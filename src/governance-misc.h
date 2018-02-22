@@ -9,8 +9,6 @@
 #include "governance.h"
 #include "init.h"
 
-using namespace std;
-
 class CGovernanceVote;
 
 /**

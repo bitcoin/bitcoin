@@ -182,11 +182,11 @@ UniValue gobject(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
         }
 
-        DBG( cout << "gobject: prepare "
+        DBG( std::cout << "gobject: prepare "
              << " GetDataAsPlainString = " << govobj.GetDataAsPlainString()
              << ", hash = " << govobj.GetHash().GetHex()
              << ", txidFee = " << wtx.GetHash().GetHex()
-             << endl; );
+             << std::endl; );
 
         return wtx.GetHash().ToString();
     }
@@ -205,10 +205,10 @@ UniValue gobject(const JSONRPCRequest& request)
 
         bool fMnFound = mnodeman.Has(activeMasternode.outpoint);
 
-        DBG( cout << "gobject: submit activeMasternode.pubKeyMasternode = " << activeMasternode.pubKeyMasternode.GetHash().ToString()
+        DBG( std::cout << "gobject: submit activeMasternode.pubKeyMasternode = " << activeMasternode.pubKeyMasternode.GetHash().ToString()
              << ", outpoint = " << activeMasternode.outpoint.ToStringShort()
              << ", params.size() = " << request.params.size()
-             << ", fMnFound = " << fMnFound << endl; );
+             << ", fMnFound = " << fMnFound << std::endl; );
 
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -234,11 +234,11 @@ UniValue gobject(const JSONRPCRequest& request)
 
         CGovernanceObject govobj(hashParent, nRevision, nTime, txidFee, strDataHex);
 
-        DBG( cout << "gobject: submit "
+        DBG( std::cout << "gobject: submit "
              << " GetDataAsPlainString = " << govobj.GetDataAsPlainString()
              << ", hash = " << govobj.GetHash().GetHex()
              << ", txidFee = " << txidFee.GetHex()
-             << endl; );
+             << std::endl; );
 
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
             CProposalValidator validator(strDataHex);

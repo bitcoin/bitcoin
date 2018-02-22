@@ -28,8 +28,6 @@
 
 #include <univalue.h>
 
-using namespace std;
-
 // In script_tests.cpp
 extern UniValue read_json(const std::string& jsondata);
 

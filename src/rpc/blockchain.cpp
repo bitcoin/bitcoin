@@ -30,7 +30,6 @@
 
 #include <mutex>
 #include <condition_variable>
-using namespace std;
 
 struct CUpdatedBlock
 {
@@ -149,7 +148,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
 UniValue getblockcount(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw runtime_error(
+        throw std::runtime_error(
             "getblockcount\n"
             "\nReturns the number of blocks in the longest blockchain.\n"
             "\nResult:\n"
@@ -166,7 +165,7 @@ UniValue getblockcount(const JSONRPCRequest& request)
 UniValue getbestblockhash(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw runtime_error(
+        throw std::runtime_error(
             "getbestblockhash\n"
             "\nReturns the hash of the best (tip) block in the longest blockchain.\n"
             "\nResult:\n"
@@ -193,7 +192,7 @@ void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
 UniValue waitfornewblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "waitfornewblock (timeout)\n"
             "\nWaits for a specific new block and returns useful info about it.\n"
             "\nReturns the current block on timeout or exit.\n"
@@ -231,7 +230,7 @@ UniValue waitfornewblock(const JSONRPCRequest& request)
 UniValue waitforblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw runtime_error(
+        throw std::runtime_error(
             "waitforblock <blockhash> (timeout)\n"
             "\nWaits for a specific new block and returns useful info about it.\n"
             "\nReturns the current block on timeout or exit.\n"
@@ -273,7 +272,7 @@ UniValue waitforblock(const JSONRPCRequest& request)
 UniValue waitforblockheight(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw runtime_error(
+        throw std::runtime_error(
             "waitforblockheight <height> (timeout)\n"
             "\nWaits for (at least) block height and returns the height and hash\n"
             "of the current tip.\n"
@@ -315,7 +314,7 @@ UniValue waitforblockheight(const JSONRPCRequest& request)
 UniValue getdifficulty(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw runtime_error(
+        throw std::runtime_error(
             "getdifficulty\n"
             "\nReturns the proof-of-work difficulty as a multiple of the minimum difficulty.\n"
             "\nResult:\n"
@@ -367,7 +366,7 @@ void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
     info.push_back(Pair("ancestorsize", e.GetSizeWithAncestors()));
     info.push_back(Pair("ancestorfees", e.GetModFeesWithAncestors()));
     const CTransaction& tx = e.GetTx();
-    set<string> setDepends;
+    std::set<std::string> setDepends;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
         if (mempool.exists(txin.prevout.hash))
@@ -375,7 +374,7 @@ void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
     }
 
     UniValue depends(UniValue::VARR);
-    BOOST_FOREACH(const string& dep, setDepends)
+    BOOST_FOREACH(const std::string& dep, setDepends)
     {
         depends.push_back(dep);
     }
@@ -400,7 +399,7 @@ UniValue mempoolToJSON(bool fVerbose = false)
     }
     else
     {
-        vector<uint256> vtxid;
+        std::vector<uint256> vtxid;
         mempool.queryHashes(vtxid);
 
         UniValue a(UniValue::VARR);
@@ -414,7 +413,7 @@ UniValue mempoolToJSON(bool fVerbose = false)
 UniValue getrawmempool(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "getrawmempool ( verbose )\n"
             "\nReturns all transaction ids in memory pool as a json array of string transaction ids.\n"
             "\nHint: use getmempoolentry to fetch a specific transaction from the mempool.\n"
@@ -446,7 +445,7 @@ UniValue getrawmempool(const JSONRPCRequest& request)
 UniValue getmempoolancestors(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
-        throw runtime_error(
+        throw std::runtime_error(
             "getmempoolancestors txid (verbose)\n"
             "\nIf txid is in the mempool, returns all in-mempool ancestors.\n"
             "\nArguments:\n"
@@ -510,7 +509,7 @@ UniValue getmempoolancestors(const JSONRPCRequest& request)
 UniValue getmempooldescendants(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
-        throw runtime_error(
+        throw std::runtime_error(
             "getmempooldescendants txid (verbose)\n"
             "\nIf txid is in the mempool, returns all in-mempool descendants.\n"
             "\nArguments:\n"
@@ -574,7 +573,7 @@ UniValue getmempooldescendants(const JSONRPCRequest& request)
 UniValue getmempoolentry(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
-        throw runtime_error(
+        throw std::runtime_error(
             "getmempoolentry txid\n"
             "\nReturns mempool data for given transaction\n"
             "\nArguments:\n"
@@ -607,7 +606,7 @@ UniValue getmempoolentry(const JSONRPCRequest& request)
 UniValue getblockhashes(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
-        throw runtime_error(
+        throw std::runtime_error(
             "getblockhashes timestamp\n"
             "\nReturns array of hashes of blocks within the timestamp range provided.\n"
             "\nArguments:\n"
@@ -641,7 +640,7 @@ UniValue getblockhashes(const JSONRPCRequest& request)
 UniValue getblockhash(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "getblockhash height\n"
             "\nReturns hash of block in best-block-chain at height provided.\n"
             "\nArguments:\n"
@@ -666,7 +665,7 @@ UniValue getblockhash(const JSONRPCRequest& request)
 UniValue getblockheader(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw runtime_error(
+        throw std::runtime_error(
             "getblockheader \"hash\" ( verbose )\n"
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for blockheader 'hash'.\n"
             "If verbose is true, returns an Object with information about blockheader <hash>.\n"
@@ -725,7 +724,7 @@ UniValue getblockheader(const JSONRPCRequest& request)
 UniValue getblockheaders(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
-        throw runtime_error(
+        throw std::runtime_error(
             "getblockheaders \"hash\" ( count verbose )\n"
             "\nReturns an array of items with information about <count> blockheaders starting from <hash>.\n"
             "\nIf verbose is false, each item is a string that is serialized, hex-encoded data for a single blockheader.\n"
@@ -814,7 +813,7 @@ UniValue getblockheaders(const JSONRPCRequest& request)
 UniValue getblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw runtime_error(
+        throw std::runtime_error(
             "getblock \"blockhash\" ( verbose )\n"
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
             "If verbose is true, returns an Object with information about block <hash>.\n"
@@ -952,7 +951,7 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
 UniValue pruneblockchain(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "pruneblockchain\n"
             "\nArguments:\n"
             "1. \"height\"       (numeric, required) The block height to prune up to. May be set to a discrete height, or a unix timestamp\n"
@@ -1001,7 +1000,7 @@ UniValue pruneblockchain(const JSONRPCRequest& request)
 UniValue gettxoutsetinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw runtime_error(
+        throw std::runtime_error(
             "gettxoutsetinfo\n"
             "\nReturns statistics about the unspent transaction output set.\n"
             "Note this call may take some time.\n"
@@ -1041,7 +1040,7 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
 UniValue gettxout(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
-        throw runtime_error(
+        throw std::runtime_error(
             "gettxout \"txid\" n ( include_mempool )\n"
             "\nReturns details about an unspent transaction output.\n"
             "\nArguments:\n"
@@ -1123,7 +1122,7 @@ UniValue verifychain(const JSONRPCRequest& request)
     int nCheckLevel = GetArg("-checklevel", DEFAULT_CHECKLEVEL);
     int nCheckDepth = GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
     if (request.fHelp || request.params.size() > 2)
-        throw runtime_error(
+        throw std::runtime_error(
             "verifychain ( checklevel nblocks )\n"
             "\nVerifies blockchain database.\n"
             "\nArguments:\n"
@@ -1209,7 +1208,7 @@ void BIP9SoftForkDescPushBack(UniValue& bip9_softforks, const std::string &name,
 UniValue getblockchaininfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw runtime_error(
+        throw std::runtime_error(
             "getblockchaininfo\n"
             "Returns an object containing various state info regarding blockchain processing.\n"
             "\nResult:\n"
@@ -1303,7 +1302,7 @@ struct CompareBlocksByHeight
 UniValue getchaintips(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2)
-        throw runtime_error(
+        throw std::runtime_error(
             "getchaintips ( count branchlen )\n"
             "Return information about all known tips in the block tree,"
             " including the main chain as well as orphaned branches.\n"
@@ -1343,7 +1342,7 @@ UniValue getchaintips(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     /*
-     * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them. 
+     * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them.
      * Algorithm:
      *  - Make one pass through mapBlockIndex, picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
      *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.
@@ -1396,7 +1395,7 @@ UniValue getchaintips(const JSONRPCRequest& request)
         obj.push_back(Pair("chainwork", block->nChainWork.GetHex()));
         obj.push_back(Pair("branchlen", branchLen));
 
-        string status;
+        std::string status;
         if (chainActive.Contains(block)) {
             // This block is part of the currently active chain.
             status = "active";
@@ -1440,7 +1439,7 @@ UniValue mempoolInfoToJSON()
 UniValue getmempoolinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw runtime_error(
+        throw std::runtime_error(
             "getmempoolinfo\n"
             "\nReturns details on the active state of the TX memory pool.\n"
             "\nResult:\n"
@@ -1462,7 +1461,7 @@ UniValue getmempoolinfo(const JSONRPCRequest& request)
 UniValue preciousblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "preciousblock \"blockhash\"\n"
             "\nTreats a block as if it were received before others with the same work.\n"
             "\nA later preciousblock call can override the effect of an earlier one.\n"
@@ -1500,7 +1499,7 @@ UniValue preciousblock(const JSONRPCRequest& request)
 UniValue invalidateblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "invalidateblock \"blockhash\"\n"
             "\nPermanently marks a block as invalid, as if it violated a consensus rule.\n"
             "\nArguments:\n"
@@ -1538,7 +1537,7 @@ UniValue invalidateblock(const JSONRPCRequest& request)
 UniValue reconsiderblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "reconsiderblock \"blockhash\"\n"
             "\nRemoves invalidity status of a block and its descendants, reconsider them for activation.\n"
             "This can be used to undo the effects of invalidateblock.\n"

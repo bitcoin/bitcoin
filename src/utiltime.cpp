@@ -13,8 +13,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
 
-using namespace std;
-
 static int64_t nMockTime = 0; //!< For unit testing
 
 int64_t GetTime()

@@ -10,8 +10,6 @@
 
 #include <boost/lexical_cast.hpp>
 
-using namespace std;
-
 class CGovernanceVote;
 class CConnman;
 

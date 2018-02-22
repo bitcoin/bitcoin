@@ -293,7 +293,7 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernance
 
 void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman& connman, CNode* pfrom)
 {
-    DBG( cout << "CGovernanceManager::AddGovernanceObject START" << endl; );
+    DBG( std::cout << "CGovernanceManager::AddGovernanceObject START" << std::endl; );
 
     uint256 nHash = govobj.GetHash();
     std::string strHash = nHash.ToString();
@@ -346,16 +346,16 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANANGERS?
 
-    DBG( cout << "CGovernanceManager::AddGovernanceObject Before trigger block, GetDataAsPlainString = "
+    DBG( std::cout << "CGovernanceManager::AddGovernanceObject Before trigger block, GetDataAsPlainString = "
               << govobj.GetDataAsPlainString()
               << ", nObjectType = " << govobj.nObjectType
-              << endl; );
+              << std::endl; );
 
     switch(govobj.nObjectType) {
     case GOVERNANCE_OBJECT_TRIGGER:
-        DBG( cout << "CGovernanceManager::AddGovernanceObject Before AddNewTrigger" << endl; );
+        DBG( std::cout << "CGovernanceManager::AddGovernanceObject Before AddNewTrigger" << std::endl; );
         triggerman.AddNewTrigger(nHash);
-        DBG( cout << "CGovernanceManager::AddGovernanceObject After AddNewTrigger" << endl; );
+        DBG( std::cout << "CGovernanceManager::AddGovernanceObject After AddNewTrigger" << std::endl; );
         break;
     case GOVERNANCE_OBJECT_WATCHDOG:
         mapWatchdogObjects[nHash] = govobj.GetCreationTime() + GOVERNANCE_WATCHDOG_EXPIRATION_TIME;
@@ -378,7 +378,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
     CGovernanceException exception;
     CheckOrphanVotes(govobj, exception, connman);
 
-    DBG( cout << "CGovernanceManager::AddGovernanceObject END" << endl; );
+    DBG( std::cout << "CGovernanceManager::AddGovernanceObject END" << std::endl; );
 }
 
 bool CGovernanceManager::UpdateCurrentWatchdog(CGovernanceObject& watchdogNew)
@@ -1015,7 +1015,7 @@ void CGovernanceManager::CheckMasternodeOrphanObjects(CConnman& connman)
         CGovernanceObject& govobj = pair.first;
 
         if(pair.second.nExpirationTime >= nNow) {
-            string strError;
+            std::string strError;
             bool fMasternodeMissing = false;
             bool fConfirmationsMissing = false;
             bool fIsValid = govobj.IsValidLocally(strError, fMasternodeMissing, fConfirmationsMissing, true);

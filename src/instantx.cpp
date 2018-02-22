@@ -586,8 +586,8 @@ bool CInstantSend::ResolveConflicts(const CTxLockCandidate& txLockCandidate)
             itLockCandidateConflicting->second.SetConfirmedHeight(0); // expired
             CheckAndRemove(); // clean up
             // AlreadyHave should still return "true" for both of them
-            mapLockRequestRejected.insert(make_pair(txHash, txLockRequest));
-            mapLockRequestRejected.insert(make_pair(hashConflicting, txLockRequestConflicting));
+            mapLockRequestRejected.insert(std::make_pair(txHash, txLockRequest));
+            mapLockRequestRejected.insert(std::make_pair(hashConflicting, txLockRequestConflicting));
 
             // TODO: clean up mapLockRequestRejected later somehow
             //       (not a big issue since we already PoSe ban malicious masternodes
@@ -736,13 +736,13 @@ bool CInstantSend::AlreadyHave(const uint256& hash)
 void CInstantSend::AcceptLockRequest(const CTxLockRequest& txLockRequest)
 {
     LOCK(cs_instantsend);
-    mapLockRequestAccepted.insert(make_pair(txLockRequest.GetHash(), txLockRequest));
+    mapLockRequestAccepted.insert(std::make_pair(txLockRequest.GetHash(), txLockRequest));
 }
 
 void CInstantSend::RejectLockRequest(const CTxLockRequest& txLockRequest)
 {
     LOCK(cs_instantsend);
-    mapLockRequestRejected.insert(make_pair(txLockRequest.GetHash(), txLockRequest));
+    mapLockRequestRejected.insert(std::make_pair(txLockRequest.GetHash(), txLockRequest));
 }
 
 bool CInstantSend::HasTxLockRequest(const uint256& txHash)
@@ -1175,7 +1175,7 @@ void COutPointLock::Relay(CConnman& connman) const
 
 void CTxLockCandidate::AddOutPointLock(const COutPoint& outpoint)
 {
-    mapOutPointLocks.insert(make_pair(outpoint, COutPointLock(outpoint)));
+    mapOutPointLocks.insert(std::make_pair(outpoint, COutPointLock(outpoint)));
 }
 
 void CTxLockCandidate::MarkOutpointAsAttacked(const COutPoint& outpoint)

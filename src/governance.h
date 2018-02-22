@@ -69,7 +69,7 @@ public:
     int64_t GetMinTimestamp()
     {
         int nIndex = nDataStart;
-        int64_t nMin = numeric_limits<int64_t>::max();
+        int64_t nMin = std::numeric_limits<int64_t>::max();
         if(fBufferEmpty) {
             return nMin;
         }

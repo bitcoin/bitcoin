@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_CASE(ratecheck_test)
     CRateCheckBuffer buffer;
 
     BOOST_CHECK(buffer.GetCount() == 0);
-    BOOST_CHECK(buffer.GetMinTimestamp() == numeric_limits<int64_t>::max());
+    BOOST_CHECK(buffer.GetMinTimestamp() == std::numeric_limits<int64_t>::max());
     BOOST_CHECK(buffer.GetMaxTimestamp() == 0);
     BOOST_CHECK(buffer.GetRate() == 0.0);
 
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ratecheck_test)
         BOOST_TEST_MESSAGE("In loop: i = " << i);
         buffer2.AddTimestamp(i);
         BOOST_CHECK(buffer2.GetCount() == (i <= 5 ? i : 5));
-        BOOST_CHECK(buffer2.GetMinTimestamp() == max(int64_t(1), i - 4));
+        BOOST_CHECK(buffer2.GetMinTimestamp() == std::max(int64_t(1), i - 4));
         BOOST_CHECK(buffer2.GetMaxTimestamp() == i);
     }
 }
