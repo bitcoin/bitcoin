@@ -374,6 +374,66 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
     }
 }
 
+void CMasternodeMan::AddDeterministicMasternodes()
+{
+    if (!deterministicMNManager->IsDeterministicMNsSporkActive())
+        return;
+
+    bool added = false;
+    {
+        LOCK(cs);
+        unsigned int oldMnCount = mapMasternodes.size();
+
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        for (const auto& dmn : mnList.valid_range()) {
+            // call Find() on each deterministic MN to force creation of CMasternode object
+            auto mn = Find(COutPoint(dmn->proTxHash, dmn->nCollateralIndex));
+            assert(mn);
+
+            // make sure we use the splitted keys from now on
+            mn->keyIDOwner = dmn->pdmnState->keyIDOwner;
+            mn->keyIDOperator = dmn->pdmnState->keyIDOperator;
+            mn->keyIDVoting = dmn->pdmnState->keyIDVoting;
+            mn->addr = dmn->pdmnState->addr;
+            mn->nProtocolVersion = dmn->pdmnState->nProtocolVersion;
+        }
+
+        added = oldMnCount != mapMasternodes.size();
+    }
+
+    if (added) {
+        NotifyMasternodeUpdates(*g_connman, true, false);
+    }
+}
+
+void CMasternodeMan::RemoveNonDeterministicMasternodes()
+{
+    if (!deterministicMNManager->IsDeterministicMNsSporkActive())
+        return;
+
+    bool erased = false;
+    {
+        LOCK(cs);
+        std::set<COutPoint> mnSet;
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        for (const auto& dmn : mnList.valid_range()) {
+            mnSet.insert(COutPoint(dmn->proTxHash, dmn->nCollateralIndex));
+        }
+        auto it = mapMasternodes.begin();
+        while (it != mapMasternodes.end()) {
+            if (!mnSet.count(it->second.outpoint)) {
+                mapMasternodes.erase(it++);
+                erased = true;
+            } else {
+                ++it;
+            }
+        }
+    }
+    if (erased) {
+        NotifyMasternodeUpdates(*g_connman, false, true);
+    }
+}
+
 void CMasternodeMan::Clear()
 {
     LOCK(cs);
@@ -706,6 +766,23 @@ masternode_info_t CMasternodeMan::FindRandomNotInVec(const std::vector<COutPoint
 
     LogPrint("masternode", "CMasternodeMan::FindRandomNotInVec -- failed\n");
     return masternode_info_t();
+}
+
+std::map<COutPoint, CMasternode> CMasternodeMan::GetFullMasternodeMap()
+{
+    LOCK(cs);
+
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        std::map<COutPoint, CMasternode> result;
+        for (const auto &p : mapMasternodes) {
+            if (deterministicMNManager->HasValidMNAtChainTip(p.first.hash)) {
+                result.emplace(p.first, p.second);
+            }
+        }
+        return result;
+    } else {
+        return mapMasternodes;
+    }
 }
 
 bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeMan::score_pair_vec_t& vecMasternodeScoresRet, int nMinProtocol)
@@ -1808,6 +1885,9 @@ void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
 {
     nCachedBlockHeight = pindex->nHeight;
     LogPrint("masternode", "CMasternodeMan::UpdatedBlockTip -- nCachedBlockHeight=%d\n", nCachedBlockHeight);
+
+    AddDeterministicMasternodes();
+    RemoveNonDeterministicMasternodes();
 
     CheckSameAddr();
 
