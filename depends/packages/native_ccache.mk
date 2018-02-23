@@ -8,6 +8,12 @@ define $(package)_set_vars
 $(package)_config_opts=
 endef
 
+define $(package)_preprocess_cmds
+  sed -i '57,60d' Makefile.in; \
+  sed -i '57izlib_sources = src/zlib/adler32.c src/zlib/crc32.c src/zlib/deflate.c src/zlib/gzclose.c src/zlib/gzlib.c src/zlib/gzread.c src/zlib/gzwrite.c src/zlib/inffast.c src/zlib/inflate.c src/zlib/inftrees.c src/zlib/trees.c src/zlib/zutil.c' Makefile.in; \
+  sed "s/-Werror/-Werror -Wimplicit-fallthrough=0/" dev.mk.in;
+endef
+
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef
