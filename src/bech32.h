@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Pieter Wuille
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/MIT.
 
 // Bech32 is a string encoding format used in newer address types.
 // The output consists of a human-readable part (alphanumeric), a

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/MIT.
 """Big number routines.
 
 This file is copied from python-bitcoinlib.
