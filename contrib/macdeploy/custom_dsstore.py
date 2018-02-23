@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2013-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/licenses/MIT.
 from __future__ import division,print_function,unicode_literals
