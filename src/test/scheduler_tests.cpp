@@ -56,8 +56,8 @@ BOOST_AUTO_TEST_CASE(manythreads)
     int counter[10] = { 0 };
     FastRandomContext rng(42);
     auto zeroToNine = [](FastRandomContext& rc) -> int { return rc.randrange(10); }; // [0, 9]
-    auto randomMsec = [](FastRandomContext& rc) -> int { return -11 + rc.randrange(1012); }; // [-11, 1000]
-    auto randomDelta = [](FastRandomContext& rc) -> int { return -1000 + rc.randrange(2001); }; // [-1000, 1000]
+    auto randomMsec = [](FastRandomContext& rc) -> int { return -11 + (int)rc.randrange(1012); }; // [-11, 1000]
+    auto randomDelta = [](FastRandomContext& rc) -> int { return -1000 + (int)rc.randrange(2001); }; // [-1000, 1000]
 
     boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
     boost::chrono::system_clock::time_point now = start;
