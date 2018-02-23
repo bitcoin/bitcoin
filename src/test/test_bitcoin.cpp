@@ -28,6 +28,9 @@ void CConnmanTest::AddNode(CNode& node)
 void CConnmanTest::ClearNodes()
 {
     LOCK(g_connman->cs_vNodes);
+    for (CNode* node : g_connman->vNodes) {
+        delete node;
+    }
     g_connman->vNodes.clear();
 }
 
