@@ -891,7 +891,13 @@ size_t CConnman::SocketSendData(CNode *pnode) const
             LOCK(pnode->cs_hSocket);
             if (pnode->hSocket == INVALID_SOCKET)
                 break;
-            nBytes = send(pnode->hSocket, reinterpret_cast<const char*>(data.data()) + pnode->nSendOffset, data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
+            int flags = MSG_NOSIGNAL | MSG_DONTWAIT;
+#ifdef MSG_MORE
+            if (it + 1 != pnode->vSendMsg.end()) {
+                flags |= MSG_MORE;
+            }
+#endif
+            nBytes = send(pnode->hSocket, reinterpret_cast<const char*>(data.data()) + pnode->nSendOffset, data.size() - pnode->nSendOffset, flags);
         }
         if (nBytes > 0) {
             pnode->nLastSend = GetSystemTimeInSeconds();
