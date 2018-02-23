@@ -31,6 +31,7 @@
 #include <QScrollBar>
 #include <QSettings>
 #include <QTextDocument>
+#include <QApplication>
 
 static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
 int getConfTargetForIndex(int index) {
@@ -369,7 +370,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     bool fSubbedFee = rv["outputs_fee"].size() > 0 ? true : false;
 
     size_t nBytes = rv["bytes"].get_int64();
-
+    bool fNeedHWDevice = rv["need_hwdevice"].get_bool();
 
     CAmount txFee = rFee * COIN;
 
@@ -461,7 +462,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     }
     questionString.append("</span>");
 
-    if (rv["need_hwdevice"].get_bool() == true)
+    if (fNeedHWDevice)
     {
         questionString.append("<hr /><span><b>");
         questionString.append(tr("Your hardware device must be connected to sign this txn."));
@@ -485,6 +486,11 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     sCommand += " false";
     sCommand += sCoinControl;
+
+    // hack, NotifyWaitingForDevice events get processed after rpc call completes.
+    // TODO: move tryCallRpc to thread
+    model->waitingForDevice(false);
+    qApp->processEvents();
 
     if (!model->tryCallRpc(sCommand, rv))
         sendStatus = WalletModel::TransactionCreationFailed;

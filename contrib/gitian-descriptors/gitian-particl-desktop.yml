@@ -33,21 +33,23 @@ script: |
   wget -nc https://dl.winehq.org/wine-builds/Release.key
   sudo apt-key add Release.key
   sudo apt-add-repository https://dl.winehq.org/wine-builds/ubuntu/
-  sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-  echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mono-official.list
   curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
   echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
   sudo apt-get update -y
-  sudo apt-get install -y --force-yes wine-stable winehq-stable yarn mono-devel
+  sudo apt-get install -y --force-yes wine-stable winehq-stable yarn
   WINEARCH=win32 winecfg
 
   if test -n "$GBUILD_CACHE_ENABLED"; then
     export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
-    mkdir -p ${BASE_CACHE}/electron ${BASE_CACHE}/nvm_bin ~/.nvm/.cache/
+    mkdir -p ${BASE_CACHE}/electron ${BASE_CACHE}/electron-builder ${BASE_CACHE}/nvm_bin ~/.nvm/.cache/ ${BASE_CACHE}/yarn-cache
     rm -rf ~/.electron
     ln -sf ${BASE_CACHE}/electron ~/.electron
+    rm -rf ~/.electron-builder
+    ln -sf ${BASE_CACHE}/electron-builder ~/.electron-builder
     rm -rf ~/.nvm/.cache/bin
     ln -sf ${BASE_CACHE}/nvm_bin ~/.nvm/.cache/bin
+    rm -rf ~/.yarn-cache
+    ln -sf ${BASE_CACHE}/yarn-cache ~/.yarn-cache
   fi
 
   WRAP_DIR=$HOME/wrapped
@@ -93,9 +95,10 @@ script: |
   cd particl-desktop
   yarn install
 
-  npm run package:linux
-  npm run package:win
-  npm run package:mac
+  yarn run package:linux
+  tar -cvzf packages/particl-desktop_test.tar.gz packages/linux-unpacked/
+  yarn run package:win
+  yarn run package:mac
 
   mkdir -p $OUTDIR
   cp packages/particl-desktop* $OUTDIR

@@ -327,7 +327,8 @@ UniValue devicesignrawtransaction(const JSONRPCRequest &request)
             "  ]\n"
             "}\n"
             "\nExamples\n"
-);
+            + HelpExampleCli("devicesignrawtransaction", "\"myhex\"")
+            + HelpExampleRpc("devicesignrawtransaction", "\"myhex\""));
 
 #ifdef ENABLE_WALLET
     LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);

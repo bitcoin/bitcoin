@@ -83,7 +83,7 @@ CUSBDevice *SelectDevice(std::vector<std::unique_ptr<CUSBDevice> > &vDevices, st
         sError = "No device found.";
         return NULL;
     };
-     if (vDevices.size() > 1) // TODO: Select device
+    if (vDevices.size() > 1) // TODO: Select device
     {
         sError = "Multiple devices found.";
         return NULL;

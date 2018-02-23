@@ -40,7 +40,8 @@ MAX_VERSIONS = {
 'GCC':     (4,4,0),
 'CXXABI':  (1,3,3),
 'GLIBCXX': (3,4,13),
-'GLIBC':   (2,11)
+'GLIBC':   (2,11),
+'LIBUDEV': (183,)
 }
 # See here for a description of _IO_stdin_used:
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
@@ -68,7 +69,8 @@ b'libX11.so.6', # part of X11
 b'libxcb.so.1', # part of X11
 b'libfontconfig.so.1', # font support
 b'libfreetype.so.6', # font parsing
-b'libdl.so.2' # programming interface to dynamic linker
+b'libdl.so.2', # programming interface to dynamic linker
+b'libudev.so.1'
 }
 
 class CPPFilt(object):

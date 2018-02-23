@@ -2748,26 +2748,26 @@ static bool ParseOutput(
     std::string sKey = strprintf("n%d", o.vout);
     mapValue_t::iterator mvi = wtx.mapValue.find(sKey);
     if (mvi != wtx.mapValue.end()) {
-        output.push_back(Pair("narration", mvi->second));
+        output.pushKV("narration", mvi->second);
     }
     if (addr.Set(o.destination)) {
-        output.push_back(Pair("address", addr.ToString()));
+        output.pushKV("address", addr.ToString());
         addresses.push_back(addr.ToString());
     }
     if (o.ismine & ISMINE_WATCH_ONLY) {
         if (watchonly & ISMINE_WATCH_ONLY) {
-            output.push_back(Pair("involvesWatchonly", true));
+            output.pushKV("involvesWatchonly", true);
         } else {
             return false;
         }
     }
     if (o.destStake.type() != typeid(CNoDestination)) {
-        output.push_back(Pair("coldstake_address", CBitcoinAddress(o.destStake).ToString()));
+        output.pushKV("coldstake_address", CBitcoinAddress(o.destStake).ToString());
     }
     if (pwallet->mapAddressBook.count(o.destination)) {
-        output.push_back(Pair("label", pwallet->mapAddressBook[o.destination].name));
+        output.pushKV("label", pwallet->mapAddressBook[o.destination].name);
     }
-    output.push_back(Pair("vout", o.vout));
+    output.pushKV("vout", o.vout);
     amounts.push_back(std::to_string(o.amount));
     return true;
 }
@@ -2810,19 +2810,19 @@ static void ParseOutputs(
     UniValue outputs(UniValue::VARR);
     // common to every type of transaction
     if (strSentAccount != "") {
-        entry.push_back(Pair("account", strSentAccount));
+        entry.pushKV("account", strSentAccount);
     }
     WalletTxToJSON(wtx, entry, true);
 
     if (!listStaked.empty() || !listSent.empty())
-        entry.push_back(Pair("abandoned", wtx.isAbandoned()));
+        entry.pushKV("abandoned", wtx.isAbandoned());
 
     // staked
     if (!listStaked.empty()) {
         if (wtx.GetDepthInMainChain() < 1) {
-            entry.push_back(Pair("category", "orphaned_stake"));
+            entry.pushKV("category", "orphaned_stake");
         } else {
-            entry.push_back(Pair("category", "stake"));
+            entry.pushKV("category", "stake");
         }
         for (const auto &s : listStaked) {
             UniValue output(UniValue::VOBJ);
@@ -2837,7 +2837,7 @@ static void ParseOutputs(
             )) {
                 return ;
             }
-            output.push_back(Pair("amount", ValueFromAmount(s.amount)));
+            output.pushKV("amount", ValueFromAmount(s.amount));
             outputs.push_back(output);
         }
 
@@ -2845,7 +2845,7 @@ static void ParseOutputs(
     } else {
         // sent
         if (!listSent.empty()) {
-            entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+            entry.pushKV("fee", ValueFromAmount(-nFee));
             for (const auto &s : listSent) {
                 UniValue output(UniValue::VOBJ);
                 if (!ParseOutput(output,
@@ -2858,7 +2858,7 @@ static void ParseOutputs(
                 )) {
                     return ;
                 }
-                output.push_back(Pair("amount", ValueFromAmount(-s.amount)));
+                output.pushKV("amount", ValueFromAmount(-s.amount));
                 amount -= s.amount;
                 outputs.push_back(output);
             }
@@ -2883,10 +2883,10 @@ static void ParseOutputs(
                     CStealthAddress sx;
                     CKeyID idK = boost::get<CKeyID>(r.destination);
                     if (pwallet->GetStealthLinked(idK, sx)) {
-                        output.push_back(Pair("stealth_address", sx.Encoded()));
+                        output.pushKV("stealth_address", sx.Encoded());
                     }
                 }
-                output.push_back(Pair("amount", ValueFromAmount(r.amount)));
+                output.pushKV("amount", ValueFromAmount(r.amount));
                 amount += r.amount;
 
                 bool fExists = false;
@@ -2904,25 +2904,25 @@ static void ParseOutputs(
 
         if (wtx.IsCoinBase()) {
             if (wtx.GetDepthInMainChain() < 1) {
-                entry.push_back(Pair("category", "orphan"));
+                entry.pushKV("category", "orphan");
             } else if (wtx.GetBlocksToMaturity() > 0) {
-                entry.push_back(Pair("category", "immature"));
+                entry.pushKV("category", "immature");
             } else {
-                entry.push_back(Pair("category", "coinbase"));
+                entry.pushKV("category", "coinbase");
             }
         } else if (!nFee) {
-            entry.push_back(Pair("category", "receive"));
+            entry.pushKV("category", "receive");
         } else if (amount == 0) {
             if (listSent.empty())
-                entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
-            entry.push_back(Pair("category", "internal_transfer"));
+                entry.pushKV("fee", ValueFromAmount(-nFee));
+            entry.pushKV("category", "internal_transfer");
         } else {
-            entry.push_back(Pair("category", "send"));
+            entry.pushKV("category", "send");
         }
     };
 
-    entry.push_back(Pair("outputs", outputs));
-    entry.push_back(Pair("amount", ValueFromAmount(amount)));
+    entry.pushKV("outputs", outputs);
+    entry.pushKV("amount", ValueFromAmount(amount));
 
     if (fWithReward && !listStaked.empty())
     {
@@ -2948,7 +2948,7 @@ static void ParseOutputs(
                 continue;
             nInput += pwallet->GetOutputValue(vin.prevout, true);
         };
-        entry.push_back(Pair("reward", ValueFromAmount(nOutput - nInput)));
+        entry.pushKV("reward", ValueFromAmount(nOutput - nInput));
     };
 
     if (search != "") {
@@ -4088,7 +4088,7 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
             fEnabled = true;
     };
 
-    obj.push_back(Pair("enabled", fEnabled));
+    obj.pushKV("enabled", fEnabled);
     if (addrColdStaking.IsValid(CChainParams::EXT_PUBLIC_KEY))
     {
         CTxDestination dest = addrColdStaking.Get();
@@ -4295,9 +4295,9 @@ UniValue listunspentanon(const JSONRPCRequest &request)
         entry.pushKV("confirmations", out.nDepth);
         //entry.pushKV("spendable", out.fSpendable);
         //entry.pushKV("solvable", out.fSolvable);
-        entry.push_back(Pair("safe", out.fSafe));
+        entry.pushKV("safe", out.fSafe);
         if (fIncludeImmature)
-            entry.push_back(Pair("mature", out.fMature));
+            entry.pushKV("mature", out.fMature);
 
         results.push_back(entry);
     }
@@ -4499,7 +4499,7 @@ UniValue listunspentblind(const JSONRPCRequest &request)
         entry.pushKV("confirmations", out.nDepth);
         //entry.push_back(Pair("spendable", out.fSpendable));
         //entry.push_back(Pair("solvable", out.fSolvable));
-        entry.push_back(Pair("safe", out.fSafe));
+        entry.pushKV("safe", out.fSafe);
         results.push_back(entry);
     }
 
