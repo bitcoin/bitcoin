@@ -626,15 +626,29 @@ UniValue masternode_status(const JSONRPCRequest& request)
 
     UniValue mnObj(UniValue::VOBJ);
 
+    // keep compatibility with legacy status for now (might get deprecated/removed later)
     mnObj.push_back(Pair("outpoint", activeMasternodeInfo.outpoint.ToStringShort()));
     mnObj.push_back(Pair("service", activeMasternodeInfo.service.ToString()));
 
-    CMasternode mn;
-    if(mnodeman.Get(activeMasternodeInfo.outpoint, mn)) {
-        mnObj.push_back(Pair("payee", CBitcoinAddress(mn.keyIDCollateralAddress).ToString()));
-    }
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        auto dmn = activeMasternodeManager->GetDMN();
+        if (dmn) {
+            mnObj.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
+            mnObj.push_back(Pair("collateralIndex", (int)dmn->nCollateralIndex));
+            UniValue stateObj;
+            dmn->pdmnState->ToJson(stateObj);
+            mnObj.push_back(Pair("dmnState", stateObj));
+        }
+        mnObj.push_back(Pair("state", activeMasternodeManager->GetStateString()));
+        mnObj.push_back(Pair("status", activeMasternodeManager->GetStatus()));
+    } else {
+        CMasternode mn;
+        if(mnodeman.Get(activeMasternodeInfo.outpoint, mn)) {
+            mnObj.push_back(Pair("payee", CBitcoinAddress(mn.keyIDCollateralAddress).ToString()));
+        }
 
-    mnObj.push_back(Pair("status", legacyActiveMasternodeManager.GetStatus()));
+        mnObj.push_back(Pair("status", legacyActiveMasternodeManager.GetStatus()));
+    }
     return mnObj;
 }
 
