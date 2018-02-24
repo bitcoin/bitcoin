@@ -5229,7 +5229,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     string strMintDisabledMessage = _("Info: Minting disabled by 'nominting' option.");
     string strMintBlockMessage = _("Info: Minting suspended due to block creation failure.");
 
-    try { loop {
+    try { ploop {
         if (GetBoolArg("-nominting"))
         {
             strMintWarning = strMintDisabledMessage;
@@ -5317,7 +5317,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
         uint256 hashbuf[2];
         uint256& hash = *alignup<16>(hashbuf);
-        loop
+        ploop
         {
             unsigned int nHashesDone = 0;
             unsigned int nNonceFound;

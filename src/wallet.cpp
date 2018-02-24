@@ -1231,7 +1231,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
         LOCK2(cs_main, cs_wallet);
         {
             nFeeRet = nTransactionFee;
-            loop
+            ploop
             {
                 wtxNew.vin.clear();
                 wtxNew.vout.clear();
@@ -1546,7 +1546,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     }
 
     int64 nMinFee = 0;
-    loop
+    ploop
     {
         // Set output amount
         if (txNew.vout.size() == 3)
