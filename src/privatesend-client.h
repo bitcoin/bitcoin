@@ -15,9 +15,16 @@ class CConnman;
 
 static const int DENOMS_COUNT_MAX                   = 100;
 
+static const int MIN_PRIVATESEND_ROUNDS             = 2;
+static const int MIN_PRIVATESEND_AMOUNT             = 2;
+static const int MIN_PRIVATESEND_LIQUIDITY          = 0;
+static const int MAX_PRIVATESEND_ROUNDS             = 16;
+static const int MAX_PRIVATESEND_AMOUNT             = MAX_MONEY / COIN;
+static const int MAX_PRIVATESEND_LIQUIDITY          = 100;
 static const int DEFAULT_PRIVATESEND_ROUNDS         = 2;
 static const int DEFAULT_PRIVATESEND_AMOUNT         = 1000;
 static const int DEFAULT_PRIVATESEND_LIQUIDITY      = 0;
+
 static const bool DEFAULT_PRIVATESEND_MULTISESSION  = false;
 
 // Warn user if mixing in gui or try to create backup if mixing in daemon mode
@@ -28,6 +35,45 @@ static const int PRIVATESEND_KEYS_THRESHOLD_STOP    = 50;
 
 // The main object for accessing mixing
 extern CPrivateSendClient privateSendClient;
+
+class CPendingDsaRequest
+{
+private:
+    static const int TIMEOUT = 15;
+
+    CService addr;
+    CDarksendAccept dsa;
+    int64_t nTimeCreated;
+
+public:
+    CPendingDsaRequest():
+        addr(CService()),
+        dsa(CDarksendAccept()),
+        nTimeCreated(0)
+    {};
+
+    CPendingDsaRequest(const CService& addr_, const CDarksendAccept& dsa_):
+        addr(addr_),
+        dsa(dsa_)
+    { nTimeCreated = GetTime(); }
+
+    CService GetAddr() { return addr; }
+    CDarksendAccept GetDSA() { return dsa; }
+    bool IsExpired() { return GetTime() - nTimeCreated > TIMEOUT; }
+
+    friend bool operator==(const CPendingDsaRequest& a, const CPendingDsaRequest& b)
+    {
+        return a.addr == b.addr && a.dsa == b.dsa;
+    }
+    friend bool operator!=(const CPendingDsaRequest& a, const CPendingDsaRequest& b)
+    {
+        return !(a == b);
+    }
+    explicit operator bool() const
+    {
+        return *this != CPendingDsaRequest();
+    }
+};
 
 /** Used to keep track of current status of mixing pool
  */
@@ -54,6 +100,7 @@ private:
 
     masternode_info_t infoMixingMasternode;
     CMutableTransaction txMyCollateral; // client side collateral
+    CPendingDsaRequest pendingDsaRequest;
 
     CKeyHolderStorage keyHolderStorage; // storage for keys used in PrepareDenominate
 
@@ -69,23 +116,23 @@ private:
 
     // Make sure we have enough keys since last backup
     bool CheckAutomaticBackup();
-    bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman* connman);
-    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman* connman);
+    bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
+    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman& connman);
 
     /// Create denominations
-    bool CreateDenominated(CConnman* connman);
-    bool CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman* connman);
+    bool CreateDenominated(CConnman& connman);
+    bool CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman& connman);
 
     /// Split up large inputs or make fee sized inputs
-    bool MakeCollateralAmounts(CConnman* connman);
-    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman* connman);
+    bool MakeCollateralAmounts(CConnman& connman);
+    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman& connman);
 
     /// As a client, submit part of a future mixing transaction to a Masternode to start the process
-    bool SubmitDenominate(CConnman* connman);
+    bool SubmitDenominate(CConnman& connman);
     /// step 1: prepare denominated inputs and outputs
     bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, std::vector<CTxDSIn>& vecTxDSInRet, std::vector<CTxOut>& vecTxOutRet);
     /// step 2: send denominated inputs and outputs prepared in step 1
-    bool SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, CConnman* connman);
+    bool SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, CConnman& connman);
 
     /// Get Masternode updates about the progress of mixing
     bool CheckPoolStateUpdate(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew=0);
@@ -93,9 +140,9 @@ private:
     void SetState(PoolState nStateNew);
 
     /// As a client, check and sign the final transaction
-    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman* connman);
+    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman);
 
-    void RelayIn(const CDarkSendEntry& entry, CConnman* connman);
+    void RelayIn(const CDarkSendEntry& entry, CConnman& connman);
 
     void SetNull();
 
@@ -121,11 +168,12 @@ public:
         nCachedNumBlocks(std::numeric_limits<int>::max()),
         fCreateAutoBackups(true) { SetNull(); }
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman* connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
     void ClearSkippedDenominations() { vecDenominationsSkipped.clear(); }
 
     void SetMinBlocksToWait(int nMinBlocksToWaitIn) { nMinBlocksToWait = nMinBlocksToWaitIn; }
+
 
     void ResetPool();
 
@@ -137,7 +185,9 @@ public:
     bool IsMixingMasternode(const CNode* pnode);
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(CConnman* connman, bool fDryRun=false);
+    bool DoAutomaticDenominating(CConnman& connman, bool fDryRun=false);
+
+    void ProcessPendingDsaRequest(CConnman& connman);
 
     void CheckTimeout();
 

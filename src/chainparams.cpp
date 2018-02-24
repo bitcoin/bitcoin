@@ -187,12 +187,14 @@ public:
             ( 483849, uint256S("0x000001eb7f8124282ab62296e63d3145ff6c84cf18afae4d4b8e02cd3182b6a8"))
             (1066428, uint256S("0x000000012dc5256d977b50270d1ca5642726308dcf26b6c219985edb8f2ab8f6"))
             (1300730, uint256S("0x0000000001fdf11c0b4238b448c9a9643c7862575124fe0d7ee6fe7b5e7dba30"))
-            (1384154, uint256S("0x0000000000fb3c41fb8a955b3c9fca128e57e51834347ea368adbea309fcd265")),
+            (1384154, uint256S("0x0000000000fb3c41fb8a955b3c9fca128e57e51834347ea368adbea309fcd265"))
+       };
 
+       chainTxData = ChainTxData{
             1518000378, // * UNIX timestamp of last checkpoint block
             1652928,    // * total number of transactions between genesis and last checkpoint
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            960.0       // * estimated number of transactions per day after checkpoint
+            0.025       // * estimated number of transactions per second after that timestamp
         };
     }
 };
@@ -291,12 +293,15 @@ public:
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
-            (   0, uint256S("0x0000082f5939c2154dbcba35f784530d12e9d72472fcfaf29674ea312cdf4c83")),
+            (   0, uint256S("0x0000082f5939c2154dbcba35f784530d12e9d72472fcfaf29674ea312cdf4c83"))
+        };
+
+        chainTxData = ChainTxData{
 
             0, // * UNIX timestamp of last checkpoint block
             0,       // * total number of transactions between genesis and last checkpoint
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            0         // * estimated number of transactions per day after checkpoint
+            0.01         // * estimated number of transactions per day after checkpoint
         };
 
     }
@@ -377,7 +382,10 @@ public:
 
         checkpointData = (CCheckpointData){
             boost::assign::map_list_of
-            ( 0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")),
+            ( 0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"))
+        };
+
+        chainTxData = ChainTxData{
             0,
             0,
             0

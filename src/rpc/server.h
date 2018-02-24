@@ -76,6 +76,11 @@ bool RPCIsInWarmup(std::string *statusOut);
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValue::VType>& typesExpected, bool fAllowNull=false);
 
+/**
+ * Type-check one argument; throws JSONRPCError if wrong type given.
+ */
+void RPCTypeCheckArgument(const UniValue& value, UniValue::VType typeExpected);
+
 /*
   Check for expected keys/value types in an Object.
 */
@@ -134,6 +139,7 @@ public:
     std::string name;
     rpcfn_type actor;
     bool okSafeMode;
+    std::vector<std::string> argNames;
 };
 
 /**
@@ -185,7 +191,7 @@ extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKe
 extern int64_t nWalletUnlockTime;
 extern CAmount AmountFromValue(const UniValue& value);
 extern UniValue ValueFromAmount(const CAmount& amount);
-extern double GetDifficulty(const CBlockIndex* blockindex = nullptr);
+extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
 extern std::string HelpRequiringPassphrase();
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);

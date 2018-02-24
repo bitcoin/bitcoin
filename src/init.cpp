@@ -40,6 +40,7 @@
 #include <utilmoneystr.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <warnings.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif
@@ -170,9 +171,9 @@ class CCoinsViewErrorCatcher : public CCoinsViewBacked
 {
 public:
     CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
-    bool GetCoins(const uint256 &txid, CCoins &coins) const {
+    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override {
         try {
-            return CCoinsViewBacked::GetCoins(txid, coins);
+            return CCoinsViewBacked::GetCoin(outpoint, coin);
         } catch(const std::runtime_error& e) {
             uiInterface.ThreadSafeMessageBox(_("Error reading from database, shutting down."), "", CClientUIInterface::MSG_ERROR);
             LogPrintf("Error reading from database: %s\n", e.what());
@@ -186,7 +187,6 @@ public:
     // Writes do not need similar protection, as failure to write is handled by the caller.
 };
 
-static CCoinsViewDB *pcoinsdbview = nullptr;
 static CCoinsViewErrorCatcher *pcoinscatcher = nullptr;
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
@@ -1407,7 +1407,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
 
-    pdsNotificationInterface = new CDSNotificationInterface(&connman);
+    pdsNotificationInterface = new CDSNotificationInterface(connman);
     RegisterValidationInterface(pdsNotificationInterface);
 
     if (mapArgs.count("-maxuploadtarget")) {
@@ -1664,14 +1664,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     // ********************************************************* Step 11a: setup PrivateSend
-    fMasterNode = GetBoolArg("-masternode", false);
+    fMasternodeMode = GetBoolArg("-masternode", false);
 
-    if((fMasterNode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
+    if((fMasternodeMode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
         return InitError("Enabling Masternode support requires turning on transaction indexing."
                   "Please add txindex=1 to your configuration and start with -reindex");
     }
 
-    if(fMasterNode) {
+    if(fMasternodeMode) {
         LogPrintf("MASTERNODE:\n");
 
         if(!GetArg("-masternodeaddr", "").empty()) {
@@ -1730,7 +1730,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     //lite mode disables all Masternode and Darksend related functionality
     fLiteMode = GetBoolArg("-litemode", false);
-    if(fMasterNode && fLiteMode){
+    if(fMasternodeMode && fLiteMode){
         return InitError("You can not start a masternode in litemode");
     }
 
@@ -1791,7 +1791,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 11d: start chaincoin-ps-<smth> threads
 
     threadGroup.create_thread(boost::bind(&ThreadCheckPrivateSend, boost::ref(*g_connman)));
-    if (fMasterNode)
+    if (fMasternodeMode)
         threadGroup.create_thread(boost::bind(&ThreadCheckPrivateSendServer, boost::ref(*g_connman)));
     else
         threadGroup.create_thread(boost::bind(&ThreadCheckPrivateSendClient, boost::ref(*g_connman)));

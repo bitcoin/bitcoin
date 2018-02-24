@@ -43,7 +43,7 @@
 
 //Dash only features
 
-extern bool fMasterNode;
+extern bool fMasternodeMode;
 extern bool fLiteMode;
 extern int nWalletBackups;
 
@@ -66,7 +66,7 @@ extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
 extern bool fServer;
-extern std::string strMiscWarning;
+
 extern bool fLogTimestamps;
 extern bool fLogTimeMicros;
 extern bool fLogThreadNames;
@@ -200,6 +200,11 @@ bool GetBoolArg(const std::string& strArg, bool fDefault);
  * @return true if argument gets set, false if it already had a value
  */
 bool SoftSetArg(const std::string& strArg, const std::string& strValue);
+
+// Forces a arg setting
+void ForceSetArg(const std::string& strArg, const std::string& strValue);
+void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
+void ForceRemoveArg(const std::string& strArg);
 
 /**
  * Set a boolean argument if it doesn't already have a value

@@ -313,6 +313,7 @@ public:
  *      .Finalize()
  */
 uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
+uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
 
 /** ----------- ChainCoin Hash ------------------------------------------------ */
 template<typename T1>

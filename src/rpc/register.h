@@ -21,7 +21,7 @@ void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 /** Register DASH based RPC commands */
-void RegisterDashRPCCommands(CRPCTable &tableRPC);
+void RegisterMasternodeRPCCommands(CRPCTable &tableRPC);
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
@@ -30,7 +30,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterMiscRPCCommands(t);
     RegisterMiningRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
-    RegisterDashRPCCommands(t);
+    RegisterMasternodeRPCCommands(t);
 }
 
 #endif

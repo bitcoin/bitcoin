@@ -26,9 +26,12 @@ extern CInstantSend instantsend;
     (1000/2900.0)**5 = 0.004875397277841433
 */
 static const int INSTANTSEND_CONFIRMATIONS_REQUIRED = 6;
+
+static const int MIN_INSTANTSEND_DEPTH              = 0;
+static const int MAX_INSTANTSEND_DEPTH              = 60;
 static const int DEFAULT_INSTANTSEND_DEPTH          = 5;
 
-static const int MIN_INSTANTSEND_PROTO_VERSION      = 70208;
+static const int MIN_INSTANTSEND_PROTO_VERSION      = 70015;
 
 // For how long we are going to accept votes/locks
 // after we saw the first one for a specific transaction
@@ -65,11 +68,11 @@ private:
 
     bool CreateTxLockCandidate(const CTxLockRequest& txLockRequest);
     void CreateEmptyTxLockCandidate(const uint256& txHash);
-    void Vote(CTxLockCandidate& txLockCandidate, CConnman* connman);
+    void Vote(CTxLockCandidate& txLockCandidate, CConnman& connman);
 
     //process consensus vote message
-    bool ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman* connman);
-    void ProcessOrphanTxLockVotes(CConnman* connman);
+    bool ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman& connman);
+    void ProcessOrphanTxLockVotes(CConnman& connman);
     bool IsEnoughOrphanVotesForTx(const CTxLockRequest& txLockRequest);
     bool IsEnoughOrphanVotesForTxAndOutPoint(const uint256& txHash, const COutPoint& outpoint);
     int64_t GetAverageMasternodeOrphanVoteTime();
@@ -85,10 +88,10 @@ private:
 public:
     CCriticalSection cs_instantsend;
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman* connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
-    bool ProcessTxLockRequest(const CTxLockRequest& txLockRequest, CConnman* connman);
-    void Vote(const uint256& txHash, CConnman* connman);
+    bool ProcessTxLockRequest(const CTxLockRequest& txLockRequest, CConnman& connman);
+    void Vote(const uint256& txHash, CConnman& connman);
 
     bool AlreadyHave(const uint256& hash);
 
@@ -113,28 +116,55 @@ public:
     // verify if transaction lock timed out
     bool IsTxLockCandidateTimedOut(const uint256& txHash);
 
-    void Relay(const uint256& txHash, CConnman* connman);
+    void Relay(const uint256& txHash, CConnman& connman);
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
-    void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
+    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock);
 
     std::string ToString();
 };
 
-class CTxLockRequest : public CTransaction
+class CTxLockRequest
 {
 private:
-    static const CAmount MIN_FEE            = 0.001 * COIN;
+    static const CAmount MIN_FEE            = 0.0001 * COIN;
 
 public:
     static const int WARN_MANY_INPUTS       = 100;
 
-    CTxLockRequest() = default;
-    CTxLockRequest(const CTransaction& tx) : CTransaction(tx) {}
+    CTransactionRef tx;
+
+    CTxLockRequest() : tx(MakeTransactionRef()) {}
+    CTxLockRequest(const CTransaction& _tx) : tx(MakeTransactionRef(_tx)) {};
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(tx);
+    }
 
     bool IsValid() const;
     CAmount GetMinFee() const;
     int GetMaxSignatures() const;
+
+    const uint256 &GetHash() const {
+        return tx->GetHash();
+    }
+
+    std::string ToString() const {
+        return tx->ToString();
+    }
+
+    friend bool operator==(const CTxLockRequest& a, const CTxLockRequest& b)
+    {
+        return *a.tx == *b.tx;
+    }
+
+    friend bool operator!=(const CTxLockRequest& a, const CTxLockRequest& b)
+    {
+        return *a.tx != *b.tx;
+    }
 
     explicit operator bool() const
     {
@@ -179,16 +209,19 @@ public:
         READWRITE(txHash);
         READWRITE(outpoint);
         READWRITE(outpointMasternode);
-        READWRITE(vchMasternodeSignature);
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(vchMasternodeSignature);
+        }
     }
 
     uint256 GetHash() const;
+    uint256 GetSignatureHash() const;
 
     uint256 GetTxHash() const { return txHash; }
     COutPoint GetOutpoint() const { return outpoint; }
     COutPoint GetMasternodeOutpoint() const { return outpointMasternode; }
 
-    bool IsValid(CNode* pnode, CConnman* connman) const;
+    bool IsValid(CNode* pnode, CConnman& connman) const;
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
     bool IsExpired(int nHeight) const;
     bool IsTimedOut() const;
@@ -197,7 +230,7 @@ public:
     bool Sign();
     bool CheckSignature() const;
 
-    void Relay(CConnman* connman) const;
+    void Relay(CConnman& connman) const;
 };
 
 class COutPointLock
@@ -225,7 +258,7 @@ public:
     bool IsReady() const { return !fAttacked && CountVotes() >= SIGNATURES_REQUIRED; }
     void MarkAsAttacked() { fAttacked = true; }
 
-    void Relay(CConnman* connman) const;
+    void Relay(CConnman& connman) const;
 };
 
 class CTxLockCandidate
@@ -259,7 +292,7 @@ public:
     bool IsExpired(int nHeight) const;
     bool IsTimedOut() const;
 
-    void Relay(CConnman* connman) const;
+    void Relay(CConnman& connman) const;
 };
 
 #endif

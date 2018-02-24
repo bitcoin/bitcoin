@@ -15,9 +15,9 @@
 
 //! These need to be macros, as clientversion.cpp's and chaincoin*-res.rc's voodoo requires it
 #define CLIENT_VERSION_MAJOR 0
-#define CLIENT_VERSION_MINOR 13
-#define CLIENT_VERSION_REVISION 3
-#define CLIENT_VERSION_BUILD 99
+#define CLIENT_VERSION_MINOR 14
+#define CLIENT_VERSION_REVISION 99
+#define CLIENT_VERSION_BUILD 0
 
 //! Set to true for release, false for prerelease or test build
 #define CLIENT_VERSION_IS_RELEASE false

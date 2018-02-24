@@ -6,15 +6,16 @@
 #include <masternode.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
+#include <netbase.h>
 #include <protocol.h>
 
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
 
-void CActiveMasternode::ManageState(CConnman* connman)
+void CActiveMasternode::ManageState(CConnman& connman)
 {
     LogPrint("masternode", "CActiveMasternode::ManageState -- Start\n");
-    if(!fMasterNode) {
+    if(!fMasternodeMode) {
         LogPrint("masternode", "CActiveMasternode::ManageState -- Not a masternode, returning\n");
         return;
     }
@@ -80,7 +81,7 @@ std::string CActiveMasternode::GetTypeString() const
     return strType;
 }
 
-bool CActiveMasternode::SendMasternodePing(CConnman* connman)
+bool CActiveMasternode::SendMasternodePing(CConnman& connman)
 {
     if(!fPingerEnabled) {
         LogPrint("masternode", "CActiveMasternode::SendMasternodePing -- %s: masternode ping service is disabled, skipping...\n", GetStateString());
@@ -125,7 +126,7 @@ bool CActiveMasternode::UpdateSentinelPing(int version)
     return true;
 }
 
-void CActiveMasternode::ManageStateInitial(CConnman* connman)
+void CActiveMasternode::ManageStateInitial(CConnman& connman)
 {
     LogPrint("masternode", "CActiveMasternode::ManageStateInitial -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
 
@@ -143,7 +144,7 @@ void CActiveMasternode::ManageStateInitial(CConnman* connman)
     if(!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        connman->ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty, this](CNode* pnode) {
+        connman.ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty, this](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
                 fFoundLocal = GetLocal(service, &pnode->addr) && CMasternode::IsValidNetAddr(service);
@@ -180,9 +181,13 @@ void CActiveMasternode::ManageStateInitial(CConnman* connman)
         return;
     }
 
+    // Check socket connectivity
     LogPrintf("CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
+    SOCKET hSocket;
+    bool fConnected = ConnectSocket(service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
+    CloseSocket(hSocket);
 
-    if(!connman->ConnectNode(CAddress(service, NODE_NETWORK), nullptr, true)) {
+    if (!fConnected) {
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
         strNotCapableReason = "Could not connect to " + service.ToString();
         LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
@@ -223,7 +228,7 @@ void CActiveMasternode::ManageStateRemote()
         }
         if(nState != ACTIVE_MASTERNODE_STARTED) {
             LogPrintf("CActiveMasternode::ManageStateRemote -- STARTED!\n");
-            outpoint = infoMn.vin.prevout;
+            outpoint = infoMn.outpoint;
             service = infoMn.addr;
             fPingerEnabled = true;
             nState = ACTIVE_MASTERNODE_STARTED;

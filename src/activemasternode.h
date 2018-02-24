@@ -26,7 +26,7 @@ class CActiveMasternode
 public:
     enum masternode_type_enum_t {
         MASTERNODE_UNKNOWN = 0,
-        MASTERNODE_REMOTE  = 1,
+        MASTERNODE_REMOTE  = 1
     };
 
 private:
@@ -38,7 +38,7 @@ private:
     bool fPingerEnabled;
 
     /// Ping Masternode
-    bool SendMasternodePing(CConnman* connman);
+    bool SendMasternodePing(CConnman& connman);
 
     //  sentinel ping data
     int64_t nSentinelPingTime;
@@ -68,7 +68,7 @@ public:
     {}
 
     /// Manage state of active Masternode
-    void ManageState(CConnman* connman);
+    void ManageState(CConnman& connman);
 
     std::string GetStateString() const;
     std::string GetStatus() const;
@@ -77,7 +77,7 @@ public:
     bool UpdateSentinelPing(int version);
 
 private:
-    void ManageStateInitial(CConnman* connman);
+    void ManageStateInitial(CConnman& connman);
     void ManageStateRemote();
 };
 

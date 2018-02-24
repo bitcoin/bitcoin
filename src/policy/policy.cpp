@@ -7,27 +7,51 @@
 
 #include <policy/policy.h>
 
+#include <consensus/validation.h>
 #include <validation.h>
+#include <coins.h>
 #include <tinyformat.h>
 #include <util.h>
 #include <utilstrencodings.h>
 
-/**
- * Check transaction inputs to mitigate two
- * potential denial-of-service attacks:
- *
- * 1. scriptSigs with extra data stuffed into them,
- *    not consumed by scriptPubKey (or P2SH script)
- * 2. P2SH scripts with a crazy number of expensive
- *    CHECKSIG/CHECKMULTISIG operations
- *
- * Why bother? To avoid denial-of-service attacks; an attacker
- * can submit a standard HASH... OP_EQUAL transaction,
- * which will get accepted into blocks. The redemption
- * script can be anything; an attacker could use a very
- * expensive-to-check-upon-redemption script like:
- *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
- */
+CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
+{
+    // "Dust" is defined in terms of dustRelayFee,
+    // which has units satoshis-per-kilobyte.
+    // If you'd pay more in fees than the value of the output
+    // to spend something, then we consider it dust.
+    // A typical spendable non-segwit txout is 34 bytes big, and will
+    // need a CTxIn of at least 148 bytes to spend:
+    // so dust is a spendable txout less than
+    // 182*dustRelayFee/1000 (in satoshis).
+    // 546 satoshis at the default rate of 3000 sat/kB.
+    // A typical spendable segwit txout is 31 bytes big, and will
+    // need a CTxIn of at least 67 bytes to spend:
+    // so dust is a spendable txout less than
+    // 98*dustRelayFee/1000 (in satoshis).
+    // 294 satoshis at the default rate of 3000 sat/kB.
+    if (txout.scriptPubKey.IsUnspendable())
+        return 0;
+
+    size_t nSize = GetSerializeSize(txout, SER_DISK, 0);
+    int witnessversion = 0;
+    std::vector<unsigned char> witnessprogram;
+
+    if (txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+        // sum the sizes of the parts of a transaction input
+        // with 75% segwit discount applied to the script size.
+        nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+    } else {
+        nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
+    }
+
+    return dustRelayFeeIn.GetFee(nSize);
+}
+
+bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
+{
+    return (txout.nValue < GetDustThreshold(txout, dustRelayFeeIn));
+}
 
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool witnessEnabled)
 {
@@ -118,6 +142,22 @@ if (nDataOut > 1) {
 return true;
 }
 
+/**
+ * Check transaction inputs to mitigate two
+ * potential denial-of-service attacks:
+ *
+ * 1. scriptSigs with extra data stuffed into them,
+ *    not consumed by scriptPubKey (or P2SH script)
+ * 2. P2SH scripts with a crazy number of expensive
+ *    CHECKSIG/CHECKMULTISIG operations
+ *
+ * Why bother? To avoid denial-of-service attacks; an attacker
+ * can submit a standard HASH... OP_EQUAL transaction,
+ * which will get accepted into blocks. The redemption
+ * script can be anything; an attacker could use a very
+ * expensive-to-check-upon-redemption script like:
+ *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
+ */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
 if (tx.IsCoinBase())
@@ -125,7 +165,7 @@ if (tx.IsCoinBase())
 
 for (unsigned int i = 0; i < tx.vin.size(); i++)
 {
-    const CTxOut& prev = mapInputs.GetOutputFor(tx.vin[i]);
+    const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
     std::vector<std::vector<unsigned char> > vSolutions;
     txnouttype whichType;
@@ -164,7 +204,7 @@ for (unsigned int i = 0; i < tx.vin.size(); i++)
     if (tx.wit.vtxinwit[i].IsNull())
         continue;
 
-    const CTxOut &prev = mapInputs.GetOutputFor(tx.vin[i]);
+    const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
     // get the scriptPubKey corresponding to this input:
     CScript prevScript = prev.scriptPubKey;
@@ -204,6 +244,8 @@ for (unsigned int i = 0; i < tx.vin.size(); i++)
 return true;
 }
 
+CFeeRate incrementalRelayFee = CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE);
+CFeeRate dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
 unsigned int nBytesPerSigOp = DEFAULT_BYTES_PER_SIGOP;
 
 int64_t GetVirtualTransactionSize(int64_t nWeight, int64_t nSigOpCost)

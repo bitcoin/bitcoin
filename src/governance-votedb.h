@@ -8,9 +8,10 @@
 #include <list>
 #include <map>
 
-#include "governance-vote.h"
-#include "serialize.h"
-#include "uint256.h"
+#include <governance-vote.h>
+#include <serialize.h>
+#include <streams.h>
+#include <uint256.h>
 
 /**
  * Represents the collection of votes associated with a given CGovernanceObject
@@ -62,15 +63,13 @@ public:
     /**
      * Retrieve a vote cached in memory
      */
-    bool GetVote(const uint256& nHash, CGovernanceVote& vote) const;
+    bool SerializeVoteToStream(const uint256& nHash, CDataStream& ss) const;
 
     int GetVoteCount() {
         return nMemoryVotes;
     }
 
     std::vector<CGovernanceVote> GetVotes() const;
-
-    CGovernanceObjectVoteFile& operator=(const CGovernanceObjectVoteFile& other);
 
     void RemoveVotesFromMasternode(const COutPoint& outpointMasternode);
 

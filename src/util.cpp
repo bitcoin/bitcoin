@@ -104,7 +104,7 @@ namespace boost {
 using namespace std;
 
 //Dash only features
-bool fMasterNode = false;
+bool fMasternodeMode = false;
 bool fLiteMode = false;
 /**
     nWalletBackups:
@@ -126,7 +126,7 @@ bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
 bool fDaemon = false;
 bool fServer = false;
-string strMiscWarning;
+
 bool fLogTimestamps = DEFAULT_LOGTIMESTAMPS;
 bool fLogTimeMicros = DEFAULT_LOGTIMEMICROS;
 bool fLogThreadNames = DEFAULT_LOGTHREADNAMES;
@@ -472,6 +472,25 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue)
         return SoftSetArg(strArg, std::string("1"));
     else
         return SoftSetArg(strArg, std::string("0"));
+}
+
+void ForceSetArg(const std::string& strArg, const std::string& strValue)
+{
+    LOCK(cs_args);
+    mapArgs[strArg] = strValue;
+}
+
+void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values)
+{
+    LOCK(cs_args);
+    _mapMultiArgs[strArg] = values;
+}
+
+void ForceRemoveArg(const std::string& strArg)
+{
+    LOCK(cs_args);
+    mapArgs.erase(strArg);
+    _mapMultiArgs.erase(strArg);
 }
 
 static const int screenWidth = 79;
@@ -1010,3 +1029,4 @@ std::string CopyrightHolders(const std::string& strPrefix)
     }
     return strCopyrightHolders;
 }
+

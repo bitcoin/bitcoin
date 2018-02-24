@@ -18,7 +18,7 @@
 #define CLIENT_VERSION_MAJOR 0
 
 /* Minor version */
-#define CLIENT_VERSION_MINOR 13
+#define CLIENT_VERSION_MINOR 14
 
 /* Build revision */
 #define CLIENT_VERSION_REVISION 99
@@ -324,7 +324,7 @@
 #define PACKAGE_NAME "Chaincoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Chaincoin Core 0.13.99"
+#define PACKAGE_STRING "Chaincoin Core 0.14.99"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "chaincoincore"
@@ -333,7 +333,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.13.99"
+#define PACKAGE_VERSION "0.14.99"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */

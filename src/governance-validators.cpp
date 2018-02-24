@@ -2,15 +2,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "governance-validators.h"
+#include <governance-validators.h>
 
-#include "base58.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <utilstrencodings.h>
 
 #include <algorithm>
 
 CProposalValidator::CProposalValidator(const std::string& strDataHexIn)
-    : strData(),
+    : strDataHex(),
       objJSON(UniValue::VOBJ),
       fJSONValid(false),
       strErrorMessages()
@@ -22,7 +22,7 @@ CProposalValidator::CProposalValidator(const std::string& strDataHexIn)
 
 void CProposalValidator::Clear()
 {
-    strData = std::string();
+    strDataHex = std::string();
     objJSON = UniValue(UniValue::VOBJ);
     fJSONValid = false;
     strErrorMessages = std::string();
@@ -31,7 +31,7 @@ void CProposalValidator::Clear()
 void CProposalValidator::SetHexData(const std::string& strDataHexIn)
 {
     std::vector<unsigned char> v = ParseHex(strDataHexIn);
-    strData = std::string(v.begin(), v.end());
+    strDataHex = std::string(v.begin(), v.end());
     ParseJSONData();
 }
 
@@ -154,23 +154,14 @@ bool CProposalValidator::ValidatePaymentAddress()
         return false;
     }
 
-    static const std::string base58chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-
-    size_t nLength = strPaymentAddress.size();
-
-    if((nLength < 26) || (nLength > 35)) {
-        strErrorMessages += "incorrect payment_address length;";
-        return false;
-    }
-
-    if(strPaymentAddress.find_first_not_of(base58chars) != std::string::npos) {
-        strErrorMessages += "payment_address contains invalid characters;";
-        return false;
-    }
-
     CBitcoinAddress address(strPaymentAddress);
     if(!address.IsValid()) {
         strErrorMessages += "payment_address is invalid;";
+        return false;
+    }
+
+    if(address.IsScript()) {
+        strErrorMessages += "script addresses are not supported;";
         return false;
     }
 
@@ -204,13 +195,13 @@ void CProposalValidator::ParseJSONData()
 {
     fJSONValid = false;
 
-    if(strData.empty()) {
+    if(strDataHex.empty()) {
         return;
     }
 
     try {
         UniValue obj(UniValue::VOBJ);
-        obj.read(strData);
+        obj.read(strDataHex);
         std::vector<UniValue> arr1 = obj.getValues();
         std::vector<UniValue> arr2 = arr1.at(0).getValues();
         objJSON = arr2.at(1);

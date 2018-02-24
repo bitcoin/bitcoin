@@ -5,11 +5,9 @@
 #ifndef GOVERNANCE_MISC_H
 #define GOVERNANCE_MISC_H
 
-#include "validation.h"
-#include "governance.h"
-#include "init.h"
-
-using namespace std;
+#include <validation.h>
+#include <governance.h>
+#include <init.h>
 
 class CGovernanceVote;
 

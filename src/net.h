@@ -151,13 +151,17 @@ public:
     bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
     bool GetNetworkActive() const { return fNetworkActive; }
     void SetNetworkActive(bool active);
-    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false); bool CheckIncomingNonce(uint64_t nonce);
+    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false, bool fAddnode = false, bool fConnectToMasternode = false);
+    bool OpenMasternodeConnection(const CAddress& addrConnect);
+    bool CheckIncomingNonce(uint64_t nonce);
 
-    // fConnectToMasternode should be 'true' only if you want this node to allow to connect to itself
-    // and/or you want it to be disconnected on CMasternodeMan::ProcessMasternodeConnections()
-    // Unfortunately, can't make this method private like in Bitcoin,
-    // because it's used in many Dash-specific places (masternode, privatesend).
-    CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool fConnectToMasternode = false);
+    struct CFullyConnectedOnly {
+        bool operator() (const CNode* pnode) const {
+            return NodeFullyConnected(pnode);
+        }
+    };
+
+    constexpr static const CFullyConnectedOnly FullyConnectedOnly{};
 
     struct CAllNodes {
         bool operator() (const CNode*) const {return true;}
@@ -165,31 +169,36 @@ public:
 
     constexpr static const CAllNodes AllNodes{};
 
-    bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
-    bool ForNode(const CService& addr, std::function<bool(CNode* pnode)> func);
     bool ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
     bool ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
+
+    template<typename Callable>
+    bool ForNode(const CService& addr, Callable&& func)
+    {
+        return ForNode(addr, FullyConnectedOnly, func);
+    }
+
+    template<typename Callable>
+    bool ForNode(NodeId id, Callable&& func)
+    {
+        return ForNode(id, FullyConnectedOnly, func);
+    }
+
+    bool IsConnected(const CService& addr, std::function<bool(const CNode* pnode)> cond)
+    {
+        return ForNode(addr, cond, [](CNode* pnode){
+            return true;
+        });
+    }
+
+    bool IsMasternodeOrDisconnectRequested(const CService& addr);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
     template<typename Callable>
     bool ForEachNodeContinueIf(Callable&& func)
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
-            if(!func(node))
-                return false;
-        return true;
-    }
-
-    template<typename Callable>
-    bool ForEachNodeContinueIf(Callable&& func) const
-    {
-        LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
-            if(!func(node))
-                return false;
-        return true;
+        return ForEachNodeContinueIf(FullyConnectedOnly, func);
     }
 
     template<typename Condition, typename Callable>
@@ -201,6 +210,12 @@ public:
                 if(!func(node))
                     return false;
         return true;
+    };
+
+    template<typename Callable>
+    bool ForEachNodeContinueIf(Callable&& func) const
+    {
+        return ForEachNodeContinueIf(FullyConnectedOnly, func);
     }
 
     template<typename Condition, typename Callable>
@@ -211,69 +226,65 @@ public:
             if (cond(node))
                 func(node);
         }
-    }
-
-    template<typename Callable, typename CallableAfter>
-    bool ForEachNodeContinueIfThen(Callable&& pre, CallableAfter&& post)
-    {
-        bool ret = true;
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
-            if(!pre(node)) {
-                ret = false;
-                break;
-            }
-        post();
-        return ret;
     };
-    template<typename Callable, typename CallableAfter>
-    bool ForEachNodeContinueIfThen(Callable&& pre, CallableAfter&& post) const
-    {
-        bool ret = true;
-        LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
-            if(!pre(node)) {
-                ret = false;
-                break;
-            }
-        post();
-        return ret;
-    }
 
     template<typename Callable>
     void ForEachNode(Callable&& func)
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
-            func(node);
+        ForEachNode(FullyConnectedOnly, func);
     }
+
+    template<typename Condition, typename Callable>
+    void ForEachNode(const Condition& cond, Callable&& func) const
+    {
+        LOCK(cs_vNodes);
+        for (auto&& node : vNodes) {
+            if (cond(node))
+                func(node);
+        }
+    };
 
     template<typename Callable>
     void ForEachNode(Callable&& func) const
     {
-        LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
-            func(node);
+        ForEachNode(FullyConnectedOnly, func);
     }
+
+    template<typename Condition, typename Callable, typename CallableAfter>
+    void ForEachNodeThen(const Condition& cond, Callable&& pre, CallableAfter&& post)
+    {
+        LOCK(cs_vNodes);
+        for (auto&& node : vNodes) {
+            if (cond(node))
+                pre(node);
+        }
+        post();
+    };
 
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
-            pre(node);
-        post();
+        ForEachNodeThen(FullyConnectedOnly, pre, post);
     }
+
+    template<typename Condition, typename Callable, typename CallableAfter>
+    void ForEachNodeThen(const Condition& cond, Callable&& pre, CallableAfter&& post) const
+    {
+        LOCK(cs_vNodes);
+        for (auto&& node : vNodes) {
+            if (cond(node))
+                pre(node);
+        }
+        post();
+    };
 
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
     {
-        LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
-            pre(node);
-        post();
+        ForEachNodeThen(FullyConnectedOnly, pre, post);
     }
 
+    std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
     std::vector<CNode*> CopyNodeVector();
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
@@ -317,6 +328,7 @@ public:
 
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);
+    bool AddPendingMasternode(const CService& addr);
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
     size_t GetNodeCount(NumConnections num);
@@ -390,6 +402,7 @@ private:
     CNode* FindNode(const CService& addr);
 
     bool AttemptToEvictConnection();
+    CNode* ConnectNode(CAddress addrConnect, const char *pszDest = NULL, bool fCountFailure = false);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
     void DeleteNode(CNode* pnode);
@@ -410,6 +423,9 @@ private:
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes);
+
+    // Whether the node should be passed out in ForEach* callbacks
+    static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
     CCriticalSection cs_totalBytesRecv;
@@ -442,6 +458,8 @@ private:
     CCriticalSection cs_vOneShots;
     std::vector<std::string> vAddedNodes;
     CCriticalSection cs_vAddedNodes;
+    std::vector<CService> vPendingMasternodes;
+    CCriticalSection cs_vPendingMasternodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
@@ -575,6 +593,7 @@ public:
     int nVersion;
     std::string cleanSubVer;
     bool fInbound;
+    bool fAddnode;
     int nStartingHeight;
     uint64_t nSendBytes;
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -649,6 +668,8 @@ public:
     uint64_t nSendBytes;
     std::deque<std::vector<unsigned char>> vSendMsg;
     CCriticalSection cs_vSend;
+    CCriticalSection cs_hSocket;
+    CCriticalSection cs_vRecv;
 
     CCriticalSection cs_vProcessMsg;
     std::list<CNetMessage> vProcessMsg;
@@ -658,22 +679,22 @@ public:
     uint64_t nRecvBytes;
     std::atomic<int> nRecvVersion;
 
-    int64_t nLastSend;
-    int64_t nLastRecv;
-    int64_t nTimeConnected;
-    int64_t nTimeOffset;
+    std::atomic<int64_t> nLastSend;
+    std::atomic<int64_t> nLastRecv;
+    const int64_t nTimeConnected;
+    std::atomic<int64_t> nTimeOffset;
     const CAddress addr;
-    std::string addrName;
-    CService addrLocal;
     int nVersion;
     // strSubVer is whatever byte array we read from the wire. However, this field is intended
     // to be printed out, displayed to humans in various forms and so on. So we sanitize it and
     // store the sanitized version in cleanSubVer. The original should be used when dealing with
     // the network or wire types and the cleaned string used when displayed or logged.
     std::string strSubVer, cleanSubVer;
+    CCriticalSection cs_SubVer; // used for both cleanSubVer and strSubVer
     bool fWhitelisted; // This peer can bypass DoS banning.
     bool fFeeler; // If true this node is being used as a short lived feeler.
     bool fOneShot;
+    bool fAddnode;
     bool fClient;
     const bool fInbound;
     bool fSuccessfullyConnected;
@@ -769,6 +790,12 @@ private:
     const int nMyStartingHeight;
     int nSendVersion;
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
+
+    mutable CCriticalSection cs_addrName;
+    std::string addrName;
+
+    CService addrLocal;
+    mutable CCriticalSection cs_addrLocal;
 public:
 
     NodeId GetId() const {
@@ -799,25 +826,12 @@ public:
     {
         return nRecvVersion;
     }
-    void SetSendVersion(int nVersionIn)
-    {
-        // Send version may only be changed in the version message, and
-        // only one version message is allowed per session. We can therefore
-        // treat this value as const and even atomic as long as it's only used
-        // once the handshake is complete. Any attempt to set this twice is an
-        // error.
-        assert(nSendVersion == 0);
-        nSendVersion = nVersionIn;
-    }
+    void SetSendVersion(int nVersionIn);
+    int GetSendVersion() const;
 
-    int GetSendVersion() const
-    {
-        // The send version should always be explicitly set to
-        // INIT_PROTO_VERSION rather than using this value until the handshake
-        // is complete.
-        assert(nSendVersion != 0);
-        return nSendVersion;
-    }
+    CService GetAddrLocal() const;
+    //! May not be called more than once
+    void SetAddrLocal(const CService& addrLocalIn);
 
     CNode* AddRef()
     {
@@ -888,6 +902,15 @@ public:
     {
         return nLocalServices;
     }
+    std::string GetAddrName() const;
+    //! Sets the addrName only if it was not previously set
+    void MaybeSetAddrName(const std::string& addrNameIn);
+};
+
+class CExplicitNetCleanup
+{
+public:
+    static void callCleanup();
 };
 
 
