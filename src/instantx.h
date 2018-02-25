@@ -69,9 +69,11 @@ private:
     void Vote(CTxLockCandidate& txLockCandidate, CConnman& connman);
 
     //process consensus vote message
-    bool ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman& connman);
-    void ProcessOrphanTxLockVotes(CConnman& connman);
-    bool IsEnoughOrphanVotesForTx(const CTxLockRequest& txLockRequest);
+    bool ProcessNewTxLockVote(CNode* pfrom, const CTxLockVote& vote, CConnman& connman);
+
+    void UpdateVotedOutpoints(const CTxLockVote& vote, CTxLockCandidate& txLockCandidate);
+    bool ProcessOrphanTxLockVote(const CTxLockVote& vote);
+    void ProcessOrphanTxLockVotes();
     bool IsEnoughOrphanVotesForTxAndOutPoint(const uint256& txHash, const COutPoint& outpoint);
     int64_t GetAverageMasternodeOrphanVoteTime();
 
