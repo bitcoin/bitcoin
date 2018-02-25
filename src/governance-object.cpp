@@ -447,9 +447,11 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
     }
 
     switch(nObjectType) {
+        case GOVERNANCE_OBJECT_WATCHDOG:
+            // watchdogs are deprecated
+            return false;
         case GOVERNANCE_OBJECT_PROPOSAL:
         case GOVERNANCE_OBJECT_TRIGGER:
-        case GOVERNANCE_OBJECT_WATCHDOG:
             if (vchData.size() > MAX_GOVERNANCE_OBJECT_DATA_SIZE) {
                 strError = strprintf("Invalid object size %d", vchData.size());
                 return false;
@@ -465,7 +467,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
     // CHECK COLLATERAL IF REQUIRED (HIGH CPU USAGE)
 
     if(fCheckCollateral) { 
-        if((nObjectType == GOVERNANCE_OBJECT_TRIGGER) || (nObjectType == GOVERNANCE_OBJECT_WATCHDOG)) {
+        if(nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
             std::string strOutpoint = masternodeOutpoint.ToStringShort();
             masternode_info_t infoMn;
             if(!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
