@@ -138,9 +138,9 @@ size_t ClientModel::getMempoolDynamicUsage() const
 double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
 {
     CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
+    LOCK(cs_main);
     if (!tip)
     {
-        LOCK(cs_main);
         tip = chainActive.Tip();
     }
     return GuessVerificationProgress(Params().TxData(), tip);
