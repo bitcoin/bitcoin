@@ -85,12 +85,12 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
     nBlockMaxWeight = DEFAULT_BLOCK_MAX_WEIGHT;
     nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
     bool fWeightSet = false;
-    if (mapArgs.count("-blockmaxweight")) {
+    if (IsArgSet("-blockmaxweight")) {
         nBlockMaxWeight = GetArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
         nBlockMaxSize = MAX_BLOCK_SERIALIZED_SIZE;
         fWeightSet = true;
     }
-    if (mapArgs.count("-blockmaxsize")) {
+    if (IsArgSet("-blockmaxsize")) {
         nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
         if (!fWeightSet) {
             nBlockMaxWeight = nBlockMaxSize * WITNESS_SCALE_FACTOR;
@@ -248,7 +248,7 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
     for (const CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
-        if (!fIncludeWitness && !it->GetTx().wit.IsNull())
+        if (!fIncludeWitness && it->GetTx().HasWitness())
             return false;
         if (fNeedSizeAccounting) {
             uint64_t nTxSize = ::GetSerializeSize(it->GetTx(), SER_NETWORK, PROTOCOL_VERSION);
@@ -557,7 +557,7 @@ void BlockAssembler::addPriorityTxs()
         }
 
         // cannot accept witness transactions into a non-witness block
-        if (!fIncludeWitness && !iter->GetTx().wit.IsNull())
+        if (!fIncludeWitness && iter->GetTx().HasWitness())
             continue;
 
         // If tx is dependent on other mempool txs which haven't yet been included

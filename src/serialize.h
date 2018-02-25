@@ -61,35 +61,6 @@ inline T* NCONST_PTR(const T* val)
 }
 
 /**
- * Get begin pointer of vector (non-const version).
- * @note These functions avoid the undefined case of indexing into an empty
- * vector, as well as that of indexing after the end of the vector.
- */
-template <typename V>
-inline typename V::value_type* begin_ptr(V& v)
-{
-    return v.empty() ? nullptr : &v[0];
-}
-/** Get begin pointer of vector (const version) */
-template <typename V>
-inline const typename V::value_type* begin_ptr(const V& v)
-{
-    return v.empty() ? nullptr : &v[0];
-}
-/** Get end pointer of vector (non-const version) */
-template <typename V>
-inline typename V::value_type* end_ptr(V& v)
-{
-    return v.empty() ? nullptr : (&v[0] + v.size());
-}
-/** Get end pointer of vector (const version) */
-template <typename V>
-inline const typename V::value_type* end_ptr(const V& v)
-{
-    return v.empty() ? nullptr : (&v[0] + v.size());
-}
-
-/*
  * Lowest-level serialization and conversion.
  * @note Sizes of these types are verified in the tests
  */

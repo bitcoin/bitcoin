@@ -119,8 +119,10 @@ const char * const BITCOIN_CONF_FILENAME = "chaincoin.conf";
 const char * const BITCOIN_PID_FILENAME = "chaincoind.pid";
 const char * const MASTERNODE_CONF_FILENAME = "masternode.conf";
 
+CCriticalSection cs_args;
 map<string, string> mapArgs;
-map<string, vector<string> > mapMultiArgs;
+static map<string, vector<string> > _mapMultiArgs;
+const map<string, vector<string> >& mapMultiArgs = _mapMultiArgs;
 bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
@@ -264,24 +266,28 @@ bool LogAcceptCategory(const char* category)
 
         if (ptrCategory.get() == nullptr)
         {
-            std::string strThreadName = GetThreadName();
-            LogPrintf("debug turned on:\n");
-            for (int i = 0; i < (int)mapMultiArgs["-debug"].size(); ++i)
-                LogPrintf("  thread %s category %s\n", strThreadName, mapMultiArgs["-debug"][i]);
-            const vector<string>& categories = mapMultiArgs["-debug"];
-            ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
-            // thread_specific_ptr automatically deletes the set when the thread ends.
-            // "chaincoin" is a composite category enabling all Dash-related debug output
-            if(ptrCategory->count(string("chaincoin"))) {
-                ptrCategory->insert(string("privatesend"));
-                ptrCategory->insert(string("instantsend"));
-                ptrCategory->insert(string("masternode"));
-                ptrCategory->insert(string("keepass"));
-                ptrCategory->insert(string("mnpayments"));
-                ptrCategory->insert(string("gobject"));
+            if (mapMultiArgs.count("-debug")) {
+                std::string strThreadName = GetThreadName();
+                LogPrintf("debug turned on:\n");
+                for (int i = 0; i < (int)mapMultiArgs.at("-debug").size(); ++i)
+                    LogPrintf("  thread %s category %s\n", strThreadName, mapMultiArgs.at("-debug")[i]);
+                const std::vector<std::string>& categories = mapMultiArgs.at("-debug");
+                ptrCategory.reset(new std::set<std::string>(categories.begin(), categories.end()));
+                // thread_specific_ptr automatically deletes the set when the thread ends.
+                // "dash" is a composite category enabling all Dash-related debug output
+                if(ptrCategory->count(std::string("chaincoin"))) {
+                    ptrCategory->insert(std::string("privatesend"));
+                    ptrCategory->insert(std::string("instantsend"));
+                    ptrCategory->insert(std::string("masternode"));
+                    ptrCategory->insert(std::string("keepass"));
+                    ptrCategory->insert(std::string("mnpayments"));
+                    ptrCategory->insert(std::string("gobject"));
+                }
+            } else {
+                ptrCategory.reset(new std::set<std::string>());
             }
         }
-        const set<string>& setCategories = *ptrCategory.get();
+        const std::set<std::string>& setCategories = *ptrCategory.get();
 
         // if not debugging everything and not debugging specific category, LogPrint does nothing.
         if (setCategories.count(string("")) == 0 &&
@@ -404,8 +410,9 @@ static void InterpretNegativeSetting(std::string& strKey, std::string& strValue)
 
 void ParseParameters(int argc, const char* const argv[])
 {
+    LOCK(cs_args);
     mapArgs.clear();
-    mapMultiArgs.clear();
+    _mapMultiArgs.clear();
 
     for (int i = 1; i < argc; i++)
     {
@@ -437,8 +444,15 @@ void ParseParameters(int argc, const char* const argv[])
     }
 }
 
+bool IsArgSet(const std::string& strArg)
+{
+    LOCK(cs_args);
+    return mapArgs.count(strArg);
+}
+
 std::string GetArg(const std::string& strArg, const std::string& strDefault)
 {
+    LOCK(cs_args);
     if (mapArgs.count(strArg))
         return mapArgs[strArg];
     return strDefault;
@@ -446,6 +460,7 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault)
 
 int64_t GetArg(const std::string& strArg, int64_t nDefault)
 {
+    LOCK(cs_args);
     if (mapArgs.count(strArg))
         return atoi64(mapArgs[strArg]);
     return nDefault;
@@ -453,6 +468,7 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault)
 
 bool GetBoolArg(const std::string& strArg, bool fDefault)
 {
+    LOCK(cs_args);
     if (mapArgs.count(strArg))
         return InterpretBool(mapArgs[strArg]);
     return fDefault;
@@ -460,6 +476,7 @@ bool GetBoolArg(const std::string& strArg, bool fDefault)
 
 bool SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
+    LOCK(cs_args);
     if (mapArgs.count(strArg))
         return false;
     mapArgs[strArg] = strValue;
@@ -575,8 +592,8 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     if (!path.empty())
         return path;
 
-    if (mapArgs.count("-datadir")) {
-        path = fs::system_complete(mapArgs["-datadir"]);
+    if (IsArgSet("-datadir")) {
+        path = fs::system_complete(GetArg("-datadir", ""));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -590,6 +607,14 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     fs::create_directories(path);
 
     return path;
+}
+
+void ClearDatadirCache()
+{
+    LOCK(csPathCached);
+
+    pathCached = boost::filesystem::path();
+    pathCachedNetSpecific = boost::filesystem::path();
 }
 
 static boost::filesystem::path backupsDirCached;
@@ -620,12 +645,6 @@ const boost::filesystem::path &GetBackupsDir()
     return backupsDir;
 }
 
-void ClearDatadirCache()
-{
-    pathCached = boost::filesystem::path();
-    pathCachedNetSpecific = boost::filesystem::path();
-}
-
 boost::filesystem::path GetConfigFile(const std::string& confPath)
 {
     boost::filesystem::path pathConfigFile(confPath);
@@ -644,26 +663,27 @@ boost::filesystem::path GetMasternodeConfigFile(const std::string& confPath)
     return pathConfigFile;
 }
 
-void ReadConfigFile(const std::string& confPath,
-                    map<string, string>& mapSettingsRet,
-                    map<string, vector<string> >& mapMultiSettingsRet)
+void ReadConfigFile(const std::string& confPath)
 {
     boost::filesystem::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good())
         return; // No chaincoin.conf file is OK
 
-    set<string> setOptions;
-    setOptions.insert("*");
-
-    for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
-        // Don't overwrite existing settings so command line settings override chaincoin.conf
-        string strKey = string("-") + it->string_key;
-        string strValue = it->value[0];
-        InterpretNegativeSetting(strKey, strValue);
-        if (mapSettingsRet.count(strKey) == 0)
-            mapSettingsRet[strKey] = strValue;
-        mapMultiSettingsRet[strKey].push_back(strValue);
+        LOCK(cs_args);
+        set<string> setOptions;
+        setOptions.insert("*");
+
+        for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
+        {
+            // Don't overwrite existing settings so command line settings override bitcoin.conf
+            string strKey = string("-") + it->string_key;
+            string strValue = it->value[0];
+            InterpretNegativeSetting(strKey, strValue);
+            if (mapArgs.count(strKey) == 0)
+                mapArgs[strKey] = strValue;
+            _mapMultiArgs[strKey].push_back(strValue);
+        }
     }
     // If datadir is changed in .conf file:
     ClearDatadirCache();
@@ -826,13 +846,13 @@ void ShrinkDebugFile()
         // Restart the file with some of the end
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
         fseek(file, -((long)vch.size()), SEEK_END);
-        int nBytes = fread(begin_ptr(vch), 1, vch.size(), file);
+        int nBytes = fread(vch.data(), 1, vch.size(), file);
         fclose(file);
 
         file = fopen(pathLog.string().c_str(), "w");
         if (file)
         {
-            fwrite(begin_ptr(vch), 1, nBytes, file);
+            fwrite(vch.data(), 1, nBytes, file);
             fclose(file);
         }
     }

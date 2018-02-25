@@ -23,8 +23,6 @@
 static const unsigned int DEFAULT_WALLET_DBLOGSIZE = 100;
 static const bool DEFAULT_WALLET_PRIVDB = true;
 
-extern unsigned int nWalletDBUpdated;
-
 class CDBEnv
 {
 private:
@@ -164,7 +162,7 @@ protected:
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(10000);
         ssValue << value;
-        Dbt datValue(&ssValue[0], ssValue.size());
+        Dbt datValue(ssValue.data(), ssValue.size());
 
         // Write
         int ret = pdb->put(activeTxn, &datKey, &datValue, (fOverwrite ? 0 : DB_NOOVERWRITE));
@@ -238,7 +236,7 @@ protected:
         }
         Dbt datValue;
         if (fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE) {
-            datValue.set_data(&ssValue[0]);
+            datValue.set_data(ssKey.data());
             datValue.set_size(ssValue.size());
         }
         datKey.set_flags(DB_DBT_MALLOC);

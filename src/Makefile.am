@@ -97,6 +97,7 @@ BITCOIN_CORE_H = \
   consensus/consensus.h \
   core_io.h \
   core_memusage.h \
+  cuckoocache.h \
   dsnotificationinterface.h \
   governance.h \
   governance-classes.h \
@@ -131,6 +132,7 @@ BITCOIN_CORE_H = \
   netmessagemaker.h \
   noui.h \
   policy/fees.h \
+  policy/feerate.h \
   policy/policy.h \
   policy/rbf.h \
   pow.h \
@@ -155,6 +157,7 @@ BITCOIN_CORE_H = \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
   support/cleanse.h \
+  support/events.h \
   support/lockedpool.h \
   sync.h \
   threadsafety.h \
@@ -224,7 +227,6 @@ libbitcoin_server_a_SOURCES = \
   netfulfilledman.cpp \
   net_processing.cpp \
   noui.cpp \
-  policy/feerate.h \
   policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \

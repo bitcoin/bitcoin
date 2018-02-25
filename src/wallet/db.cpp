@@ -21,12 +21,6 @@
 #include <boost/thread.hpp>
 #include <boost/version.hpp>
 
-using namespace std;
-
-
-unsigned int nWalletDBUpdated;
-
-
 //
 // CDB
 //
@@ -179,7 +173,7 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
     if (fAggressive)
         flags |= DB_AGGRESSIVE;
 
-    stringstream strDump;
+    std::stringstream strDump;
 
     Db db(dbenv, 0);
     int result = db.verify(strFile.c_str(), nullptr, &strDump, flags);
@@ -203,7 +197,7 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
     // ... repeated
     // DATA=END
 
-    string strLine;
+    std::string strLine;
     while (!strDump.eof() && strLine != HEADER_END)
         getline(strDump, strLine); // Skip past header
 
@@ -287,7 +281,7 @@ CDB::CDB(const std::string& strFilename, const char* pszMode, bool fFlushOnClose
                 throw runtime_error(strprintf("CDB: Error %d, can't open database %s", ret, strFilename));
             }
 
-            if (fCreate && !Exists(string("version"))) {
+            if (fCreate && !Exists(std::string("version"))) {
                 bool fTmp = fReadOnly;
                 fReadOnly = false;
                 WriteVersion(CLIENT_VERSION);
@@ -330,7 +324,7 @@ void CDB::Close()
     }
 }
 
-void CDBEnv::CloseDb(const string& strFile)
+void CDBEnv::CloseDb(const std::string& strFile)
 {
     {
         LOCK(cs_db);
@@ -344,7 +338,7 @@ void CDBEnv::CloseDb(const string& strFile)
     }
 }
 
-bool CDBEnv::RemoveDb(const string& strFile)
+bool CDBEnv::RemoveDb(const std::string& strFile)
 {
     this->CloseDb(strFile);
 
@@ -353,7 +347,7 @@ bool CDBEnv::RemoveDb(const string& strFile)
     return (rc == 0);
 }
 
-bool CDB::Rewrite(const string& strFile, const char* pszSkip)
+bool CDB::Rewrite(const std::string& strFile, const char* pszSkip)
 {
     while (true) {
         {
@@ -366,7 +360,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 
                 bool fSuccess = true;
                 LogPrintf("CDB::Rewrite: Rewriting %s...\n", strFile);
-                string strFileRes = strFile + ".rewrite";
+                std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
                     CDB db(strFile.c_str(), "r");
                     Db* pdbCopy = new Db(bitdb.dbenv, 0);
@@ -405,7 +399,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                                 ssValue << CLIENT_VERSION;
                             }
                             Dbt datKey(ssKey.data(), ssKey.size());
-                            Dbt datValue(&ssValue[0], ssValue.size());
+                            Dbt datValue(ssValue.data(), ssValue.size());
                             int ret2 = pdbCopy->put(nullptr, &datKey, &datValue, DB_NOOVERWRITE);
                             if (ret2 > 0)
                                 fSuccess = false;
@@ -446,9 +440,9 @@ void CDBEnv::Flush(bool fShutdown)
         return;
     {
         LOCK(cs_db);
-        map<string, int>::iterator mi = mapFileUseCount.begin();
+        std::map<std::string, int>::iterator mi = mapFileUseCount.begin();
         while (mi != mapFileUseCount.end()) {
-            string strFile = (*mi).first;
+            std::string strFile = (*mi).first;
             int nRefCount = (*mi).second;
             LogPrint("db", "CDBEnv::Flush: Flushing %s (refcount = %d)...\n", strFile, nRefCount);
             if (nRefCount == 0) {

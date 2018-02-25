@@ -1,15 +1,3 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#include <script/chaincoinconsensus.h>
-
-#include <primitives/transaction.h>
-#include <pubkey.h>
-#include <script/interpreter.h>
-#include <version.h>
-
 namespace {
 
 /** A class that deserializes a single CTransaction one time. */
@@ -28,10 +16,10 @@ public:
         if (nSize > m_remaining)
             throw std::ios_base::failure(std::string(__func__) + ": end of data");
 
-        if (pch == nullptr)
+        if (pch == NULL)
             throw std::ios_base::failure(std::string(__func__) + ": bad destination buffer");
 
-        if (m_data == nullptr)
+        if (m_data == NULL)
             throw std::ios_base::failure(std::string(__func__) + ": bad source buffer");
 
         memcpy(pch, m_data, nSize);
@@ -48,7 +36,6 @@ public:
 
     int GetVersion() const { return m_version; }
     int GetType() const { return m_type; }
-
 private:
     const int m_type;
     const int m_version;
@@ -56,7 +43,7 @@ private:
     size_t m_remaining;
 };
 
-inline int set_error(chaincoinconsensus_error* ret, chaincoinconsensus_error serror)
+inline int set_error(bitcoinconsensus_error* ret, bitcoinconsensus_error serror)
 {
     if (ret)
         *ret = serror;
@@ -71,49 +58,59 @@ struct ECCryptoClosure
 ECCryptoClosure instance_of_eccryptoclosure;
 }
 
-int verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, CAmount amount,
-                                    const unsigned char *txTo        , unsigned int txToLen,
-                                    unsigned int nIn, unsigned int flags, chaincoinconsensus_error* err)
+/** Check that all specified flags are part of the libconsensus interface. */
+static bool verify_flags(unsigned int flags)
 {
+    return (flags & ~(bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL)) == 0;
+}
+
+static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, CAmount amount,
+                                    const unsigned char *txTo        , unsigned int txToLen,
+                                    unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
+{
+    if (!verify_flags(flags)) {
+        return bitcoinconsensus_ERR_INVALID_FLAGS;
+    }
     try {
         TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, txTo, txToLen);
         CTransaction tx(deserialize, stream);
         if (nIn >= tx.vin.size())
-            return set_error(err, chaincoinconsensus_ERR_TX_INDEX);
+            return set_error(err, bitcoinconsensus_ERR_TX_INDEX);
         if (GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) != txToLen)
-            return set_error(err, chaincoinconsensus_ERR_TX_SIZE_MISMATCH);
+            return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
 
-         // Regardless of the verification result, the tx did not error.
-         set_error(err, chaincoinconsensus_ERR_OK);
-         PrecomputedTransactionData txdata(tx);
-         return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), nIn < tx.wit.vtxinwit.size() ? &tx.wit.vtxinwit[nIn].scriptWitness : nullptr, flags, TransactionSignatureChecker(&tx, nIn, amount, txdata), nullptr);
+        // Regardless of the verification result, the tx did not error.
+        set_error(err, bitcoinconsensus_ERR_OK);
+
+        PrecomputedTransactionData txdata(tx);
+        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), &tx.vin[nIn].scriptWitness, flags, TransactionSignatureChecker(&tx, nIn, amount, txdata), NULL);
     } catch (const std::exception&) {
-        return set_error(err, chaincoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
+        return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
     }
 }
 
-int chaincoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
+int bitcoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
                                     const unsigned char *txTo        , unsigned int txToLen,
-                                    unsigned int nIn, unsigned int flags, chaincoinconsensus_error* err)
+                                    unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
     CAmount am(amount);
     return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, nIn, flags, err);
 }
 
 
-int chaincoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
+int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
                                    const unsigned char *txTo        , unsigned int txToLen,
-                                   unsigned int nIn, unsigned int flags, chaincoinconsensus_error* err)
+                                   unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
-    if (flags & chaincoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
-        return set_error(err, chaincoinconsensus_ERR_AMOUNT_REQUIRED);
+    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
+        return set_error(err, bitcoinconsensus_ERR_AMOUNT_REQUIRED);
     }
 
     CAmount am(0);
     return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, nIn, flags, err);
 }
 
-unsigned int chaincoinconsensus_version()
+unsigned int bitcoinconsensus_version()
 {
     // Just use the API version for now
     return BITCOINCONSENSUS_API_VER;
