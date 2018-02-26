@@ -37,7 +37,7 @@ Compatibility
 ==============
 
 Chaincoin Core is extensively tested on multiple operating systems using
-the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
+the Linux kernel, macOS 10.11+, and Windows 7 and newer (Windows XP is not supported).
 
 Chaincoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
