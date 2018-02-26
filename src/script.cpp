@@ -1254,7 +1254,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         // Compare
         CScript::const_iterator pc1 = script1.begin();
         CScript::const_iterator pc2 = script2.begin();
-        loop
+        ploop
         {
             if (pc1 == script1.end() && pc2 == script2.end())
             {
