@@ -102,6 +102,22 @@ class BlockchainTest(BitcoinTestFramework):
     def _test_getchaintxstats(self):
         self.log.info("Test getchaintxstats")
 
+        # Test `getchaintxstats` invalid extra parameters
+        assert_raises_rpc_error(-1, 'getchaintxstats', self.nodes[0].getchaintxstats, 0, '', 0)
+
+        # Test `getchaintxstats` invalid `nblocks`
+        assert_raises_rpc_error(-1, "JSON value is not an integer as expected", self.nodes[0].getchaintxstats, '')
+        assert_raises_rpc_error(-8, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, -1)
+        assert_raises_rpc_error(-8, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, self.nodes[0].getblockcount())
+
+        # Test `getchaintxstats` invalid `blockhash`
+        assert_raises_rpc_error(-1, "JSON value is not a string as expected", self.nodes[0].getchaintxstats, blockhash=0)
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getchaintxstats, blockhash='0')
+        blockhash = self.nodes[0].getblockhash(200)
+        self.nodes[0].invalidateblock(blockhash)
+        assert_raises_rpc_error(-8, "Block is not in main chain", self.nodes[0].getchaintxstats, blockhash=blockhash)
+        self.nodes[0].reconsiderblock(blockhash)
+
         chaintxstats = self.nodes[0].getchaintxstats(1)
         # 200 txs plus genesis tx
         assert_equal(chaintxstats['txcount'], 201)
@@ -132,8 +148,6 @@ class BlockchainTest(BitcoinTestFramework):
         assert('window_tx_count' not in chaintxstats)
         assert('window_interval' not in chaintxstats)
         assert('txrate' not in chaintxstats)
-
-        assert_raises_rpc_error(-8, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, 201)
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
