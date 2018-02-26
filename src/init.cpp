@@ -1856,8 +1856,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("fLiteMode %d\n", fLiteMode);
     LogPrintf("nInstantSendDepth %d\n", nInstantSendDepth);
 #ifdef ENABLE_WALLET
-    LogPrintf("PrivateSend rounds %d\n", privateSendClient.nPrivateSendRounds);
-    LogPrintf("PrivateSend amount %d\n", privateSendClient.nPrivateSendAmount);
+    LogPrintf("PrivateSend liquidityprovider: %d\n", privateSendClient.nLiquidityProvider);
+    LogPrintf("PrivateSend rounds: %d\n", privateSendClient.nPrivateSendRounds);
+    LogPrintf("PrivateSend amount: %d\n", privateSendClient.nPrivateSendAmount);
 #endif // ENABLE_WALLET
 
     CPrivateSend::InitStandardDenominations();

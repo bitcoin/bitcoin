@@ -103,7 +103,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
 {
     if(!mnodeman.Has(vote.GetMasternodeOutpoint())) {
         std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Masternode index not found";
+        ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
         if(cmmapOrphanVotes.Insert(vote.GetMasternodeOutpoint(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
             if(pfrom) {

@@ -118,9 +118,6 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strComm
         int nMsgMessageID;
         vRecv >> nMsgSessionID >> nMsgState >> nMsgEntriesCount >> nMsgStatusUpdate >> nMsgMessageID;
 
-        LogPrint("privatesend", "DSSTATUSUPDATE -- nMsgSessionID %d  nMsgState: %d  nEntriesCount: %d  nMsgStatusUpdate: %d  nMsgMessageID %d\n",
-                nMsgSessionID, nMsgState, nEntriesCount, nMsgStatusUpdate, nMsgMessageID);
-
         if(nMsgState < POOL_STATE_MIN || nMsgState > POOL_STATE_MAX) {
             LogPrint("privatesend", "DSSTATUSUPDATE -- nMsgState is out of bounds: %d\n", nMsgState);
             return;
@@ -136,7 +133,8 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        LogPrint("privatesend", "DSSTATUSUPDATE -- GetMessageByID: %s\n", CPrivateSend::GetMessageByID(PoolMessage(nMsgMessageID)));
+        LogPrint("privatesend", "DSSTATUSUPDATE -- nMsgSessionID %d  nMsgState: %d  nEntriesCount: %d  nMsgStatusUpdate: %d  nMsgMessageID %d (%s)\n",
+                nMsgSessionID, nMsgState, nEntriesCount, nMsgStatusUpdate, nMsgMessageID, CPrivateSend::GetMessageByID(PoolMessage(nMsgMessageID)));
 
         if(!CheckPoolStateUpdate(PoolState(nMsgState), nMsgEntriesCount, PoolStatusUpdate(nMsgStatusUpdate), PoolMessage(nMsgMessageID), nMsgSessionID)) {
             LogPrint("privatesend", "DSSTATUSUPDATE -- CheckPoolStateUpdate failed\n");
@@ -1278,7 +1276,7 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     CAmount nValueLeft = tallyItem.nAmount;
     nValueLeft -= CPrivateSend::GetCollateralAmount(); // leave some room for fees
 
-    LogPrintf("CreateDenominated0 nValueLeft: %f\n", (float)nValueLeft/COIN);
+    LogPrintf("CreateDenominated0: %s nValueLeft: %f\n", CBitcoinAddress(tallyItem.txdest).ToString(), (float)nValueLeft/COIN);
 
     // ****** Add an output for mixing collaterals ************ /
 

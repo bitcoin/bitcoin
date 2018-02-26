@@ -49,7 +49,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         }
 
         if(!spork.CheckSignature()) {
-            LogPrintf("CSporkManager::ProcessSpork -- invalid signature\n");
+            LogPrintf("CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
             Misbehaving(pfrom->GetId(), 100);
             return;
         }

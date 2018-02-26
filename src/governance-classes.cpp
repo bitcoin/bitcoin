@@ -487,7 +487,7 @@ CSuperblock(uint256& nHash)
          << std::endl; );
 
     if (pGovObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) {
-        DBG( std::cout << "CSuperblock Constructor pHoObj not a trigger, returning" << std::endl; );
+        DBG( std::cout << "CSuperblock Constructor pGovObj not a trigger, returning" << std::endl; );
         throw std::runtime_error("CSuperblock: Governance Object not a trigger");
     }
 
