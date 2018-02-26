@@ -14,14 +14,25 @@ UpdateDialog::UpdateDialog(QWidget *parent) :
     iconSize(40)
 {
     ui->setupUi(this);
-    ui->progressBar->setVisible(false);
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Download"));
-    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Not Now"));
+    // Backup the original size of the widget
+    originalSize = size();
     connect(ui->osComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(selectionChanged(int)));
 
     setPossibleOS();
-    setProgressValue(0);
     setIcon();
+}
+
+void UpdateDialog::reset()
+{
+    // Restore the size
+    this->resize(originalSize);
+    // Hide progress bar
+    ui->progressBar->setVisible(false);
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Download"));
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Not Now"));
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setAttribute(Qt::WA_UnderMouse, false);
+    setProgressValue(0);
 }
 
 UpdateDialog* UpdateDialog::instance = 0;
@@ -153,7 +164,8 @@ void UpdateDialog::downloadVersion()
     if (!fileName.trimmed().isEmpty())
     {
         ui->progressBar->setVisible(true);
-        this->resize(this->width(), this->height() + 45);
+        // Resize window size to show progress bar
+        this->resize(this->width(), this->height() + ui->progressBar->size().height());
         ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
         ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Cancel");
         CURLcode res = updater.DownloadFile(url, fileName.toStdString(), &UpdateProgressBar);
@@ -208,6 +220,7 @@ void UpdateDialog::setIcon() const
 int UpdateDialog::exec()
 {
     // Set according values and exec
+    reset();
     setCurrentVersion(QString::fromStdString(FormatVersion(CLIENT_VERSION)));
     setUpdateVersion(QString::fromStdString(FormatVersion(updater.GetVersion())));
     setOS(updater.GetOS());

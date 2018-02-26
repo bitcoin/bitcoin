@@ -35,6 +35,7 @@ private:
     void setPossibleOS();
     void shaError(const QString& error);
     void setIcon() const;
+    void reset();
 
 private:
     Ui::UpdateDialog *ui;
@@ -42,6 +43,7 @@ private:
     static UpdateDialog *instance;
     QString fileName;
     const int iconSize;
+    QSize originalSize;
 };
 
 #endif // UPDATEDIALOG_H
