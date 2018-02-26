@@ -49,7 +49,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                     # count key types
                     for addrObj in addrs:
                         if addrObj['address'] == addr.split(",")[0] and addrObj['hdkeypath'] == keypath and keytype == "label=":
-                            # a labled entry in the wallet should contain both a native address
+                            # a labeled entry in the wallet should contain both a native address
                             # and the p2sh-p2wpkh address that was added at wallet setup
                             if len(addr.split(",")) == 2:
                                 addr_list = addr.split(",")

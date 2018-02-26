@@ -35,7 +35,7 @@ To install WSL on Windows 10 with Fall Creators Update installed (version >= 162
 
 1. Enable the Windows Subsystem for Linux feature
   * Open the Windows Features dialog (`OptionalFeatures.exe`)
-  * Enable 'Windows Susbsystem for Linux'
+  * Enable 'Windows Subsystem for Linux'
   * Click 'OK' and restart if necessary
 2. Install Ubuntu
   * Open Microsoft Store and search for "Ubuntu 18.04" or use [this link](https://www.microsoft.com/store/productId/9N9TNGVNDL3Q)
