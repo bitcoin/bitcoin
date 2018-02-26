@@ -247,7 +247,7 @@ fi
 
 # Set up build
 pushd ./particl-core
-git fetch
+git fetch --tags
 git checkout ${COMMIT}
 popd
 

@@ -152,7 +152,7 @@ int CLedgerDevice::GetInfo(UniValue &info, std::string &sError)
     uint8_t out[260];
     size_t apduSize = 0;
     in[apduSize++] = BTCHIP_CLA;
-    in[apduSize++] = 0x16; // getCoinVersion
+    in[apduSize++] = BTCHIP_INS_GET_COIN_VER;
     in[apduSize++] = 0x00;
     in[apduSize++] = 0x00;
     in[apduSize++] = 0x00;
@@ -165,7 +165,7 @@ int CLedgerDevice::GetInfo(UniValue &info, std::string &sError)
         Close();
         return errorN(1, sError, __func__, "Dongle application error: %.4x", sw);
     };
-    if (result < 2)
+    if (result < 3)
     {
         Close();
         return errorN(1, sError, __func__, "Bad read length: %d", result);
@@ -174,12 +174,21 @@ int CLedgerDevice::GetInfo(UniValue &info, std::string &sError)
 
     UniValue errors(UniValue::VARR);
 
-    std::vector<uint8_t> vchVersion;
-    vchVersion.push_back(out[1]);
-    info.pushKV("pubkey_version", strprintf("%.2x", vchVersion[0]));
-
-    if (vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
+    std::vector<uint8_t> data(1);
+    data[0] = out[1];
+    info.pushKV("pubkey_version", strprintf("%.2x", data[0]));
+    if (data != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         errors.push_back("pubkey version mismatch.");
+
+    data[0] = out[3];
+    info.pushKV("script_version", strprintf("%.2x", data[0]));
+    info.pushKV("coin_family", strprintf("%.2x", out[4]));
+
+    if (out[5] <= 128)
+    {
+        std::string s((const char*)&out[6], out[5]);
+        info.pushKV("coin_id", s);
+    };
 
     apduSize = 0;
     in[apduSize++] = BTCHIP_CLA;
@@ -474,7 +483,6 @@ int CLedgerDevice::PrepareTransaction(const CTransaction *tx, const CCoinsViewCa
             return errorN(1, sError, __func__, "amount must be 8 bytes.");
         memcpy(&in[apduSize], vchAmount.data(), vchAmount.size());
         apduSize += vchAmount.size();
-
 
         if (i == 0)
         {

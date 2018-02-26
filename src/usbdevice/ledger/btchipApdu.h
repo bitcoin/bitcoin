@@ -23,6 +23,7 @@
 #define BTCHIP_CLA 0xE0
 #define BTCHIP_ADM_CLA 0xD0
 
+#define BTCHIP_INS_GET_COIN_VER              0x16
 #define BTCHIP_INS_SETUP                     0x20
 #define BTCHIP_INS_VERIFY_PIN                0x22
 #define BTCHIP_INS_GET_OPERATION_MODE        0x24
