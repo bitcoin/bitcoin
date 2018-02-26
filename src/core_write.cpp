@@ -174,8 +174,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             in.pushKV("vout", (int64_t)txin.prevout.n);
             UniValue o(UniValue::VOBJ);
             o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
-            if (include_hex)
+            if (include_hex) {
                 o.pushKV("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
+            }
             in.pushKV("scriptSig", o);
             if (!tx.vin[i].scriptWitness.IsNull()) {
                 UniValue txinwitness(UniValue::VARR);
