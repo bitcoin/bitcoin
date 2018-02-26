@@ -32,6 +32,7 @@ QString OpenURIDialog::getURI()
 
 void OpenURIDialog::accept()
 {
+#ifdef ENABLE_WALLET
     SendCoinsRecipient rcp;
     if(GUIUtil::parseBitcoinURI(getURI(), &rcp))
     {
@@ -40,6 +41,7 @@ void OpenURIDialog::accept()
     } else {
         ui->uriEdit->setValid(false);
     }
+#endif // ENABLE_WALLET
 }
 
 void OpenURIDialog::on_selectFileButton_clicked()

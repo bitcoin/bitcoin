@@ -9,19 +9,18 @@
 #include <chainparams.h>
 #include <qt/test/rpcnestedtests.h>
 #include <util.h>
-#include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/test/paymentservertests.h>
 #include <qt/test/wallettests.h>
+#include <qt/test/uritests.h>
+#include <openssl/ssl.h>
 #endif
 
 #include <QApplication>
 #include <QObject>
 #include <QTest>
-
-#include <openssl/ssl.h>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -74,13 +73,14 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     app.setApplicationName("Bitcoin-Qt-test");
 
+#ifdef ENABLE_WALLET
     SSL_library_init();
 
     URITests test1;
     if (QTest::qExec(&test1) != 0) {
         fInvalid = true;
     }
-#ifdef ENABLE_WALLET
+
     PaymentServerTests test2;
     if (QTest::qExec(&test2) != 0) {
         fInvalid = true;

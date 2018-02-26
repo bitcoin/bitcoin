@@ -5,6 +5,10 @@
 #ifndef BITCOIN_QT_GUIUTIL_H
 #define BITCOIN_QT_GUIUTIL_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <amount.h>
 #include <fs.h>
 
@@ -18,7 +22,10 @@
 #include <QLabel>
 
 class QValidatedLineEdit;
+
+#ifdef ENABLE_WALLET
 class SendCoinsRecipient;
+#endif // ENABLE_WALLET
 
 QT_BEGIN_NAMESPACE
 class QAbstractItemView;
@@ -44,10 +51,12 @@ namespace GUIUtil
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
+#ifdef ENABLE_WALLET
     // Parse "bitcoin:" URI into recipient object, return true on successful parsing
     bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
     bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
     QString formatBitcoinURI(const SendCoinsRecipient &info);
+#endif // ENABLE_WALLET
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(const QString& address, const CAmount& amount);
