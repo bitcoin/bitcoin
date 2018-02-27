@@ -22,7 +22,7 @@ TIMESTAMP_WINDOW = 2 * 60 * 60
 
 
 def calc_usage(blockdir):
-    return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(blockdir+f)) / (1024. * 1024.)
+    return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(os.path.join(blockdir, f))) / (1024. * 1024.)
 
 class PruneTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -69,7 +69,7 @@ class PruneTest(BitcoinTestFramework):
         sync_blocks(self.nodes[0:5])
 
     def test_height_min(self):
-        if not os.path.isfile(self.prunedir+"blk00000.dat"):
+        if not os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")):
             raise AssertionError("blk00000.dat is missing, pruning too early")
         self.log.info("Success")
         self.log.info("Though we're already using more than 550MiB, current usage: %d" % calc_usage(self.prunedir))
@@ -79,7 +79,7 @@ class PruneTest(BitcoinTestFramework):
             mine_large_block(self.nodes[0], self.utxo_cache_0)
 
         # Wait for blk00000.dat to be pruned
-        wait_until(lambda: not os.path.isfile(self.prunedir+"blk00000.dat"), timeout=30)
+        wait_until(lambda: not os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), timeout=30)
 
         self.log.info("Success")
         usage = calc_usage(self.prunedir)
@@ -255,7 +255,7 @@ class PruneTest(BitcoinTestFramework):
                 assert_equal(ret, expected_ret)
 
         def has_block(index):
-            return os.path.isfile(self.options.tmpdir + "/node{}/regtest/blocks/blk{:05}.dat".format(node_number, index))
+            return os.path.isfile(os.path.join(self.nodes[node_number].datadir, "regtest", "blocks", "blk{:05}.dat".format(index)))
 
         # should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
         assert_raises_rpc_error(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
