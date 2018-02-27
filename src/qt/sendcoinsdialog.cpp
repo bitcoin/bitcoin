@@ -489,7 +489,8 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     // hack, NotifyWaitingForDevice events get processed after rpc call completes.
     // TODO: move tryCallRpc to thread
-    model->waitingForDevice(false);
+    if (fNeedHWDevice)
+        model->waitingForDevice(false);
     qApp->processEvents();
 
     if (!model->tryCallRpc(sCommand, rv))

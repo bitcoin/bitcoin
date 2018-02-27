@@ -5077,6 +5077,7 @@ int CHDWallet::UnloadTransaction(const uint256 &hash)
         return 1;
     };
 
+    NotifyTransactionChanged(this, hash, CT_DELETED);
     return 0;
 };
 
@@ -7705,7 +7706,16 @@ bool CHDWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CC
             // Broadcast
             if (!wtxNew.AcceptToMemoryPool(maxTxFee, state)) {
                 LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
-                // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
+                // If we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
+                if (state.GetRejectCode() != REJECT_DUPLICATE)
+                {
+                    const uint256 hash = wtxNew.GetHash();
+                    UnloadTransaction(hash);
+                    CHDWalletDB wdb(*dbw);
+                    wdb.EraseTx(hash);
+                    return false;
+                };
+
             } else {
                 wtxNew.RelayWalletTransaction(connman);
             }
@@ -7734,7 +7744,16 @@ bool CHDWallet::CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
             if (!wtxNew.AcceptToMemoryPool(maxTxFee, state))
             {
                 LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
-                // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
+                // If we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
+                if (state.GetRejectCode() != REJECT_DUPLICATE)
+                {
+                    const uint256 hash = wtxNew.GetHash();
+                    UnloadTransaction(hash);
+                    CHDWalletDB wdb(*dbw);
+                    wdb.EraseTxRecord(hash);
+                    wdb.EraseStoredTx(hash);
+                    return false;
+                };
             } else
             {
                 wtxNew.BindWallet(this);

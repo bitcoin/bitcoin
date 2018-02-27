@@ -4497,8 +4497,8 @@ UniValue listunspentblind(const JSONRPCRequest &request)
             entry.pushKV("amount", ValueFromAmount(nValue));
         };
         entry.pushKV("confirmations", out.nDepth);
-        //entry.push_back(Pair("spendable", out.fSpendable));
-        //entry.push_back(Pair("solvable", out.fSolvable));
+        //entry.pushKV("spendable", out.fSpendable);
+        //entry.pushKV("solvable", out.fSolvable);
         entry.pushKV("safe", out.fSafe);
         results.push_back(entry);
     }
@@ -4874,15 +4874,16 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     if (typeIn == OUTPUT_STANDARD && typeOut == OUTPUT_STANDARD)
     {
         if (!pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state))
-            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", FormatStateMessage(state)));
     } else
     {
         if (!pwallet->CommitTransaction(wtx, rtx, reservekey, g_connman.get(), state))
-            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", FormatStateMessage(state)));
     };
 
+    /*
     UniValue vErrors(UniValue::VARR);
-    if (!state.IsValid())
+    if (!state.IsValid()) // Should be caught in CommitTransaction
     {
         // This can happen if the mempool rejected the transaction.  Report
         // what happened in the "errors" response.
@@ -4893,6 +4894,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         result.pushKV("errors", vErrors);
         return result;
     };
+    */
 
     pwallet->PostProcessTempRecipients(vecSend);
 
