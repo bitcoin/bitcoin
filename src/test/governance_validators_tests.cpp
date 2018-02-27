@@ -41,9 +41,16 @@ BOOST_AUTO_TEST_CASE(valid_proposals_test)
     BOOST_CHECK_MESSAGE(tests.size(), "Empty `tests`");
     for(size_t i = 0; i < tests.size(); ++i) {
         const UniValue& objProposal = tests[i];
-        std::string strHexData = CreateEncodedProposalObject(objProposal);
-        CProposalValidator validator(strHexData);
-        BOOST_CHECK_MESSAGE(validator.Validate(), validator.GetErrorMessages());
+
+        // legacy format
+        std::string strHexData1 = CreateEncodedProposalObject(objProposal);
+        CProposalValidator validator1(strHexData1);
+        BOOST_CHECK_MESSAGE(validator1.Validate(), validator1.GetErrorMessages());
+
+        // new format
+        std::string strHexData2 = HexStr(objProposal.write());
+        CProposalValidator validator2(strHexData2);
+        BOOST_CHECK_MESSAGE(validator2.Validate(), validator2.GetErrorMessages());
     }
 }
 

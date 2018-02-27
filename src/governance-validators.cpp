@@ -190,10 +190,17 @@ void CProposalValidator::ParseJSONData(const std::string& strJSONData)
 
     try {
         UniValue obj(UniValue::VOBJ);
+
         obj.read(strJSONData);
-        std::vector<UniValue> arr1 = obj.getValues();
-        std::vector<UniValue> arr2 = arr1.at(0).getValues();
-        objJSON = arr2.at(1);
+
+        if (obj.isObject()) {
+            objJSON = obj;
+        } else {
+            std::vector<UniValue> arr1 = obj.getValues();
+            std::vector<UniValue> arr2 = arr1.at(0).getValues();
+            objJSON = arr2.at(1);
+        }
+
         fJSONValid = true;
     }
     catch(std::exception& e) {
