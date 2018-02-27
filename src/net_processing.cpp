@@ -684,51 +684,6 @@ void EraseOrphansFor(NodeId peer)
     if (nErased > 0) LogPrint("mempool", "Erased %d orphan tx from peer %d\n", nErased, peer);
 }
 
-static CCriticalSection cs_most_recent_block;
-static std::shared_ptr<const CBlock> most_recent_block;
-static std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block;
-static uint256 most_recent_block_hash;
-
-void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) {
-    std::shared_ptr<const CBlockHeaderAndShortTxIDs> pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs> (*pblock, true);
-    CNetMsgMaker msgMaker(PROTOCOL_VERSION);
-
-    LOCK(cs_main);
-
-    static int nHighestFastAnnounce = 0;
-    if (pindex->nHeight <= nHighestFastAnnounce)
-        return;
-    nHighestFastAnnounce = pindex->nHeight;
-
-    bool fWitnessEnabled = IsWitnessEnabled(pindex->pprev, Params().GetConsensus());
-    uint256 hashBlock(pblock->GetHash());
-
-    {
-        LOCK(cs_most_recent_block);
-        most_recent_block_hash = hashBlock;
-        most_recent_block = pblock;
-        most_recent_compact_block = pcmpctblock;
-    }
-
-    connman->ForEachNode([this, &pcmpctblock, pindex, &msgMaker, fWitnessEnabled, &hashBlock](CNode* pnode) {
-        // TODO: Avoid the repeated-serialization here
-        if (pnode->nVersion < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
-            return;
-        ProcessBlockAvailability(pnode->GetId());
-        CNodeState &state = *State(pnode->GetId());
-        // If the peer has, or we announced to them the previous block already,
-        // but we don't think they have this one, go ahead and announce it
-        if (state.fPreferHeaderAndIDs && (!fWitnessEnabled || state.fWantsCmpctWitness) &&
-                !PeerHasHeader(&state, pindex) && PeerHasHeader(&state, pindex->pprev)) {
-
-            LogPrint("net", "%s sending header-and-ids %s to peer %d\n", "PeerLogicValidation::NewPoWValidBlock",
-                    hashBlock.ToString(), pnode->id);
-            connman->PushMessage(pnode, msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock));
-            state.pindexBestHeaderSent = pindex;
-        }
-    });
-}
-
 unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     unsigned int nEvicted = 0;
@@ -828,6 +783,51 @@ void PeerLogicValidation::SyncTransaction(const CTransaction& tx, const CBlockIn
         }
         LogPrint("mempool", "Erased %d orphan tx included or conflicted by block\n", nErased);
     }
+}
+
+static CCriticalSection cs_most_recent_block;
+static std::shared_ptr<const CBlock> most_recent_block;
+static std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block;
+static uint256 most_recent_block_hash;
+
+void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) {
+    std::shared_ptr<const CBlockHeaderAndShortTxIDs> pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs> (*pblock, true);
+    const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
+
+    LOCK(cs_main);
+
+    static int nHighestFastAnnounce = 0;
+    if (pindex->nHeight <= nHighestFastAnnounce)
+        return;
+    nHighestFastAnnounce = pindex->nHeight;
+
+    bool fWitnessEnabled = IsWitnessEnabled(pindex->pprev, Params().GetConsensus());
+    uint256 hashBlock(pblock->GetHash());
+
+    {
+        LOCK(cs_most_recent_block);
+        most_recent_block_hash = hashBlock;
+        most_recent_block = pblock;
+        most_recent_compact_block = pcmpctblock;
+    }
+
+    connman->ForEachNode([this, &pcmpctblock, pindex, &msgMaker, fWitnessEnabled, &hashBlock](CNode* pnode) {
+        // TODO: Avoid the repeated-serialization here
+        if (pnode->nVersion < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
+            return;
+        ProcessBlockAvailability(pnode->GetId());
+        CNodeState &state = *State(pnode->GetId());
+        // If the peer has, or we announced to them the previous block already,
+        // but we don't think they have this one, go ahead and announce it
+        if (state.fPreferHeaderAndIDs && (!fWitnessEnabled || state.fWantsCmpctWitness) &&
+                !PeerHasHeader(&state, pindex) && PeerHasHeader(&state, pindex->pprev)) {
+
+            LogPrint("net", "%s sending header-and-ids %s to peer %d\n", "PeerLogicValidation::NewPoWValidBlock",
+                    hashBlock.ToString(), pnode->id);
+            connman->PushMessage(pnode, msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock));
+            state.pindexBestHeaderSent = pindex;
+        }
+    });
 }
 
 void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
@@ -1026,7 +1026,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 {
     std::deque<CInv>::iterator it = pfrom->vRecvGetData.begin();
     std::vector<CInv> vNotFound;
-    CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+    const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
     LOCK(cs_main);
 
     while (it != pfrom->vRecvGetData.end()) {
@@ -1320,7 +1320,7 @@ inline void static SendBlockTransactions(const CBlock& block, const BlockTransac
         resp.txn[i] = block.vtx[req.indexes[i]];
     }
     LOCK(cs_main);
-    CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+    const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
     int nSendFlags = State(pfrom->GetId())->fWantsCmpctWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
     connman.PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCKTXN, resp));
 }
@@ -1512,7 +1512,7 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
     }
 
     // At this point, the outgoing message serialization version can't change.
-    CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+    const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 
     if (strCommand == NetMsgType::VERACK)
     {
@@ -2973,7 +2973,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
             return true;
 
         // If we get here, the outgoing message serialization version is set and can't change.
-        CNetMsgMaker msgMaker(pto->GetSendVersion());
+        const CNetMsgMaker msgMaker(pto->GetSendVersion());
 
         //
         // Message: ping
