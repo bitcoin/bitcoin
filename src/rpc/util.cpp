@@ -4,7 +4,6 @@
 
 #include <base58.h>
 #include <keystore.h>
-#include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/util.h>
 #include <tinyformat.h>
