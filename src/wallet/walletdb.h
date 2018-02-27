@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_WALLETDB_H
-#define BITCOIN_WALLET_WALLETDB_H
+#ifndef LIBERTA_WALLET_WALLETDB_H
+#define LIBERTA_WALLET_WALLETDB_H
 
 #include "amount.h"
 #include "wallet/db.h"
@@ -104,6 +104,15 @@ public:
 
     bool WriteOrderPosNext(int64_t nOrderPosNext);
 
+    // presstab
+    bool WriteStakeSplitThreshold(uint64_t nStakeSplitThreshold);
+    bool WriteMultiSend(std::vector<std::pair<std::string, int> > vMultiSend);
+    bool EraseMultiSend(std::vector<std::pair<std::string, int> > vMultiSend);
+    bool WriteMSettings(bool fMultiSendStake, bool fMultiSendMasternode, int nLastMultiSendHeight);
+    bool WriteMSDisabledAddresses(std::vector<std::string> vDisabledAddresses);
+    bool EraseMSDisabledAddresses(std::vector<std::string> vDisabledAddresses);
+    bool WriteAutoCombineSettings(bool fEnable, CAmount nCombineThreshold);
+
     bool WriteDefaultKey(const CPubKey& vchPubKey);
 
     bool ReadPool(int64_t nPool, CKeyPool& keypool);
@@ -128,6 +137,7 @@ public:
 
     DBErrors ReorderTransactions(CWallet* pwallet);
     DBErrors LoadWallet(CWallet* pwallet);
+    DBErrors LoadWalletImport(CWallet* pwallet);
     DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
     DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
     static bool Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKeys);
@@ -143,4 +153,4 @@ private:
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 void ThreadFlushWalletDB(const std::string& strFile);
 
-#endif // BITCOIN_WALLET_WALLETDB_H
+#endif // LIBERTA_WALLET_WALLETDB_H

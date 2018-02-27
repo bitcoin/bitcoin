@@ -1,12 +1,13 @@
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
 #include "chain.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "init.h"
 #include "main.h"
+#include "miner.h"
 #include "script/script.h"
 #include "script/standard.h"
 #include "sync.h"
@@ -79,10 +80,10 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
     
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
-            "importprivkey \"bitcoinprivkey\" ( \"label\" rescan )\n"
+            "importprivkey \"libertaprivkey\" ( \"label\" rescan )\n"
             "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
             "\nArguments:\n"
-            "1. \"bitcoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
+            "1. \"libertaprivkey\"   (string, required) The private key (see dumpprivkey)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "\nNote: This call can take minutes to complete if rescan is true.\n"
@@ -115,7 +116,9 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
     if (fRescan && fPruneMode)
         throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
 
-    CBitcoinSecret vchSecret;
+    strSecret = convertAddress(strSecret.c_str(),128);
+
+    CLibertaSecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
 
     if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
@@ -150,7 +153,7 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-void ImportAddress(const CBitcoinAddress& address, const string& strLabel);
+void ImportAddress(const CLibertaAddress& address, const string& strLabel);
 void ImportScript(const CScript& script, const string& strLabel, bool isRedeemScript)
 {
     if (!isRedeemScript && ::IsMine(*pwalletMain, script) == ISMINE_SPENDABLE)
@@ -164,11 +167,11 @@ void ImportScript(const CScript& script, const string& strLabel, bool isRedeemSc
     if (isRedeemScript) {
         if (!pwalletMain->HaveCScript(script) && !pwalletMain->AddCScript(script))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2sh redeemScript to wallet");
-        ImportAddress(CBitcoinAddress(CScriptID(script)), strLabel);
+        ImportAddress(CLibertaAddress(CScriptID(script)), strLabel);
     }
 }
 
-void ImportAddress(const CBitcoinAddress& address, const string& strLabel)
+void ImportAddress(const CLibertaAddress& address, const string& strLabel)
 {
     CScript script = GetScriptForDestination(address.Get());
     ImportScript(script, strLabel, false);
@@ -222,7 +225,7 @@ UniValue importaddress(const UniValue& params, bool fHelp)
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    CBitcoinAddress address(params[0].get_str());
+    CLibertaAddress address(params[0].get_str());
     if (address.IsValid()) {
         if (fP2SH)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot use the p2sh flag with an address - use a script instead");
@@ -231,7 +234,7 @@ UniValue importaddress(const UniValue& params, bool fHelp)
         std::vector<unsigned char> data(ParseHex(params[0].get_str()));
         ImportScript(CScript(data.begin(), data.end()), strLabel, fP2SH);
     } else {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Liberta address or script");
     }
 
     if (fRescan)
@@ -288,7 +291,7 @@ UniValue importpubkey(const UniValue& params, bool fHelp)
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    ImportAddress(CBitcoinAddress(pubKey.GetID()), strLabel);
+    ImportAddress(CLibertaAddress(pubKey.GetID()), strLabel);
     ImportScript(GetScriptForRawPubKey(pubKey), strLabel, false);
 
     if (fRescan)
@@ -352,15 +355,16 @@ UniValue importwallet(const UniValue& params, bool fHelp)
         boost::split(vstr, line, boost::is_any_of(" "));
         if (vstr.size() < 2)
             continue;
-        CBitcoinSecret vchSecret;
-        if (!vchSecret.SetString(vstr[0]))
+        CLibertaSecret vchSecret;
+        
+        if (!vchSecret.SetString(convertAddress(vstr[0].c_str(),128)))
             continue;
         CKey key = vchSecret.GetKey();
         CPubKey pubkey = key.GetPubKey();
         assert(key.VerifyPubKey(pubkey));
         CKeyID keyid = pubkey.GetID();
         if (pwalletMain->HaveKey(keyid)) {
-            LogPrintf("Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString());
+            LogPrintf("Skipping import of %s (key already present)\n", CLibertaAddress(keyid).ToString());
             continue;
         }
         int64_t nTime = DecodeDumpTime(vstr[1]);
@@ -378,7 +382,7 @@ UniValue importwallet(const UniValue& params, bool fHelp)
                 fLabel = true;
             }
         }
-        LogPrintf("Importing %s...\n", CBitcoinAddress(keyid).ToString());
+        LogPrintf("Importing %s...\n", CLibertaAddress(keyid).ToString());
         if (!pwalletMain->AddKeyPubKey(key, pubkey)) {
             fGood = false;
             continue;
@@ -408,6 +412,133 @@ UniValue importwallet(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
+UniValue importwalletfile(const UniValue& params, bool fHelp)
+{
+
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() < 1 || params.size() > 3)
+        throw runtime_error(
+            "importwalletfile <file> [walletpassword] [rescan=true]\n"
+            "Import wallet.dat , can be used to claim crowdfund investments and rewards \n"
+            "Password is only required if wallet is encrypted\n"
+        );
+
+    // Whether to perform rescan after import
+    bool fRescan = true;
+    if (params.size() > 2)
+        fRescan = params[2].get_bool();
+
+    EnsureWalletIsUnlocked();
+
+    CWallet* pwalletImport = new CWallet(params[0].get_str().c_str());
+    DBErrors nLoadWalletRet = pwalletImport->LoadWalletImport();
+
+    std::ostringstream strErrors;
+    if (nLoadWalletRet != DB_LOAD_OK)
+        {
+            if (nLoadWalletRet == DB_CORRUPT)
+                throw JSONRPCError(RPC_WALLET_ERROR, "Error loading wallet.dat: Wallet corrupted");
+            else if (nLoadWalletRet == DB_LOAD_FAIL)
+            {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Wallet failed to load");
+            }
+            else
+                LogPrintf("Non-fatal errors loading wallet file\n");
+    }
+
+    // Handle encrypted wallets. Wallets first need to be unlocked before the keys
+    // can be added into your clam wallet. 
+    if (pwalletImport->IsCrypted() && pwalletImport->IsLocked()) {
+        bool fGotWalletPass = true;
+        if (params.size() < 2)
+            fGotWalletPass = false;
+        else
+        {
+            // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+            // Alternately, find a way to make params[0] mlock()'d to begin with.
+            SecureString strWalletPass;
+            strWalletPass.reserve(100);
+            strWalletPass = params[1].get_str().c_str();
+            if (strWalletPass.length() > 0)
+            {
+                if (!pwalletImport->Unlock(strWalletPass))
+                    throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect for the wallet you are attempting to import.");
+            } else
+                fGotWalletPass = false;
+        }
+
+        if (!fGotWalletPass)
+            throw runtime_error(
+                "importwallet <file> <walletpassword>\n"
+                "Import encrypted wallet from BTC/LTC/DOGE \n\n"
+                "You are attempting to import an encrypted wallet\n"
+                "The passphrase must be entered to import the wallet\n"
+                );
+    }
+
+    int nImported = 0;
+    int nSkipped = 0;
+
+    {
+        LOCK2(cs_main, pwalletMain->cs_wallet);
+        LOCK(pwalletImport->cs_wallet);
+
+        std::set<CKeyID> setKeys;
+        pwalletImport->GetKeys(setKeys);
+
+        BOOST_FOREACH(const CKeyID &keyid, setKeys) {
+            
+            int64_t nTime = GetTime();
+
+            std::string strAddr = CLibertaAddress(keyid).ToString();
+            std::string strLabel = "importwallet";
+
+            CKey key;
+            if (pwalletImport->GetKey(keyid, key)) {
+
+                if (pwalletMain->HaveKey(keyid)) {
+                    if (fDebug) 
+                        LogPrintf("Skipping import of %s (key already present)\n", strAddr);
+                    nSkipped++;
+                    continue;
+                }
+		
+                if (fDebug) 
+                    LogPrintf("Importing %s...\n", strAddr);
+
+                pwalletMain->AddKey(key);
+                pwalletMain->SetAddressBook(keyid, strLabel, "receive");
+                pwalletMain->mapKeyMetadata[keyid].nCreateTime = nTime;
+                nImported++;
+            }
+        }
+    }
+    
+    delete pwalletImport;
+
+    LogPrintf("walletimport imported %d and skipped %d key(s)\n", nImported, nSkipped);
+
+    if (nImported > 0) 
+    {
+        if (fRescan)
+        {
+            pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+            pwalletMain->ReacceptWalletTransactions();
+            pwalletMain->MarkDirty();
+            LogPrintf("Rescan complete\n");
+        }
+        else
+            LogPrintf("Not rescanning because user requested that it should be skipped\n");
+    } 
+    else
+        LogPrintf("Not rescanning because no new keys were imported\n");
+
+    return NullUniValue;
+}
+
+
 UniValue dumpprivkey(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
@@ -415,11 +546,11 @@ UniValue dumpprivkey(const UniValue& params, bool fHelp)
     
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "dumpprivkey \"bitcoinaddress\"\n"
-            "\nReveals the private key corresponding to 'bitcoinaddress'.\n"
+            "dumpprivkey \"libertaaddress\"\n"
+            "\nReveals the private key corresponding to 'libertaaddress'.\n"
             "Then the importprivkey can be used with this output\n"
             "\nArguments:\n"
-            "1. \"bitcoinaddress\"   (string, required) The bitcoin address for the private key\n"
+            "1. \"libertaaddress\"   (string, required) The liberta address for the private key\n"
             "\nResult:\n"
             "\"key\"                (string) The private key\n"
             "\nExamples:\n"
@@ -433,16 +564,16 @@ UniValue dumpprivkey(const UniValue& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     string strAddress = params[0].get_str();
-    CBitcoinAddress address;
+    CLibertaAddress address;
     if (!address.SetString(strAddress))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Liberta address");
     CKeyID keyID;
     if (!address.GetKeyID(keyID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
     CKey vchSecret;
     if (!pwalletMain->GetKey(keyID, vchSecret))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
-    return CBitcoinSecret(vchSecret).ToString();
+    return CLibertaSecret(vchSecret).ToString();
 }
 
 
@@ -485,7 +616,7 @@ UniValue dumpwallet(const UniValue& params, bool fHelp)
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
 
     // produce output
-    file << strprintf("# Wallet dump created by Bitcoin %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
+    file << strprintf("# Wallet dump created by Liberta %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
     file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
     file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
     file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));
@@ -493,15 +624,15 @@ UniValue dumpwallet(const UniValue& params, bool fHelp)
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
         const CKeyID &keyid = it->second;
         std::string strTime = EncodeDumpTime(it->first);
-        std::string strAddr = CBitcoinAddress(keyid).ToString();
+        std::string strAddr = CLibertaAddress(keyid).ToString();
         CKey key;
         if (pwalletMain->GetKey(keyid, key)) {
             if (pwalletMain->mapAddressBook.count(keyid)) {
-                file << strprintf("%s %s label=%s # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, EncodeDumpString(pwalletMain->mapAddressBook[keyid].name), strAddr);
+                file << strprintf("%s %s label=%s # addr=%s\n", CLibertaSecret(key).ToString(), strTime, EncodeDumpString(pwalletMain->mapAddressBook[keyid].name), strAddr);
             } else if (setKeyPool.count(keyid)) {
-                file << strprintf("%s %s reserve=1 # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, strAddr);
+                file << strprintf("%s %s reserve=1 # addr=%s\n", CLibertaSecret(key).ToString(), strTime, strAddr);
             } else {
-                file << strprintf("%s %s change=1 # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, strAddr);
+                file << strprintf("%s %s change=1 # addr=%s\n", CLibertaSecret(key).ToString(), strTime, strAddr);
             }
         }
     }
