@@ -11,6 +11,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
+    assert_raises_rpc_error
 )
 
 
@@ -119,6 +120,40 @@ class WalletHDTest(BitcoinTestFramework):
                 keypath = self.nodes[1].getaddressinfo(out['scriptPubKey']['addresses'][0])['hdkeypath']
 
         assert_equal(keypath[0:7], "m/0'/1'")
+
+        # Generate a new HD seed on node 1 and make sure it is set
+        orig_masterkeyid = self.nodes[1].getwalletinfo()['hdmasterkeyid']
+        self.nodes[1].sethdseed()
+        new_masterkeyid = self.nodes[1].getwalletinfo()['hdmasterkeyid']
+        assert orig_masterkeyid != new_masterkeyid
+        addr = self.nodes[1].getnewaddress()
+        assert_equal(self.nodes[1].getaddressinfo(addr)['hdkeypath'], 'm/0\'/0\'/0\'') # Make sure the new address is the first from the keypool
+        self.nodes[1].keypoolrefill(1) # Fill keypool with 1 key
+
+        # Set a new HD seed on node 1 without flushing the keypool
+        new_seed = self.nodes[0].dumpprivkey(self.nodes[0].getnewaddress())
+        orig_masterkeyid = new_masterkeyid
+        self.nodes[1].sethdseed(False, new_seed)
+        new_masterkeyid = self.nodes[1].getwalletinfo()['hdmasterkeyid']
+        assert orig_masterkeyid != new_masterkeyid
+        addr = self.nodes[1].getnewaddress()
+        assert_equal(orig_masterkeyid, self.nodes[1].getaddressinfo(addr)['hdmasterkeyid'])
+        assert_equal(self.nodes[1].getaddressinfo(addr)['hdkeypath'], 'm/0\'/0\'/1\'') # Make sure the new address continues previous keypool
+
+        # Check that the next address is from the new seed
+        self.nodes[1].keypoolrefill(1)
+        next_addr = self.nodes[1].getnewaddress()
+        assert_equal(new_masterkeyid, self.nodes[1].getaddressinfo(next_addr)['hdmasterkeyid'])
+        assert_equal(self.nodes[1].getaddressinfo(next_addr)['hdkeypath'], 'm/0\'/0\'/0\'') # Make sure the new address is not from previous keypool
+        assert next_addr != addr
+
+        # Sethdseed parameter validity
+        assert_raises_rpc_error(-1, 'sethdseed', self.nodes[0].sethdseed, False, new_seed, 0)
+        assert_raises_rpc_error(-5, "Invalid private key", self.nodes[1].sethdseed, False, "not_wif")
+        assert_raises_rpc_error(-1, "JSON value is not a boolean as expected", self.nodes[1].sethdseed, "Not_bool")
+        assert_raises_rpc_error(-1, "JSON value is not a string as expected", self.nodes[1].sethdseed, False, True)
+        assert_raises_rpc_error(-5, "Already have this key", self.nodes[1].sethdseed, False, new_seed)
+        assert_raises_rpc_error(-5, "Already have this key", self.nodes[1].sethdseed, False, self.nodes[1].dumpprivkey(self.nodes[1].getnewaddress()))
 
 if __name__ == '__main__':
     WalletHDTest().main ()
