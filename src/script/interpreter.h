@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_INTERPRETER_H
-#define BITCOIN_SCRIPT_INTERPRETER_H
+#ifndef LIBERTA_SCRIPT_INTERPRETER_H
+#define LIBERTA_SCRIPT_INTERPRETER_H
 
 #include "script_error.h"
 #include "primitives/transaction.h"
@@ -81,6 +81,11 @@ enum
     //
     // See BIP65 for details.
     SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
+
+    // support CHECKSEQUENCEVERIFY opcode
+    //
+    // See BIP112 for details
+    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
@@ -96,6 +101,11 @@ public:
     }
 
     virtual bool CheckLockTime(const CScriptNum& nLockTime) const
+    {
+         return false;
+    }
+
+    virtual bool CheckSequence(const CScriptNum& nSequence) const
     {
          return false;
     }
@@ -116,6 +126,7 @@ public:
     TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
     bool CheckLockTime(const CScriptNum& nLockTime) const;
+    bool CheckSequence(const CScriptNum& nSequence) const;
 };
 
 class MutableTransactionSignatureChecker : public TransactionSignatureChecker
@@ -127,7 +138,10 @@ public:
     MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn) : TransactionSignatureChecker(&txTo, nInIn), txTo(*txToIn) {}
 };
 
+bool IsCompressedOrUncompressedPubKey(const std::vector<unsigned char> &vchPubKey);
+bool IsLowDERSignature(const std::vector<unsigned char> &vchSig, ScriptError* serror, bool haveHashType = true);
+bool IsValidSignatureEncoding(const std::vector<unsigned char> &sig, bool haveHashType = true);
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL);
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL);
 
-#endif // BITCOIN_SCRIPT_INTERPRETER_H
+#endif // LIBERTA_SCRIPT_INTERPRETER_H

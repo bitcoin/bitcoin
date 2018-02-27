@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,7 +47,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         // Standard tx, sender provides pubkey, receiver adds signature
         mTemplates.insert(make_pair(TX_PUBKEY, CScript() << OP_PUBKEY << OP_CHECKSIG));
 
-        // Bitcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
+        // Liberta address tx, sender provides hash of pubkey, receiver provides signature and pubkey
         mTemplates.insert(make_pair(TX_PUBKEYHASH, CScript() << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG));
 
         // Sender provides N pubkeys, receivers provides M signatures
@@ -125,7 +125,14 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 // to other if/else statements
             }
 
-            if (opcode2 == OP_PUBKEY)
+            if (opcode2 == OP_ANYDATA)
+            {
+                if (vch1.empty()
+                    && opcode1 != OP_0 && opcode1 < OP_1 && opcode1 > OP_16)
+                    break;
+                vSolutionsRet.push_back(vch1);
+            }
+            else if (opcode2 == OP_PUBKEY)
             {
                 if (vch1.size() < 33 || vch1.size() > 65)
                     break;
@@ -147,6 +154,20 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 }
                 else
                     break;
+            }
+            else if (opcode2 == OP_BIGINTEGER)
+            {
+            	try {
+            		CScriptNum n(vch1, true, 5);
+
+            		LogPrintf("Freeze Solver BIGINT=%d \n", n.getint64());
+            		// if try reaches here without scriptnum_error
+            		// then vch1 is a valid bigint
+            		vSolutionsRet.push_back(vch1);
+            	} catch (scriptnum_error&) {
+//            		LogPrintf("Freeze Solver BIGINT ERROR! %s \n", ::ScriptToAsmStr(CScript(vch1)));
+            		break;
+            	} // end try/catch
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {

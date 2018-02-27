@@ -1,13 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_SCRIPT_H
-#define BITCOIN_SCRIPT_SCRIPT_H
+#ifndef LIBERTA_SCRIPT_SCRIPT_H
+#define LIBERTA_SCRIPT_SCRIPT_H
 
 #include "crypto/common.h"
 #include "prevector.h"
+#include "pubkey.h"
 
 #include <assert.h>
 #include <climits>
@@ -164,7 +165,8 @@ enum opcodetype
     OP_NOP1 = 0xb0,
     OP_CHECKLOCKTIMEVERIFY = 0xb1,
     OP_NOP2 = OP_CHECKLOCKTIMEVERIFY,
-    OP_NOP3 = 0xb2,
+    OP_CHECKSEQUENCEVERIFY = 0xb2,
+    OP_NOP3 = OP_CHECKSEQUENCEVERIFY,
     OP_NOP4 = 0xb3,
     OP_NOP5 = 0xb4,
     OP_NOP6 = 0xb5,
@@ -175,8 +177,10 @@ enum opcodetype
 
 
     // template matching params
+    OP_BIGINTEGER = 0xf0,
     OP_SMALLINTEGER = 0xfa,
     OP_PUBKEYS = 0xfb,
+    OP_ANYDATA = 0xfc,
     OP_PUBKEYHASH = 0xfd,
     OP_PUBKEY = 0xfe,
 
@@ -259,6 +263,11 @@ public:
     inline CScriptNum& operator+=( const CScriptNum& rhs)       { return operator+=(rhs.m_value);  }
     inline CScriptNum& operator-=( const CScriptNum& rhs)       { return operator-=(rhs.m_value);  }
 
+    inline CScriptNum operator&(   const int64_t& rhs)    const { return CScriptNum(m_value & rhs);}
+    inline CScriptNum operator&(   const CScriptNum& rhs) const { return operator&(rhs.m_value);   }
+
+    inline CScriptNum& operator&=( const CScriptNum& rhs)       { return operator&=(rhs.m_value);  }
+
     inline CScriptNum operator-()                         const
     {
         assert(m_value != std::numeric_limits<int64_t>::min());
@@ -287,6 +296,12 @@ public:
         return *this;
     }
 
+    inline CScriptNum& operator&=( const int64_t& rhs)
+    {
+        m_value &= rhs;
+        return *this;
+    }
+
     int getint() const
     {
         if (m_value > std::numeric_limits<int>::max())
@@ -294,6 +309,11 @@ public:
         else if (m_value < std::numeric_limits<int>::min())
             return std::numeric_limits<int>::min();
         return m_value;
+    }
+
+    int64_t getint64() const
+    {
+	return m_value;
     }
 
     std::vector<unsigned char> getvch() const
@@ -417,6 +437,14 @@ public:
     CScript& operator<<(const CScriptNum& b)
     {
         *this << b.getvch();
+        return *this;
+    }
+
+    CScript& operator<<(const CPubKey& key)
+    {
+        assert(key.size() < OP_PUSHDATA1);
+        insert(end(), (unsigned char)key.size());
+        insert(end(), key.begin(), key.end());
         return *this;
     }
 
@@ -582,7 +610,7 @@ public:
     }
 
     /**
-     * Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
+     * Pre-version-0.6, Liberta always counted CHECKMULTISIGs
      * as 20 sigops. With pay-to-script-hash, that changed:
      * CHECKMULTISIGs serialized in scriptSigs are
      * counted more accurately, assuming they are of the form
@@ -596,6 +624,7 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    bool IsNormalPaymentScript() const;
     bool IsPayToScriptHash() const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
@@ -612,6 +641,7 @@ public:
         return (size() > 0 && *begin() == OP_RETURN);
     }
 
+    std::string ToString() const;
     void clear()
     {
         // The default std::vector::clear() does not release memory.
@@ -628,4 +658,4 @@ public:
     virtual ~CReserveScript() {}
 };
 
-#endif // BITCOIN_SCRIPT_SCRIPT_H
+#endif // LIBERTA_SCRIPT_SCRIPT_H
