@@ -1,16 +1,15 @@
-#
+#!/usr/bin/env python3
 #
 # bignum.py
 #
-# This file is copied from python-bitcoinlib.
+# This file is copied from python-libertalib.
 #
-# Distributed under the MIT/X11 software license, see the accompanying
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
 """Bignum routines"""
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import struct
 
@@ -83,7 +82,7 @@ def mpi2bn(s):
         return -v
     return v
 
-# bitcoin-specific little endian format, with implicit size
+# liberta-specific little endian format, with implicit size
 def mpi2vch(s):
     r = s[4:]           # strip size
     r = r[::-1]         # reverse string, converting BE->LE

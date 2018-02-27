@@ -1,13 +1,13 @@
-#!/usr/bin/env python2
-# Copyright (c) 2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Liberta Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import LibertaTestFramework
 from test_framework.util import *
 
 
-class SignRawTransactionsTest(BitcoinTestFramework):
+class SignRawTransactionsTest(LibertaTestFramework):
     """Tests transaction signing via RPC command "signrawtransaction"."""
 
     def setup_chain(self):

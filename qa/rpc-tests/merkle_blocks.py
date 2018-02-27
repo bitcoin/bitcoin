@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Liberta Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,10 +7,10 @@
 # Test merkleblock fetch/validation
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import LibertaTestFramework
 from test_framework.util import *
 
-class MerkleBlockTest(BitcoinTestFramework):
+class MerkleBlockTest(LibertaTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -32,7 +32,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        print "Mining blocks..."
+        print("Mining blocks...")
         self.nodes[0].generate(105)
         self.sync_all()
 

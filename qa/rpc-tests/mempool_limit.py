@@ -1,14 +1,14 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Liberta Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Test mempool limiting together/eviction with the wallet
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import LibertaTestFramework
 from test_framework.util import *
 
-class MempoolLimitTest(BitcoinTestFramework):
+class MempoolLimitTest(LibertaTestFramework):
 
     def __init__(self):
         self.txouts = gen_return_txouts()
@@ -38,11 +38,10 @@ class MempoolLimitTest(BitcoinTestFramework):
         self.nodes[0].settxfee(0) # return to automatic fee selection
         txFS = self.nodes[0].signrawtransaction(txF['hex'])
         txid = self.nodes[0].sendrawtransaction(txFS['hex'])
-        self.nodes[0].lockunspent(True, [us0])
 
         relayfee = self.nodes[0].getnetworkinfo()['relayfee']
         base_fee = relayfee*100
-        for i in xrange (4):
+        for i in range (4):
             txids.append([])
             txids[i] = create_lots_of_big_transactions(self.nodes[0], self.txouts, utxos[30*i:30*i+30], (i+1)*base_fee)
 

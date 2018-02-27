@@ -3,11 +3,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-BUILDDIR="@abs_top_builddir@"
-EXEEXT="@EXEEXT@"
+BUILDDIR="/home/trevor/liberta"
+EXEEXT=""
 
 # These will turn into comments if they were disabled when configuring.
-@ENABLE_WALLET_TRUE@ENABLE_WALLET=1
-@BUILD_LIBERTA_UTILS_TRUE@ENABLE_UTILS=1
-@BUILD_LIBERTAD_TRUE@ENABLE_LIBERTAD=1
-@ENABLE_ZMQ_TRUE@ENABLE_ZMQ=1
+ENABLE_WALLET=1
+ENABLE_UTILS=1
+ENABLE_LIBERTAD=1
+ENABLE_ZMQ=1
