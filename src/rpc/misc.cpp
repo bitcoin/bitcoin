@@ -1075,7 +1075,7 @@ static UniValue getinfo_deprecated(const JSONRPCRequest& request)
         "- getblockchaininfo: blocks, difficulty, chain\n"
         "- getnetworkinfo: version, protocolversion, timeoffset, connections, proxy, relayfee, warnings\n"
         "- getwalletinfo: balance, keypoololdest, keypoolsize, paytxfee, unlocked_until, walletversion\n"
-        "\nbitcoin-cli has the option -getinfo to collect and format these in the old format."
+        "\nparticl-cli has the option -getinfo to collect and format these in the old format."
     );
 }
 
