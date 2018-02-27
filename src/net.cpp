@@ -319,8 +319,9 @@ CNode* CConnman::FindNode(const std::string& addrName)
 {
     LOCK(cs_vNodes);
 for (CNode* pnode : vNodes)
-        if (pnode->GetAddrName() == addrName)
-            return (pnode);
+    if (pnode->GetAddrName() == addrName) {
+        return (pnode);
+    }
     return nullptr;
 }
 
