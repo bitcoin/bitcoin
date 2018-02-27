@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin developers
+// Copyright (c) 2009-2015 The Liberta developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -370,7 +370,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
         return;
     }
 
-    // Fees are stored and reported as BTC-per-kb:
+    // Fees are stored and reported as LBT-per-kb:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
     // Want the priority of the tx at confirmation. However we don't know
@@ -416,7 +416,7 @@ void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
         return;
     }
 
-    // Fees are stored and reported as BTC-per-kb:
+    // Fees are stored and reported as LBT-per-kb:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
     // Want the priority of the tx at confirmation.  The priority when it

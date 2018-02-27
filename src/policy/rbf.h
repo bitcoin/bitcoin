@@ -1,9 +1,9 @@
-// Copyright (c) 2016 The Bitcoin developers
+// Copyright (c) 2016 The Liberta developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_POLICY_RBF_H
-#define BITCOIN_POLICY_RBF_H
+#ifndef LIBERTA_POLICY_RBF_H
+#define LIBERTA_POLICY_RBF_H
 
 #include "txmempool.h"
 
@@ -17,4 +17,4 @@ bool SignalsOptInRBF(const CTransaction &tx);
 // as the sequence numbers of all in-mempool ancestors.
 bool IsRBFOptIn(const CTxMemPoolEntry &entry, CTxMemPool &pool);
 
-#endif // BITCOIN_POLICY_RBF_H
+#endif // LIBERTA_POLICY_RBF_H

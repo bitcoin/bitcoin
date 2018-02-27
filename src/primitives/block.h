@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PRIMITIVES_BLOCK_H
-#define BITCOIN_PRIMITIVES_BLOCK_H
+#ifndef LIBERTA_PRIMITIVES_BLOCK_H
+#define LIBERTA_PRIMITIVES_BLOCK_H
 
 #include "primitives/transaction.h"
 #include "serialize.h"
@@ -21,7 +21,6 @@ class CBlockHeader
 {
 public:
     // header
-    static const int32_t CURRENT_VERSION=4;
     int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -49,7 +48,7 @@ public:
 
     void SetNull()
     {
-        nVersion = CBlockHeader::CURRENT_VERSION;
+        nVersion = 0;
         hashPrevBlock.SetNull();
         hashMerkleRoot.SetNull();
         nTime = 0;
@@ -63,11 +62,17 @@ public:
     }
 
     uint256 GetHash() const;
+	
+    uint256 GetVerifiedHash() const;
 
+   
+    uint256 GetMidHash() const;
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
     }
+
+    std::string ToString() const;
 };
 
 
@@ -77,7 +82,11 @@ public:
     // network and disk
     std::vector<CTransaction> vtx;
 
+    // network and disk
+    std::vector<unsigned char> vchBlockSig;
+
     // memory only
+    mutable CScript payee;
     mutable bool fChecked;
 
     CBlock()
@@ -97,6 +106,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
+	if(vtx.size() > 1 && vtx[1].IsCoinStake())
+		READWRITE(vchBlockSig);
     }
 
     void SetNull()
@@ -104,6 +115,19 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         fChecked = false;
+        payee = CScript();
+        vchBlockSig.clear();
+    }
+
+    // two types of block: proof-of-work or proof-of-stake
+    bool IsProofOfStake() const
+    {
+        return (vtx.size() > 1 && vtx[1].IsCoinStake());
+    }
+
+    bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
     }
 
     CBlockHeader GetBlockHeader() const
@@ -157,4 +181,4 @@ struct CBlockLocator
     }
 };
 
-#endif // BITCOIN_PRIMITIVES_BLOCK_H
+#endif // LIBERTA_PRIMITIVES_BLOCK_H
