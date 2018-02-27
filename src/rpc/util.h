@@ -8,7 +8,6 @@
 #include <pubkey.h>
 #include <script/standard.h>
 #include <univalue.h>
-#include <utilstrencodings.h>
 
 #include <boost/variant/static_visitor.hpp>
 
