@@ -3405,6 +3405,9 @@ UniValue bumpfee(const JSONRPCRequest& request)
         }
         if (options.exists("reduce_output")) {
             reduce_output = options["reduce_output"].get_int64();
+            if (reduce_output < 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid reduce_output parameter (cannot be negative)");
+            }
         }
     }
 
