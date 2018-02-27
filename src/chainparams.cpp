@@ -319,7 +319,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nStartTime = 1517792400; // Feb 5th, 2018
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nTimeout = 1549328400; // Feb 5th, 2019
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 100;
-        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 59; // 50% of 100
+        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 50; // 50% of 100
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000924e924a21715"); // 37900
@@ -445,7 +445,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nStartTime = 1517792400; // Feb 5th, 2018
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nTimeout = 1549328400; // Feb 5th, 2019
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 100;
-        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 59; // 50% of 100
+        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 50; // 50% of 100
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
