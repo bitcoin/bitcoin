@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The LibertaCore developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_GUIUTIL_H
-#define BITCOIN_QT_GUIUTIL_H
+#ifndef LIBERTA_QT_GUIUTIL_H
+#define LIBERTA_QT_GUIUTIL_H
 
 #include "amount.h"
 
@@ -14,6 +14,7 @@
 #include <QProgressBar>
 #include <QString>
 #include <QTableView>
+#include <QTableWidget>
 
 #include <boost/filesystem.hpp>
 
@@ -29,7 +30,7 @@ class QUrl;
 class QWidget;
 QT_END_NAMESPACE
 
-/** Utility functions used by the Bitcoin Qt UI.
+/** Utility functions used by the LibertaQt UI.
  */
 namespace GUIUtil
 {
@@ -44,10 +45,10 @@ namespace GUIUtil
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
-    // Parse "bitcoin:" URI into recipient object, return true on successful parsing
-    bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
-    bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
-    QString formatBitcoinURI(const SendCoinsRecipient &info);
+    // Parse "liberta:" URI into recipient object, return true on successful parsing
+    bool parseLibertaURI(const QUrl &uri, SendCoinsRecipient *out);
+    bool parseLibertaURI(QString uri, SendCoinsRecipient *out);
+    QString formatLibertaURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(const QString& address, const CAmount& amount);
@@ -114,6 +115,16 @@ namespace GUIUtil
     // Open debug.log
     void openDebugLogfile();
 
+
+// Open liberta.conf
+void openConfigfile();
+
+// Open masternode.conf
+void openMNConfigfile();
+
+// Browse backup folder
+void showBackups();
+
     // Replace invalid default fonts with known good ones
     void SubstituteFonts(const QString& language);
 
@@ -174,6 +185,21 @@ namespace GUIUtil
             void on_geometriesChanged();
     };
 
+/**
+     * Extension to QTableWidgetItem that facilitates proper ordering for "DHMS"
+     * strings (primarily used in the masternode's "active" listing).
+     */
+class DHMSTableWidgetItem : public QTableWidgetItem
+{
+public:
+    DHMSTableWidgetItem(const int64_t seconds);
+    virtual bool operator<(QTableWidgetItem const& item) const;
+
+private:
+    // Private backing value for DHMS string, used for sorting.
+    int64_t value;
+};
+
     bool GetStartOnSystemStartup();
     bool SetStartOnSystemStartup(bool fAutoStart);
 
@@ -181,6 +207,9 @@ namespace GUIUtil
     void saveWindowGeometry(const QString& strSetting, QWidget *parent);
     /** Restore window size and position */
     void restoreWindowGeometry(const QString& strSetting, const QSize &defaultSizeIn, QWidget *parent);
+
+/** Load global CSS theme */
+QString loadStyleSheet();
 
     /* Convert QString to OS specific boost path through UTF-8 */
     boost::filesystem::path qstringToBoostPath(const QString &path);
@@ -216,4 +245,4 @@ namespace GUIUtil
 
 } // namespace GUIUtil
 
-#endif // BITCOIN_QT_GUIUTIL_H
+#endif // LIBERTA_QT_GUIUTIL_H

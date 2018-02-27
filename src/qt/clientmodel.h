@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The LibertaCore developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_CLIENTMODEL_H
-#define BITCOIN_QT_CLIENTMODEL_H
+#ifndef LIBERTA_QT_CLIENTMODEL_H
+#define LIBERTA_QT_CLIENTMODEL_H
 
 #include <QObject>
 #include <QDateTime>
@@ -18,6 +18,7 @@ class CWallet;
 class CBlockIndex;
 
 QT_BEGIN_NAMESPACE
+class QDateTime;
 class QTimer;
 QT_END_NAMESPACE
 
@@ -35,7 +36,7 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for Bitcoin network client. */
+/** Model for Libertanetwork client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
@@ -50,7 +51,9 @@ public:
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
+    QString getMasternodeCountString() const;
     int getNumBlocks() const;
+    int getNumBlocksAtStartup();
 
     //! Return number of transactions in the mempool
     long getMempoolSize() const;
@@ -82,7 +85,12 @@ private:
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
+    QString cachedMasternodeCountString;
+
+    int numBlocksAtStartup;
+
     QTimer *pollTimer;
+    QTimer* pollMnTimer;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -90,6 +98,7 @@ private:
 Q_SIGNALS:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress);
+    void strMasternodesChanged(const QString& strMasternodes);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
@@ -102,9 +111,10 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void updateTimer();
+    void updateMnTimer();
     void updateNumConnections(int numConnections);
     void updateAlert(const QString &hash, int status);
     void updateBanlist();
 };
 
-#endif // BITCOIN_QT_CLIENTMODEL_H
+#endif // LIBERTA_QT_CLIENTMODEL_H

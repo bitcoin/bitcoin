@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The LibertaCore developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_BANTABLEMODEL_H
-#define BITCOIN_QT_BANTABLEMODEL_H
+#ifndef LIBERTA_QT_BANTABLEMODEL_H
+#define LIBERTA_QT_BANTABLEMODEL_H
 
 #include "net.h"
 
@@ -69,4 +69,4 @@ private:
     BanTablePriv *priv;
 };
 
-#endif // BITCOIN_QT_BANTABLEMODEL_H
+#endif // LIBERTA_QT_BANTABLEMODEL_H

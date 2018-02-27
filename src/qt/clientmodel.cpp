@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The LibertaCore developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,9 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "clientversion.h"
+#include "main.h"
+#include "masternode-sync.h"
+#include "masternodeman.h"
 #include "net.h"
 #include "txmempool.h"
 #include "ui_interface.h"
@@ -19,6 +22,7 @@
 
 #include <stdint.h>
 
+#include <QDateTime>
 #include <QDebug>
 #include <QTimer>
 
@@ -39,6 +43,11 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(updateTimer()));
     pollTimer->start(MODEL_UPDATE_DELAY);
+
+    pollMnTimer = new QTimer(this);
+    connect(pollMnTimer, SIGNAL(timeout()), this, SLOT(updateMnTimer()));
+    // no need to update as frequent as data for balances/txes/blocks
+    pollMnTimer->start(MODEL_UPDATE_DELAY * 4);
 
     subscribeToCoreSignals();
 }
@@ -62,10 +71,21 @@ int ClientModel::getNumConnections(unsigned int flags) const
     return nNum;
 }
 
+QString ClientModel::getMasternodeCountString() const
+{
+    return tr("Total: %1 (OBF compatible: %2 / Enabled: %3)").arg(QString::number((int)mnodeman.size())).arg(QString::number((int)mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION))).arg(QString::number((int)mnodeman.CountEnabled()));
+}
+
 int ClientModel::getNumBlocks() const
 {
     LOCK(cs_main);
     return chainActive.Height();
+}
+
+int ClientModel::getNumBlocksAtStartup()
+{
+    if (numBlocksAtStartup == -1) numBlocksAtStartup = getNumBlocks();
+    return numBlocksAtStartup;
 }
 
 quint64 ClientModel::getTotalBytesRecv() const
@@ -81,7 +101,6 @@ quint64 ClientModel::getTotalBytesSent() const
 QDateTime ClientModel::getLastBlockDate() const
 {
     LOCK(cs_main);
-
     if (chainActive.Tip())
         return QDateTime::fromTime_t(chainActive.Tip()->GetBlockTime());
 
@@ -115,6 +134,23 @@ void ClientModel::updateTimer()
     // the following calls will aquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
     Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
+}
+
+void ClientModel::updateMnTimer()
+{
+    // Get required lock upfront. This avoids the GUI from getting stuck on
+    // periodical polls if the core is holding the locks for a longer time -
+    // for example, during a wallet rescan.
+    TRY_LOCK(cs_main, lockMain);
+    if (!lockMain)
+        return;
+    QString newMasternodeCountString = getMasternodeCountString();
+
+    if (cachedMasternodeCountString != newMasternodeCountString) {
+        cachedMasternodeCountString = newMasternodeCountString;
+
+        Q_EMIT strMasternodesChanged(cachedMasternodeCountString);
+    }
 }
 
 void ClientModel::updateNumConnections(int numConnections)
