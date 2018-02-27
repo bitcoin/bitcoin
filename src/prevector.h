@@ -10,8 +10,11 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <cstddef>
 #include <iterator>
 #include <type_traits>
+
+#include <compat.h>
 
 #pragma pack(push, 1)
 /** Implements a drop-in replacement for std::vector<T> which stores up to N
@@ -194,8 +197,21 @@ private:
     T* item_ptr(difference_type pos) { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
     const T* item_ptr(difference_type pos) const { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
 
-    void fill(T* dst, size_type count, const T& value) {
-        for (size_type i = 0; i < count; ++i) {
+    void fill(T* dst, ptrdiff_t count) {
+        if (IS_TRIVIALLY_CONSTRUCTIBLE<T>::value) {
+            // The most common use of prevector is where T=unsigned char. For
+            // trivially constructible types, we can use memset() to avoid
+            // looping.
+            ::memset(dst, 0, count * sizeof(T));
+        } else {
+            for (auto i = 0; i < count; ++i) {
+                new(static_cast<void*>(dst + i)) T();
+            }
+        }
+    }
+
+    void fill(T* dst, ptrdiff_t count, const T& value) {
+        for (auto i = 0; i < count; ++i) {
             new(static_cast<void*>(dst + i)) T(value);
         }
     }
@@ -310,16 +326,19 @@ public:
 
     void resize(size_type new_size) {
         size_type cur_size = size();
+        if (cur_size == new_size) {
+            return;
+        }
         if (cur_size > new_size) {
             erase(item_ptr(new_size), end());
+            return;
         }
         if (new_size > capacity()) {
             change_capacity(new_size);
         }
-        for (T* p = item_ptr(0); cur_size < new_size; cur_size++) {
-            _size++;
-            new(static_cast<void*>(p + cur_size)) T();
-        }
+        ptrdiff_t increase = new_size - cur_size;
+        fill(item_ptr(cur_size), increase);
+        _size += increase;
     }
 
     void reserve(size_type new_capacity) {
