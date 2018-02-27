@@ -390,8 +390,9 @@ class WalletParticlTest(ParticlTestFramework):
         ro = nodes[2].getwalletinfo()
         assert(ro['total_balance'] == 0)
 
-        ro = nodes[2].scanchain()
-        assert(ro['result'] == 'Scan complete.')
+        ro = nodes[2].rescanblockchain()
+        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(ro['start_height'] == 0)
         assert(nodes[2].getwalletinfo()['total_balance'] == 25000)
 
 

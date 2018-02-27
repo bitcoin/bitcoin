@@ -39,7 +39,7 @@ class ForkTest(ParticlTestFramework):
         ro = nodes[0].getnewextaddress('lblExtTest')
         assert(ro == 'pparszNetDqyrvZksLHJkwJGwJ1r9JCcEyLeHatLjerxRuD3qhdTdrdo2mE6e1ewfd25EtiwzsECooU5YwhAzRN63iFid6v5AQn9N5oE9wfBYehn')
 
-        ro = nodes[0].scanchain()
+        ro = nodes[0].rescanblockchain()
         assert(nodes[0].getwalletinfo()['total_balance'] == 25000)
 
 

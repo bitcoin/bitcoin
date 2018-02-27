@@ -135,7 +135,7 @@ class FilterTransactionsTest(ParticlTestFramework):
             }
         )
 
-        ro = nodes[0].scanchain()
+        ro = nodes[0].rescanblockchain()
         self.stakeBlocks(1)
 
         #
