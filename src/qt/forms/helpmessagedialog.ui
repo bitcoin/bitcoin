@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string notr="true">Bitcoin Core - Command-line options</string>
+   <string notr="true">Liberta - Command-line options</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <property name="spacing">
@@ -55,7 +55,7 @@
         </size>
        </property>
        <property name="pixmap">
-        <pixmap resource="../bitcoin.qrc">:/icons/bitcoin</pixmap>
+        <pixmap resource="../liberta.qrc">:/icons/liberta</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>
@@ -153,7 +153,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../liberta.qrc"/>
  </resources>
  <connections>
   <connection>
