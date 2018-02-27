@@ -1,4 +1,4 @@
-Source: bitcoin
+Source: liberta
 Section: utils
 Priority: optional
 Maintainer: Jonas Smedegaard <dr@jones.dk>
@@ -23,45 +23,45 @@ Build-Depends: debhelper,
  libprotobuf-dev, protobuf-compiler,
  python
 Standards-Version: 3.9.2
-Homepage: https://bitcoincore.org/
-Vcs-Git: git://github.com/bitcoin/bitcoin.git
-Vcs-Browser: https://github.com/bitcoin/bitcoin
+Homepage: https://libertacore.org/
+Vcs-Git: git://github.com/liberta/liberta.git
+Vcs-Browser: https://github.com/liberta/liberta
 
-Package: bitcoind
+Package: libertad
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Bitcoin is an experimental new digital currency that enables instant
- payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
+ Liberta is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Liberta uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Bitcoin Core
+ and issuing money are carried out collectively by the network. Liberta Core
  is the name of the open source software which enables the use of this currency.
  .
- This package provides the daemon, bitcoind, and the CLI tool
- bitcoin-cli to interact with the daemon.
+ This package provides the daemon, libertad, and the CLI tool
+ liberta-cli to interact with the daemon.
 
-Package: bitcoin-qt
+Package: liberta-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Bitcoin is an experimental new digital currency that enables instant
- payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
+ Liberta is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Liberta uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Bitcoin Core
+ and issuing money are carried out collectively by the network. Liberta Core
  is the name of the open source software which enables the use of this currency.
  .
- This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
+ This package provides Liberta-Qt, a GUI for Liberta based on Qt.
 
-Package: bitcoin-tx
+Package: liberta-tx
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer digital currency - standalone transaction tool
- Bitcoin is an experimental new digital currency that enables instant
- payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
+ Liberta is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Liberta uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Bitcoin Core
+ and issuing money are carried out collectively by the network. Liberta Core
  is the name of the open source software which enables the use of this currency.
  .
- This package provides bitcoin-tx, a command-line transaction creation
- tool which can be used without a bitcoin daemon.  Some means of
+ This package provides liberta-tx, a command-line transaction creation
+ tool which can be used without a liberta daemon.  Some means of
  exchanging minimal transaction data with peers is still required.

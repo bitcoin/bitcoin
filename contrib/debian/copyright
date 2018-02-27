@@ -1,13 +1,13 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Bitcoin
+Upstream-Name: Liberta
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#bitcoin@freenode.net
-Source: https://github.com/bitcoin/bitcoin
+ irc://#liberta@freenode.net
+Source: https://github.com/liberta/liberta
 
 Files: *
-Copyright: 2009-2016, Bitcoin Core Developers
+Copyright: 2009-2016, Liberta Core Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
+Comment: The Liberta Core Developers encompasses the current developers listed on liberta.org,
          as well as the numerous contributors to the project.
 
 Files: debian/*
@@ -72,12 +72,12 @@ License: Expat
 Comment: Modifications of Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/about.png
-       src/qt/res/icons/bitcoin.*
-       share/pixmaps/bitcoin*
-       src/qt/res/src/bitcoin.svg
+       src/qt/res/icons/liberta.*
+       share/pixmaps/liberta*
+       src/qt/res/src/liberta.svg
 Copyright: Bitboy, Jonas Schnelli
 License: public-domain
-Comment: Site: https://bitcointalk.org/?topic=1756.0
+Comment: Site: https://libertatalk.org/?topic=1756.0
 
 
 License: Expat

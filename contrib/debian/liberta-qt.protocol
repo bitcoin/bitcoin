@@ -1,0 +1,11 @@
+[Protocol]
+exec=liberta-qt '%u'
+protocol=liberta
+input=none
+output=none
+helper=true
+listing=
+reading=false
+writing=false
+makedir=false
+deleting=false

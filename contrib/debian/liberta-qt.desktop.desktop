@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Liberta
+Comment=Liberta P2P Cryptocurrency
+Exec=liberta-qt %u
+Terminal=false
+Type=Application
+Icon=liberta128
+MimeType=x-scheme-handler/liberta;
+Categories=Office;Finance;
+Name[en_ZW]=liberta-qt.desktop

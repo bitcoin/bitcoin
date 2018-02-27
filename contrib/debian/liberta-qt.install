@@ -1,0 +1,6 @@
+usr/local/bin/liberta-qt usr/bin
+share/pixmaps/liberta32.xpm usr/share/pixmaps
+share/pixmaps/liberta16.xpm usr/share/pixmaps
+share/pixmaps/liberta128.png usr/share/pixmaps
+debian/liberta-qt.desktop usr/share/applications
+debian/liberta-qt.protocol usr/share/kde4/services/
