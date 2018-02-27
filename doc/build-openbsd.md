@@ -2,7 +2,7 @@ OpenBSD build guide
 ======================
 (updated for OpenBSD 5.7)
 
-This guide describes how to build bitcoind and command-line utilities on OpenBSD.
+This guide describes how to build libertad and command-line utilities on OpenBSD.
 
 As OpenBSD is most common as a server OS, we will not bother with the GUI.
 
@@ -19,7 +19,7 @@ pkg_add python # (select version 2.7.x, not 3.x)
 ln -sf /usr/local/bin/python2.7 /usr/local/bin/python2
 ```
 
-The default C++ compiler that comes with OpenBSD 5.7 is g++ 4.2. This version is old (from 2007), and is not able to compile the current version of Bitcoin Core. It is possible to patch it up to compile, but with the planned transition to C++11 this is a losing battle. So here we will be installing a newer compiler.
+The default C++ compiler that comes with OpenBSD 5.7 is g++ 4.2. This version is old (from 2007), and is not able to compile the current version of Liberta Core. It is possible to patch it up to compile, but with the planned transition to C++11 this is a losing battle. So here we will be installing a newer compiler.
 
 GCC
 -------
@@ -36,16 +36,16 @@ This compiler will not overwrite the system compiler, it will be installed as `e
 
 Do not use `pkg_add boost`! The boost version installed thus is compiled using the `g++` compiler not `eg++`, which will result in a conflict between `/usr/local/lib/libestdc++.so.XX.0` and `/usr/lib/libstdc++.so.XX.0`, resulting in a test crash:
 
-    test_bitcoin:/usr/lib/libstdc++.so.57.0: /usr/local/lib/libestdc++.so.17.0 : WARNING: symbol(_ZN11__gnu_debug17_S_debug_me ssagesE) size mismatch, relink your program
+    test_liberta:/usr/lib/libstdc++.so.57.0: /usr/local/lib/libestdc++.so.17.0 : WARNING: symbol(_ZN11__gnu_debug17_S_debug_me ssagesE) size mismatch, relink your program
     ...
     Segmentation fault (core dumped)
 
-This makes it necessary to build boost, or at least the parts used by Bitcoin Core, manually:
+This makes it necessary to build boost, or at least the parts used by Liberta Core, manually:
 
 ```
-# Pick some path to install boost to, here we create a directory within the bitcoin directory
-BITCOIN_ROOT=$(pwd)
-BOOST_PREFIX="${BITCOIN_ROOT}/boost"
+# Pick some path to install boost to, here we create a directory within the liberta directory
+LIBERTA_ROOT=$(pwd)
+BOOST_PREFIX="${LIBERTA_ROOT}/boost"
 mkdir -p $BOOST_PREFIX
 
 # Fetch the source and verify that it is not tampered with
@@ -62,7 +62,7 @@ patch -p0 < /usr/ports/devel/boost/patches/patch-boost_test_impl_execution_monit
 sed 's/__OPEN_BSD__/__OpenBSD__/g' < libs/filesystem/src/path.cpp > libs/filesystem/src/path.cpp.tmp
 mv libs/filesystem/src/path.cpp.tmp libs/filesystem/src/path.cpp
 
-# Build w/ minimum configuration necessary for bitcoin
+# Build w/ minimum configuration necessary for liberta
 echo 'using gcc : : eg++ : <cxxflags>"-fvisibility=hidden -fPIC" <linkflags>"" <archiver>"ar" <striper>"strip"  <ranlib>"ranlib" <rc>"" : ;' > user-config.jam
 config_opts="runtime-link=shared threadapi=pthread threading=multi link=static variant=release --layout=tagged --build-type=complete --user-config=user-config.jam -sNO_BZIP2=1"
 ./bootstrap.sh --without-icu --with-libraries=chrono,filesystem,program_options,system,thread,test
@@ -78,9 +78,9 @@ See "Berkeley DB" in [build_unix.md](build_unix.md) for instructions on how to b
 You cannot use the BerkeleyDB library from ports, for the same reason as boost above (g++/libstd++ incompatibility).
 
 ```bash
-# Pick some path to install BDB to, here we create a directory within the bitcoin directory
-BITCOIN_ROOT=$(pwd)
-BDB_PREFIX="${BITCOIN_ROOT}/db4"
+# Pick some path to install BDB to, here we create a directory within the liberta directory
+LIBERTA_ROOT=$(pwd)
+BDB_PREFIX="${LIBERTA_ROOT}/db4"
 mkdir -p $BDB_PREFIX
 
 # Fetch the source and verify that it is not tampered with
@@ -96,7 +96,7 @@ cd db-4.8.30.NC/build_unix/
 make install
 ```
 
-### Building Bitcoin Core
+### Building Liberta Core
 
 **Important**: use `gmake`, not `make`. The non-GNU `make` will exit with a horrible error.
 
@@ -149,9 +149,9 @@ gmake
 However, this does not appear to work. Compilation succeeds, but link fails
 with many 'local symbol discarded' errors:
 
-    local symbol 150: discarded in section `.text._ZN10tinyformat6detail14FormatIterator6finishEv' from libbitcoin_util.a(libbitcoin_util_a-random.o)
-    local symbol 151: discarded in section `.text._ZN10tinyformat6detail14FormatIterator21streamStateFromFormatERSoRjPKcii' from libbitcoin_util.a(libbitcoin_util_a-random.o)
-    local symbol 152: discarded in section `.text._ZN10tinyformat6detail12convertToIntIA13_cLb0EE6invokeERA13_Kc' from libbitcoin_util.a(libbitcoin_util_a-random.o)
+    local symbol 150: discarded in section `.text._ZN10tinyformat6detail14FormatIterator6finishEv' from libliberta_util.a(libliberta_util_a-random.o)
+    local symbol 151: discarded in section `.text._ZN10tinyformat6detail14FormatIterator21streamStateFromFormatERSoRjPKcii' from libliberta_util.a(libliberta_util_a-random.o)
+    local symbol 152: discarded in section `.text._ZN10tinyformat6detail12convertToIntIA13_cLb0EE6invokeERA13_Kc' from libliberta_util.a(libliberta_util_a-random.o)
 
 According to similar reported errors this is a binutils (ld) issue in 2.15, the
 version installed by OpenBSD 5.7:

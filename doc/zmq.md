@@ -5,8 +5,8 @@ connections, inter-process communication, and shared-memory,
 providing various message-oriented semantics such as publish/subscribe,
 request/reply, and push/pull.
 
-The Bitcoin Core daemon can be configured to act as a trusted "border
-router", implementing the bitcoin wire protocol and relay, making
+The Liberta Core daemon can be configured to act as a trusted "border
+router", implementing the liberta wire protocol and relay, making
 consensus decisions, maintaining the local blockchain database,
 broadcasting locally generated transactions into the network, and
 providing a queryable RPC interface to interact on a polled basis for
@@ -33,19 +33,19 @@ buffering or reassembly.
 
 ## Prerequisites
 
-The ZeroMQ feature in Bitcoin Core requires ZeroMQ API version 4.x or
+The ZeroMQ feature in Liberta Core requires ZeroMQ API version 4.x or
 newer. Typically, it is packaged by distributions as something like
 *libzmq3-dev*. The C++ wrapper for ZeroMQ is *not* needed.
 
 In order to run the example Python client scripts in contrib/ one must
-also install *python-zmq*, though this is not necessary for daemon
+also install *python3-zmq*, though this is not necessary for daemon
 operation.
 
 ## Enabling
 
 By default, the ZeroMQ feature is automatically compiled in if the
 necessary prerequisites are found.  To disable, use --disable-zmq
-during the *configure* step of building bitcoind:
+during the *configure* step of building libertad:
 
     $ ./configure --disable-zmq (other options)
 
@@ -66,8 +66,8 @@ address. The same address can be used in more than one notification.
 
 For instance:
 
-    $ bitcoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
-               -zmqpubrawtx=ipc:///tmp/bitcoind.tx.raw
+    $ libertad -zmqpubhashtx=tcp://127.0.0.1:28332 \
+               -zmqpubrawtx=ipc:///tmp/libertad.tx.raw
 
 Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
@@ -75,7 +75,7 @@ notification `-zmqpubhashtx` the topic is `hashtx` (no null
 terminator) and the body is the hexadecimal transaction hash (32
 bytes).
 
-These options can also be provided in bitcoin.conf.
+These options can also be provided in liberta.conf.
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
 [ZeroMQ API](http://api.zeromq.org/4-0:_start).
@@ -87,9 +87,9 @@ arriving. Please see `contrib/zmq/zmq_sub.py` for a working example.
 
 ## Remarks
 
-From the perspective of bitcoind, the ZeroMQ socket is write-only; PUB
+From the perspective of libertad, the ZeroMQ socket is write-only; PUB
 sockets don't even have a read function. Thus, there is no state
-introduced into bitcoind directly. Furthermore, no information is
+introduced into libertad directly. Furthermore, no information is
 broadcast that wasn't already received from the public P2P network.
 
 No authentication or authorization is done on connecting clients; it

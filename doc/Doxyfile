@@ -28,13 +28,13 @@ DOXYFILE_ENCODING      = UTF-8
 # The PROJECT_NAME tag is a single word (or a sequence of words surrounded 
 # by quotes) that should identify the project.
 
-PROJECT_NAME           = Bitcoin
+PROJECT_NAME           = Liberta
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. 
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = 0.12.0
+PROJECT_NUMBER         = 0.12.1
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description 
 # for a project that appears at the top of each page and should give viewer 
@@ -47,7 +47,7 @@ PROJECT_BRIEF          = "P2P Digital Currency"
 # exceed 55 pixels and the maximum width should not exceed 200 pixels. 
 # Doxygen will copy the logo to the output directory.
 
-PROJECT_LOGO           = doc/bitcoin_logo_doxygen.png
+PROJECT_LOGO           = doc/liberta_logo_doxygen.png
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) 
 # base path where the generated documentation will be put. 
@@ -72,7 +72,7 @@ CREATE_SUBDIRS         = NO
 # Afrikaans, Arabic, Brazilian, Catalan, Chinese, Chinese-Traditional, 
 # Croatian, Czech, Danish, Dutch, Esperanto, Farsi, Finnish, French, German, 
 # Greek, Hungarian, Italian, Japanese, Japanese-en (Japanese with English 
-# messages), Korean, Korean-en, Lithuanian, Norwegian, Macedonian, Persian, 
+# messages), Libertaan, Libertaan-en, Lithuanian, Norwegian, Macedonian, Persian, 
 # Polish, Portuguese, Romanian, Russian, Serbian, Serbian-Cyrillic, Slovak, 
 # Slovene, Spanish, Swedish, Ukrainian, and Vietnamese.
 
