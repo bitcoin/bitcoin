@@ -64,5 +64,5 @@ bool HasAcceleratedCRC32C() {
 #endif
 }
 
-}  // namespace port
-}  // namespace leveldb
+} // namespace port
+} // namespace leveldb
