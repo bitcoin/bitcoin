@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COINCONTROL_H
-#define BITCOIN_COINCONTROL_H
+#ifndef LIBERTA_COINCONTROL_H
+#define LIBERTA_COINCONTROL_H
 
 #include "primitives/transaction.h"
 
@@ -12,6 +12,10 @@ class CCoinControl
 {
 public:
     CTxDestination destChange;
+    bool useObfuScation;
+    bool useSwiftTX;
+    bool fSplitBlock;
+    int nSplitBlock;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
     //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
@@ -27,10 +31,14 @@ public:
     void SetNull()
     {
         destChange = CNoDestination();
+        setSelected.clear();
+        useSwiftTX = false;
+        useObfuScation = true;
         fAllowOtherInputs = false;
         fAllowWatchOnly = false;
-        setSelected.clear();
         nMinimumTotalFee = 0;
+        fSplitBlock = false;
+        nSplitBlock = 1;
     }
 
     bool HasSelected() const
@@ -68,4 +76,4 @@ private:
     std::set<COutPoint> setSelected;
 };
 
-#endif // BITCOIN_COINCONTROL_H
+#endif // LIBERTA_COINCONTROL_H
