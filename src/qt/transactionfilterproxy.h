@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2013 The LibertaCore developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_TRANSACTIONFILTERPROXY_H
-#define BITCOIN_QT_TRANSACTIONFILTERPROXY_H
+#ifndef LIBERTA_QT_TRANSACTIONFILTERPROXY_H
+#define LIBERTA_QT_TRANSACTIONFILTERPROXY_H
 
 #include "amount.h"
 
@@ -24,6 +24,8 @@ public:
     static const QDateTime MAX_DATE;
     /** Type filter bit field (all types) */
     static const quint32 ALL_TYPES = 0xFFFFFFFF;
+    /** Type filter bit field (all types but Obfuscation-SPAM) */
+    static const quint32 COMMON_TYPES = 4479;
 
     static quint32 TYPE(int type) { return 1<<type; }
 
@@ -65,4 +67,4 @@ private:
     bool showInactive;
 };
 
-#endif // BITCOIN_QT_TRANSACTIONFILTERPROXY_H
+#endif // LIBERTA_QT_TRANSACTIONFILTERPROXY_H

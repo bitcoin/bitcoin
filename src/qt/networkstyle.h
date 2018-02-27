@@ -1,9 +1,9 @@
-// Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2014 The LibertaCore developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_NETWORKSTYLE_H
-#define BITCOIN_QT_NETWORKSTYLE_H
+#ifndef LIBERTA_QT_NETWORKSTYLE_H
+#define LIBERTA_QT_NETWORKSTYLE_H
 
 #include <QIcon>
 #include <QPixmap>
@@ -20,7 +20,7 @@ public:
     const QIcon &getAppIcon() const { return appIcon; }
     const QIcon &getTrayAndWindowIcon() const { return trayAndWindowIcon; }
     const QString &getTitleAddText() const { return titleAddText; }
-
+    const QPixmap& getSplashImage() const { return splashImage; }
 private:
     NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText);
 
@@ -28,6 +28,7 @@ private:
     QIcon appIcon;
     QIcon trayAndWindowIcon;
     QString titleAddText;
+    QPixmap splashImage;
 };
 
-#endif // BITCOIN_QT_NETWORKSTYLE_H
+#endif // LIBERTA_QT_NETWORKSTYLE_H

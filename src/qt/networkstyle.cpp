@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2015 The LibertaCore developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,9 +27,11 @@ NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, 
     titleAddText(qApp->translate("SplashScreen", titleAddText))
 {
     // load pixmap
-    QPixmap pixmap(":/icons/bitcoin");
+    QPixmap pixmap(":/icons/liberta");
+    QPixmap pixmapr(":/icons/splash");
+    splashImage = pixmapr;
 
-    if(iconColorHueShift != 0 && iconColorSaturationReduction != 0)
+    /*if(iconColorHueShift != 0 && iconColorSaturationReduction != 0)
     {
         // generate QImage from QPixmap
         QImage img = pixmap.toImage();
@@ -73,7 +75,7 @@ NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, 
 #else
         pixmap = QPixmap::fromImage(img);
 #endif
-    }
+    }*/
 
     appIcon             = QIcon(pixmap);
     trayAndWindowIcon   = QIcon(pixmap.scaled(QSize(256,256)));
