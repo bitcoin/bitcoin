@@ -171,7 +171,7 @@ LIBERTA_CORE_H = \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
-  zmq/zmqpublishnotifier.h
+  zmq/zmqpublishnotifier.h \
 
 
 obj/build.h: FORCE
@@ -275,7 +275,7 @@ crypto_libliberta_crypto_a_SOURCES = \
   crypto/sha256.cpp \
   crypto/sha256.h \
   crypto/sha512.cpp \
-  crypto/sha512.h
+  crypto/sha512.h \
 
 # common: shared between libertad, and liberta-qt and non-server tools
 libliberta_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_INCLUDES)
