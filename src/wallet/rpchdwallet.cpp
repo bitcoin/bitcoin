@@ -2333,6 +2333,12 @@ UniValue scanchain(const JSONRPCRequest &request)
             "\nDEPRECATED, will be removed in 0.17. Replaced by rescanblockchain.\n"
             "Scan blockchain for owned transactions.");
 
+    if (!IsDeprecatedRPCEnabled("scanchain")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "scanchain is deprecated and will be fully removed in v0.18. "
+            "To use scanchain in v0.17, restart particld with -deprecatedrpc=scanchain.\n"
+            "Projects should transition to using rescanblockchain before upgrading to v0.18");
+    }
+
     //EnsureWalletIsUnlocked(pwallet);
 
     UniValue result(UniValue::VOBJ);
