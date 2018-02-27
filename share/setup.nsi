@@ -1,34 +1,34 @@
-Name "@PACKAGE_NAME@ (@WINDOWS_BITS@-bit)"
+Name "Liberta Core (-bit)"
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION @CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@
+!define VERSION 0.12.1
 !define COMPANY "Liberta Core project"
 !define URL https://libertacore.org/
 
 # MUI Symbol Definitions
-!define MUI_ICON "@abs_top_srcdir@/share/pixmaps/liberta.ico"
-!define MUI_WELCOMEFINISHPAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-wizard.bmp"
+!define MUI_ICON "/home/trevor/liberta/share/pixmaps/liberta.ico"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "/home/trevor/liberta/share/pixmaps/nsis-wizard.bmp"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
-!define MUI_HEADERIMAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-header.bmp"
+!define MUI_HEADERIMAGE_BITMAP "/home/trevor/liberta/share/pixmaps/nsis-header.bmp"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
-!define MUI_STARTMENUPAGE_DEFAULTFOLDER "@PACKAGE_NAME@"
+!define MUI_STARTMENUPAGE_DEFAULTFOLDER "Liberta Core"
 !define MUI_FINISHPAGE_RUN $INSTDIR\liberta-qt.exe
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
-!define MUI_UNWELCOMEFINISHPAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-wizard.bmp"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "/home/trevor/liberta/share/pixmaps/nsis-wizard.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
 
 # Included files
 !include Sections.nsh
 !include MUI2.nsh
-!if "@WINDOWS_BITS@" == "64"
+!if "" == "64"
 !include x64.nsh
 !endif
 
@@ -48,8 +48,8 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile @abs_top_srcdir@/liberta-${VERSION}-win@WINDOWS_BITS@-setup.exe
-!if "@WINDOWS_BITS@" == "64"
+OutFile /home/trevor/liberta/liberta-${VERSION}-win-setup.exe
+!if "" == "64"
 InstallDir $PROGRAMFILES64\Liberta
 !else
 InstallDir $PROGRAMFILES\Liberta
@@ -58,7 +58,7 @@ CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion ${VERSION}.@CLIENT_VERSION_BUILD@
+VIProductVersion ${VERSION}.0
 VIAddVersionKey ProductName "Liberta Core"
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -73,14 +73,14 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File @abs_top_srcdir@/release/liberta-qt.exe
-    File /oname=COPYING.txt @abs_top_srcdir@/COPYING
-    File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
+    File /home/trevor/liberta/release/liberta-qt.exe
+    File /oname=COPYING.txt /home/trevor/liberta/COPYING
+    File /oname=readme.txt /home/trevor/liberta/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File @abs_top_srcdir@/release/libertad.exe
-    File @abs_top_srcdir@/release/liberta-cli.exe
+    File /home/trevor/liberta/release/libertad.exe
+    File /home/trevor/liberta/release/liberta-cli.exe
     SetOutPath $INSTDIR\doc
-    File /r @abs_top_srcdir@/doc\*.*
+    File /r /home/trevor/liberta/doc\*.*
     SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 
@@ -160,7 +160,7 @@ SectionEnd
 # Installer functions
 Function .onInit
     InitPluginsDir
-!if "@WINDOWS_BITS@" == "64"
+!if "" == "64"
     ${If} ${RunningX64}
       ; disable registry redirection (enable access to 64-bit portion of registry)
       SetRegView 64
