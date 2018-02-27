@@ -1097,9 +1097,7 @@ isminetype CHDWallet::HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount
     };
 
     pa = nullptr;
-    if (CCryptoKeyStore::HaveKey(address))
-        return ISMINE_SPENDABLE;
-    return ISMINE_NO;
+    return CCryptoKeyStore::IsMine(address);
 };
 
 isminetype CHDWallet::IsMine(const CKeyID &address) const
@@ -1592,6 +1590,7 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
         return ISMINE_NO;
     }
 
+    isminetype mine = ISMINE_NO;
     switch (whichType)
     {
     case TX_NONSTANDARD:
@@ -1603,7 +1602,9 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
             isInvalid = true;
             return ISMINE_NO;
         }
-        return HaveKey(keyID, ak, pa);
+        if ((mine = HaveKey(keyID, ak, pa)))
+            return mine;
+        break;
     case TX_PUBKEYHASH:
     case TX_TIMELOCKED_PUBKEYHASH:
     case TX_PUBKEYHASH256:
@@ -1621,7 +1622,9 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
                 return ISMINE_NO;
             }
         }
-        return HaveKey(keyID, ak, pa);
+        if ((mine = HaveKey(keyID, ak, pa)))
+            return mine;
+        break;
     case TX_SCRIPTHASH:
     case TX_TIMELOCKED_SCRIPTHASH:
     case TX_SCRIPTHASH256:

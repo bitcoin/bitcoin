@@ -72,7 +72,7 @@ protected:
 public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
-    isminetype IsMine(const CKeyID &address) const override { return HaveKey(address) ? ISMINE_SPENDABLE : ISMINE_NO; };
+    isminetype IsMine(const CKeyID &address) const override;
     bool HaveKey(const CKeyID &address) const override;
     std::set<CKeyID> GetKeys() const override;
     bool GetKey(const CKeyID &address, CKey &keyOut) const override;

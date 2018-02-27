@@ -182,11 +182,7 @@ class MultiSigTest(ParticlTestFramework):
         ro = nodes[0].signrawtransactionwithkey(hexRaw1, signkeys, inputs)
         hexRaw2 = ro['hex']
 
-        ro = nodes[0].decoderawtransaction(hexRaw2)
-        #print("hexRaw2", json.dumps(ro, indent=4, default=self.jsonDecimal))
-
         txnid_spendMultisig2 = nodes[0].sendrawtransaction(hexRaw2)
-        #print(json.dumps(txnid_spendMultisig2, indent=4, default=self.jsonDecimal))
 
         self.stakeBlocks(1)
         block2_hash = nodes[0].getblockhash(2)
@@ -235,8 +231,6 @@ class MultiSigTest(ParticlTestFramework):
         locktime = 946684801
 
         hexRaw = nodes[0].createrawtransaction(inputs, outputs, locktime)
-        #ro = nodes[0].decoderawtransaction(hexRaw)
-        #print("createrawtransaction", json.dumps(ro, indent=4, default=self.jsonDecimal))
 
         vk0 = nodes[0].dumpprivkey(addrs[0])
         signkeys = [vk0,]
@@ -249,9 +243,6 @@ class MultiSigTest(ParticlTestFramework):
         signkeys = [vk1,]
         ro = nodes[0].signrawtransactionwithkey(hexRaw1, signkeys, inputs)
         hexRaw2 = ro['hex']
-
-        #ro = nodes[0].decoderawtransaction(hexRaw2)
-        #print("hexRaw2", json.dumps(ro, indent=4, default=self.jsonDecimal))
 
         txnid_spendMultisig3 = nodes[0].sendrawtransaction(hexRaw2)
 
