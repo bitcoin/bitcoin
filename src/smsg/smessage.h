@@ -72,9 +72,11 @@ const unsigned int SMSG_TIME_IGNORE    = 90;                // seconds a peer is
 
 const unsigned int SMSG_MAX_MSG_BYTES  = 4096;              // the user input part
 const unsigned int SMSG_MAX_AMSG_BYTES = 512;               // the user input part (ANON)
+const unsigned int SMSG_MAX_MSG_BYTES_PAID = 1024 * 1024;   // the user input part (Paid)
 
 // max size of payload worst case compression
 const unsigned int SMSG_MAX_MSG_WORST = LZ4_COMPRESSBOUND(SMSG_MAX_MSG_BYTES+SMSG_PL_HDR_LEN);
+const unsigned int SMSG_MAX_MSG_WORST_PAID = LZ4_COMPRESSBOUND(SMSG_MAX_MSG_BYTES_PAID+SMSG_PL_HDR_LEN);
 
 static const int MIN_SMSG_PROTO_VERSION = 90006;
 

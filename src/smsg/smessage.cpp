@@ -2964,9 +2964,17 @@ int CSMSG::Store(SecureMessage& smsg, bool fHashBucket)
 int CSMSG::Validate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
 {
     // return SecureMessageCodes
-    if (nPayload > SMSG_MAX_MSG_WORST)
-        return SMSG_PAYLOAD_OVER_SIZE;
     SecureMessage *psmsg = (SecureMessage*) pHeader;
+
+    if (psmsg->IsPaidVersion())
+    {
+        if (nPayload > SMSG_MAX_MSG_BYTES_PAID)
+            return SMSG_PAYLOAD_OVER_SIZE;
+    } else
+    if (nPayload > SMSG_MAX_MSG_WORST)
+    {
+        return SMSG_PAYLOAD_OVER_SIZE;
+    };
 
     int64_t now = GetAdjustedTime();
     if (psmsg->timestamp > now + SMSG_TIME_LEEWAY)
@@ -3209,9 +3217,6 @@ int CSMSG::Encrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyID 
             CBitcoinAddress(addressTo).ToString());
     };
 
-    if (message.size() > (fSendAnonymous ? SMSG_MAX_AMSG_BYTES : SMSG_MAX_MSG_BYTES))
-        return errorN(SMSG_MESSAGE_TOO_LONG, "%s: Message is too long, %u.", __func__, message.size());
-
     smsg.timestamp = GetTime();
 
     CBitcoinAddress coinAddrFrom;
@@ -3390,6 +3395,14 @@ int CSMSG::Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
         return errorN(SMSG_WALLET_LOCKED, "%s: %s.", __func__, sError);
     };
 
+    if (fPaid)
+    {
+        if (message.size() > SMSG_MAX_MSG_BYTES_PAID)
+        {
+            sError = strprintf("Message is too long, %d > %d", message.size(), SMSG_MAX_MSG_BYTES_PAID);
+            return errorN(SMSG_MESSAGE_TOO_LONG, "%s: %s.", __func__, sError);
+        };
+    } else
     if (message.size() > (fSendAnonymous ? SMSG_MAX_AMSG_BYTES : SMSG_MAX_MSG_BYTES))
     {
         sError = strprintf("Message is too long, %d > %d", message.size(), fSendAnonymous ? SMSG_MAX_AMSG_BYTES : SMSG_MAX_MSG_BYTES);
