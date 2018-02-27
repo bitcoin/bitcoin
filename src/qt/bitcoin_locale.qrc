@@ -23,7 +23,6 @@
         <file alias="en_AU">locale/bitcoin_en_AU.qm</file>
         <file alias="en_GB">locale/bitcoin_en_GB.qm</file>
         <file alias="en">locale/bitcoin_en.qm</file>
-        <file alias="en_US">locale/bitcoin_en_US.qm</file>
         <file alias="eo">locale/bitcoin_eo.qm</file>
         <file alias="es_419">locale/bitcoin_es_419.qm</file>
         <file alias="es_AR">locale/bitcoin_es_AR.qm</file>
