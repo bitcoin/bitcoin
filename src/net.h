@@ -174,20 +174,10 @@ public:
 
     constexpr static const CAllNodes AllNodes{};
 
+    bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
     bool ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
+    bool ForNode(const CService& addr, std::function<bool(CNode* pnode)> func);
     bool ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
-
-    template<typename Callable>
-    bool ForNode(const CService& addr, Callable&& func)
-    {
-        return ForNode(addr, FullyConnectedOnly, func);
-    }
-
-    template<typename Callable>
-    bool ForNode(NodeId id, Callable&& func)
-    {
-        return ForNode(id, FullyConnectedOnly, func);
-    }
 
     bool IsConnected(const CService& addr, std::function<bool(const CNode* pnode)> cond)
     {
@@ -200,43 +190,15 @@ public:
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
-    template<typename Callable>
-    bool ForEachNodeContinueIf(Callable&& func)
-    {
-        return ForEachNodeContinueIf(FullyConnectedOnly, func);
-    }
-
     template<typename Condition, typename Callable>
-    bool ForEachNodeContinueIf(const Condition& cond, Callable&& func) const
+    bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
     {
         LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
+        for (auto&& node : vNodes)
             if (cond(node))
                 if(!func(node))
                     return false;
         return true;
-    };
-
-    template<typename Callable>
-    bool ForEachNodeContinueIf(Callable&& func) const
-    {
-        return ForEachNodeContinueIf(FullyConnectedOnly, func);
-    }
-
-    template<typename Condition, typename Callable>
-    void ForEachNode(const Condition& cond, Callable&& func)
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (cond(node))
-                func(node);
-        }
-    };
-
-    template<typename Callable>
-    void ForEachNode(Callable&& func)
-    {
-        ForEachNode(FullyConnectedOnly, func);
     }
 
     template<typename Condition, typename Callable>
@@ -247,46 +209,48 @@ public:
             if (cond(node))
                 func(node);
         }
-    };
+    }
+
+    template<typename Callable>
+    void ForEachNode(Callable&& func)
+    {
+        LOCK(cs_vNodes);
+        for (auto&& node : vNodes) {
+            if (NodeFullyConnected(node))
+                func(node);
+        }
+    }
 
     template<typename Callable>
     void ForEachNode(Callable&& func) const
     {
-        ForEachNode(FullyConnectedOnly, func);
-    }
-
-    template<typename Condition, typename Callable, typename CallableAfter>
-    void ForEachNodeThen(const Condition& cond, Callable&& pre, CallableAfter&& post)
-    {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (cond(node))
-                pre(node);
+            if (NodeFullyConnected(node))
+                func(node);
         }
-        post();
-    };
+    }
 
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
     {
-        ForEachNodeThen(FullyConnectedOnly, pre, post);
-    }
-
-    template<typename Condition, typename Callable, typename CallableAfter>
-    void ForEachNodeThen(const Condition& cond, Callable&& pre, CallableAfter&& post) const
-    {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (cond(node))
+            if (NodeFullyConnected(node))
                 pre(node);
         }
         post();
-    };
+    }
 
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
     {
-        ForEachNodeThen(FullyConnectedOnly, pre, post);
+        LOCK(cs_vNodes);
+        for (auto&& node : vNodes) {
+            if (NodeFullyConnected(node))
+                pre(node);
+        }
+        post();
     }
 
     std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
@@ -692,7 +656,7 @@ public:
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset;
     const CAddress addr;
-    int nVersion;
+    std::atomic<int> nVersion;
     // strSubVer is whatever byte array we read from the wire. However, this field is intended
     // to be printed out, displayed to humans in various forms and so on. So we sanitize it and
     // store the sanitized version in cleanSubVer. The original should be used when dealing with
@@ -705,7 +669,7 @@ public:
     bool fAddnode;
     bool fClient;
     const bool fInbound;
-    bool fSuccessfullyConnected;
+    std::atomic_bool fSuccessfullyConnected;
     std::atomic_bool fDisconnect;
     // We use fRelayTxes for two purposes -
     // a) it allows us to not relay tx invs before receiving the peer's version message
@@ -802,6 +766,7 @@ private:
     mutable CCriticalSection cs_addrName;
     std::string addrName;
 
+    // Our address, as reported by the peer
     CService addrLocal;
     mutable CCriticalSection cs_addrLocal;
 public:

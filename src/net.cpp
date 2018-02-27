@@ -740,6 +740,32 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     return true;
 }
 
+void CNode::SetSendVersion(int nVersionIn)
+{
+    // Send version may only be changed in the version message, and
+    // only one version message is allowed per session. We can therefore
+    // treat this value as const and even atomic as long as it's only used
+    // once a version message has been successfully processed. Any attempt to
+    // set this twice is an error.
+    if (nSendVersion != 0) {
+        error("Send version already set for node: %i. Refusing to change from %i to %i", id, nSendVersion, nVersionIn);
+    } else {
+        nSendVersion = nVersionIn;
+    }
+}
+
+int CNode::GetSendVersion() const
+{
+    // The send version should always be explicitly set to
+    // INIT_PROTO_VERSION rather than using this value until SetSendVersion
+    // has been called.
+    if (nSendVersion == 0) {
+        error("Requesting unset send version for node: %i. Using %i", id, INIT_PROTO_VERSION);
+        return INIT_PROTO_VERSION;
+    }
+    return nSendVersion;
+}
+
 int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
 {
     // copy data to temporary parsing buffer
@@ -2846,6 +2872,19 @@ int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds) {
     return nNow + (int64_t)(log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */) * average_interval_seconds * -1000000.0 + 0.5);
 }
 
+bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
+{
+    CNode* found = nullptr;
+    LOCK(cs_vNodes);
+    for (auto&& pnode : vNodes) {
+        if(pnode->id == id) {
+            found = pnode;
+            break;
+        }
+    }
+    return found != nullptr && NodeFullyConnected(found) && func(found);
+}
+
 bool CConnman::ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func)
 {
     CNode* found = nullptr;
@@ -2856,7 +2895,20 @@ bool CConnman::ForNode(const CService& addr, std::function<bool(const CNode* pno
             break;
         }
     }
-    return found != nullptr && cond(found) && func(found);
+    return found != nullptr&& NodeFullyConnected(found) && cond(found) && func(found);
+}
+
+bool CConnman::ForNode(const CService& addr, std::function<bool(CNode* pnode)> func)
+{
+    CNode* found = nullptr;
+    LOCK(cs_vNodes);
+    for (auto&& pnode : vNodes) {
+        if((CService)pnode->addr == addr) {
+            found = pnode;
+            break;
+        }
+    }
+    return found != nullptr && NodeFullyConnected(found) && func(found);
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func)
@@ -2869,7 +2921,7 @@ bool CConnman::ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, 
             break;
         }
     }
-    return found != nullptr && cond(found) && func(found);
+    return found != nullptr&& NodeFullyConnected(found) && cond(found) && func(found);
 }
 
 CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id) const
