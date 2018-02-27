@@ -63,11 +63,5 @@ class VoteTest(ParticlTestFramework):
         assert(ro['blocks_counted'] == 2)
         assert(ro['Option 3'] == '1, 50.00%')
 
-
-
-
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
 if __name__ == '__main__':
     VoteTest().main()

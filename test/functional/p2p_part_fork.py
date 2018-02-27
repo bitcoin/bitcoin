@@ -125,9 +125,6 @@ class ForkTest(ParticlTestFramework):
         ro = nodes[3].getblockchaininfo()
         assert(ro['blocks'] == 5)
 
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
 
 if __name__ == '__main__':
     ForkTest().main()

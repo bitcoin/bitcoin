@@ -171,9 +171,5 @@ class BlindTest(ParticlTestFramework):
             assert('Insufficient blinded funds' in e.error['message'])
 
 
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
-
 if __name__ == '__main__':
     BlindTest().main()

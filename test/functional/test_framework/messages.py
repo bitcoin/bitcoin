@@ -28,7 +28,7 @@ from test_framework.util import hex_str_to_bytes, bytes_to_hex_str
 
 MIN_VERSION_SUPPORTED = 60001
 #MY_VERSION = 70014  # past bip-31 for ping/pong
-MY_VERSION = 90004
+MY_VERSION = 90005
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
@@ -1071,15 +1071,18 @@ class msg_getaddr():
 class msg_ping():
     command = b"ping"
 
-    def __init__(self, nonce=0):
+    def __init__(self, nonce=0, height=0):
         self.nonce = nonce
+        self.height = height
 
     def deserialize(self, f):
         self.nonce = struct.unpack("<Q", f.read(8))[0]
+        self.height = struct.unpack("<i", f.read(4))[0]
 
     def serialize(self):
         r = b""
         r += struct.pack("<Q", self.nonce)
+        r += struct.pack("<i", self.height)
         return r
 
     def __repr__(self):

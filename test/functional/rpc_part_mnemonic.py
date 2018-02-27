@@ -117,9 +117,6 @@ class MnemonicTest(ParticlTestFramework):
         ro = node.mnemonic('decode', '', 'sortir hygiène boueux détourer doyen émission prospère tunnel cerveau miracle brioche feuille arbitre terne alléger prison connoter diable méconnu fraise pelle carbone erreur admettre')
         assert(ro['master'] == 'tprv8ZgxMBicQKsPdsKV1vzsQkRQp5TobgyfXsBLcU49jmnC2zBT4Cd5LTCtdoWe5gg7EPjjQnAsxbMG1qyoCn1bHn6n4c1ZEdFLKg1TJAwTriQ')
 
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
 
 if __name__ == '__main__':
     MnemonicTest().main()

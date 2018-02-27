@@ -401,7 +401,7 @@ class P2PInterface(P2PConnection):
 
     # Sync up with the node
     def sync_with_ping(self, timeout=60):
-        self.send_message(msg_ping(nonce=self.ping_counter))
+        self.send_message(msg_ping(nonce=self.ping_counter,height=0))
         test_function = lambda: self.last_message.get("pong") and self.last_message["pong"].nonce == self.ping_counter
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
         self.ping_counter += 1

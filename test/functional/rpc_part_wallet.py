@@ -49,9 +49,6 @@ class WalletRPCTest(ParticlTestFramework):
         assert(isclose(ro[0]['amount'], 2.999512))
         assert(len(ro[0]['outputs']) == 2)
 
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
 
 if __name__ == '__main__':
     WalletRPCTest().main()

@@ -169,14 +169,14 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
 {
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
-    
-    if (block.nVersion >= PARTICL_BLOCK_VERSION)
+
+    if (block.nVersion == PARTICL_BLOCK_VERSION)
     {
         for (size_t s = 0; s < block.vtx.size(); s++)
             leaves[s] = block.vtx[s]->GetWitnessHash();
         return ComputeMerkleRoot(leaves, mutated);
     };
-    
+
     leaves[0].SetNull(); // The witness hash of the coinbase is 0.
     for (size_t s = 1; s < block.vtx.size(); s++) {
         leaves[s] = block.vtx[s]->GetWitnessHash();

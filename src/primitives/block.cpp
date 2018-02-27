@@ -10,6 +10,8 @@
 #include <utilstrencodings.h>
 #include <crypto/common.h>
 
+int WITNESS_SCALE_FACTOR = WITNESS_SCALE_FACTOR_PART;
+
 uint256 CBlockHeader::GetHash() const
 {
     return SerializeHash(*this);

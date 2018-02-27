@@ -88,6 +88,7 @@ class TestNode():
 
         if kwargs.pop('legacymode',True):
             extra_args.append("-legacymode")
+            extra_args.append("-nosmsg")
         if stderr is None:
             stderr = self.stderr
         self.process = subprocess.Popen(self.args + extra_args, stderr=stderr, *args, **kwargs)

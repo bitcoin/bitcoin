@@ -601,9 +601,6 @@ class WalletParticlTest(ParticlTestFramework):
 
         ro = nodes[1].walletpassphrasechange('changedPass', 'changedPass2')
 
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
 
 if __name__ == '__main__':
     WalletParticlTest().main()

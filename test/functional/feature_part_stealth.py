@@ -194,8 +194,5 @@ class StealthTest(ParticlTestFramework):
         assert(sx1_b32 in flat and sx2_b32 in flat)
 
 
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
 if __name__ == '__main__':
     StealthTest().main()

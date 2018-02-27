@@ -125,10 +125,5 @@ class USBDeviceTest(ParticlTestFramework):
         assert(ro[0]['txid'] == txnid2)
 
 
-
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
-
 if __name__ == '__main__':
     USBDeviceTest().main()

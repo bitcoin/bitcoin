@@ -89,6 +89,7 @@ script:
     - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude pruning,dbcrash"; fi
 #   - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --coverage --quiet ${extended}; fi
     - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --combinedlogslen=4000 --coverage --quiet --particl --insight; fi
+    - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --coverage --quiet; fi
 
 after_success:
     - COMMIT=$(echo $TRAVIS_COMMIT | head -c 7)

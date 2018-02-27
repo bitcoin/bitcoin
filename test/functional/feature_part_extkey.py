@@ -134,15 +134,10 @@ class ExtKeyTest(ParticlTestFramework):
             assert(txnHash in ro['tx'])
 
 
-
         # Test bech32 encoding
         ek_b32 = 'tpep1q3ehtcetqqqqqqesj04mypkmhnly5rktqmcpmjuq09lyevcsjxrgra6x8trd52vp2vpsk6kf86v3npg6x66ymrn5yrqnclxtqrlfdlw3j4f0309dhxct8kc68paxt'
         assert(node.getnewextaddress('lbl_b32', '', True) == ek_b32)
         assert(ek_b32 in json.dumps(node.filteraddresses()))
-
-
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 
 
 if __name__ == '__main__':

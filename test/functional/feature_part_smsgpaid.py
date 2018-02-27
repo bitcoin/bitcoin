@@ -138,8 +138,5 @@ class SmsgPaidTest(ParticlTestFramework):
         assert(flat.count('Wallet is locked') == 2)
 
 
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
 if __name__ == '__main__':
     SmsgPaidTest().main()

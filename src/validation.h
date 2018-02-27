@@ -132,7 +132,8 @@ static const int64_t MAX_FEE_ESTIMATION_TIP_AGE = 3 * 60 * 60;
 /** Default for -permitbaremultisig */
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
-static const bool DEFAULT_TXINDEX = true; // required for staking
+static const bool DEFAULT_TXINDEX_ = true; // required for staking
+#define DEFAULT_TXINDEX (gArgs.GetBoolArg("-legacymode", false) ? false : DEFAULT_TXINDEX_)
 static const bool DEFAULT_ADDRESSINDEX = false;
 static const bool DEFAULT_TIMESTAMPINDEX = false;
 static const bool DEFAULT_SPENTINDEX = false;

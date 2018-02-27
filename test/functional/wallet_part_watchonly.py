@@ -41,10 +41,5 @@ class WalletParticlWatchOnlyTest(ParticlTestFramework):
         assert(len(ro) == 1)
 
 
-
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
-
 if __name__ == '__main__':
     WalletParticlWatchOnlyTest().main()

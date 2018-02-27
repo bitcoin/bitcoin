@@ -968,6 +968,14 @@ bool AppInitBasicSetup()
 
 bool AppInitParameterInteraction()
 {
+    fParticlMode = !gArgs.GetBoolArg("-legacymode", false); // qa tests
+    if (!fParticlMode)
+    {
+        WITNESS_SCALE_FACTOR = WITNESS_SCALE_FACTOR_BTC;
+        if (gArgs.GetBoolArg("-regtest", false))
+            ResetParams(CBaseChainParams::REGTEST, fParticlMode);
+    };
+
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 2: parameter interactions
 
@@ -1001,10 +1009,6 @@ bool AppInitParameterInteraction()
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
-
-    fParticlMode = !gArgs.GetBoolArg("-legacymode", false); // qa tests
-    if (gArgs.GetBoolArg("-regtest", false) && !fParticlMode)
-        ResetParams(CBaseChainParams::REGTEST, fParticlMode);
 
     if (gArgs.IsArgSet("-debug")) {
         // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
@@ -1126,7 +1130,7 @@ bool AppInitParameterInteraction()
     }
 
     // TODO: Check pruning
-    if (fPruneMode)
+    if (fPruneMode && fParticlMode)
     {
         LogPrintf("Block pruning disabled.  Todo.\n");
         fPruneMode = false;

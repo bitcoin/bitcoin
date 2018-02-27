@@ -252,11 +252,5 @@ class MultiSigTest(ParticlTestFramework):
         assert(txnid_spendMultisig3 in ro['tx'])
 
 
-
-
-        #assert(False)
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
-
 if __name__ == '__main__':
     MultiSigTest().main()

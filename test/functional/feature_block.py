@@ -737,7 +737,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                                                \-> b56p2 (16)
         #                                                \-> b56   (16)
         #
-        # Merkle tree malleability (CVE-2012-2459): repeating sequences of transactions in a block without 
+        # Merkle tree malleability (CVE-2012-2459): repeating sequences of transactions in a block without
         #                           affecting the merkle root of a block, while still invalidating it.
         #                           See:  src/consensus/merkle.h
         #
