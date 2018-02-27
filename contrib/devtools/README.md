@@ -16,11 +16,11 @@ source files if these have a git commit from the current year.
 
 For example a file changed in 2015 (with 2015 being the current year):
 
-```// Copyright (c) 2009-2013 The Bitcoin Core developers```
+```// Copyright (c) 2009-2013 The Liberta Core developers```
 
 would be changed to:
 
-```// Copyright (c) 2009-2015 The Bitcoin Core developers```
+```// Copyright (c) 2009-2015 The Liberta Core developers```
 
 git-subtree-check.sh
 ====================
@@ -30,9 +30,9 @@ the commit it claims to have been updated to.
 
 To use, make sure that you have fetched the upstream repository branch in which the subtree is
 maintained:
-* for `src/secp256k1`: https://github.com/bitcoin/secp256k1.git (branch master)
-* for `src/leveldb`: https://github.com/bitcoin/leveldb.git (branch bitcoin-fork)
-* for `src/univalue`: https://github.com/bitcoin/univalue.git (branch master)
+* for `src/secp256k1`: https://github.com/liberta/secp256k1.git (branch master)
+* for `src/leveldb`: https://github.com/liberta/leveldb.git (branch liberta-fork)
+* for `src/univalue`: https://github.com/liberta/univalue.git (branch master)
 
 Usage: `git-subtree-check.sh DIR COMMIT`
 
@@ -45,10 +45,10 @@ A small script to automate merging pull-requests securely and sign them with GPG
 
 For example:
 
-  ./github-merge.sh bitcoin/bitcoin 3077
+  ./github-merge.sh liberta/liberta 3077
 
 (in any git repository) will help you merge pull request #3077 for the
-bitcoin/bitcoin repository.
+liberta/liberta repository.
 
 What it does:
 * Fetch master and the pull request.
@@ -66,16 +66,16 @@ couldn't mess with the sources.
 
 Setup
 ---------
-Configuring the github-merge tool for the bitcoin repository is done in the following way:
+Configuring the github-merge tool for the liberta repository is done in the following way:
 
-    git config githubmerge.repository bitcoin/bitcoin
+    git config githubmerge.repository liberta/liberta
     git config githubmerge.testcmd "make -j4 check" (adapt to whatever you want to use for testing)
     git config --global user.signingkey mykeyid (if you want to GPG sign)
 
 optimize-pngs.py
 ================
 
-A script to optimize png files in the bitcoin
+A script to optimize png files in the liberta
 repository (requires pngcrush).
 
 security-check.py and test-security-check.py
@@ -98,10 +98,10 @@ If only supported symbols are used the return value will be 0 and the output wil
 
 If there are 'unsupported' symbols, the return value will be 1 a list like this will be printed:
 
-    .../64/test_bitcoin: symbol memcpy from unsupported version GLIBC_2.14
-    .../64/test_bitcoin: symbol __fdelt_chk from unsupported version GLIBC_2.15
-    .../64/test_bitcoin: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
-    .../64/test_bitcoin: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
+    .../64/test_liberta: symbol memcpy from unsupported version GLIBC_2.14
+    .../64/test_liberta: symbol __fdelt_chk from unsupported version GLIBC_2.15
+    .../64/test_liberta: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
+    .../64/test_liberta: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
 
 update-translations.py
 ======================
