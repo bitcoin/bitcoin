@@ -43,11 +43,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>选择你要发送币的目的地址</translation>
+        <translation>Choose the address to send coins to</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>选择接收币的地址</translation>
+        <translation>Choose the address to receive coins with</translation>
     </message>
     </context>
 <context>
