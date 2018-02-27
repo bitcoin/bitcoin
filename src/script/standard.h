@@ -11,8 +11,6 @@
 
 #include <boost/variant.hpp>
 
-#include <stdint.h>
-
 #include <boost/variant.hpp>
 
 #include <stdint.h>

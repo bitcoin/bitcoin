@@ -15,8 +15,6 @@
 #include <utilstrencodings.h>
 #include <warnings.h>
 
-using namespace std;
-
 static CCriticalSection cs_nTimeOffset;
 static int64_t nTimeOffset = 0;
 
@@ -49,7 +47,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 {
     LOCK(cs_nTimeOffset);
     // Ignore duplicates
-    static set<CNetAddr> setKnown;
+    static std::set<CNetAddr> setKnown;
     if (setKnown.size() == BITCOIN_TIMEDATA_MAX_SAMPLES)
         return;
     if (!setKnown.insert(ip).second)

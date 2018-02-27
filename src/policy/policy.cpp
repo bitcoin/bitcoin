@@ -73,7 +73,7 @@ if (sz >= MAX_STANDARD_TX_WEIGHT) {
     return false;
 }
 
-BOOST_FOREACH(const CTxIn& txin, tx.vin)
+for (const auto& txin : tx.vin)
 {
     // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
     // keys (remember the 520 byte limit on redeemScript size). That works
@@ -94,7 +94,7 @@ BOOST_FOREACH(const CTxIn& txin, tx.vin)
 
 unsigned int nDataOut = 0;
 txnouttype whichType;
-BOOST_FOREACH(const CTxOut& txout, tx.vout) {
+for (const auto& txout : tx.vout) {
     if (!::IsStandard(txout.scriptPubKey, whichType, witnessEnabled)) {
         reason = "scriptpubkey";
         return false;
@@ -105,7 +105,7 @@ BOOST_FOREACH(const CTxOut& txout, tx.vout) {
     else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
         reason = "bare-multisig";
         return false;
-    } else if (txout.IsDust(::minRelayTxFee)) {
+    } else if (txout.IsDust(dustRelayFee)) {
         reason = "dust";
         return false;
     }
@@ -127,7 +127,7 @@ if (tx.IsCoinBase())
 
 for (unsigned int i = 0; i < tx.vin.size(); i++)
 {
-    const CTxOut& prev = mapInputs.GetOutputFor(tx.vin[i]);
+    const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
     std::vector<std::vector<unsigned char> > vSolutions;
     txnouttype whichType;
@@ -166,7 +166,7 @@ for (unsigned int i = 0; i < tx.vin.size(); i++)
     if (tx.vin[i].scriptWitness.IsNull())
         continue;
 
-    const CTxOut &prev = mapInputs.GetOutputFor(tx.vin[i]);
+    const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
     // get the scriptPubKey corresponding to this input:
     CScript prevScript = prev.scriptPubKey;
@@ -205,6 +205,9 @@ for (unsigned int i = 0; i < tx.vin.size(); i++)
 }
 return true;
 }
+
+CFeeRate incrementalRelayFee = CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE);
+CFeeRate dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
 
 unsigned int nBytesPerSigOp = DEFAULT_BYTES_PER_SIGOP;
 

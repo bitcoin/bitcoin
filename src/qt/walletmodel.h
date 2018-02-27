@@ -225,6 +225,8 @@ public:
 
     int getDefaultConfirmTarget() const;
 
+    bool getDefaultWalletRbf() const;
+
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;

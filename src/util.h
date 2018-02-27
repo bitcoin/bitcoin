@@ -20,6 +20,7 @@
 #include <utiltime.h>
 #include <amount.h>
 
+#include <atomic>
 #include <exception>
 #include <map>
 #include <stdint.h>
@@ -77,7 +78,6 @@ extern const char * const BITCOIN_CONF_FILENAME;
 extern const char * const BITCOIN_PID_FILENAME;
 extern const char * const MASTERNODE_CONF_FILENAME;
 
-
 /**
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
  * If no translation slot is registered, nothing is returned, and simply return the input.
@@ -106,26 +106,10 @@ int LogPrintStr(const std::string &str);
     LogPrintStr(tfm::format(__VA_ARGS__)); \
 } while(0)
 
-template<typename T1, typename... Args>
-bool error(const char* fmt, const T1& v1, const Args&... args)
+template<typename... Args>
+bool error(const char* fmt, const Args&... args)
 {
-    LogPrintStr("ERROR: " + tfm::format(fmt, v1, args...) + "\n");
-    return false;
-}
-
-/**
- * Zero-arg versions of logging and error, these are not covered by
- * the variadic templates above (and don't take format arguments but
- * bare strings).
- */
-static inline int LogPrint(const char* category, const char* format)
-{
-    if(!LogAcceptCategory(category)) return 0;
-    return LogPrintStr(format);
-}
-static inline bool error(const char* format)
-{
-    LogPrintStr(std::string("ERROR: ") + format + "\n");
+    LogPrintStr("ERROR: " + tfm::format(fmt, args...) + "\n");
     return false;
 }
 
@@ -139,7 +123,7 @@ bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
 bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
-const boost::filesystem::path &GetBackupsDir();
+boost::filesystem::path &GetBackupsDir();
 void ClearDatadirCache();
 boost::filesystem::path GetConfigFile(const std::string& confPath);
 boost::filesystem::path GetMasternodeConfigFile(const std::string& confPath);
@@ -151,7 +135,6 @@ void ReadConfigFile(const std::string& confPath);
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
-boost::filesystem::path GetTempPath();
 void OpenDebugLog();
 void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
@@ -209,11 +192,6 @@ bool GetBoolArg(const std::string& strArg, bool fDefault);
  */
 bool SoftSetArg(const std::string& strArg, const std::string& strValue);
 
-// Forces a arg setting
-void ForceSetArg(const std::string& strArg, const std::string& strValue);
-void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
-void ForceRemoveArg(const std::string& strArg);
-
 /**
  * Set a boolean argument if it doesn't already have a value
  *
@@ -223,8 +201,10 @@ void ForceRemoveArg(const std::string& strArg);
  */
 bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
-// Forces a arg setting, used only in testing
+// Forces an arg setting
 void ForceSetArg(const std::string& strArg, const std::string& strValue);
+void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
+void ForceRemoveArg(const std::string& strArg);
 
 /**
  * Format a string to be used as group of options in help messages
@@ -281,7 +261,6 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
 }
-
 
 /**
  * @brief Converts version strings to 4-byte unsigned integer

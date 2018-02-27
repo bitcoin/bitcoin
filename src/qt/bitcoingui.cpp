@@ -10,6 +10,7 @@
 #include <bitcoingui.h>
 
 #include <bitcoinunits.h>
+#include <chainparams.h>
 #include <clientmodel.h>
 #include <guiconstants.h>
 #include <guiutil.h>
@@ -934,7 +935,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
                 return;
             }
             // Case: not Importing, not Reindexing and no network connection
-            progressBarLabel->setText(tr("No block source available..."));
+            progressBarLabel->setText(tr("Connecting to peers..."));
             break;
     }
 

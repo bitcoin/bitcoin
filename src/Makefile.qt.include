@@ -587,7 +587,7 @@ RES_CSS = \
   qt/res/css/light-hires.css \
   qt/res/css/green.css
 
-RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
+RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 
 BITCOIN_RC = qt/res/chaincoin-qt-res.rc
 

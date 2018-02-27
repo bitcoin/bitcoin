@@ -768,3 +768,8 @@ int WalletModel::getDefaultConfirmTarget() const
 {
     return nTxConfirmTarget;
 }
+
+bool WalletModel::getDefaultWalletRbf() const
+{
+    return fWalletRbf;
+}

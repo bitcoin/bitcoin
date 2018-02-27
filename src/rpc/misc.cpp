@@ -511,13 +511,6 @@ UniValue setmocktime(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VNUM));
     SetMockTime(request.params[0].get_int64());
 
-    uint64_t t = GetTime();
-    if(g_connman) {
-        g_connman->ForEachNode([t](CNode* pnode) {
-            pnode->nLastSend = pnode->nLastRecv = t;
-        });
-    }
-
     return NullUniValue;
 }
 
