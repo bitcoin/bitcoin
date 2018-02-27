@@ -1,11 +1,12 @@
 ---
-name: "bitcoin-win-0.12"
+name: "liberta-win-0.12"
 enable_cache: true
 suites:
 - "trusty"
 architectures:
 - "amd64"
 packages: 
+- "curl"
 - "g++"
 - "git-core"
 - "pkg-config"
@@ -20,15 +21,15 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python"
-reference_datetime: "2016-01-01 00:00:00"
+reference_datetime: "2018-02-09 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
+- "url": "https://github.com/crypt0rick/liberta.git"
+  "dir": "liberta"
 files: []
 script: |
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
-  CONFIGFLAGS="--enable-reduce-exports"
+  CONFIGFLAGS="--enable-reduce-exports --disable-gui-tests"
   FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip"
   FAKETIME_PROGS="date makensis zip"
 
@@ -68,7 +69,7 @@ script: |
 
   # Create per-host linker wrapper
   # This is only needed for trusty, as the mingw linker leaks a few bytes of
-  # heap, causing non-determinism. See discussion in https://github.com/bitcoin/bitcoin/pull/6900
+  # heap, causing non-determinism. See discussion in https://github.com/liberta/liberta/pull/6900
   for i in $HOSTS; do
     mkdir -p ${WRAP_DIR}/${i}
     for prog in collect2; do
@@ -91,7 +92,7 @@ script: |
 
   export PATH=${WRAP_DIR}:${PATH}
 
-  cd bitcoin
+  cd liberta
   BASEPREFIX=`pwd`/depends
   # Build dependencies for each host
   for i in $HOSTS; do
@@ -102,14 +103,14 @@ script: |
   ./autogen.sh
   ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
   make dist
-  SOURCEDIST=`echo bitcoin-*.tar.gz`
+  SOURCEDIST=`echo liberta-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
 
   # Correct tar file order
   mkdir -p temp
   pushd temp
   tar xf ../$SOURCEDIST
-  find bitcoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  find liberta-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   mkdir -p $OUTDIR/src
   cp ../$SOURCEDIST $OUTDIR/src
   popd
@@ -129,7 +130,7 @@ script: |
     make ${MAKEOPTS} -C src check-security
     make deploy
     make install-strip
-    cp -f bitcoin-*setup*.exe $OUTDIR/
+    cp -f liberta-*setup*.exe $OUTDIR/
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
