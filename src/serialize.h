@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SERIALIZE_H
-#define BITCOIN_SERIALIZE_H
+#ifndef LIBERTA_SERIALIZE_H
+#define LIBERTA_SERIALIZE_H
 
 #include "compat/endian.h"
 
@@ -13,6 +13,7 @@
 #include <ios>
 #include <limits>
 #include <map>
+#include <memory>
 #include <set>
 #include <stdint.h>
 #include <string>
@@ -21,6 +22,8 @@
 #include <vector>
 
 #include "prevector.h"
+
+class CScript;
 
 static const unsigned int MAX_SIZE = 0x02000000;
 
@@ -520,6 +523,13 @@ template<typename Stream, typename T, typename A, typename V> void Unserialize_i
 template<typename Stream, typename T, typename A> inline void Unserialize(Stream& is, std::vector<T, A>& v, int nType, int nVersion);
 
 /**
+ * others derived from vector
+ */
+extern inline unsigned int GetSerializeSize(const CScript& v, int nType, int nVersion);
+template<typename Stream> void Serialize(Stream& os, const CScript& v, int nType, int nVersion);
+template<typename Stream> void Unserialize(Stream& is, CScript& v, int nType, int nVersion);
+
+/**
  * pair
  */
 template<typename K, typename T> unsigned int GetSerializeSize(const std::pair<K, T>& item, int nType, int nVersion);
@@ -781,6 +791,28 @@ inline void Unserialize(Stream& is, std::vector<T, A>& v, int nType, int nVersio
 
 
 /**
+ * others derived from vector
+ */
+inline unsigned int GetSerializeSize(const CScript& v, int nType, int nVersion)
+{
+    return GetSerializeSize((const std::vector<unsigned char>&)v, nType, nVersion);
+}
+
+template<typename Stream>
+void Serialize(Stream& os, const CScript& v, int nType, int nVersion)
+{
+    Serialize(os, (const std::vector<unsigned char>&)v, nType, nVersion);
+}
+
+template<typename Stream>
+void Unserialize(Stream& is, CScript& v, int nType, int nVersion)
+{
+    Unserialize(is, (std::vector<unsigned char>&)v, nType, nVersion);
+}
+
+
+
+/**
  * pair
  */
 template<typename K, typename T>
@@ -938,4 +970,4 @@ public:
     }
 };
 
-#endif // BITCOIN_SERIALIZE_H
+#endif // LIBERTA_SERIALIZE_H

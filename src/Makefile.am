@@ -1,84 +1,71 @@
 DIST_SUBDIRS = secp256k1 univalue
-
+LIBS+=  -lssl -lcrypto -lcurl
 AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS)
 AM_CXXFLAGS = $(HARDENED_CXXFLAGS)
 AM_CPPFLAGS = $(HARDENED_CPPFLAGS)
+EXTRA_LIBRARIES =
 
-if EMBEDDED_LEVELDB
-LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
-LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/helpers/memenv
-LIBLEVELDB += $(builddir)/leveldb/libleveldb.a
-LIBMEMENV  += $(builddir)/leveldb/libmemenv.a
+LIBERTA_CONFIG_INCLUDES=-I$(builddir)/config
+LIBERTA_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
-# NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
-$(LIBLEVELDB): $(LIBMEMENV)
+LIBERTA_INCLUDES += -I$(srcdir)/secp256k1/include
+LIBERTA_INCLUDES += -I$(srcdir)/univalue/include
 
-$(LIBLEVELDB) $(LIBMEMENV):
-	@echo "Building LevelDB ..." && $(MAKE) -C $(@D) $(@F) CXX="$(CXX)" \
-	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
-          OPT="$(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS) $(AM_CPPFLAGS) $(CPPFLAGS) -D__STDC_LIMIT_MACROS"
-endif
-
-BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
-BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
-
-BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
-BITCOIN_INCLUDES += -I$(srcdir)/univalue/include
-
-LIBBITCOIN_SERVER=libbitcoin_server.a
-LIBBITCOIN_WALLET=libbitcoin_wallet.a
-LIBBITCOIN_COMMON=libbitcoin_common.a
-LIBBITCOIN_CLI=libbitcoin_cli.a
-LIBBITCOIN_UTIL=libbitcoin_util.a
-LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
-LIBBITCOINQT=qt/libbitcoinqt.a
+LIBLIBERTA_SERVER=libliberta_server.a
+LIBLIBERTA_WALLET=libliberta_wallet.a
+LIBLIBERTA_COMMON=libliberta_common.a
+LIBLIBERTA_CLI=libliberta_cli.a
+LIBLIBERTA_UTIL=libliberta_util.a
+LIBLIBERTA_CRYPTO=crypto/libliberta_crypto.a
+LIBLIBERTAQT=qt/liblibertaqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBUNIVALUE=univalue/libunivalue.la
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
-  
+
 $(LIBUNIVALUE): $(wildcard univalue/lib/*) $(wildcard univalue/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
-EXTRA_LIBRARIES = \
-  crypto/libbitcoin_crypto.a \
-  libbitcoin_util.a \
-  libbitcoin_common.a \
-  libbitcoin_server.a \
-  libbitcoin_cli.a
+EXTRA_LIBRARIES += \
+  crypto/libliberta_crypto.a \
+  libliberta_util.a \
+  libliberta_common.a \
+  libliberta_server.a \
+  libliberta_cli.a
 if ENABLE_WALLET
-BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
-EXTRA_LIBRARIES += libbitcoin_wallet.a
+LIBERTA_INCLUDES += $(BDB_CPPFLAGS)
+EXTRA_LIBRARIES += libliberta_wallet.a
 endif
 if ENABLE_ZMQ
-EXTRA_LIBRARIES += libbitcoin_zmq.a
+EXTRA_LIBRARIES += libliberta_zmq.a
 endif
 
-if BUILD_BITCOIN_LIBS
-lib_LTLIBRARIES = libbitcoinconsensus.la
-LIBBITCOIN_CONSENSUS=libbitcoinconsensus.la
+if BUILD_LIBERTA_LIBS
+lib_LTLIBRARIES = liblibertaconsensus.la
+LIBLIBERTA_CONSENSUS=liblibertaconsensus.la
 else
-LIBBITCOIN_CONSENSUS=
+LIBLIBERTA_CONSENSUS=
 endif
 
 bin_PROGRAMS =
 TESTS =
 BENCHMARKS =
 
-if BUILD_BITCOIND
-  bin_PROGRAMS += bitcoind
+if BUILD_LIBERTAD
+  bin_PROGRAMS += libertad
 endif
 
-if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += bitcoin-cli bitcoin-tx
+if BUILD_LIBERTA_UTILS
+  bin_PROGRAMS += liberta-cli liberta-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
-# bitcoin core #
-BITCOIN_CORE_H = \
+# liberta core #
+LIBERTA_CORE_H = \
+  activemasternode.h \
   addrman.h \
   alert.h \
   amount.h \
@@ -105,15 +92,24 @@ BITCOIN_CORE_H = \
   consensus/validation.h \
   core_io.h \
   core_memusage.h \
+  obfuscation.h \
+  obfuscation-relay.h \
   hash.h \
   httprpc.h \
   httpserver.h \
   init.h \
+  swifttx.h \
   key.h \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
   main.h \
+  masternode.h \
+  masternode-payments.h \
+  masternode-budget.h \
+  masternode-sync.h \
+  masternodeman.h \
+  masternodeconfig.h \
   memusage.h \
   merkleblock.h \
   miner.h \
@@ -123,6 +119,7 @@ BITCOIN_CORE_H = \
   policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
+  pos.h \
   pow.h \
   prevector.h \
   primitives/block.h \
@@ -131,9 +128,9 @@ BITCOIN_CORE_H = \
   pubkey.h \
   random.h \
   reverselock.h \
-  rpcclient.h \
-  rpcprotocol.h \
-  rpcserver.h \
+  rpc/client.h \
+  rpc/protocol.h \
+  rpc/server.h \
   scheduler.h \
   script/interpreter.h \
   script/script.h \
@@ -141,7 +138,9 @@ BITCOIN_CORE_H = \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
+  semiOrderedMap.h \
   serialize.h \
+  spork.h \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -163,6 +162,7 @@ BITCOIN_CORE_H = \
   utiltime.h \
   validationinterface.h \
   version.h \
+  versionbits.h \
   wallet/crypter.h \
   wallet/db.h \
   wallet/wallet.h \
@@ -178,12 +178,13 @@ obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh $(abs_top_builddir)/src/obj/build.h \
 	  $(abs_top_srcdir)
-libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
+libliberta_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between bitcoind and bitcoin-qt
-libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
-libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_server_a_SOURCES = \
+# server: shared between libertad and liberta-qt
+libliberta_server_a_CPPFLAGS = -fPIC $(AM_CPPFLAGS) $(LIBERTA_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libliberta_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+LIBS += -lz -levent -levent_core
+libliberta_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -200,40 +201,55 @@ libbitcoin_server_a_SOURCES = \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
+  pos.cpp \
   pow.cpp \
   rest.cpp \
-  rpcblockchain.cpp \
-  rpcmining.cpp \
-  rpcmisc.cpp \
-  rpcnet.cpp \
-  rpcrawtransaction.cpp \
-  rpcserver.cpp \
+  rpc/blockchain.cpp \
+  rpc/masternode.cpp \
+  rpc/masternode-budget.cpp \
+  rpc/mining.cpp \
+  rpc/misc.cpp \
+  rpc/net.cpp \
+  rpc/rawtransaction.cpp \
+  rpc/server.cpp \
   script/sigcache.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
   validationinterface.cpp \
-  $(BITCOIN_CORE_H)
+  versionbits.cpp \
+  $(LIBERTA_CORE_H)
 
 if ENABLE_ZMQ
-LIBBITCOIN_ZMQ=libbitcoin_zmq.a
+LIBLIBERTA_ZMQ=libliberta_zmq.a
 
-libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
-libbitcoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_zmq_a_SOURCES = \
+libliberta_zmq_a_CPPFLAGS = $(LIBERTA_INCLUDES) $(ZMQ_CFLAGS)
+libliberta_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libliberta_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
   zmq/zmqnotificationinterface.cpp \
   zmq/zmqpublishnotifier.cpp
 endif
 
 
-# wallet: shared between bitcoind and bitcoin-qt, but only linked
+# wallet: shared between libertad and liberta-qt, but only linked
 # when wallet enabled
-libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_wallet_a_SOURCES = \
+libliberta_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_INCLUDES)
+libliberta_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libliberta_wallet_a_SOURCES = \
   wallet/crypter.cpp \
+  activemasternode.cpp \
+  obfuscation.cpp \
+  obfuscation-relay.cpp \
+  swifttx.cpp \
+  masternode.cpp \
+  masternode-budget.cpp \
+  masternode-payments.cpp \
+  masternode-sync.cpp \
+  masternodeconfig.cpp \
+  masternodeman.cpp \
+  spork.cpp \
   wallet/db.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
@@ -241,12 +257,12 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/wallet_ismine.cpp \
   wallet/walletdb.cpp \
   policy/rbf.cpp \
-  $(BITCOIN_CORE_H)
+  $(LIBERTA_CORE_H)
 
 # crypto primitives library
-crypto_libbitcoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES)
-crypto_libbitcoin_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libbitcoin_crypto_a_SOURCES = \
+crypto_libliberta_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_CONFIG_INCLUDES)
+crypto_libliberta_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libliberta_crypto_a_SOURCES = \
   crypto/common.h \
   crypto/hmac_sha256.cpp \
   crypto/hmac_sha256.h \
@@ -261,10 +277,10 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sha512.cpp \
   crypto/sha512.h
 
-# common: shared between bitcoind, and bitcoin-qt and non-server tools
-libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_common_a_SOURCES = \
+# common: shared between libertad, and liberta-qt and non-server tools
+libliberta_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_INCLUDES)
+libliberta_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libliberta_common_a_SOURCES = \
   amount.cpp \
   arith_uint256.cpp \
   base58.cpp \
@@ -288,14 +304,14 @@ libbitcoin_common_a_SOURCES = \
   script/script_error.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  $(BITCOIN_CORE_H)
+  $(LIBERTA_CORE_H)
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
-libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_util_a_SOURCES = \
+libliberta_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_INCLUDES)
+libliberta_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libliberta_util_a_SOURCES = \
   support/pagelocker.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -303,7 +319,7 @@ libbitcoin_util_a_SOURCES = \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
   random.cpp \
-  rpcprotocol.cpp \
+  rpc/protocol.cpp \
   support/cleanse.cpp \
   sync.cpp \
   uint256.cpp \
@@ -311,94 +327,94 @@ libbitcoin_util_a_SOURCES = \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
   utiltime.cpp \
-  $(BITCOIN_CORE_H)
+  $(LIBERTA_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
+libliberta_util_a_SOURCES += compat/glibc_compat.cpp
 endif
 
-# cli: shared between bitcoin-cli and bitcoin-qt
-libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libbitcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_cli_a_SOURCES = \
-  rpcclient.cpp \
-  $(BITCOIN_CORE_H)
+# cli: shared between liberta-cli and liberta-qt
+libliberta_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_INCLUDES)
+libliberta_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libliberta_cli_a_SOURCES = \
+  rpc/client.cpp \
+  $(LIBERTA_CORE_H)
 
-nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
+nodist_libliberta_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# bitcoind binary #
-bitcoind_SOURCES = bitcoind.cpp
-bitcoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-bitcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# libertad binary #
+libertad_SOURCES = libertad.cpp
+libertad_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_INCLUDES)
+libertad_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libertad_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoind_SOURCES += bitcoind-res.rc
+libertad_SOURCES += libertad-res.rc
 endif
 
-bitcoind_LDADD = \
-  $(LIBBITCOIN_SERVER) \
-  $(LIBBITCOIN_COMMON) \
+libertad_LDADD = \
+  $(LIBLIBERTA_SERVER) \
+  $(LIBLIBERTA_COMMON) \
   $(LIBUNIVALUE) \
-  $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CRYPTO) \
+  $(LIBLIBERTA_UTIL) \
+  $(LIBLIBERTA_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
 if ENABLE_ZMQ
-bitcoind_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+libertad_LDADD += $(LIBLIBERTA_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_WALLET
-bitcoind_LDADD += libbitcoin_wallet.a
+libertad_LDADD += libliberta_wallet.a
 endif
 
-bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+libertad_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 
-# bitcoin-cli binary #
-bitcoin_cli_SOURCES = bitcoin-cli.cpp
-bitcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-bitcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# liberta-cli binary #
+liberta_cli_SOURCES = liberta-cli.cpp
+liberta_cli_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_INCLUDES) $(EVENT_CFLAGS)
+liberta_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+liberta_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoin_cli_SOURCES += bitcoin-cli-res.rc
+liberta_cli_SOURCES += liberta-cli-res.rc
 endif
 
-bitcoin_cli_LDADD = \
-  $(LIBBITCOIN_CLI) \
+liberta_cli_LDADD = \
+  $(LIBLIBERTA_CLI) \
   $(LIBUNIVALUE) \
-  $(LIBBITCOIN_UTIL)
+  $(LIBLIBERTA_UTIL)
 
-bitcoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+liberta_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
-# bitcoin-tx binary #
-bitcoin_tx_SOURCES = bitcoin-tx.cpp
-bitcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-bitcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# liberta-tx binary #
+liberta_tx_SOURCES = liberta-tx.cpp
+liberta_tx_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_INCLUDES)
+liberta_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+liberta_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoin_tx_SOURCES += bitcoin-tx-res.rc
+liberta_tx_SOURCES += liberta-tx-res.rc
 endif
 
-bitcoin_tx_LDADD = \
+liberta_tx_LDADD = \
   $(LIBUNIVALUE) \
-  $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CRYPTO) \
+  $(LIBLIBERTA_COMMON) \
+  $(LIBLIBERTA_UTIL) \
+  $(LIBLIBERTA_CRYPTO) \
   $(LIBSECP256K1)
 
-bitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+liberta_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
-# bitcoinconsensus library #
-if BUILD_BITCOIN_LIBS
-include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = \
+# libertaconsensus library #
+if BUILD_LIBERTA_LIBS
+include_HEADERS = script/libertaconsensus.h
+liblibertaconsensus_la_SOURCES = \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
   crypto/sha1.cpp \
@@ -407,20 +423,20 @@ libbitcoinconsensus_la_SOURCES = \
   hash.cpp \
   primitives/transaction.cpp \
   pubkey.cpp \
-  script/bitcoinconsensus.cpp \
+  script/libertaconsensus.cpp \
   script/interpreter.cpp \
   script/script.cpp \
   uint256.cpp \
   utilstrencodings.cpp
 
 if GLIBC_BACK_COMPAT
-  libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
+  liblibertaconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
-libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+liblibertaconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+liblibertaconsensus_la_LIBADD = $(LIBSECP256K1)
+liblibertaconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_LIBERTA_INTERNAL
+liblibertaconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #
@@ -473,6 +489,10 @@ endif
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)
 	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(abspath $(<D) $<)
+
+if EMBEDDED_LEVELDB
+include Makefile.leveldb.include
+endif
 
 if ENABLE_TESTS
 include Makefile.test.include

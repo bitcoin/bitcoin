@@ -1,93 +1,105 @@
-bin_PROGRAMS += qt/bitcoin-qt
-EXTRA_LIBRARIES += qt/libbitcoinqt.a
+bin_PROGRAMS += qt/liberta-qt
+EXTRA_LIBRARIES += qt/liblibertaqt.a
 
-# bitcoin qt core #
+LIBS+= 
+
+# liberta qt core #
 QT_TS = \
-  qt/locale/bitcoin_af_ZA.ts \
-  qt/locale/bitcoin_ar.ts \
-  qt/locale/bitcoin_be_BY.ts \
-  qt/locale/bitcoin_bg_BG.ts \
-  qt/locale/bitcoin_bg.ts \
-  qt/locale/bitcoin_bs.ts \
-  qt/locale/bitcoin_ca_ES.ts \
-  qt/locale/bitcoin_ca.ts \
-  qt/locale/bitcoin_ca@valencia.ts \
-  qt/locale/bitcoin_cs_CZ.ts \
-  qt/locale/bitcoin_cs.ts \
-  qt/locale/bitcoin_cy.ts \
-  qt/locale/bitcoin_da.ts \
-  qt/locale/bitcoin_de.ts \
-  qt/locale/bitcoin_el_GR.ts \
-  qt/locale/bitcoin_el.ts \
-  qt/locale/bitcoin_en_GB.ts \
-  qt/locale/bitcoin_en.ts \
-  qt/locale/bitcoin_eo.ts \
-  qt/locale/bitcoin_es_CL.ts \
-  qt/locale/bitcoin_es_DO.ts \
-  qt/locale/bitcoin_es_ES.ts \
-  qt/locale/bitcoin_es_MX.ts \
-  qt/locale/bitcoin_es.ts \
-  qt/locale/bitcoin_es_UY.ts \
-  qt/locale/bitcoin_es_VE.ts \
-  qt/locale/bitcoin_et.ts \
-  qt/locale/bitcoin_eu_ES.ts \
-  qt/locale/bitcoin_fa_IR.ts \
-  qt/locale/bitcoin_fa.ts \
-  qt/locale/bitcoin_fi.ts \
-  qt/locale/bitcoin_fr_CA.ts \
-  qt/locale/bitcoin_fr_FR.ts \
-  qt/locale/bitcoin_fr.ts \
-  qt/locale/bitcoin_gl.ts \
-  qt/locale/bitcoin_he.ts \
-  qt/locale/bitcoin_hi_IN.ts \
-  qt/locale/bitcoin_hr.ts \
-  qt/locale/bitcoin_hu.ts \
-  qt/locale/bitcoin_id_ID.ts \
-  qt/locale/bitcoin_it.ts \
-  qt/locale/bitcoin_ja.ts \
-  qt/locale/bitcoin_ka.ts \
-  qt/locale/bitcoin_kk_KZ.ts \
-  qt/locale/bitcoin_ko_KR.ts \
-  qt/locale/bitcoin_ky.ts \
-  qt/locale/bitcoin_la.ts \
-  qt/locale/bitcoin_lt.ts \
-  qt/locale/bitcoin_lv_LV.ts \
-  qt/locale/bitcoin_mk_MK.ts \
-  qt/locale/bitcoin_mn.ts \
-  qt/locale/bitcoin_ms_MY.ts \
-  qt/locale/bitcoin_nb.ts \
-  qt/locale/bitcoin_nl.ts \
-  qt/locale/bitcoin_pam.ts \
-  qt/locale/bitcoin_pl.ts \
-  qt/locale/bitcoin_pt_BR.ts \
-  qt/locale/bitcoin_pt_PT.ts \
-  qt/locale/bitcoin_ro_RO.ts \
-  qt/locale/bitcoin_ru_RU.ts \
-  qt/locale/bitcoin_ru.ts \
-  qt/locale/bitcoin_sk.ts \
-  qt/locale/bitcoin_sl_SI.ts \
-  qt/locale/bitcoin_sq.ts \
-  qt/locale/bitcoin_sr.ts \
-  qt/locale/bitcoin_sv.ts \
-  qt/locale/bitcoin_th_TH.ts \
-  qt/locale/bitcoin_tr_TR.ts \
-  qt/locale/bitcoin_tr.ts \
-  qt/locale/bitcoin_uk.ts \
-  qt/locale/bitcoin_ur_PK.ts \
-  qt/locale/bitcoin_uz@Cyrl.ts \
-  qt/locale/bitcoin_vi.ts \
-  qt/locale/bitcoin_vi_VN.ts \
-  qt/locale/bitcoin_zh_CN.ts \
-  qt/locale/bitcoin_zh.ts \
-  qt/locale/bitcoin_zh_TW.ts
+  qt/locale/liberta_af.ts \
+  qt/locale/liberta_af_ZA.ts \
+  qt/locale/liberta_ar.ts \
+  qt/locale/liberta_be_BY.ts \
+  qt/locale/liberta_bg_BG.ts \
+  qt/locale/liberta_bg.ts \
+  qt/locale/liberta_bs.ts \
+  qt/locale/liberta_ca_ES.ts \
+  qt/locale/liberta_ca.ts \
+  qt/locale/liberta_ca@valencia.ts \
+  qt/locale/liberta_cs_CZ.ts \
+  qt/locale/liberta_cs.ts \
+  qt/locale/liberta_cy.ts \
+  qt/locale/liberta_da.ts \
+  qt/locale/liberta_de.ts \
+  qt/locale/liberta_el_GR.ts \
+  qt/locale/liberta_el.ts \
+  qt/locale/liberta_en_GB.ts \
+  qt/locale/liberta_en.ts \
+  qt/locale/liberta_eo.ts \
+  qt/locale/liberta_es_AR.ts \
+  qt/locale/liberta_es_CL.ts \
+  qt/locale/liberta_es_CO.ts \
+  qt/locale/liberta_es_DO.ts \
+  qt/locale/liberta_es_ES.ts \
+  qt/locale/liberta_es_MX.ts \
+  qt/locale/liberta_es.ts \
+  qt/locale/liberta_es_UY.ts \
+  qt/locale/liberta_es_VE.ts \
+  qt/locale/liberta_et.ts \
+  qt/locale/liberta_eu_ES.ts \
+  qt/locale/liberta_fa_IR.ts \
+  qt/locale/liberta_fa.ts \
+  qt/locale/liberta_fi.ts \
+  qt/locale/liberta_fr_CA.ts \
+  qt/locale/liberta_fr_FR.ts \
+  qt/locale/liberta_fr.ts \
+  qt/locale/liberta_gl.ts \
+  qt/locale/liberta_he.ts \
+  qt/locale/liberta_hi_IN.ts \
+  qt/locale/liberta_hr.ts \
+  qt/locale/liberta_hu.ts \
+  qt/locale/liberta_id_ID.ts \
+  qt/locale/liberta_it.ts \
+  qt/locale/liberta_ja.ts \
+  qt/locale/liberta_ka.ts \
+  qt/locale/liberta_kk_KZ.ts \
+  qt/locale/liberta_ko_KR.ts \
+  qt/locale/liberta_ky.ts \
+  qt/locale/liberta_la.ts \
+  qt/locale/liberta_lt.ts \
+  qt/locale/liberta_lv_LV.ts \
+  qt/locale/liberta_mk_MK.ts \
+  qt/locale/liberta_mn.ts \
+  qt/locale/liberta_ms_MY.ts \
+  qt/locale/liberta_nb.ts \
+  qt/locale/liberta_nl.ts \
+  qt/locale/liberta_pam.ts \
+  qt/locale/liberta_pl.ts \
+  qt/locale/liberta_pt_BR.ts \
+  qt/locale/liberta_pt_PT.ts \
+  qt/locale/liberta_ro_RO.ts \
+  qt/locale/liberta_ro.ts \
+  qt/locale/liberta_ru_RU.ts \
+  qt/locale/liberta_ru.ts \
+  qt/locale/liberta_sk.ts \
+  qt/locale/liberta_sl_SI.ts \
+  qt/locale/liberta_sq.ts \
+  qt/locale/liberta_sr.ts \
+  qt/locale/liberta_sv.ts \
+  qt/locale/liberta_ta.ts \
+  qt/locale/liberta_th_TH.ts \
+  qt/locale/liberta_tr_TR.ts \
+  qt/locale/liberta_tr.ts \
+  qt/locale/liberta_uk.ts \
+  qt/locale/liberta_ur_PK.ts \
+  qt/locale/liberta_uz@Cyrl.ts \
+  qt/locale/liberta_uz@Latn.ts \
+  qt/locale/liberta_vi.ts \
+  qt/locale/liberta_vi_VN.ts \
+  qt/locale/liberta_zh_CN.ts \
+  qt/locale/liberta_zh.ts \
+  qt/locale/liberta_zh_TW.ts
 
 QT_FORMS_UI = \
   qt/forms/addressbookpage.ui \
   qt/forms/askpassphrasedialog.ui \
   qt/forms/coincontroldialog.ui \
+  qt/forms/blockexplorer.ui \
+  qt/forms/obfuscationconfig.ui \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
+  qt/forms/masternodelist.ui \
+  qt/forms/multisenddialog.ui \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
   qt/forms/overviewpage.ui \
@@ -97,26 +109,30 @@ QT_FORMS_UI = \
   qt/forms/sendcoinsdialog.ui \
   qt/forms/sendcoinsentry.ui \
   qt/forms/signverifymessagedialog.ui \
-  qt/forms/transactiondescdialog.ui
+  qt/forms/tradingdialog.ui \
+  qt/forms/transactiondescdialog.ui 
 
 QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
   qt/moc_addresstablemodel.cpp \
   qt/moc_askpassphrasedialog.cpp \
   qt/moc_bantablemodel.cpp \
-  qt/moc_bitcoinaddressvalidator.cpp \
-  qt/moc_bitcoinamountfield.cpp \
-  qt/moc_bitcoingui.cpp \
-  qt/moc_bitcoinunits.cpp \
+  qt/moc_libertaaddressvalidator.cpp \
+  qt/moc_libertaamountfield.cpp \
+  qt/moc_libertagui.cpp \
+  qt/moc_libertaunits.cpp \
   qt/moc_clientmodel.cpp \
   qt/moc_coincontroldialog.cpp \
   qt/moc_coincontroltreewidget.cpp \
   qt/moc_csvmodelwriter.cpp \
+  qt/moc_obfuscationconfig.cpp \
   qt/moc_editaddressdialog.cpp \
   qt/moc_guiutil.cpp \
   qt/moc_intro.cpp \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
+  qt/moc_masternodelist.cpp \
+  qt/moc_multisenddialog.cpp \
   qt/moc_notificator.cpp \
   qt/moc_openuridialog.cpp \
   qt/moc_optionsdialog.cpp \
@@ -134,6 +150,7 @@ QT_MOC_CPP = \
   qt/moc_sendcoinsentry.cpp \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
+  qt/moc_tradingdialog.cpp \
   qt/moc_trafficgraphwidget.cpp \
   qt/moc_transactiondesc.cpp \
   qt/moc_transactiondescdialog.cpp \
@@ -143,47 +160,52 @@ QT_MOC_CPP = \
   qt/moc_utilitydialog.cpp \
   qt/moc_walletframe.cpp \
   qt/moc_walletmodel.cpp \
-  qt/moc_walletview.cpp
+  qt/moc_walletview.cpp \
+  qt/moc_blockexplorer.cpp 
 
-BITCOIN_MM = \
+LIBERTA_MM = \
   qt/macdockiconhandler.mm \
   qt/macnotificationhandler.mm
 
 QT_MOC = \
-  qt/bitcoin.moc \
-  qt/bitcoinamountfield.moc \
+  qt/liberta.moc \
+  qt/libertaamountfield.moc \
   qt/intro.moc \
   qt/overviewpage.moc \
   qt/rpcconsole.moc
 
-QT_QRC_CPP = qt/qrc_bitcoin.cpp
-QT_QRC = qt/bitcoin.qrc
-QT_QRC_LOCALE_CPP = qt/qrc_bitcoin_locale.cpp
-QT_QRC_LOCALE = qt/bitcoin_locale.qrc
+QT_QRC_CPP = qt/qrc_liberta.cpp
+QT_QRC = qt/liberta.qrc
+QT_QRC_LOCALE_CPP = qt/qrc_liberta_locale.cpp
+QT_QRC_LOCALE = qt/liberta_locale.qrc
 
 PROTOBUF_CC = qt/paymentrequest.pb.cc
 PROTOBUF_H = qt/paymentrequest.pb.h
 PROTOBUF_PROTO = qt/paymentrequest.proto
 
-BITCOIN_QT_H = \
+LIBERTA_QT_H = \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
   qt/bantablemodel.h \
-  qt/bitcoinaddressvalidator.h \
-  qt/bitcoinamountfield.h \
-  qt/bitcoingui.h \
-  qt/bitcoinunits.h \
+  qt/libertaaddressvalidator.h \
+  qt/libertaamountfield.h \
+  qt/libertagui.h \
+  qt/libertaunits.h \
+  qt/blockexplorer.h \
   qt/clientmodel.h \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \
   qt/csvmodelwriter.h \
+  qt/obfuscationconfig.h \
   qt/editaddressdialog.h \
   qt/guiconstants.h \
   qt/guiutil.h \
   qt/intro.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
+  qt/masternodelist.h \
+  qt/multisenddialog.h \
   qt/networkstyle.h \
   qt/notificator.h \
   qt/openuridialog.h \
@@ -204,6 +226,7 @@ BITCOIN_QT_H = \
   qt/sendcoinsentry.h \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
+  qt/tradingdialog.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
@@ -223,8 +246,8 @@ RES_ICONS = \
   qt/res/icons/address-book.png \
   qt/res/icons/about.png \
   qt/res/icons/about_qt.png \
-  qt/res/icons/bitcoin.ico \
-  qt/res/icons/bitcoin.png \
+  qt/res/icons/liberta.ico \
+  qt/res/icons/liberta.png \
   qt/res/icons/clock1.png \
   qt/res/icons/clock2.png \
   qt/res/icons/clock3.png \
@@ -240,6 +263,7 @@ RES_ICONS = \
   qt/res/icons/edit.png \
   qt/res/icons/editcopy.png \
   qt/res/icons/editpaste.png \
+  qt/res/icons/explorer.png \
   qt/res/icons/export.png \
   qt/res/icons/eye.png \
   qt/res/icons/eye_minus.png \
@@ -257,6 +281,7 @@ RES_ICONS = \
   qt/res/icons/remove.png \
   qt/res/icons/send.png \
   qt/res/icons/synced.png \
+  qt/res/icons/trade.png \
   qt/res/icons/transaction0.png \
   qt/res/icons/transaction2.png \
   qt/res/icons/transaction_conflicted.png \
@@ -267,16 +292,18 @@ RES_ICONS = \
   qt/res/icons/warning.png \
   qt/res/icons/verify.png
 
-BITCOIN_QT_CPP = \
+LIBERTA_QT_CPP = \
   qt/bantablemodel.cpp \
-  qt/bitcoinaddressvalidator.cpp \
-  qt/bitcoinamountfield.cpp \
-  qt/bitcoingui.cpp \
-  qt/bitcoinunits.cpp \
+  qt/libertaaddressvalidator.cpp \
+  qt/libertaamountfield.cpp \
+  qt/libertagui.cpp \
+  qt/libertaunits.cpp \
+  qt/blockexplorer.cpp \
   qt/clientmodel.cpp \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
   qt/intro.cpp \
+  qt/masternodelist.cpp \
   qt/networkstyle.cpp \
   qt/notificator.cpp \
   qt/optionsdialog.cpp \
@@ -287,21 +314,25 @@ BITCOIN_QT_CPP = \
   qt/qvaluecombobox.cpp \
   qt/rpcconsole.cpp \
   qt/splashscreen.cpp \
+  qt/tradingdialog.cpp \
   qt/trafficgraphwidget.cpp \
   qt/utilitydialog.cpp
 
 if TARGET_WINDOWS
-BITCOIN_QT_CPP += qt/winshutdownmonitor.cpp
+LIBERTA_QT_CPP += qt/winshutdownmonitor.cpp
 endif
 
 if ENABLE_WALLET
-BITCOIN_QT_CPP += \
+LIBERTA_QT_CPP += \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
   qt/coincontroldialog.cpp \
   qt/coincontroltreewidget.cpp \
+  qt/obfuscationconfig.cpp \
   qt/editaddressdialog.cpp \
+  qt/masternodelist.cpp \
+  qt/multisenddialog.cpp \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
   qt/paymentrequestplus.cpp \
@@ -328,19 +359,19 @@ RES_IMAGES =
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
-BITCOIN_RC = qt/res/bitcoin-qt-res.rc
+LIBERTA_RC = qt/res/liberta-qt-res.rc
 
-BITCOIN_QT_INCLUDES = -I$(builddir)/qt -I$(srcdir)/qt -I$(srcdir)/qt/forms \
+LIBERTA_QT_INCLUDES = -I$(builddir)/qt -I$(srcdir)/qt -I$(srcdir)/qt/forms \
   -I$(builddir)/qt/forms -DQT_NO_KEYWORDS
 
-qt_libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+qt_liblibertaqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_INCLUDES) $(LIBERTA_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
-qt_libbitcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_liblibertaqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS) -fPIC
 
-qt_libbitcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+qt_liblibertaqt_a_SOURCES = $(LIBERTA_QT_CPP) $(LIBERTA_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
-nodist_qt_libbitcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
+nodist_qt_liblibertaqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
@@ -349,70 +380,70 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 # Most files will depend on the forms and moc files as includes. Generate them
 # before anything else.
 $(QT_MOC): $(QT_FORMS_H)
-$(qt_libbitcoinqt_a_OBJECTS) $(qt_bitcoin_qt_OBJECTS) : | $(QT_MOC)
+$(qt_liblibertaqt_a_OBJECTS) $(qt_liberta_qt_OBJECTS) : | $(QT_MOC)
 
 #Generating these with a half-written protobuf header leads to wacky results.
 #This makes sure it's done.
 $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
-# bitcoin-qt binary #
-qt_bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+# liberta-qt binary #
+qt_liberta_qt_CPPFLAGS = $(AM_CPPFLAGS) $(LIBERTA_INCLUDES) $(LIBERTA_QT_INCLUDES) \
   $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
-qt_bitcoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_liberta_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS) -fPIC
 
-qt_bitcoin_qt_SOURCES = qt/bitcoin.cpp
+qt_liberta_qt_SOURCES = qt/liberta.cpp
 if TARGET_DARWIN
-  qt_bitcoin_qt_SOURCES += $(BITCOIN_MM)
+  qt_liberta_qt_SOURCES += $(LIBERTA_MM)
 endif
 if TARGET_WINDOWS
-  qt_bitcoin_qt_SOURCES += $(BITCOIN_RC)
+  qt_liberta_qt_SOURCES += $(LIBERTA_RC)
 endif
-qt_bitcoin_qt_LDADD = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
+qt_liberta_qt_LDADD = qt/liblibertaqt.a $(LIBLIBERTA_SERVER)
 if ENABLE_WALLET
-qt_bitcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
+qt_liberta_qt_LDADD += $(LIBLIBERTA_WALLET)
 endif
 if ENABLE_ZMQ
-qt_bitcoin_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+qt_liberta_qt_LDADD += $(LIBLIBERTA_ZMQ) $(ZMQ_LIBS)
 endif
-qt_bitcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+qt_liberta_qt_LDADD += $(LIBLIBERTA_CLI) $(LIBLIBERTA_COMMON) $(LIBLIBERTA_UTIL) $(LIBLIBERTA_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
-qt_bitcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-qt_bitcoin_qt_LIBTOOLFLAGS = --tag CXX
+qt_liberta_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qt_liberta_qt_LIBTOOLFLAGS = --tag CXX
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
 
 SECONDARY: $(QT_QM)
 
-qt/bitcoinstrings.cpp: $(libbitcoin_server_a_SOURCES) $(libbitcoin_wallet_a_SOURCES)
+qt/libertastrings.cpp: $(libliberta_server_a_SOURCES) $(libliberta_wallet_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) ../share/qt/extract_strings_qt.py $^
 
-translate: qt/bitcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
+translate: qt/libertastrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(LIBERTA_QT_CPP) $(LIBERTA_QT_H) $(LIBERTA_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts qt/locale/bitcoin_en.ts
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts qt/locale/liberta_en.ts
 
 $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@test -f $(RCC)
 	@test -f $(@D)/$(<F) || cp -f $< $(@D)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin_locale $(@D)/$(<F) | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name liberta_locale $(@D)/$(<F) | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
 	@test -f $(RCC)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin $< | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name liberta $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
-CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
+CLEAN_QT = $(nodist_qt_liblibertaqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
 
 CLEANFILES += $(CLEAN_QT)
 
-bitcoin_qt_clean: FORCE
-	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_bitcoin_qt_OBJECTS) qt/bitcoin-qt$(EXEEXT) $(LIBBITCOINQT)
+liberta_qt_clean: FORCE
+	rm -f $(CLEAN_QT) $(qt_liblibertaqt_a_OBJECTS) $(qt_liberta_qt_OBJECTS) qt/liberta-qt$(EXEEXT) $(LIBLIBERTAQT)
 
-bitcoin_qt : qt/bitcoin-qt$(EXEEXT)
+liberta_qt : qt/liberta-qt$(EXEEXT)
 
 ui_%.h: %.ui
 	@test -f $(UIC)
@@ -420,11 +451,11 @@ ui_%.h: %.ui
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(UIC) -o $@ $< || (echo "Error creating $@"; false)
 
 %.moc: %.cpp
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(MOC) $(QT_INCLUDES) $(MOC_DEFS) $< | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(MOC) $(DEFAULT_INCLUDES) $(QT_INCLUDES) $(MOC_DEFS) $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
 moc_%.cpp: %.h
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(MOC) $(QT_INCLUDES) $(MOC_DEFS) $< | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(MOC) $(DEFAULT_INCLUDES) $(QT_INCLUDES) $(MOC_DEFS) $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
 %.qm: %.ts

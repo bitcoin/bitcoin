@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PUBKEY_H
-#define BITCOIN_PUBKEY_H
+#ifndef LIBERTA_PUBKEY_H
+#define LIBERTA_PUBKEY_H
 
 #include "hash.h"
 #include "serialize.h"
@@ -171,6 +171,11 @@ public:
         return size() == 33;
     }
 
+    std::vector<unsigned char> getvch() const
+    {
+        return std::vector<unsigned char>(begin(), end());
+    }
+
     /**
      * Verify a DER signature (~72 bytes).
      * If this public key is not fully valid, the return value will be false.
@@ -181,6 +186,8 @@ public:
      * Check whether a signature is normalized (lower-S).
      */
     static bool CheckLowS(const std::vector<unsigned char>& vchSig);
+
+    static bool CheckSignatureElement(const unsigned char *vch, int len, bool half);
 
     //! Recover a public key from a compact signature.
     bool RecoverCompact(const uint256& hash, const std::vector<unsigned char>& vchSig);
@@ -221,4 +228,4 @@ public:
     ~ECCVerifyHandle();
 };
 
-#endif // BITCOIN_PUBKEY_H
+#endif // LIBERTA_PUBKEY_H

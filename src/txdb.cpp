@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -72,6 +72,10 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
 }
 
 CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blocks" / "index", nCacheSize, fMemory, fWipe) {
+    if (!Read('S', salt)) {
+        salt = GetRandHash();
+        Write('S', salt);
+    }
 }
 
 bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
@@ -163,6 +167,43 @@ bool CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos>
     return WriteBatch(batch);
 }
 
+bool CBlockTreeDB::ReadAddrIndex(uint160 addrid, std::vector<CExtDiskTxPos> &list) {
+    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+
+    uint64_t lookupid;
+    {
+        CHashWriter ss(SER_GETHASH, 0);
+        ss << salt;
+        ss << addrid;
+        lookupid = UintToArith256(ss.GetHash()).GetLow64();
+    }
+
+    pcursor->Seek(make_pair('a', lookupid));
+
+    while (pcursor->Valid()) {
+        std::pair<std::pair<char, uint64_t>, CExtDiskTxPos> key;
+        if (pcursor->GetKey(key) && key.first.first == 'a' && key.first.second == lookupid) {
+            list.push_back(key.second);
+        } else {
+            break;
+        }
+        pcursor->Next();
+    }
+    return true;
+}
+
+bool CBlockTreeDB::AddAddrIndex(const std::vector<std::pair<uint160, CExtDiskTxPos> > &list) {
+    unsigned char foo[0];
+    CDBBatch batch(&GetObfuscateKey());
+    for (std::vector<std::pair<uint160, CExtDiskTxPos> >::const_iterator it=list.begin(); it!=list.end(); it++) {
+        CHashWriter ss(SER_GETHASH, 0);
+        ss << salt;
+        ss << it->first;
+        batch.Write(make_pair(make_pair('a', UintToArith256(ss.GetHash()).GetLow64()), it->second), FLATDATA(foo));
+    }
+    return WriteBatch(batch, true);
+}
+
 bool CBlockTreeDB::WriteFlag(const std::string &name, bool fValue) {
     return Write(std::make_pair(DB_FLAG, name), fValue ? '1' : '0');
 }
@@ -177,7 +218,7 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
 
 bool CBlockTreeDB::LoadBlockIndexGuts()
 {
-    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
 
     pcursor->Seek(make_pair(DB_BLOCK_INDEX, uint256()));
 
@@ -200,11 +241,14 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nTime          = diskindex.nTime;
                 pindexNew->nBits          = diskindex.nBits;
                 pindexNew->nNonce         = diskindex.nNonce;
-                pindexNew->nStatus        = diskindex.nStatus;
+		pindexNew->nStatus        = diskindex.nStatus;
+                pindexNew->nStakeModifier = diskindex.nStakeModifier;
+                pindexNew->nMoneySupply   = diskindex.nMoneySupply;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
-                    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
+                if (!pindexNew->IsProofOfStake())
+                    if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
+                        return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
 
                 pcursor->Next();
             } else {

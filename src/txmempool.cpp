@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,10 +22,10 @@ using namespace std;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                                  bool poolHasNoInputsOf, CAmount _inChainInputValue,
-                                 bool _spendsCoinbase, unsigned int _sigOps):
+                                 bool _spendsCoinbase, unsigned int _sigOps, LockPoints lp):
     tx(_tx), nFee(_nFee), nTime(_nTime), entryPriority(_entryPriority), entryHeight(_entryHeight),
     hadNoDependencies(poolHasNoInputsOf), inChainInputValue(_inChainInputValue),
-    spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps)
+    spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps), lockPoints(lp)
 {
     nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
     nModSize = tx.CalculateModifiedSize(nTxSize);
@@ -59,6 +59,11 @@ void CTxMemPoolEntry::UpdateFeeDelta(int64_t newFeeDelta)
 {
     nModFeesWithDescendants += newFeeDelta - feeDelta;
     feeDelta = newFeeDelta;
+}
+
+void CTxMemPoolEntry::UpdateLockPoints(const LockPoints& lp)
+{
+    lockPoints = lp;
 }
 
 // Update the given tx for any in-mempool descendants.
@@ -501,12 +506,16 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
 
 void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags)
 {
-    // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
+    // Remove transactions spending a coinbase or coinstake which are now immature and no-longer-final transactions
     LOCK(cs);
     list<CTransaction> transactionsToRemove;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->GetTx();
-        if (!CheckFinalTx(tx, flags)) {
+        LockPoints lp = it->GetLockPoints();
+        bool validLP =  TestLockPointValidity(&lp);
+        if (!CheckFinalTx(tx, flags) || !CheckSequenceLocks(tx, flags, &lp, validLP)) {
+            // Note if CheckSequenceLocks fails the LockPoints may still be invalid
+            // So it's critical that we remove the tx and not depend on the LockPoints.
             transactionsToRemove.push_back(tx);
         } else if (it->GetSpendsCoinbase()) {
             BOOST_FOREACH(const CTxIn& txin, tx.vin) {
@@ -515,11 +524,14 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
                     continue;
                 const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
 		if (nCheckFrequency != 0) assert(coins);
-                if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < COINBASE_MATURITY)) {
+                if (!coins || ((coins->IsCoinBase() || coins->IsCoinStake()) && ((signed long)nMemPoolHeight) - coins->nHeight < COINBASE_MATURITY)) {
                     transactionsToRemove.push_back(tx);
                     break;
                 }
             }
+        }
+        if (!validLP) {
+            mapTx.modify(it, update_lock_points(lp));
         }
     }
     BOOST_FOREACH(const CTransaction& tx, transactionsToRemove) {

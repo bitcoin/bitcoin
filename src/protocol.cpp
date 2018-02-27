@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,6 +35,21 @@ const char *FILTERADD="filteradd";
 const char *FILTERCLEAR="filterclear";
 const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
+const char *TXLOCKREQUEST="tx lock request";
+const char *TXLOCKVOTE="tx lock vote";
+const char *SPORK="spork";
+const char *MNWINNER="mn winner";
+const char *MNSCANERROR="mn scan error";
+const char *MNBUDGETVOTE="mn budget vote";
+const char *MNBUDGETPROPOSAL="mn budget proposal";
+const char *MNBUDGETFINALIZED="mn budget finalized";
+const char *MNBUDGETFINALIZEDVOTE="mn budget finalized vote";
+const char *QUORUM="mn quorum";
+const char *ANNOUNCE="mn announce";
+const char *MNPING="mn ping";
+const char *DSTX="dstx";
+const char *SSC="ssc";
+const char *MNVS="mnvs";
 };
 
 static const char* ppszTypeName[] =
@@ -42,7 +57,20 @@ static const char* ppszTypeName[] =
     "ERROR", // Should never occur
     NetMsgType::TX,
     NetMsgType::BLOCK,
-    "filtered block" // Should never occur
+    "filtered block", // Should never occur
+    NetMsgType::SPORK,
+    NetMsgType::TXLOCKREQUEST,
+    NetMsgType::TXLOCKVOTE,
+    NetMsgType::MNWINNER,
+    NetMsgType::MNSCANERROR,
+    NetMsgType::MNBUDGETVOTE,
+    NetMsgType::MNBUDGETPROPOSAL,
+    NetMsgType::MNBUDGETFINALIZED,
+    NetMsgType::MNBUDGETFINALIZEDVOTE,
+    NetMsgType::QUORUM,
+    NetMsgType::ANNOUNCE,
+    NetMsgType::MNPING,
+    NetMsgType::DSTX
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -70,7 +98,22 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::FILTERADD,
     NetMsgType::FILTERCLEAR,
     NetMsgType::REJECT,
-    NetMsgType::SENDHEADERS
+    NetMsgType::SENDHEADERS,
+    NetMsgType::TXLOCKREQUEST,
+    NetMsgType::TXLOCKVOTE,
+    NetMsgType::SPORK,
+    NetMsgType::MNWINNER,
+    NetMsgType::MNSCANERROR,
+    NetMsgType::MNBUDGETVOTE,
+    NetMsgType::MNBUDGETPROPOSAL,
+    NetMsgType::MNBUDGETFINALIZED,
+    NetMsgType::MNBUDGETFINALIZEDVOTE,
+    NetMsgType::QUORUM,
+    NetMsgType::ANNOUNCE,
+    NetMsgType::MNPING,
+    NetMsgType::DSTX,
+    NetMsgType::SSC,
+    NetMsgType::MNVS
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

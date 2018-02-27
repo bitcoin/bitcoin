@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Liberta Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/liberta-config.h"
 #endif
 
 #include "net.h"
@@ -15,10 +15,13 @@
 #include "consensus/consensus.h"
 #include "crypto/common.h"
 #include "hash.h"
+#include "miner.h"
+#include "obfuscation.h"
 #include "primitives/transaction.h"
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
+#include <curl/curl.h>
 
 #ifdef WIN32
 #include <string.h>
@@ -41,6 +44,9 @@
 // Dump addresses to peers.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
 
+// get fiat rates
+#define FIAT_INTERVAL 300
+
 #if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
 #endif
@@ -58,8 +64,13 @@
 
 using namespace std;
 
+extern "C" { int tor_main(int argc, char *argv[]);
+	
+	//void process_signal(uintptr_t sig);
+}
+
 namespace {
-    const int MAX_OUTBOUND_CONNECTIONS = 8;
+    const int MAX_OUTBOUND_CONNECTIONS = 20;
 
     struct ListenSocket {
         SOCKET socket;
@@ -69,9 +80,15 @@ namespace {
     };
 }
 
+const static std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
+
 //
 // Global state variables
 //
+double usdprice =0;
+double LBTprice=0;
+double usdrate=0;
+
 bool fDiscover = true;
 bool fListen = true;
 uint64_t nLocalServices = NODE_NETWORK;
@@ -92,7 +109,7 @@ CCriticalSection cs_vNodes;
 map<CInv, CDataStream> mapRelay;
 deque<pair<int64_t, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
-limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
+limitedmap<uint256, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
@@ -203,7 +220,7 @@ bool IsPeerAddrLocalGood(CNode *pnode)
 }
 
 // pushes our own address to a peer
-void AdvertizeLocal(CNode *pnode)
+void AdvertiseLocal(CNode *pnode)
 {
     if (fListen && pnode->fSuccessfullyConnected)
     {
@@ -218,7 +235,7 @@ void AdvertizeLocal(CNode *pnode)
         }
         if (addrLocal.IsRoutable())
         {
-            LogPrintf("AdvertizeLocal: advertizing address %s\n", addrLocal.ToString());
+            LogPrintf("AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
             pnode->PushAddress(addrLocal);
         }
     }
@@ -379,16 +396,17 @@ CNode* FindNode(const CService& addr)
     return NULL;
 }
 
-CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
+CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool obfuScationMaster)
 {
     if (pszDest == NULL) {
-        if (IsLocal(addrConnect))
+        if (IsLocal(addrConnect) && !obfuScationMaster)
             return NULL;
 
         // Look for an existing connection
         CNode* pnode = FindNode((CService)addrConnect);
-        if (pnode)
-        {
+        if (pnode) {
+            pnode->fObfuScationMaster = obfuScationMaster;
+
             pnode->AddRef();
             return pnode;
         }
@@ -423,6 +441,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
         }
 
         pnode->nTimeConnected = GetTime();
+        if (obfuScationMaster) pnode->fObfuScationMaster = true;
 
         return pnode;
     } else if (!proxyConnectionFailed) {
@@ -629,7 +648,9 @@ void CNode::copyStats(CNodeStats &stats)
     X(fInbound);
     X(nStartingHeight);
     X(nSendBytes);
+    X(mapSendBytesPerMsgCmd);
     X(nRecvBytes);
+    X(mapRecvBytesPerMsgCmd);
     X(fWhitelisted);
 
     // It is common for nodes with good ping times to suddenly become lagged,
@@ -643,7 +664,7 @@ void CNode::copyStats(CNodeStats &stats)
         nPingUsecWait = GetTimeMicros() - nPingUsecStart;
     }
 
-    // Raw ping time is in microseconds, but show it to user as whole seconds (Bitcoin users should be well used to small numbers with many decimal places by now :)
+    // Raw ping time is in microseconds, but show it to user as whole seconds (Libertausers should be well used to small numbers with many decimal places by now :)
     stats.dPingTime = (((double)nPingUsecTime) / 1e6);
     stats.dPingMin  = (((double)nMinPingUsecTime) / 1e6);
     stats.dPingWait = (((double)nPingUsecWait) / 1e6);
@@ -684,6 +705,15 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
         nBytes -= handled;
 
         if (msg.complete()) {
+
+            //store received bytes per message command
+            //to prevent a memory DOS, only allow valid commands
+            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.hdr.pchCommand);
+            if (i == mapRecvBytesPerMsgCmd.end())
+                i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
+            assert(i != mapRecvBytesPerMsgCmd.end());
+            i->second += msg.hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+
             msg.nTime = GetTimeMicros();
             messageHandlerCondition.notify_one();
         }
@@ -789,6 +819,7 @@ void SocketSendData(CNode *pnode)
         assert(pnode->nSendSize == 0);
     }
     pnode->vSendMsg.erase(pnode->vSendMsg.begin(), it);
+
 }
 
 static list<CNode*> vNodesDisconnected;
@@ -884,6 +915,8 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
                 continue;
             if (node->fDisconnect)
                 continue;
+            if (node->addr.IsLocal())
+                continue;
             vEvictionCandidates.push_back(CNodeRef(node));
         }
     }
@@ -942,6 +975,7 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
             return false;
 
     // Disconnect from the network group with the most connections
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
     vEvictionCandidates[0]->fDisconnect = true;
 
     return true;
@@ -1341,7 +1375,7 @@ void ThreadMapPort()
             }
         }
 
-        string strDesc = "Bitcoin " + FormatFullVersion();
+        string strDesc = "Liberta " + FormatFullVersion();
 
         try {
             while (true) {
@@ -1594,8 +1628,8 @@ void ThreadOpenConnections()
                 continue;
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
-            if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50)
-                continue;
+            //if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50)
+            //    continue;
 
             addrConnect = addr;
             break;
@@ -1847,7 +1881,7 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to %s on this computer. Bitcoin Core is probably already running."), addrBind.ToString());
+            strError = strprintf(_("Unable to bind to %s on this computer. Liberta is probably already running."), addrBind.ToString());
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToString(), NetworkErrorString(nErr));
         LogPrintf("%s\n", strError);
@@ -1873,6 +1907,7 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
     return true;
 }
 
+/*
 void static Discover(boost::thread_group& threadGroup)
 {
     if (!fDiscover)
@@ -1923,6 +1958,119 @@ void static Discover(boost::thread_group& threadGroup)
     }
 #endif
 }
+*/
+
+
+static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
+
+std::string remove(std::string input, char m)
+{
+  input.erase(std::remove(input.begin(),input.end(), m),input.end());
+
+  return input;
+}
+
+std::string replacestring(std::string subject, const std::string& search,
+                          const std::string& replace) {
+    size_t pos = 0;
+    while((pos = subject.find(search, pos)) != std::string::npos) {
+         subject.replace(pos, search.length(), replace);
+         pos += replace.length();
+    }
+    return subject;
+}
+
+void LBTgetprice()
+{
+	double price;
+    std::string url;
+    url = "https://bittrex.com/api/v1.1/public/getticker?market=BTC-LBT";
+
+    const char * c = url.c_str();
+
+      std::string readBuffer;
+      CURLcode res;
+      CURL *curl;
+      curl = curl_easy_init();
+      if(curl) {
+		curl_global_init(CURL_GLOBAL_ALL);
+        curl_easy_setopt(curl, CURLOPT_URL, c);
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "Liberta/0.12");
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        }
+		if(res != CURLE_OK) {
+			if (fDebug) LogPrintf("Curl Error LBTgetprice() - %s - on URL:%s.\n", curl_easy_strerror(res), url);
+		}
+		else {
+			if (fDebug) LogPrintf("Curl Response LBTgetprice() - Lenght %lu - Buffer - %s .\n", (long)readBuffer.size(), readBuffer);
+			std::size_t pos = readBuffer.find(",\"A");
+			readBuffer = readBuffer.substr(0,pos);
+			readBuffer = replacestring(readBuffer, ",", ",\n");
+			readBuffer = remove(readBuffer, ',');
+			readBuffer = remove(readBuffer, '"');
+			readBuffer = remove(readBuffer, ':');
+			readBuffer = remove(readBuffer, '{');
+			readBuffer = replacestring(readBuffer, "successtrue", "");
+			readBuffer = replacestring(readBuffer, "message", "");
+			readBuffer = replacestring(readBuffer, "resultBid", "");
+			readBuffer = remove(readBuffer, '\n');
+			}
+		
+		if ( ! (istringstream(readBuffer) >> price) ) price = 0;
+
+      if (price > 0)
+         LBTprice = price;
+}
+
+void btcusdprice()
+{
+    std::string url = "https://blockchain.info/q/24hrprice";
+    const char * c = url.c_str();
+    std::string readBuffer;
+    CURLcode res;
+    CURL *curl;
+    curl = curl_easy_init();
+    if(curl) {
+        curl_global_init(CURL_GLOBAL_ALL);
+        curl_easy_setopt(curl, CURLOPT_URL, c);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Liberta/0.12");
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5);
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+    }
+    double price = atof(readBuffer.c_str());
+    
+    if (price > 0)
+       usdprice = price;
+}
+
+void FiatData()
+{
+    btcusdprice();
+    LBTgetprice();
+    usdrate = usdprice*LBTprice;
+}
+
+void static Discover(boost::thread_group& threadGroup)
+{
+    // no network discovery
+}
+
+
+
 
 void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
@@ -1986,6 +2134,13 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // Dump network addresses
     scheduler.scheduleEvery(&DumpData, DUMP_ADDRESSES_INTERVAL);
+
+    if (GetBoolArg("-staking", true))
+        //threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "stake", &ThreadStakeMiner));
+        threadGroup.create_thread(boost::bind(&ThreadStakeMiner, pwalletMain));
+
+    // Retrieve fiat prices 
+    scheduler.scheduleEvery(&FiatData, FIAT_INTERVAL);
 }
 
 bool StopNode()
@@ -2042,11 +2197,13 @@ public:
 }
 instance_of_cnetcleanup;
 
-
-
-
-
-
+void CExplicitNetCleanup::callCleanup()
+{
+    // Explicit call to destructor of CNetCleanup because it's not implicitly called
+    // when the wallet is restarted from within the wallet itself.
+    CNetCleanup* tmp = new CNetCleanup();
+    delete tmp; // Stroustrup's gonna kill me for that
+}
 
 void RelayTransaction(const CTransaction& tx)
 {
@@ -2086,6 +2243,29 @@ void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
             pnode->PushInventory(inv);
     }
 }
+
+void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll)
+{
+    CInv inv(MSG_TXLOCK_REQUEST, tx.GetHash());
+
+    //broadcast the new lock
+    LOCK(cs_vNodes);
+    BOOST_FOREACH (CNode* pnode, vNodes) {
+        if (!relayToAll && !pnode->fRelayTxes)
+            continue;
+
+        pnode->PushMessage("ix", tx);
+    }
+}
+
+void RelayInv(CInv& inv, const int minProtoVersion)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH (CNode* pnode, vNodes)
+        if (pnode->nVersion >= minProtoVersion)
+            pnode->PushInventory(inv);
+}
+
 
 void CNode::RecordBytesRecv(uint64_t bytes)
 {
@@ -2380,6 +2560,9 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nPingUsecTime = 0;
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
+    BOOST_FOREACH(const std::string &msg, getAllNetMessageTypes())
+        mapRecvBytesPerMsgCmd[msg] = 0;
+    mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
     {
         LOCK(cs_nLastNodeId);
@@ -2419,7 +2602,7 @@ void CNode::AskFor(const CInv& inv)
     // We're using mapAskFor as a priority queue,
     // the key is the earliest time the request can be sent
     int64_t nRequestTime;
-    limitedmap<CInv, int64_t>::const_iterator it = mapAlreadyAskedFor.find(inv);
+    limitedmap<uint256, int64_t>::const_iterator it = mapAlreadyAskedFor.find(inv.hash);
     if (it != mapAlreadyAskedFor.end())
         nRequestTime = it->second;
     else
@@ -2438,7 +2621,7 @@ void CNode::AskFor(const CInv& inv)
     if (it != mapAlreadyAskedFor.end())
         mapAlreadyAskedFor.update(it, nRequestTime);
     else
-        mapAlreadyAskedFor.insert(std::make_pair(inv, nRequestTime));
+        mapAlreadyAskedFor.insert(std::make_pair(inv.hash, nRequestTime));
     mapAskFor.insert(std::make_pair(nRequestTime, inv));
 }
 
@@ -2459,7 +2642,7 @@ void CNode::AbortMessage() UNLOCK_FUNCTION(cs_vSend)
     LogPrint("net", "(aborted)\n");
 }
 
-void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
+void CNode::EndMessage(const char* pszCommand) UNLOCK_FUNCTION(cs_vSend)
 {
     // The -*messagestest options are intentionally not documented in the help message,
     // since they are only used during development to debug the networking code and are
@@ -2481,6 +2664,9 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     // Set the size
     unsigned int nSize = ssSend.size() - CMessageHeader::HEADER_SIZE;
     WriteLE32((uint8_t*)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], nSize);
+
+    //log total amount of bytes per command
+    mapSendBytesPerMsgCmd[std::string(pszCommand)] += nSize + CMessageHeader::HEADER_SIZE;
 
     // Set the checksum
     uint256 hash = Hash(ssSend.begin() + CMessageHeader::HEADER_SIZE, ssSend.end());
