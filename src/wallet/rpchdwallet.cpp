@@ -3897,7 +3897,7 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
             "  \"currentblocktx\": nnn,         (numeric) the number of transactions in the last block\n"
             "  \"pooledtx\": n                  (numeric) the number of transactions in the mempool\n"
             "  \"difficulty\": xxx.xxxxx        (numeric) the current difficulty\n"
-            "  \"last-search-time\": xxxxxxx    (numeric) the last time this wallet searched for a coinstake\n"
+            "  \"lastsearchtime\": xxxxxxx      (numeric) the last time this wallet searched for a coinstake\n"
             "  \"weight\": xxxxxxx              (numeric) the current stake weight of this wallet\n"
             "  \"netstakeweight\": xxxxxxx      (numeric) the current stake weight of the network\n"
             "  \"expectedtime\": xxxxxxx        (numeric) estimated time for next stake\n"
@@ -3971,7 +3971,7 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     obj.pushKV("pooledtx", (uint64_t)mempool.size());
 
     obj.pushKV("difficulty", GetDifficulty());
-    obj.pushKV("last-search-time", (uint64_t)pwallet->nLastCoinStakeSearchTime);
+    obj.pushKV("lastsearchtime", (uint64_t)pwallet->nLastCoinStakeSearchTime);
 
     obj.pushKV("weight", (uint64_t)nWeight);
     obj.pushKV("netstakeweight", (uint64_t)nNetworkWeight);
