@@ -1,42 +1,43 @@
-Bitcoin Core integration/staging tree
+Liberta Core integration/staging tree
 =====================================
 
-[![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
+[![Build Status](https://travis-ci.org/liberta/liberta.svg?branch=master)](https://travis-ci.org/liberta/liberta)
 
-https://bitcoincore.org
+https://libertacore.org
 
-What is Bitcoin?
+What is Liberta?
 ----------------
 
-Bitcoin is an experimental new digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
+Liberta is an experimental new digital currency that enables instant payments to
+anyone, anywhere in the world. Liberta uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
+out collectively by the network. Liberta Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see https://www.bitcoin.org/en/download.
+the Liberta Core software, see https://liberta.org/en/download, or read the
+[original whitepaper](https://libertacore.org/liberta.pdf).
 
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Liberta Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcoin Core.
+completely stable. [Tags](https://github.com/liberta/liberta/tags) are created
+regularly to indicate new official, stable release versions of Liberta Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
+The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/liberta-dev)
 should be used to discuss complicated or controversial changes before working
 on a patch set.
 
-Developer IRC can be found on Freenode at #bitcoin-core-dev.
+Developer IRC can be found on Freenode at #liberta-core-dev.
 
 Testing
 -------
@@ -54,10 +55,10 @@ submit new unit tests for old code. Unit tests can be compiled and run
 
 There are also [regression and integration tests](/qa) of the RPC interface, written
 in Python, that are run automatically on the build server.
-These tests can be run with: `qa/pull-tester/rpc-tests.py`
+These tests can be run (if the [test dependencies](/qa) are installed) with: `qa/pull-tester/rpc-tests.py`
 
 The Travis CI system makes sure that every pull request is built for Windows
-and Linux, OSX, and that unit and sanity tests are automatically run.
+and Linux, OS X, and that unit and sanity tests are automatically run.
 
 ### Manual Quality Assurance (QA) Testing
 
@@ -70,7 +71,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/bitcoin/).
+[Liberta Core's Transifex page](https://www.transifex.com/projects/p/liberta/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
@@ -78,4 +79,4 @@ Translations are periodically pulled from Transifex and merged into the git repo
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
 
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
+Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/liberta-translators).
