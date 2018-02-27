@@ -3574,17 +3574,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 }
 
                 // Fill in dummy signatures for fee calculation.
-                int nIn = 0;
-                for (const auto& txdsin : vecTxDSInTmp)
-                {
-                    const CScript& scriptPubKey = txdsin.prevPubKey;
-                    CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
-                    if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes))
-                    {
-                        strFailReason = _("Signing transaction failed");
-                        return false;
-                    }
-                    nIn++;
+                if (!DummySignTx(txNew, setCoins)) {
+                    strFailReason = _("Signing transaction failed");
+                    return false;
                 }
 
                 unsigned int nBytes = GetVirtualTransactionSize(txNew);
