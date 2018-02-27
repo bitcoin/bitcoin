@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-# Copyright (c) 2012-2017 The Bitcoin Core developers
+# Copyright (c) 2012-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/MIT.
 '''
 Generate valid and invalid base58 address and private key test vectors.
 
