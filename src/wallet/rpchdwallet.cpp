@@ -1151,6 +1151,8 @@ UniValue extkey(const JSONRPCRequest &request)
             };
         };
 
+        int64_t nCreatedAt = nTimeStartScan ? nTimeStartScan : GetTime();
+
         std::string sLabel;
         if (request.params.size() > nParamOffset)
         {
@@ -1169,12 +1171,17 @@ UniValue extkey(const JSONRPCRequest &request)
         };
 
         {
+            WalletRescanReserver reserver(pwallet);
+            if (!reserver.reserve()) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+            }
+
             LOCK2(cs_main, pwallet->cs_wallet);
             CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
                 throw std::runtime_error("TxnBegin failed.");
 
-            int rv = pwallet->ExtKeyImportAccount(&wdb, sek, nTimeStartScan, sLabel);
+            int rv = pwallet->ExtKeyImportAccount(&wdb, sek, nCreatedAt, sLabel);
             if (rv == 1)
             {
                 wdb.TxnAbort();
@@ -1197,6 +1204,10 @@ UniValue extkey(const JSONRPCRequest &request)
                 result.pushKV("scanned_from", nTimeStartScan);
                 result.pushKV("note", "Please backup your wallet."); // TODO: check for child of existing key?
             };
+
+            pwallet->RescanFromTime(nTimeStartScan, reserver, true /* update */);
+            pwallet->MarkDirty();
+            pwallet->ReacceptWalletTransactions();
 
         } // cs_wallet
     } else
@@ -1541,6 +1552,11 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
 
     LogPrintf("Importing master key and account with labels '%s', '%s'.\n", sLblMaster.c_str(), sLblAccount.c_str());
 
+    WalletRescanReserver reserver(pwallet);
+    if (!reserver.reserve()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+    }
+
     CExtKey58 eKey58;
     CExtKeyPair ekp;
     if (eKey58.Set58(sMnemonic.c_str()) == 0)
@@ -1639,8 +1655,9 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
         };
     } // cs_wallet
 
-    if (0 != pwallet->ScanChainFromTime(nScanFrom))
-        throw std::runtime_error("ScanChainFromTime failed.");
+    pwallet->RescanFromTime(nScanFrom, reserver, true);
+    pwallet->MarkDirty();
+    pwallet->ReacceptWalletTransactions();
 
     UniValue warnings(UniValue::VARR);
     // Check for coldstaking outputs without coldstakingaddress set
@@ -2313,6 +2330,7 @@ UniValue scanchain(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "scanchain [from_height]\n"
+            "\nDEPRECATED, will be removed in 0.17. Replaced by rescanblockchain.\n"
             "Scan blockchain for owned transactions.");
 
     //EnsureWalletIsUnlocked(pwallet);

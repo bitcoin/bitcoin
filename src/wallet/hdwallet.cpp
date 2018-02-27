@@ -254,7 +254,14 @@ bool CHDWallet::InitLoadWallet()
             }
 
             int64_t nStart = GetTimeMillis();
-            pwallet->ScanForWalletTransactions(pindexRescan, true);
+            {
+                WalletRescanReserver reserver(walletInstance);
+                if (!reserver.reserve()) {
+                    InitError(_("Failed to rescan the wallet during initialization"));
+                    return errorN(0, "Reserve rescan failed.");
+                }
+                walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, true);
+            }
             LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
             pwallet->SetBestChain(chainActive.GetLocator());
             pwallet->dbw->IncrementUpdateCounter();
@@ -5368,7 +5375,7 @@ int CHDWallet::ExtKeyImportLoose(CHDWalletDB *pwdb, CStoredExtKey &sekIn, CKeyID
     return 0;
 };
 
-int CHDWallet::ExtKeyImportAccount(CHDWalletDB *pwdb, CStoredExtKey &sekIn, int64_t nTimeStartScan, const std::string &sLabel)
+int CHDWallet::ExtKeyImportAccount(CHDWalletDB *pwdb, CStoredExtKey &sekIn, int64_t nCreatedAt, const std::string &sLabel)
 {
     // rv: 0 success, 1 fail, 2 existing key, 3 updated key
     // It's not possible to import an account using only a public key as internal keys are derived hardened
@@ -5377,11 +5384,6 @@ int CHDWallet::ExtKeyImportAccount(CHDWalletDB *pwdb, CStoredExtKey &sekIn, int6
     {
         LogPrintf("%s.\n", __func__);
         AssertLockHeld(cs_wallet);
-
-        if (nTimeStartScan == 0)
-            LogPrintf("No blockchain scanning.\n");
-        else
-            LogPrintf("Scan blockchain from %d.\n", nTimeStartScan);
     };
 
     assert(pwdb);
@@ -5456,8 +5458,6 @@ int CHDWallet::ExtKeyImportAccount(CHDWalletDB *pwdb, CStoredExtKey &sekIn, int6
                 delete sea;
                 return errorN(1, "WriteExtKey failed.");
             };
-            if (nTimeStartScan)
-                ScanChainFromTime(nTimeStartScan);
 
             delete sek;
             delete sea;
@@ -5477,7 +5477,7 @@ int CHDWallet::ExtKeyImportAccount(CHDWalletDB *pwdb, CStoredExtKey &sekIn, int6
     };
 
     std::vector<uint8_t> v;
-    sea->mapValue[EKVT_CREATED_AT] = SetCompressedInt64(v, nTimeStartScan);
+    sea->mapValue[EKVT_CREATED_AT] = SetCompressedInt64(v, nCreatedAt);
 
     if (0 != ExtKeySaveAccountToDB(pwdb, idAccount, sea))
     {
@@ -5492,9 +5492,6 @@ int CHDWallet::ExtKeyImportAccount(CHDWalletDB *pwdb, CStoredExtKey &sekIn, int6
         delete sea;
         return errorN(1, "ExtKeyAddAccountToMap() failed.");
     };
-
-    if (nTimeStartScan)
-        ScanChainFromTime(nTimeStartScan);
 
     return 0;
 };
@@ -7435,33 +7432,6 @@ bool CHDWallet::GetFullChainPath(const CExtKeyAccount *pa, size_t nChain, std::v
     return true;
 };
 
-int CHDWallet::ScanChainFromTime(int64_t nTimeStartScan)
-{
-    LogPrintf("%s: %d\n", __func__, nTimeStartScan);
-
-    CBlockIndex *pnext, *pindex = chainActive.Genesis();
-
-    if (pindex == nullptr)
-        return errorN(1, "%s: Genesis Block is not set.", __func__);
-
-    while (pindex && pindex->nTime < nTimeStartScan
-        && (pnext = chainActive.Next(pindex)))
-        pindex = pnext;
-
-    LogPrintf("%s: Starting from height %d.\n", __func__, pindex->nHeight);
-
-    {
-        LOCK2(cs_main, cs_wallet);
-
-        MarkDirty();
-
-        ScanForWalletTransactions(pindex, true);
-        ReacceptWalletTransactions();
-    } // cs_main, cs_wallet
-
-    return 0;
-};
-
 int CHDWallet::ScanChainFromHeight(int nHeight)
 {
     LogPrintf("%s: %d\n", __func__, nHeight);
@@ -7482,7 +7452,10 @@ int CHDWallet::ScanChainFromHeight(int nHeight)
 
         MarkDirty();
 
-        ScanForWalletTransactions(pindex, true);
+        WalletRescanReserver reserver(this);
+        if (!reserver.reserve())
+            return errorN(1, "%s: Failed to reserve the wallet for scanning.", __func__);
+        ScanForWalletTransactions(pindex, nullptr, reserver, true);
         ReacceptWalletTransactions();
     } // cs_main, cs_wallet
 
@@ -8776,59 +8749,6 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBloc
 
     return false;
 };
-
-/**
- * Scan the block chain (starting in pindexStart) for transactions
- * from or to us. If fUpdate is true, found transactions that already
- * exist in the wallet will be updated.
- *
- * Returns null if scan was successful. Otherwise, if a complete rescan was not
- * possible (due to pruning or corruption), returns pointer to the most recent
- * block that could not be scanned.
- */
-CBlockIndex* CHDWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
-{
-    int64_t nNow = GetTime();
-    const CChainParams& chainParams = Params();
-
-    CBlockIndex* pindex = pindexStart;
-    CBlockIndex* ret = nullptr;
-    {
-        LOCK2(cs_main, cs_wallet);
-        fAbortRescan = false;
-        fScanningWallet = true;
-
-        ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
-        double dProgressStart = GuessVerificationProgress(chainParams.TxData(), pindex);
-        double dProgressTip = GuessVerificationProgress(chainParams.TxData(), chainActive.Tip());
-        while (pindex && !fAbortRescan)
-        {
-            if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
-                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((GuessVerificationProgress(chainParams.TxData(), pindex) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
-            if (GetTime() >= nNow + 60) {
-                nNow = GetTime();
-                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
-            }
-
-            CBlock block;
-            if (ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
-                for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-                    AddToWalletIfInvolvingMe(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
-                }
-            } else {
-                ret = pindex;
-            }
-            pindex = chainActive.Next(pindex);
-        }
-        if (pindex && fAbortRescan) {
-            LogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
-        }
-        ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
-
-        fScanningWallet = false;
-    }
-    return ret;
-}
 
 CWalletTx *CHDWallet::GetTempWalletTx(const uint256& hash)
 {

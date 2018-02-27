@@ -627,6 +627,10 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
     if (request.params[3].isNum())
         nScanFrom = request.params[3].get_int64();
 
+    WalletRescanReserver reserver(pwallet);
+    if (!reserver.reserve()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+    }
 
     std::string sError;
     CExtPubKey ekp;
@@ -728,8 +732,9 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
         };
     } // pwallet->cs_wallet
 
-    if (0 != pwallet->ScanChainFromTime(nScanFrom))
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "ScanChainFromTime failed.");
+    pwallet->RescanFromTime(nScanFrom, reserver, true /* update */);
+    pwallet->MarkDirty();
+    pwallet->ReacceptWalletTransactions();
 
     std::string sPath;
     if (0 != PathToString(vPath, sPath))
