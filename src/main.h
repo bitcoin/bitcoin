@@ -28,7 +28,6 @@
 #include <utility>
 #include <vector>
 
-#include <atomic>
 
 #include <boost/unordered_map.hpp>
 
@@ -140,7 +139,7 @@ extern uint64_t nLastBlockSize;
 extern const std::string strMessageMagic;
 extern CWaitableCriticalSection csBestBlock;
 extern CConditionVariable cvBlockChange;
-extern std::atomic_bool fImporting;
+extern bool fImporting;
 extern bool fReindex;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
