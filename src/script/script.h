@@ -640,6 +640,9 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+	// <-AddressIndex-l-2018/02/01-modified for address index func.
+	bool IsPayToPublicKeyHash() const;
+	// ->AddressIndex-l
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;

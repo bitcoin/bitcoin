@@ -18,6 +18,7 @@
 #include <script/script_error.h>
 #include <sync.h>
 #include <versionbits.h>
+#include "spentindex.h"
 
 #include <algorithm>
 #include <exception>
@@ -130,6 +131,11 @@ static const int64_t MAX_FEE_ESTIMATION_TIP_AGE = 3 * 60 * 60;
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 static const bool DEFAULT_TXINDEX = false;
+// <-AddressIndex-l-2018/01/31-modified for address index func.
+static const bool DEFAULT_ADDRESSINDEX = true;
+static const bool DEFAULT_TIMESTAMPINDEX = true;
+static const bool DEFAULT_SPENTINDEX = true;
+// ->AddressIndex-l
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 /** Default for -persistmempool */
 static const bool DEFAULT_PERSIST_MEMPOOL = true;
@@ -391,6 +397,16 @@ public:
 
 /** Initializes the script-execution cache */
 void InitScriptExecutionCache();
+
+// <-AddressIndex-l-2018/01/31-modified for address index func.
+bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &hashes);
+bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
+bool GetAddressIndex(uint160 addressHash, int type,
+                     std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
+                     int start = 0, int end = 0);
+bool GetAddressUnspent(uint160 addressHash, int type,
+                       std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs);
+// ->AddressIndex-l
 
 
 /** Functions for disk access for blocks */
