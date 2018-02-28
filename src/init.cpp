@@ -27,8 +27,9 @@
 #include <net_processing.h>
 #include <policy/policy.h>
 #include <policy/feerate.h>
-#include <rpc/server.h>
+#include <rpc/blockchain.h>
 #include <rpc/register.h>
+#include <rpc/server.h>
 #include <script/standard.h>
 #include <script/sigcache.h>
 #include <scheduler.h>
