@@ -5,7 +5,8 @@
 #include "bench.h"
 
 #include "chainparams.h"
-#include "main.h"
+#include "streams.h"
+#include "validation.h"
 #include "consensus/validation.h"
 
 namespace block_bench {
