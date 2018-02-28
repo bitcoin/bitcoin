@@ -117,6 +117,10 @@ weights.
 - #13246 `6de7543` Bump to Ubuntu Bionic 18.04 in build-windows.md (ken2812221)
 - #12556 `e730b82` Fix version typo in getpeerinfo RPC call help (tamasblummer)
 
+### Logging
+
+- The log timestamp format is now ISO 8601 (e.g. "2018-02-28T12:34:56Z").
+
 Credits
 =======
 
