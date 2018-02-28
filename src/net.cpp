@@ -2377,17 +2377,20 @@ void CConnman::Interrupt()
     interruptNet();
     InterruptSocks5(true);
 
-    if (semOutbound)
+    if (semOutbound) {
         for (int i=0; i<(nMaxOutbound + nMaxFeeler); i++)
             semOutbound->post();
+    }
 
-    if (semAddnode)
+    if (semAddnode) {
         for (int i=0; i<nMaxAddnode; i++)
             semAddnode->post();
+    }
 
-    if (semMasternodeOutbound)
+    if (semMasternodeOutbound) {
         for (int i=0; i<MAX_OUTBOUND_MASTERNODE_CONNECTIONS; i++)
             semMasternodeOutbound->post();
+    }
 
 }
 
