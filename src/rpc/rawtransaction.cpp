@@ -29,6 +29,9 @@
 #include "wallet/wallet.h"
 #endif
 
+#include "evo/specialtx.h"
+#include "evo/providertx.h"
+
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -125,6 +128,15 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     if (!tx.vExtraPayload.empty()) {
         entry.push_back(Pair("extraPayloadSize", (int)tx.vExtraPayload.size()));
         entry.push_back(Pair("extraPayload", HexStr(tx.vExtraPayload)));
+    }
+
+    if (tx.nVersion >= 3 && tx.nType == TRANSACTION_PROVIDER_REGISTER) {
+        CProRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue proTxObj;
+            proTx.ToJson(proTxObj);
+            entry.push_back(Pair("proTx", proTxObj));
+        }
     }
 
     if (!hashBlock.IsNull()) {
