@@ -369,6 +369,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         accept();
         CoinControlDialog::coinControl()->UnSelectAll();
         coinControlUpdateLabels();
+        Q_EMIT coinsSent(currentTransaction.getTransaction()->GetHash());
     }
     fNewRecipientAllowed = true;
 }
