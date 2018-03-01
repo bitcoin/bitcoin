@@ -452,6 +452,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         accept();
         CoinControlDialog::coinControl()->UnSelectAll();
         coinControlUpdateLabels();
+        Q_EMIT coinsSent(currentTransaction.getTransaction()->GetHash());
     }
     fNewRecipientAllowed = true;
 }
