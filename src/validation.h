@@ -462,9 +462,19 @@ int GetSpendHeight(const CCoinsViewCache& inputs);
 extern VersionBitsCache versionbitscache;
 
 /**
+ * Ignorable version bits
+ */
+extern std::vector<IgnoreVersionBits> ignorebits;
+enum class IgnoreBitsMode {
+  ibmFALSE = 0,
+  ibmTRUE = 1,
+};
+
+/**
  * Determine what nVersion a new block should use.
  */
-int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+
+int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params, IgnoreBitsMode use_ignorebits = IgnoreBitsMode::ibmFALSE);
 
 /** Reject codes greater or equal to this can be returned by AcceptToMemPool
  * for transactions, to signal internal conditions. They cannot and should not

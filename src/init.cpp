@@ -71,6 +71,7 @@ bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
+static const bool DEFAULT_VB_IGNORE_DEFAULTS = true;
 
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
@@ -448,6 +449,8 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-limitdescendantcount=<n>", strprintf("Do not accept transactions if any ancestor would have <n> or more in-mempool descendants (default: %u)", DEFAULT_DESCENDANT_LIMIT));
         strUsage += HelpMessageOpt("-limitdescendantsize=<n>", strprintf("Do not accept transactions if any ancestor would have more than <n> kilobytes of in-mempool descendants (default: %u).", DEFAULT_DESCENDANT_SIZE_LIMIT));
         strUsage += HelpMessageOpt("-vbparams=deployment:start:end", "Use given start/end times for specified version bits deployment (regtest-only)");
+        strUsage += HelpMessageOpt("-vbignore=bit:start:end", "Ignore use of given version bit between given start/end times");
+        strUsage += HelpMessageOpt("-vbignoredefaults=<n>", strprintf("Ignore version bits per chain defaults (default: %u).", DEFAULT_VB_IGNORE_DEFAULTS));
     }
     strUsage += HelpMessageOpt("-debug=<category>", strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + ". " +
         _("If <category> is not supplied or if <category> = 1, output all debugging information.") + " " + _("<category> can be:") + " " + ListLogCategories() + ".");
@@ -1122,6 +1125,36 @@ bool AppInitParameterInteraction()
         std::vector<std::string> vstrReplacementModes;
         boost::split(vstrReplacementModes, strReplacementModeList, boost::is_any_of(","));
         fEnableReplacement = (std::find(vstrReplacementModes.begin(), vstrReplacementModes.end(), "fee") != vstrReplacementModes.end());
+    }
+
+    if (gArgs.GetBoolArg("-vbignoredefaults", DEFAULT_VB_IGNORE_DEFAULTS)) {
+        for (const IgnoreVersionBits& ivb : chainparams.IgnoreBits()) {
+            LogPrintf("Ignoring version bit %d from start=%ld, end=%ld (default)\n", ivb.bit, ivb.beginTime, ivb.endTime);
+            ignorebits.push_back(ivb);
+        }
+    }
+    if (gArgs.IsArgSet("-vbignore")) {
+        // Allow ignoring version bit parameters for forks that you will not enforce
+        for (const std::string& strIgnoreVersionBits : gArgs.GetArgs("-vbignore")) {
+            std::vector<std::string> vIgnore;
+            boost::split(vIgnore, strIgnoreVersionBits, boost::is_any_of(":"));
+            if (vIgnore.size() != 3) {
+                return InitError("Version bits ignore instruction malformed, expecting bit:start:end");
+            }
+            int64_t nBeginTime, nEndTime;
+            int32_t nBit;
+            if (!ParseInt32(vIgnore[0], &nBit) || nBit < 0 || nBit > 28) {
+                return InitError(strprintf("Invalid version bit (%s)", vIgnore[0]));
+            }
+            if (!ParseInt64(vIgnore[1], &nBeginTime)) {
+                return InitError(strprintf("Invalid start time (%s)", vIgnore[1]));
+            }
+            if (!ParseInt64(vIgnore[2], &nEndTime)) {
+                return InitError(strprintf("Invalid end time (%s)", vIgnore[2]));
+            }
+            LogPrintf("Ignoring version bit %d from start=%ld, end=%ld\n", nBit, nBeginTime, nEndTime);
+            ignorebits.emplace_back(nBit, nBeginTime, nEndTime);
+        }
     }
 
     if (gArgs.IsArgSet("-vbparams")) {
