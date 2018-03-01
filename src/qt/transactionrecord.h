@@ -81,7 +81,8 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        Fee
     };
 
     /** Number of confirmation recommended for accepting a transaction */

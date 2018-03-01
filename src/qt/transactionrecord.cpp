@@ -104,7 +104,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
             //
             // Debit
             //
-            CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
 
             for (unsigned int nOut = 0; nOut < wtx.tx->vout.size(); nOut++)
             {
@@ -120,6 +119,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                 TransactionRecord sub(hash, nTime);
                 sub.idx = nOut;
                 sub.involvesWatchAddress = involvesWatchAddress;
+                sub.debit = -txout.nValue;
 
                 if (!boost::get<CNoDestination>(&wtx.txout_address[nOut]))
                 {
@@ -134,15 +134,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                     sub.address = mapValue["to"];
                 }
 
-                CAmount nValue = txout.nValue;
-                /* Add fee to first output */
-                if (nTxFee > 0)
-                {
-                    nValue += nTxFee;
-                    nTxFee = 0;
-                }
-                sub.debit = -nValue;
+                parts.append(sub);
+            }
 
+            CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
+
+            if (nTxFee > 0) {
+                TransactionRecord sub(hash, nTime);
+                sub.type = TransactionRecord::Fee;
+                sub.debit = -nTxFee;
                 parts.append(sub);
             }
         }
