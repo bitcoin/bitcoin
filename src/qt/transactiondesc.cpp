@@ -18,6 +18,7 @@
 #include <util.h>
 #include <wallet/db.h>
 #include <wallet/wallet.h>
+#include <policy/policy.h>
 
 #include <stdint.h>
 #include <string>
@@ -243,6 +244,8 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
 
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxID() + "<br>";
     strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(wtx.tx->GetTotalSize()) + " bytes<br>";
+    strHTML += "<b>" + tr("Transaction virtual size") + ":</b> " + QString::number(GetVirtualTransactionSize(*wtx.tx)) + " bytes<br>";
+    strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
 
     // Message from normal chaincoin:URI (chaincoin:XyZ...?message=example)
     for (const std::pair<std::string, std::string>& r : wtx.vOrderForm)
