@@ -85,6 +85,8 @@ public:
     int LLMQConnectionRetryTimeout() const { return nLLMQConnectionRetryTimeout; }
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
+    /** Return true if the fallback fee is by default enabled for this network */
+    bool IsFallbackFeeEnabled() const { return m_fallback_fee_enabled; }
     /** Return the list of hostnames to look up for DNS seeds */
     const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
@@ -134,6 +136,7 @@ protected:
     int nLLMQConnectionRetryTimeout;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
+    bool m_fallback_fee_enabled;
     int nPoolMinParticipants;
     int nPoolMaxParticipants;
     int nFulfilledRequestExpireTime;

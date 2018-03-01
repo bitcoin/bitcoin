@@ -203,6 +203,7 @@ BASE_SCRIPTS = [
     'feature_governance_objects.py',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
+    'wallet_fallbackfee.py',
     'feature_minchainwork.py',
     'p2p_unrequested_blocks.py', # NOTE: needs dash_hash to pass
     'feature_shutdown.py',

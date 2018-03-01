@@ -53,6 +53,7 @@ static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
 static CCriticalSection cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
+bool g_wallet_allow_fallback_fee = false; //<! will be defined via chainparams
 
 bool AddWallet(const std::shared_ptr<CWallet>& wallet)
 {
@@ -3836,6 +3837,12 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                             i++;
                         }
                     }
+                }
+
+                if (feeCalc.reason == FeeReason::FALLBACK && !g_wallet_allow_fallback_fee) {
+                    // eventually allow a fallback fee
+                    strFailReason = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
+                    return false;
                 }
 
                 if (nAmountLeft == nFeeRet) {
