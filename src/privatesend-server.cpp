@@ -4,6 +4,7 @@
 #include <privatesend-server.h>
 
 #include <activemasternode.h>
+#include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <init.h>

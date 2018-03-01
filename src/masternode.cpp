@@ -5,6 +5,7 @@
 #include <activemasternode.h>
 #include <base58.h>
 #include <chainparams.h>
+#include <consensus/tx_verify.h>
 #include <init.h>
 #include <netbase.h>
 #include <masternode.h>

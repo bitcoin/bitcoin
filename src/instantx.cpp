@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <activemasternode.h>
+#include <consensus/tx_verify.h>
 #include <instantx.h>
 #include <key.h>
 #include <validation.h>
