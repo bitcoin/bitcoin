@@ -82,6 +82,20 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
         "04 67 8a fd b0");
 
     BOOST_CHECK_EQUAL(
+        HexStr(ParseHex_expected + sizeof(ParseHex_expected),
+               ParseHex_expected + sizeof(ParseHex_expected)),
+        "");
+
+    BOOST_CHECK_EQUAL(
+        HexStr(ParseHex_expected + sizeof(ParseHex_expected),
+               ParseHex_expected + sizeof(ParseHex_expected), true),
+        "");
+
+    BOOST_CHECK_EQUAL(
+        HexStr(ParseHex_expected, ParseHex_expected),
+        "");
+
+    BOOST_CHECK_EQUAL(
         HexStr(ParseHex_expected, ParseHex_expected, true),
         "");
 
