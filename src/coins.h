@@ -10,6 +10,7 @@
 #include "core_memusage.h"
 #include "hash.h"
 #include "memusage.h"
+#include "primitives/transaction.h"
 #include "serialize.h"
 #include "uint256.h"
 
