@@ -25,11 +25,16 @@
 
 UniValue masternodelist(const JSONRPCRequest& request);
 
+bool EnsureWalletIsAvailable(bool avoidException);
+
 #ifdef ENABLE_WALLET
 void EnsureWalletIsUnlocked();
 
 UniValue privatesend(const JSONRPCRequest& request)
 {
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "privatesend \"command\"\n"
@@ -41,14 +46,14 @@ UniValue privatesend(const JSONRPCRequest& request)
             "  reset       - Reset mixing\n"
             );
 
+    if(fMasternodeMode)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
+
     if(request.params[0].get_str() == "start") {
         {
             LOCK(pwalletMain->cs_wallet);
             EnsureWalletIsUnlocked();
         }
-
-        if(fMasternodeMode)
-            return "Mixing is not supported from masternodes";
 
         privateSendClient.fEnablePrivateSend = true;
         bool result = privateSendClient.DoAutomaticDenominating(*g_connman);
@@ -254,6 +259,9 @@ UniValue masternode(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
     if (strCommand == "start-alias")
     {
+        if (!EnsureWalletIsAvailable(request.fHelp))
+            return NullUniValue;
+
         if (request.params.size() < 2)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify an alias");
 
@@ -303,6 +311,9 @@ UniValue masternode(const JSONRPCRequest& request)
 
     if (strCommand == "start-all" || strCommand == "start-missing" || strCommand == "start-disabled")
     {
+        if (!EnsureWalletIsAvailable(request.fHelp))
+            return NullUniValue;
+
         {
             LOCK(pwalletMain->cs_wallet);
             EnsureWalletIsUnlocked();
@@ -393,6 +404,9 @@ UniValue masternode(const JSONRPCRequest& request)
 
 #ifdef ENABLE_WALLET
     if (strCommand == "outputs") {
+        if (!EnsureWalletIsAvailable(request.fHelp))
+            return NullUniValue;
+
         // Find possible candidates
         std::vector<COutput> vPossibleCoins;
         pwalletMain->AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_1000);
@@ -646,6 +660,9 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
     if (strCommand == "create-alias")
     {
+        if (!EnsureWalletIsAvailable(request.fHelp))
+            return NullUniValue;
+
         // wait for reindex and/or import to finish
         if (fImporting || fReindex)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Wait for reindex and/or import to finish");
@@ -679,7 +696,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                     vecMnb.push_back(mnb);
                     CDataStream ssVecMnb(SER_NETWORK, PROTOCOL_VERSION);
                     ssVecMnb << vecMnb;
-                    statusObj.push_back(Pair("hex", HexStr(ssVecMnb.begin(), ssVecMnb.end())));
+                    statusObj.push_back(Pair("hex", HexStr(ssVecMnb)));
                 } else {
                     statusObj.push_back(Pair("errorMessage", strError));
                 }
@@ -698,6 +715,9 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 
     if (strCommand == "create-all")
     {
+        if (!EnsureWalletIsAvailable(request.fHelp))
+            return NullUniValue;
+
         // wait for reindex and/or import to finish
         if (fImporting || fReindex)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Wait for reindex and/or import to finish");
