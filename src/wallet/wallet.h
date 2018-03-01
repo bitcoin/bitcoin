@@ -40,6 +40,7 @@ extern CFeeRate payTxFee;
 extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
+extern bool bBIP69Enabled;
 
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;

@@ -3222,6 +3222,23 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue setbip69enabled(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "setbip69enabled enable\n"
+                "\nEnable/Disable BIP69 input/output sorting (-regtest only)\n"
+                "\nArguments:\n"
+                "1. enable  (bool, required) true or false"
+        );
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST)
+        throw std::runtime_error("setbip69enabled for regression testing (-regtest mode) only");
+
+    bBIP69Enabled = request.params[0].get_bool();
+
+    return NullUniValue;
+}
+
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
 extern UniValue importaddress(const JSONRPCRequest& request);
@@ -3282,6 +3299,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   true,   {"oldpassphrase","newpassphrase"} },
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
+
+    { "hidden",             "setbip69enabled",          &setbip69enabled,          true,   {} },
+
 };
 
 void RegisterWalletRPCCommands(CRPCTable &tableRPC)
