@@ -2,17 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "spork.h"
+
+#include "base58.h"
 #include "chainparams.h"
 #include "validation.h"
 #include "messagesigner.h"
 #include "net_processing.h"
 #include "netmessagemaker.h"
-#include "spork.h"
 
 #include <boost/lexical_cast.hpp>
-
-class CSporkMessage;
-class CSporkManager;
 
 CSporkManager sporkManager;
 
@@ -48,7 +47,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
             LogPrintf("%s new\n", strLogMsg);
         }
 
-        if(!spork.CheckSignature()) {
+        if(!spork.CheckSignature(sporkPubKeyID)) {
             LogPrintf("CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
             Misbehaving(pfrom->GetId(), 100);
             return;
@@ -107,7 +106,7 @@ bool CSporkManager::UpdateSpork(int nSporkID, int64_t nValue, CConnman& connman)
 
     CSporkMessage spork = CSporkMessage(nSporkID, nValue, GetAdjustedTime());
 
-    if(spork.Sign(strMasterPrivKey)) {
+    if(spork.Sign(sporkPrivKey)) {
         spork.Relay(connman);
         mapSporks[spork.GetHash()] = spork;
         mapSporksActive[nSporkID] = spork;
@@ -202,18 +201,38 @@ std::string CSporkManager::GetSporkNameByID(int nSporkID)
     }
 }
 
+bool CSporkManager::SetSporkAddress(const std::string& strAddress) {
+    CBitcoinAddress address(strAddress);
+    if (!address.IsValid() || !address.GetKeyID(sporkPubKeyID)) {
+        LogPrintf("CSporkManager::SetSporkAddress -- Failed to parse spork address\n");
+        return false;
+    }
+    return true;
+}
+
 bool CSporkManager::SetPrivKey(const std::string& strPrivKey)
 {
+    CKey key;
+    CPubKey pubKey;
+    if(!CMessageSigner::GetKeysFromSecret(strPrivKey, key, pubKey)) {
+        LogPrintf("CSporkManager::SetPrivKey -- Failed to parse private key\n");
+        return false;
+    }
+
+    if (pubKey.GetID() != sporkPubKeyID) {
+        LogPrintf("CSporkManager::SetPrivKey -- New private key does not belong to spork address\n");
+        return false;
+    }
+
     CSporkMessage spork;
-
-    spork.Sign(strPrivKey);
-
-    if(spork.CheckSignature()){
+    if (spork.Sign(key)) {
         // Test signing successful, proceed
         LogPrintf("CSporkManager::SetPrivKey -- Successfully initialized as spork signer\n");
-        strMasterPrivKey = strPrivKey;
+
+        sporkPrivKey = key;
         return true;
     } else {
+        LogPrintf("CSporkManager::SetPrivKey -- Test signing failed\n");
         return false;
     }
 }
@@ -228,16 +247,10 @@ uint256 CSporkMessage::GetSignatureHash() const
     return GetHash();
 }
 
-bool CSporkMessage::Sign(const std::string& strSignKey)
+bool CSporkMessage::Sign(const CKey& key)
 {
-    CKey key;
-    CPubKey pubkey;
+    CKeyID pubKeyId = key.GetPubKey().GetID();
     std::string strError = "";
-
-    if(!CMessageSigner::GetKeysFromSecret(strSignKey, key, pubkey)) {
-        LogPrintf("CSporkMessage::Sign -- GetKeysFromSecret() failed, invalid spork key %s\n", strSignKey);
-        return false;
-    }
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
@@ -247,7 +260,7 @@ bool CSporkMessage::Sign(const std::string& strSignKey)
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, pubkey, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, pubKeyId, vchSig, strError)) {
             LogPrintf("CSporkMessage::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
@@ -259,7 +272,7 @@ bool CSporkMessage::Sign(const std::string& strSignKey)
             return false;
         }
 
-        if(!CMessageSigner::VerifyMessage(pubkey, vchSig, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(pubKeyId, vchSig, strMessage, strError)) {
             LogPrintf("CSporkMessage::Sign -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -268,15 +281,14 @@ bool CSporkMessage::Sign(const std::string& strSignKey)
     return true;
 }
 
-bool CSporkMessage::CheckSignature() const
+bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
 {
     std::string strError = "";
-    CPubKey pubkey(ParseHex(Params().SporkPubKey()));
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::VerifyHash(hash, pubkey, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, pubKeyId, vchSig, strError)) {
             // Note: unlike for many other messages when SPORK_6_NEW_SIGS is ON sporks with sigs in old format
             // and newer timestamps should not be accepted, so if we failed here - that's it
             LogPrintf("CSporkMessage::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
@@ -285,7 +297,7 @@ bool CSporkMessage::CheckSignature() const
     } else {
         std::string strMessage = boost::lexical_cast<std::string>(nSporkID) + boost::lexical_cast<std::string>(nValue) + boost::lexical_cast<std::string>(nTimeSigned);
 
-        if (!CMessageSigner::VerifyMessage(pubkey, vchSig, strMessage, strError)){
+        if (!CMessageSigner::VerifyMessage(pubKeyId, vchSig, strMessage, strError)){
             LogPrintf("CSporkMessage::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
