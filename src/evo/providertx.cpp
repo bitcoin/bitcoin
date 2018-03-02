@@ -120,3 +120,18 @@ void CProRegTx::ToJson(UniValue& obj) const
 
     obj.push_back(Pair("inputsHash", inputsHash.ToString()));
 }
+
+bool IsProTxCollateral(const CTransaction& tx, uint32_t n)
+{
+    return GetProTxCollateralIndex(tx) == n;
+}
+
+uint32_t GetProTxCollateralIndex(const CTransaction& tx)
+{
+    if (tx.nVersion < 3 || tx.nType != TRANSACTION_PROVIDER_REGISTER)
+        return (uint32_t) - 1;
+    CProRegTx proTx;
+    if (!GetTxPayload(tx, proTx))
+        assert(false);
+    return proTx.nCollateralIndex;
+}

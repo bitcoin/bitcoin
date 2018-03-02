@@ -59,4 +59,7 @@ public:
 
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 
+bool IsProTxCollateral(const CTransaction& tx, uint32_t n);
+uint32_t GetProTxCollateralIndex(const CTransaction& tx);
+
 #endif//DASH_PROVIDERTX_H
