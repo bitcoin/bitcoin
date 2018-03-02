@@ -11,8 +11,6 @@ WalletTestingSetup::WalletTestingSetup(const std::string& chainName):
     TestingSetup(chainName)
 {
     bitdb.MakeMock();
-    g_wallet_allow_fallback_fee = true;
-
     bool fFirstRun;
     g_address_type = OUTPUT_TYPE_DEFAULT;
     g_change_type = OUTPUT_TYPE_DEFAULT;
