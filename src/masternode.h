@@ -16,8 +16,8 @@ class CConnman;
 static const int MASTERNODE_CHECK_SECONDS               =   5;
 static const int MASTERNODE_MIN_MNB_SECONDS             =   5 * 60;
 static const int MASTERNODE_MIN_MNP_SECONDS             =  10 * 60;
-static const int MASTERNODE_EXPIRATION_SECONDS          =  65 * 60;
-static const int MASTERNODE_SENTINEL_PING_MAX_SECONDS   = 120 * 60;
+static const int MASTERNODE_SENTINEL_PING_MAX_SECONDS   =  60 * 60;
+static const int MASTERNODE_EXPIRATION_SECONDS          = 120 * 60;
 static const int MASTERNODE_NEW_START_REQUIRED_SECONDS  = 180 * 60;
 
 static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;

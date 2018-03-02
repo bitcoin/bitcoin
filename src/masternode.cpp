@@ -210,6 +210,14 @@ void CMasternode::Check(bool fForce)
             return;
         }
 
+        if(!IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS)) {
+            nActiveState = MASTERNODE_EXPIRED;
+            if(nActiveStatePrev != nActiveState) {
+                LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
+            }
+            return;
+        }
+
         bool fSentinelPingActive = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive();
         bool fSentinelPingExpired = fSentinelPingActive && (!lastPing.fSentinelIsCurrent || !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS));
 
@@ -224,13 +232,6 @@ void CMasternode::Check(bool fForce)
             return;
         }
 
-        if(!IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS)) {
-            nActiveState = MASTERNODE_EXPIRED;
-            if(nActiveStatePrev != nActiveState) {
-                LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
-            }
-            return;
-        }
     }
 
     // Allow MNs to become ENABLED immediately in regtest/devnet
