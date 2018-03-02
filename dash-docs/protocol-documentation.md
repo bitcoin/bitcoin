@@ -47,9 +47,9 @@ Bitcoin Output https://bitcoin.org/en/glossary/output
 | ---------- | ----------- | --------- | ---------- |
 | 4 | nVersion | int32_t | Transaction data format version
 | 1+ | tx_in count | var_int | Number of Transaction inputs
-| 41+ | vin | [CTxIn](#ctxin) | A list of 1 or more transaction inputs
+| 41+ | vin | [CTxIn](#ctxin)[] | A list of 1 or more transaction inputs
 | 1+ | tx_out count | var_int | Number of Transaction outputs
-| 9+ | vout | [CTxOut](#ctxout) | A list of 1 or more transaction outputs
+| 9+ | vout | [CTxOut](#ctxout)[] | A list of 1 or more transaction outputs
 | 4 | nLockTime | uint32_t | The block number or timestamp at which this transaction is unlocked
 
 ### CPubKey
@@ -84,8 +84,7 @@ Whenever a masternode comes online or a client is syncing, they will send this m
 | 71-73 | sig | char[] | Signature of this message (verifiable via pubKeyCollateralAddress)
 | 8 | sigTime | int64_t | Time which the signature was created
 | 4 | nProtocolVersion | int | The protocol version of the masternode
-| # | lastPing | CMasternodePing | The last known ping of the masternode
-| 8 | nLastDsq | int64_t | The last time the masternode sent a DSQ message (for mixing) (DEPRECATED)
+| # | lastPing | [CMasternodePing](#mnping---mnp) | The last known ping of the masternode
 
 ### MNPING - "mnp"
 
@@ -162,7 +161,7 @@ Response to DSQ message which allows the user to join a mixing pool
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
 | 4 | nDenom | int | denomination that will be exclusively used when submitting inputs into the pool
-| 41+ | txCollateral | int | collateral tx that will be charged if this client acts maliciousely
+| 216+ | txCollateral | [CTransaction](#ctransaction) | collateral tx that will be charged if this client acts maliciously
 
 ### DSVIN - "dsi"
 
@@ -173,9 +172,8 @@ When queue is ready user is expected to send his entry to start actual mixing
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
 | ? | vecTxDSIn | CTxDSIn[] | vector of users inputs (CTxDSIn serialization is equal to [CTxIn](#ctxin) serialization)
-| 8 | nAmount | int64_t | depreciated since 12.1, it's used for backwards compatibility only and can be removed with future protocol bump
-| ? | txCollateral | [CTransaction](#ctransaction) | Collateral transaction which is used to prevent misbehavior and also to charge fees randomly
-| ? | vecTxOut | CTxOut[] | vector of user outputs
+| 216+ | txCollateral | [CTransaction](#ctransaction) | Collateral transaction which is used to prevent misbehavior and also to charge fees randomly
+| ? | vecTxOut | [CTxOut](#ctxout)[] | vector of user outputs
 
 ### DSSIGNFINALTX - "dss"
 
