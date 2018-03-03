@@ -14,8 +14,8 @@
 #include <test/test_bitcoin.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
-#include <wallet/init.h>
 #include <wallet/test/wallet_test_fixture.h>
+#include <wallet/walletmanager.h>
 
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>

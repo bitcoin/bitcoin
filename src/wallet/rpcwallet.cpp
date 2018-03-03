@@ -26,10 +26,9 @@
 #include <utilmoneystr.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
-#include <wallet/init.h>
 #include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
 #include <wallet/walletdb.h>
+#include <wallet/walletmanager.h>
 #include <wallet/walletutil.h>
 
 #include <init.h>  // For StartShutdown

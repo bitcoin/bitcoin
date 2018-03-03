@@ -20,10 +20,9 @@
 #include <util.h>
 #include <utilstrencodings.h>
 #ifdef ENABLE_WALLET
-#include <wallet/init.h>
 #include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
 #include <wallet/walletdb.h>
+#include <wallet/walletmanager.h>
 #endif
 #include <warnings.h>
 

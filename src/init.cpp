@@ -45,6 +45,7 @@
 #include <validationinterface.h>
 #ifdef ENABLE_WALLET
 #include <wallet/init.h>
+#include <wallet/walletmanager.h>
 #endif
 #include <warnings.h>
 #include <stdint.h>

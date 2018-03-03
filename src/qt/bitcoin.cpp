@@ -34,8 +34,7 @@
 #include <warnings.h>
 
 #ifdef ENABLE_WALLET
-#include <wallet/init.h>
-#include <wallet/wallet.h>
+#include <wallet/walletmanager.h>
 #endif
 
 #include <stdint.h>

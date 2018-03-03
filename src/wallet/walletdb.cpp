@@ -14,8 +14,7 @@
 #include <sync.h>
 #include <util.h>
 #include <utiltime.h>
-#include <wallet/init.h>
-#include <wallet/wallet.h>
+#include <wallet/walletmanager.h>
 
 #include <atomic>
 
