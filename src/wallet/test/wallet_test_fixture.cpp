@@ -9,8 +9,6 @@ WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     : TestingSetup(chainName),
       m_wallet(*m_chain, WalletLocation(), WalletDatabase::CreateMock())
 {
-    g_wallet_allow_fallback_fee = true;
-
     bool fFirstRun;
     m_wallet.LoadWallet(fFirstRun);
     m_wallet.handleNotifications();
