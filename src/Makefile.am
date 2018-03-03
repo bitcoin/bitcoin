@@ -404,6 +404,7 @@ libparticl_common_a_SOURCES = \
   key/keyutil.cpp \
   key/extkey.cpp \
   key/stealth.cpp \
+  smsg/crypter.cpp \
   key/mnemonic.cpp \
   unilib/uninorms.cpp \
   unilib/utf8.cpp \

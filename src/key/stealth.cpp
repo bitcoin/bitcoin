@@ -10,6 +10,8 @@
 #include <key.h>
 #include <pubkey.h>
 #include <random.h>
+#include <script/script.h>
+#include <smsg/crypter.h>
 
 #include <support/allocators/secure.h>
 
@@ -404,6 +406,72 @@ bool ExtractStealthPrefix(const char *pPrefix, uint32_t &nPrefix)
     if (errno != 0 || !pend || *pend != '\0')
         return error("%s strtol failed.", __func__);
     return true;
+};
+
+int MakeStealthData(const std::string &sNarration, stealth_prefix prefix, const CKey &sShared, const CPubKey &pkEphem,
+    std::vector<uint8_t> &vData, uint32_t &nStealthPrefix, std::string &sError)
+{
+    std::vector<uint8_t> vchNarr;
+    if (sNarration.length() > 0)
+    {
+        SecMsgCrypter crypter;
+        crypter.SetKey(sShared.begin(), pkEphem.begin());
+
+        if (!crypter.Encrypt((uint8_t*)sNarration.data(), sNarration.length(), vchNarr))
+            return errorN(1, sError, __func__, "Narration encryption failed.");
+
+        if (vchNarr.size() > MAX_STEALTH_NARRATION_SIZE)
+            return errorN(1, sError, __func__, "Encrypted narration is too long.");
+    };
+
+    vData.resize(34
+        + (prefix.number_bits > 0 ? 5 : 0)
+        + (vchNarr.size() + (vchNarr.size() > 0 ? 1 : 0)));
+
+    size_t o = 0;
+    vData[o++] = DO_STEALTH;
+    memcpy(&vData[o], pkEphem.begin(), 33);
+    o += 33;
+
+    if (prefix.number_bits > 0)
+    {
+        vData[o++] = DO_STEALTH_PREFIX;
+        nStealthPrefix = FillStealthPrefix(prefix.number_bits, prefix.bitfield);
+        memcpy(&vData[o], &nStealthPrefix, 4);
+        o+=4;
+    };
+
+    if (vchNarr.size() > 0)
+    {
+        vData[o++] = DO_NARR_CRYPT;
+        memcpy(&vData[o], &vchNarr[0], vchNarr.size());
+        o += vchNarr.size();
+    };
+
+    return 0;
+};
+
+int PrepareStealthOutput(const CStealthAddress &sx, const std::string &sNarration,
+    CScript &scriptPubKey, std::vector<uint8_t> &vData, std::string &sError)
+{
+    CKey sShared, sEphem;
+    ec_point pkSendTo;
+    int k, nTries = 24;
+    for (k = 0; k < nTries; ++k) // if StealthSecret fails try again with new ephem key
+    {
+        sEphem.MakeNewKey(true);
+        if (StealthSecret(sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo) == 0)
+            break;
+    };
+    if (k >= nTries)
+        return errorN(1, sError, __func__, "Could not generate receiving public key.");
+    CPubKey pkEphem = sEphem.GetPubKey();
+    scriptPubKey = GetScriptForDestination(CPubKey(pkSendTo).GetID());
+
+    uint32_t nStealthPrefix;
+    if (0 != MakeStealthData(sNarration, sx.prefix, sShared, pkEphem, vData, nStealthPrefix, sError))
+        return 1;
+    return 0;
 };
 
 void ECC_Start_Stealth()

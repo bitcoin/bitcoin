@@ -21,6 +21,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
+#include <key/stealth.h>
 
 #include <stdio.h>
 
@@ -309,6 +310,20 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
     // construct TxOut, append to transaction output list
     if (tx.IsParticlVersion())
     {
+        if (destination.type() == typeid(CStealthAddress))
+        {
+            CStealthAddress sx = boost::get<CStealthAddress>(destination);
+            std::shared_ptr<CTxOutData> outData = MAKE_OUTPUT<CTxOutData>();
+            std::string sNarration;
+            std::string sError;
+            if (0 != PrepareStealthOutput(sx, sNarration, scriptPubKey, outData->vData, sError))
+                throw std::runtime_error(std::string("PrepareStealthOutput failed: ") + sError);
+
+            tx.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>(value, scriptPubKey));
+            tx.vpout.push_back(outData);
+            return;
+        };
+
         tx.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>(value, scriptPubKey));
         return;
     };
@@ -501,11 +516,6 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
         std::string flags = vStrInputParts.back();
         bSegWit = (flags.find('W') != std::string::npos);
         bScriptHash = (flags.find('S') != std::string::npos);
-    }
-
-    if (scriptPubKey.size() > MAX_SCRIPT_SIZE) {
-        throw std::runtime_error(strprintf(
-                    "script exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_SIZE));
     }
 
     if (scriptPubKey.size() > MAX_SCRIPT_SIZE) {

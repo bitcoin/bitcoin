@@ -17,8 +17,9 @@
 #include <uint256.h>
 #include <key/types.h>
 
-const uint32_t MAX_STEALTH_NARRATION_SIZE = 48;
+class CScript;
 
+const uint32_t MAX_STEALTH_NARRATION_SIZE = 48;
 const uint32_t MIN_STEALTH_RAW_SIZE = 1 + 33 + 1 + 33 + 1 + 1; // without checksum (4bytes) or version (1byte)
 
 
@@ -141,6 +142,12 @@ inline uint32_t SetStealthMask(uint8_t nBits)
 uint32_t FillStealthPrefix(uint8_t nBits, uint32_t nBitfield);
 
 bool ExtractStealthPrefix(const char *pPrefix, uint32_t &nPrefix);
+
+int MakeStealthData(const std::string &sNarration, stealth_prefix prefix, const CKey &sShared, const CPubKey &pkEphem,
+    std::vector<uint8_t> &vData, uint32_t &nStealthPrefix, std::string &sError);
+
+int PrepareStealthOutput(const CStealthAddress &sx, const std::string &sNarration,
+    CScript &scriptPubKey, std::vector<uint8_t> &vData, std::string &sError);
 
 void ECC_Start_Stealth();
 void ECC_Stop_Stealth();

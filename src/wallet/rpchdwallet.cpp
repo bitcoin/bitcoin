@@ -2803,6 +2803,7 @@ static void ParseOutputs(
     const isminefilter & watchonly,
     std::string          search,
     bool                 fWithReward,
+    bool                 fBech32,
     std::vector<CScript> &vDevFundScripts
 ) {
     UniValue entry(UniValue::VOBJ);
@@ -2907,7 +2908,7 @@ static void ParseOutputs(
                     CStealthAddress sx;
                     CKeyID idK = boost::get<CKeyID>(r.destination);
                     if (pwallet->GetStealthLinked(idK, sx)) {
-                        output.pushKV("stealth_address", sx.Encoded());
+                        output.pushKV("stealth_address", sx.Encoded(fBech32));
                     }
                 }
                 output.pushKV("amount", ValueFromAmount(r.amount));
@@ -3220,6 +3221,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "                \"to\":                '9999'\n"
             "                \"collate\":           false\n"
             "                \"with_reward\":       false\n"
+            "                \"use_bech32\":        false\n"
             "        }\n"
             "\n"
             "        Expected values are as follows:\n"
@@ -3252,6 +3254,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "                to:                unix timestamp or string \"yyyy-mm-ddThh:mm:ss\"\n"
             "                collate:           display number of records and sum of amount fields\n"
             "                with_reward        calculate reward explicitly from txindex if necessary\n"
+            "                use_bech32         display addresses in bech32 encoding\n"
             "\n"
             "        Examples:\n"
             "            List only when category is 'stake'\n"
@@ -3282,6 +3285,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     int64_t timeTo = 0x3AFE130E00; // 9999
     bool fCollate = false;
     bool fWithReward = false;
+    bool fBech32 = false;
 
     if (!request.params[0].isNull()) {
         const UniValue & options = request.params[0].get_obj();
@@ -3293,7 +3297,10 @@ UniValue filtertransactions(const JSONRPCRequest &request)
                 {"search",            UniValueType(UniValue::VSTR)},
                 {"category",          UniValueType(UniValue::VSTR)},
                 {"type",              UniValueType(UniValue::VSTR)},
-                {"sort",              UniValueType(UniValue::VSTR)}
+                {"sort",              UniValueType(UniValue::VSTR)},
+                {"collate",           UniValueType(UniValue::VBOOL)},
+                {"with_reward",       UniValueType(UniValue::VBOOL)},
+                {"use_bech32",        UniValueType(UniValue::VBOOL)},
             },
             true, // allow null
             false // strict
@@ -3385,6 +3392,8 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             fCollate = options["collate"].get_bool();
         if (options["with_reward"].isBool())
             fWithReward = options["with_reward"].get_bool();
+        if (options["use_bech32"].isBool())
+            fBech32 = options["use_bech32"].get_bool();
     }
 
 
@@ -3421,6 +3430,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
                 watchonly,
                 search,
                 fWithReward,
+                fBech32,
                 vDevFundScripts
             );
         tit++;

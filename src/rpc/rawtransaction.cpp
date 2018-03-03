@@ -490,9 +490,8 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
     UniValue sendTo = request.params[1].get_obj();
 
     CMutableTransaction rawTx;
+    rawTx.nVersion = fParticlMode ? PARTICL_TXN_VERSION : BTC_TXN_VERSION;
 
-    if (fParticlMode)
-        rawTx.nVersion = PARTICL_TXN_VERSION;
 
     if (!request.params[2].isNull()) {
         int64_t nLockTime = request.params[2].get_int64();
@@ -561,7 +560,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
         } else {
             CTxDestination destination = DecodeDestination(name_);
             if (!IsValidDestination(destination)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + name_);
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Particl address: ") + name_);
             }
 
             if (!destinations.insert(destination).second) {
@@ -575,8 +574,23 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             {
                 std::shared_ptr<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
                 out->nValue = nAmount;
-                out->scriptPubKey = scriptPubKey;
-                rawTx.vpout.push_back(out);
+                if (destination.type() == typeid(CStealthAddress))
+                {
+                    CStealthAddress sx = boost::get<CStealthAddress>(destination);
+                    std::shared_ptr<CTxOutData> outData = MAKE_OUTPUT<CTxOutData>();
+                    std::string sNarration;
+                    std::string sError;
+                    if (0 != PrepareStealthOutput(sx, sNarration, scriptPubKey, outData->vData, sError))
+                        throw JSONRPCError(RPC_INTERNAL_ERROR, std::string("PrepareStealthOutput failed: ") + sError);
+
+                    out->scriptPubKey = scriptPubKey;
+                    rawTx.vpout.push_back(out);
+                    rawTx.vpout.push_back(outData);
+                } else
+                {
+                    out->scriptPubKey = scriptPubKey;
+                    rawTx.vpout.push_back(out);
+                };
             } else
             {
                 CTxOut out(nAmount, scriptPubKey);

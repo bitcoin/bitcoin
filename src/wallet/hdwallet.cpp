@@ -2464,49 +2464,6 @@ void CHDWallet::AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTe
     return;
 };
 
-static int MakeStealthData(const std::string &sNarration, stealth_prefix prefix, const CKey &sShared, const CPubKey &pkEphem,
-    std::vector<uint8_t> &vData, uint32_t &nStealthPrefix, std::string &sError)
-{
-    std::vector<uint8_t> vchNarr;
-    if (sNarration.length() > 0)
-    {
-        SecMsgCrypter crypter;
-        crypter.SetKey(sShared.begin(), pkEphem.begin());
-
-        if (!crypter.Encrypt((uint8_t*)sNarration.data(), sNarration.length(), vchNarr))
-            return errorN(1, sError, __func__, "Narration encryption failed.");
-
-        if (vchNarr.size() > MAX_STEALTH_NARRATION_SIZE)
-            return errorN(1, sError, __func__, "Encrypted narration is too long.");
-    };
-
-    vData.resize(34
-        + (prefix.number_bits > 0 ? 5 : 0)
-        + (vchNarr.size() + (vchNarr.size() > 0 ? 1 : 0)));
-
-    size_t o = 0;
-    vData[o++] = DO_STEALTH;
-    memcpy(&vData[o], pkEphem.begin(), 33);
-    o += 33;
-
-    if (prefix.number_bits > 0)
-    {
-        vData[o++] = DO_STEALTH_PREFIX;
-        nStealthPrefix = FillStealthPrefix(prefix.number_bits, prefix.bitfield);
-        memcpy(&vData[o], &nStealthPrefix, 4);
-        o+=4;
-    };
-
-    if (vchNarr.size() > 0)
-    {
-        vData[o++] = DO_NARR_CRYPT;
-        memcpy(&vData[o], &vchNarr[0], vchNarr.size());
-        o += vchNarr.size();
-    };
-
-    return 0;
-};
-
 int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStoredExtKey *pc, std::string &sError)
 {
     LOCK(cs_wallet);
@@ -3016,7 +2973,6 @@ bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r
         r.address = coinControl->destChange;
 
         return ExpandChangeAddress(this, r, sError);
-
     } else
     if (coinControl && coinControl->scriptChange.size() > 0)
     {
@@ -10605,7 +10561,7 @@ bool CHDWallet::GetScriptForAddress(CScript &script, const CBitcoinAddress &addr
         vecSend.push_back(r);
 
         if (0 != ExpandTempRecipients(vecSend, NULL, strError) || vecSend.size() != 2)
-            return error("%s: ToStealthRecipient failed, %s.", __func__, strError);
+            return error("%s: ExpandTempRecipients failed, %s.", __func__, strError);
 
         script = vecSend[0].scriptPubKey;
         *vData = vecSend[1].vData;
