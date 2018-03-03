@@ -31,8 +31,6 @@
 #include <utility>
 #include <vector>
 
-typedef CWallet* CWalletRef;
-
 /**
  * Settings
  */
@@ -1246,10 +1244,10 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key);
 class WalletRescanReserver
 {
 private:
-    CWalletRef m_wallet;
+    CWallet* m_wallet;
     bool m_could_reserve;
 public:
-    explicit WalletRescanReserver(CWalletRef w) : m_wallet(w), m_could_reserve(false) {}
+    explicit WalletRescanReserver(CWallet* w) : m_wallet(w), m_could_reserve(false) {}
 
     bool reserve()
     {

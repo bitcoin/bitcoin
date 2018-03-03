@@ -10,11 +10,9 @@
 #include <vector>
 #include <util.h>
 
-typedef CWallet* CWalletRef;
-
 class CWalletManager {
 private:
-    std::vector<CWalletRef> m_vpwallets;
+    std::vector<CWallet*> m_vpwallets;
 
 public:
     //! Load wallet databases.

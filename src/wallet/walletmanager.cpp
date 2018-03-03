@@ -27,25 +27,25 @@ bool CWalletManager::OpenWallets()
 }
 
 void CWalletManager::StartWallets(CScheduler& scheduler) {
-    for (CWalletRef pwallet : m_vpwallets) {
+    for (CWallet* pwallet : m_vpwallets) {
         pwallet->postInitProcess(scheduler);
     }
 }
 
 void CWalletManager::FlushWallets() {
-    for (CWalletRef pwallet : m_vpwallets) {
+    for (CWallet* pwallet : m_vpwallets) {
         pwallet->Flush(false);
     }
 }
 
 void CWalletManager::StopWallets() {
-    for (CWalletRef pwallet : m_vpwallets) {
+    for (CWallet* pwallet : m_vpwallets) {
         pwallet->Flush(true);
     }
 }
 
 void CWalletManager::CloseWallets() {
-    for (CWalletRef pwallet : m_vpwallets) {
+    for (CWallet* pwallet : m_vpwallets) {
         delete pwallet;
     }
     m_vpwallets.clear();
@@ -72,7 +72,7 @@ unsigned int CWalletManager::CountWallets() {
 }
 
 CWallet* CWalletManager::FindWalletByName(const std::string &name) {
-    for (CWalletRef pwallet : m_vpwallets) {
+    for (CWallet* pwallet : m_vpwallets) {
         if (pwallet->GetName() == name) {
             return pwallet;
         }
