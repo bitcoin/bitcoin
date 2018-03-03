@@ -34,6 +34,7 @@
 #include <warnings.h>
 
 #ifdef ENABLE_WALLET
+#include <wallet/init.h>
 #include <wallet/wallet.h>
 #endif
 
@@ -484,9 +485,8 @@ void BitcoinApplication::initializeResult(bool success)
 
 #ifdef ENABLE_WALLET
         bool fFirstWallet = true;
-        for (CWalletRef pwallet : vpwallets) {
+        ForEachWallet([this, &fFirstWallet](CWallet *pwallet) {
             WalletModel * const walletModel = new WalletModel(platformStyle, pwallet, optionsModel);
-
             window->addWallet(walletModel);
             if (fFirstWallet) {
                 window->setCurrentWallet(walletModel->getWalletName());
@@ -497,7 +497,7 @@ void BitcoinApplication::initializeResult(bool success)
                              paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
 
             m_wallet_models.push_back(walletModel);
-        }
+        });
 #endif
 
         // If -min option passed, start window minimized.

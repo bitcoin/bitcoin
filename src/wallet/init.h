@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_INIT_H
 
 #include <string>
+#include <wallet/wallet.h>
 
 class CRPCTable;
 class CScheduler;
@@ -25,6 +26,9 @@ void RegisterWalletRPC(CRPCTable &tableRPC);
 //  being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
 bool VerifyWallets();
 
+typedef CWallet* CWalletRef;
+extern std::vector<CWalletRef> vpwallets;
+
 //! Load wallet databases.
 bool OpenWallets();
 
@@ -39,5 +43,24 @@ void StopWallets();
 
 //! Close all wallets.
 void CloseWallets();
+
+void AddWallet(CWallet *wallet);
+void DeallocWallet(unsigned int pos);
+
+bool HasWallets();
+
+unsigned int CountWallets();
+
+template<typename Callable>
+void ForEachWallet(Callable&& func)
+{
+    for (auto&& wallet : vpwallets) {
+        func(wallet);
+    }
+};
+
+CWallet* GetWalletAtPos(int pos);
+
+CWallet* FindWalletByName(const std::string &name);
 
 #endif // BITCOIN_WALLET_INIT_H

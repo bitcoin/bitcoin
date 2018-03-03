@@ -14,6 +14,8 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
+std::vector<CWalletRef> vpwallets;
+
 std::string GetWalletHelpString(bool showDebug)
 {
     std::string strUsage = HelpMessageGroup(_("Wallet options:"));
@@ -309,4 +311,33 @@ void CloseWallets() {
         delete pwallet;
     }
     vpwallets.clear();
+}
+
+void AddWallet(CWallet *wallet) {
+    vpwallets.insert(vpwallets.begin(), wallet);
+}
+
+void DeallocWallet(unsigned int pos) {
+    vpwallets.erase(vpwallets.begin()+pos);
+}
+
+bool HasWallets() {
+    return !vpwallets.empty();
+}
+
+CWallet * GetWalletAtPos(int pos) {
+    return vpwallets[pos];
+}
+
+unsigned int CountWallets() {
+    return vpwallets.size();
+}
+
+CWallet* FindWalletByName(const std::string &name) {
+    for (CWalletRef pwallet : ::vpwallets) {
+        if (pwallet->GetName() == name) {
+            return pwallet;
+        }
+    }
+    return nullptr;
 }
