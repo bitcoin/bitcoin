@@ -43,13 +43,13 @@ CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
 {
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
         // wallet endpoint was used
-        CWallet *wallet = FindWalletByName(urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size())));
+        CWallet *wallet = g_wallet_manager->FindWalletByName(urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size())));
         if (wallet) {
             return wallet;
         }
         throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
     }
-    return CountWallets() == 1 || (request.fHelp && CountWallets() > 0) ? GetWalletAtPos(0) : nullptr;
+    return g_wallet_manager->CountWallets() == 1 || (request.fHelp && g_wallet_manager->CountWallets() > 0) ? g_wallet_manager->GetWalletAtPos(0) : nullptr;
 }
 
 std::string HelpRequiringPassphrase(CWallet * const pwallet)
@@ -63,7 +63,7 @@ bool EnsureWalletIsAvailable(CWallet * const pwallet, bool avoidException)
 {
     if (pwallet) return true;
     if (avoidException) return false;
-    if (!HasWallets()) {
+    if (!g_wallet_manager->HasWallets()) {
         // Note: It isn't currently possible to trigger this error because
         // wallet RPC methods aren't registered unless a wallet is loaded. But
         // this error is being kept as a precaution, because it's possible in
@@ -2844,7 +2844,7 @@ UniValue listwallets(const JSONRPCRequest& request)
     UniValue obj(UniValue::VARR);
 
     bool not_available_found = false;
-    ForEachWallet([&not_available_found, &request,&obj](CWallet *pwallet) {
+    g_wallet_manager->ForEachWallet([&not_available_found, &request,&obj](CWallet *pwallet) {
         if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
             not_available_found = true;
             return;

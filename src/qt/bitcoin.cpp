@@ -484,7 +484,7 @@ void BitcoinApplication::initializeResult(bool success)
 
 #ifdef ENABLE_WALLET
         bool fFirstWallet = true;
-        ForEachWallet([this, &fFirstWallet](CWallet *pwallet) {
+        g_wallet_manager->ForEachWallet([this, &fFirstWallet](CWallet *pwallet) {
             WalletModel * const walletModel = new WalletModel(platformStyle, pwallet, optionsModel);
             window->addWallet(walletModel);
             if (fFirstWallet) {

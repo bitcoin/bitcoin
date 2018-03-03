@@ -69,7 +69,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
     {
 
 #ifdef ENABLE_WALLET
-        if (HasWallets() && IsDeprecatedRPCEnabled("validateaddress")) {
+        if (g_wallet_manager->HasWallets() && IsDeprecatedRPCEnabled("validateaddress")) {
             ret.pushKVs(getaddressinfo(request));
         }
 #endif

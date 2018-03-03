@@ -74,7 +74,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     // after.
     {
         CWallet wallet("dummy", CWalletDBWrapper::CreateDummy());
-        AddWallet(&wallet);
+        g_wallet_manager->AddWallet(&wallet);
         UniValue keys;
         keys.setArray();
         UniValue key;
@@ -105,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
                       "downloading and rescanning the relevant blocks (see -reindex and -rescan "
                       "options).\"}},{\"success\":true}]",
                               0, oldTip->GetBlockTimeMax(), TIMESTAMP_WINDOW));
-        DeallocWallet(0);
+        g_wallet_manager->DeallocWallet(0);
     }
 }
 
@@ -140,7 +140,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         JSONRPCRequest request;
         request.params.setArray();
         request.params.push_back((pathTemp / "wallet.backup").string());
-        AddWallet(&wallet);
+        g_wallet_manager->AddWallet(&wallet);
         ::dumpwallet(request);
     }
 
@@ -152,8 +152,8 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         JSONRPCRequest request;
         request.params.setArray();
         request.params.push_back((pathTemp / "wallet.backup").string());
-        DeallocWallet(0);
-        AddWallet(&wallet);
+        g_wallet_manager->DeallocWallet(0);
+        g_wallet_manager->AddWallet(&wallet);
         ::importwallet(request);
 
         LOCK(wallet.cs_wallet);
@@ -167,7 +167,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     }
 
     SetMockTime(0);
-    DeallocWallet(0);
+    g_wallet_manager->DeallocWallet(0);
 }
 
 // Check that GetImmatureCredit() returns a newly calculated value instead of

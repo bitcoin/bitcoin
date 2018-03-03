@@ -11,40 +11,47 @@
 #include <util.h>
 
 typedef CWallet* CWalletRef;
-extern std::vector<CWalletRef> vpwallets;
 
-//! Load wallet databases.
-bool OpenWallets();
+class CWalletManager {
+private:
+    std::vector<CWalletRef> m_vpwallets;
 
-//! Complete startup of wallets.
-void StartWallets(CScheduler& scheduler);
+public:
+    //! Load wallet databases.
+    bool OpenWallets();
 
-//! Flush all wallets in preparation for shutdown.
-void FlushWallets();
+    //! Complete startup of wallets.
+    void StartWallets(CScheduler& scheduler);
 
-//! Stop all wallets. Wallets will be flushed first.
-void StopWallets();
+    //! Flush all wallets in preparation for shutdown.
+    void FlushWallets();
 
-//! Close all wallets.
-void CloseWallets();
+    //! Stop all wallets. Wallets will be flushed first.
+    void StopWallets();
 
-void AddWallet(CWallet *wallet);
-void DeallocWallet(unsigned int pos);
+    //! Close all wallets.
+    void CloseWallets();
 
-bool HasWallets();
+    void AddWallet(CWallet *wallet);
+    void DeallocWallet(unsigned int pos);
 
-unsigned int CountWallets();
+    bool HasWallets();
 
-template<typename Callable>
-void ForEachWallet(Callable&& func)
-{
-    for (auto&& wallet : vpwallets) {
-        func(wallet);
-    }
+    unsigned int CountWallets();
+
+    template<typename Callable>
+    void ForEachWallet(Callable&& func)
+    {
+        for (auto&& wallet : m_vpwallets) {
+            func(wallet);
+        }
+    };
+
+    CWallet* GetWalletAtPos(int pos);
+    CWallet* FindWalletByName(const std::string &name);
 };
 
-CWallet* GetWalletAtPos(int pos);
-
-CWallet* FindWalletByName(const std::string &name);
+// global wallet manager instance
+extern std::unique_ptr<CWalletManager> g_wallet_manager;
 
 #endif // BITCOIN_WALLET_WALLETMANAGER_H

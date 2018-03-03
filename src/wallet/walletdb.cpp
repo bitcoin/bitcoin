@@ -748,7 +748,7 @@ void MaybeCompactWalletDB()
         return;
     }
 
-    ForEachWallet([](CWallet* pwallet) {
+    g_wallet_manager->ForEachWallet([](CWallet* pwallet) {
         CWalletDBWrapper& dbh = pwallet->GetDBHandle();
 
         unsigned int nUpdateCounter = dbh.nUpdateCounter;

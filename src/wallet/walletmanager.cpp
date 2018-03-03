@@ -6,9 +6,9 @@
 #include <wallet/walletmanager.h>
 #include <wallet/walletutil.h>
 
-std::vector<CWalletRef> vpwallets;
+std::unique_ptr<CWalletManager> g_wallet_manager = std::unique_ptr<CWalletManager>(new CWalletManager());;
 
-bool OpenWallets()
+bool CWalletManager::OpenWallets()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -20,59 +20,59 @@ bool OpenWallets()
         if (!pwallet) {
             return false;
         }
-        vpwallets.push_back(pwallet);
+        m_vpwallets.push_back(pwallet);
     }
 
     return true;
 }
 
-void StartWallets(CScheduler& scheduler) {
-    for (CWalletRef pwallet : vpwallets) {
+void CWalletManager::StartWallets(CScheduler& scheduler) {
+    for (CWalletRef pwallet : m_vpwallets) {
         pwallet->postInitProcess(scheduler);
     }
 }
 
-void FlushWallets() {
-    for (CWalletRef pwallet : vpwallets) {
+void CWalletManager::FlushWallets() {
+    for (CWalletRef pwallet : m_vpwallets) {
         pwallet->Flush(false);
     }
 }
 
-void StopWallets() {
-    for (CWalletRef pwallet : vpwallets) {
+void CWalletManager::StopWallets() {
+    for (CWalletRef pwallet : m_vpwallets) {
         pwallet->Flush(true);
     }
 }
 
-void CloseWallets() {
-    for (CWalletRef pwallet : vpwallets) {
+void CWalletManager::CloseWallets() {
+    for (CWalletRef pwallet : m_vpwallets) {
         delete pwallet;
     }
-    vpwallets.clear();
+    m_vpwallets.clear();
 }
 
-void AddWallet(CWallet *wallet) {
-    vpwallets.insert(vpwallets.begin(), wallet);
+void CWalletManager::AddWallet(CWallet *wallet) {
+    m_vpwallets.insert(m_vpwallets.begin(), wallet);
 }
 
-void DeallocWallet(unsigned int pos) {
-    vpwallets.erase(vpwallets.begin()+pos);
+void CWalletManager::DeallocWallet(unsigned int pos) {
+    m_vpwallets.erase(m_vpwallets.begin()+pos);
 }
 
-bool HasWallets() {
-    return !vpwallets.empty();
+bool CWalletManager::HasWallets() {
+    return !m_vpwallets.empty();
 }
 
-CWallet * GetWalletAtPos(int pos) {
-    return vpwallets[pos];
+CWallet * CWalletManager::GetWalletAtPos(int pos) {
+    return m_vpwallets[pos];
 }
 
-unsigned int CountWallets() {
-    return vpwallets.size();
+unsigned int CWalletManager::CountWallets() {
+    return m_vpwallets.size();
 }
 
-CWallet* FindWalletByName(const std::string &name) {
-    for (CWalletRef pwallet : ::vpwallets) {
+CWallet* CWalletManager::FindWalletByName(const std::string &name) {
+    for (CWalletRef pwallet : m_vpwallets) {
         if (pwallet->GetName() == name) {
             return pwallet;
         }
