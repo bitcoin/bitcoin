@@ -38,7 +38,7 @@ port = 28332
 
 class ZMQHandler():
     def __init__(self):
-        self.loop = zmq.asyncio.install()
+        self.loop = asyncio.get_event_loop()
         self.zmqContext = zmq.asyncio.Context()
 
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)
