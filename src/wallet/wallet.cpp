@@ -4636,6 +4636,19 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts)
     }
 }
 
+void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts)
+{
+    AssertLockHeld(cs_wallet);
+    for (const auto &o : setWalletUTXO) {
+        if (mapWallet.count(o.hash)) {
+            const auto &p = mapWallet[o.hash];
+            if (IsProTxCollateral(*p.tx, o.n)) {
+                vOutpts.emplace_back(o);
+            }
+        }
+    }
+}
+
 /** @} */ // end of Actions
 
 class CAffectedKeysVisitor : public boost::static_visitor<void> {
