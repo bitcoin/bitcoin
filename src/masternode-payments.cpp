@@ -178,7 +178,10 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
         if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
             if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
                 LogPrint("gobject", "%s -- Valid superblock at height %d: %s", __func__, nBlockHeight, txNew.ToString());
-                return true;
+                // only allow superblock and masternode payments in the same block after spork15 activation
+                if (!deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight))
+                    return true;
+                // continue validation, should also pay MN
             } else {
                 LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, txNew.ToString());
                 // should NOT allow such superblocks, when superblocks are enabled
@@ -198,13 +201,18 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
         return true;
     }
 
-    if(sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
-        LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString());
+    if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
+        // always enforce masternode payments when spork15 is active
         return false;
-    }
+    } else {
+        if(sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
+            LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString());
+            return false;
+        }
 
-    LogPrintf("%s -- WARNING: Masternode payment enforcement is disabled, accepting any payee\n", __func__);
-    return true;
+        LogPrintf("%s-- WARNING: Masternode payment enforcement is disabled, accepting any payee\n", __func__);
+        return true;
+    }
 }
 
 void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet)
@@ -217,10 +225,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
             CSuperblockManager::GetSuperblockPayments(nBlockHeight, voutSuperblockPaymentsRet);
     }
 
-    // TODO this is a placeholder until DIP3 is merged, which will allow superblock payments and MN reward payments
-    // in the same block. We set this to false for now, which means that we'll always get into the next if statement
-    // when a superblock payment is present
-    bool allowSuperblockAndMNReward = false;
+    bool allowSuperblockAndMNReward = deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight);
 
     // don't allow payments to superblocks AND masternodes before spork15 activation
     if (!voutSuperblockPaymentsRet.empty() && !allowSuperblockAndMNReward) {
@@ -253,6 +258,9 @@ std::string GetRequiredPaymentsString(int nBlockHeight)
 {
     // IF WE HAVE A ACTIVATED TRIGGER FOR THIS HEIGHT - IT IS A SUPERBLOCK, GET THE REQUIRED PAYEES
     if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
+        if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
+           return mnpayments.GetRequiredPaymentsString(nBlockHeight) + ", " + CSuperblockManager::GetRequiredPaymentsString(nBlockHeight);
+        }
         return CSuperblockManager::GetRequiredPaymentsString(nBlockHeight);
     }
 
