@@ -539,13 +539,24 @@ int CLedgerDevice::PrepareTransaction(const CTransaction *tx, const CCoinsViewCa
     PutVarInt(vOutputData, tx->vpout.size());
     for (const auto &txout : tx->vpout)
     {
+        std::vector<uint8_t> vchAmount(8);
+        if (txout->IsType(OUTPUT_DATA))
+        {
+            memset(vchAmount.data(), 0, vchAmount.size());
+            vOutputData.insert(vOutputData.end(), vchAmount.begin(), vchAmount.end());
+
+            std::vector<uint8_t> &vData = ((CTxOutData*)txout.get())->vData;
+            PutVarInt(vOutputData, vData.size());
+            vOutputData.insert(vOutputData.end(), vData.begin(), vData.end());
+            continue;
+        };
+
         if (!txout->IsStandardOutput())
             return errorN(1, sError, __func__, "all outputs must be standard.");
         CAmount nValue = txout->GetValue();
-        std::vector<uint8_t> vchAmount(8);
         memcpy(&vchAmount[0], &nValue, 8);
-
         vOutputData.insert(vOutputData.end(), vchAmount.begin(), vchAmount.end());
+
         const CScript *pScript = txout->GetPScriptPubKey();
         PutVarInt(vOutputData, pScript->size());
         vOutputData.insert(vOutputData.end(), pScript->begin(), pScript->end());
