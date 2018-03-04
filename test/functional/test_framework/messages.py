@@ -4,7 +4,7 @@
 # Copyright (c) 2010-2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Bitcoin test framework primitive and message strcutures
+"""Bitcoin test framework primitive and message structures
 
 CBlock, CTransaction, CBlockHeader, CTxIn, CTxOut, etc....:
     data structures that should map to corresponding structures in

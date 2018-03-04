@@ -345,7 +345,7 @@ Status Version::Get(const ReadOptions& options,
 
   // We can search level-by-level since entries never hop across
   // levels.  Therefore we are guaranteed that if we find data
-  // in an smaller level, later levels are irrelevant.
+  // in a smaller level, later levels are irrelevant.
   std::vector<FileMetaData*> tmp;
   FileMetaData* tmp2;
   for (int level = 0; level < config::kNumLevels; level++) {
