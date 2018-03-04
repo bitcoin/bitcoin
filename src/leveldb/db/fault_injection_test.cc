@@ -103,7 +103,7 @@ struct FileState {
 }  // anonymous namespace
 
 // A wrapper around WritableFile which informs another Env whenever this file
-// is written to or sync'ed.
+// is written to or synced.
 class TestWritableFile : public WritableFile {
  public:
   TestWritableFile(const FileState& state,
