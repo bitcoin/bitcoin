@@ -29,7 +29,7 @@ bench_bench_particl_SOURCES = \
   bench/lockedpool.cpp \
   bench/perf.cpp \
   bench/perf.h \
-  bench/prevector_destructor.cpp
+  bench/prevector.cpp
 
 nodist_bench_bench_particl_SOURCES = $(GENERATED_BENCH_FILES)
 

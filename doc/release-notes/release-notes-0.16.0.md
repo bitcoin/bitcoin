@@ -1,5 +1,3 @@
-## (note: this is a temporary file, to be added-to by anybody, and moved to release-notes at release time)
-
 Bitcoin Core version 0.16.0 is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-0.16.0/>
@@ -43,7 +41,7 @@ Compatibility
 ==============
 
 Bitcoin Core is extensively tested on multiple operating systems using
-the Linux kernel, macOS 10.8+, and Windows 7 and newer (Windows XP is not supported).
+the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
 
 Bitcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.

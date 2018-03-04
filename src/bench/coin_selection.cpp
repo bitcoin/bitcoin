@@ -37,11 +37,6 @@ static void CoinSelection(benchmark::State& state)
     LOCK(wallet.cs_wallet);
 
     while (state.KeepRunning()) {
-        // Empty wallet.
-        for (COutput output : vCoins)
-            delete output.tx;
-        vCoins.clear();
-
         // Add coins.
         for (int i = 0; i < 1000; i++)
             addCoin(1000 * COIN, wallet, vCoins);
@@ -53,6 +48,12 @@ static void CoinSelection(benchmark::State& state)
         assert(success);
         assert(nValueRet == 1003 * COIN);
         assert(setCoinsRet.size() == 2);
+
+        // Empty wallet.
+        for (COutput& output : vCoins) {
+            delete output.tx;
+        }
+        vCoins.clear();
     }
 }
 

@@ -576,6 +576,9 @@ public:
                         //   (the tx=... number in the SetBestChain debug.log lines)
             0.038       // * estimated number of transactions per second after that timestamp
         };
+
+        /* disable fallback fee on mainnet */
+        m_fallback_fee_enabled = false;
     }
 
     void SetOld()
@@ -716,6 +719,9 @@ public:
             0,
             0
         };
+
+        /* enable fallback fee on testnet */
+        m_fallback_fee_enabled = true;
     }
 };
 
@@ -831,6 +837,9 @@ public:
             0,
             0
         };
+
+        /* enable fallback fee on regtest */
+        m_fallback_fee_enabled = true;
     }
 
     void SetOld()

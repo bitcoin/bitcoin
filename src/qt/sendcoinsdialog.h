@@ -55,6 +55,9 @@ public Q_SLOTS:
     void setBalance(const CAmount& balance, const CAmount& staked, const CAmount& blindBalance, const CAmount& anonBalance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance, const CAmount& watchStakedBalance);
 
+Q_SIGNALS:
+    void coinsSent(const uint256& txid);
+
 private:
     Ui::SendCoinsDialog *ui;
     ClientModel *clientModel;
