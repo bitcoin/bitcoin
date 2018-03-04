@@ -202,7 +202,7 @@ UniValue getdevicepublickey(const JSONRPCRequest &request)
     rv.pushKV("address", CBitcoinAddress(pk.GetID()).ToString());
     rv.pushKV("path", sPath);
     return rv;
-}
+};
 
 UniValue getdevicexpub(const JSONRPCRequest &request)
 {
@@ -374,8 +374,6 @@ UniValue devicesignrawtransaction(const JSONRPCRequest &request)
             GetPath(pathkey.vPath, paths[idx], request.params[4]);
 
             std::string sError;
-            PathToString(pathkey.vPath, sError);
-
             if (0 != pDevice->GetPubKey(pathkey.vPath, pathkey.pk, sError))
                 throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Device GetPubKey failed %s.", sError));
 
@@ -572,7 +570,7 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || request.params.size() > 5)
         throw std::runtime_error(
             "initaccountfromdevice (\"label\" \"path\" makedefault scan_chain_from)\n"
             "Initialise an extended key account from a hardware device.\n"
@@ -583,6 +581,8 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
             "                           The full path is \"accountpath\"/\"path\".\n"
             "3. makedefault           (bool, optional) Make the new account the default account for the wallet (default=true).\n"
             "4. scan_chain_from       (int, optional) Timestamp, scan the chain for incoming txns only on blocks after time (default=0).\n"
+            "5. initstealthchain      (bool, optional) Prepare the account to generate stealthaddresses (default=true).\n"
+            "                           The hardware device will need to sign a fake transaction to use as the seed for the scan chain.\n"
             "\nResult\n"
             "{\n"
             "  \"extkey\"           (string) The derived extended public key at \"path\".\n"
@@ -622,10 +622,8 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
     };
 
     bool fMakeDefault = request.params[2].isBool() ? request.params[2].get_bool() : true;
-
-    int64_t nScanFrom = 0;
-    if (request.params[3].isNum())
-        nScanFrom = request.params[3].get_int64();
+    int64_t nScanFrom = request.params[3].isNum() ? request.params[3].get_int64() : 0;
+    bool fInitStealth = request.params[4].isBool() ? request.params[4].get_bool() : true;
 
     WalletRescanReserver reserver(pwallet);
     if (!reserver.reserve()) {
@@ -680,7 +678,7 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
         vChainPath.push_back(nExternal);
         sekExternal->SetPath(vChainPath);
         sekExternal->nFlags |= EAF_ACTIVE | EAF_RECEIVE_ON | EAF_IN_ACCOUNT | EAF_HARDWARE_DEVICE;
-        sekExternal->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_INTERNAL);
+        sekExternal->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_EXTERNAL);
         sea->InsertChain(sekExternal);
         sea->nActiveExternal = sea->NumChains();
 
@@ -690,9 +688,65 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
         vChainPath.push_back(nInternal);
         sekInternal->SetPath(vChainPath);
         sekInternal->nFlags |= EAF_ACTIVE | EAF_RECEIVE_ON | EAF_IN_ACCOUNT | EAF_HARDWARE_DEVICE;
-        sekInternal->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_EXTERNAL);
+        sekInternal->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_INTERNAL);
         sea->InsertChain(sekInternal);
         sea->nActiveInternal = sea->NumChains();
+
+        if (fInitStealth)
+        {
+            // Generate a chain to use for generating scan secrets
+            // Use a signed message as the seed so the scan chain is deterministic.
+            // In this way if the wallet is locked it's not possible to regenerate the private key to the scan chain.
+
+            std::string msg = "Scan chain secret seed";
+            std::vector<uint8_t> vchSig;
+            std::vector<uint32_t> vSigPath;
+            if (!pwallet->GetFullChainPath(sea, sea->nActiveExternal, vSigPath))
+            {
+                sea->FreeChains();
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "GetFullChainPath failed.");
+            };
+            vSigPath.push_back(0);
+            if (0 != pDevice->SignMessage(vSigPath, msg, vchSig, sError))
+            {
+                sea->FreeChains();
+                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Could not generate scan chain seed from signed message %s.", sError));
+            };
+            vchSig.insert(vchSig.end(), sekExternal->kp.pubkey.begin(), sekExternal->kp.pubkey.end());
+
+            CExtKey evStealthScan;
+            evStealthScan.SetMaster(vchSig.data(), vchSig.size());
+
+            CStoredExtKey *sekStealthScan = new CStoredExtKey();
+            sekStealthScan->kp = evStealthScan;
+            vSigPath.clear();
+            //sekStealthSpend->SetPath(vSigPath);
+            sekStealthScan->nFlags |= EAF_ACTIVE | EAF_IN_ACCOUNT;
+            sekStealthScan->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_STEALTH_SCAN);
+            sea->InsertChain(sekStealthScan);
+            uint32_t nStealthScanChain = sea->NumChains();
+
+
+            CExtPubKey epStealthSpend;
+            uint32_t nStealthSpend;
+            if (sekAccount->DeriveNextKey(epStealthSpend, nStealthSpend, false) != 0)
+            {
+                sea->FreeChains();
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Could not derive account chain keys.");
+            };
+            CStoredExtKey *sekStealthSpend = new CStoredExtKey();
+            sekStealthSpend->kp = epStealthSpend;
+            vChainPath.pop_back();
+            vChainPath.push_back(nStealthSpend);
+            sekStealthSpend->SetPath(vChainPath);
+            sekStealthSpend->nFlags |= EAF_ACTIVE | EAF_IN_ACCOUNT | EAF_HARDWARE_DEVICE;
+            sekStealthSpend->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_STEALTH);
+            sea->InsertChain(sekStealthSpend);
+            sea->nActiveStealth = sea->NumChains();
+
+            sea->mapValue[EKVT_STEALTH_SCAN_CHAIN] = SetCompressedInt64(vData, nStealthScanChain);
+            sea->mapValue[EKVT_STEALTH_SPEND_CHAIN] = SetCompressedInt64(vData, sea->nActiveStealth);
+        };
 
         if (!wdb.TxnBegin())
             throw std::runtime_error("TxnBegin failed.");
@@ -746,20 +800,230 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
     result.pushKV("scanfrom", nScanFrom);
 
     return result;
-}
+};
+
+
+UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
+{
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() > 4)
+        throw std::runtime_error(
+            "devicegetnewstealthaddress [label] [num_prefix_bits] [prefix_num] [bech32]\n"
+            "Returns a new Particl stealth address for receiving payments."
+            + HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. \"label\"             (string, optional) If specified the key is added to the address book.\n"
+            "2. num_prefix_bits     (int, optional) If specified and > 0, the stealth address is created with a prefix.\n"
+            "3. prefix_num          (int, optional) If prefix_num is not specified the prefix will be selected deterministically.\n"
+            "           prefix_num can be specified in base2, 10 or 16, for base 2 prefix_num must begin with 0b, 0x for base16.\n"
+            "           A 32bit integer will be created from prefix_num and the least significant num_prefix_bits will become the prefix.\n"
+            "           A stealth address created without a prefix will scan all incoming stealth transactions, irrespective of transaction prefixes.\n"
+            "           Stealth addresses with prefixes will scan only incoming stealth transactions with a matching prefix.\n"
+            "4. bech32              (bool, optional) Use Bech32 encoding.\n"
+            "\nResult:\n"
+            "\"address\"              (string) The new particl stealth address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("devicegetnewstealthaddress", "\"lblTestSxAddrPrefix\" 3 \"0b101\"")
+            + HelpExampleRpc("devicegetnewstealthaddress", "\"lblTestSxAddrPrefix\", 3, \"0b101\""));
+
+    if (Params().NetworkID() == "main")
+        throw std::runtime_error("TODO");
+
+    EnsureWalletIsUnlocked(pwallet);
+
+
+    std::string sError, sLabel;
+    if (request.params.size() > 0)
+        sLabel = request.params[0].get_str();
+
+    uint32_t num_prefix_bits = 0;
+    if (request.params.size() > 1)
+    {
+        std::string sTemp = request.params[1].get_str();
+        char *pend;
+        errno = 0;
+        num_prefix_bits = strtoul(sTemp.c_str(), &pend, 10);
+        if (errno != 0 || !pend || *pend != '\0')
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("num_prefix_bits invalid number."));
+    };
+
+    if (num_prefix_bits > 32)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("num_prefix_bits must be <= 32."));
+
+    std::string sPrefix_num;
+    if (request.params.size() > 2)
+        sPrefix_num = request.params[2].get_str();
+
+    bool fBech32 = request.params.size() > 3 ? request.params[3].get_bool() : false;
+
+
+    CEKAStealthKey akStealth;
+    CStealthAddress sxAddr;
+    {
+        LOCK(pwallet->cs_wallet);
+
+        ExtKeyAccountMap::iterator mi = pwallet->mapExtAccounts.find(pwallet->idDefaultAccount);
+        if (mi == pwallet->mapExtAccounts.end())
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Unknown account.");
+
+        uint64_t nScanChain, nSpendChain;
+        CExtKeyAccount *sea = mi->second;
+        CStoredExtKey *sekScan = nullptr, *sekSpend = nullptr;
+        mapEKValue_t::iterator mvi = sea->mapValue.find(EKVT_STEALTH_SCAN_CHAIN);
+        if (mvi != sea->mapValue.end())
+        {
+            GetCompressedInt64(mvi->second, nScanChain);
+            sekScan = sea->GetChain(nScanChain);
+        };
+        if (!sekScan)
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Unknown stealth scan chain.");
+
+        mvi = sea->mapValue.find(EKVT_STEALTH_SPEND_CHAIN);
+        if (mvi != sea->mapValue.end())
+        {
+            GetCompressedInt64(mvi->second, nSpendChain);
+            sekSpend = sea->GetChain(nSpendChain);
+        };
+        if (!sekSpend)
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Unknown stealth spend chain.");
+
+
+        uint32_t nSpendGenerated = sekSpend->nHGenerated;
+
+        std::vector<uint32_t> vSpendPath;
+        if (!pwallet->GetFullChainPath(sea, nSpendChain, vSpendPath))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "GetFullChainPath failed.");
+        vSpendPath.push_back(WithHardenedBit(nSpendGenerated));
+
+        std::vector<std::unique_ptr<CUSBDevice> > vDevices;
+        CUSBDevice *pDevice = SelectDevice(vDevices);
+
+        CPubKey pkSpend;
+        if (0 != pDevice->GetPubKey(vSpendPath, pkSpend, sError))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Device GetPubKey failed %s.", sError));
+
+        sekSpend->nHGenerated = nSpendGenerated+1;
+
+
+        CKey kScan;
+        uint32_t nScanOut;
+        if (0 != sekScan->DeriveNextKey(kScan, nScanOut, true))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Derive failed.");
+
+
+        uint32_t nPrefixBits = num_prefix_bits;
+        uint32_t nPrefix = 0;
+        const char *pPrefix = sPrefix_num.empty() ? nullptr : sPrefix_num.c_str();
+        if (pPrefix)
+        {
+            if (!ExtractStealthPrefix(pPrefix, nPrefix))
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "ExtractStealthPrefix failed.");
+        } else
+        if (nPrefixBits > 0)
+        {
+            // If pPrefix is null, set nPrefix from the hash of kScan
+            uint8_t tmp32[32];
+            CSHA256().Write(kScan.begin(), 32).Finalize(tmp32);
+            memcpy(&nPrefix, tmp32, 4);
+        };
+
+        uint32_t nMask = SetStealthMask(nPrefixBits);
+        nPrefix = nPrefix & nMask;
+        akStealth = CEKAStealthKey(nScanChain, nScanOut, kScan, nSpendChain, nSpendGenerated, pkSpend, nPrefixBits, nPrefix);
+        akStealth.sLabel = sLabel;
+
+        if (0 != akStealth.SetSxAddr(sxAddr))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "SetSxAddr failed.");
+
+
+        CKeyID idAccount = sea->GetID();
+        CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
+
+        if (!wdb.TxnBegin())
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "TxnBegin failed.");
+
+        std::vector<CEKAStealthKeyPack> aksPak;
+
+        CKeyID idKey = akStealth.GetID();
+        sea->mapStealthKeys[idKey] = akStealth;
+
+        if (!wdb.ReadExtStealthKeyPack(idAccount, sea->nPackStealth, aksPak))
+        {
+            // New pack
+            aksPak.clear();
+            if (LogAcceptCategory(BCLog::HDWALLET))
+                LogPrintf("Account %s, starting new stealth keypack %u.\n", idAccount.ToString(), sea->nPackStealth);
+        };
+
+        aksPak.push_back(CEKAStealthKeyPack(idKey, akStealth));
+        if (!wdb.WriteExtStealthKeyPack(idAccount, sea->nPackStealth, aksPak))
+        {
+            sea->mapStealthKeys.erase(idKey);
+            wdb.TxnAbort();
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteExtKey failed.");
+        };
+
+        if (!wdb.WriteExtKey(sea->vExtKeyIDs[nScanChain], *sekScan)
+            || !wdb.WriteExtKey(sea->vExtKeyIDs[nSpendChain], *sekSpend))
+        {
+            sea->mapStealthKeys.erase(idKey);
+            //sek->SetCounter(nChildBkp, true);
+
+            wdb.TxnAbort();
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteExtKey failed.");
+        };
+
+        std::vector<uint32_t> vPath;
+        uint32_t idIndex;
+        bool requireUpdateDB;
+        if (0 == pwallet->ExtKeyGetIndex(&wdb, sea, idIndex, requireUpdateDB))
+            vPath.push_back(idIndex); // first entry is the index to the account / master key
+
+        if (0 == AppendChainPath(sekSpend, vPath))
+        {
+            vPath.push_back(WithHardenedBit(nSpendGenerated));
+        } else
+        {
+            LogPrintf("Warning: %s - missing path value.\n", __func__);
+            vPath.clear();
+        };
+
+        if ((uint32_t)aksPak.size() >= MAX_KEY_PACK_SIZE-1)
+            sea->nPackStealth++;
+        if (((uint32_t)aksPak.size() >= MAX_KEY_PACK_SIZE-1 || requireUpdateDB)
+            && !wdb.WriteExtAccount(idAccount, *sea))
+        {
+            wdb.TxnAbort();
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteExtAccount failed.");
+        };
+
+        pwallet->SetAddressBook(&wdb, sxAddr, sLabel, "receive", vPath, false, fBech32);
+
+        if (!wdb.TxnCommit())
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "TxnCommit failed.");
+    }
+
+    pwallet->AddressBookChangedNotify(sxAddr, CT_NEW);
+
+    return sxAddr.ToString(fBech32);
+};
 #endif
 
 static const CRPCCommand commands[] =
-{ //  category              name                        actor (function)           argNames
-  //  --------------------- ------------------------    -----------------------    ----------
-    { "usbdevice",          "listdevices",              &listdevices,              {} },
-    { "usbdevice",          "getdeviceinfo",            &getdeviceinfo,            {} },
-    { "usbdevice",          "getdevicepublickey",       &getdevicepublickey,       {"path","accountpath"} },
-    { "usbdevice",          "getdevicexpub",            &getdevicexpub,            {"path","accountpath"} },
-    { "usbdevice",          "devicesignmessage",        &devicesignmessage,        {"path","message","accountpath"} },
-    { "usbdevice",          "devicesignrawtransaction", &devicesignrawtransaction, {"hexstring","prevtxs","privkeypaths","sighashtype","accountpath"} }, /* uses wallet if enabled */
+{ //  category              name                            actor (function)            argNames
+  //  --------------------- ------------------------        -----------------------     ----------
+    { "usbdevice",          "listdevices",                  &listdevices,               {} },
+    { "usbdevice",          "getdeviceinfo",                &getdeviceinfo,             {} },
+    { "usbdevice",          "getdevicepublickey",           &getdevicepublickey,        {"path","accountpath"} },
+    { "usbdevice",          "getdevicexpub",                &getdevicexpub,             {"path","accountpath"} },
+    { "usbdevice",          "devicesignmessage",            &devicesignmessage,         {"path","message","accountpath"} },
+    { "usbdevice",          "devicesignrawtransaction",     &devicesignrawtransaction,  {"hexstring","prevtxs","privkeypaths","sighashtype","accountpath"} }, /* uses wallet if enabled */
 #ifdef ENABLE_WALLET
-    { "usbdevice",          "initaccountfromdevice",    &initaccountfromdevice,    {"label","path","makedefault","scan_chain_from"} },
+    { "usbdevice",          "initaccountfromdevice",        &initaccountfromdevice,     {"label","path","makedefault","scan_chain_from","initstealthchain"} },
+    { "usbdevice",          "devicegetnewstealthaddress",   &devicegetnewstealthaddress,{"label","num_prefix_bits","prefix_num","bech32"} },
 #endif
 };
 

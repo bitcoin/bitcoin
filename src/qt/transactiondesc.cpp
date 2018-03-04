@@ -258,6 +258,11 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
 
+    std::string sKey = strprintf("n%d", rec->getOutputIndex());
+    mapValue_t::iterator mvi = wtx.mapValue.find(sKey);
+    if (mvi != wtx.mapValue.end())
+        strHTML += "<br><b>" + tr("Narration") + ":</b><br>" + GUIUtil::HtmlEscape(mvi->second, true) + "<br>";
+
     //
     // PaymentRequest info:
     //

@@ -79,8 +79,9 @@ int ExtractBip32InfoV(const std::vector<uint8_t> &vchKey, UniValue &keyInfo, std
 
     CChainParams::Base58Type typePk = CChainParams::EXT_PUBLIC_KEY;
     if (memcmp(&vchKey[0], &Params().Base58Prefix(CChainParams::EXT_SECRET_KEY)[0], 4) == 0)
+    {
         keyInfo.pushKV("type", "Particl extended secret key");
-    else
+    } else
     if (memcmp(&vchKey[0], &Params().Base58Prefix(CChainParams::EXT_SECRET_KEY_BTC)[0], 4) == 0)
     {
         keyInfo.pushKV("type", "Bitcoin extended secret key");
@@ -123,12 +124,16 @@ int ExtractBip32InfoP(const std::vector<uint8_t> &vchKey, UniValue &keyInfo, std
     CExtPubKey pk;
 
     if (memcmp(&vchKey[0], &Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY)[0], 4) == 0)
+    {
         keyInfo.pushKV("type", "Particl extended public key");
-    else
+    } else
     if (memcmp(&vchKey[0], &Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY_BTC)[0], 4) == 0)
+    {
         keyInfo.pushKV("type", "Bitcoin extended public key");
-    else
+    } else
+    {
         keyInfo.pushKV("type", "Unknown extended public key");
+    };
 
     keyInfo.pushKV("version", strprintf("%02X", reversePlace(&vchKey[0])));
     keyInfo.pushKV("depth", strprintf("%u", vchKey[4]));
@@ -330,6 +335,7 @@ int AccountInfo(CHDWallet *pwallet, CExtKeyAccount *pa, int nShowKeys, bool fAll
                     case EKT_INTERNAL:      sUseType = "internal";      break;
                     case EKT_STEALTH:       sUseType = "stealth";       break;
                     case EKT_CONFIDENTIAL:  sUseType = "confidential";  break;
+                    case EKT_STEALTH_SCAN:  sUseType = "stealth_scan";  break;
                     default:                sUseType = "unknown";       break;
                 };
                 objC.pushKV("use_type", sUseType);
@@ -756,6 +762,17 @@ static int ExtractExtKeyId(const std::string &sInKey, CKeyID &keyId, CChainParam
     return 0;
 };
 
+static bool GetBool(const UniValue &uv)
+{
+    if (uv.isBool())
+        return uv.get_bool();
+    std::string s = uv.get_str();
+    bool rv;
+    if (!part::GetStringBool(s, rv))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Not a bool value.");
+    return rv;
+};
+
 UniValue extkey(const JSONRPCRequest &request)
 {
     CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
@@ -1050,18 +1067,14 @@ UniValue extkey(const JSONRPCRequest &request)
         bool fBip44 = false;
         if (request.params.size() > nParamOffset)
         {
-            std::string s = request.params[nParamOffset].get_str();
-            if (part::IsStringBoolPositive(s))
-                fBip44 = true;
+            fBip44 = GetBool(request.params[nParamOffset]);
             nParamOffset++;
         };
 
         bool fSaveBip44 = false;
         if (request.params.size() > nParamOffset)
         {
-            std::string s = request.params[nParamOffset].get_str();
-            if (part::IsStringBoolPositive(s))
-                fSaveBip44 = true;
+            fSaveBip44 = GetBool(request.params[nParamOffset]);
             nParamOffset++;
         };
 
@@ -1101,7 +1114,11 @@ UniValue extkey(const JSONRPCRequest &request)
 
             if (!wdb.TxnCommit())
                 throw std::runtime_error("TxnCommit failed.");
+
+            CBitcoinAddress addr;
+            addr.Set(fBip44 ? idDerived : sek.GetID(), CChainParams::EXT_KEY_HASH);
             result.pushKV("result", "Success.");
+            result.pushKV("id", addr.ToString().c_str());
             result.pushKV("key_label", sek.sLabel);
             result.pushKV("note", "Please backup your wallet."); // TODO: check for child of existing key?
         } // cs_wallet
@@ -1920,17 +1937,17 @@ UniValue getnewextaddress(const JSONRPCRequest &request)
         };
     };
 
-    bool fbech32 = !request.params[2].isNull() ? request.params[2].get_bool() : false;
+    bool fBech32 = !request.params[2].isNull() ? request.params[2].get_bool() : false;
 
     CStoredExtKey *sek = new CStoredExtKey();
-    if (0 != pwallet->NewExtKeyFromAccount(strLabel, sek, pLabel, pChild, fbech32))
+    if (0 != pwallet->NewExtKeyFromAccount(strLabel, sek, pLabel, pChild, fBech32))
     {
         delete sek;
         throw JSONRPCError(RPC_WALLET_ERROR, _("NewExtKeyFromAccount failed."));
     };
 
     // CBitcoinAddress displays public key only
-    return CBitcoinAddress(sek->kp, fbech32).ToString();
+    return CBitcoinAddress(sek->kp, fBech32).ToString();
 }
 
 UniValue getnewstealthaddress(const JSONRPCRequest &request)
@@ -1983,17 +2000,17 @@ UniValue getnewstealthaddress(const JSONRPCRequest &request)
     if (request.params.size() > 2)
         sPrefix_num = request.params[2].get_str();
 
-    bool fbech32 = request.params.size() > 3 ? request.params[3].get_bool() : false;
+    bool fBech32 = request.params.size() > 3 ? request.params[3].get_bool() : false;
 
     CEKAStealthKey akStealth;
     std::string sError;
-    if (0 != pwallet->NewStealthKeyFromAccount(sLabel, akStealth, num_prefix_bits, sPrefix_num.empty() ? nullptr : sPrefix_num.c_str(), fbech32))
+    if (0 != pwallet->NewStealthKeyFromAccount(sLabel, akStealth, num_prefix_bits, sPrefix_num.empty() ? nullptr : sPrefix_num.c_str(), fBech32))
         throw JSONRPCError(RPC_WALLET_ERROR, _("NewStealthKeyFromAccount failed."));
 
     CStealthAddress sxAddr;
     akStealth.SetSxAddr(sxAddr);
 
-    return sxAddr.ToString(fbech32);
+    return sxAddr.ToString(fBech32);
 }
 
 UniValue importstealthaddress(const JSONRPCRequest &request)
@@ -2056,7 +2073,7 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, _("Could not convert prefix to number."));
     };
 
-    bool fbech32 = request.params.size() > 5 ? request.params[5].get_bool() : false;
+    bool fBech32 = request.params.size() > 5 ? request.params[5].get_bool() : false;
 
     std::vector<uint8_t> vchScanSecret;
     std::vector<uint8_t> vchSpendSecret;
@@ -2159,18 +2176,18 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
         if (pwallet->HaveStealthAddress(sxAddr)) // check for extkeys, no update possible
             throw JSONRPCError(RPC_WALLET_ERROR, _("Import failed - stealth address exists."));
 
-        pwallet->SetAddressBook(sxAddr, sLabel, "", fbech32);
+        pwallet->SetAddressBook(sxAddr, sLabel, "", fBech32);
     }
 
     if (fFound)
     {
-        result.pushKV("result", "Success, updated " + sxAddr.Encoded(fbech32));
+        result.pushKV("result", "Success, updated " + sxAddr.Encoded(fBech32));
     } else
     {
         if (!pwallet->ImportStealthAddress(sxAddr, skSpend))
             throw std::runtime_error("Could not save to wallet.");
         result.pushKV("result", "Success");
-        result.pushKV("stealth_address", sxAddr.Encoded(fbech32));
+        result.pushKV("stealth_address", sxAddr.Encoded(fBech32));
     };
 
     return result;
@@ -5339,6 +5356,17 @@ UniValue debugwallet(const JSONRPCRequest &request)
         LogPrintf("nAbandonedOrphans %d\n", nAbandonedOrphans);
         LogPrintf("nMapWallet %d\n", nMapWallet);
         result.pushKV("unabandoned_orphans", (int)nUnabandonedOrphans);
+
+        int64_t rv = 0;
+        if (pwallet->CountRecords("sxkm", rv))
+            result.pushKV("locked_stealth_outputs", (int)rv);
+        else
+            result.pushKV("locked_stealth_outputs", "error");
+
+        if (pwallet->CountRecords("lao", rv))
+            result.pushKV("locked_blinded_outputs", (int)rv);
+        else
+            result.pushKV("locked_blinded_outputs", "error");
 
         // Check for gaps in the hd key chains
         ExtKeyAccountMap::const_iterator itam = pwallet->mapExtAccounts.begin();

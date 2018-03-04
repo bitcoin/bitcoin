@@ -35,8 +35,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getnetworkhashps", 1, "height" },
     { "sendtoaddress", 1, "amount" },
     { "sendtoaddress", 4, "subtractfeefromamount" },
-    { "sendtoaddress", 5 , "replaceable" },
-    { "sendtoaddress", 6 , "conf_target" },
+    { "sendtoaddress", 6 , "replaceable" },
+    { "sendtoaddress", 7 , "conf_target" },
     { "settxfee", 0, "amount" },
     { "getreceivedbyaddress", 1, "minconf" },
     { "getreceivedbyaccount", 1, "minconf" },
@@ -217,6 +217,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "devicesignrawtransaction", 2, "privkeypaths" },
     { "initaccountfromdevice", 2, "makedefault" },
     { "initaccountfromdevice", 3, "scan_chain_from" },
+    { "initaccountfromdevice", 4, "initstealthchain" },
 
 
     { "logging", 0, "include" },

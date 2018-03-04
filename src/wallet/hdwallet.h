@@ -626,6 +626,7 @@ public:
     bool GetStealthLinked(const CKeyID &idK, CStealthAddress &sx);
     bool ProcessLockedStealthOutputs();
     bool ProcessLockedBlindedOutputs();
+    bool CountRecords(std::string sPrefix, int64_t rv);
     bool ProcessStealthOutput(const CTxDestination &address,
         std::vector<uint8_t> &vchEphemPK, uint32_t prefix, bool fHavePrefix, CKey &sShared, bool fNeedShared=false);
 

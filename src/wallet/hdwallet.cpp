@@ -5057,18 +5057,13 @@ int CHDWallet::GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&s
         return errorN(1, "%s: %s.", __func__, _("Default account not found"));
 
     sea = mi->second;
-
     mapEKValue_t::iterator mvi = sea->mapValue.find(EKVT_CONFIDENTIAL_CHAIN);
     if (mvi != sea->mapValue.end())
     {
         uint64_t n;
         GetCompressedInt64(mvi->second, n);
-
-        if (n < sea->vExtKeys.size())
-        {
-            pc = sea->vExtKeys[n];
+        if ((pc = sea->GetChain(n)))
             return 0;
-        };
 
         return errorN(1, "%s: %s.", __func__, _("Confidential chain set but not found"));
     };
@@ -5678,8 +5673,8 @@ int CHDWallet::ExtKeyCreateAccount(CStoredExtKey *sekAccount, CKeyID &idMaster, 
     ekaOut.vExtKeys.push_back(sekInternal);
     ekaOut.vExtKeys.push_back(sekStealth);
 
-    sekExternal->mapValue[EKVT_KEY_TYPE] = SetChar(v, EKT_INTERNAL);
-    sekInternal->mapValue[EKVT_KEY_TYPE] = SetChar(v, EKT_EXTERNAL);
+    sekExternal->mapValue[EKVT_KEY_TYPE] = SetChar(v, EKT_EXTERNAL);
+    sekInternal->mapValue[EKVT_KEY_TYPE] = SetChar(v, EKT_INTERNAL);
     sekStealth->mapValue[EKVT_KEY_TYPE] = SetChar(v, EKT_STEALTH);
 
     ekaOut.nActiveExternal = 1;
@@ -7062,7 +7057,6 @@ int CHDWallet::NewStealthKeyFromAccount(
     if (nPrefixBits > 0)
     {
         // If pPrefix is null, set nPrefix from the hash of kSpend
-
         uint8_t tmp32[32];
         CSHA256().Write(kSpend.begin(), 32).Finalize(tmp32);
         memcpy(&nPrefix, tmp32, 4);
@@ -7071,7 +7065,8 @@ int CHDWallet::NewStealthKeyFromAccount(
     uint32_t nMask = SetStealthMask(nPrefixBits);
     nPrefix = nPrefix & nMask;
 
-    CEKAStealthKey aks(nChain, nScanOut, kScan, nChain, nSpendOut, kSpend, nPrefixBits, nPrefix);
+    CPubKey pkSpend = kSpend.GetPubKey();
+    CEKAStealthKey aks(nChain, nScanOut, kScan, nChain, nSpendOut, pkSpend, nPrefixBits, nPrefix);
     aks.sLabel = sLabel;
 
     CStealthAddress sxAddr;
@@ -8116,6 +8111,40 @@ bool CHDWallet::ProcessLockedBlindedOutputs()
     return true;
 };
 
+bool CHDWallet::CountRecords(std::string sPrefix, int64_t rv)
+{
+    rv = 0;
+    LOCK(cs_wallet);
+    CHDWalletDB wdb(*dbw);
+
+    if (!wdb.TxnBegin())
+        return error("%s: TxnBegin failed.", __func__);
+
+    Dbc *pcursor;
+    if (!(pcursor = wdb.GetTxnCursor()))
+        return error("%s: Cannot create DB cursor.", __func__);
+
+    CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    ssKey << sPrefix;
+    std::string strType;
+    unsigned int fFlags = DB_SET_RANGE;
+    while (wdb.ReadKeyAtCursor(pcursor, ssKey, fFlags) == 0)
+    {
+        fFlags = DB_NEXT;
+        ssKey >> strType;
+        if (strType != sPrefix)
+            break;
+
+        rv++;
+    };
+
+    pcursor->close();
+
+    wdb.TxnAbort();
+
+    return true;
+};
+
 inline bool MatchPrefix(uint32_t nAddrBits, uint32_t addrPrefix, uint32_t outputPrefix, bool fHavePrefix)
 {
     if (nAddrBits < 1) // addresses without prefixes scan all incoming stealth outputs
@@ -8280,7 +8309,7 @@ bool CHDWallet::ProcessStealthOutput(const CTxDestination &address,
                 LogPrintf("Found stealth txn to address %s\n", aks.ToStealthAddress());
 
                 // Check key if not locked
-                if (!IsLocked())
+                if (!IsLocked() && !(ea->nFlags & EAF_HARDWARE_DEVICE))
                 {
                     CKey kTest;
                     if (0 != ea->ExpandStealthChildKey(&aks, sShared, kTest))

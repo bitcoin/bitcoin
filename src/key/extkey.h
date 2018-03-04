@@ -29,16 +29,18 @@ typedef std::map<uint8_t, std::vector<uint8_t> > mapEKValue_t;
 
 enum EKAddonValueTypes
 {
-    EKVT_CREATED_AT         = 1, // up to 8 bytes of int64_t
-    EKVT_KEY_TYPE           = 2, // 1 uint8 of MainExtKeyTypes
-    EKVT_STRING_PAIR        = 3, // str1 null str2 null
-    EKVT_ROOT_ID            = 4, // packed keyid of the root key in the path eg: for key of path m/44'/44'/0, EKVT_ROOT_ID is the id of m
-    EKVT_PATH               = 5, // pack 4bytes no separators
-    EKVT_ADDED_SECRET_AT    = 6,
-    EKVT_N_LOOKAHEAD        = 7,
-    EKVT_INDEX              = 8, // 4byte index to full identifier in local wallet db
-    EKVT_CONFIDENTIAL_CHAIN = 9,
-    EKVT_HARDWARE_DEVICE    = 10, // 4bytes nVendorId, 4bytes nProductId
+    EKVT_CREATED_AT             = 1,    // up to 8 bytes of int64_t
+    EKVT_KEY_TYPE               = 2,    // 1 uint8 of MainExtKeyTypes
+    EKVT_STRING_PAIR            = 3,    // str1 null str2 null
+    EKVT_ROOT_ID                = 4,    // packed keyid of the root key in the path eg: for key of path m/44'/44'/0, EKVT_ROOT_ID is the id of m
+    EKVT_PATH                   = 5,    // pack 4bytes no separators
+    EKVT_ADDED_SECRET_AT        = 6,
+    EKVT_N_LOOKAHEAD            = 7,
+    EKVT_INDEX                  = 8,    // 4byte index to full identifier in local wallet db
+    EKVT_CONFIDENTIAL_CHAIN     = 9,
+    EKVT_HARDWARE_DEVICE        = 10,   // 4bytes nVendorId, 4bytes nProductId
+    EKVT_STEALTH_SCAN_CHAIN     = 11,
+    EKVT_STEALTH_SPEND_CHAIN    = 12,
 };
 
 extern CCriticalSection cs_extKey;
@@ -493,7 +495,9 @@ class CEKAStealthKey
 {
 public:
     CEKAStealthKey() {};
-    CEKAStealthKey(uint32_t nScanParent_, uint32_t nScanKey_, CKey scanSecret_, uint32_t nSpendParent_, uint32_t nSpendKey_, CKey spendSecret_, uint8_t nPrefixBits_, uint32_t nPrefix_)
+    CEKAStealthKey(uint32_t nScanParent_, uint32_t nScanKey_, const CKey &scanSecret_,
+        uint32_t nSpendParent_, uint32_t nSpendKey_, const CPubKey &pkSpendSecret,
+        uint8_t nPrefixBits_, uint32_t nPrefix_)
     {
         // Spend secret is not stored
         nFlags = 0;
@@ -505,7 +509,7 @@ public:
         memcpy(&pkScan[0], pk.begin(), pk.size());
 
         akSpend = CEKAKey(nSpendParent_, nSpendKey_);
-        pk = spendSecret_.GetPubKey();
+        pk = pkSpendSecret;
         pkSpend.resize(pk.size());
         memcpy(&pkSpend[0], pk.begin(), pk.size());
 

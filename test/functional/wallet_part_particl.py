@@ -109,6 +109,7 @@ class WalletParticlTest(ParticlTestFramework):
         for c in ro['chains']:
             if c['function'] != 'active_external' or c['num_derives'] != '1':
                 continue
+            assert(c['use_type'] == 'external')
             fFound = True
             break
         assert(fFound)

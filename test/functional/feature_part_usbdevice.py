@@ -10,7 +10,7 @@ from test_framework.util import *
 class USBDeviceTest(ParticlTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 2
+        self.num_nodes = 3
         self.extra_args = [ ['-debug','-noacceptnonstdtxn'] for i in range(self.num_nodes)]
 
     def setup_network(self, split=False):
@@ -18,6 +18,8 @@ class USBDeviceTest(ParticlTestFramework):
         self.start_nodes()
 
         connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes_bi(self.nodes, 0, 2)
+        connect_nodes_bi(self.nodes, 1, 2)
         self.is_network_split = False
         self.sync_all()
 
@@ -123,6 +125,49 @@ class USBDeviceTest(ParticlTestFramework):
 
         ro = nodes[0].filtertransactions()
         assert(ro[0]['txid'] == txnid2)
+
+        hwsxaddr = nodes[1].devicegetnewstealthaddress()
+        assert(hwsxaddr == 'TetZ8hgE3cEzUy5jgxRox5HY9QqzTKDjRVqqDLbV4q8TUXAXhoUaN9hmi4ubQXBfMEZHjsTC1iUBfWwyX3W6iYxP15UHALofxtGxae')
+
+        hwsxaddr2 = nodes[1].devicegetnewstealthaddress('lbl2 4bits', '4', '0xaaaa', True)
+        assert(hwsxaddr2 == 'tps1qqpewyspjp93axk82zahx5xfjyprpvypfgnp95n9aynxxw3w0qs63acpqf8jypelvry3ckp0cfje4xw3g0y0fg6x2hs8s6undlxeau6h8j3hvqqypgl3x6aq')
+
+        ro = nodes[1].liststealthaddresses()
+        assert(len(ro[0]['Stealth Addresses']) == 2)
+
+
+        ro = nodes[1].filteraddresses()
+        assert(len(ro) == 3)
+
+
+        txnid3 = nodes[0].sendtoaddress(hwsxaddr, 0.1, '', '', False, 'test msg')
+        self.sync_all()
+
+        ro = nodes[1].listtransactions()
+        assert(len(ro) == 4)
+        assert('test msg' in json.dumps(ro[3], default=self.jsonDecimal))
+
+
+
+
+        # import privkey in node2
+        rootkey = nodes[2].extkeyaltversion('xparFdrwJK7K2nfYzrkEqAKr5EcJNdY4c6ZNoLFFx1pMXQSQpo5MAufjogrS17RkqsLAijZJaBDHhG3G7SuJjtsTmRRTEKZDzGMnVCeX59cQCiR')
+        ro = nodes[2].extkey('import', rootkey, 'master key', True)
+        ro = nodes[2].extkey('setmaster', ro['id'])
+        assert(ro['result'] == 'Success.')
+        ro = nodes[2].extkey('deriveaccount', 'test account')
+        ro = nodes[2].extkey('setdefaultaccount', ro['account'])
+        assert(ro['result'] == 'Success.')
+        addrtest = nodes[2].getnewaddress()
+        ro = nodes[1].getdevicepublickey('0/0')
+        assert(addrtest == ro['address'])
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

@@ -261,18 +261,15 @@ int StealthSecret(const CKey &secret, const ec_point &pubkey, const ec_point &pk
 int StealthSecretSpend(const CKey &scanSecret, const ec_point &ephemPubkey, const CKey &spendSecret, CKey &secretOut)
 {
     /*
-
     c  = H(dP)
     R' = R + cG     [without decrypting wallet]
        = (f + c)G   [after decryption of wallet]
-         Remember: mod curve.order, pad with 0x00s where necessary?
     */
 
     if (ephemPubkey.size() != EC_COMPRESSED_SIZE)
         return errorN(1, "%s: sanity checks failed.", __func__);
 
     secp256k1_pubkey P;
-
     if (!secp256k1_ec_pubkey_parse(secp256k1_ctx_stealth, &P, &ephemPubkey[0], EC_COMPRESSED_SIZE))
         return errorN(1, "%s: secp256k1_ec_pubkey_parse P failed.", __func__);
 
@@ -300,7 +297,6 @@ int StealthSecretSpend(const CKey &scanSecret, const ec_point &ephemPubkey, cons
 
 int StealthSharedToSecretSpend(const CKey &sharedS, const CKey &spendSecret, CKey &secretOut)
 {
-
     secretOut = spendSecret;
     if (!secp256k1_ec_privkey_tweak_add(secp256k1_ctx_stealth, secretOut.begin_nc(), sharedS.begin()))
         return errorN(1, "%s: secp256k1_ec_privkey_tweak_add failed.", __func__);
