@@ -890,6 +890,31 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     return AcceptToMemoryPoolWithTime(pool, state, tx, fLimitFree, pfMissingInputs, GetTime(), plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, fDryRun);
 }
 
+bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin)
+{
+    LOCK(cs_main);
+    if (!pcoinsTip->GetCoin(outpoint, coin))
+        return false;
+    if (coin.IsSpent())
+        return false;
+    return true;
+}
+
+int GetUTXOHeight(const COutPoint& outpoint)
+{
+    // -1 means UTXO is yet unknown or already spent
+    Coin coin;
+    return GetUTXOCoin(outpoint, coin) ? coin.nHeight : -1;
+}
+
+int GetUTXOConfirmations(const COutPoint& outpoint)
+{
+    // -1 means UTXO is yet unknown or already spent
+    LOCK(cs_main);
+    int nPrevoutHeight = GetUTXOHeight(outpoint);
+    return (nPrevoutHeight > -1 && chainActive.Tip()) ? chainActive.Height() - nPrevoutHeight + 1 : -1;
+}
+
 /** Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock */
 bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
 {

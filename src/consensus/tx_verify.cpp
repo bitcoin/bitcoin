@@ -152,31 +152,6 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin)
-{
-    LOCK(cs_main);
-    if (!pcoinsTip->GetCoin(outpoint, coin))
-        return false;
-    if (coin.IsSpent())
-        return false;
-    return true;
-}
-
-int GetUTXOHeight(const COutPoint& outpoint)
-{
-    // -1 means UTXO is yet unknown or already spent
-    CCoins coin;
-    return GetUTXOCoin(outpoint, coin) ? coin.nHeight : -1;
-}
-
-int GetUTXOConfirmations(const COutPoint& outpoint)
-{
-    // -1 means UTXO is yet unknown or already spent
-    LOCK(cs_main);
-    int nPrevoutHeight = GetUTXOHeight(outpoint);
-    return (nPrevoutHeight > -1 && chainActive.Tip()) ? chainActive.Height() - nPrevoutHeight + 1 : -1;
-}
-
 bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs)
 {
     // Basic checks that don't depend on any context
