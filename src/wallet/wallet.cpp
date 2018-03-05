@@ -8,6 +8,7 @@
 #include <checkpoints.h>
 #include <chain.h>
 #include <wallet/coincontrol.h>
+#include <wallet/coinselection.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <fs.h>
