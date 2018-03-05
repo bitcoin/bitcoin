@@ -207,7 +207,7 @@ public:
     bool AddPaymentVote(const CMasternodePaymentVote& vote);
     bool HasVerifiedPaymentVote(uint256 hashIn);
     bool ProcessBlock(int nBlockHeight, CConnman& connman);
-    void CheckPreviousBlockVotes(int nPrevBlockHeight);
+    void CheckBlockVotes(int nBlockHeight);
 
     void Sync(CNode* node, CConnman& connman);
     void RequestLowDataPaymentBlocks(CNode* pnode, CConnman& connman);
