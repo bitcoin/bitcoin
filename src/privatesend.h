@@ -391,7 +391,7 @@ public:
     static CDarksendBroadcastTx GetDSTX(const uint256& hash);
 
     static void UpdatedBlockTip(const CBlockIndex *pindex);
-    static void TransactionAddedToMempool(const CTransactionRef& tx) override;
+    static void TransactionAddedToMempool(const CTransactionRef& tx);
 };
 
 void ThreadCheckPrivateSend(CConnman& connman);

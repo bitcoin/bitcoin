@@ -19,7 +19,7 @@
 
 std::string FormatScript(const CScript& script)
 {
-    string ret;
+    std::string ret;
     CScript::const_iterator it = script.begin();
     opcodetype op;
     while (it != script.end()) {
@@ -52,7 +52,7 @@ std::string FormatScript(const CScript& script)
     return ret.substr(0, ret.size() - 1);
 }
 
-const map<unsigned char, std::string> mapSigHashTypes =
+const std::map<unsigned char, std::string> mapSigHashTypes =
     boost::assign::map_list_of
     (static_cast<unsigned char>(SIGHASH_ALL), std::string("ALL"))
     (static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_ANYONECANPAY), std::string("ALL|ANYONECANPAY"))

@@ -139,9 +139,10 @@ static CScript PushAll(const std::vector<valtype>& values)
 bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPubKey, SignatureData& sigdata)
 {
     CScript script = fromPubKey;
+    bool solved = true;
     std::vector<valtype> result;
     txnouttype whichType;
-    bool solved = SignStep(creator, script, result, whichType, SIGVERSION_BASE);
+    solved = SignStep(creator, script, result, whichType, SIGVERSION_BASE);
     bool P2SH = false;
     CScript subscript;
     sigdata.scriptWitness.stack.clear();
@@ -189,9 +190,7 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
     SignatureData data;
     assert(tx.vin.size() > nIn);
     data.scriptSig = tx.vin[nIn].scriptSig;
-    if (tx.wit.vtxinwit.size() > nIn) {
-        data.scriptWitness = tx.wit.vtxinwit[nIn].scriptWitness;
-    }
+    data.scriptWitness = tx.vin[nIn].scriptWitness;
     return data;
 }
 
@@ -199,10 +198,7 @@ void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const Signatur
 {
     assert(tx.vin.size() > nIn);
     tx.vin[nIn].scriptSig = data.scriptSig;
-    if (!data.scriptWitness.IsNull() || tx.wit.vtxinwit.size() > nIn) {
-        tx.wit.vtxinwit.resize(tx.vin.size());
-        tx.wit.vtxinwit[nIn].scriptWitness = data.scriptWitness;
-    }
+    tx.vin[nIn].scriptWitness = data.scriptWitness;
 }
 
 bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType)

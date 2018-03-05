@@ -45,7 +45,7 @@ CScript ParseScript(const std::string& s)
         }
     }
 
-    std:vector<std::string> words;
+    std::vector<std::string> words;
     boost::algorithm::split(words, s, boost::algorithm::is_any_of(" \t\n"), boost::algorithm::token_compress_on);
 
     for (std::vector<std::string>::const_iterator w = words.begin(); w != words.end(); ++w)
@@ -140,7 +140,7 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
 
 uint256 ParseHashUV(const UniValue& v, const std::string& strName)
 {
-    string strHex;
+    std::string strHex;
     if (v.isStr())
         strHex = v.getValStr();
     return ParseHashStr(strHex, strName);  // Note: ParseHashStr("") throws a runtime_error
@@ -158,7 +158,7 @@ uint256 ParseHashStr(const std::string& strHex, const std::string& strName)
 
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName)
 {
-    string strHex;
+    std::string strHex;
     if (v.isStr())
         strHex = v.getValStr();
     if (!IsHex(strHex))

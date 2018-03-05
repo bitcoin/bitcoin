@@ -628,7 +628,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the rawtx:
-    CMutableTransaction mtx(txVariants[0]);
+    CMutableTransaction mergedTx(txVariants[0]);
 
     // Fetch previous transactions (inputs):
     CCoinsView viewDummy;
@@ -765,7 +765,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 
     // Use CTransaction for the constant parts of the
     // transaction to avoid rehashing.
-    const CTransaction txConst(mtx);
+    const CTransaction txConst(mergedTx);
     // Sign what we can:
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
         CTxIn& txin = mergedTx.vin[i];
@@ -779,8 +779,8 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 
         SignatureData sigdata;
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
-        if (!fHashSingle || (i < mtx.vout.size()))
-            ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mtx, i, amount, nHashType), prevPubKey, sigdata);
+        if (!fHashSingle || (i < mergedTx.vout.size()))
+            ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, amount, nHashType), prevPubKey, sigdata);
 
         // ... and merge in other signatures:
         for (const CMutableTransaction& txv : txVariants) {
@@ -796,7 +796,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     bool fComplete = vErrors.empty();
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("hex", EncodeHexTx(mtx)));
+    result.push_back(Pair("hex", EncodeHexTx(mergedTx)));
     result.push_back(Pair("complete", fComplete));
     if (!vErrors.empty()) {
         result.push_back(Pair("errors", vErrors));

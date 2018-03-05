@@ -466,21 +466,23 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwalletMain);
 
-    SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUseInstantSend, fUsePrivateSend);
+    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUseInstantSend, fUsePrivateSend);
 
     return wtx.GetHash().GetHex();
 }
 
 UniValue instantsendtoaddress(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(pwalletMain, request.fHelp))
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
+    }
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
-        throw runtime_error(
+        throw std::runtime_error(
             "instantsendtoaddress \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
             "\nSend an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
-            + HelpRequiringPassphrase(pwalletMain) +
+            + HelpRequiringPassphrase(pwallet) +
             "\nArguments:\n"
             "1. \"address\"  (string, required) The chaincoin address to send to.\n"
             "2. \"amount\"      (numeric, required) The amount in btc to send. eg 0.1\n"
@@ -1275,7 +1277,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
     for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         const CWalletTx& wtx = pairWtx.second;
 
-        if (wtx.IsCoinBase() || !CheckFinalTx(wtx))
+        if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
             continue;
 
         int nDepth = wtx.GetDepthInMainChain(fAddLockConf);
@@ -1739,8 +1741,8 @@ UniValue listaccounts(const JSONRPCRequest& request)
         const CWalletTx& wtx = pairWtx.second;
         CAmount nFee;
         std::string strSentAccount;
-        list<COutputEntry> listReceived;
-        list<COutputEntry> listSent;
+        std::list<COutputEntry> listReceived;
+        std::list<COutputEntry> listSent;
         int nDepth = wtx.GetDepthInMainChain(fAddLockConf);
         if (wtx.GetBlocksToMaturity() > 0 || nDepth < 0)
             continue;
@@ -2122,8 +2124,6 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
     // Alternately, find a way to make params[0] mlock()'d to begin with.
     strWalletPass = request.params[0].get_str().c_str();
-
-    int64_t nSleepTime = request.params[1].get_int64();
 
     bool fForMixingOnly = false;
     if (request.params.size() >= 3) {
@@ -2532,14 +2532,14 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
 }
 
 UniValue keepass(const JSONRPCRequest& request) {
-    string strCommand;
+    std::string strCommand;
 
     if (request.params.size() >= 1)
         strCommand = request.params[0].get_str();
 
     if (request.fHelp  ||
         (strCommand != "genkey" && strCommand != "init" && strCommand != "setpassphrase"))
-        throw runtime_error(
+        throw std::runtime_error(
             "keepass <genkey|init|setpassphrase>\n");
 
     if (strCommand == "genkey")
@@ -2728,7 +2728,7 @@ UniValue listunspent(const JSONRPCRequest& request)
     assert(pwallet != nullptr);
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, nullptr, true);
+    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, ALL_COINS, true);
     for (const COutput& out : vecOutputs) {
         CTxDestination address;
         const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
@@ -3066,162 +3066,6 @@ UniValue bumpfee(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue fundrawtransaction(const JSONRPCRequest& request)
-{
-    if (!EnsureWalletIsAvailable(request.fHelp))
-        return NullUniValue;
-
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw runtime_error(
-                            "fundrawtransaction \"hexstring\" ( options )\n"
-                            "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
-                            "This will not modify existing inputs, and will add at most one change output to the outputs.\n"
-                            "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
-                            "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
-                            "The inputs added will not be signed, use signrawtransaction for that.\n"
-                            "Note that all existing inputs must have their previous output transaction be in the wallet.\n"
-                            "Note that all inputs selected must be of standard form and P2SH scripts must be\n"
-                            "in the wallet using importaddress or addmultisigaddress (to calculate fees).\n"
-                            "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
-                            "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only\n"
-                            "\nArguments:\n"
-                            "1. \"hexstring\"           (string, required) The hex string of the raw transaction\n"
-                            "2. options               (object, optional)\n"
-                            "   {\n"
-                            "     \"changeAddress\"          (string, optional, default pool address) The bitcoin address to receive the change\n"
-                            "     \"changePosition\"         (numeric, optional, default random) The index of the change output\n"
-                            "     \"includeWatching\"        (boolean, optional, default false) Also select inputs which are watch only\n"
-                            "     \"lockUnspents\"           (boolean, optional, default false) Lock selected unspent outputs\n"
-                            "     \"reserveChangeKey\"       (boolean, optional, default true) Reserves the change output key from the keypool\n"
-                            "     \"feeRate\"                (numeric, optional, default not set: makes wallet determine the fee) Set a specific feerate (" + CURRENCY_UNIT + " per KB)\n"
-                            "     \"subtractFeeFromOutputs\" (array, optional) A json array of integers.\n"
-                            "                              The fee will be equally deducted from the amount of each specified output.\n"
-                            "                              The outputs are specified by their zero-based index, before any change output is added.\n"
-                            "                              Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
-                            "                              If no outputs are specified here, the sender pays the fee.\n"
-                            "                                  [vout_index,...]\n"
-                            "   }\n"
-                            "                         for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}\n"
-                            "\nResult:\n"
-                            "{\n"
-                            "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
-                            "  \"fee\":       n,         (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
-                            "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
-                            "}\n"
-                            "\"hex\"             \n"
-                            "\nExamples:\n"
-                            "\nCreate a transaction with no inputs\n"
-                            + HelpExampleCli("createrawtransaction", "\"[]\" \"{\\\"myaddress\\\":0.01}\"") +
-                            "\nAdd sufficient unsigned inputs to meet the output value\n"
-                            + HelpExampleCli("fundrawtransaction", "\"rawtransactionhex\"") +
-                            "\nSign the transaction\n"
-                            + HelpExampleCli("signrawtransaction", "\"fundedtransactionhex\"") +
-                            "\nSend the transaction\n"
-                            + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
-                            );
-
-    RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR));
-
-    CTxDestination changeAddress = CNoDestination();
-    int changePosition = -1;
-    bool includeWatching = false;
-    bool lockUnspents = false;
-    bool reserveChangeKey = true;
-    CFeeRate feeRate = CFeeRate(0);
-    bool overrideEstimatedFeerate = false;
-    UniValue subtractFeeFromOutputs;
-    set<int> setSubtractFeeFromOutputs;
-
-    if (request.params.size() > 1) {
-      if (request.params[1].type() == UniValue::VBOOL) {
-        // backward compatibility bool only fallback
-        includeWatching = request.params[1].get_bool();
-      }
-      else {
-        RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR)(UniValue::VOBJ));
-
-        UniValue options = request.params[1];
-
-        RPCTypeCheckObj(options,
-            {
-                {"changeAddress", UniValueType(UniValue::VSTR)},
-                {"changePosition", UniValueType(UniValue::VNUM)},
-                {"includeWatching", UniValueType(UniValue::VBOOL)},
-                {"lockUnspents", UniValueType(UniValue::VBOOL)},
-                {"reserveChangeKey", UniValueType(UniValue::VBOOL)},
-                {"feeRate", UniValueType()}, // will be checked below
-                {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
-            },
-            true, true);
-
-        if (options.exists("changeAddress")) {
-            CBitcoinAddress address(options["changeAddress"].get_str());
-
-            if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "changeAddress must be a valid bitcoin address");
-
-            changeAddress = address.Get();
-        }
-
-        if (options.exists("changePosition"))
-            changePosition = options["changePosition"].get_int();
-
-        if (options.exists("includeWatching"))
-            includeWatching = options["includeWatching"].get_bool();
-
-        if (options.exists("lockUnspents"))
-            lockUnspents = options["lockUnspents"].get_bool();
-
-        if (options.exists("reserveChangeKey"))
-            reserveChangeKey = options["reserveChangeKey"].get_bool();
-
-        if (options.exists("feeRate"))
-        {
-            feeRate = CFeeRate(AmountFromValue(options["feeRate"]));
-            overrideEstimatedFeerate = true;
-        }
-
-        if (options.exists("subtractFeeFromOutputs"))
-            subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
-      }
-    }
-
-    // parse hex string from parameter
-    CMutableTransaction tx;
-    if (!DecodeHexTx(tx, request.params[0].get_str(), true))
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
-
-    if (tx.vout.size() == 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
-
-    if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > tx.vout.size()))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
-
-    for (unsigned int idx = 0; idx < subtractFeeFromOutputs.size(); idx++) {
-        int pos = subtractFeeFromOutputs[idx].get_int();
-        if (setSubtractFeeFromOutputs.count(pos))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, duplicated position: %d", pos));
-        if (pos < 0)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, negative position: %d", pos));
-        if (pos >= int(tx.vout.size()))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, position too large: %d", pos));
-        setSubtractFeeFromOutputs.insert(pos);
-    }
-
-    CAmount nFeeOut;
-    string strFailReason;
-
-    if(!pwalletMain->FundTransaction(tx, nFeeOut, overrideEstimatedFeerate, feeRate, changePosition, strFailReason, includeWatching, lockUnspents, setSubtractFeeFromOutputs, reserveChangeKey, changeAddress))
-        throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
-
-    UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("hex", EncodeHexTx(tx)));
-    result.push_back(Pair("changepos", changePosition));
-    result.push_back(Pair("fee", ValueFromAmount(nFeeOut)));
-
-    return result;
-}
-
 UniValue setbip69enabled(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -3248,6 +3092,7 @@ extern UniValue dumpwallet(const JSONRPCRequest& request);
 extern UniValue importwallet(const JSONRPCRequest& request);
 extern UniValue importprunedfunds(const JSONRPCRequest& request);
 extern UniValue removeprunedfunds(const JSONRPCRequest& request);
+extern UniValue importmulti(const JSONRPCRequest& request);
 
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafeMode

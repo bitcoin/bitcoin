@@ -2292,6 +2292,7 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     nLocalServices = connOptions.nLocalServices;
     nMaxConnections = connOptions.nMaxConnections;
     nMaxOutbound = std::min((connOptions.nMaxOutbound), nMaxConnections);
+    nMaxAddnode = connOptions.nMaxAddnode;
     nMaxFeeler = connOptions.nMaxFeeler;
 
     nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
@@ -2358,17 +2359,6 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     if (semMasternodeOutbound == nullptr) {
         // initialize semaphore
         semMasternodeOutbound = new CSemaphore(MAX_OUTBOUND_MASTERNODE_CONNECTIONS);
-    }
-
-    if (pnodeLocalHost == nullptr) {
-        CNetAddr local;
-        LookupHost("127.0.0.1", local, false);
-
-        NodeId id = GetNewNodeId();
-        uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-
-        pnodeLocalHost = new CNode(id, nLocalServices, GetBestHeight(), INVALID_SOCKET, CAddress(CService(local, 0), nLocalServices), 0, nonce);
-        GetNodeSignals().InitializeNode(pnodeLocalHost, *this);
     }
 
     //
@@ -2984,7 +2974,7 @@ bool CConnman::ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, 
     CNode* found = nullptr;
     LOCK(cs_vNodes);
     for (auto&& pnode : vNodes) {
-        if(pnode->GetID() == id) {
+        if(pnode->GetId() == id) {
             found = pnode;
             break;
         }

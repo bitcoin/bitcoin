@@ -123,7 +123,7 @@ public:
     void Relay(const uint256& txHash, CConnman& connman);
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
-    void TransactionAddedToMempool(const CTransactionRef& tx) override;
+    void TransactionAddedToMempool(const CTransactionRef& tx);
 
     std::string ToString();
 };

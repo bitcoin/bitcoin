@@ -1,9 +1,9 @@
 /* src/config/chaincoin-config.h.  Generated from chaincoin-config.h.in by configure.  */
 /* src/config/chaincoin-config.h.in.  Generated from configure.ac by autoheader.  */
 
-#ifndef CHAINCOIN_CONFIG_H
+#ifndef BITCOIN_CONFIG_H
 
-#define CHAINCOIN_CONFIG_H
+#define BITCOIN_CONFIG_H
 
 /* Define if building universal (internal helper macro) */
 /* #undef AC_APPLE_UNIVERSAL_BUILD */
@@ -27,10 +27,10 @@
 #define COPYRIGHT_HOLDERS "The %s developers"
 
 /* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The Bitcoin Core developers"
+#define COPYRIGHT_HOLDERS_FINAL "The Chaincoin Core developers"
 
 /* Replacement for %s in copyright holders string */
-#define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcoin Core"
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "Chaincoin Core"
 
 /* Copyright year */
 #define COPYRIGHT_YEAR 2018
@@ -102,6 +102,10 @@
    */
 #define HAVE_DECL_DAEMON 1
 
+/* Define to 1 if you have the declaration of `EVP_MD_CTX_new', and to 0 if
+   you don't. */
+#define HAVE_DECL_EVP_MD_CTX_NEW 0
+
 /* Define to 1 if you have the declaration of `htobe16', and to 0 if you
    don't. */
 #define HAVE_DECL_HTOBE16 0
@@ -146,6 +150,18 @@
    don't. */
 #define HAVE_DECL_STRNLEN 1
 
+/* Define to 1 if you have the declaration of `__builtin_clz', and to 0 if you
+   don't. */
+#define HAVE_DECL___BUILTIN_CLZ 0
+
+/* Define to 1 if you have the declaration of `__builtin_clzl', and to 0 if
+   you don't. */
+#define HAVE_DECL___BUILTIN_CLZL 0
+
+/* Define to 1 if you have the declaration of `__builtin_clzll', and to 0 if
+   you don't. */
+#define HAVE_DECL___BUILTIN_CLZLL 0
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
 
@@ -161,11 +177,8 @@
 /* Define to 1 if the system has the `visibility' function attribute */
 /* #undef HAVE_FUNC_ATTRIBUTE_VISIBILITY */
 
-/* Define this symbol if you have getaddrinfo_a */
-/* #undef HAVE_GETADDRINFO_A */
-
-/* Define this symbol if you have inet_pton */
-#define HAVE_INET_PTON 1
+/* Define this symbol if the BSD getentropy system call is available */
+/* #undef HAVE_GETENTROPY */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
@@ -245,6 +258,12 @@
 /* Define to 1 if you have the `z ' library (-lz ). */
 /* #undef HAVE_LIBZ_ */
 
+/* Define this symbol if you have malloc_info */
+/* #undef HAVE_MALLOC_INFO */
+
+/* Define this symbol if you have mallopt with M_ARENA_MAX */
+/* #undef HAVE_MALLOPT_ARENA_MAX */
+
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
 
@@ -259,6 +278,9 @@
 
 /* Define to 1 if you have the <miniupnpc/upnperrors.h> header file. */
 #define HAVE_MINIUPNPC_UPNPERRORS_H 1
+
+/* Define this symbol if you have MSG_DONTWAIT */
+#define HAVE_MSG_DONTWAIT 1
 
 /* Define this symbol if you have MSG_NOSIGNAL */
 /* #undef HAVE_MSG_NOSIGNAL */
@@ -287,8 +309,14 @@
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
 
+/* Define this symbol if the BSD sysctl(KERN_ARND) is available */
+/* #undef HAVE_SYSCTL_ARND */
+
 /* Define to 1 if you have the <sys/endian.h> header file. */
 /* #undef HAVE_SYS_ENDIAN_H */
+
+/* Define this symbol if the Linux getrandom system call is available */
+/* #undef HAVE_SYS_GETRANDOM */
 
 /* Define to 1 if you have the <sys/prctl.h> header file. */
 /* #undef HAVE_SYS_PRCTL_H */
@@ -318,7 +346,7 @@
 #define LT_OBJDIR ".libs/"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/chaincoinunlimited/chaincoin/issues"
+#define PACKAGE_BUGREPORT "https://github.com/chaincoin/chaincoin/issues"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "Chaincoin Core"
@@ -327,10 +355,10 @@
 #define PACKAGE_STRING "Chaincoin Core 0.14.99"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "chaincoincore"
+#define PACKAGE_TARNAME "chaincoin"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL ""
+#define PACKAGE_URL "https://chaincoin.org/"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "0.14.99"
@@ -341,6 +369,9 @@
 
 /* Define this symbol if the qt platform is cocoa */
 /* #undef QT_QPA_PLATFORM_COCOA */
+
+/* Define this symbol if the minimal qt platform exists */
+/* #undef QT_QPA_PLATFORM_MINIMAL */
 
 /* Define this symbol if the qt platform is windows */
 /* #undef QT_QPA_PLATFORM_WINDOWS */
@@ -390,4 +421,4 @@
 /* Define for large files, on AIX-style hosts. */
 /* #undef _LARGE_FILES */
 
-#endif //CHAINCOIN_CONFIG_H
+#endif //BITCOIN_CONFIG_H

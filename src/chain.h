@@ -216,6 +216,9 @@ public:
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
 
+    //! (memory only) Maximum nTime in the chain up to and including this block.
+    unsigned int nTimeMax;
+
     void SetNull()
     {
         phashBlock = nullptr;
@@ -230,6 +233,7 @@ public:
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
+        nTimeMax = 0;
 
         nVersion       = 0;
         hashMerkleRoot = uint256();
@@ -293,6 +297,11 @@ public:
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
+    }
+
+    int64_t GetBlockTimeMax() const
+    {
+        return (int64_t)nTimeMax;
     }
 
     enum { nMedianTimeSpan=11 };

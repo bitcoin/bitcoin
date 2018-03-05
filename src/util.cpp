@@ -352,7 +352,7 @@ static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine
  */
 static std::string LogThreadNameStr(const std::string &str, bool *fStartedNewLine)
 {
-    string strThreadLogged;
+    std::string strThreadLogged;
 
     if (!fLogThreadNames)
         return str;
@@ -519,19 +519,6 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     LOCK(cs_args);
     mapArgs[strArg] = strValue;
     mapMultiArgs[strArg].push_back(strValue);
-}
-
-void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values)
-{
-    LOCK(cs_args);
-    _mapMultiArgs[strArg] = values;
-}
-
-void ForceRemoveArg(const std::string& strArg)
-{
-    LOCK(cs_args);
-    mapArgs.erase(strArg);
-    _mapMultiArgs.erase(strArg);
 }
 
 static const int screenWidth = 79;

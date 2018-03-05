@@ -449,14 +449,14 @@ void CPrivateSend::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex
     uint256 txHash = tx.GetHash();
     if (!mapDSTX.count(txHash)) return;
 
-    // When tx is 0-confirmed or conflicted, posInBlock is SYNC_TRANSACTION_NOT_IN_BLOCK and nConfirmedHeight should be set to -1
-    mapDSTX[txHash].SetConfirmedHeight(posInBlock == CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK ? -1 : pindex->nHeight);
+    // When tx is 0-confirmed or conflicted, pindes is NULL and nConfirmedHeight should be set to -1
+    mapDSTX[txHash].SetConfirmedHeight(pindex == nullptr ? -1 : pindex->nHeight);
     LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::SyncTransaction -- txid=%s\n", txHash.ToString());
 }
 
 void CPrivateSend::TransactionAddedToMempool(const CTransactionRef& ptx) {
 
-    LOCK2(cs_main, cs_wallet);
+    LOCK2(cs_main, cs_mapdstx);
     SyncTransaction(ptx, nullptr, -1);
 
 }

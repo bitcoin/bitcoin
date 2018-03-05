@@ -1993,7 +1993,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
 
             LogPrintf("DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
-            mempool.PrioritiseTransaction(hashTx, hashTx.ToString(), 1000, 0.1*COIN);
+            mempool.PrioritiseTransaction(hashTx, 0.1*COIN);
             mnodeman.DisallowMixing(dstx.masternodeOutpoint);
         }
 
@@ -2278,7 +2278,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (pindex->nHeight <= chainActive.Height() + 2) {
             if ((!fAlreadyInFlight && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) ||
                  (fAlreadyInFlight && blockInFlightIt->second.first == pfrom->GetId())) {
-                std::list<QueuedBlock>::iterator* queuedBlockIt = NULnullptrL;
+                std::list<QueuedBlock>::iterator* queuedBlockIt = nullptr;
                 if (!MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), pindex, &queuedBlockIt)) {
                     if (!(*queuedBlockIt)->partialBlock)
                         (*queuedBlockIt)->partialBlock.reset(new PartiallyDownloadedBlock(&mempool));
@@ -3442,7 +3442,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
             int nOtherPeersWithValidatedDownloads = nPeersWithValidatedDownloads - (state.nBlocksInFlightValidHeaders > 0);
             if (nNow > state.nDownloadingSince + consensusParams.nPowTargetSpacing * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
-                LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->id);
+                LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->GetId());
                 pto->fDisconnect = true;
                 return true;
             }
@@ -3488,7 +3488,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 }
             } else {
                 //If we're not going to ask, don't expect a response.
-                LogPrint(BCLog::NET, "SendMessages -- GETDATA -- already have inv = %s peer=%d\n", inv.ToString(), pto->id);
+                LogPrint(BCLog::NET, "SendMessages -- GETDATA -- already have inv = %s peer=%d\n", inv.ToString(), pto->GetId());
                 pto->setAskFor.erase(inv.hash);
             }
             pto->mapAskFor.erase(pto->mapAskFor.begin());

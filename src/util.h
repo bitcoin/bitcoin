@@ -69,7 +69,7 @@ extern bool fLogTimestamps;
 extern bool fLogTimeMicros;
 extern bool fLogThreadNames;
 extern bool fLogIPs;
-extern volatile bool fReopenDebugLog;
+extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
 extern const char * const BITCOIN_CONF_FILENAME;
@@ -185,6 +185,7 @@ bool RenameOver(fs::path src, fs::path dest);
 bool TryCreateDirectory(const fs::path& p);
 fs::path GetDefaultDataDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
+fs::path GetBackupsDir();
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 fs::path GetMasternodeConfigFile(const std::string& confPath);
