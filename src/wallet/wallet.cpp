@@ -1543,6 +1543,79 @@ int CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
+// Helper for producing a max-sized low-S signature (eg 72 bytes)
+bool CWallet::DummySignInput(CTxIn &tx_in, const CTxOut &txout) const
+{
+    // Fill in dummy signatures for fee calculation.
+    const CScript& scriptPubKey = txout.scriptPubKey;
+    SignatureData sigdata;
+
+    if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
+    {
+        return false;
+    } else {
+        UpdateInput(tx_in, sigdata);
+    }
+    return true;
+}
+
+// Helper for producing a bunch of max-sized low-S signatures (eg 72 bytes)
+bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> &txouts) const
+{
+    // Fill in dummy signatures for fee calculation.
+    int nIn = 0;
+    for (const auto& txout : txouts)
+    {
+        if (!DummySignInput(txNew.vin[nIn], txout)) {
+            return false;
+        }
+
+        nIn++;
+    }
+    return true;
+}
+
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet)
+{
+    std::vector<CTxOut> txouts;
+    // Look up the inputs.  We should have already checked that this transaction
+    // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
+    // wallet, with a valid index into the vout array, and the ability to sign.
+    for (auto& input : tx.vin) {
+        const auto mi = wallet->mapWallet.find(input.prevout.hash);
+        if (mi == wallet->mapWallet.end()) {
+            return -1;
+        }
+        assert(input.prevout.n < mi->second.tx->vout.size());
+        txouts.emplace_back(mi->second.tx->vout[input.prevout.n]);
+    }
+    return CalculateMaximumSignedTxSize(tx, wallet, txouts);
+}
+
+// txouts needs to be in the order of tx.vin
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts)
+{
+    CMutableTransaction txNew(tx);
+    if (!wallet->DummySignTx(txNew, txouts)) {
+        // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
+        // implies that we can sign for every input.
+        return -1;
+    }
+    return GetVirtualTransactionSize(txNew);
+}
+
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet)
+{
+    CMutableTransaction txn;
+    txn.vin.push_back(CTxIn(COutPoint()));
+    if (!wallet->DummySignInput(txn.vin[0], txout)) {
+        // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
+        // implies that we can sign for every input.
+        return -1;
+    }
+    return GetVirtualTransactionInputSize(txn.vin[0]);
+}
+
 void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
                            std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const
 {
@@ -2752,7 +2825,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
-    unsigned int nBytes;
+    int nBytes;
     {
         std::set<CInputCoin> setCoins;
         LOCK2(cs_main, cs_wallet);
@@ -2903,18 +2976,10 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     txNew.vin.push_back(CTxIn(coin.outpoint,CScript(),
                                               nSequence));
 
-                // Fill in dummy signatures for fee calculation.
-                if (!DummySignTx(txNew, setCoins)) {
+                nBytes = CalculateMaximumSignedTxSize(txNew, this);
+                if (nBytes < 0) {
                     strFailReason = _("Signing transaction failed");
                     return false;
-                }
-
-                nBytes = GetVirtualTransactionSize(txNew);
-
-                // Remove scriptSigs to eliminate the fee calculation dummy signatures
-                for (auto& vin : txNew.vin) {
-                    vin.scriptSig = CScript();
-                    vin.scriptWitness.SetNull();
                 }
 
                 nFeeNeeded = GetMinimumFee(nBytes, coin_control, ::mempool, ::feeEstimator, &feeCalc);

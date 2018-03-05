@@ -16,33 +16,6 @@
 #include <util.h>
 #include <net.h>
 
-// Calculate the size of the transaction assuming all signatures are max size
-// Use DummySignatureCreator, which inserts 72 byte signatures everywhere.
-// TODO: re-use this in CWallet::CreateTransaction (right now
-// CreateTransaction uses the constructed dummy-signed tx to do a priority
-// calculation, but we should be able to refactor after priority is removed).
-// NOTE: this requires that all inputs must be in mapWallet (eg the tx should
-// be IsAllFromMe).
-static int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet)
-{
-    CMutableTransaction txNew(tx);
-    std::vector<CInputCoin> vCoins;
-    // Look up the inputs.  We should have already checked that this transaction
-    // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
-    // wallet, with a valid index into the vout array.
-    for (auto& input : tx.vin) {
-        const auto mi = wallet->mapWallet.find(input.prevout.hash);
-        assert(mi != wallet->mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
-        vCoins.emplace_back(CInputCoin(&(mi->second), input.prevout.n));
-    }
-    if (!wallet->DummySignTx(txNew, vCoins)) {
-        // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
-        // implies that we can sign for every input.
-        return -1;
-    }
-    return GetVirtualTransactionSize(txNew);
-}
-
 //! Check whether transaction has descendant in wallet or mempool, or has been
 //! mined, or conflicts with a mined transaction. Return a feebumper::Result.
 static feebumper::Result PreconditionChecks(const CWallet* wallet, const CWalletTx& wtx, std::vector<std::string>& errors)
