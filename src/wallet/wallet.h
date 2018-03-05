@@ -291,6 +291,9 @@ public:
     bool IsCoinBase() const { return tx->IsCoinBase(); }
 };
 
+//Get the marginal bytes of spending the specified output
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet);
+
 /** 
  * A transaction with a bunch of additional info that only the owner cares about.
  * It includes any unrecorded transactions needed to link it back to the block chain.
@@ -491,6 +494,12 @@ public:
     CAmount GetAnonymizedCredit(bool fUseCache=true) const;
     CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=true) const;
 
+    // Get the marginal bytes if spending the specified output from this transaction
+    int GetSpendSize(unsigned int out) const
+    {
+        return CalculateMaximumSignedInputSize(tx->vout[out], pwallet);
+    }
+
     void GetAmounts(std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
 
@@ -554,6 +563,9 @@ public:
     int i;
     int nDepth;
 
+    /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
+    int nInputBytes;
+
     /** Whether we have the private keys to spend this output */
     bool fSpendable;
 
@@ -569,7 +581,12 @@ public:
 
     COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn;
+        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1;
+        // If known and signable by the given wallet, compute nInputBytes
+        // Failure will keep this value -1
+        if (fSpendable && tx) {
+            nInputBytes = tx->GetSpendSize(i);
+        }
     }
 
     //Used with Private Send. Will return largest nondenom, then denominations, then very small inputs
@@ -1064,8 +1081,14 @@ public:
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& entries);
     bool AddAccountingEntry(const CAccountingEntry&);
     bool AddAccountingEntry(const CAccountingEntry&, CWalletDB *pwalletdb);
-    template <typename ContainerType>
-    bool DummySignTx(CMutableTransaction &txNew, const ContainerType &coins) const;
+    bool DummySignTx(CMutableTransaction &txNew, const std::set<CTxOut> &txouts) const
+    {
+        std::vector<CTxOut> v_txouts(txouts.size());
+        std::copy(txouts.begin(), txouts.end(), v_txouts.begin());
+        return DummySignTx(txNew, v_txouts);
+    }
+    bool DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> &txouts) const;
+    bool DummySignInput(CTxIn &tx_in, const CTxOut &txout) const;
 
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;
@@ -1384,4 +1407,10 @@ public:
     }
 };
 
+// Calculate the size of the transaction assuming all signatures are max size
+// Use DummySignatureCreator, which inserts 72 byte signatures everywhere.
+// NOTE: this requires that all inputs must be in mapWallet (eg the tx should
+// be IsAllFromMe).
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet);
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts);
 #endif // BITCOIN_WALLET_WALLET_H
