@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
                 test.erase(InsecureRandRange(test.size()));
             }
             if (InsecureRandBits(3) == 2) {
-                int new_size = std::max<int>(0, std::min<int>(30, test.size() + (InsecureRandRange(5)) - 2));
+                int new_size = std::max(0, std::min(30, (int)test.size() + (int)InsecureRandRange(5) - 2));
                 test.resize(new_size);
             }
             if (InsecureRandBits(3) == 3) {
