@@ -240,11 +240,7 @@ Threads
 
 - DumpAddresses : Dumps IP addresses of nodes to peers.dat.
 
-- ThreadFlushWalletDB : Close the wallet.dat file if it hasn't been used in 500ms.
-
 - ThreadRPCServer : Remote procedure call handler, listens on port 8332 for connections and services them.
-
-- BitcoinMiner : Generates bitcoins (if wallet is enabled).
 
 - Shutdown : Does an orderly shutdown of everything.
 
@@ -382,6 +378,18 @@ C++ data structures
   - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
   that are not language lawyers
 
+- Initialize all non-static class members where they are defined
+
+  - *Rationale*: Initializing the members in the declaration makes it easy to spot uninitialized ones,
+  and avoids accidentally reading uninitialized memory
+
+```cpp
+class A
+{
+    uint32_t m_count{0};
+}
+```
+
 Strings and formatting
 ------------------------
 
@@ -417,11 +425,11 @@ member name:
 ```c++
 class AddressBookPage
 {
-    Mode mode;
+    Mode m_mode;
 }
 
 AddressBookPage::AddressBookPage(Mode _mode) :
-      mode(_mode)
+      m_mode(_mode)
 ...
 ```
 
