@@ -32,7 +32,6 @@ BOOST_AUTO_TEST_CASE(smsg_test)
 #ifdef ENABLE_WALLET
     SeedInsecureRand();
     fParticlMode = true;
-    g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
 
     const std::string sTestMessage =
         "A short test message 0123456789 !@#$%^&*()_+-=";
@@ -95,8 +94,6 @@ BOOST_AUTO_TEST_CASE(smsg_test)
 
     smsgModule.Shutdown();
 
-    CConnman *p = g_connman.release();
-    delete p;
 #endif
 }
 

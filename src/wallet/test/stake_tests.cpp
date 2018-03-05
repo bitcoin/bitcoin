@@ -165,6 +165,30 @@ BOOST_AUTO_TEST_CASE(stake_test)
     BOOST_CHECK_NO_THROW(rv = CallRPC("getnewextaddress lblHDKey"));
 
     {
+        LOCK(pwallet->cs_wallet);
+        CBitcoinAddress addr("pdtYqn1fBVpgRa6Am6VRRLH8fkrFr1TuDq");
+        CKeyID idk;
+        BOOST_CHECK(addr.GetKeyID(idk));
+        BOOST_CHECK(pwallet->IsMine(idk) == ISMINE_SPENDABLE);
+
+        const CEKAKey *pak = nullptr;
+        const CEKASCKey *pasc = nullptr;
+        CExtKeyAccount *pa = nullptr;
+        BOOST_CHECK(pwallet->HaveKey(idk, pak, pasc, pa));
+        BOOST_REQUIRE(pa);
+        BOOST_REQUIRE(pak);
+        BOOST_CHECK(pak->nParent == 1);
+        BOOST_CHECK(pak->nKey == 1);
+        BOOST_CHECK(!pasc);
+
+        CEKAKey ak;
+        CKey key;
+        CKeyID idStealth;
+        BOOST_CHECK(pwallet->GetKey(idk, key, pa, ak, idStealth));
+        BOOST_CHECK(idk == key.GetPubKey().GetID());
+    }
+
+    {
         LOCK2(cs_main, pwallet->cs_wallet);
         BOOST_REQUIRE(pwallet->GetBalance() == 12500000000000);
     }

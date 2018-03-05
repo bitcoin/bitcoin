@@ -408,7 +408,7 @@ public:
 
 
     isminetype HaveAddress(const CTxDestination &dest);
-    isminetype HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const;
+    isminetype HaveKey(const CKeyID &address, const CEKAKey *&pak, const CEKASCKey *&pasc, CExtKeyAccount *&pa) const;
     isminetype IsMine(const CKeyID &address) const override;
     bool HaveKey(const CKeyID &address) const override;
 
@@ -441,7 +441,7 @@ public:
 
     isminetype IsMine(const CTxIn& txin) const override;
     isminetype IsMine(const CScript &scriptPubKey, CKeyID &keyID,
-        CEKAKey &ak, CExtKeyAccount *&pa, bool &isInvalid, SigVersion = SIGVERSION_BASE);
+        const CEKAKey *&pak, const CEKASCKey *&pasc, CExtKeyAccount *&pa, bool &isInvalid, SigVersion = SIGVERSION_BASE);
 
     isminetype IsMine(const CTxOutBase *txout) const override;
     bool IsMine(const CTransaction& tx) const override;
@@ -569,14 +569,14 @@ public:
     int ExtKeyLoadAccountPacks();
     int PrepareLookahead();
 
-    int ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &idKey, CEKAKey &ak, bool &fUpdateAcc) const;
-    int ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &idKey, CEKASCKey &asck, bool &fUpdateAcc) const;
+    int ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &idKey, const CEKAKey &ak, bool &fUpdateAcc) const;
+    int ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &idKey, const CEKASCKey &asck, bool &fUpdateAcc) const;
 
-    int ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &keyId, CEKAKey &ak) const;
-    int ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, CEKAKey &ak) const;
+    int ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &keyId, const CEKAKey &ak) const;
+    int ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, const CEKAKey &ak) const;
 
-    int ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &keyId, CEKASCKey &asck) const;
-    int ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, CEKASCKey &asck) const;
+    int ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &keyId, const CEKASCKey &asck) const;
+    int ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, const CEKASCKey &asck) const;
 
     int ExtKeyUpdateStealthAddress(CHDWalletDB *pwdb, CExtKeyAccount *sea, CKeyID &sxId, std::string &sLabel);
 

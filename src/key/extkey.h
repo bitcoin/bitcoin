@@ -455,9 +455,9 @@ public:
 
     uint32_t nParent; // chain identifier, vExtKeys
     uint32_t nKey;
-    //uint32_t nChecksum; // TODO: is it worth storing 4 bytes of the id (160 hash here)
 
-    std::string sLabel; // TODO: use later
+    //uint32_t nChecksum; // TODO: is it worth storing 4 bytes of the id (160 hash here)
+    std::string sLabel; // TODO: remove
 };
 
 
@@ -488,7 +488,7 @@ public:
     CKey sShared;
 
     //uint32_t nChecksum; // TODO: is it worth storing 4 bytes of the id (160 hash here)
-    std::string sLabel; // TODO: use later
+    std::string sLabel; // TODO: remove
 };
 
 class CEKAStealthKey
@@ -575,7 +575,7 @@ class CEKAKeyPack
 {
 public:
     CEKAKeyPack() {};
-    CEKAKeyPack(CKeyID id_, CEKAKey &ak_) : id(id_), ak(ak_) {};
+    CEKAKeyPack(CKeyID id_, const CEKAKey &ak_) : id(id_), ak(ak_) {};
 
     template<typename Stream>
     void Serialize(Stream &s) const
@@ -598,7 +598,7 @@ class CEKASCKeyPack
 {
 public:
     CEKASCKeyPack() {};
-    CEKASCKeyPack(CKeyID id_, CEKASCKey &asck_) : id(id_), asck(asck_) {};
+    CEKASCKeyPack(CKeyID id_, const CEKASCKey &asck_) : id(id_), asck(asck_) {};
 
     template<typename Stream>
     void Serialize(Stream &s) const
@@ -621,7 +621,7 @@ class CEKAStealthKeyPack
 {
 public:
     CEKAStealthKeyPack() {};
-    CEKAStealthKeyPack(CKeyID id_, CEKAStealthKey &aks_) : id(id_), aks(aks_) {};
+    CEKAStealthKeyPack(CKeyID id_, const CEKAStealthKey &aks_) : id(id_), aks(aks_) {};
 
     template<typename Stream>
     void Serialize(Stream &s) const
@@ -682,7 +682,8 @@ public:
     };
 
     int HaveSavedKey(const CKeyID &id);
-    int HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak, isminetype &ismine);
+    int HaveKey(const CKeyID &id, bool fUpdate, const CEKAKey *&pak, const CEKASCKey *&pasc, isminetype &ismine);
+    int HaveStealthKey(const CKeyID &id, const CEKASCKey *&pasc, isminetype &ismine);
     bool GetKey(const CKeyID &id, CKey &keyOut) const;
     bool GetKey(const CEKAKey &ak, CKey &keyOut) const;
     bool GetKey(const CEKASCKey &asck, CKey &keyOut) const;
@@ -694,8 +695,8 @@ public:
     bool GetPubKey(const CEKAKey &ak, CPubKey &pkOut) const;
     bool GetPubKey(const CEKASCKey &asck, CPubKey &pkOut) const;
 
-    bool SaveKey(const CKeyID &id, CEKAKey &keyIn);
-    bool SaveKey(const CKeyID &id, CEKASCKey &keyIn);
+    bool SaveKey(const CKeyID &id, const CEKAKey &keyIn);
+    bool SaveKey(const CKeyID &id, const CEKASCKey &keyIn);
 
     bool IsLocked(const CEKAStealthKey &aks);
 

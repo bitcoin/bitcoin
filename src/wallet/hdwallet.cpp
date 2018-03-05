@@ -1071,29 +1071,33 @@ isminetype CHDWallet::HaveAddress(const CTxDestination &dest)
     return ISMINE_NO;
 };
 
-isminetype CHDWallet::HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const
+isminetype CHDWallet::HaveKey(const CKeyID &address, const CEKAKey *&pak, const CEKASCKey *&pasc, CExtKeyAccount *&pa) const
 {
     AssertLockHeld(cs_wallet);
     //LOCK(cs_wallet);
 
+    pak = nullptr;
+    pasc = nullptr;
     int rv;
     ExtKeyAccountMap::const_iterator it;
     for (it = mapExtAccounts.begin(); it != mapExtAccounts.end(); ++it)
     {
         pa = it->second;
         isminetype ismine = ISMINE_NO;
-        rv = pa->HaveKey(address, true, ak, ismine);
-        if (rv == HK_YES)
-            return ismine;
+        rv = pa->HaveKey(address, true, pak, pasc, ismine);
+        if (rv == HK_NO)
+            continue;
+
         if (rv == HK_LOOKAHEAD_DO_UPDATE)
         {
-            if (0 != ExtKeySaveKey(it->second, address, ak))
+            CEKAKey ak = *pak; // Must copy CEKAKey, ExtKeySaveKey modifies CExtKeyAccount
+            if (0 != ExtKeySaveKey(pa, address, ak))
             {
                 LogPrintf("%s: ExtKeySaveKey failed.", __func__);
                 return ISMINE_NO;
             };
-            return ismine;
         };
+        return ismine;
     };
 
     pa = nullptr;
@@ -1104,18 +1108,20 @@ isminetype CHDWallet::IsMine(const CKeyID &address) const
 {
     LOCK(cs_wallet);
 
-    CEKAKey ak;
+    const CEKAKey *pak = nullptr;
+    const CEKASCKey *pasc = nullptr;
     CExtKeyAccount *pa = nullptr;
-    return HaveKey(address, ak, pa);
+    return HaveKey(address, pak, pasc, pa);
 };
 
 bool CHDWallet::HaveKey(const CKeyID &address) const
 {
     LOCK(cs_wallet);
 
-    CEKAKey ak;
+    const CEKAKey *pak = nullptr;
+    const CEKASCKey *pasc = nullptr;
     CExtKeyAccount *pa = nullptr;
-    return HaveKey(address, ak, pa) & ISMINE_SPENDABLE ? true : false;
+    return HaveKey(address, pak, pasc, pa) & ISMINE_SPENDABLE ? true : false;
 };
 
 isminetype CHDWallet::HaveExtKey(const CKeyID &keyID) const
@@ -1557,7 +1563,7 @@ isminetype CHDWallet::IsMine(const CTxIn& txin) const
 };
 
 isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
-    CEKAKey &ak, CExtKeyAccount *&pa, bool &isInvalid, SigVersion sigversion)
+    const CEKAKey *&pak, const CEKASCKey *&pasc, CExtKeyAccount *&pa, bool &isInvalid, SigVersion sigversion)
 {
     if (HasIsCoinstakeOp(scriptPubKey))
     {
@@ -1565,11 +1571,11 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
         if (!SplitConditionalCoinstakeScript(scriptPubKey, scriptA, scriptB))
             return ISMINE_NO;
 
-        isminetype typeB = IsMine(scriptB, keyID, ak, pa, isInvalid, sigversion);
+        isminetype typeB = IsMine(scriptB, keyID, pak, pasc, pa, isInvalid, sigversion);
         if (typeB & ISMINE_SPENDABLE)
             return typeB;
 
-        isminetype typeA = IsMine(scriptA, keyID, ak, pa, isInvalid, sigversion);
+        isminetype typeA = IsMine(scriptA, keyID, pak, pasc, pa, isInvalid, sigversion);
         if (typeA & ISMINE_SPENDABLE)
         {
             int ia = (int)typeA;
@@ -1602,7 +1608,7 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
             isInvalid = true;
             return ISMINE_NO;
         }
-        if ((mine = HaveKey(keyID, ak, pa)))
+        if ((mine = HaveKey(keyID, pak, pasc, pa)))
             return mine;
         break;
     case TX_PUBKEYHASH:
@@ -1622,7 +1628,7 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
                 return ISMINE_NO;
             }
         }
-        if ((mine = HaveKey(keyID, ak, pa)))
+        if ((mine = HaveKey(keyID, pak, pasc, pa)))
             return mine;
         break;
     case TX_SCRIPTHASH:
@@ -6540,7 +6546,7 @@ int CHDWallet::PrepareLookahead()
     return 0;
 };
 
-int CHDWallet::ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &idKey, CEKAKey &ak, bool &fUpdateAcc) const
+int CHDWallet::ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &idKey, const CEKAKey &ak, bool &fUpdateAcc) const
 {
     // Must call WriteExtAccount after
 
@@ -6573,7 +6579,7 @@ int CHDWallet::ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const 
     return 0;
 };
 
-int CHDWallet::ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &idKey, CEKASCKey &asck, bool &fUpdateAcc) const
+int CHDWallet::ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &idKey, const CEKASCKey &asck, bool &fUpdateAcc) const
 {
     // Must call WriteExtAccount after
 
@@ -6605,7 +6611,7 @@ int CHDWallet::ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const 
     return 0;
 };
 
-int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &keyId, CEKAKey &ak) const
+int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &keyId, const CEKAKey &ak) const
 {
     LogPrint(BCLog::HDWALLET, "%s %s %s.\n", __func__, sea->GetIDString58(), CBitcoinAddress(keyId).ToString());
     AssertLockHeld(cs_wallet);
@@ -6703,7 +6709,7 @@ int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyI
     return 0;
 };
 
-int CHDWallet::ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, CEKAKey &ak) const
+int CHDWallet::ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, const CEKAKey &ak) const
 {
     //LOCK(cs_wallet);
     AssertLockHeld(cs_wallet);
@@ -6724,7 +6730,7 @@ int CHDWallet::ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, CEKAKey &
     return 0;
 };
 
-int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &keyId, CEKASCKey &asck) const
+int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &keyId, const CEKASCKey &asck) const
 {
     LogPrint(BCLog::HDWALLET, "%s: %s %s.\n", __func__, sea->GetIDString58(), CBitcoinAddress(keyId).ToString());
     AssertLockHeld(cs_wallet);
@@ -6746,7 +6752,7 @@ int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyI
     return 0;
 };
 
-int CHDWallet::ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, CEKASCKey &asck) const
+int CHDWallet::ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, const CEKASCKey &asck) const
 {
     AssertLockHeld(cs_wallet);
 
@@ -8816,14 +8822,15 @@ int CHDWallet::OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdat
     };
 
     CKeyID idk;
-    CEKAKey ak;
+    const CEKAKey *pak = nullptr;
+    const CEKASCKey *pasc = nullptr;
     CExtKeyAccount *pa = nullptr;
     bool isInvalid;
-    isminetype mine = IsMine(pout->scriptPubKey, idk, ak, pa, isInvalid);
+    isminetype mine = IsMine(pout->scriptPubKey, idk, pak, pasc, pa, isInvalid);
     if (!(mine & ISMINE_ALL))
         return 0;
 
-    if (pa && pa->nActiveInternal == ak.nParent) // TODO: could check EKVT_KEY_TYPE
+    if (pa && pak && pa->nActiveInternal == pak->nParent) // TODO: could check EKVT_KEY_TYPE
         rout.nFlags |= ORF_CHANGE | ORF_FROM;
 
     rout.nType = OUTPUT_STANDARD;
@@ -8861,14 +8868,15 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
     */
 
     CKeyID idk;
-    CEKAKey ak;
+    const CEKAKey *pak = nullptr;
+    const CEKASCKey *pasc = nullptr;
     CExtKeyAccount *pa = nullptr;
     bool isInvalid;
-    isminetype mine = IsMine(pout->scriptPubKey, idk, ak, pa, isInvalid);
+    isminetype mine = IsMine(pout->scriptPubKey, idk, pak, pasc, pa, isInvalid);
     if (!(mine & ISMINE_ALL))
         return 0;
 
-    if (pa && pa->nActiveInternal == ak.nParent)
+    if (pa && pak && pa->nActiveInternal == pak->nParent)
         rout.nFlags |= ORF_CHANGE | ORF_FROM;
 
     rout.nType = OUTPUT_CT;
@@ -8944,16 +8952,17 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
     CKeyID idk = pout->pk.GetID();
     CKey key;
     CKeyID idStealth;
-    CEKAKey ak;
+    const CEKAKey *pak = nullptr;
+    const CEKASCKey *pasc = nullptr;
     CExtKeyAccount *pa = nullptr;
 
     rout.nType = OUTPUT_RINGCT;
 
     if (IsLocked())
     {
-        if (!HaveKey(idk, ak, pa))
+        if (!HaveKey(idk, pak, pasc, pa))
             return 0;
-        if (pa && pa->nActiveInternal == ak.nParent)
+        if (pa && pak && pa->nActiveInternal == pak->nParent)
             rout.nFlags |= ORF_CHANGE | ORF_FROM;
 
         rout.nFlags |= ORF_OWNED;
@@ -8972,6 +8981,7 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
         return 1;
     };
 
+    CEKAKey ak;
     if (!GetKey(idk, key, pa, ak, idStealth))
         return 0;
         //return errorN(0, "%s: GetKey failed.", __func__);

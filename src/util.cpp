@@ -509,7 +509,7 @@ static bool icompare_str(const std::string &a, const std::string &b)
 void *memrchr(const void *s, int c, size_t n)
 {
     if (n < 1)
-        return NULL;
+        return nullptr;
 
     unsigned char *cp = (unsigned char*) s + n;
 
@@ -518,7 +518,7 @@ void *memrchr(const void *s, int c, size_t n)
             return (void*) cp;
     } while (--n != 0);
 
-    return NULL;
+    return nullptr;
 };
 
 // memcmp_nta - memcmp that is secure against timing attacks

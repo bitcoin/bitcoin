@@ -268,7 +268,7 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
 
         vPath.push_back(nChild);
 
-        p = strtok(NULL, "/");
+        p = strtok(nullptr, "/");
     };
 
     if (vPath.size() < 1)
@@ -591,42 +591,53 @@ int CExtKeyAccount::HaveSavedKey(const CKeyID &id)
 
     AccKeyMap::const_iterator mi = mapKeys.find(id);
     if (mi != mapKeys.end())
-        return 1;
-    return 0;
+        return HK_YES;
+    return HK_NO;
 };
 
-int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak, isminetype &ismine)
+int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, const CEKAKey *&pak, const CEKASCKey *&pasc, isminetype &ismine)
 {
-    LOCK(cs_account);
     // If fUpdate, promote key if found in look ahead
+    LOCK(cs_account);
+
+    pasc = nullptr;
     AccKeyMap::const_iterator mi = mapKeys.find(id);
     if (mi != mapKeys.end())
     {
-        ak = mi->second;
-        ismine = IsMine(ak.nParent);
+        pak = &mi->second;
+        ismine = IsMine(pak->nParent);
         return HK_YES;
     };
 
     mi = mapLookAhead.find(id);
     if (mi != mapLookAhead.end())
     {
+        pak = &mi->second;
+        ismine = IsMine(pak->nParent);
         if (LogAcceptCategory(BCLog::HDWALLET))
             LogPrintf("HaveKey in lookAhead %s\n", CBitcoinAddress(mi->first).ToString());
-        ismine = IsMine(ak.nParent);
-        if (fUpdate)
-        {
-            ak = mi->second; // pass up for save to db
-            return HK_LOOKAHEAD_DO_UPDATE;
-        };
-        return HK_LOOKAHEAD;
+        return fUpdate ? HK_LOOKAHEAD_DO_UPDATE : HK_LOOKAHEAD;
     };
+
+    pak = nullptr;
+    return HaveStealthKey(id, pasc, ismine);
+};
+
+int CExtKeyAccount::HaveStealthKey(const CKeyID &id, const CEKASCKey *&pasc, isminetype &ismine)
+{
+    LOCK(cs_account);
 
     AccKeySCMap::const_iterator miSck = mapStealthChildKeys.find(id);
     if (miSck != mapStealthChildKeys.end())
     {
-        ismine = IsMine(ak.nParent);
+        pasc = &miSck->second;
+        AccStealthKeyMap::const_iterator miSk = mapStealthKeys.find(pasc->idStealthKey);
+        if (miSk == mapStealthKeys.end())
+            ismine = ISMINE_NO;
+        else
+            ismine = IsMine(miSk->second.akSpend.nParent);
         return HK_YES;
-    }
+    };
     ismine = ISMINE_NO;
     return HK_NO;
 };
@@ -662,7 +673,7 @@ bool CExtKeyAccount::GetKey(const CEKASCKey &asck, CKey &keyOut) const
 
     AccStealthKeyMap::const_iterator miSk = mapStealthKeys.find(asck.idStealthKey);
     if (miSk == mapStealthKeys.end())
-        return error("%s: CEKASCKey Stealth key not in this account!", __func__);
+        return error("%s: CEKASCKey Stealth key not found.", __func__);
 
     return (0 == ExpandStealthChildKey(&miSk->second, asck.sShared, keyOut));
 };
@@ -755,7 +766,7 @@ bool CExtKeyAccount::GetPubKey(const CEKASCKey &asck, CPubKey &pkOut) const
     return (0 == ExpandStealthChildPubKey(&miSk->second, asck.sShared, pkOut));
 };
 
-bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
+bool CExtKeyAccount::SaveKey(const CKeyID &id, const CEKAKey &keyIn)
 {
     // TODO: rename? this is taking a key from lookahead and saving it
     LOCK(cs_account);
@@ -790,9 +801,10 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
                     break;
                 };
 
-                CEKAKey ak;
+                const CEKAKey *pak = nullptr;
+                const CEKASCKey *pasc = nullptr;
                 isminetype ismine;
-                if (HK_YES != HaveKey(pk.GetID(), false, ak, ismine))
+                if (HK_YES != HaveKey(pk.GetID(), false, pak, pasc, ismine))
                     break;
 
                 pc->nGenerated = i;
@@ -836,7 +848,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
     return true;
 };
 
-bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKASCKey &keyIn)
+bool CExtKeyAccount::SaveKey(const CKeyID &id, const CEKASCKey &keyIn)
 {
     LOCK(cs_account);
     AccKeySCMap::const_iterator mi = mapStealthChildKeys.find(id);

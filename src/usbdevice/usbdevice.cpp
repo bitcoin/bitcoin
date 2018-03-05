@@ -81,12 +81,12 @@ CUSBDevice *SelectDevice(std::vector<std::unique_ptr<CUSBDevice> > &vDevices, st
     if (vDevices.size() < 1)
     {
         sError = "No device found.";
-        return NULL;
+        return nullptr;
     };
     if (vDevices.size() > 1) // TODO: Select device
     {
         sError = "Multiple devices found.";
-        return NULL;
+        return nullptr;
     };
 
     return vDevices[0].get();
@@ -108,19 +108,23 @@ bool DeviceSignatureCreator::CreateSig(std::vector<unsigned char> &vchSig, const
     const CHDWallet *pw = dynamic_cast<const CHDWallet*>(keystore);
     if (pw)
     {
-        CEKAKey ak;
+        const CEKAKey *pak = nullptr;
+        const CEKASCKey *pasc = nullptr;
         CExtKeyAccount *pa = nullptr;
-        if (!pw->HaveKey(keyid, ak, pa) || !pa)
+        if (!pw->HaveKey(keyid, pak, pasc, pa) || !pa)
             return false;
 
         std::vector<uint32_t> vPath;
-        if (!pw->GetFullChainPath(pa, ak.nParent, vPath))
-            return error("%s: GetFullAccountPath failed.", __func__);
+        if (pak)
+        {
+            if (!pw->GetFullChainPath(pa, pak->nParent, vPath))
+                return error("%s: GetFullAccountPath failed.", __func__);
 
-        vPath.push_back(ak.nKey);
+            vPath.push_back(pak->nKey);
 
-        if (0 != pDevice->SignTransaction(vPath, txTo, nIn, scriptCode, nHashType, amount, sigversion, vchSig, pDevice->sError))
-            return error("%s: SignTransaction faile.", __func__);
+            if (0 != pDevice->SignTransaction(vPath, txTo, nIn, scriptCode, nHashType, amount, sigversion, vchSig, pDevice->sError))
+                return error("%s: SignTransaction faile.", __func__);
+        };
         return true;
     };
 

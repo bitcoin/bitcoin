@@ -2621,10 +2621,9 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
 
             if (fSave)
             {
-                CEKAKey ak(nChain, nChildOut);
-                isminetype ismine;
-                if (HK_YES != sea->HaveKey(idk, false, ak, ismine))
+                if (HK_YES != sea->HaveSavedKey(idk))
                 {
+                    CEKAKey ak(nChain, nChildOut);
                     if (0 != pwallet->ExtKeySaveKey(sea, idk, ak))
                         throw JSONRPCError(RPC_WALLET_ERROR, "ExtKeySaveKey failed.");
                 };

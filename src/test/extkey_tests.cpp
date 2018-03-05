@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key/extkey.h>
-
+#include <uint256.h>
 #include <test/test_bitcoin.h>
 
 #include <base58.h>
@@ -551,6 +551,27 @@ BOOST_AUTO_TEST_CASE(extkey_regtest_keys)
 
     // Return to mainnet
     SelectParams(CBaseChainParams::MAIN);
+}
+
+BOOST_AUTO_TEST_CASE(extkey_account)
+{
+    CExtKeyAccount eka;
+    uint160 i;
+    i.SetHex("0x01");
+    CKeyID idk = CKeyID(i);
+    CEKAKey ekk(2, 3);
+
+    BOOST_CHECK(eka.SaveKey(idk, ekk));
+    BOOST_CHECK(HK_YES == eka.HaveSavedKey(idk));
+
+    const CEKAKey *pak = nullptr;
+    const CEKASCKey *pasc = nullptr;
+    isminetype ismine;
+    BOOST_CHECK(HK_YES == eka.HaveKey(idk, false, pak, pasc, ismine));
+    BOOST_CHECK(pak != nullptr);
+    BOOST_CHECK(pasc == nullptr);
+    BOOST_CHECK(pak->nParent == 2);
+    BOOST_CHECK(pak->nKey == 3);
 }
 
 BOOST_AUTO_TEST_CASE(extkey_misc_keys)
