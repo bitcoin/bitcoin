@@ -194,11 +194,16 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
     return data;
 }
 
+void UpdateInput(CTxIn& input, const SignatureData& data)
+{
+    input.scriptSig = data.scriptSig;
+    input.scriptWitness = data.scriptWitness;
+}
+
 void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const SignatureData& data)
 {
     assert(tx.vin.size() > nIn);
-    tx.vin[nIn].scriptSig = data.scriptSig;
-    tx.vin[nIn].scriptWitness = data.scriptWitness;
+    UpdateInput(tx.vin[nIn], data);
 }
 
 bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType)
