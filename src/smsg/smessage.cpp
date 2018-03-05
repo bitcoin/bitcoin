@@ -3248,12 +3248,13 @@ int CSMSG::Encrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyID 
     CKey keyR;
     keyR.MakeNewKey(true); // make compressed key
 
+    //uint256 P = keyR.ECDH(cpkDestK);
     secp256k1_pubkey pubkey;
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_smsg, &pubkey, cpkDestK.begin(), cpkDestK.size()))
         return errorN(SMSG_INVALID_ADDRESS_TO, "%s: secp256k1_ec_pubkey_parse failed: %s.", __func__, HexStr(cpkDestK));
 
-    std::vector<uint8_t> vchP(32);
-    if (!secp256k1_ecdh(secp256k1_context_smsg, vchP.data(), &pubkey, keyR.begin()))
+    uint256 P;
+    if (!secp256k1_ecdh(secp256k1_context_smsg, P.begin(), &pubkey, keyR.begin()))
         return errorN(SMSG_GENERAL_ERROR, "%s: secp256k1_ecdh failed.", __func__);
 
     CPubKey cpkR = keyR.GetPubKey();
@@ -3267,7 +3268,7 @@ int CSMSG::Encrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyID 
     std::vector<uint8_t> vchHashed;
     vchHashed.resize(64); // 512
     memset(vchHashed.data(), 0, 64);
-    CSHA512().Write(vchP.data(), vchP.size()).Finalize(&vchHashed[0]);
+    CSHA512().Write(P.begin(), 32).Finalize(&vchHashed[0]);
     std::vector<uint8_t> key_e(&vchHashed[0], &vchHashed[0]+32);
     std::vector<uint8_t> key_m(&vchHashed[32], &vchHashed[32]+32);
 
@@ -3673,14 +3674,15 @@ int CSMSG::Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, u
         return errorN(SMSG_UNKNOWN_VERSION, "%s: Unknown version number.", __func__);
     };
 
+    // Do an EC point multiply with private key k and public key R. This gives you public key P.
+    //CPubKey R(psmsg->cpkR, psmsg->cpkR+33);
+    //uint256 P = keyDest.ECDH(R);
     secp256k1_pubkey R;
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_smsg, &R, psmsg->cpkR, 33))
         return errorN(SMSG_GENERAL_ERROR, "%s: secp256k1_ec_pubkey_parse failed: %s.", __func__, HexStr(psmsg->cpkR, psmsg->cpkR+33));
 
-    std::vector<uint8_t> vchP(32);
-
-    // Do an EC point multiply with private key k and public key R. This gives you public key P.
-    if (!secp256k1_ecdh(secp256k1_context_smsg, vchP.data(), &R, keyDest.begin()))
+    uint256 P;
+    if (!secp256k1_ecdh(secp256k1_context_smsg, P.begin(), &R, keyDest.begin()))
         return errorN(SMSG_GENERAL_ERROR, "%s: secp256k1_ecdh failed.", __func__);
 
     // Use public key P to calculate the SHA512 hash H.
@@ -3688,7 +3690,7 @@ int CSMSG::Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, u
     std::vector<uint8_t> vchHashedDec;
     vchHashedDec.resize(64);    // 512 bits
     memset(vchHashedDec.data(), 0, 64);
-    CSHA512().Write(vchP.data(), vchP.size()).Finalize(&vchHashedDec[0]);
+    CSHA512().Write(P.begin(), 32).Finalize(&vchHashedDec[0]);
     std::vector<uint8_t> key_e(&vchHashedDec[0], &vchHashedDec[0]+32);
     std::vector<uint8_t> key_m(&vchHashedDec[32], &vchHashedDec[32]+32);
 

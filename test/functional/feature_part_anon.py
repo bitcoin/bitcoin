@@ -63,6 +63,7 @@ class AnonTest(ParticlTestFramework):
             txnHashes.append(txnHash)
 
         for h in txnHashes:
+            print(h) # debug
             assert(self.wait_for_mempool(nodes[1], h))
 
 

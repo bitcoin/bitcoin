@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(smsg_test)
     for (int i = 0; i < nKeys; i++)
     {
         smsg::SecureMessage smsg;
+        smsg.SetNull();
         smsg::MessageData msg;
         CKeyID kFrom = keyOwn[i].GetPubKey().GetID();
         CKeyID kTo = keyRemote[i].GetPubKey().GetID();

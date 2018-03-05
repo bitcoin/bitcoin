@@ -128,6 +128,13 @@ public:
         pPayload = nullptr;
     };
 
+    void SetNull()
+    {
+        memset(iv, 0, 16);
+        memset(cpkR, 0, 33);
+        memset(mac, 0, 32);
+    };
+
     bool IsPaidVersion()
     {
         return version[0] == 3;
