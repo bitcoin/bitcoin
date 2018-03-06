@@ -1,0 +1,35 @@
+From 6e6b47d5ab381c3df3b30bb0b0a6cf210dfb1eba Mon Sep 17 00:00:00 2001
+From: Cory Fields <cory-nospam-@coryfields.com>
+Date: Mon, 5 Mar 2018 14:22:05 -0500
+Subject: [PATCH] disable pthread_set_name_np
+
+pthread_set_name_np adds a Glibc requirement on >= 2.12.
+---
+ src/thread.cpp | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/thread.cpp b/src/thread.cpp
+index 4fc59c3e..c3fdfd46 100644
+--- a/src/thread.cpp
++++ b/src/thread.cpp
+@@ -220,7 +220,7 @@ void zmq::thread_t::setThreadName(const char *name_)
+  */
+     if (!name_)
+         return;
+-
++#if 0
+ #if defined(ZMQ_HAVE_PTHREAD_SETNAME_1)
+     int rc = pthread_setname_np(name_);
+     if(rc) return;
+@@ -233,6 +233,8 @@ void zmq::thread_t::setThreadName(const char *name_)
+ #elif defined(ZMQ_HAVE_PTHREAD_SET_NAME)
+     pthread_set_name_np(descriptor, name_);
+ #endif
++#endif
++    return;
+ }
+
+ #endif
+--
+2.11.1
+
