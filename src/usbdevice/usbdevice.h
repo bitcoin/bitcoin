@@ -117,7 +117,7 @@ public:
     virtual int PrepareTransaction(const CTransaction *tx, const CCoinsViewCache &view) { return 0; };
 
     //int SignHash(const std::vector<uint32_t> &vPath, const uint256 &hash, std::vector<uint8_t> &vchSig, std::string &sError);
-    virtual int SignTransaction(const std::vector<uint32_t> &vPath, const CTransaction *tx,
+    virtual int SignTransaction(const std::vector<uint32_t> &vPath, const std::vector<uint8_t> &vSharedSecret, const CTransaction *tx,
         int nIn, const CScript &scriptCode, int hashType, const std::vector<uint8_t> &amount, SigVersion sigversion,
         std::vector<uint8_t> &vchSig, std::string &sError) { return 0; };
 

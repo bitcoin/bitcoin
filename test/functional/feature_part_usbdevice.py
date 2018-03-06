@@ -141,12 +141,25 @@ class USBDeviceTest(ParticlTestFramework):
 
 
         txnid3 = nodes[0].sendtoaddress(hwsxaddr, 0.1, '', '', False, 'test msg')
-        self.sync_all()
+        self.stakeBlocks(1)
 
         ro = nodes[1].listtransactions()
         assert(len(ro) == 4)
         assert('test msg' in json.dumps(ro[3], default=self.jsonDecimal))
 
+        ro = nodes[1].listunspent()
+        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+
+        inputs = []
+        for output in ro:
+            if output['txid'] == txnid3:
+                inputs.append({'txid' : txnid3, 'vout' : output['vout']})
+                break
+        assert(len(inputs) > 0)
+        hexRaw = nodes[1].createrawtransaction(inputs, {addr0_0:0.09})
+
+        ro = nodes[1].devicesignrawtransaction(hexRaw)
+        assert(ro['complete'] == True)
 
 
 

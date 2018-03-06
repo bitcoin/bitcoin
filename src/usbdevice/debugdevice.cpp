@@ -100,12 +100,11 @@ int CDebugDevice::PrepareTransaction(const CTransaction *tx, const CCoinsViewCac
     return 0;
 };
 
-int CDebugDevice::SignTransaction(const std::vector<uint32_t> &vPath, const CTransaction *tx,
+int CDebugDevice::SignTransaction(const std::vector<uint32_t> &vPath, const std::vector<uint8_t> &vSharedSecret, const CTransaction *tx,
     int nIn, const CScript &scriptCode, int hashType, const std::vector<uint8_t> &amount, SigVersion sigversion,
     std::vector<uint8_t> &vchSig, std::string &sError)
 {
     uint256 hash = SignatureHash(scriptCode, *tx, nIn, hashType, amount, sigversion);
-
 
     CExtKey vkOut, vkWork = ekv;
     for (auto it = vPath.begin(); it != vPath.end(); ++it)
@@ -116,9 +115,15 @@ int CDebugDevice::SignTransaction(const std::vector<uint32_t> &vPath, const CTra
     };
 
     CKey key = vkOut.key;
+    if (vSharedSecret.size() == 32)
+    {
+        key = key.Add(vSharedSecret.data());
+        if (!key.IsValid())
+            return errorN(1, sError, __func__, "Add failed");
+    };
 
     if (!key.Sign(hash, vchSig))
-        return false;
+        return errorN(1, sError, __func__, "Sign failed");
     vchSig.push_back((unsigned char)hashType);
 
     return 0;

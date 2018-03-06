@@ -115,16 +115,31 @@ bool DeviceSignatureCreator::CreateSig(std::vector<unsigned char> &vchSig, const
             return false;
 
         std::vector<uint32_t> vPath;
+        std::vector<uint8_t> vSharedSecret;
         if (pak)
         {
             if (!pw->GetFullChainPath(pa, pak->nParent, vPath))
                 return error("%s: GetFullAccountPath failed.", __func__);
 
             vPath.push_back(pak->nKey);
+        } else
+        if (pasc)
+        {
+            AccStealthKeyMap::const_iterator miSk = pa->mapStealthKeys.find(pasc->idStealthKey);
+            if (miSk == pa->mapStealthKeys.end())
+                return error("%s: CEKASCKey Stealth key not found.", __func__);
+            if (!pw->GetFullChainPath(pa, miSk->second.akSpend.nParent, vPath))
+                return error("%s: GetFullAccountPath failed.", __func__);
 
-            if (0 != pDevice->SignTransaction(vPath, txTo, nIn, scriptCode, nHashType, amount, sigversion, vchSig, pDevice->sError))
-                return error("%s: SignTransaction faile.", __func__);
+            vPath.push_back(miSk->second.akSpend.nKey);
+            vSharedSecret.resize(32);
+            memcpy(vSharedSecret.data(), pasc->sShared.begin(), 32);
+        } else
+        {
+            return error("%s: HaveKey error.", __func__);
         };
+        if (0 != pDevice->SignTransaction(vPath, vSharedSecret, txTo, nIn, scriptCode, nHashType, amount, sigversion, vchSig, pDevice->sError))
+                return error("%s: SignTransaction faile.", __func__);
         return true;
     };
 
@@ -135,7 +150,8 @@ bool DeviceSignatureCreator::CreateSig(std::vector<unsigned char> &vchSig, const
         if (!pks->GetKey(keyid, pathkey))
             return false;
 
-        if (0 != pDevice->SignTransaction(pathkey.vPath, txTo, nIn, scriptCode, nHashType, amount, sigversion, vchSig, pDevice->sError))
+        std::vector<uint8_t> vSharedSecret;
+        if (0 != pDevice->SignTransaction(pathkey.vPath, vSharedSecret, txTo, nIn, scriptCode, nHashType, amount, sigversion, vchSig, pDevice->sError))
             return error("%s: SignTransaction failed.", __func__);
         return true;
     };

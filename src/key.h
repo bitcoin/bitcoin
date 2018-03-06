@@ -149,6 +149,8 @@ public:
      */
     uint256 ECDH(const CPubKey& pubkey) const;
 
+    CKey Add(const uint8_t *p) const;
+
     /**
      * Create a DER-serialized signature.
      * The test_case parameter tweaks the deterministic nonce.

@@ -199,6 +199,14 @@ uint256 CKey::ECDH(const CPubKey& pubkey) const {
     return result;
 }
 
+CKey CKey::Add(const uint8_t *p) const {
+    assert(fValid);
+    CKey result = *this;
+    if (!secp256k1_ec_privkey_tweak_add(secp256k1_context_sign, result.begin_nc(), p))
+        result.SetFlags(false, true);
+    return result;
+}
+
 bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
     if (!fValid)
         return false;

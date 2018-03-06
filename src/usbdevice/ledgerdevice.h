@@ -26,7 +26,7 @@ public:
 
     int PrepareTransaction(const CTransaction *tx, const CCoinsViewCache &view) override;
 
-    int SignTransaction(const std::vector<uint32_t> &vPath, const CTransaction *tx,
+    int SignTransaction(const std::vector<uint32_t> &vPath, const std::vector<uint8_t> &vSharedSecret, const CTransaction *tx,
         int nIn, const CScript &scriptCode, int hashType, const std::vector<uint8_t> &amount, SigVersion sigversion,
         std::vector<uint8_t> &vchSig, std::string &sError) override;
 };

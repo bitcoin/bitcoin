@@ -598,7 +598,7 @@ int CLedgerDevice::PrepareTransaction(const CTransaction *tx, const CCoinsViewCa
     return 0;
 };
 
-int CLedgerDevice::SignTransaction(const std::vector<uint32_t> &vPath, const CTransaction *tx,
+int CLedgerDevice::SignTransaction(const std::vector<uint32_t> &vPath, const std::vector<uint8_t> &vSharedSecret, const CTransaction *tx,
     int nIn, const CScript &scriptCode, int hashType, const std::vector<uint8_t>& amount, SigVersion sigversion,
     std::vector<uint8_t> &vchSig, std::string &sError)
 {
@@ -702,6 +702,12 @@ int CLedgerDevice::SignTransaction(const std::vector<uint32_t> &vPath, const CTr
     WriteBE32(&in[apduSize], tx->nLockTime);
     apduSize += 4;
     in[apduSize++] = hashType;
+    in[apduSize++] = vSharedSecret.size();
+    if (vSharedSecret.size() > 0)
+    {
+        memcpy(&in[apduSize], vSharedSecret.data(), vSharedSecret.size());
+        apduSize += vSharedSecret.size();
+    };
 
     in[ofslen] = apduSize - (ofslen+1);
     result = sendApduHidHidapi(handle, 1, in, apduSize, out, sizeof(out), &sw);

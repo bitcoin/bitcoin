@@ -913,7 +913,6 @@ UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
         if (0 != sekScan->DeriveNextKey(kScan, nScanOut, true))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Derive failed.");
 
-
         uint32_t nPrefixBits = num_prefix_bits;
         uint32_t nPrefix = 0;
         const char *pPrefix = sPrefix_num.empty() ? nullptr : sPrefix_num.c_str();
@@ -932,7 +931,7 @@ UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
 
         uint32_t nMask = SetStealthMask(nPrefixBits);
         nPrefix = nPrefix & nMask;
-        akStealth = CEKAStealthKey(nScanChain, nScanOut, kScan, nSpendChain, nSpendGenerated, pkSpend, nPrefixBits, nPrefix);
+        akStealth = CEKAStealthKey(nScanChain, nScanOut, kScan, nSpendChain, WithHardenedBit(nSpendGenerated), pkSpend, nPrefixBits, nPrefix);
         akStealth.sLabel = sLabel;
 
         if (0 != akStealth.SetSxAddr(sxAddr))
