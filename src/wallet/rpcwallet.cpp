@@ -5,7 +5,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-<<<<<<< HEAD
 #include <amount.h>
 #include <base58.h>
 #include <chain.h>
@@ -20,6 +19,7 @@
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
+#include <rpc/mining.h>
 #include <rpc/server.h>
 #include <script/sign.h>
 #include <timedata.h>
@@ -30,30 +30,6 @@
 #include <wallet/feebumper.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
-=======
-#include "amount.h"
-#include "base58.h"
-#include "chain.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "validation.h"
-#include "net.h"
-#include "policy/feerate.h"
-#include "policy/fees.h"
-#include "policy/policy.h"
-#include "policy/rbf.h"
-#include "rpc/mining.h"
-#include "rpc/server.h"
-#include "script/sign.h"
-#include "timedata.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "wallet/coincontrol.h"
-#include "wallet/feebumper.h"
-#include "wallet/wallet.h"
-#include "wallet/walletdb.h"
->>>>>>> df7e2f0... rpc: Move the `generate` RPC call to rpcwallet
 
 #include <stdint.h>
 
@@ -3224,12 +3200,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
 
-<<<<<<< HEAD
     { "hidden",             "setbip69enabled",          &setbip69enabled,          true,   {} },
 
-=======
     { "generating",         "generate",                 &generate,                 true,   {"nblocks","maxtries"} },
->>>>>>> df7e2f0... rpc: Move the `generate` RPC call to rpcwallet
 };
 
 void RegisterWalletRPCCommands(CRPCTable &tableRPC)
