@@ -173,6 +173,7 @@ public:
     // Manual block validity manipulation:
     bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIndex *pindex);
     bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex);
+    void InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state);
     bool ResetBlockFailureFlags(CBlockIndex *pindex);
 
     bool ReplayBlocks(const CChainParams& params, CCoinsView* view);
@@ -197,7 +198,6 @@ private:
      */
     void CheckBlockIndex(const Consensus::Params& consensusParams);
 
-    void InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state);
     CBlockIndex* FindMostWorkChain();
     bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBlockIndex *pindexNew, const CDiskBlockPos& pos, const Consensus::Params& consensusParams);
 
@@ -3495,10 +3495,20 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
         LOCK(cs_main);
 
-        if (ret) {
+        if (!ret) {
+            // Mark the block as invalid if we recognize it in mapBlockIndex.
+            // This doesn't happen within CheckBlock so we have to include a call
+            // here. It *does* happen within AcceptBlock below.
+            BlockMap::iterator it = mapBlockIndex.find(pblock->GetHash());
+
+            if (it != mapBlockIndex.end()) {
+                g_chainstate.InvalidBlockFound(it->second, state);
+            }
+        } else {
             // Store to disk
             ret = g_chainstate.AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
         }
+
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
             return error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
