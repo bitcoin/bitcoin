@@ -300,6 +300,12 @@ def initialize_datadir(dirname, n):
 def get_datadir_path(dirname, n):
     return os.path.join(dirname, "node" + str(n))
 
+def append_config(dirname, n, options):
+    datadir = get_datadir_path(dirname, n)
+    with open(os.path.join(datadir, "bitcoin.conf"), 'a', encoding='utf8') as f:
+        for option in options:
+            f.write(option + "\n")
+
 def get_auth_cookie(datadir):
     user = None
     password = None

@@ -124,7 +124,7 @@ class ImportRescanTest(BitcoinTestFramework):
             if import_node.prune:
                 extra_args[i] += ["-prune=1"]
 
-        self.add_nodes(self.num_nodes, extra_args)
+        self.add_nodes(self.num_nodes, extra_args=extra_args)
         self.start_nodes()
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
