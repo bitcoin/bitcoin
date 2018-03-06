@@ -34,8 +34,8 @@ If you're using the automated script (found in [contrib/gitian-build.sh](/contri
 Check out the source code in the following directory hierarchy.
 
     cd /path/to/your/toplevel/build
-    git clone https://github.com/bitcoin-core/gitian.sigs.git
-    git clone https://github.com/bitcoin-core/bitcoin-detached-sigs.git
+    git clone https://github.com/chaincoin-core/gitian.sigs.git
+    git clone https://github.com/chaincoin-core/chaincoin-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
     git clone https://github.com/chaincoin/chaincoin.git
 
@@ -63,7 +63,7 @@ If you're using the automated script (found in [contrib/gitian-build.sh](/contri
 Setup Gitian descriptors:
 
     pushd ./chaincoin
-    export SIGNER=(your Gitian key, ie bluematt, sipa, etc)
+    export SIGNER="(your Gitian key, ie bluematt, sipa, etc)"
     export VERSION=(new version, e.g. 0.8.0)
     git fetch
     git checkout v${VERSION}
@@ -113,16 +113,16 @@ The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
     pushd ./gitian-builder
     ./bin/gbuild --num-make 2 --memory 3000 --commit chaincoin=v${VERSION} ../chaincoin/contrib/gitian-descriptors/gitian-linux.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../chaincoin/contrib/gitian-descriptors/gitian-linux.yml
+    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-linux --destination ../gitian.sigs/ ../chaincoin/contrib/gitian-descriptors/gitian-linux.yml
     mv build/out/chaincoin-*.tar.gz build/out/src/chaincoin-*.tar.gz ../
 
     ./bin/gbuild --num-make 2 --memory 3000 --commit chaincoin=v${VERSION} ../chaincoin/contrib/gitian-descriptors/gitian-win.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../chaincoin/contrib/gitian-descriptors/gitian-win.yml
+    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../chaincoin/contrib/gitian-descriptors/gitian-win.yml
     mv build/out/chaincoin-*-win-unsigned.tar.gz inputs/chaincoin-win-unsigned.tar.gz
     mv build/out/chaincoin-*.zip build/out/chaincoin-*.exe ../
 
     ./bin/gbuild --num-make 2 --memory 3000 --commit chaincoin=v${VERSION} ../chaincoin/contrib/gitian-descriptors/gitian-osx.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../chaincoin/contrib/gitian-descriptors/gitian-osx.yml
+    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../chaincoin/contrib/gitian-descriptors/gitian-osx.yml
     mv build/out/chaincoin-*-osx-unsigned.tar.gz inputs/chaincoin-osx-unsigned.tar.gz
     mv build/out/chaincoin-*.tar.gz build/out/chaincoin-*.dmg ../
     popd
@@ -152,9 +152,9 @@ Verify the signatures
 Commit your signature to gitian.sigs:
 
     pushd gitian.sigs
-    git add ${VERSION}-linux/${SIGNER}
-    git add ${VERSION}-win-unsigned/${SIGNER}
-    git add ${VERSION}-osx-unsigned/${SIGNER}
+    git add ${VERSION}-linux/"${SIGNER}"
+    git add ${VERSION}-win-unsigned/"${SIGNER}"
+    git add ${VERSION}-osx-unsigned/"${SIGNER}"
     git commit -a
     git push  # Assuming you can push to the gitian.sigs tree
     popd
@@ -193,13 +193,13 @@ Codesigner only: Commit the detached codesign payloads:
 Non-codesigners: wait for Windows/OS X detached signatures:
 
 - Once the Windows/OS X builds each have 3 matching signatures, they will be signed with their respective release keys.
-- Detached signatures will then be committed to the [bitcoin-detached-sigs](https://github.com/bitcoin-core/bitcoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
+- Detached signatures will then be committed to the [chaincoin-detached-sigs](https://github.com/chaincoin-core/chaincoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
 Create (and optionally verify) the signed OS X binary:
 
     pushd ./gitian-builder
     ./bin/gbuild -i --commit signature=v${VERSION} ../chaincoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../chaincoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../chaincoin/contrib/gitian-descriptors/gitian-osx-signer.yml
     ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../chaincoin/contrib/gitian-descriptors/gitian-osx-signer.yml
     mv build/out/chaincoin-osx-signed.dmg ../chaincoin-${VERSION}-osx.dmg
     popd
@@ -208,7 +208,7 @@ Create (and optionally verify) the signed Windows binaries:
 
     pushd ./gitian-builder
     ./bin/gbuild -i --commit signature=v${VERSION} ../chaincoin/contrib/gitian-descriptors/gitian-win-signer.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../chaincoin/contrib/gitian-descriptors/gitian-win-signer.yml
+    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../chaincoin/contrib/gitian-descriptors/gitian-win-signer.yml
     ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-signed ../chaincoin/contrib/gitian-descriptors/gitian-win-signer.yml
     mv build/out/chaincoin-*win64-setup.exe ../chaincoin-${VERSION}-win64-setup.exe
     mv build/out/chaincoin-*win32-setup.exe ../chaincoin-${VERSION}-win32-setup.exe
@@ -217,8 +217,8 @@ Create (and optionally verify) the signed Windows binaries:
 Commit your signature for the signed OS X/Windows binaries:
 
     pushd gitian.sigs
-    git add ${VERSION}-osx-signed/${SIGNER}
-    git add ${VERSION}-win-signed/${SIGNER}
+    git add ${VERSION}-osx-signed/"${SIGNER}"
+    git add ${VERSION}-win-signed/"${SIGNER}"
     git commit -a
     git push  # Assuming you can push to the gitian.sigs tree
     popd
