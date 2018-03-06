@@ -238,6 +238,9 @@ public:
 
     int getDefaultConfirmTarget() const;
 
+    QString getWalletName() const;
+
+    static bool isMultiwallet();
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;
