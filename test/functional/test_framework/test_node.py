@@ -16,6 +16,7 @@ import time
 
 from .authproxy import JSONRPCException
 from .util import (
+    append_config,
     assert_equal,
     delete_cookie_file,
     get_rpc_proxy,
@@ -43,7 +44,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, dirname, extra_args, rpchost, timewait, binary, stderr, mocktime, coverage_dir, use_cli=False):
+    def __init__(self, i, dirname, rpchost, timewait, binary, stderr, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
         self.index = i
         self.datadir = os.path.join(dirname, "node" + str(i))
         self.rpchost = rpchost
@@ -58,6 +59,8 @@ class TestNode():
             self.binary = binary
         self.stderr = stderr
         self.coverage_dir = coverage_dir
+        if extra_conf != None:
+            append_config(dirname, i, extra_conf)
         # Most callers will just need to add extra args to the standard list below.
         # For those callers that need more flexibity, they can just set the args property directly.
         # Note that common args are set in the config file (see initialize_datadir)
