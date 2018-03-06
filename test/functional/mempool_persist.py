@@ -66,7 +66,9 @@ class MempoolPersistTest(BitcoinTestFramework):
 
         self.log.debug("Stop-start the nodes. Verify that node0 has the transactions in its mempool and node1 does not. Verify that node2 calculates its balance correctly after loading wallet transactions.")
         self.stop_nodes()
-        self.start_node(1)  # Give this one a head-start, so we can be "extra-sure" that it didn't load anything later
+        # Give this node a head-start, so we can be "extra-sure" that it didn't load anything later
+        # Also don't store the mempool, to keep the datadir clean
+        self.start_node(1, extra_args=["-persistmempool=0"])
         self.start_node(0)
         self.start_node(2)
         # Give bitcoind a second to reload the mempool
