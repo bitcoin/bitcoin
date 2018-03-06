@@ -59,7 +59,7 @@ if showdiff | grep -E -q '^\+.*\s+$'; then
 fi
 
 # Check if tab characters were found in the diff.
-if showcodediff | grep -P -q '^\+.*\t'; then
+if showcodediff | perl -nle '$MATCH++ if m{^\+.*\t}; END{exit 1 unless $MATCH>0}' > /dev/null; then
   echo "This diff appears to have added new lines with tab characters instead of spaces."
   echo "The following changes were suspected:"
   FILENAME=""
@@ -81,7 +81,7 @@ if showcodediff | grep -P -q '^\+.*\t'; then
       fi
       echo "$line"
     fi
-  done < <(showcodediff | grep -P '^(diff --git |@@|\+.*\t)')
+  done < <(showcodediff | perl -nle 'print if m{^(diff --git |@@|\+.*\t)}')
   RET=1
 fi
 
