@@ -15,6 +15,7 @@
 #include <masternodeman.h>
 #ifdef ENABLE_WALLET
 #include <privatesend-client.h>
+#include <wallet/rpcwallet.h>
 #endif // ENABLE_WALLET
 #include <privatesend-server.h>
 #include <rpc/server.h>
@@ -27,11 +28,17 @@
 
 UniValue masternodelist(const JSONRPCRequest& request);
 
+
 #ifdef ENABLE_WALLET
 void EnsureWalletIsUnlocked();
 
 UniValue privatesend(const JSONRPCRequest& request)
 {
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "privatesend \"command\"\n"
@@ -45,7 +52,7 @@ UniValue privatesend(const JSONRPCRequest& request)
 
     if(request.params[0].get_str() == "start") {
         {
-            LOCK(pwalletMain->cs_wallet);
+            LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
             EnsureWalletIsUnlocked();
         }
 
@@ -72,13 +79,18 @@ UniValue privatesend(const JSONRPCRequest& request)
 #endif // ENABLE_WALLET
 
 UniValue getpoolinfo(const JSONRPCRequest& request)
-{
+{    
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "getpoolinfo\n"
             "Returns an object containing mixing pool related information.\n");
 
 #ifdef ENABLE_WALLET
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
     CPrivateSendBase* pprivateSendBase = fMasternodeMode ? (CPrivateSendBase*)&privateSendServer : (CPrivateSendBase*)&privateSendClient;
 
     UniValue obj(UniValue::VOBJ);
@@ -94,9 +106,9 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("addr",          mnInfo.addr.ToString()));
     }
 
-    if (pwalletMain) {
-        obj.push_back(Pair("keys_left",     pwalletMain->nKeysLeftSinceAutoBackup));
-        obj.push_back(Pair("warnings",      pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
+    if (pwallet) {
+        obj.push_back(Pair("keys_left",     pwallet->nKeysLeftSinceAutoBackup));
+        obj.push_back(Pair("warnings",      pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
                                                 ? "WARNING: keypool is almost depleted!" : ""));
     }
 #else // ENABLE_WALLET
@@ -254,13 +266,18 @@ UniValue masternode(const JSONRPCRequest& request)
     }
 
 #ifdef ENABLE_WALLET
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
     if (strCommand == "start-alias")
     {
         if (request.params.size() < 2)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify an alias");
 
         {
-            LOCK(pwalletMain->cs_wallet);
+            LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
             EnsureWalletIsUnlocked();
         }
 
@@ -306,7 +323,7 @@ UniValue masternode(const JSONRPCRequest& request)
     if (strCommand == "start-all" || strCommand == "start-missing" || strCommand == "start-disabled")
     {
         {
-            LOCK(pwalletMain->cs_wallet);
+            LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
             EnsureWalletIsUnlocked();
         }
 
@@ -397,7 +414,7 @@ UniValue masternode(const JSONRPCRequest& request)
     if (strCommand == "outputs") {
         // Find possible candidates
         std::vector<COutput> vPossibleCoins;
-        pwalletMain->AvailableCoins(vPossibleCoins, true, nullptr, false, ONLY_1000);
+        pwallet->AvailableCoins(vPossibleCoins, true, nullptr, false, ONLY_1000);
 
         UniValue obj(UniValue::VOBJ);
         for (const auto& out : vPossibleCoins) {
@@ -646,6 +663,11 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                 );
 
 #ifdef ENABLE_WALLET
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
     if (strCommand == "create-alias")
     {
         // wait for reindex and/or import to finish
@@ -656,7 +678,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify an alias");
 
         {
-            LOCK(pwalletMain->cs_wallet);
+            LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
             EnsureWalletIsUnlocked();
         }
 
@@ -705,7 +727,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Wait for reindex and/or import to finish");
 
         {
-            LOCK(pwalletMain->cs_wallet);
+            LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
             EnsureWalletIsUnlocked();
         }
 

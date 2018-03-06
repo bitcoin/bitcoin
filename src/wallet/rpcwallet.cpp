@@ -434,7 +434,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             + HelpExampleRpc("sendtoaddress", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\", 0.1, \"donation\", \"seans outpost\"")
         );
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
 
     CBitcoinAddress address(request.params[0].get_str());
     if (!address.IsValid())
@@ -463,7 +463,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     if (request.params.size() > 6)
         fUsePrivateSend = request.params[6].get_bool();
 
-    EnsureWalletIsUnlocked(pwalletMain);
+    EnsureWalletIsUnlocked(pwallet);
 
     SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUseInstantSend, fUsePrivateSend);
 

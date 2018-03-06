@@ -5,6 +5,12 @@
 #include <privatesend-util.h>
 #include <util.h>
 
+CWallet *GetWalletForPSRequest()
+{
+    // TODO: Some way to access secondary wallets
+    return vpwallets.empty() ? nullptr : vpwallets[0];
+}
+
 CKeyHolder::CKeyHolder(CWallet* pwallet) :
     reserveKey(pwallet)
 {

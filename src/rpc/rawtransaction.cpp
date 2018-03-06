@@ -621,7 +621,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         );
 
 #ifdef ENABLE_WALLET
-    LOCK2(cs_main, pwallet ? &pwalletMain->cs_wallet : nullptr);
+    LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
 #else
     LOCK(cs_main);
 #endif

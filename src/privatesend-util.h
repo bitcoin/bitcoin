@@ -7,6 +7,14 @@
 
 #include <wallet/wallet.h>
 
+/**
+ * Figures out what wallet, if any, to use for a Private Send.
+ *
+ * @param[in]
+ * @return NULL if no wallet should be used, or a pointer to the CWallet
+ */
+CWallet *GetWalletForPSRequest();
+
 class CKeyHolder
 {
 private:

@@ -969,3 +969,6 @@ src/crypto/.libs/libchaincoinconsensus_la-sha512.o
 src/crypto/.libs/libchaincoinconsensus_la-shavite.o
 src/crypto/.libs/libchaincoinconsensus_la-simd.o
 src/crypto/.libs/libchaincoinconsensus_la-skein.o
+src/libbitcoin_server_a-masternodeman.o-01447105
+src/.deps/libbitcoin_wallet_a-privatesend-client.Tpo
+src/policy/libbitcoin_server_a-rbf.o

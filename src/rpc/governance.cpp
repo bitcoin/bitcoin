@@ -21,7 +21,8 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include <wallet/rpcwallet.h>
+#include <wallet/wallet.h>
 #endif // ENABLE_WALLET
 
 UniValue gobject(const JSONRPCRequest& request)
@@ -122,6 +123,11 @@ UniValue gobject(const JSONRPCRequest& request)
     }
 
 #ifdef ENABLE_WALLET
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
     // PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
     if(strCommand == "prepare")
     {
@@ -170,15 +176,15 @@ UniValue gobject(const JSONRPCRequest& request)
         }
 
         CWalletTx wtx;
-        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), false)) {
+        if(!pwallet->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), false)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
         }
 
         // -- make our change address
-        CReserveKey reservekey(pwalletMain);
+        CReserveKey reservekey(pwallet);
         // -- send the tx to the network
         CValidationState state;
-        if (!pwalletMain->CommitTransaction(wtx, reservekey, g_connman.get(), state, NetMsgType::TX)) {
+        if (!pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state, NetMsgType::TX)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
         }
 

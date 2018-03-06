@@ -96,6 +96,8 @@ public:
         consensus.nMajorityWindow = 1000;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("0x00000012f1c40ff12a9e6b0e9076fe4fa7ad27012e256a5ad7bcb80dc02c0409"); // PM-Tech: ChainCoin
+        consensus.BIP65Height = 1500000;
+        consensus.BIP66Height = 1000000;
         consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000"); // PM-Tech: ChainCoin
         consensus.nPowTargetTimespan = 90; // PM-Tech: ChainCoin re-target at every block
         consensus.nPowTargetSpacing = 90; // PM-Tech: ChainCoin 90 seconds
@@ -172,7 +174,6 @@ public:
 
         checkpointData = {  // PM-Tech: ChainCoin
             {
-                boost::assign::map_list_of
                 {      0, uint256S("0x00000f639db5734b2b861ef8dbccc33aebd7de44d13de000a12d093bcc866c64")},
                 {   6143, uint256S("0x0000000026fb51f5bc9943ed69d9ff7697ecf7fed419d88b417655f93a487ce1")},
                 {  12797, uint256S("0x000000002c29644e179baa188fa6b9b9454721f1f21f2b9f31eebe9acc1a31db")},
@@ -223,6 +224,8 @@ public:
         consensus.nMajorityWindow = 100;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("0x00000352de593a01e0efcbaec00345ec80d20c7bd2024ec7c2beec048af0e6d9");
+        consensus.BIP65Height = 50000;
+        consensus.BIP66Height = 50000;
         consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000");
         consensus.nPowTargetTimespan = 90; // PM-Tech: ChainCoin
         consensus.nPowTargetSpacing = 90; // PM-Tech: ChainCoin
@@ -328,6 +331,8 @@ public:
         consensus.nMajorityWindow = 1000;
         consensus.BIP34Height = -1; // BIP34 has not necessarily activated on regtest
         consensus.BIP34Hash = uint256();
+        consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
+        consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 90; // PM-Tech: ChainCoin 90s
         consensus.nPowTargetSpacing = 90; // PM-Tech: ChainCoin 90s
