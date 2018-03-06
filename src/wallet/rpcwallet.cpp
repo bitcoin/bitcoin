@@ -33,7 +33,7 @@
 
 #include <init.h>  // For StartShutdown
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <univalue.h>
 

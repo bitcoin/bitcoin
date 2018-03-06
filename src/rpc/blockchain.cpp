@@ -27,7 +27,7 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <univalue.h>
 

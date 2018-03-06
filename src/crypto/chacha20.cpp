@@ -8,7 +8,7 @@
 #include <crypto/common.h>
 #include <crypto/chacha20.h>
 
-#include <string.h>
+#include <cstring>
 
 constexpr static inline uint32_t rotl32(uint32_t v, int c) { return (v << c) | (v >> (32 - c)); }
 

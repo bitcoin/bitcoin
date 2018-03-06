@@ -18,7 +18,7 @@ static void Sleep100ms(benchmark::State& state)
 BENCHMARK(Sleep100ms, 10);
 
 // Extremely fast-running benchmark:
-#include <math.h>
+#include <cmath>
 
 volatile double sum = 0.0; // volatile, global so not optimized away
 

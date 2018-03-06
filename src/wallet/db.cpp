@@ -12,7 +12,7 @@
 #include <utilstrencodings.h>
 #include <wallet/walletutil.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #ifndef WIN32
 #include <sys/stat.h>

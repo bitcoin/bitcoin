@@ -11,7 +11,7 @@
 #include <utilmoneystr.h>
 #include <test/test_bitcoin.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 #ifndef WIN32
 #include <signal.h>

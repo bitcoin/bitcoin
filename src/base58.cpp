@@ -14,8 +14,8 @@
 #include <boost/variant/static_visitor.hpp>
 
 #include <algorithm>
-#include <assert.h>
-#include <string.h>
+#include <cassert>
+#include <cstring>
 
 
 /** All alphanumeric characters except for "0", "I", "O", and "l" */

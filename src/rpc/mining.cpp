@@ -27,7 +27,7 @@
 #include <warnings.h>
 
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 
 unsigned int ParseConfirmTarget(const UniValue& value)
 {

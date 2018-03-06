@@ -6,7 +6,7 @@
 
 #include <wallet/test/wallet_test_fixture.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/test/unit_test.hpp>
 

@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 #include <bench/perf.h>
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
