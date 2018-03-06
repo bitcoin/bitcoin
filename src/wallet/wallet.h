@@ -8,7 +8,6 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include <amount.h>
-#include <base58.h>
 #include <policy/feerate.h>
 #include <saltedhasher.h>
 #include <streams.h>
@@ -80,6 +79,7 @@ static const bool DEFAULT_USE_HD_WALLET = false;
 
 class CBlockIndex;
 class CCoinControl;
+class CKey;
 class COutput;
 class CReserveKey;
 class CScript;

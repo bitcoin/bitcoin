@@ -11,16 +11,16 @@ TEST_BINARY=test/test_dash$(EXEEXT)
 
 JSON_TEST_FILES = \
   test/data/blockfilters.json \
-  test/data/script_tests.json \
-  test/data/base58_keys_valid.json \
   test/data/base58_encode_decode.json \
-  test/data/base58_keys_invalid.json \
   test/data/bip39_vectors.json \
+  test/data/key_io_valid.json \
+  test/data/key_io_invalid.json \
   test/data/proposals_valid.json \
   test/data/proposals_invalid.json \
+  test/data/script_tests.json \
+  test/data/sighash.json \
   test/data/tx_invalid.json \
-  test/data/tx_valid.json \
-  test/data/sighash.json
+  test/data/tx_valid.json
 
 RAW_TEST_FILES =
 
@@ -58,6 +58,7 @@ BITCOIN_TESTS =\
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
+  test/key_io_tests.cpp \
   test/key_tests.cpp \
   test/limitedmap_tests.cpp \
   test/dbwrapper_tests.cpp \

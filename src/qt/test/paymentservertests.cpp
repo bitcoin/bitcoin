@@ -8,6 +8,7 @@
 #include <qt/test/paymentrequestdata.h>
 
 #include <amount.h>
+#include <chainparams.h>
 #include <interfaces/node.h>
 #include <random.h>
 #include <script/script.h>
