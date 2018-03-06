@@ -143,6 +143,7 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
 }
 
+#ifdef ENABLE_WALLET
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
     // return if URI is not valid or is no bitcoin: URI
@@ -245,6 +246,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
 
     return ret;
 }
+#endif // ENABLE_WALLET
 
 bool isDust(const QString& address, const CAmount& amount)
 {
