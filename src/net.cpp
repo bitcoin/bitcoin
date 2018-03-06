@@ -1631,7 +1631,8 @@ void CConnman::ThreadDNSAddressSeed()
             if (!resolveSource.SetInternal(host)) {
                 continue;
             }
-            if (LookupHost(host.c_str(), vIPs, 0, true))
+            unsigned int nMaxIPs = 256; // Limits number of IPs learned from a DNS seed
+            if (LookupHost(host.c_str(), vIPs, nMaxIPs, true))
             {
                 for (const CNetAddr& ip : vIPs)
                 {
