@@ -11,7 +11,6 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <init.h>
-#include <wallet/coincontrol.h>
 #include <instantx.h>
 #include <keepass.h>
 #include <net.h>
