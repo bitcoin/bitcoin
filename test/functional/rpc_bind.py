@@ -14,6 +14,7 @@ from test_framework.netutil import *
 class RPCBindTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
+        self.bind_to_localhost_only = False
         self.num_nodes = 1
 
     def setup_network(self):
