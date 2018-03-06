@@ -173,6 +173,14 @@ public:
     // Manual block validity manipulation:
     bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIndex *pindex);
     bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex);
+
+    /**
+     * Mark a single block as invalid, updating its status in `mapBlockIndex`.
+     * Perform other index-related bookkeeping.
+     *
+     * See also: InvalidateBlock, which should be called instead of this if the
+     * block being invalidated is on the active chain.
+     */
     void InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state);
     bool ResetBlockFailureFlags(CBlockIndex *pindex);
 
@@ -1279,13 +1287,18 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
 }
 
 void CChainState::InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state) {
-    if (!state.CorruptionPossible()) {
-        pindex->nStatus |= BLOCK_FAILED_VALID;
-        m_failed_blocks.insert(pindex);
-        setDirtyBlockIndex.insert(pindex);
-        setBlockIndexCandidates.erase(pindex);
-        InvalidChainFound(pindex);
+    AssertLockHeld(cs_main);
+
+    if (state.CorruptionPossible()) {
+        // No updates should happen if corruption is possible.
+        return;
     }
+
+    pindex->nStatus |= BLOCK_FAILED_VALID;
+    m_failed_blocks.insert(pindex);
+    setDirtyBlockIndex.insert(pindex);
+    setBlockIndexCandidates.erase(pindex);
+    InvalidChainFound(pindex);
 }
 
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight)
@@ -2781,11 +2794,7 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
         invalid_walk_tip = invalid_walk_tip->pprev;
     }
 
-    // Mark the block itself as invalid.
-    pindex->nStatus |= BLOCK_FAILED_VALID;
-    setDirtyBlockIndex.insert(pindex);
-    setBlockIndexCandidates.erase(pindex);
-    m_failed_blocks.insert(pindex);
+    InvalidBlockFound(pindex, state);
 
     // DisconnectTip will add transactions to disconnectpool; try to add these
     // back to the mempool.
@@ -2800,8 +2809,6 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
         }
         it++;
     }
-
-    InvalidChainFound(pindex);
 
     // Only notify about a new block tip if the active chain was modified.
     if (pindex_was_in_chain) {
@@ -3449,9 +3456,8 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
 
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
-        if (state.IsInvalid() && !state.CorruptionPossible()) {
-            pindex->nStatus |= BLOCK_FAILED_VALID;
-            setDirtyBlockIndex.insert(pindex);
+        if (state.IsInvalid()) {
+            InvalidBlockFound(pindex, state);
         }
         return error("%s: %s", __func__, FormatStateMessage(state));
     }
