@@ -144,6 +144,10 @@ Development tips and tricks
 Run configure with the --enable-debug option, then make. Or run configure with
 CXXFLAGS="-g -ggdb -O0" or whatever debug flags you need.
 
+**compiling for gprof profiling**
+
+Run configure with the --enable-gprof option, then make.
+
 **debug.log**
 
 If the code is behaving strangely, take a look in the debug.log file in the data directory;
