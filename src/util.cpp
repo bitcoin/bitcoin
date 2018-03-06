@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <fcntl.h>
+#include <sched.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 
@@ -965,4 +966,18 @@ int64_t GetStartupTime()
 fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
 {
     return fs::absolute(path, GetDataDir(net_specific));
+}
+
+int ScheduleBatchPriority(void)
+{
+#ifdef SCHED_BATCH
+    const static sched_param param{.sched_priority = 0};
+    if (int ret = pthread_setschedparam(0, SCHED_BATCH, &param)) {
+        LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(errno));
+        return ret;
+    }
+    return 0;
+#else
+    return 1;
+#endif
 }
