@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <base58.h>
 #include <chain.h>
 #include <coins.h>
 #include <consensus/validation.h>
@@ -12,6 +11,7 @@
 #include <keystore.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <key_io.h>
 #include <merkleblock.h>
 #include <net.h>
 #include <policy/policy.h>
@@ -896,13 +896,9 @@ UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     const UniValue& keys = request.params[1].get_array();
     for (unsigned int idx = 0; idx < keys.size(); ++idx) {
         UniValue k = keys[idx];
-        CBitcoinSecret vchSecret;
-        if (!vchSecret.SetString(k.get_str())) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
-        }
-        CKey key = vchSecret.GetKey();
+        CKey key = DecodeSecret(k.get_str());
         if (!key.IsValid()) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
         }
         keystore.AddKey(key);
     }

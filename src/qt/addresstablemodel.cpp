@@ -7,9 +7,8 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
-#include <base58.h>
+#include <key_io.h>
 #include <wallet/wallet.h>
-
 
 #include <QFont>
 #include <QDebug>
