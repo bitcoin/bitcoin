@@ -1320,7 +1320,7 @@ int CWallet::GetRealOutpointPrivateSendRounds(const COutPoint& outpoint, int nRo
         if (mdwi == mDenomWtxes.end()) {
             // not known yet, let's add it
             LogPrint(BCLog::PRIVSEND, "GetRealOutpointPrivateSendRounds INSERTING %s\n", hash.ToString());
-            mDenomWtxes[hash] = CMutableTransaction(*wtx);
+            mDenomWtxes[hash] = CMutableTransaction(*wtx->tx);
         } else if(mDenomWtxes[hash].vout[nout].nRounds != -10) {
             // found and it's not an initial value, just return it
             return mDenomWtxes[hash].vout[nout].nRounds;
@@ -1809,10 +1809,10 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman, std::string strCommand
             LogPrintf("Relaying wtx %s\n", GetHash().ToString());
 
             if(strCommand == NetMsgType::TXLOCKREQUEST) {
-                instantsend.ProcessTxLockRequest(((CTxLockRequest)*this), *connman);
+                instantsend.ProcessTxLockRequest(((CTxLockRequest)*this->tx), *connman);
             }
             if (connman) {
-                connman->RelayTransaction((CTransaction)*this);
+                connman->RelayTransaction((CTransaction)*this->tx);
                 return true;
             }
         }
