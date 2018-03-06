@@ -31,31 +31,35 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
 {
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
-    int type = index.data(TransactionTableModel::TypeRole).toInt();
-    QDateTime datetime = index.data(TransactionTableModel::DateRole).toDateTime();
-    bool involvesWatchAddress = index.data(TransactionTableModel::WatchonlyRole).toBool();
-    QString address = index.data(TransactionTableModel::AddressRole).toString();
-    QString label = index.data(TransactionTableModel::LabelRole).toString();
-    QString txid = index.data(TransactionTableModel::TxHashRole).toString();
-    qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
     int status = index.data(TransactionTableModel::StatusRole).toInt();
+    if (!showInactive && status == TransactionStatus::Conflicted)
+        return false;
 
-    if(!showInactive && status == TransactionStatus::Conflicted)
+    int type = index.data(TransactionTableModel::TypeRole).toInt();
+    if (!(TYPE(type) & typeFilter))
         return false;
-    if(!(TYPE(type) & typeFilter))
-        return false;
+
+    bool involvesWatchAddress = index.data(TransactionTableModel::WatchonlyRole).toBool();
     if (involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_No)
         return false;
     if (!involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_Yes)
         return false;
-    if(datetime < dateFrom || datetime > dateTo)
+
+    QDateTime datetime = index.data(TransactionTableModel::DateRole).toDateTime();
+    if (datetime < dateFrom || datetime > dateTo)
         return false;
+
+    QString address = index.data(TransactionTableModel::AddressRole).toString();
+    QString label = index.data(TransactionTableModel::LabelRole).toString();
+    QString txid = index.data(TransactionTableModel::TxHashRole).toString();
     if (!address.contains(m_search_string, Qt::CaseInsensitive) &&
         !  label.contains(m_search_string, Qt::CaseInsensitive) &&
         !   txid.contains(m_search_string, Qt::CaseInsensitive)) {
         return false;
     }
-    if(amount < minAmount)
+
+    qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
+    if (amount < minAmount)
         return false;
 
     return true;
