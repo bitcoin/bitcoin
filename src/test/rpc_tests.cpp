@@ -5,8 +5,8 @@
 #include <rpc/server.h>
 #include <rpc/client.h>
 
-#include <base58.h>
 #include <core_io.h>
+#include <key_io.h>
 #include <netbase.h>
 
 #include <test/test_bitcoin.h>
