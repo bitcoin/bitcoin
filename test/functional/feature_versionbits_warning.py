@@ -19,8 +19,9 @@ from test_framework.util import wait_until
 VB_PERIOD = 144           # versionbits period length for regtest
 VB_THRESHOLD = 108        # versionbits activation threshold for regtest
 VB_TOP_BITS = 0x20000000
-VB_UNKNOWN_BIT = 27       # Choose a bit unassigned to any deployment
+VB_UNKNOWN_BIT = 11       # Choose a bit unassigned to any deployment
 VB_UNKNOWN_VERSION = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
+VB_IGNORE_VERSION = VB_TOP_BITS | 0x1FFFE000
 
 WARN_UNKNOWN_RULES_MINED = "Unknown block versions being mined! It's possible unknown rules are in effect"
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
@@ -70,6 +71,15 @@ class VersionBitsWarningTest(BitcoinTestFramework):
 
         # Mine one period worth of blocks
         node.generate(VB_PERIOD)
+
+        self.log.info("Check that there is no warning if previous VB_BLOCKS have VB_PERIOD blocks with ignored versionbits version.")
+        # Build one period of blocks with ignored bit. There should be no warning
+        self.send_blocks_with_version(node.p2p, VB_PERIOD, VB_IGNORE_VERSION)
+        assert(not WARN_UNKNOWN_RULES_MINED in node.getmininginfo()["warnings"])
+        assert(not WARN_UNKNOWN_RULES_MINED in node.getnetworkinfo()["warnings"])
+        assert(not VB_PATTERN.match(node.getmininginfo()["warnings"]))
+        assert(not VB_PATTERN.match(node.getnetworkinfo()["warnings"]))
+        assert(not self.versionbits_in_alert_file())
 
         self.log.info("Check that there is no warning if previous VB_BLOCKS have <VB_THRESHOLD blocks with unknown versionbits version.")
         # Build one period of blocks with < VB_THRESHOLD blocks signaling some unknown bit
