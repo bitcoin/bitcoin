@@ -560,9 +560,7 @@ int CEKAStealthKey::ToRaw(std::vector<uint8_t> &raw) const
 
 std::string CStoredExtKey::GetIDString58() const
 {
-    CBitcoinAddress addr;
-    addr.Set(kp.GetID(), CChainParams::EXT_KEY_HASH);
-    return addr.ToString();
+    return HDKeyIDToString(kp.GetID());
 };
 
 int CStoredExtKey::SetPath(const std::vector<uint32_t> &vPath_)
@@ -580,9 +578,8 @@ std::string CExtKeyAccount::GetIDString58() const
     // 0th chain is always account chain
     if (vExtKeyIDs.size() < 1)
         return "Not Set";
-    CBitcoinAddress addr;
-    addr.Set(vExtKeyIDs[0], CChainParams::EXT_ACC_HASH);
-    return addr.ToString();
+
+    return HDAccIDToString(vExtKeyIDs[0]);
 };
 
 int CExtKeyAccount::HaveSavedKey(const CKeyID &id)
@@ -1182,3 +1179,16 @@ int AppendPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath)
     return 0;
 };
 
+std::string HDAccIDToString(const CKeyID &id)
+{
+    CBitcoinAddress addr;
+    addr.Set(id, CChainParams::EXT_ACC_HASH);
+    return addr.ToString();
+};
+
+std::string HDKeyIDToString(const CKeyID &id)
+{
+    CBitcoinAddress addr;
+    addr.Set(id, CChainParams::EXT_KEY_HASH);
+    return addr.ToString();
+};

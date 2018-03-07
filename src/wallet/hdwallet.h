@@ -561,11 +561,15 @@ public:
 
     int ExtKeyCreateInitial(CHDWalletDB *pwdb);
     int ExtKeyLoadMaster();
+
+    int ExtKeyLoadAccountKeys(CHDWalletDB *pwdb, CExtKeyAccount *sea);
+    int ExtKeyLoadAccount(CHDWalletDB *pwdb, const CKeyID &idAccount);
     int ExtKeyLoadAccounts();
 
-    int ExtKeySaveAccountToDB(CHDWalletDB *pwdb, CKeyID &idAccount, CExtKeyAccount *sea);
-    int ExtKeyAddAccountToMaps(CKeyID &idAccount, CExtKeyAccount *sea, bool fAddToLookAhead = true);
+    int ExtKeySaveAccountToDB(CHDWalletDB *pwdb, const CKeyID &idAccount, CExtKeyAccount *sea);
+    int ExtKeyAddAccountToMaps(const CKeyID &idAccount, CExtKeyAccount *sea, bool fAddToLookAhead = true);
     int ExtKeyRemoveAccountFromMapsAndFree(CExtKeyAccount *sea);
+    int ExtKeyRemoveAccountFromMapsAndFree(const CKeyID &idAccount);
     int ExtKeyLoadAccountPacks();
     int PrepareLookahead();
 
@@ -593,8 +597,13 @@ public:
     int NewStealthKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, std::string &sLabel, CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix, bool fBech32=false);
     int NewStealthKeyFromAccount(std::string &sLabel, CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix, bool fBech32=false); // wrapper - use default account
 
-    int NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, std::string &sLabel, CStoredExtKey *sekOut, const char *plabel=nullptr, uint32_t *childNo=nullptr, bool fBech32=false);
-    int NewExtKeyFromAccount(std::string &sLabel, CStoredExtKey *sekOut, const char *plabel=nullptr, uint32_t *childNo=nullptr, bool fBech32=false); // wrapper - use default account
+    int InitAccountStealthV2Chains(CHDWalletDB *pwdb, CExtKeyAccount *sea);
+    int SaveStealthAddress(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CEKAStealthKey &akStealth, bool fBech32);
+    int NewStealthKeyV2FromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, std::string &sLabel, CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix, bool fBech32=false);
+    int NewStealthKeyV2FromAccount(std::string &sLabel, CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix, bool fBech32=false); // wrapper - use default account
+
+    int NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, std::string &sLabel, CStoredExtKey *sekOut, const char *plabel=nullptr, const uint32_t *childNo=nullptr, bool fHardened=false, bool fBech32=false);
+    int NewExtKeyFromAccount(std::string &sLabel, CStoredExtKey *sekOut, const char *plabel=nullptr, const uint32_t *childNo=nullptr, bool fHardened=false, bool fBech32=false); // wrapper - use default account
 
     int ExtKeyGetDestination(const CExtKeyPair &ek, CPubKey &pkDest, uint32_t &nKey);
     int ExtKeyUpdateLooseKey(const CExtKeyPair &ek, uint32_t nKey, bool fAddToAddressBook);

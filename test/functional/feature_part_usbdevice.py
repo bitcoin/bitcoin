@@ -127,10 +127,15 @@ class USBDeviceTest(ParticlTestFramework):
         assert(ro[0]['txid'] == txnid2)
 
         hwsxaddr = nodes[1].devicegetnewstealthaddress()
-        assert(hwsxaddr == 'TetZ8hgE3cEzUy5jgxRox5HY9QqzTKDjRVqqDLbV4q8TUXAXhoUaN9hmi4ubQXBfMEZHjsTC1iUBfWwyX3W6iYxP15UHALofxtGxae')
+        assert(hwsxaddr == 'tps1qqpdwu7gqjqz9s9wfek843akvkzvw0xq3tkzs93sj4ceq60cp54mvzgpqf4tp6d7h0nza2xe362am697dax24hcr33yxqwvq58l5cf6j6q5hkqqqgykgrc')
 
         hwsxaddr2 = nodes[1].devicegetnewstealthaddress('lbl2 4bits', '4', '0xaaaa', True)
-        assert(hwsxaddr2 == 'tps1qqpewyspjp93axk82zahx5xfjyprpvypfgnp95n9aynxxw3w0qs63acpqf8jypelvry3ckp0cfje4xw3g0y0fg6x2hs8s6undlxeau6h8j3hvqqypgl3x6aq')
+        assert(hwsxaddr2 == 'tps1qqpewyspjp93axk82zahx5xfjyprpvypfgnp95n9aynxxw3w0qs63acpq0s5z2rwk0raczg8jszl9qy5stncud76ahr5etn9hqmp30e3e86w2qqypgh9sgv0')
+
+        ro = nodes[1].getaddressinfo(hwsxaddr2)
+        assert(ro['prefix_num_bits'] == 4)
+        assert(ro['prefix_bitfield'] == '0x000a')
+        assert(ro['isondevice'] == True)
 
         ro = nodes[1].liststealthaddresses()
         assert(len(ro[0]['Stealth Addresses']) == 2)
@@ -148,8 +153,6 @@ class USBDeviceTest(ParticlTestFramework):
         assert('test msg' in json.dumps(ro[3], default=self.jsonDecimal))
 
         ro = nodes[1].listunspent()
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-
         inputs = []
         for output in ro:
             if output['txid'] == txnid3:
@@ -176,10 +179,16 @@ class USBDeviceTest(ParticlTestFramework):
         assert(addrtest == ro['address'])
 
 
+        addrtest = nodes[2].getnewstealthaddress('', '0', '', True, True)
+        assert(addrtest == hwsxaddr)
+
+        addrtest2 = nodes[2].getnewstealthaddress('lbl2 4bits', '4', '0xaaaa', True, True)
+        assert(addrtest2 == hwsxaddr2)
 
 
-
-
+        extaddr1_0 = nodes[1].getnewextaddress()
+        extaddr2_0 = nodes[2].getnewextaddress()
+        assert(extaddr1_0 == extaddr2_0)
 
 
 

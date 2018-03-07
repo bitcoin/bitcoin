@@ -51,9 +51,10 @@ enum MainExtKeyTypes
     EKT_BIP44_MASTER, // display with btc prefix (xprv)
     EKT_INTERNAL,
     EKT_EXTERNAL,
-    EKT_STEALTH,
+    EKT_STEALTH,      // legacy v1 stealth addresses
     EKT_CONFIDENTIAL,
     EKT_STEALTH_SCAN,
+    EKT_STEALTH_SPEND,
     EKT_MAX_TYPES,
 };
 
@@ -894,6 +895,9 @@ bool IsBIP32(const char *base58);
 int AppendChainPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath);
 int AppendChainPath(const CStoredExtKey *pc, std::vector<uint8_t> &vPath);
 int AppendPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath);
+
+std::string HDAccIDToString(const CKeyID &id);
+std::string HDKeyIDToString(const CKeyID &id);
 
 #endif // EXT_KEY_H
 

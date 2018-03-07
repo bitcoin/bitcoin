@@ -727,25 +727,31 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
             uint32_t nStealthScanChain = sea->NumChains();
 
 
+            // Step over hardened chain 1 (stealth v1 chain)
+            sekAccount->SetCounter(1, true);
+
             CExtPubKey epStealthSpend;
             uint32_t nStealthSpend;
-            if (sekAccount->DeriveNextKey(epStealthSpend, nStealthSpend, false) != 0)
+            vPath.push_back(WithHardenedBit(CHAIN_NO_STEALTH_SPEND));
+            if (0 != pDevice->GetXPub(vPath, epStealthSpend, sError))
             {
                 sea->FreeChains();
-                throw JSONRPCError(RPC_INTERNAL_ERROR, "Could not derive account chain keys.");
+                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("GetXPub failed %s.", sError));
             };
+            vPath.pop_back();
+
             CStoredExtKey *sekStealthSpend = new CStoredExtKey();
             sekStealthSpend->kp = epStealthSpend;
             vChainPath.pop_back();
             vChainPath.push_back(nStealthSpend);
             sekStealthSpend->SetPath(vChainPath);
             sekStealthSpend->nFlags |= EAF_ACTIVE | EAF_IN_ACCOUNT | EAF_HARDWARE_DEVICE;
-            sekStealthSpend->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_STEALTH);
+            sekStealthSpend->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_STEALTH_SPEND);
             sea->InsertChain(sekStealthSpend);
-            sea->nActiveStealth = sea->NumChains();
+            uint32_t nStealthSpendChain = sea->NumChains();
 
             sea->mapValue[EKVT_STEALTH_SCAN_CHAIN] = SetCompressedInt64(vData, nStealthScanChain);
-            sea->mapValue[EKVT_STEALTH_SPEND_CHAIN] = SetCompressedInt64(vData, sea->nActiveStealth);
+            sea->mapValue[EKVT_STEALTH_SPEND_CHAIN] = SetCompressedInt64(vData, nStealthSpendChain);
         };
 
         if (!wdb.TxnBegin())
@@ -822,15 +828,12 @@ UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
             "           A 32bit integer will be created from prefix_num and the least significant num_prefix_bits will become the prefix.\n"
             "           A stealth address created without a prefix will scan all incoming stealth transactions, irrespective of transaction prefixes.\n"
             "           Stealth addresses with prefixes will scan only incoming stealth transactions with a matching prefix.\n"
-            "4. bech32              (bool, optional) Use Bech32 encoding.\n"
+            "4. bech32              (bool, optional) Use Bech32 encoding, default true.\n"
             "\nResult:\n"
             "\"address\"              (string) The new particl stealth address\n"
             "\nExamples:\n"
             + HelpExampleCli("devicegetnewstealthaddress", "\"lblTestSxAddrPrefix\" 3 \"0b101\"")
             + HelpExampleRpc("devicegetnewstealthaddress", "\"lblTestSxAddrPrefix\", 3, \"0b101\""));
-
-    if (Params().NetworkID() == "main")
-        throw std::runtime_error("TODO");
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -857,7 +860,7 @@ UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
     if (request.params.size() > 2)
         sPrefix_num = request.params[2].get_str();
 
-    bool fBech32 = request.params.size() > 3 ? request.params[3].get_bool() : false;
+    bool fBech32 = request.params.size() > 3 ? request.params[3].get_bool() : true;
 
 
     CEKAStealthKey akStealth;
@@ -869,8 +872,8 @@ UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
         if (mi == pwallet->mapExtAccounts.end())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unknown account.");
 
-        uint64_t nScanChain, nSpendChain;
         CExtKeyAccount *sea = mi->second;
+        uint64_t nScanChain, nSpendChain;
         CStoredExtKey *sekScan = nullptr, *sekSpend = nullptr;
         mapEKValue_t::iterator mvi = sea->mapValue.find(EKVT_STEALTH_SCAN_CHAIN);
         if (mvi != sea->mapValue.end())
@@ -944,62 +947,13 @@ UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
         if (!wdb.TxnBegin())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "TxnBegin failed.");
 
-        std::vector<CEKAStealthKeyPack> aksPak;
-
-        CKeyID idKey = akStealth.GetID();
-        sea->mapStealthKeys[idKey] = akStealth;
-
-        if (!wdb.ReadExtStealthKeyPack(idAccount, sea->nPackStealth, aksPak))
-        {
-            // New pack
-            aksPak.clear();
-            if (LogAcceptCategory(BCLog::HDWALLET))
-                LogPrintf("Account %s, starting new stealth keypack %u.\n", idAccount.ToString(), sea->nPackStealth);
-        };
-
-        aksPak.push_back(CEKAStealthKeyPack(idKey, akStealth));
-        if (!wdb.WriteExtStealthKeyPack(idAccount, sea->nPackStealth, aksPak))
-        {
-            sea->mapStealthKeys.erase(idKey);
-            wdb.TxnAbort();
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteExtKey failed.");
-        };
-
-        if (!wdb.WriteExtKey(sea->vExtKeyIDs[nScanChain], *sekScan)
-            || !wdb.WriteExtKey(sea->vExtKeyIDs[nSpendChain], *sekSpend))
-        {
-            sea->mapStealthKeys.erase(idKey);
-            //sek->SetCounter(nChildBkp, true);
-
-            wdb.TxnAbort();
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteExtKey failed.");
-        };
-
-        std::vector<uint32_t> vPath;
-        uint32_t idIndex;
-        bool requireUpdateDB;
-        if (0 == pwallet->ExtKeyGetIndex(&wdb, sea, idIndex, requireUpdateDB))
-            vPath.push_back(idIndex); // first entry is the index to the account / master key
-
-        if (0 == AppendChainPath(sekSpend, vPath))
-        {
-            vPath.push_back(WithHardenedBit(nSpendGenerated));
-        } else
-        {
-            LogPrintf("Warning: %s - missing path value.\n", __func__);
-            vPath.clear();
-        };
-
-        if ((uint32_t)aksPak.size() >= MAX_KEY_PACK_SIZE-1)
-            sea->nPackStealth++;
-        if (((uint32_t)aksPak.size() >= MAX_KEY_PACK_SIZE-1 || requireUpdateDB)
-            && !wdb.WriteExtAccount(idAccount, *sea))
+        if (0 != pwallet->SaveStealthAddress(&wdb, sea, akStealth, fBech32))
         {
             wdb.TxnAbort();
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteExtAccount failed.");
+            pwallet->ExtKeyRemoveAccountFromMapsAndFree(idAccount);
+            pwallet->ExtKeyLoadAccount(&wdb, idAccount);
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "SaveStealthAddress failed.");
         };
-
-        pwallet->SetAddressBook(&wdb, sxAddr, sLabel, "receive", vPath, false, fBech32);
 
         if (!wdb.TxnCommit())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "TxnCommit failed.");
