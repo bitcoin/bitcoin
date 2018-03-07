@@ -76,9 +76,6 @@ $(BITCOIN_WIN_INSTALLER): all-recursive
 	  echo error: could not build $@
 	@echo built $@
 
-$(if $(findstring src/,$(MAKECMDGOALS)),$(MAKECMDGOALS), none): FORCE
-	$(MAKE) -C src $(patsubst src/%,%,$@)
-
 $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)
 	@echo "APPL????" > $@
@@ -105,7 +102,7 @@ $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings:
 
 OSX_APP_BUILT=$(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lproj \
   $(OSX_APP)/Contents/Resources/bitcoin.icns $(OSX_APP)/Contents/Info.plist \
-  $(OSX_APP)/Contents/MacOS/Bitcoin-Qt $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings
+  $(OSX_APP)/Contents/MacOS/Chaincoin-Qt $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings
 
 osx_volname:
 	echo $(OSX_VOLNAME) >$@
@@ -145,7 +142,7 @@ $(APP_DIST_DIR)/.background/$(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE_DPIF
 $(APP_DIST_DIR)/.DS_Store: $(OSX_DSSTORE_GEN)
 	$(PYTHON) $< "$@" "$(OSX_VOLNAME)"
 
-$(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
+$(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Chaincoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
 	INSTALLNAMETOOL=$(INSTALLNAMETOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -translations-dir=$(QT_TRANSLATION_DIR) -add-qt-tr $(OSX_QT_TRANSLATIONS) -verbose 2
 
 deploydir: $(APP_DIST_EXTRAS)
@@ -169,45 +166,52 @@ $(BITCOIN_CLI_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
 if USE_LCOV
-LCOV_FILTER_PATTERN=-p "/usr/include/" -p "src/leveldb/" -p "src/bench/" -p "src/univalue" -p "src/crypto/ctaes" -p "src/secp256k1"
 
 baseline.info:
 	$(LCOV) -c -i -d $(abs_builddir)/src -o $@
 
 baseline_filtered.info: baseline.info
-	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
-	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
+	$(LCOV) -r $< "/usr/include/*" -o $@
 
-test_bitcoin.info: baseline_filtered.info
+leveldb_baseline.info: baseline_filtered.info
+	$(LCOV) -c -i -d $(abs_builddir)/src/leveldb -b $(abs_builddir)/src/leveldb -o $@
+
+leveldb_baseline_filtered.info: leveldb_baseline.info
+	$(LCOV) -r $< "/usr/include/*" -o $@
+
+baseline_filtered_combined.info: leveldb_baseline_filtered.info baseline_filtered.info
+	$(LCOV) -a leveldb_baseline_filtered.info -a baseline_filtered.info -o $@
+
+test_bitcoin.info: baseline_filtered_combined.info
 	$(MAKE) -C src/ check
-	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src -t test_bitcoin -o $@
-	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
+	$(LCOV) -c -d $(abs_builddir)/src -t test_bitcoin -o $@
+	$(LCOV) -z -d $(abs_builddir)/src
+	$(LCOV) -z -d $(abs_builddir)/src/leveldb
 
 test_bitcoin_filtered.info: test_bitcoin.info
-	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
-	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
+	$(LCOV) -r $< "/usr/include/*" -o $@
 
 functional_test.info: test_bitcoin_filtered.info
-	-@TIMEOUT=15 test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
-	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src --t functional-tests -o $@
-	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
+	-@TIMEOUT=15 python test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
+	$(LCOV) -c -d $(abs_builddir)/src --t functional-tests -o $@
+	$(LCOV) -z -d $(abs_builddir)/src
+	$(LCOV) -z -d $(abs_builddir)/src/leveldb
 
 functional_test_filtered.info: functional_test.info
-	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
-	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
+	$(LCOV) -r $< "/usr/include/*" -o $@
 
-test_bitcoin_coverage.info: baseline_filtered.info test_bitcoin_filtered.info
-	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_bitcoin_filtered.info -o $@
+test_bitcoin_coverage.info: baseline_filtered_combined.info test_bitcoin_filtered.info
+	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_bitcoin_filtered.info -o $@
 
-total_coverage.info: test_bitcoin_filtered.info functional_test_filtered.info
-	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_bitcoin_filtered.info -a functional_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
+total_coverage.info: baseline_filtered_combined.info test_bitcoin_filtered.info functional_test_filtered.info
+	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_bitcoin_filtered.info -a functional_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
 
 test_bitcoin.coverage/.dirstamp:  test_bitcoin_coverage.info
-	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
+	$(GENHTML) -s $< -o $(@D)
 	@touch $@
 
 total.coverage/.dirstamp: total_coverage.info
-	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
+	$(GENHTML) -s $< -o $(@D)
 	@touch $@
 
 cov: test_bitcoin.coverage/.dirstamp total.coverage/.dirstamp

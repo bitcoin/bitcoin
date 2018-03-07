@@ -332,7 +332,9 @@ void OverviewPage::updatePrivateSendProgress()
 {
     if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
-    if(!pwalletMain) return;
+    CWalletRef pwallet = vpwallets.empty() ? nullptr : vpwallets[0];
+
+    if(!pwallet) return;
 
     QString strAmountAndRounds;
     QString strPrivateSendAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, privateSendClient.nPrivateSendAmount * COIN, false, BitcoinUnits::separatorAlways);
@@ -351,7 +353,7 @@ void OverviewPage::updatePrivateSendProgress()
         return;
     }
 
-    CAmount nAnonymizableBalance = pwalletMain->GetAnonymizableBalance(false, false);
+    CAmount nAnonymizableBalance = pwallet->GetAnonymizableBalance(false, false);
 
     CAmount nMaxToAnonymize = nAnonymizableBalance + currentAnonymizedBalance;
 
@@ -385,10 +387,10 @@ void OverviewPage::updatePrivateSendProgress()
     CAmount nNormalizedAnonymizedBalance;
     float nAverageAnonymizedRounds;
 
-    nDenominatedConfirmedBalance = pwalletMain->GetDenominatedBalance();
-    nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true);
-    nNormalizedAnonymizedBalance = pwalletMain->GetNormalizedAnonymizedBalance();
-    nAverageAnonymizedRounds = pwalletMain->GetAverageAnonymizedRounds();
+    nDenominatedConfirmedBalance = pwallet->GetDenominatedBalance();
+    nDenominatedUnconfirmedBalance = pwallet->GetDenominatedBalance(true);
+    nNormalizedAnonymizedBalance = pwallet->GetNormalizedAnonymizedBalance();
+    nAverageAnonymizedRounds = pwallet->GetAverageAnonymizedRounds();
 
     // calculate parts of the progress, each of them shouldn't be higher than 1
     // progress of denominating
@@ -456,7 +458,7 @@ void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI) {
 void OverviewPage::privateSendStatus()
 {
     if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
-
+    CWalletRef pwallet = vpwallets.empty() ? nullptr : vpwallets[0];
     static int64_t nLastDSProgressBlockTime = 0;
     int nBestHeight = clientModel->getNumBlocks();
 
@@ -464,8 +466,8 @@ void OverviewPage::privateSendStatus()
     if(((nBestHeight - privateSendClient.nCachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;
     nLastDSProgressBlockTime = GetTimeMillis();
 
-    QString strKeysLeftText(tr("keys left: %1").arg(pwalletMain->nKeysLeftSinceAutoBackup));
-    if(pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
+    QString strKeysLeftText(tr("keys left: %1").arg(pwallet->nKeysLeftSinceAutoBackup));
+    if(pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
         strKeysLeftText = "<span style='color:red;'>" + strKeysLeftText + "</span>";
     }
     ui->labelPrivateSendEnabled->setToolTip(strKeysLeftText);
@@ -489,7 +491,7 @@ void OverviewPage::privateSendStatus()
 
     // Warn user that wallet is running out of keys
     // NOTE: we do NOT warn user and do NOT create autobackups if mixing is not running
-    if (nWalletBackups > 0 && pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
+    if (nWalletBackups > 0 && pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
         QSettings settings;
         if(settings.value("fLowKeysWarning").toBool()) {
             QString strWarn =   tr("Very low number of keys left since last automatic backup!") + "<br><br>" +
@@ -506,7 +508,7 @@ void OverviewPage::privateSendStatus()
 
         std::string strBackupWarning;
         std::string strBackupError;
-        if(!AutoBackupWallet(pwalletMain, "", strBackupWarning, strBackupError)) {
+        if(!AutoBackupWallet(pwallet, "", strBackupWarning, strBackupError)) {
             if (!strBackupWarning.empty()) {
                 // It's still more or less safe to continue but warn user anyway
                 LogPrintf("OverviewPage::privateSendStatus -- WARNING! Something went wrong on automatic backup: %s\n", strBackupWarning);
@@ -575,7 +577,7 @@ void OverviewPage::privateSendStatus()
 
 void OverviewPage::privateSendAuto(){
     CConnman& connman = *g_connman;
-    privateSendClient.DoAutomaticDenominating(&connman);
+    privateSendClient.DoAutomaticDenominating(connman);
 }
 
 void OverviewPage::privateSendReset(){

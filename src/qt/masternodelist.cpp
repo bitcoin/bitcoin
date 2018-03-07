@@ -106,18 +106,22 @@ void MasternodeList::StartAlias(std::string strAlias)
     std::string strStatusHtml;
     strStatusHtml += "<center>Alias: " + strAlias;
 
-    for (CMasternodeConfig::CMasternodeEntry mne : masternodeConfig.getEntries()) {
+    for (const auto& mne : masternodeConfig.getEntries()) {
         if(mne.getAlias() == strAlias) {
             std::string strError;
             CMasternodeBroadcast mnb;
 
             bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
+            int nDoS;
+            if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
+                strError = "Failed to verify MNB";
+                fSuccess = false;
+            }
+
             if(fSuccess) {
                 strStatusHtml += "<br>Successfully started masternode.";
-                mnodeman.UpdateMasternodeList(mnb, &connman);
-                mnb.Relay(&connman);
-                mnodeman.NotifyMasternodeUpdates(&connman);
+                mnodeman.NotifyMasternodeUpdates(*g_connman);
             } else {
                 strStatusHtml += "<br>Failed to start masternode.<br>Error: " + strError;
             }
@@ -139,7 +143,7 @@ void MasternodeList::StartAll(std::string strCommand)
     int nCountFailed = 0;
     std::string strFailedHtml;
 
-    for (CMasternodeConfig::CMasternodeEntry mne : masternodeConfig.getEntries()) {
+    for (const auto& mne : masternodeConfig.getEntries()) {
         std::string strError;
         CMasternodeBroadcast mnb;
 
@@ -154,17 +158,22 @@ void MasternodeList::StartAll(std::string strCommand)
 
         bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
+        int nDoS;
+        if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
+            strError = "Failed to verify MNB";
+            fSuccess = false;
+        }
+
         if(fSuccess) {
             nCountSuccessful++;
-            mnodeman.UpdateMasternodeList(mnb, &connman);
-            mnb.Relay(&connman);
-            mnodeman.NotifyMasternodeUpdates(&connman);
+            mnodeman.NotifyMasternodeUpdates(*g_connman);
         } else {
             nCountFailed++;
             strFailedHtml += "\nFailed to start " + mne.getAlias() + ". Error: " + strError;
         }
     }
-    pwalletMain->Lock();
+    CWalletRef pwallet = vpwallets.empty() ? nullptr : vpwallets[0];
+    pwallet->Lock();
 
     std::string returnObj;
     returnObj = strprintf("Successfully started %d masternodes, failed to start %d, total %d", nCountSuccessful, nCountFailed, nCountFailed + nCountSuccessful);

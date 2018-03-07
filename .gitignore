@@ -972,3 +972,5 @@ src/crypto/.libs/libchaincoinconsensus_la-skein.o
 src/libbitcoin_server_a-masternodeman.o-01447105
 src/.deps/libbitcoin_wallet_a-privatesend-client.Tpo
 src/policy/libbitcoin_server_a-rbf.o
+src/chaincoin_cli-chaincoin-cli.o
+src/chaincoin_tx-chaincoin-tx.o

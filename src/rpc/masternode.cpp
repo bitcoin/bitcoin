@@ -30,7 +30,7 @@ UniValue masternodelist(const JSONRPCRequest& request);
 
 
 #ifdef ENABLE_WALLET
-void EnsureWalletIsUnlocked();
+void EnsureWalletIsUnlocked(CWallet * const pwallet);
 
 UniValue privatesend(const JSONRPCRequest& request)
 {
@@ -53,7 +53,7 @@ UniValue privatesend(const JSONRPCRequest& request)
     if(request.params[0].get_str() == "start") {
         {
             LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            EnsureWalletIsUnlocked();
+            EnsureWalletIsUnlocked(pwallet);
         }
 
         if(fMasternodeMode)
@@ -278,7 +278,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
         {
             LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            EnsureWalletIsUnlocked();
+            EnsureWalletIsUnlocked(pwallet);
         }
 
         std::string strAlias = request.params[1].get_str();
@@ -324,7 +324,7 @@ UniValue masternode(const JSONRPCRequest& request)
     {
         {
             LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            EnsureWalletIsUnlocked();
+            EnsureWalletIsUnlocked(pwallet);
         }
 
         if((strCommand == "start-missing" || strCommand == "start-disabled") && !masternodeSync.IsMasternodeListSynced()) {
@@ -679,7 +679,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 
         {
             LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            EnsureWalletIsUnlocked();
+            EnsureWalletIsUnlocked(pwallet);
         }
 
         bool fFound = false;
@@ -728,7 +728,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 
         {
             LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            EnsureWalletIsUnlocked();
+            EnsureWalletIsUnlocked(pwallet);
         }
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;

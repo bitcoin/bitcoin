@@ -632,6 +632,11 @@ bool WalletModel::havePrivKey(const CKeyID &address) const
     return wallet->HaveKey(address);
 }
 
+bool WalletModel::getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const
+{
+    return wallet->GetKey(address, vchPrivKeyOut);
+}
+
 // returns a list of COutputs from COutPoints
 void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs)
 {
@@ -722,7 +727,7 @@ bool WalletModel::transactionCanBeBumped(uint256 hash) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     const CWalletTx *wtx = wallet->GetWalletTx(hash);
-    return wtx && SignalsOptInRBF(*wtx) && !wtx->mapValue.count("replaced_by_txid");
+    return wtx && SignalsOptInRBF(*wtx->tx) && !wtx->mapValue.count("replaced_by_txid");
 }
 
 bool WalletModel::bumpFee(uint256 hash)

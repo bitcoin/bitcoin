@@ -26,7 +26,7 @@
 #include <boost/thread.hpp>
 
 #ifdef ENABLE_WALLET
-extern CWallet* pwalletMain;
+extern CWalletRef pwalletMain = vpwallets[0];
 #endif // ENABLE_WALLET
 extern CTxMemPool mempool;
 

@@ -10,6 +10,7 @@
 #include <rpcconsole.h>
 #include <ui_debugwindow.h>
 
+#include <bantablemodel.h>
 #include <clientmodel.h>
 #include <guiutil.h>
 #include <platformstyle.h>

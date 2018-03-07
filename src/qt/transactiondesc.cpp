@@ -55,7 +55,7 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
         if(!instantsend.HasTxLockRequest(wtx.GetHash())) return strTxStatus; // regular tx
 
         int nSignatures = instantsend.GetTransactionLockSignatures(wtx.GetHash());
-        int nSignaturesMax = CTxLockRequest(wtx).GetMaxSignatures();
+        int nSignaturesMax = CTxLockRequest(*wtx.tx).GetMaxSignatures();
         // InstantSend
         strTxStatus += " (";
         if(instantsend.IsLockedInstantSendTransaction(wtx.GetHash())) {

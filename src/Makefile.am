@@ -387,23 +387,15 @@ libbitcoin_common_a_SOURCES = \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
-  consensus/merkle.cpp \
   core_read.cpp \
   core_write.cpp \
-  hash.cpp \
   key.cpp \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \
   policy/feerate.cpp \
-  primitives/block.cpp \
-  primitives/transaction.cpp \
   protocol.cpp \
-  pubkey.cpp \
   scheduler.cpp \
-  script/interpreter.cpp \
-  script/script.cpp \
-  script/script_error.cpp \
   script/sign.cpp \
   script/standard.cpp \
   warnings.cpp \
@@ -594,7 +586,7 @@ endif
 
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)
-		$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
+	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
 
 if EMBEDDED_LEVELDB
 include Makefile.leveldb.include
