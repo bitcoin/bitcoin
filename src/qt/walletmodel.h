@@ -143,6 +143,8 @@ public:
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
     CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
+    CAmount getAnonBalance(const CCoinControl *coinControl = nullptr) const;
+    CAmount getBlindBalance(const CCoinControl *coinControl = nullptr) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
     bool haveWatchOnly() const;

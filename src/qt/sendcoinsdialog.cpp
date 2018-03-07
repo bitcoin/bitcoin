@@ -773,8 +773,12 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
         coin_control = *CoinControlDialog::coinControl();
     }
 
+    QString sTypeFrom = ui->cbxTypeFrom->currentText().toLower();
     // Calculate available amount to send.
-    CAmount amount = model->getBalance(&coin_control);
+    CAmount amount =
+        sTypeFrom == "anon" ? model->getAnonBalance(&coin_control) :
+        sTypeFrom == "blind" ? model->getBlindBalance(&coin_control) :
+        model->getBalance(&coin_control);
     for (int i = 0; i < ui->entries->count(); ++i) {
         SendCoinsEntry* e = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if (e && !e->isHidden() && e != entry) {

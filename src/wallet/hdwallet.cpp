@@ -2321,6 +2321,57 @@ bool CHDWallet::GetBalances(CHDWalletBalances &bal)
     return true;
 };
 
+CAmount CHDWallet::GetAvailableBalance(const CCoinControl* coinControl) const
+{
+    LOCK2(cs_main, cs_wallet);
+
+    CAmount balance = 0;
+    std::vector<COutput> vCoins;
+    AvailableCoins(vCoins, true, coinControl);
+    for (const COutput& out : vCoins) {
+        if (out.fSpendable) {
+            balance += out.tx->tx->vpout[out.i]->GetValue();
+        }
+    }
+    return balance;
+}
+
+CAmount CHDWallet::GetAvailableAnonBalance(const CCoinControl* coinControl) const
+{
+    LOCK2(cs_main, cs_wallet);
+
+    CAmount balance = 0;
+    std::vector<COutputR> vCoins;
+    AvailableAnonCoins(vCoins, true, coinControl);
+    for (const COutputR& out : vCoins) {
+        if (out.fSpendable) {
+            const COutputRecord *oR = out.rtx->second.GetOutput(out.i);
+            if (!oR)
+                continue;
+            balance += oR->nValue;
+        }
+    }
+    return balance;
+}
+
+CAmount CHDWallet::GetAvailableBlindBalance(const CCoinControl* coinControl) const
+{
+    LOCK2(cs_main, cs_wallet);
+
+    CAmount balance = 0;
+    std::vector<COutputR> vCoins;
+    AvailableBlindedCoins(vCoins, true, coinControl);
+    for (const COutputR& out : vCoins) {
+        if (out.fSpendable) {
+            const COutputRecord *oR = out.rtx->second.GetOutput(out.i);
+            if (!oR)
+                continue;
+            balance += oR->nValue;
+        }
+    }
+    return balance;
+}
+
 bool CHDWallet::IsChange(const CTxOutBase *txout) const
 {
     // TODO: fix handling of 'change' outputs. The assumption is that any

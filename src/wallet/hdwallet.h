@@ -477,6 +477,9 @@ public:
     CAmount GetLegacyBalance(const isminefilter& filter, int minDepth, const std::string* account) const override;
 
     bool GetBalances(CHDWalletBalances &bal);
+    CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const override;
+    CAmount GetAvailableAnonBalance(const CCoinControl* coinControl = nullptr) const;
+    CAmount GetAvailableBlindBalance(const CCoinControl* coinControl = nullptr) const;
 
 
     bool IsChange(const CTxOutBase *txout) const override;

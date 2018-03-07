@@ -88,6 +88,33 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
     return wallet->GetBalance();
 }
 
+CAmount WalletModel::getAnonBalance(const CCoinControl *coinControl) const
+{
+    CHDWallet *phdw = getParticlWallet();
+    if (!phdw)
+        return 0;
+    if (coinControl)
+    {
+        return phdw->GetAvailableAnonBalance(coinControl);
+    }
+
+    return phdw->GetBalance();
+}
+
+CAmount WalletModel::getBlindBalance(const CCoinControl *coinControl) const
+{
+    CHDWallet *phdw = getParticlWallet();
+    if (!phdw)
+        return 0;
+    if (coinControl)
+    {
+        return phdw->GetAvailableBlindBalance(coinControl);
+    }
+
+    return phdw->GetBlindBalance();
+}
+
+
 CAmount WalletModel::getUnconfirmedBalance() const
 {
     return wallet->GetUnconfirmedBalance();
