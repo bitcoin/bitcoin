@@ -23,7 +23,7 @@ static void RIPEMD160(benchmark::State& state)
     uint8_t hash[CRIPEMD160::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
     while (state.KeepRunning())
-        CRIPEMD160().Write(in.data(in), in.size()).Finalize(hash);
+        CRIPEMD160().Write(in.data(), in.size()).Finalize(hash);
 }
 
 static void SHA1(benchmark::State& state)

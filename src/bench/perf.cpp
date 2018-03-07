@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bench/perf.h>
+#include "perf.h"
 
 #if defined(__i386__) || defined(__x86_64__)
 
