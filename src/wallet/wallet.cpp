@@ -3947,7 +3947,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
-    CWallet *walletInstance = new CWallet(name, WalletDatabase::Create(path));
+    std::unique_ptr<CWallet> walletInstance = MakeUnique<CWallet>(name, WalletDatabase::Create(path));
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DBErrors::LOAD_OK)
     {
@@ -4058,9 +4058,6 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
             pindexRescan = FindForkInGlobalIndex(chainActive, locator);
     }
 
-    walletInstance->m_last_block_processed = chainActive.Tip();
-    RegisterValidationInterface(walletInstance);
-
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
         //We can't rescan beyond non-pruned blocks, stop and throw an error
@@ -4089,7 +4086,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
         nStart = GetTimeMillis();
         {
-            WalletRescanReserver reserver(walletInstance);
+            WalletRescanReserver reserver(walletInstance.get());
             if (!reserver.reserve()) {
                 InitError(_("Failed to rescan the wallet during initialization"));
                 return nullptr;
@@ -4134,7 +4131,11 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         LogPrintf("mapAddressBook.size() = %u\n",  walletInstance->mapAddressBook.size());
     }
 
-    return walletInstance;
+    walletInstance->m_last_block_processed = chainActive.Tip();
+
+    CWallet* wallet_raw_ptr = walletInstance.release();
+    RegisterValidationInterface(wallet_raw_ptr);
+    return wallet_raw_ptr;
 }
 
 std::atomic<bool> CWallet::fFlushScheduled(false);
