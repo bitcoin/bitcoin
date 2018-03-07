@@ -236,3 +236,31 @@ In this case there is no dependency on Berkeley DB 4.8.
 
 Mining is also possible in disable-wallet mode, but only using the `getblocktemplate` RPC
 call not `getwork`.
+
+Additional Configure Flags
+--------------------------
+A list of additional configure flags can be displayed with:
+
+    ./configure --help
+
+ARM Cross-compilation
+-------------------
+These steps can be performed on, for example, an Ubuntu VM. The depends system
+will also work on other Linux distributions, however the commands for
+installing the toolchain will be different.
+
+First install the toolchain:
+
+    sudo apt-get install g++-arm-linux-gnueabihf
+
+To build executables for ARM:
+
+    cd depends
+    make HOST=arm-linux-gnueabihf NO_QT=1
+    cd ..
+    ./configure --prefix=$PWD/depends/arm-linux-gnueabihf --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
+    make
+
+
+For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
+>>>>>>> 3e55b3a... [doc] added depends cross compile info
