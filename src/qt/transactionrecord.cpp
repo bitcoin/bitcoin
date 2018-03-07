@@ -254,7 +254,7 @@ bool TransactionRecord::statusUpdateNeeded() const
     return status.cur_num_blocks != chainActive.Height() || status.needsUpdate;
 }
 
-QString TransactionRecord::getTxID() const
+QString TransactionRecord::getTxHash() const
 {
     return QString::fromStdString(hash.ToString());
 }
