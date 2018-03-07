@@ -30,31 +30,35 @@ class MultiWalletTest(BitcoinTestFramework):
 
         self.stop_nodes()
 
-        self.assert_start_raises_init_error(0, ['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
-        self.assert_start_raises_init_error(0, ['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir())
-        self.assert_start_raises_init_error(0, ['-walletdir=debug.log'], 'Error: Specified -walletdir "debug.log" is not a directory', cwd=data_dir())
+        self.nodes[0].assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
+        self.nodes[0].assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir())
+        self.nodes[0].assert_start_raises_init_error(['-walletdir=debug.log'], 'Error: Specified -walletdir "debug.log" is not a directory', cwd=data_dir())
 
         # should not initialize if there are duplicate wallets
-        self.assert_start_raises_init_error(0, ['-wallet=w1', '-wallet=w1'], 'Error loading wallet w1. Duplicate -wallet filename specified.')
+        self.nodes[0].assert_start_raises_init_error(['-wallet=w1', '-wallet=w1'], 'Error: Error loading wallet w1. Duplicate -wallet filename specified.')
 
         # should not initialize if wallet file is a directory
         os.mkdir(wallet_dir('w11'))
-        self.assert_start_raises_init_error(0, ['-wallet=w11'], 'Error loading wallet w11. -wallet filename must be a regular file.')
+        self.nodes[0].assert_start_raises_init_error(['-wallet=w11'], 'Error: Error loading wallet w11. -wallet filename must be a regular file.')
 
         # should not initialize if one wallet is a copy of another
         shutil.copyfile(wallet_dir('w2'), wallet_dir('w22'))
-        self.assert_start_raises_init_error(0, ['-wallet=w2', '-wallet=w22'], 'duplicates fileid')
+        exp_stderr = "\n\n\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\n" + \
+                     "EXCEPTION: St13runtime_error       \n" + \
+                     "CDB: Can't open database w22 \(duplicates fileid [0-9A-Fa-f]+ from w2\)       \n" + \
+                     "bitcoin in AppInit\(\)       \n"
+        self.nodes[0].assert_start_raises_init_error(['-wallet=w2', '-wallet=w22'], exp_stderr)
 
         # should not initialize if wallet file is a symlink
         os.symlink(wallet_dir('w1'), wallet_dir('w12'))
-        self.assert_start_raises_init_error(0, ['-wallet=w12'], 'Error loading wallet w12. -wallet filename must be a regular file.')
+        self.nodes[0].assert_start_raises_init_error(['-wallet=w12'], 'Error: Error loading wallet w12. -wallet filename must be a regular file.')
 
         # should not initialize if the specified walletdir does not exist
-        self.assert_start_raises_init_error(0, ['-walletdir=bad'], 'Error: Specified -walletdir "bad" does not exist')
+        self.nodes[0].assert_start_raises_init_error(['-walletdir=bad'], 'Error: Specified -walletdir "bad" does not exist')
         # should not initialize if the specified walletdir is not a directory
         not_a_dir = wallet_dir('notadir')
         open(not_a_dir, 'a').close()
-        self.assert_start_raises_init_error(0, ['-walletdir=' + not_a_dir], 'Error: Specified -walletdir "' + not_a_dir + '" is not a directory')
+        self.nodes[0].assert_start_raises_init_error(['-walletdir=' + not_a_dir], 'Error: Specified -walletdir "' + not_a_dir + '" is not a directory')
 
         # if wallets/ doesn't exist, datadir should be the default wallet dir
         wallet_dir2 = data_dir('walletdir')
@@ -74,8 +78,11 @@ class MultiWalletTest(BitcoinTestFramework):
 
         competing_wallet_dir = os.path.join(self.options.tmpdir, 'competing_walletdir')
         os.mkdir(competing_wallet_dir)
-        self.restart_node(0, ['-walletdir='+competing_wallet_dir])
-        self.assert_start_raises_init_error(1, ['-walletdir='+competing_wallet_dir], 'Error initializing wallet database environment')
+        self.restart_node(0, ['-walletdir=' + competing_wallet_dir])
+        exp_stderr = "Error: Error initializing wallet database environment \"\S+?\"!\n" + \
+                     "terminate called after throwing an instance of 'std::system_error'\n" + \
+                     "  what\(\):  Invalid argument"
+        self.nodes[1].assert_start_raises_init_error(['-walletdir=' + competing_wallet_dir], exp_stderr)
 
         self.restart_node(0, self.extra_args[0])
 

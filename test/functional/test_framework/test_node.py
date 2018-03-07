@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import subprocess
+import tempfile
 import time
 
 from .authproxy import JSONRPCException
@@ -42,7 +43,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, dirname, extra_args, rpchost, timewait, binary, stderr, mocktime, coverage_dir, use_cli=False):
+    def __init__(self, i, dirname, extra_args, rpchost, timewait, binary, mocktime, coverage_dir, use_cli=False):
         self.index = i
         self.datadir = os.path.join(dirname, "node" + str(i))
         self.rpchost = rpchost
@@ -55,7 +56,6 @@ class TestNode():
             self.binary = os.getenv("BITCOIND", "bitcoind")
         else:
             self.binary = binary
-        self.stderr = stderr
         self.coverage_dir = coverage_dir
         # Most callers will just need to add extra args to the standard list below.
         # For those callers that need more flexibity, they can just set the args property directly.
@@ -83,13 +83,22 @@ class TestNode():
             assert self.rpc_connected and self.rpc is not None, "Error: no RPC connection"
             return getattr(self.rpc, name)
 
-    def start(self, extra_args=None, stderr=None, *args, **kwargs):
+    def start(self, extra_args=None, stdout=None, stderr=None, *args, **kwargs):
         """Start the node."""
         if extra_args is None:
             extra_args = self.extra_args
+
+        # Add a new stdout and stderr file for each time bitcoind is started
         if stderr is None:
-            stderr = self.stderr
-        self.process = subprocess.Popen(self.args + extra_args, stderr=stderr, *args, **kwargs)
+            self.stderr = tempfile.NamedTemporaryFile(dir=os.path.join(self.datadir, 'stderr'), delete=False)
+        if stdout is None:
+            self.stdout = tempfile.NamedTemporaryFile(dir=os.path.join(self.datadir, 'stdout'), delete=False)
+
+        # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
+        subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
+
+        self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, *args, **kwargs)
+
         self.running = True
         self.log.debug("bitcoind started, waiting for RPC to come up")
 
@@ -128,7 +137,7 @@ class TestNode():
             wallet_path = "wallet/%s" % wallet_name
             return self.rpc / wallet_path
 
-    def stop_node(self):
+    def stop_node(self, clean_stderr=True):
         """Stop the node."""
         if not self.running:
             return
@@ -137,6 +146,10 @@ class TestNode():
             self.stop()
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
+        if clean_stderr:
+            stderr = self.stderr.read()
+            if stderr != b'':
+                raise AssertionError("stderr not empty:\n{}".format(stderr))
         del self.p2ps[:]
 
     def is_node_stopped(self):
@@ -161,6 +174,38 @@ class TestNode():
 
     def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT):
         wait_until(self.is_node_stopped, timeout=timeout)
+
+    def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, *args, **kwargs):
+        """Attempt to start the node and expect it to raise an error.
+
+        extra_args: extra arguments to pass through to bitcoind
+        expected_msg: regex that stderr should match when bitcoind fails
+
+        Will throw if bitcoind starts without an error.
+        Will throw if an expected_msg is provided and it does not match bitcoind's stdout."""
+        with tempfile.NamedTemporaryFile(dir=os.path.join(self.datadir, 'stderr'), delete=False) as log_stderr, \
+             tempfile.NamedTemporaryFile(dir=os.path.join(self.datadir, 'stdout'), delete=False) as log_stdout:
+            try:
+                self.start(extra_args, stderr=log_stderr, stdout=log_stdout, *args, **kwargs)
+                self.wait_for_rpc_connection()
+                self.stop_node(clean_stderr=False)
+                self.wait_util_stopped()
+            except Exception as e:
+                assert 'bitcoind exited' in str(e)  # node must have shutdown
+                self.running = False
+                self.process = None
+                # Check stderr for expected message
+                if expected_msg is not None:
+                    log_stderr.seek(0)
+                    stderr = log_stderr.read().decode('utf-8')
+                    if re.fullmatch(expected_msg + '\n', stderr) is None:
+                        raise AssertionError('Expected stdout "{}" does not match stdout:\n"{}'.format(expected_msg, stderr))
+            else:
+                if expected_msg is None:
+                    assert_msg = "bitcoind should have exited with an error"
+                else:
+                    assert_msg = "bitcoind should have exited with expected error " + expected_msg
+                raise AssertionError(assert_msg)
 
     def node_encrypt_wallet(self, passphrase):
         """"Encrypts the wallet.

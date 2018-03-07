@@ -22,7 +22,7 @@ def allInvsMatch(invsExpected, testnode):
         time.sleep(1)
     return False
 
-class TestNode(P2PInterface):
+class TestP2PConn(P2PInterface):
     def __init__(self):
         super().__init__()
         self.txinvs = []
@@ -48,7 +48,7 @@ class FeeFilterTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Setup the p2p connections and start up the network thread.
-        self.nodes[0].add_p2p_connection(TestNode())
+        self.nodes[0].add_p2p_connection(TestP2PConn())
         network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
 
