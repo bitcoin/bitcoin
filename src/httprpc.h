@@ -5,8 +5,12 @@
 #ifndef BITCOIN_HTTPRPC_H
 #define BITCOIN_HTTPRPC_H
 
+#include <functional>
 #include <string>
 #include <map>
+
+class HTTPRequest;
+class JSONRPCRequest;
 
 /** Start HTTP RPC subsystem.
  * Precondition; HTTP and RPC has been started.
@@ -31,5 +35,14 @@ void InterruptREST();
  * Precondition; HTTP and RPC has been stopped.
  */
 void StopREST();
+
+/** Callback to prepare a JSONRPCRequest */
+typedef void (*JSONRPCRequestPreparer)(JSONRPCRequest& req, const HTTPRequest&);
+/** Register callback for preparing JSONRPCRequests.
+ * If multiple handlers match a prefix, all of them will be invoked.
+ */
+void RegisterJSONRPCRequestPreparer(const JSONRPCRequestPreparer&);
+/** Unregister callback */
+void UnregisterJSONRPCRequestPreparer(const JSONRPCRequestPreparer&);
 
 #endif

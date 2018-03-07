@@ -18,9 +18,22 @@
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp> // boost::trim
+#include <boost/signals2/signal.hpp>
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
+
+boost::signals2::signal<void (JSONRPCRequest&, const HTTPRequest&)> PrepareJSONRPCRequestCallbacks;
+
+void RegisterJSONRPCRequestPreparer(const JSONRPCRequestPreparer& preparer)
+{
+    PrepareJSONRPCRequestCallbacks.connect(preparer);
+}
+
+void UnregisterJSONRPCRequestPreparer(const JSONRPCRequestPreparer& preparer)
+{
+    PrepareJSONRPCRequestCallbacks.disconnect(preparer);
+}
 
 /** Simple one-shot callback timer to be used by the RPC mechanism to e.g.
  * re-lock the wallet.
@@ -180,6 +193,8 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         // Set the URI
         jreq.URI = req->GetURI();
 
+        PrepareJSONRPCRequestCallbacks(jreq, *req);
+
         std::string strReply;
         // singleton request
         if (valRequest.isObject()) {
@@ -226,6 +241,8 @@ static bool InitRPCAuthentication()
     return true;
 }
 
+void JSONRPCRequestWalletResolver(JSONRPCRequest&, const HTTPRequest&);
+
 bool StartHTTPRPC()
 {
     LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
@@ -236,6 +253,8 @@ bool StartHTTPRPC()
 #ifdef ENABLE_WALLET
     // ifdef can be removed once we switch to better endpoint support and API versioning
     RegisterHTTPHandler("/wallet/", false, HTTPReq_JSONRPC);
+
+    RegisterJSONRPCRequestPreparer(JSONRPCRequestWalletResolver);
 #endif
     assert(EventBase());
     httpRPCTimerInterface = MakeUnique<HTTPRPCTimerInterface>(EventBase());
@@ -252,6 +271,11 @@ void StopHTTPRPC()
 {
     LogPrint(BCLog::RPC, "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
+#ifdef ENABLE_WALLET
+    UnregisterHTTPHandler("/wallet/", false);
+
+    UnregisterJSONRPCRequestPreparer(JSONRPCRequestWalletResolver);
+#endif
     if (httpRPCTimerInterface) {
         RPCUnsetTimerInterface(httpRPCTimerInterface.get());
         httpRPCTimerInterface.reset();
