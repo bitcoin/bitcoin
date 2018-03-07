@@ -42,7 +42,7 @@ std::string WalletInit::GetHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-mnemonicpassphrase=<text>", _("User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)"));
     strUsage += HelpMessageOpt("-hdseed=<hex>", _("User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)"));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
-    strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), DEFAULT_WALLET_DAT));
+    strUsage += HelpMessageOpt("-wallet=<path>", _("Specify wallet database path. Can be specified multiple times to load multiple wallets. Path is interpreted relative to <walletdir> if it is not absolute, and will be created if it does not exist (as a directory containing a wallet.dat file and log files). For backwards compatibility this will also accept names of existing data files in <walletdir>.)"));
     strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), DEFAULT_WALLETBROADCAST));
     strUsage += HelpMessageOpt("-walletdir=<dir>", _("Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)"));
     strUsage += HelpMessageOpt("-walletnotify=<cmd>", _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)"));
@@ -94,7 +94,7 @@ bool WalletInit::ParameterInteraction()
         return InitError(_("You can not start a masternode with wallet enabled."));
     }
 
-    gArgs.SoftSetArg("-wallet", DEFAULT_WALLET_DAT);
+    gArgs.SoftSetArg("-wallet", "");
     const bool is_multiwallet = gArgs.GetArgs("-wallet").size() > 1;
 
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
@@ -257,18 +257,22 @@ bool WalletInit::Verify()
     std::set<fs::path> wallet_paths;
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        if (boost::filesystem::path(walletFile).filename() != walletFile) {
-            return InitError(strprintf(_("Error loading wallet %s. -wallet parameter must only specify a filename (not a path)."), walletFile));
-        }
-
-        if (SanitizeString(walletFile, SAFE_CHARS_FILENAME) != walletFile) {
-            return InitError(strprintf(_("Error loading wallet %s. Invalid characters in -wallet filename."), walletFile));
-        }
-
+        // Do some checking on wallet path. It should be either a:
+        //
+        // 1. Path where a directory can be created.
+        // 2. Path to an existing directory.
+        // 3. Path to a symlink to a directory.
+        // 4. For backwards compatibility, the name of a data file in -walletdir.
         fs::path wallet_path = fs::absolute(walletFile, GetWalletDir());
-
-        if (fs::exists(wallet_path) && (!fs::is_regular_file(wallet_path) || fs::is_symlink(wallet_path))) {
-            return InitError(strprintf(_("Error loading wallet %s. -wallet filename must be a regular file."), walletFile));
+        fs::file_type path_type = fs::symlink_status(wallet_path).type();
+        if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
+              (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
+              (path_type == fs::regular_file && fs::path(walletFile).filename() == walletFile))) {
+            return InitError(strprintf(
+                _("Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
+                  "database/log.?????????? files can be stored, a location where such a directory could be created, "
+                  "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)"),
+                walletFile, GetWalletDir()));
         }
 
         if (!wallet_paths.insert(wallet_path).second) {
@@ -276,21 +280,21 @@ bool WalletInit::Verify()
         }
 
         std::string strError;
-        if (!CWalletDB::VerifyEnvironment(walletFile, GetWalletDir().string(), strError)) {
+        if (!CWalletDB::VerifyEnvironment(wallet_path, strError)) {
             return InitError(strError);
         }
 
         if (gArgs.GetBoolArg("-salvagewallet", false)) {
             // Recover readable keypairs:
-            CWallet dummyWallet;
+            CWallet dummyWallet("dummy", CWalletDBWrapper::CreateDummy());
             std::string backup_filename;
-            if (!CWalletDB::Recover(walletFile, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter, backup_filename)) {
+            if (!CWalletDB::Recover(wallet_path, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter, backup_filename)) {
                 return false;
             }
         }
 
         std::string strWarning;
-        bool dbV = CWalletDB::VerifyDatabaseFile(walletFile, GetWalletDir().string(), strWarning, strError);
+        bool dbV = CWalletDB::VerifyDatabaseFile(wallet_path, strWarning, strError);
         if (!strWarning.empty()) {
             InitWarning(strWarning);
         }
@@ -311,7 +315,7 @@ bool WalletInit::Open()
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile);
+        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()));
         if (!pwallet) {
             return false;
         }

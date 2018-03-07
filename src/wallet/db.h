@@ -11,6 +11,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
+#include <util.h>
 #include <version.h>
 
 #include <atomic>
@@ -33,20 +34,19 @@ private:
     // shutdown problems/crashes caused by a static initialized internal pointer.
     std::string strPath;
 
-    void EnvShutdown();
-
 public:
-    mutable CCriticalSection cs_db;
     std::unique_ptr<DbEnv> dbenv;
     std::map<std::string, int> mapFileUseCount;
     std::map<std::string, Db*> mapDb;
 
-    CDBEnv();
+    CDBEnv(const fs::path& env_directory);
     ~CDBEnv();
     void Reset();
 
     void MakeMock();
     bool IsMock() const { return fMockDb; }
+    bool IsInitialized() const { return fDbEnvInit; }
+    fs::path Directory() const { return strPath; }
 
     /**
      * Verify that database file strFile is OK. If it is not,
@@ -57,7 +57,7 @@ public:
     enum VerifyResult { VERIFY_OK,
                         RECOVER_OK,
                         RECOVER_FAIL };
-    typedef bool (*recoverFunc_type)(const std::string& strFile, std::string& out_backup_filename);
+    typedef bool (*recoverFunc_type)(const fs::path& file_path, std::string& out_backup_filename);
     VerifyResult Verify(const std::string& strFile, recoverFunc_type recoverFunc, std::string& out_backup_filename);
     /**
      * Salvage data from a file that Verify says is bad.
@@ -69,7 +69,7 @@ public:
     typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
     bool Salvage(const std::string& strFile, bool fAggressive, std::vector<KeyValPair>& vResult);
 
-    bool Open(const fs::path& path, bool retry = 0);
+    bool Open(bool retry);
     void Close();
     void Flush(bool fShutdown);
     void CheckpointLSN(const std::string& strFile);
@@ -86,7 +86,8 @@ public:
     }
 };
 
-extern CDBEnv bitdb;
+/** Get CDBEnv and database filename given a wallet path. */
+CDBEnv* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
 
 /** An instance of this class represents one database.
  * For BerkeleyDB this is just a (env, strFile) tuple.
@@ -101,9 +102,33 @@ public:
     }
 
     /** Create DB handle to real database */
-    CWalletDBWrapper(CDBEnv *env_in, const std::string &strFile_in) :
-        nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0), env(env_in), strFile(strFile_in)
+    CWalletDBWrapper(const fs::path& wallet_path, bool mock = false) :
+        nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0)
     {
+        env = GetWalletEnv(wallet_path, strFile);
+        if (mock) {
+            env->Close();
+            env->Reset();
+            env->MakeMock();
+        }
+    }
+
+    /** Return object for accessing database at specified path. */
+    static std::unique_ptr<CWalletDBWrapper> Create(const fs::path& path)
+    {
+        return MakeUnique<CWalletDBWrapper>(path);
+    }
+
+    /** Return object for accessing dummy database with no read/write capabilities. */
+    static std::unique_ptr<CWalletDBWrapper> CreateDummy()
+    {
+        return MakeUnique<CWalletDBWrapper>();
+    }
+
+    /** Return object for accessing temporary in-memory database. */
+    static std::unique_ptr<CWalletDBWrapper> CreateMock()
+    {
+        return MakeUnique<CWalletDBWrapper>("", true /* mock */);
     }
 
     /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
@@ -113,10 +138,6 @@ public:
     /** Back up the entire database to a file.
      */
     bool Backup(const std::string& strDest);
-
-    /** Get a name for this database, for debugging etc.
-     */
-    std::string GetName() const { return strFile; }
 
     /** Make sure all changes are flushed to disk.
      */
@@ -162,15 +183,15 @@ public:
 
     void Flush();
     void Close();
-    static bool Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
+    static bool Recover(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
 
     /* flush the wallet passively (TRY_LOCK)
        ideal to be called periodically */
     static bool PeriodicFlush(CWalletDBWrapper& dbw);
     /* verifies the database environment */
-    static bool VerifyEnvironment(const std::string& walletFile, const fs::path& walletDir, std::string& errorStr);
+    static bool VerifyEnvironment(const fs::path& file_path, std::string& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const std::string& walletFile, const fs::path& walletDir, std::string& warningStr, std::string& errorStr, CDBEnv::recoverFunc_type recoverFunc);
+    static bool VerifyDatabaseFile(const fs::path& file_path, std::string& warningStr, std::string& errorStr, CDBEnv::recoverFunc_type recoverFunc);
 
 public:
     template <typename K, typename T>
@@ -330,7 +351,7 @@ public:
     {
         if (!pdb || activeTxn)
             return false;
-        DbTxn* ptxn = bitdb.TxnBegin();
+        DbTxn* ptxn = env->TxnBegin();
         if (!ptxn)
             return false;
         activeTxn = ptxn;
