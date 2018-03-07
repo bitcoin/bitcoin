@@ -1,0 +1,107 @@
+{
+  "_comment": "Build with `packer build gitian-host.json`",
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "guest_os_type": "Ubuntu_64",
+      "boot_command": [
+        "{{user `boot_command_prefix`}}",
+        "/install/vmlinuz noapic ",
+        "file=/floppy/{{user `preseed`}} ",
+        "debian-installer={{user `locale`}} auto locale={{user `locale`}} kbd-chooser/method=us ",
+        "hostname={{user `hostname`}} ",
+        "fb=false debconf/frontend=noninteractive ",
+        "keyboard-configuration/modelcode=SKIP ",
+        "keyboard-configuration/layout=USA ",
+        "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+        "passwd/user-fullname={{user `ssh_fullname`}} ",
+        "passwd/user-password={{user `ssh_password`}} ",
+        "passwd/user-password-again={{user `ssh_password`}} ",
+        "passwd/username={{user `ssh_username`}} ",
+        "initrd=/install/initrd.gz -- <enter>"
+      ],
+      "disk_size": "{{user `disk_size`}}",
+      "floppy_files": [
+        "config/{{user `preseed`}}"
+      ],
+      "guest_additions_mode": "attach",
+      "guest_additions_url": "https://download.virtualbox.org/virtualbox/{{.Version}}/VBoxGuestAdditions_{{.Version}}.iso",
+      "headless": "{{user `headless`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_urls": [
+        "{{user `mirror_protocol`}}://{{user `mirror`}}/{{user `mirror_directory`}}/{{user `iso_name`}}"
+      ],
+      "output_directory": "output-{{user `vm_name`}}",
+      "shutdown_command": "echo '{{user `ssh_password`}}'|sudo -S shutdown -P now",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_username": "{{user `ssh_username`}}",
+      "ssh_wait_timeout": "10000s",
+      "vm_name": "{{user `vm_name`}}",
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `memory`}}" ],
+        ["modifyvm", "{{.Name}}", "--cpus", "{{user `cpus`}}"]
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "keep_input_artifact": false,
+      "output": "box/{{.Provider}}/{{user `vm_name`}}-{{user `version`}}.box",
+      "type": "vagrant",
+      "vagrantfile_template": "{{user `vagrantfile_template`}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "environment_vars": [
+        "UPDATE={{user `update`}}",
+        "INSTALL_VAGRANT_KEY={{user `install_vagrant_key`}}",
+        "SSH_USERNAME={{user `ssh_username`}}",
+        "SSH_PASSWORD={{user `ssh_password`}}",
+        "http_proxy={{user `http_proxy`}}",
+        "https_proxy={{user `https_proxy`}}",
+        "ftp_proxy={{user `ftp_proxy`}}",
+        "rsync_proxy={{user `rsync_proxy`}}",
+        "no_proxy={{user `no_proxy`}}"
+      ],
+      "execute_command": "echo '{{user `ssh_password`}}' | {{.Vars}} sudo -E -S bash '{{.Path}}'",
+      "scripts": [
+        "config/vagrant.sh",
+        "config/sshd.sh",
+        "config/packages.sh",
+        "config/cleanup.sh"
+      ],
+      "type": "shell"
+    }
+  ],
+  "variables": {
+    "boot_command_prefix": "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+    "cpus": "2",
+    "disk_size": "16384",
+    "ftp_proxy": "{{env `ftp_proxy`}}",
+    "headless": "true",
+    "http_proxy": "{{env `http_proxy`}}",
+    "https_proxy": "{{env `https_proxy`}}",
+    "install_vagrant_key": "true",
+    "iso_checksum": "0a03608988cfd2e50567990dc8be96fb3c501e198e2e6efcb846d89efc7b89f2",
+    "iso_checksum_type": "sha256",
+    "iso_name": "ubuntu-16.04.4-server-amd64.iso",
+    "locale": "en_US",
+    "memory": "2560",
+    "mirror": "releases.ubuntu.com",
+    "mirror_directory": "16.04",
+    "mirror_protocol": "http",
+    "no_proxy": "{{env `no_proxy`}}",
+    "preseed" : "preseed.cfg",
+    "rsync_proxy": "{{env `rsync_proxy`}}",
+    "hostname": "vagrant",
+    "ssh_fullname": "vagrant",
+    "ssh_password": "vagrant",
+    "ssh_username": "vagrant",
+    "update": "true",
+    "vagrantfile_template": "Vagrantfile",
+    "version": "0",
+    "vm_name": "gitian-host-xenial64"
+  }
+}

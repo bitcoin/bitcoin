@@ -1,0 +1,9 @@
+cache
+cache/*
+output
+output/*
+packer_cache
+packer_cache/
+.stamp-*
+.*.manifest
+.vagrant
