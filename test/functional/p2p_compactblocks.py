@@ -882,8 +882,12 @@ class CompactBlocksTest(BitcoinTestFramework):
         # node1 will not download blocks from node0.
         self.log.info("Syncing nodes...")
         assert(self.nodes[0].getbestblockhash() != self.nodes[1].getbestblockhash())
-        while (self.nodes[0].getblockcount() > self.nodes[1].getblockcount()):
-            block_hash = self.nodes[0].getblockhash(self.nodes[1].getblockcount()+1)
+        while True:
+            node0_tip = self.nodes[0].getblockcount()
+            node1_tip = self.nodes[1].getblockcount()
+            if node1_tip >= node0_tip:
+                break
+            block_hash = self.nodes[0].getblockhash(node1_tip + 1)
             self.nodes[1].submitblock(self.nodes[0].getblock(block_hash, False))
         assert_equal(self.nodes[0].getbestblockhash(), self.nodes[1].getbestblockhash())
 
