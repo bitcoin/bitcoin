@@ -9,7 +9,6 @@ Roughly based on http://voorloopnul.com/blog/a-python-netstat-in-less-than-100-l
 
 import sys
 import socket
-import fcntl
 import struct
 import array
 import os
@@ -90,6 +89,8 @@ def all_interfaces():
     '''
     Return all interfaces that are up
     '''
+    import fcntl  # Linux only, so only import when required
+
     is_64bits = sys.maxsize > 2**32
     struct_size = 40 if is_64bits else 32
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
