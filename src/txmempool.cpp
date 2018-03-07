@@ -1076,11 +1076,4 @@ void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, 
     }
 }
 
-bool CTxMemPool::TransactionWithinChainLimit(const uint256& txid, size_t ancestor_limit, size_t descendant_limit) const {
-    LOCK(cs);
-    auto it = mapTx.find(txid);
-    return it == mapTx.end() || (it->GetCountWithAncestors() < ancestor_limit &&
-                                 CalculateDescendantMaximum(it) < descendant_limit);
-}
-
 SaltedTxidHasher::SaltedTxidHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}
