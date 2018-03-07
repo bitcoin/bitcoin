@@ -17,6 +17,7 @@
 #include <script/sign.h>
 #include <util.h>
 #include <wallet/crypter.h>
+#include <wallet/coinselection.h>
 #include <wallet/walletdb.h>
 #include <wallet/rpcwallet.h>
 
@@ -53,10 +54,6 @@ static const CAmount DEFAULT_DISCARD_FEE = 10000;
 static const CAmount DEFAULT_TRANSACTION_MINFEE = 1000;
 //! minimum recommended increment for BIP 125 replacement txs
 static const CAmount WALLET_INCREMENTAL_RELAY_FEE = 5000;
-//! target minimum change amount
-static const CAmount MIN_CHANGE = CENT;
-//! final minimum change amount after paying for fees
-static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 //! Default for -spendzeroconfchange
 static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 //! Default for -walletrejectlongchains
@@ -495,40 +492,6 @@ public:
     bool AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state);
 
     std::set<uint256> GetConflicts() const;
-};
-
-
-class CInputCoin {
-public:
-    CInputCoin(const CWalletTx* walletTx, unsigned int i)
-    {
-        if (!walletTx)
-            throw std::invalid_argument("walletTx should not be null");
-        if (i >= walletTx->tx->vout.size())
-            throw std::out_of_range("The output index is out of range");
-
-        outpoint = COutPoint(walletTx->GetHash(), i);
-        txout = walletTx->tx->vout[i];
-        effective_value = txout.nValue;
-    }
-
-    COutPoint outpoint;
-    CTxOut txout;
-    CAmount effective_value;
-    CAmount fee = 0;
-    CAmount long_term_fee = 0;
-
-    bool operator<(const CInputCoin& rhs) const {
-        return outpoint < rhs.outpoint;
-    }
-
-    bool operator!=(const CInputCoin& rhs) const {
-        return outpoint != rhs.outpoint;
-    }
-
-    bool operator==(const CInputCoin& rhs) const {
-        return outpoint == rhs.outpoint;
-    }
 };
 
 class COutput
