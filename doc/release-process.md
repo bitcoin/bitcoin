@@ -93,7 +93,9 @@ Create the OS X SDK tarball, see the [OS X readme](README_osx.md) for details, a
 
 ### Optional: Seed the Gitian sources cache and offline git repositories
 
-By default, Gitian will fetch source files as needed. To cache them ahead of time:
+NOTE: Gitian is sometimes unable to download files. If you have errors, try the step below.
+
+By default, Gitian will fetch source files as needed. To cache them ahead of time, make sure you have checked out the tag you want to build in bitcoin, then:
 
     pushd ./gitian-builder
     make -C ../bitcoin/depends download SOURCES_PATH=`pwd`/cache/common
