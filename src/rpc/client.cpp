@@ -47,6 +47,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getreceivedbyaddress", 2, "addlockconf" },
     { "getreceivedbyaccount", 1, "minconf" },
     { "getreceivedbyaccount", 2, "addlockconf" },
+    { "listaddressbalances", 0, "minamount" },
     { "listreceivedbyaddress", 0, "minconf" },
     { "listreceivedbyaddress", 1, "addlockconf" },
     { "listreceivedbyaddress", 2, "include_empty" },
