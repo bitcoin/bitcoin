@@ -50,9 +50,9 @@ class ReceivedByTest(BitcoinTestFramework):
                             {"address": empty_addr},
                             {"address": empty_addr, "account": "", "amount": 0, "confirmations": 0, "txids": []})
 
-        #Test Address filtering
-        #Only on addr
-        expected = {"address":addr, "account":"", "amount":Decimal("0.1"), "confirmations":10, "txids":[txid,]}
+        # Test Address filtering
+        # Only on addr
+        expected = {"address": addr, "account": "", "amount": Decimal("0.1"), "confirmations": 10, "txids": [txid, ]}
         res = self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True, include_watchonly=True, address_filter=addr)
         assert_array_result(res, {"address":addr}, expected)
         assert_equal(len(res), 1)
