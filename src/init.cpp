@@ -884,7 +884,7 @@ void InitParameterInteraction()
     }
 
     if(!GetBoolArg("-enableinstantsend", fEnableInstantSend)){
-        if (SoftSetArg("-instantsenddepth", 0))
+        if (SoftSetArg("-instantsenddepth", "0"))
             LogPrintf("%s: parameter interaction: -enableinstantsend=false -> setting -nInstantSendDepth=0\n", __func__);
     }
 
