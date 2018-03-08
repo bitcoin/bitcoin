@@ -89,7 +89,6 @@ bool fAlerts = DEFAULT_ALERTS;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
-std::atomic<bool> fDIP0001WasLockedIn{false};
 std::atomic<bool> fDIP0001ActiveAtTip{false};
 
 uint256 hashAssumeValid;
@@ -561,7 +560,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
 
 bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state, CBlockIndex * const pindexPrev)
 {
-    bool fDIP0001Active_context = (VersionBitsState(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_ACTIVE);
+    int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
+    bool fDIP0001Active_context = nHeight >= Params().GetConsensus().DIP0001Height;
 
     // Size limits
     if (fDIP0001Active_context && ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE)
@@ -2162,7 +2162,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
-    bool fDIP0001Active_context = (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_ACTIVE);
+    bool fDIP0001Active_context = pindex->nHeight >= Params().GetConsensus().DIP0001Height;
 
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
@@ -3432,7 +3432,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
                               ? pindexPrev->GetMedianTimePast()
                               : block.GetBlockTime();
 
-    bool fDIP0001Active_context = (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_ACTIVE);
+    bool fDIP0001Active_context = nHeight >= Params().GetConsensus().DIP0001Height;
 
     // Size limits
     unsigned int nMaxBlockSize = MaxBlockSize(fDIP0001Active_context);
