@@ -88,25 +88,26 @@ void CMasternodeMan::AskForMN(CNode* pnode, const COutPoint& outpoint, CConnman&
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     LOCK(cs);
 
-    std::map<COutPoint, std::map<CNetAddr, int64_t> >::iterator it1 = mWeAskedForMasternodeListEntry.find(outpoint);
+    CService addrSquashed = Params().AllowMultiplePorts() ? (CService)pnode->addr : CService(pnode->addr, 0);
+    auto it1 = mWeAskedForMasternodeListEntry.find(outpoint);
     if (it1 != mWeAskedForMasternodeListEntry.end()) {
-        std::map<CNetAddr, int64_t>::iterator it2 = it1->second.find(pnode->addr);
+        auto it2 = it1->second.find(addrSquashed);
         if (it2 != it1->second.end()) {
             if (GetTime() < it2->second) {
                 // we've asked recently, should not repeat too often or we could get banned
                 return;
             }
             // we asked this node for this outpoint but it's ok to ask again already
-            LogPrintf("CMasternodeMan::AskForMN -- Asking same peer %s for missing masternode entry again: %s\n", pnode->addr.ToString(), outpoint.ToStringShort());
+            LogPrintf("CMasternodeMan::AskForMN -- Asking same peer %s for missing masternode entry again: %s\n", addrSquashed.ToString(), outpoint.ToStringShort());
         } else {
             // we already asked for this outpoint but not this node
-            LogPrintf("CMasternodeMan::AskForMN -- Asking new peer %s for missing masternode entry: %s\n", pnode->addr.ToString(), outpoint.ToStringShort());
+            LogPrintf("CMasternodeMan::AskForMN -- Asking new peer %s for missing masternode entry: %s\n", addrSquashed.ToString(), outpoint.ToStringShort());
         }
     } else {
         // we never asked any node for this outpoint
-        LogPrintf("CMasternodeMan::AskForMN -- Asking peer %s for missing masternode entry for the first time: %s\n", pnode->addr.ToString(), outpoint.ToStringShort());
+        LogPrintf("CMasternodeMan::AskForMN -- Asking peer %s for missing masternode entry for the first time: %s\n", addrSquashed.ToString(), outpoint.ToStringShort());
     }
-    mWeAskedForMasternodeListEntry[outpoint][pnode->addr] = GetTime() + DSEG_UPDATE_SECONDS;
+    mWeAskedForMasternodeListEntry[outpoint][addrSquashed] = GetTime() + DSEG_UPDATE_SECONDS;
 
     if (pnode->GetSendVersion() == 70208) {
         connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSEG, CTxIn(outpoint)));
@@ -206,7 +207,7 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
                             !IsMnbRecoveryRequested(hash);
                 if(fAsk) {
                     // this mn is in a non-recoverable state and we haven't asked other nodes yet
-                    std::set<CNetAddr> setRequested;
+                    std::set<CService> setRequested;
                     // calulate only once and only when it's needed
                     if(vecMasternodeRanks.empty()) {
                         int nRandomBlockHeight = GetRandInt(nCachedBlockHeight);
@@ -259,7 +260,7 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
         // no need for cm_main below
         LOCK(cs);
 
-        std::map<uint256, std::pair< int64_t, std::set<CNetAddr> > >::iterator itMnbRequest = mMnbRecoveryRequests.begin();
+        auto itMnbRequest = mMnbRecoveryRequests.begin();
         while(itMnbRequest != mMnbRecoveryRequests.end()){
             // Allow this mnb to be re-verified again after MNB_RECOVERY_RETRY_SECONDS seconds
             // if mn is still in MASTERNODE_NEW_START_REQUIRED state.
@@ -271,7 +272,7 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
         }
 
         // check who's asked for the Masternode list
-        std::map<CNetAddr, int64_t>::iterator it1 = mAskedUsForMasternodeList.begin();
+        auto it1 = mAskedUsForMasternodeList.begin();
         while(it1 != mAskedUsForMasternodeList.end()){
             if((*it1).second < GetTime()) {
                 mAskedUsForMasternodeList.erase(it1++);
@@ -291,9 +292,9 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
         }
 
         // check which Masternodes we've asked for
-        std::map<COutPoint, std::map<CNetAddr, int64_t> >::iterator it2 = mWeAskedForMasternodeListEntry.begin();
+        auto it2 = mWeAskedForMasternodeListEntry.begin();
         while(it2 != mWeAskedForMasternodeListEntry.end()){
-            std::map<CNetAddr, int64_t>::iterator it3 = it2->second.begin();
+            auto it3 = it2->second.begin();
             while(it3 != it2->second.end()){
                 if(it3->second < GetTime()){
                     it2->second.erase(it3++);
@@ -308,7 +309,7 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
             }
         }
 
-        std::map<CNetAddr, CMasternodeVerification>::iterator it3 = mWeAskedForVerification.begin();
+        auto it3 = mWeAskedForVerification.begin();
         while(it3 != mWeAskedForVerification.end()){
             if(it3->second.nBlockHeight < nCachedBlockHeight - MAX_POSE_BLOCKS) {
                 mWeAskedForVerification.erase(it3++);
@@ -412,11 +413,12 @@ void CMasternodeMan::DsegUpdate(CNode* pnode, CConnman& connman)
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     LOCK(cs);
 
+    CService addrSquashed = Params().AllowMultiplePorts() ? (CService)pnode->addr : CService(pnode->addr, 0);
     if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if(!(pnode->addr.IsRFC1918() || pnode->addr.IsLocal())) {
-            std::map<CNetAddr, int64_t>::iterator it = mWeAskedForMasternodeList.find(pnode->addr);
+            auto it = mWeAskedForMasternodeList.find(addrSquashed);
             if(it != mWeAskedForMasternodeList.end() && GetTime() < (*it).second) {
-                LogPrintf("CMasternodeMan::DsegUpdate -- we already asked %s for the list; skipping...\n", pnode->addr.ToString());
+                LogPrintf("CMasternodeMan::DsegUpdate -- we already asked %s for the list; skipping...\n", addrSquashed.ToString());
                 return;
             }
         }
@@ -428,7 +430,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode, CConnman& connman)
         connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSEG, COutPoint()));
     }
     int64_t askAgain = GetTime() + DSEG_UPDATE_SECONDS;
-    mWeAskedForMasternodeList[pnode->addr] = askAgain;
+    mWeAskedForMasternodeList[addrSquashed] = askAgain;
 
     LogPrint("masternode", "CMasternodeMan::DsegUpdate -- asked %s for the list\n", pnode->addr.ToString());
 }
@@ -946,16 +948,17 @@ void CMasternodeMan::SyncAll(CNode* pnode, CConnman& connman)
     // local network
     bool isLocal = (pnode->addr.IsRFC1918() || pnode->addr.IsLocal());
 
+    CService addrSquashed = Params().AllowMultiplePorts() ? (CService)pnode->addr : CService(pnode->addr, 0);
     // should only ask for this once
     if(!isLocal && Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        std::map<CNetAddr, int64_t>::iterator it = mAskedUsForMasternodeList.find(pnode->addr);
+        auto it = mAskedUsForMasternodeList.find(addrSquashed);
         if (it != mAskedUsForMasternodeList.end() && it->second > GetTime()) {
             Misbehaving(pnode->GetId(), 34);
             LogPrintf("CMasternodeMan::%s -- peer already asked me for the list, peer=%d\n", __func__, pnode->id);
             return;
         }
         int64_t askAgain = GetTime() + DSEG_UPDATE_SECONDS;
-        mAskedUsForMasternodeList[pnode->addr] = askAgain;
+        mAskedUsForMasternodeList[addrSquashed] = askAgain;
     }
 
     int nInvCount = 0;

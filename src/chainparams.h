@@ -75,6 +75,8 @@ public:
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
     /** Allow multiple addresses to be selected from the same network group (e.g. 192.168.x.x) */
     bool AllowMultipleAddressesFromGroup() const { return fAllowMultipleAddressesFromGroup; }
+    /** Allow nodes with the same address and multiple ports */
+    bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
@@ -108,6 +110,7 @@ protected:
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
     bool fAllowMultipleAddressesFromGroup;
+    bool fAllowMultiplePorts;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     int nPoolMaxTransactions;
