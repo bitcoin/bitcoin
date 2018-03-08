@@ -1,0 +1,79 @@
+diff --git a/flamegraph.pl b/flamegraph.pl
+index 4723421..165ba03 100755
+--- a/flamegraph.pl
++++ b/flamegraph.pl
+@@ -368,6 +368,18 @@ sub color {
+ 	}
+ 
+ 	# multi palettes
++	if (defined $type and $type eq "bitcoin") {
++		if ($name =~ /^(boost|leveldb)::/) { # C++ libs
++			$type = "yellow";
++		} elsif ($name =~ m:_\[b\]$:) {	# bitcoin annotation
++			$type = "green";
++		} elsif ($name =~ m:_\[k\]$:) {	# kernel annotation
++			$type = "aqua";
++		} else {			# system
++			$type = "red";
++		}
++		# fall-through to color palettes
++	}
+ 	if (defined $type and $type eq "java") {
+ 		# Handle both annotations (_[j], _[i], ...; which are
+ 		# accurate), as well as input that lacks any annotations, as
+@@ -1068,7 +1080,7 @@ while (my ($id, $node) = each %Node) {
+ 		$escaped_func =~ s/</&lt;/g;
+ 		$escaped_func =~ s/>/&gt;/g;
+ 		$escaped_func =~ s/"/&quot;/g;
+-		$escaped_func =~ s/_\[[kwij]\]$//;	# strip any annotation
++		$escaped_func =~ s/_\[[bkwij]\]$//;	# strip any annotation
+ 		unless (defined $delta) {
+ 			$info = "$escaped_func ($samples_txt $countname, $pct%)";
+ 		} else {
+@@ -1104,7 +1116,7 @@ while (my ($id, $node) = each %Node) {
+ 	my $chars = int( ($x2 - $x1) / ($fontsize * $fontwidth));
+ 	my $text = "";
+ 	if ($chars >= 3) { # room for one char plus two dots
+-		$func =~ s/_\[[kwij]\]$//;	# strip any annotation
++		$func =~ s/_\[[bkwij]\]$//;	# strip any annotation
+ 		$text = substr $func, 0, $chars;
+ 		substr($text, -2, 2) = ".." if $chars < length $func;
+ 		$text =~ s/&/&amp;/g;
+diff --git a/stackcollapse-perf.pl b/stackcollapse-perf.pl
+index e91f7de..6e818c3 100755
+--- a/stackcollapse-perf.pl
++++ b/stackcollapse-perf.pl
+@@ -72,6 +72,7 @@ sub remember_stack {
+ 	my ($stack, $count) = @_;
+ 	$collapsed{$stack} += $count;
+ }
++my $annotate_bitcoin = 0; # add bitcoin annotations
+ my $annotate_kernel = 0; # put an annotation on kernel function
+ my $annotate_jit = 0;   # put an annotation on jit symbols
+ my $annotate_all = 0;   # enale all annotations
+@@ -89,6 +90,7 @@ my $event_warning = 0;	  # if we printed a warning for the event
+ my $show_inline = 0;
+ my $show_context = 0;
+ GetOptions('inline' => \$show_inline,
++           'bitcoin' => \$annotate_bitcoin,
+            'context' => \$show_context,
+            'pid' => \$include_pid,
+            'kernel' => \$annotate_kernel,
+@@ -116,7 +118,7 @@ USAGE: $0 [options] infile > outfile\n
+ USAGE_END
+ 
+ if ($annotate_all) {
+-	$annotate_kernel = $annotate_jit = 1;
++	$annotate_kernel = $annotate_jit = $annotate_bitcoin = 1;
+ }
+ 
+ # for the --inline option
+@@ -326,6 +328,8 @@ while (defined($_ = <>)) {
+ 			#          7f722d142778 Ljava/io/PrintStream;::print (/tmp/perf-19982.map)
+ 			if (scalar(@inline) > 0) {
+ 				$func .= "_[i]";	# inlined
++			} elsif ($annotate_bitcoin == 1 && $mod =~ m/bitcoin/) {
++				$func .= "_[b]";	# bitcoin
+ 			} elsif ($annotate_kernel == 1 && $mod =~ m/(^\[|vmlinux$)/ && $mod !~ /unknown/) {
+ 				$func .= "_[k]";	# kernel
+ 			} elsif ($annotate_jit == 1 && $mod =~ m:/tmp/perf-\d+\.map:) {

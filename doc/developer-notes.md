@@ -142,6 +142,11 @@ Development tips and tricks
 Run configure with the --enable-debug option, then make. Or run configure with
 CXXFLAGS="-g -ggdb -O0" or whatever debug flags you need.
 
+**generating flame graph profiles**
+
+See the full docs in [flamegraph.md](/doc/flamegraph.md).
+
+
 **compiling for gprof profiling**
 
 Run configure with the --enable-gprof option, then make.
