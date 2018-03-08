@@ -27,6 +27,13 @@
 #include <univalue.h>
 
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
+// SYSCOIN snapshot
+#include <ostream>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/stream.hpp>
+#include "script/standard.h"
+#include "base58.h"
+namespace io = boost::iostreams;
 
 using namespace std;
 
@@ -672,10 +679,73 @@ struct CCoinsStats
 
     CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), nTotalAmount(0) {}
 };
+bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
+	/* It seems that there are no "const iterators" for LevelDB.  Since we
+	only need read operations on it, use a const-cast to get around
+	that restriction.  */
+	boost::scoped_ptr<CDBIterator> pcursor(const_cast<CDBWrapper*>(&db)->NewIterator());
+	pcursor->Seek(DB_COINS);
+	// SYSCOIN snapshot code
+	CTxDestination address;
+	io::stream_buffer<io::file_sink> buf("utxo.json");
+	std::ostream ta(&buf);
+	ta << "[";
 
+	CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+	stats.hashBlock = GetBestBlock();
+	ss << stats.hashBlock;
+	CAmount nTotalAmount = 0;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		std::pair<char, uint256> key;
+		CCoins coins;
+		if (pcursor->GetKey(key) && key.first == DB_COINS) {
+			if (pcursor->GetValue(coins)) {
+				stats.nTransactions++;
+				for (unsigned int i = 0; i<coins.vout.size(); i++) {
+					const CTxOut &out = coins.vout[i];
+					if (!out.IsNull()) {
+						stats.nTransactionOutputs++;
+						ss << VARINT(i + 1);
+						ss << out;
+						nTotalAmount += out.nValue;
+						// SYSCOIN snapshot
+						if (ExtractDestination(out.scriptPubKey, address))
+							ta << "[\"" << CSyscoinAddress(address).ToString() << "\"," << out.nValue << "]" << endl;
+						else
+							LogPrintf("Could not extract address for pubkey %s\n", HexStr(out.scriptPubKey).c_str());
+					}
+				}
+				stats.nSerializedSize += 32 + pcursor->GetValueSize();
+				ss << VARINT(0);
+			}
+			else {
+				return error("CCoinsViewDB::GetStats() : unable to read value");
+			}
+		}
+		else {
+			break;
+		}
+		pcursor->Next();
+	}
+	{
+		LOCK(cs_main);
+		stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
+	}
+	stats.hashSerialized = ss.GetHash();
+	stats.nTotalAmount = nTotalAmount;
+	// SYSCOIN snapshot
+	ta << "]";
+	return true;
+}
 //! Calculate statistics about the unspent transaction output set
 static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
 {
+	// SYSCOIN snapshot code
+	CTxDestination address;
+	io::stream_buffer<io::file_sink> buf("utxo.json");
+	std::ostream ta(&buf);
+	ta << "[";
     boost::scoped_ptr<CCoinsViewCursor> pcursor(view->Cursor());
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
@@ -700,6 +770,11 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
                     ss << VARINT(i+1);
                     ss << out;
                     nTotalAmount += out.nValue;
+					// SYSCOIN snapshot
+					if (ExtractDestination(out.scriptPubKey, address))
+						ta << "[\"" << CSyscoinAddress(address).ToString() << "\"," << out.nValue << "]" << endl;
+					else
+						LogPrintf("Could not extract address for pubkey %s\n", HexStr(out.scriptPubKey).c_str());
                 }
             }
             stats.nSerializedSize += 32 + pcursor->GetValueSize();
@@ -711,6 +786,8 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     }
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
+	// SYSCOIN snapshot
+	ta << "]";
     return true;
 }
 
