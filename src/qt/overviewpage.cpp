@@ -437,22 +437,22 @@ void OverviewPage::updatePrivateSendProgress()
     ui->privateSendProgress->setToolTip(strToolPip);
 }
 
-void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI) {
-    this->fShowAdvancedPSUI = fShowAdvancedPSUI;
-    int nNumItems = (fLiteMode || !fShowAdvancedPSUI) ? NUM_ITEMS : NUM_ITEMS_ADV;
+void OverviewPage::updateAdvancedPSUI(bool _fShowAdvancedPSUI) {
+    this->fShowAdvancedPSUI = _fShowAdvancedPSUI;
+    int nNumItems = (fLiteMode || !_fShowAdvancedPSUI) ? NUM_ITEMS : NUM_ITEMS_ADV;
     SetupTransactionList(nNumItems);
 
     if (fLiteMode) return;
 
     ui->framePrivateSend->setVisible(true);
-    ui->labelCompletitionText->setVisible(fShowAdvancedPSUI);
-    ui->privateSendProgress->setVisible(fShowAdvancedPSUI);
-    ui->labelSubmittedDenomText->setVisible(fShowAdvancedPSUI);
-    ui->labelSubmittedDenom->setVisible(fShowAdvancedPSUI);
-    ui->privateSendAuto->setVisible(fShowAdvancedPSUI);
-    ui->privateSendReset->setVisible(fShowAdvancedPSUI);
+    ui->labelCompletitionText->setVisible(_fShowAdvancedPSUI);
+    ui->privateSendProgress->setVisible(_fShowAdvancedPSUI);
+    ui->labelSubmittedDenomText->setVisible(_fShowAdvancedPSUI);
+    ui->labelSubmittedDenom->setVisible(_fShowAdvancedPSUI);
+    ui->privateSendAuto->setVisible(_fShowAdvancedPSUI);
+    ui->privateSendReset->setVisible(_fShowAdvancedPSUI);
     ui->privateSendInfo->setVisible(true);
-    ui->labelPrivateSendLastMessage->setVisible(fShowAdvancedPSUI);
+    ui->labelPrivateSendLastMessage->setVisible(_fShowAdvancedPSUI);
 }
 
 void OverviewPage::privateSendStatus()

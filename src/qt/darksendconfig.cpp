@@ -29,9 +29,9 @@ DarksendConfig::~DarksendConfig()
     delete ui;
 }
 
-void DarksendConfig::setModel(WalletModel *model)
+void DarksendConfig::setModel(WalletModel *_model)
 {
-    this->model = model;
+    this->model = _model;
 }
 
 void DarksendConfig::clickBasic()

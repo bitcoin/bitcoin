@@ -338,7 +338,7 @@ static void registerSignalHandler(int signal, void(*handler)(int))
     sa.sa_handler = handler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
-    sigaction(signal, &sa, NULL);
+    sigaction(signal, &sa, nullptr);
 }
 #endif
 
@@ -934,7 +934,7 @@ bool AppInitBasicSetup()
 #ifdef _MSC_VER
     // Turn off Microsoft heap dump noise
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-    _CrtSetReportFile(_CRT_WARN, CreateFileA("NUL", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0));
+    _CrtSetReportFile(_CRT_WARN, CreateFileA("NUL", GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, 0));
     // Disable confusing "helpful" text message on abort, Ctrl-C
     _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
@@ -1603,7 +1603,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                         strLoadError = _("Error initializing block database");
                         break;
                     }
-                    assert(chainActive.Tip() != NULL);
+                    assert(chainActive.Tip() != nullptr);
                 }
 
                 if (!fReset) {

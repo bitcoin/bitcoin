@@ -138,8 +138,8 @@ QString EditAddressDialog::getAddress() const
     return address;
 }
 
-void EditAddressDialog::setAddress(const QString &address)
+void EditAddressDialog::setAddress(const QString &_address)
 {
-    this->address = address;
-    ui->addressEdit->setText(address);
+    this->address = _address;
+    ui->addressEdit->setText(_address);
 }

@@ -1258,3 +1258,5 @@ src/crypto/.deps/crypto_libbitcoin_crypto_a-sha256_sse4.Po
 src/crypto/.deps/libchaincoinconsensus_la-sha256_sse4.Plo
 src/config/chaincoin-config.h
 src/config/chaincoin-config.h.in
+libchaincoinconsensus.pc
+test/functional/config.ini

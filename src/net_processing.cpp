@@ -976,7 +976,7 @@ static void RelayTransaction(const CTransaction& tx, CConnman& connman)
 
 static void RelayAddress(const CAddress& addr, bool fReachable, CConnman& connman)
 {
-    int nRelayNodes = fReachable ? 2 : 1; // limited relaying of addresses outside our network(s)
+    unsigned int nRelayNodes = fReachable ? 2 : 1; // limited relaying of addresses outside our network(s)
 
     // Relay to a limited number of other nodes
     // Use deterministic randomness to send to the same nodes for 24 hours
