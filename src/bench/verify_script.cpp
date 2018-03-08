@@ -1,15 +1,15 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bench/bench.h>
-#include <key.h>
+#include "bench.h"
+#include "key.h"
 #if defined(HAVE_CONSENSUS_LIB)
-#include <script/chaincoinconsensus.h>
+#include "script/bitcoinconsensus.h"
 #endif
-#include <script/script.h>
-#include <script/sign.h>
-#include <streams.h>
+#include "script/script.h"
+#include "script/sign.h"
+#include "streams.h"
 
 #include <array>
 
