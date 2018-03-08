@@ -1256,3 +1256,5 @@ src/wallet/libbitcoin_wallet_a-walletdb.o
 libbitcoin_server_a-net_processing.o-019f118e
 src/crypto/.deps/crypto_libbitcoin_crypto_a-sha256_sse4.Po
 src/crypto/.deps/libchaincoinconsensus_la-sha256_sse4.Plo
+src/config/chaincoin-config.h
+src/config/chaincoin-config.h.in
