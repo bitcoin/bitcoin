@@ -70,12 +70,7 @@ class AnonTest(ParticlTestFramework):
         ro = nodes[1].listtransactions()
         assert(len(ro) == 10)
 
-        ro = nodes[0].walletsettings('stakelimit', {'height':1})
-        ro = nodes[0].reservebalance(False)
-
-        assert(self.wait_for_height(nodes[1], 1))
-
-        ro = nodes[0].reservebalance(True, 10000000)
+        self.stakeBlocks(1)
 
         block1_hash = nodes[1].getblockhash(1)
         ro = nodes[1].getblock(block1_hash)
@@ -91,12 +86,7 @@ class AnonTest(ParticlTestFramework):
         ro = nodes[0].listtransactions()
         #print("0 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
 
-        ro = nodes[0].walletsettings('stakelimit', {'height':2})
-        ro = nodes[0].reservebalance(False)
-
-        assert(self.wait_for_height(nodes[1], 2))
-
-        ro = nodes[0].reservebalance(True, 10000000)
+        self.stakeBlocks(1)
 
         block1_hash = nodes[1].getblockhash(2)
         ro = nodes[1].getblock(block1_hash)
