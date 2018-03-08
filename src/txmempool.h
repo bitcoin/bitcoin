@@ -620,6 +620,12 @@ public:
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
     int Expire(int64_t time);
 
+    /**
+     * Calculate the ancestor and descendant count for the given transaction.
+     * The counts include the transaction itself.
+     */
+    void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const;
+
     /** Returns false if the transaction is in the mempool and not within the chain limit specified. */
     bool TransactionWithinChainLimit(const uint256& txid, size_t ancestor_limit, size_t descendant_limit) const;
 
