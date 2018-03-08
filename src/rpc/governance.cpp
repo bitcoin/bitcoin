@@ -6,6 +6,7 @@
 
 #include <activemasternode.h>
 #include <consensus/validation.h>
+#include <core_io.h>
 #include <governance.h>
 #include <governance-vote.h>
 #include <governance-classes.h>

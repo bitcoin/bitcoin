@@ -66,9 +66,10 @@ void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, C
         if(!masternodeSync.IsMasternodeListSynced()) return;
 
 #ifdef ENABLE_WALLET
-        CWalletRef pwalletMain = vpwallets[0];
-        if (pwalletMain)
+        if (!vpwallets.empty()) {
+            CWalletRef pwalletMain = vpwallets[0];
             LOCK(pwalletMain->cs_wallet);
+        }
 #endif
         LOCK(cs_instantsend);
 
@@ -293,9 +294,10 @@ bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman& 
     // cs_main, cs_wallet and cs_instantsend should be already locked
     AssertLockHeld(cs_main);
 #ifdef ENABLE_WALLET
-    CWalletRef pwalletMain = vpwallets[0];
-    if (pwalletMain)
+    if (!vpwallets.empty()) {
+        CWalletRef pwalletMain = vpwallets[0];
         AssertLockHeld(pwalletMain->cs_wallet);
+    }
 #endif
     AssertLockHeld(cs_instantsend);
 
@@ -423,9 +425,10 @@ void CInstantSend::ProcessOrphanTxLockVotes(CConnman& connman)
 {
     LOCK(cs_main);
 #ifdef ENABLE_WALLET
-    CWalletRef pwalletMain = vpwallets[0];
-    if (pwalletMain)
-        LOCK(pwalletMain->cs_wallet);
+    if (!vpwallets.empty()) {
+        CWalletRef pwalletMain = vpwallets[0];
+        AssertLockHeld(pwalletMain->cs_wallet);
+    }
 #endif
 //    LOCK(cs_instantsend);
 
@@ -474,9 +477,10 @@ void CInstantSend::TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCand
 {
     LOCK(cs_main);
 #ifdef ENABLE_WALLET
-    CWalletRef pwalletMain = vpwallets[0];
-    if (pwalletMain)
-        LOCK(pwalletMain->cs_wallet);
+    if (!vpwallets.empty()) {
+        CWalletRef pwalletMain = vpwallets[0];
+        AssertLockHeld(pwalletMain->cs_wallet);
+    }
 #endif
 //    LOCK(cs_instantsend);
 
@@ -495,9 +499,10 @@ void CInstantSend::UpdateLockedTransaction(const CTxLockCandidate& txLockCandida
 {
     // cs_wallet and cs_instantsend should be already locked
 #ifdef ENABLE_WALLET
-    CWalletRef pwalletMain = vpwallets[0];
-    if (pwalletMain)
+    if (!vpwallets.empty()) {
+        CWalletRef pwalletMain = vpwallets[0];
         AssertLockHeld(pwalletMain->cs_wallet);
+    }
 #endif
     AssertLockHeld(cs_instantsend);
 
@@ -506,7 +511,7 @@ void CInstantSend::UpdateLockedTransaction(const CTxLockCandidate& txLockCandida
     if(!IsLockedInstantSendTransaction(txHash)) return; // not a locked tx, do not update/notify
 
 #ifdef ENABLE_WALLET
-    if(pwalletMain) {
+    if (!vpwallets.empty()) {
         GetMainSignals().TransactionAddedToMempool(MakeTransactionRef(*txLockCandidate.txLockRequest.tx));
         // bumping this to update UI
         nCompleteTXLocks++;
@@ -771,7 +776,7 @@ bool CInstantSend::GetTxLockVote(const uint256& hash, CTxLockVote& txLockVoteRet
 
 bool CInstantSend::IsInstantSendReadyToLock(const uint256& txHash)
 {
-    if(!fEnableInstantSend || fLargeWorkForkFound || fLargeWorkInvalidChainFound)
+    if(!fEnableInstantSend)
         return false;
 
     LOCK(cs_instantsend);
@@ -783,7 +788,7 @@ bool CInstantSend::IsInstantSendReadyToLock(const uint256& txHash)
 
 bool CInstantSend::IsLockedInstantSendTransaction(const uint256& txHash)
 {
-    if(!fEnableInstantSend || fLargeWorkForkFound || fLargeWorkInvalidChainFound)
+    if(!fEnableInstantSend)
         return false;
 
     LOCK(cs_instantsend);
@@ -809,7 +814,6 @@ bool CInstantSend::IsLockedInstantSendTransaction(const uint256& txHash)
 int CInstantSend::GetTransactionLockSignatures(const uint256& txHash)
 {
     if(!fEnableInstantSend) return -1;
-    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
 
     LOCK(cs_instantsend);
 
