@@ -25,9 +25,6 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
 
-#ifdef ENABLE_WALLET
-extern CWalletRef pwalletMain = vpwallets[0];
-#endif // ENABLE_WALLET
 extern CTxMemPool mempool;
 
 bool fEnableInstantSend = true;
@@ -69,6 +66,7 @@ void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, C
         if(!masternodeSync.IsMasternodeListSynced()) return;
 
 #ifdef ENABLE_WALLET
+        CWalletRef pwalletMain = vpwallets[0];
         if (pwalletMain)
             LOCK(pwalletMain->cs_wallet);
 #endif
@@ -295,6 +293,7 @@ bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman& 
     // cs_main, cs_wallet and cs_instantsend should be already locked
     AssertLockHeld(cs_main);
 #ifdef ENABLE_WALLET
+    CWalletRef pwalletMain = vpwallets[0];
     if (pwalletMain)
         AssertLockHeld(pwalletMain->cs_wallet);
 #endif
@@ -424,6 +423,7 @@ void CInstantSend::ProcessOrphanTxLockVotes(CConnman& connman)
 {
     LOCK(cs_main);
 #ifdef ENABLE_WALLET
+    CWalletRef pwalletMain = vpwallets[0];
     if (pwalletMain)
         LOCK(pwalletMain->cs_wallet);
 #endif
@@ -474,6 +474,7 @@ void CInstantSend::TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCand
 {
     LOCK(cs_main);
 #ifdef ENABLE_WALLET
+    CWalletRef pwalletMain = vpwallets[0];
     if (pwalletMain)
         LOCK(pwalletMain->cs_wallet);
 #endif
@@ -494,6 +495,7 @@ void CInstantSend::UpdateLockedTransaction(const CTxLockCandidate& txLockCandida
 {
     // cs_wallet and cs_instantsend should be already locked
 #ifdef ENABLE_WALLET
+    CWalletRef pwalletMain = vpwallets[0];
     if (pwalletMain)
         AssertLockHeld(pwalletMain->cs_wallet);
 #endif

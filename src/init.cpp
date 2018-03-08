@@ -26,9 +26,9 @@
 #include <net.h>
 #include <netbase.h>
 #include <net_processing.h>
-#include <policy/policy.h>
 #include <policy/fees.h>
 #include <policy/feerate.h>
+#include <policy/policy.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
@@ -249,7 +249,9 @@ void Shutdown()
     }
 
     // FlushStateToDisk generates a SetBestChain callback, which we should avoid missing
-    FlushStateToDisk();
+    if (pcoinsTip != nullptr) {
+        FlushStateToDisk();
+    }
 
     // After there are no more peers/RPC left to give us new data which may generate
     // CValidationInterface callbacks, flush them...
@@ -1173,6 +1175,9 @@ bool AppInitParameterInteraction()
 
     if (GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
         return InitError("rpcserialversion must be non-negative.");
+
+    if (GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) > 1)
+        return InitError("unknown rpcserialversion requested.");
 
     nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 

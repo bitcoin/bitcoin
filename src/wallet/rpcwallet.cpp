@@ -1083,11 +1083,11 @@ UniValue sendmany(const JSONRPCRequest& request)
 
     CCoinControl coin_control;
     if (request.params.size() > 6 && !request.params[6].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6]);
+        coin_control.signalRbf = request.params[6].get_bool();
     }
 
     if (request.params.size() > 7 && !request.params[7].isNull()) {
-        coin_control.nConfirmTarget = request.params[7].get_int();
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[7]);
     }
 
     if (request.params.size() > 8 && !request.params[8].isNull()) {
@@ -1152,7 +1152,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, keyChange, g_connman.get(), state, fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX))
+    if (!pwallet->CommitTransaction(wtx, keyChange, g_connman.get(), state /*, fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX*/))
         throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
 
     return wtx.GetHash().GetHex();
