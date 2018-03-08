@@ -181,8 +181,8 @@ void CGovernanceTriggerManager::CleanAndRemove()
         bool remove = false;
         CSuperblock_sptr& pSuperblock = it->second;
         if(!pSuperblock) {
-            DBG( std::cout << "CGovernanceTriggerManager::CleanAndRemove: NULL superblock marked for removal " << std::endl; );
-            LogPrint(BCLog::GOV, "CGovernanceTriggerManager::CleanAndRemove -- NULL superblock marked for removal\n");
+            DBG( std::cout << "CGovernanceTriggerManager::CleanAndRemove: nullptr superblock marked for removal " << std::endl; );
+            LogPrint(BCLog::GOV, "CGovernanceTriggerManager::CleanAndRemove -- nullptr superblock marked for removal\n");
             remove = true;
         } else {
             DBG( std::cout << "CGovernanceTriggerManager::CleanAndRemove: superblock status = " << pSuperblock->GetStatus() << std::endl; );
@@ -204,7 +204,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
 
         if(remove) {
             DBG(
-                std::string strDataAsPlainString = "NULL";
+                std::string strDataAsPlainString = "nullptr";
                 CGovernanceObject* pgovobj = pSuperblock->GetGovernanceObject();
                 if(pgovobj) {
                     strDataAsPlainString = pgovobj->GetDataAsPlainString();
@@ -288,8 +288,8 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
         CGovernanceObject* pObj = pSuperblock->GetGovernanceObject();
 
         if(!pObj) {
-            LogPrintf("CSuperblockManager::IsSuperblockTriggered -- pObj == NULL, continuing\n");
-            DBG( std::cout << "IsSuperblockTriggered pObj is NULL, continuing" << std::endl; );
+            LogPrintf("CSuperblockManager::IsSuperblockTriggered -- pObj == nullptr, continuing\n");
+            DBG( std::cout << "IsSuperblockTriggered pObj is nullptr, continuing" << std::endl; );
             continue;
         }
 
@@ -346,7 +346,7 @@ bool CSuperblockManager::GetBestSuperblock(CSuperblock_sptr& pSuperblockRet, int
         CGovernanceObject* pObj = pSuperblock->GetGovernanceObject();
 
         if(!pObj) {
-            DBG( std::cout << "GetBestSuperblock pObj is NULL, continuing" << std::endl; );
+            DBG( std::cout << "GetBestSuperblock pObj is nullptr, continuing" << std::endl; );
             continue;
         }
 
@@ -477,7 +477,7 @@ CSuperblock(uint256& nHash)
     CGovernanceObject* pGovObj = GetGovernanceObject();
 
     if(!pGovObj) {
-        DBG( std::cout << "CSuperblock Constructor pGovObjIn is NULL, returning" << std::endl; );
+        DBG( std::cout << "CSuperblock Constructor pGovObjIn is nullptr, returning" << std::endl; );
         throw std::runtime_error("CSuperblock: Failed to find Governance Object");
     }
 

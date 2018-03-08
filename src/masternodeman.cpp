@@ -437,7 +437,7 @@ CMasternode* CMasternodeMan::Find(const COutPoint &outpoint)
 {
     LOCK(cs);
     auto it = mapMasternodes.find(outpoint);
-    return it == mapMasternodes.end() ? NULL : &(it->second);
+    return it == mapMasternodes.end() ? nullptr : &(it->second);
 }
 
 bool CMasternodeMan::Get(const COutPoint& outpoint, CMasternode& masternodeRet)
@@ -563,7 +563,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
     int nTenthNetwork = nMnCount/10;
     int nCountTenth = 0;
     arith_uint256 nHighest = 0;
-    const CMasternode *pBestMasternode = NULL;
+    const CMasternode *pBestMasternode = nullptr;
     for (const auto& s : vecMasternodeLastPaid) {
         arith_uint256 nScore = s.second->CalculateScore(blockHash);
         if(nScore > nHighest){
@@ -862,7 +862,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
         if(nDos > 0) {
             // if anything significant failed, mark that node
             Misbehaving(pfrom->GetId(), nDos);
-        } else if(pmn != NULL) {
+        } else if(pmn != nullptr) {
             // nothing significant failed, mn is a known one too
             return;
         }
@@ -1083,8 +1083,8 @@ void CMasternodeMan::CheckSameAddr()
     {
         LOCK(cs);
 
-        CMasternode* pprevMasternode = NULL;
-        CMasternode* pverifiedMasternode = NULL;
+        CMasternode* pprevMasternode = nullptr;
+        CMasternode* pverifiedMasternode = nullptr;
 
         for (auto& mnpair : mapMasternodes) {
             vSortedByAddr.push_back(&mnpair.second);
@@ -1098,7 +1098,7 @@ void CMasternodeMan::CheckSameAddr()
             // initial step
             if(!pprevMasternode) {
                 pprevMasternode = pmn;
-                pverifiedMasternode = pmn->IsPoSeVerified() ? pmn : NULL;
+                pverifiedMasternode = pmn->IsPoSeVerified() ? pmn : nullptr;
                 continue;
             }
             // second+ step
@@ -1113,7 +1113,7 @@ void CMasternodeMan::CheckSameAddr()
                     pverifiedMasternode = pmn;
                 }
             } else {
-                pverifiedMasternode = pmn->IsPoSeVerified() ? pmn : NULL;
+                pverifiedMasternode = pmn->IsPoSeVerified() ? pmn : nullptr;
             }
             pprevMasternode = pmn;
         }
@@ -1260,7 +1260,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
     {
         LOCK(cs);
 
-        CMasternode* prealMasternode = NULL;
+        CMasternode* prealMasternode = nullptr;
         std::vector<CMasternode*> vpMasternodesToBan;
 
         uint256 hash1 = mnv.GetSignatureHash1(blockHash);

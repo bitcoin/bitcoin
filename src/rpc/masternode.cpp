@@ -297,7 +297,7 @@ UniValue masternode(const JSONRPCRequest& request)
                 bool fResult = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
                 int nDoS;
-                if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
+                if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, *g_connman)) {
                     strError = "Failed to verify MNB";
                     fResult = false;
                 }
@@ -350,7 +350,7 @@ UniValue masternode(const JSONRPCRequest& request)
             bool fResult = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
             int nDoS;
-            if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
+            if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, *g_connman)) {
                 strError = "Failed to verify MNB";
                 fResult = false;
             }
@@ -846,7 +846,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             int nDos = 0;
             bool fResult;
             if (mnb.CheckSignature(nDos)) {
-                fResult = mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDos, *g_connman);
+                fResult = mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDos, *g_connman);
                 mnodeman.NotifyMasternodeUpdates(*g_connman);
             } else fResult = false;
 

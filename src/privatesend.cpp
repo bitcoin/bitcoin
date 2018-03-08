@@ -449,7 +449,7 @@ void CPrivateSend::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex
     uint256 txHash = tx.GetHash();
     if (!mapDSTX.count(txHash)) return;
 
-    // When tx is 0-confirmed or conflicted, pindes is NULL and nConfirmedHeight should be set to -1
+    // When tx is 0-confirmed or conflicted, pindes is nullptr and nConfirmedHeight should be set to -1
     mapDSTX[txHash].SetConfirmedHeight(pindex == nullptr ? -1 : pindex->nHeight);
     LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::SyncTransaction -- txid=%s\n", txHash.ToString());
 }

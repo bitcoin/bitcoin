@@ -6,7 +6,7 @@
 
 static double gettimedouble(void) {
     struct timeval tv;
-    gettimeofday(&tv, nullptr);
+    gettimeofday(&tv, NULL);
     return tv.tv_usec * 0.000001 + tv.tv_sec;
 }
 
@@ -30,13 +30,13 @@ static void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(vo
     double max = 0.0;
     for (i = 0; i < count; i++) {
         double begin, total;
-        if (setup != nullptr) {
+        if (setup != NULL) {
             setup(data);
         }
         begin = gettimedouble();
         benchmark(data);
         total = gettimedouble() - begin;
-        if (teardown != nullptr) {
+        if (teardown != NULL) {
             teardown(data);
         }
         if (total < min) {
@@ -157,14 +157,14 @@ int main(void) {
     AES128_ctx ctx128;
     AES192_ctx ctx192;
     AES256_ctx ctx256;
-    run_benchmark("aes128_init", bench_AES128_init, nullptr, nullptr, &ctx128, 20, 50000);
-    run_benchmark("aes128_encrypt_byte", bench_AES128_encrypt, bench_AES128_encrypt_setup, nullptr, &ctx128, 20, 4000000);
-    run_benchmark("aes128_decrypt_byte", bench_AES128_decrypt, bench_AES128_encrypt_setup, nullptr, &ctx128, 20, 4000000);
-    run_benchmark("aes192_init", bench_AES192_init, nullptr, nullptr, &ctx192, 20, 50000);
-    run_benchmark("aes192_encrypt_byte", bench_AES192_encrypt, bench_AES192_encrypt_setup, nullptr, &ctx192, 20, 4000000);
-    run_benchmark("aes192_decrypt_byte", bench_AES192_decrypt, bench_AES192_encrypt_setup, nullptr, &ctx192, 20, 4000000);
-    run_benchmark("aes256_init", bench_AES256_init, nullptr, nullptr, &ctx256, 20, 50000);
-    run_benchmark("aes256_encrypt_byte", bench_AES256_encrypt, bench_AES256_encrypt_setup, nullptr, &ctx256, 20, 4000000);
-    run_benchmark("aes256_decrypt_byte", bench_AES256_decrypt, bench_AES256_encrypt_setup, nullptr, &ctx256, 20, 4000000);
+    run_benchmark("aes128_init", bench_AES128_init, NULL, NULL, &ctx128, 20, 50000);
+    run_benchmark("aes128_encrypt_byte", bench_AES128_encrypt, bench_AES128_encrypt_setup, NULL, &ctx128, 20, 4000000);
+    run_benchmark("aes128_decrypt_byte", bench_AES128_decrypt, bench_AES128_encrypt_setup, NULL, &ctx128, 20, 4000000);
+    run_benchmark("aes192_init", bench_AES192_init, NULL, NULL, &ctx192, 20, 50000);
+    run_benchmark("aes192_encrypt_byte", bench_AES192_encrypt, bench_AES192_encrypt_setup, NULL, &ctx192, 20, 4000000);
+    run_benchmark("aes192_decrypt_byte", bench_AES192_decrypt, bench_AES192_encrypt_setup, NULL, &ctx192, 20, 4000000);
+    run_benchmark("aes256_init", bench_AES256_init, NULL, NULL, &ctx256, 20, 50000);
+    run_benchmark("aes256_encrypt_byte", bench_AES256_encrypt, bench_AES256_encrypt_setup, NULL, &ctx256, 20, 4000000);
+    run_benchmark("aes256_decrypt_byte", bench_AES256_decrypt, bench_AES256_encrypt_setup, NULL, &ctx256, 20, 4000000);
     return 0;
 }

@@ -201,10 +201,10 @@ bool CWallet::AddKeyPubKeyWithDB(CWalletDB &walletdb, const CKey& secret, const 
         pwalletdbEncryption = &walletdb;
     }
     if (!CCryptoKeyStore::AddKeyPubKey(secret, pubkey)) {
-        if (needsDB) pwalletdbEncryption = NULL;
+        if (needsDB) pwalletdbEncryption = nullptr;
         return false;
     }
-    if (needsDB) pwalletdbEncryption = NULL;
+    if (needsDB) pwalletdbEncryption = nullptr;
 
     // check if we need to remove from watch-only
     CScript script;
@@ -720,7 +720,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         }
 
         delete pwalletdbEncryption;
-        pwalletdbEncryption = NULL;
+        pwalletdbEncryption = nullptr;
 
         Lock();
         Unlock(strWalletPassphrase);
@@ -1064,7 +1064,7 @@ bool CWallet::LoadToWallet(const CWalletTx& wtxIn)
 /**
  * Add a transaction to the wallet, or update it.  pIndex and posInBlock should
  * be set when the transaction was known to be included in a block.  When
- * pIndex == NULL, then wallet state is not updated in AddToWallet, but
+ * pIndex == nullptr, then wallet state is not updated in AddToWallet, but
  * notifications happen and cached balances are marked dirty.
  *
  * If fUpdate is true, existing transactions will be updated.
@@ -4959,7 +4959,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             walletInstance->SetDefaultKey(newDefaultKey);
             if (!walletInstance->SetAddressBook(walletInstance->vchDefaultKey.GetID(), "", "receive")) {
                 InitError(_("Cannot write default address") += "\n");
-                return NULL;
+                return nullptr;
             }
         }
 

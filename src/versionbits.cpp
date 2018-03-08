@@ -116,7 +116,7 @@ BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockI
     stats.period = Period(params);
     stats.threshold = Threshold(params);
 
-    if (pindex == NULL)
+    if (pindex == nullptr)
         return stats;
 
     // Find beginning of period

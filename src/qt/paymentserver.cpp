@@ -146,7 +146,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
     const QDateTime currentTime = QDateTime::currentDateTime();
 
     for (const QSslCertificate& cert : certList) {
-        // Don't log NULL certificates
+        // Don't log nullptr certificates
         if (cert.isNull())
             continue;
 
