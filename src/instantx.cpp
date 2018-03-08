@@ -517,7 +517,7 @@ void CInstantSend::UpdateLockedTransaction(const CTxLockCandidate& txLockCandida
     }
 #endif
 
-    GetMainSignals().NotifyTransactionLock(*txLockCandidate.txLockRequest.tx);
+    GetMainSignals().NotifyTransactionLock(MakeTransactionRef(*txLockCandidate.txLockRequest.tx));
 
     LogPrint(BCLog::INSTSEND, "CInstantSend::UpdateLockedTransaction -- done, txid=%s\n", txHash.ToString());
 }

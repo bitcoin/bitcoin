@@ -363,7 +363,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
-static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, CCoinControl *coin_control = nullptr, bool fUseInstantSend=false, bool fUsePrivateSend=false)
+static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, CCoinControl &coin_control, bool fUseInstantSend=false, bool fUsePrivateSend=false)
 {
     CAmount curBalance = pwallet->GetBalance();
 
@@ -487,7 +487,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUseInstantSend, fUsePrivateSend);
+    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, coin_control, fUseInstantSend, fUsePrivateSend);
 
     return wtx.GetHash().GetHex();
 }
@@ -569,7 +569,7 @@ UniValue instantsendtoaddress(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, wtx, true, true);
+    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, coin_control, true);
 
     return wtx.GetHash().GetHex();
 }
@@ -1002,7 +1002,8 @@ UniValue sendfrom(const JSONRPCRequest& request)
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
-    SendMoney(pwallet, address.Get(), nAmount, false, wtx);
+    CCoinControl no_coin_control; // This is a deprecated API
+    SendMoney(pwallet, address.Get(), nAmount, false, wtx, no_coin_control);
 
     return wtx.GetHash().GetHex();
 }
@@ -1147,7 +1148,7 @@ UniValue sendmany(const JSONRPCRequest& request)
         fUsePrivateSend = request.params[10].get_bool();
 
     bool fCreated = pwallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason,
-                                                   &coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, fUseInstantSend);
+                                                   coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, fUseInstantSend);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;

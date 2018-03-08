@@ -168,7 +168,7 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &t
     return SendMessage(MSG_HASHTX, data, 32);
 }
 
-bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransaction &transaction)
+bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransactionRef &transaction)
 {
     uint256 hash = transaction.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashtxlock %s\n", hash.GetHex());
@@ -208,7 +208,7 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     return SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
 }
 
-bool CZMQPublishRawTransactionLockNotifier::NotifyTransactionLock(const CTransaction &transaction)
+bool CZMQPublishRawTransactionLockNotifier::NotifyTransactionLock(const CTransactionRef &transaction)
 {
     uint256 hash = transaction.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish rawtxlock %s\n", hash.GetHex());

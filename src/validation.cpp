@@ -2537,7 +2537,8 @@ static void NotifyHeaderTip() {
     // Send block tip changed notifications without cs_main
     if (fNotify) {
         uiInterface.NotifyHeaderTip(fInitialBlockDownload, pindexHeader);
-        GetMainSignals().NotifyHeaderTip(pindexHeader, fInitialBlockDownload);
+        // disabled to see if we can pass the info to MN code otherwise
+        // GetMainSignals().NotifyHeaderTip(pindexHeader, fInitialBlockDownload);
     }
 }
 
@@ -3230,7 +3231,8 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
     CheckBlockIndex(chainparams.GetConsensus());
 
     // Notify external listeners about accepted block header
-    GetMainSignals().AcceptedBlockHeader(pindex);
+    // disabled to see if we can pass the info to MN code otherwise
+    // GetMainSignals().AcceptedBlockHeader(pindex);
 
     return true;
 }

@@ -1035,7 +1035,7 @@ public:
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl *coinControl = nullptr, bool sign = true, AvailableCoinsType nCoinType=ALL_COINS, bool fUseInstantSend=false);
+                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, AvailableCoinsType nCoinType=ALL_COINS, bool fUseInstantSend=false);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, CValidationState& state, std::string strCommand="tx");
 
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);
@@ -1303,5 +1303,7 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const ContainerType &coins
     }
     return true;
 }
+
+bool CalculateEstimateType(FeeEstimateMode mode, bool opt_in_rbf);
 
 #endif // BITCOIN_WALLET_WALLET_H

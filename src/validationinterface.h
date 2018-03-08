@@ -19,6 +19,7 @@ class CReserveScript;
 class CValidationInterface;
 class CValidationState;
 class uint256;
+class CScheduler;
 
 // These functions dispatch to one or all registered wallets
 

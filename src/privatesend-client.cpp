@@ -1224,14 +1224,14 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
         coinControl.Select(outpoint);
 
     bool fSuccess = pwallet->CreateTransaction(vecSend, wtx, reservekeyChange,
-            nFeeRet, nChangePosRet, strFail, &coinControl, true, ONLY_NONDENOMINATED);
+            nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NONDENOMINATED);
     if(!fSuccess) {
         LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ONLY_NONDENOMINATED: %s\n", strFail);
         // If we failed then most likely there are not enough funds on this address.
         if(fTryDenominated) {
             // Try to also use denominated coins (we can't mix denominated without collaterals anyway).
             if(!pwallet->CreateTransaction(vecSend, wtx, reservekeyChange,
-                                nFeeRet, nChangePosRet, strFail, &coinControl, true, ALL_COINS)) {
+                                nFeeRet, nChangePosRet, strFail, coinControl, true, ALL_COINS)) {
                 LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ALL_COINS Error: %s\n", strFail);
                 reservekeyCollateral.ReturnKey();
                 return false;
@@ -1369,7 +1369,7 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     CReserveKey reservekeyChange(pwallet);
 
     bool fSuccess = pwallet->CreateTransaction(vecSend, wtx, reservekeyChange,
-            nFeeRet, nChangePosRet, strFail, &coinControl, true, ONLY_NONDENOMINATED);
+            nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NONDENOMINATED);
     if(!fSuccess) {
         LogPrintf("CPrivateSendClient::CreateDenominated -- Error: %s\n", strFail);
         keyHolderStorageDenom.ReturnAll();

@@ -3431,7 +3431,7 @@ bool CWallet::ConvertList(std::vector<CTxIn> vecTxIn, std::vector<CAmount>& vecA
 }
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign, AvailableCoinsType nCoinType, bool fUseInstantSend)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, AvailableCoinsType nCoinType, bool fUseInstantSend)
 {
     CAmount nFeePay = fUseInstantSend ? CTxLockRequest().GetMinFee() : 0;
 
@@ -3500,7 +3500,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         {
             std::vector<CTxDSIn> vecTxDSInTmp;
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, true, coinControl, false, nCoinType, fUseInstantSend);
+            AvailableCoins(vAvailableCoins, true, coin_control, false, nCoinType, fUseInstantSend);
 
             nFeeRet = 0;
             if(nFeePay > 0) nFeeRet = nFeePay;
@@ -3663,7 +3663,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 // and in the spirit of "smallest possible change from prior
                 // behavior."
                 vecTxDSInTmp.clear();
-                bool rbf = coinControl ? coinControl->signalRbf : fWalletRbf;
+                bool rbf = coin_control ? coin_control->signalRbf : fWalletRbf;
                 const uint32_t nSequence = rbf ? MAX_BIP125_RBF_SEQUENCE : (std::numeric_limits<unsigned int>::max() - 1);
                 for (const auto& coin : setCoins) {
                     CTxIn txin = CTxIn(coin.outpoint,CScript(), nSequence);
@@ -3711,11 +3711,11 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     currentConfirmationTarget = coinControl->nConfirmTarget;
 
                 // Allow to override the default fee estimate mode over the CoinControl instance
-                bool conservative_estimate = CalculateEstimateType(coinControl ? coinControl->m_fee_mode : FeeEstimateMode::UNSET, rbf);
+                bool conservative_estimate = CalculateEstimateType(coin_control ? coin_control->m_fee_mode : FeeEstimateMode::UNSET, rbf);
 
                 CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, ::mempool, ::feeEstimator, &feeCalc, false /* ignoreGlobalPayTxFee */, conservative_estimate);
-                if (coinControl && coinControl->fOverrideFeeRate)
-                    nFeeNeeded = coinControl->nFeeRate.GetFee(nBytes);
+                if (coinControl && coin_control->fOverrideFeeRate)
+                    nFeeNeeded = coin_control->nFeeRate.GetFee(nBytes);
 
                 if(fUseInstantSend) {
                     nFeeNeeded = std::max(nFeeNeeded, CTxLockRequest(txNew).GetMinFee());

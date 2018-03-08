@@ -324,7 +324,7 @@ std::vector<CLogCategoryActive> ListActiveLogCategories()
  * suppress printing of the timestamp when multiple calls are made that don't
  * end in a newline. Initialize it to true, and hold/manage it, in the calling context.
  */
-static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine)
+static std::string LogTimestampStr(const std::string &str, std::atomic_bool *fStartedNewLine)
 {
     std::string strStamped;
 
@@ -344,35 +344,18 @@ static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine
     } else
         strStamped = str;
 
-    return strStamped;
-}
-
-/**
- * fStartedNewLine is a state variable held by the calling context that will
- * suppress printing of the thread name when multiple calls are made that don't
- * end in a newline. Initialize it to true, and hold/manage it, in the calling context.
- */
-static std::string LogThreadNameStr(const std::string &str, bool *fStartedNewLine)
-{
-    std::string strThreadLogged;
-
-    if (!fLogThreadNames)
-        return str;
-
-    std::string strThreadName = GetThreadName();
-
-    if (*fStartedNewLine)
-        strThreadLogged = strprintf("%16s | %s", strThreadName.c_str(), str.c_str());
+    if (!str.empty() && str[str.size()-1] == '\n')
+        *fStartedNewLine = true;
     else
-        strThreadLogged = str;
+        *fStartedNewLine = false;
 
-    return strThreadLogged;
+    return strStamped;
 }
 
 int LogPrintStr(const std::string &str)
 {
     int ret = 0; // Returns total number of characters written
-    static bool fStartedNewLine = true;
+    static std::atomic_bool fStartedNewLine(true);
 
     std::string strTimestamped = LogTimestampStr(str, &fStartedNewLine);
 
