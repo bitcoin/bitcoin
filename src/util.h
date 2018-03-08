@@ -96,18 +96,18 @@ int LogPrintStr(const std::string &str);
 
 #define LogPrint(category, ...) do { \
     if (LogAcceptCategory((category))) { \
-        LogPrintStr(tfm::format(__VA_ARGS__)); \
+        LogPrintStr(tinyformat::format(__VA_ARGS__)); \
     } \
 } while(0)
 
 #define LogPrintf(...) do { \
-    LogPrintStr(tfm::format(__VA_ARGS__)); \
+    LogPrintStr(tinyformat::format(__VA_ARGS__)); \
 } while(0)
 
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)
 {
-    LogPrintStr("ERROR: " + tfm::format(fmt, args...) + "\n");
+    LogPrintStr("ERROR: " + tinyformat::format(fmt, args...) + "\n");
     return false;
 }
 
