@@ -347,6 +347,8 @@ std::string CMasternode::GetStatus() const
 
 void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack)
 {
+    AssertLockHeld(cs_main);
+
     if(!pindex) return;
 
     if (deterministicMNManager->IsDeterministicMNsSporkActive(pindex->nHeight)) {
@@ -354,7 +356,6 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
         if (!dmn || dmn->pdmnState->nLastPaidHeight == -1) {
             LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- not found\n", outpoint.ToStringShort());
         } else {
-            LOCK(cs_main);
             nBlockLastPaid = (int)dmn->pdmnState->nLastPaidHeight;
             nTimeLastPaid = chainActive[nBlockLastPaid]->nTime;
             LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- found new %d\n", outpoint.ToStringShort(), nBlockLastPaid);
