@@ -144,7 +144,7 @@ CXXFLAGS="-g -ggdb -O0" or whatever debug flags you need.
 
 **generating flame graph profiles**
 
-See the full docs in [flamegraph.md](/doc/flamegraph.md).
+See the full docs at [Flame Graphs](/doc/flamegraphs.md).
 
 
 **compiling for gprof profiling**
