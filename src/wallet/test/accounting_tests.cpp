@@ -18,7 +18,7 @@ GetResults(CWallet& wallet, std::map<CAmount, CAccountingEntry>& results)
     std::list<CAccountingEntry> aes;
 
     results.clear();
-    BOOST_CHECK(wallet.ReorderTransactions() == DB_LOAD_OK);
+    BOOST_CHECK(wallet.ReorderTransactions() == DBErrors::LOAD_OK);
     wallet.ListAccountCreditDebit("", aes);
     for (CAccountingEntry& ae : aes)
     {
