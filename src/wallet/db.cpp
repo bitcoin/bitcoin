@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +18,6 @@
 #include <sys/stat.h>
 #endif
 
-#include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
 //
@@ -37,7 +36,7 @@ void CDBEnv::EnvShutdown()
     if (ret != 0)
         LogPrintf("CDBEnv::EnvShutdown: Error %d shutting down database environment: %s\n", ret, DbEnv::strerror(ret));
     if (!fMockDb)
-        DbEnv(0).remove(strPath.c_str(), 0);
+        DbEnv((u_int32_t)0).remove(strPath.c_str(), 0);
 }
 
 void CDBEnv::Reset()
@@ -318,9 +317,9 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
     // Format of bdb dump is ascii lines:
     // header lines...
     // HEADER=END
-    // hexadecimal key
-    // hexadecimal value
-    // ... repeated
+    //  hexadecimal key
+    //  hexadecimal value
+    //  ... repeated
     // DATA=END
 
     std::string strLine;
@@ -511,11 +510,11 @@ bool CDB::Rewrite(CWalletDBWrapper& dbw, const char* pszSkip)
                         while (fSuccess) {
                             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
                             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-                            int ret = db.ReadAtCursor(pcursor, ssKey, ssValue, DB_NEXT);
-                            if (ret == DB_NOTFOUND) {
+                            int ret1 = db.ReadAtCursor(pcursor, ssKey, ssValue);
+                            if (ret1 == DB_NOTFOUND) {
                                 pcursor->close();
                                 break;
-                            } else if (ret != 0) {
+                            } else if (ret1 != 0) {
                                 pcursor->close();
                                 fSuccess = false;
                                 break;
@@ -559,6 +558,7 @@ bool CDB::Rewrite(CWalletDBWrapper& dbw, const char* pszSkip)
         }
         MilliSleep(100);
     }
+    return false;
 }
 
 
@@ -684,6 +684,7 @@ bool CWalletDBWrapper::Backup(const std::string& strDest)
         }
         MilliSleep(100);
     }
+    return false;
 }
 
 void CWalletDBWrapper::Flush(bool shutdown)
