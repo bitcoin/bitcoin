@@ -44,9 +44,9 @@ public:
     bool TxnCommit();
     bool TxnAbort();
 
-    bool ReadPK(CKeyID &addr, CPubKey &pubkey);
-    bool WritePK(CKeyID &addr, CPubKey &pubkey);
-    bool ExistsPK(CKeyID &addr);
+    bool ReadPK(const CKeyID &addr, CPubKey &pubkey);
+    bool WritePK(const CKeyID &addr, CPubKey &pubkey);
+    bool ExistsPK(const CKeyID &addr);
 
     bool ReadKey(const CKeyID &idk, SecMsgKey &key);
     bool WriteKey(const CKeyID &idk, const SecMsgKey &key);

@@ -2217,7 +2217,7 @@ int CSMSG::WalletKeyChanged(CKeyID &keyId, const std::string &sLabel, ChangeType
     return ManageLocalKey(keyId, mode);
 };
 
-int CSMSG::ScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool reportToGui)
+int CSMSG::ScanMessage(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload, bool reportToGui)
 {
     LogPrint(BCLog::SMSG, "%s\n", __func__);
     /*
@@ -2233,39 +2233,35 @@ int CSMSG::ScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, b
     bool fOwnMessage = false;
     MessageData msg; // placeholder
     CKeyID addressTo;
-    SecureMessage *psmsg = (SecureMessage*) pHeader;
-    if (psmsg->IsPaidVersion())
+    for (auto &p : smsgModule.keyStore.mapKeys)
     {
-        for (auto &p : smsgModule.keyStore.mapKeys)
+        auto &address = p.first;
+        auto &key = p.second;
+
+        if (!(key.nFlags & SMK_RECEIVE_ON))
+            continue;
+
+        if (!(key.nFlags & SMK_RECEIVE_ANON))
         {
-            auto &address = p.first;
-            auto &key = p.second;
-
-            if (!(key.nFlags & SMK_RECEIVE_ON))
-                continue;
-
-            if (!(key.nFlags & SMK_RECEIVE_ANON))
+            // Have to do full decrypt to see address from
+            if (Decrypt(false, key.key, address, pHeader, pPayload, nPayload, msg) == 0)
             {
-                // Have to do full decrypt to see address from
-                if (Decrypt(false, key.key, address, pHeader, pPayload, nPayload, msg) == 0)
-                {
-                    if (LogAcceptCategory(BCLog::SMSG))
-                        LogPrintf("Decrypted message with %s.\n", CBitcoinAddress(addressTo).ToString());
-                    if (msg.sFromAddress.compare("anon") != 0)
-                        fOwnMessage = true;
-                    addressTo = address;
-                    break;
-                };
-            } else
-            {
-                if (Decrypt(true, key.key, address, pHeader, pPayload, nPayload, msg) == 0)
-                {
-                    if (LogAcceptCategory(BCLog::SMSG))
-                        LogPrintf("Decrypted message with %s.\n", CBitcoinAddress(addressTo).ToString());
+                if (LogAcceptCategory(BCLog::SMSG))
+                    LogPrintf("Decrypted message with %s.\n", CBitcoinAddress(addressTo).ToString());
+                if (msg.sFromAddress.compare("anon") != 0)
                     fOwnMessage = true;
-                    addressTo = address;
-                    break;
-                };
+                addressTo = address;
+                break;
+            };
+        } else
+        {
+            if (Decrypt(true, key.key, address, pHeader, pPayload, nPayload, msg) == 0)
+            {
+                if (LogAcceptCategory(BCLog::SMSG))
+                    LogPrintf("Decrypted message with %s.\n", CBitcoinAddress(addressTo).ToString());
+                fOwnMessage = true;
+                addressTo = address;
+                break;
             };
         };
     };
@@ -2337,7 +2333,6 @@ int CSMSG::ScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, b
         uint160 hash;
         HashMsg(*psmsg, pPayload, nPayload, hash);
 
-
         std::string sPrefix("im");
         uint8_t chKey[30];
         memcpy(&chKey[0],  sPrefix.data(),    2);
@@ -2396,11 +2391,14 @@ int CSMSG::ScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, b
     return SMSG_NO_ERROR;
 };
 
-int CSMSG::GetLocalKey(CKeyID &ckid, CPubKey &cpkOut)
+int CSMSG::GetLocalKey(const CKeyID &ckid, CPubKey &cpkOut)
 {
-#ifdef ENABLE_WALLET
     LogPrint(BCLog::SMSG, "%s\n", __func__);
 
+    if (keyStore.GetPubKey(ckid, cpkOut))
+        return SMSG_NO_ERROR;
+
+#ifdef ENABLE_WALLET
     if (!pwallet)
         return errorN(SMSG_WALLET_UNSET, "%s: Wallet disabled.", __func__);
 
@@ -2412,14 +2410,12 @@ int CSMSG::GetLocalKey(CKeyID &ckid, CPubKey &cpkOut)
     {
         return errorN(SMSG_INVALID_PUBKEY, "%s: Public key is invalid %s.", __func__, HexStr(cpkOut));
     };
+#endif
 
     return SMSG_NO_ERROR;
-#else
-    return SMSG_WALLET_UNSET;
-#endif
 };
 
-int CSMSG::GetLocalPublicKey(std::string &strAddress, std::string &strPublicKey)
+int CSMSG::GetLocalPublicKey(const std::string &strAddress, std::string &strPublicKey)
 {
     // returns SecureMessageCodes
 
@@ -2437,7 +2433,7 @@ int CSMSG::GetLocalPublicKey(std::string &strAddress, std::string &strPublicKey)
     return SMSG_NO_ERROR;
 };
 
-int CSMSG::GetStoredKey(CKeyID &ckid, CPubKey &cpkOut)
+int CSMSG::GetStoredKey(const CKeyID &ckid, CPubKey &cpkOut)
 {
     /* returns SecureMessageCodes
     */
@@ -2787,7 +2783,7 @@ int CSMSG::Receive(CNode *pfrom, std::vector<uint8_t> &vchData)
     return SMSG_NO_ERROR;
 };
 
-int CSMSG::StoreUnscanned(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
+int CSMSG::StoreUnscanned(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload)
 {
     /*
     When the wallet is locked a copy of each received message is stored to be scanned later if wallet is unlocked
@@ -2842,7 +2838,7 @@ int CSMSG::StoreUnscanned(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload
 };
 
 
-int CSMSG::Store(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool fHashBucket)
+int CSMSG::Store(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload, bool fHashBucket)
 {
     if (LogAcceptCategory(BCLog::SMSG))
     {
@@ -2956,12 +2952,12 @@ int CSMSG::Store(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool fH
     return SMSG_NO_ERROR;
 };
 
-int CSMSG::Store(SecureMessage& smsg, bool fHashBucket)
+int CSMSG::Store(const SecureMessage& smsg, bool fHashBucket)
 {
     return Store(smsg.data(), smsg.pPayload, smsg.nPayload, fHashBucket);
 };
 
-int CSMSG::Validate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
+int CSMSG::Validate(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload)
 {
     // return SecureMessageCodes
     SecureMessage *psmsg = (SecureMessage*) pHeader;
@@ -3644,7 +3640,7 @@ int CSMSG::FundMsg(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmo
 };
 
 
-int CSMSG::Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, MessageData &msg)
+int CSMSG::Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload, MessageData &msg)
 {
     /* Decrypt secure message
 
@@ -3821,12 +3817,12 @@ int CSMSG::Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, u
     return SMSG_NO_ERROR;
 };
 
-int CSMSG::Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, SecureMessage &smsg, MessageData &msg)
+int CSMSG::Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, const SecureMessage &smsg, MessageData &msg)
 {
     return CSMSG::Decrypt(fTestOnly, keyDest, address, smsg.data(), smsg.pPayload, smsg.nPayload, msg);
 };
 
-int CSMSG::Decrypt(bool fTestOnly, const CKeyID &address, uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, MessageData &msg)
+int CSMSG::Decrypt(bool fTestOnly, const CKeyID &address, const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload, MessageData &msg)
 {
     // Fetch private key k, used to decrypt
     CKey keyDest;
@@ -3846,7 +3842,7 @@ int CSMSG::Decrypt(bool fTestOnly, const CKeyID &address, uint8_t *pHeader, uint
     return CSMSG::Decrypt(fTestOnly, keyDest, address, pHeader, pPayload, nPayload, msg);
 };
 
-int CSMSG::Decrypt(bool fTestOnly, const CKeyID &address, SecureMessage &smsg, MessageData &msg)
+int CSMSG::Decrypt(bool fTestOnly, const CKeyID &address, const SecureMessage &smsg, MessageData &msg)
 {
     return CSMSG::Decrypt(fTestOnly, address, smsg.data(), smsg.pPayload, smsg.nPayload, msg);
 };

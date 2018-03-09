@@ -28,7 +28,7 @@ bool SecMsgCrypter::SetKey(const uint8_t *chNewKey, const uint8_t *chNewIV)
     return true;
 };
 
-bool SecMsgCrypter::Encrypt(uint8_t *chPlaintext, uint32_t nPlain, std::vector<uint8_t> &vchCiphertext)
+bool SecMsgCrypter::Encrypt(const uint8_t *chPlaintext, uint32_t nPlain, std::vector<uint8_t> &vchCiphertext)
 {
     if (!fKeySet)
         return false;
@@ -48,7 +48,7 @@ bool SecMsgCrypter::Encrypt(uint8_t *chPlaintext, uint32_t nPlain, std::vector<u
     return false;
 };
 
-bool SecMsgCrypter::Decrypt(uint8_t *chCiphertext, uint32_t nCipher, std::vector<uint8_t> &vchPlaintext)
+bool SecMsgCrypter::Decrypt(const uint8_t *chCiphertext, uint32_t nCipher, std::vector<uint8_t> &vchPlaintext)
 {
     if (!fKeySet)
         return false;

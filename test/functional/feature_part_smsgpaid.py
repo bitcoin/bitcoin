@@ -137,6 +137,11 @@ class SmsgPaidTest(ParticlTestFramework):
         flat = json.dumps(ro, default=self.jsonDecimal)
         assert(flat.count('Wallet is locked') == 2)
 
+        ro = nodes[0].smsggetpubkey(address0_1)
+        assert(ro['publickey'] == 'h2UfzZxbhxQPcXDfYTBRGSC7GM77qrLjhtqcmfAnAia9')
+
+
+
 
 if __name__ == '__main__':
     SmsgPaidTest().main()

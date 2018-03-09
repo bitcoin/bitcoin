@@ -183,7 +183,7 @@ public:
 class SecMsgToken
 {
 public:
-    SecMsgToken(int64_t ts, uint8_t *p, int np, long int o, uint8_t ttl_)
+    SecMsgToken(int64_t ts, const uint8_t *p, int np, long int o, uint8_t ttl_)
     {
         timestamp = ts;
 
@@ -367,11 +367,11 @@ public:
     int WalletUnlocked();
     int WalletKeyChanged(CKeyID &keyId, const std::string &sLabel, ChangeType mode);
 
-    int ScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool reportToGui);
+    int ScanMessage(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload, bool reportToGui);
 
-    int GetStoredKey(CKeyID &ckid, CPubKey &cpkOut);
-    int GetLocalKey(CKeyID &ckid, CPubKey &cpkOut);
-    int GetLocalPublicKey(std::string &strAddress, std::string &strPublicKey);
+    int GetStoredKey(const CKeyID &ckid, CPubKey &cpkOut);
+    int GetLocalKey(const CKeyID &ckid, CPubKey &cpkOut);
+    int GetLocalPublicKey(const std::string &strAddress, std::string &strPublicKey);
 
     //int AddAddress(CKeyID &address, CPubKey &publicKey); // TODO: necessary?
     int AddAddress(std::string &address, std::string &publicKey);
@@ -387,9 +387,9 @@ public:
 
     int Receive(CNode *pfrom, std::vector<uint8_t> &vchData);
 
-    int StoreUnscanned(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
-    int Store(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool fHashBucket);
-    int Store(SecureMessage& smsg, bool fHashBucket);
+    int StoreUnscanned(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload);
+    int Store(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload, bool fHashBucket);
+    int Store(const SecureMessage& smsg, bool fHashBucket);
 
     int Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
         SecureMessage &smsg, std::string &sError, bool fPaid=false,
@@ -398,16 +398,16 @@ public:
     int HashMsg(const SecureMessage &smsg, const uint8_t *pPayload, uint32_t nPayload, uint160 &hash);
     int FundMsg(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmount *nFee);
 
-    int Validate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
+    int Validate(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload);
     int SetHash (uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
 
     int Encrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyID &addressTo, const std::string &message);
 
-    int Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, MessageData &msg);
-    int Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, SecureMessage &smsg, MessageData &msg);
+    int Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload, MessageData &msg);
+    int Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, const SecureMessage &smsg, MessageData &msg);
 
-    int Decrypt(bool fTestOnly, const CKeyID &address, uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, MessageData &msg);
-    int Decrypt(bool fTestOnly, const CKeyID &address, SecureMessage &smsg, MessageData &msg);
+    int Decrypt(bool fTestOnly, const CKeyID &address, const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload, MessageData &msg);
+    int Decrypt(bool fTestOnly, const CKeyID &address, const SecureMessage &smsg, MessageData &msg);
 
     CCriticalSection cs_smsg;            // all except inbox and outbox
 

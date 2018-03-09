@@ -146,7 +146,7 @@ bool SecMsgDB::TxnAbort()
     return true;
 };
 
-bool SecMsgDB::ReadPK(CKeyID &addr, CPubKey &pubkey)
+bool SecMsgDB::ReadPK(const CKeyID &addr, CPubKey &pubkey)
 {
     if (!pdb)
         return false;
@@ -190,7 +190,7 @@ bool SecMsgDB::ReadPK(CKeyID &addr, CPubKey &pubkey)
     return true;
 };
 
-bool SecMsgDB::WritePK(CKeyID &addr, CPubKey &pubkey)
+bool SecMsgDB::WritePK(const CKeyID &addr, CPubKey &pubkey)
 {
     if (!pdb)
         return false;
@@ -219,7 +219,7 @@ bool SecMsgDB::WritePK(CKeyID &addr, CPubKey &pubkey)
     return true;
 };
 
-bool SecMsgDB::ExistsPK(CKeyID &addr)
+bool SecMsgDB::ExistsPK(const CKeyID &addr)
 {
     if (!pdb)
         return false;

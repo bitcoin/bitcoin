@@ -25,6 +25,7 @@ public:
     uint32_t nFlags = 0; // SMSGKeyFlagTypes
     std::string sLabel;
     CKey key;
+    CPubKey pubkey;
     std::string hdKeypath; //optional HD/bip32 keypath
     CKeyID hdMasterKeyID; //id of the HD masterkey used to derive this key
 
@@ -50,9 +51,10 @@ protected:
 public:
     std::map<CKeyID, SecMsgKey> mapKeys;
 
-    bool AddKey(const CKeyID &idk, const SecMsgKey &key);
+    bool AddKey(const CKeyID &idk, SecMsgKey &key);
     bool HaveKey(const CKeyID &idk) const;
     bool EraseKey(const CKeyID &idk);
+    bool GetPubKey(const CKeyID &idk, CPubKey &pk);
 
     bool Clear();
 };

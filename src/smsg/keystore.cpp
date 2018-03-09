@@ -7,9 +7,10 @@
 namespace smsg
 {
 
-bool SecMsgKeyStore::AddKey(const CKeyID &idk, const SecMsgKey &key)
+bool SecMsgKeyStore::AddKey(const CKeyID &idk, SecMsgKey &key)
 {
     LOCK(cs_KeyStore);
+    key.pubkey = key.key.GetPubKey();
     mapKeys[idk] = key;
     return true;
 };
@@ -25,6 +26,20 @@ bool SecMsgKeyStore::EraseKey(const CKeyID &idk)
     LOCK(cs_KeyStore);
     mapKeys.erase(idk);
     return true;
+};
+
+bool SecMsgKeyStore::GetPubKey(const CKeyID &idk, CPubKey &pk)
+{
+    LOCK(cs_KeyStore);
+    std::map<CKeyID, SecMsgKey>::const_iterator it = mapKeys.find(idk);
+
+    if (it != mapKeys.end())
+    {
+        pk = it->second.pubkey;
+        return true;
+    };
+
+    return false;
 };
 
 bool SecMsgKeyStore::Clear()
