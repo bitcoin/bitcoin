@@ -4,8 +4,8 @@
 
 #include <qt/transactionrecord.h>
 
-#include <base58.h>
 #include <consensus/consensus.h>
+#include <key_io.h>
 #include <validation.h>
 #include <timedata.h>
 #include <wallet/wallet.h>
@@ -254,7 +254,7 @@ bool TransactionRecord::statusUpdateNeeded() const
     return status.cur_num_blocks != chainActive.Height() || status.needsUpdate;
 }
 
-QString TransactionRecord::getTxID() const
+QString TransactionRecord::getTxHash() const
 {
     return QString::fromStdString(hash.ToString());
 }

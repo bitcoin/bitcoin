@@ -16,9 +16,9 @@ BOOST_AUTO_TEST_CASE(base32_testvectors)
     for (unsigned int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
     {
         std::string strEnc = EncodeBase32(vstrIn[i]);
-        BOOST_CHECK(strEnc == vstrOut[i]);
+        BOOST_CHECK_EQUAL(strEnc, vstrOut[i]);
         std::string strDec = DecodeBase32(vstrOut[i]);
-        BOOST_CHECK(strDec == vstrIn[i]);
+        BOOST_CHECK_EQUAL(strDec, vstrIn[i]);
     }
 }
 

@@ -15,6 +15,7 @@
 #include <uint256.h>
 #include <version.h>
 
+#include <atomic>
 #include <stdint.h>
 #include <string>
 
@@ -291,11 +292,20 @@ enum ServiceFlags : uint64_t {
  * unless they set NODE_NETWORK_LIMITED and we are out of IBD, in which
  * case NODE_NETWORK_LIMITED suffices).
  *
- * Thus, generally, avoid calling with peerServices == NODE_NONE.
+ * Thus, generally, avoid calling with peerServices == NODE_NONE, unless
+ * state-specific flags must absolutely be avoided. When called with
+ * peerServices == NODE_NONE, the returned desirable service flags are
+ * guaranteed to not change dependent on state - ie they are suitable for
+ * use when describing peers which we know to be desirable, but for which
+ * we do not have a confirmed set of service flags.
+ *
+ * If the NODE_NONE return value is changed, contrib/seeds/makeseeds.py
+ * should be updated appropriately to filter for the same nodes.
  */
-static ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
-    return ServiceFlags(NODE_NETWORK | NODE_WITNESS);
-}
+ServiceFlags GetDesirableServiceFlags(ServiceFlags services);
+
+/** Set the current IBD status in order to figure out the desirable service flags */
+void SetServiceFlagsIBDCache(bool status);
 
 /**
  * A shortcut for (services & GetDesirableServiceFlags(services))
@@ -308,10 +318,10 @@ static inline bool HasAllDesirableServiceFlags(ServiceFlags services) {
 
 /**
  * Checks if a peer with the given service flags may be capable of having a
- * robust address-storage DB. Currently an alias for checking NODE_NETWORK.
+ * robust address-storage DB.
  */
 static inline bool MayHaveUsefulAddressDB(ServiceFlags services) {
-    return services & NODE_NETWORK;
+    return (services & NODE_NETWORK) || (services & NODE_NETWORK_LIMITED);
 }
 
 /** A CService with information about it as peer */
@@ -338,8 +348,8 @@ public:
             READWRITE(nTime);
         uint64_t nServicesInt = nServices;
         READWRITE(nServicesInt);
-        nServices = (ServiceFlags)nServicesInt;
-        READWRITE(*(CService*)this);
+        nServices = static_cast<ServiceFlags>(nServicesInt);
+        READWRITE(*static_cast<CService*>(this));
     }
 
     // TODO: make private (improves encapsulation)

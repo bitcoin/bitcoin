@@ -8,9 +8,9 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
-#include <base58.h>
 #include <chainparams.h>
 #include <policy/policy.h>
+#include <key_io.h>
 #include <ui_interface.h>
 #include <util.h>
 #include <wallet/wallet.h>
@@ -643,8 +643,9 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, const SendCoinsRecipient& r
         // use for change. Despite an actual payment and not change, this is a close match:
         // it's the output type we use subject to privacy issues, but not restricted by what
         // other software supports.
-        wallet->LearnRelatedScripts(newKey, g_change_type);
-        CTxDestination dest = GetDestinationForKey(newKey, g_change_type);
+        const OutputType change_type = g_change_type != OUTPUT_TYPE_NONE ? g_change_type : g_address_type;
+        wallet->LearnRelatedScripts(newKey, change_type);
+        CTxDestination dest = GetDestinationForKey(newKey, change_type);
         wallet->SetAddressBook(dest, strAccount, "refund");
 
         CScript s = GetScriptForDestination(dest);
