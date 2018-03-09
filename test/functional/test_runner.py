@@ -133,6 +133,7 @@ BASE_SCRIPTS= [
     'p2p_unrequested_blocks.py',
     'feature_logging.py',
     'p2p_node_network_limited.py',
+    'feature_blocksdir.py',
     'feature_config_args.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
