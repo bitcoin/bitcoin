@@ -2934,6 +2934,20 @@ bool less_then_denom (const COutput& out1, const COutput& out2)
     return (!found1 && found2);
 }
 
+bool CWallet::OutputEligibleForSpending(const COutput& output, const int nConfMine, const int nConfTheirs, const uint64_t nMaxAncestors) const
+{
+    if (!output.fSpendable)
+        return false;
+
+    if (output.nDepth < (output.tx->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
+        return false;
+
+    if (!mempool.TransactionWithinChainLimit(output.tx->GetHash(), nMaxAncestors))
+        return false;
+
+    return true;
+}
+
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMine, const int nConfTheirs, const uint64_t nMaxAncestors, std::vector<COutput> vCoins,
                                  std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const
 {
@@ -2953,6 +2967,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     // try to find nondenom first to prevent unneeded spending of mixed coins
     for (unsigned int tryDenom = 0; tryDenom < 2; tryDenom++)
     {
+<<<<<<< HEAD
         LogPrint(BCLog::SELECTCOINS, "tryDenom: %d\n", tryDenom);
         vValue.clear();
         nTotalLower = 0;
@@ -2972,6 +2987,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
             int i = output.i;
 
             if (tryDenom == 0 && CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue; // we don't want denom values on first run
+=======
+        if (!OutputEligibleForSpending(output, nConfMine, nConfTheirs, nMaxAncestors))
+            continue;
+
+        CInputCoin coin = CInputCoin(output.tx, output.i);
+>>>>>>> ce7435cf1... Move output eligibility to a separate function
 
             CInputCoin coin = CInputCoin(pcoin, i);
 
