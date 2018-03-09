@@ -449,19 +449,18 @@ bool openConfigfile()
 
 bool openMNConfigfile()
 {
-    fs::path pathConfig = GetMasternodeConfigFile(MASTERNODE_CONF_FILENAME);
+    fs::path pathMNConfig = GetMasternodeConfigFile(MASTERNODE_CONF_FILENAME);
 
     /* Create the file */
-    fs::ofstream configFile(pathConfig, std::ios_base::app);
+    fs::ofstream configMNFile(pathMNConfig, std::ios_base::app);
 
-    if (!configFile.good())
+    if (!configMNFile.good())
         return false;
 
-    configFile.close();
+    configMNFile.close();
 
     /* Open masternode.conf with the associated application */
-    if (fs::exists(pathConfig))
-    return QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+    return QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathMNConfig)));
 }
 
 void showBackups()
