@@ -14,7 +14,7 @@ class CReserveKey;
 class CCoinsViewCache;
 class CCoins;
 class CBlock;
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool bSanityCheck=false);
 bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char &type);
 bool DecodeEscrowScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
@@ -41,7 +41,7 @@ public:
     uint256 txHash;
 	uint256 extTxId;
 	uint256 redeemTxId;
-    uint64_t nHeight;
+	unsigned int nHeight;
 	uint64_t nPaymentOption;
 	unsigned int nQty;
 	unsigned int op;
@@ -166,17 +166,11 @@ public:
 		WriteEscrowIndex(escrow, vvchArgs);
         return writeState;
     }
-	void WriteEscrowBid(const CEscrow& escrow) {
-		WriteEscrowBidIndex(escrow, "valid");
-	}
-	void RefundEscrowBid(const std::vector<unsigned char> &vchEscrow) {
-		RefundEscrowBidIndex(vchEscrow, "refunded");
+	void WriteEscrowBid(const CEscrow& escrow, const std::string& status) {
+		WriteEscrowBidIndex(escrow, status);
 	}
     bool EraseEscrow(const std::vector<unsigned char>& vchEscrow, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("escrowi"), vchEscrow));
-		EraseEscrowIndex(vchEscrow, cleanup);
-		EraseEscrowFeedbackIndex(vchEscrow, cleanup);
-		EraseEscrowBidIndex(vchEscrow, cleanup);
         return eraseState;
     }
     bool ReadEscrow(const std::vector<unsigned char>& vchEscrow, CEscrow& escrow) {
@@ -187,14 +181,9 @@ public:
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteEscrowIndex(const CEscrow& escrow, const std::vector<std::vector<unsigned char> > &vvchArgs);
-	void EraseEscrowIndex(const std::vector<unsigned char>& vchEscrow, bool cleanup);
 	void WriteEscrowFeedbackIndex(const CEscrow& escrow);
-	void EraseEscrowFeedbackIndex(const std::vector<unsigned char>& vchEscrow, bool cleanup);
-	void EraseEscrowFeedbackIndex(const std::string& id);
 	void WriteEscrowBidIndex(const CEscrow& escrow, const std::string& status);
 	void RefundEscrowBidIndex(const std::vector<unsigned char>& vchEscrow, const std::string& status);
-	void EraseEscrowBidIndex(const std::vector<unsigned char>& vchEscrow, bool cleanup);
-	void EraseEscrowBidIndex(const std::string& id);
 };
 
 bool GetEscrow(const std::vector<unsigned char> &vchEscrow, CEscrow& txPos);

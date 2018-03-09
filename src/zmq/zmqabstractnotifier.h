@@ -36,6 +36,7 @@ public:
     virtual bool NotifyBlock(const CBlockIndex *pindex);
     virtual bool NotifyTransaction(const CTransaction &transaction);
     virtual bool NotifyTransactionLock(const CTransaction &transaction);
+	virtual bool NotifySyscoinUpdate(const char *, const char *);
 
 protected:
     void *psocket;

@@ -64,5 +64,9 @@ class CZMQPublishRawTransactionLockNotifier : public CZMQAbstractPublishNotifier
 public:
     bool NotifyTransactionLock(const CTransaction &transaction);
 };
-
+class CZMQPublishRawSyscoinNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+	bool NotifySyscoinUpdate(const char *value, const char *topic);
+};
 #endif // SYSCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

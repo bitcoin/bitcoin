@@ -116,6 +116,19 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 						LogPrintf("CreateGraphFromVTX: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
 					}
 				}
+				else if (!allocation.listSendingAllocationInputs.empty()) {
+					for (auto& allocationInstance : allocation.listSendingAllocationInputs) {
+						const string& receiver = stringFromVch(allocationInstance.first);
+						AliasMap::const_iterator it = mapAliasIndex.find(receiver);
+						if (it == mapAliasIndex.end()) {
+							vertices.push_back(add_vertex(graph));
+							mapAliasIndex[receiver] = vertices.size() - 1;
+						}
+						// the graph needs to be from index to index 
+						add_edge(vertices[mapAliasIndex[sender]], vertices[mapAliasIndex[receiver]], graph);
+						LogPrintf("CreateGraphFromVTX: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
+					}
+				}
 			}
 		}
 	}

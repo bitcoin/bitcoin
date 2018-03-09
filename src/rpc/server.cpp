@@ -419,7 +419,6 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "aliaswhitelist",        &aliaswhitelist,       false },
 	{ "wallet", "syscoinsendrawtransaction",		 &syscoinsendrawtransaction,	false },
 	{ "wallet", "syscoindecoderawtransaction",		 &syscoindecoderawtransaction,	false },
-	{ "wallet", "syscoinquery",          &syscoinquery,          false },
 	{ "wallet", "prunesyscoinservices",          &prunesyscoinservices,          false },
 
 		// use the blockchain as a distributed marketplace
@@ -453,6 +452,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "assetsend",      &assetsend,  false },
 	{ "wallet", "assetinfo",      &assetinfo,  false },
 	{ "wallet", "assetallocationsend",          &assetallocationsend,      false },
+	{ "wallet", "assetallocationcollectinterest",          &assetallocationcollectinterest,      false },
 	{ "wallet", "assetallocationinfo",          &assetallocationinfo,      false },
 	{ "wallet", "assetallocationsenderstatus",          &assetallocationsenderstatus,      false }
 #endif // ENABLE_WALLET

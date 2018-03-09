@@ -15,6 +15,7 @@ zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashtxlock")
 zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"rawblock")
 zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"rawtx")
 zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"rawtxlock")
+zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"alias")
 zmqSubSocket.connect("tcp://127.0.0.1:%i" % port)
 
 try:
@@ -46,6 +47,9 @@ try:
         elif topic == "rawtxlock":
             print('- RAW TX LOCK ('+sequence+') -')
             print(binascii.hexlify(body).decode("utf-8"))
+        elif topic == "alias":
+            print('- ALIAS ('+sequence+') -')
+            print(body.decode("utf-8"))
 
 except KeyboardInterrupt:
     zmqContext.destroy()

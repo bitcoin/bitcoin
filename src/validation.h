@@ -55,8 +55,8 @@ static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for DEFAULT_WHITELISTFORCERELAY. */
 static const bool DEFAULT_WHITELISTFORCERELAY = true;
 /** Default for -minrelaytxfee, minimum relay fee for transactions
- * We are ~100 times smaller then syscoin now (2016-03-01), set minRelayTxFee only 10 times higher
- * so it's still 10 times lower comparing to syscoin.
+ * We are ~100 times smaller then bitcoin now (2016-03-01), set minRelayTxFee only 10 times higher
+ * so it's still 10 times lower comparing to bitcoin.
  * 2017-07: we are 10x smaller now, let's lower defaults 10x via the same BIP9 bit as DIP0001
  */
 static const unsigned int DEFAULT_LEGACY_MIN_RELAY_TX_FEE = 1000;
@@ -125,8 +125,6 @@ static const bool DEFAULT_TXINDEX = true;
 static const bool DEFAULT_ADDRESSINDEX = true;
 static const bool DEFAULT_TIMESTAMPINDEX = false;
 static const bool DEFAULT_SPENTINDEX = false;
-// SYSCOIN
-static const bool DEFAULT_INDEXPORT = 0;
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 
 static const bool DEFAULT_TESTSAFEMODE = false;
@@ -168,7 +166,7 @@ extern bool fEnableReplacement;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 
-static const int DIP0001_PROTOCOL_VERSION = 70215;
+static const int DIP0001_PROTOCOL_VERSION = 70216;
 extern std::atomic<bool> fDIP0001WasLockedIn;
 extern std::atomic<bool> fDIP0001ActiveAtTip;
 

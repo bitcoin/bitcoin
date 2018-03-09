@@ -69,12 +69,12 @@ enum opcodetype
 
 	// distributed asset system
 	OP_ASSET_ACTIVATE = 0x01,
-	OP_ASSET_MINT = 0x02,
-	OP_ASSET_UPDATE = 0x03,
-	OP_ASSET_TRANSFER = 0x04,
-	OP_ASSET_SEND = 0x05,
+	OP_ASSET_UPDATE = 0x02,
+	OP_ASSET_TRANSFER = 0x03,
+	OP_ASSET_SEND = 0x04,
 
 	OP_ASSET_ALLOCATION_SEND = 0x01,
+	OP_ASSET_COLLECT_INTEREST = 0x02,
 
 	// syscoin extended reserved 
 	OP_SYSCOIN_ALIAS = 0x01,

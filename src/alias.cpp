@@ -32,7 +32,6 @@
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/find.hpp>
 #include <boost/assign/list_of.hpp>
-#include <mongoc.h>
 #include "instantx.h"
 using namespace std;
 CAliasDB *paliasdb = NULL;
@@ -46,22 +45,6 @@ typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrations
 mapAliasRegistrationsType mapAliasRegistrations;
 mapAliasRegistrationsDataType mapAliasRegistrationData;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend=false, bool transferAlias=false);
-extern int nIndexPort;
-mongoc_client_t *client = NULL;
-mongoc_database_t *database = NULL;
-mongoc_collection_t *alias_collection = NULL;
-mongoc_collection_t *aliashistory_collection = NULL;
-mongoc_collection_t *aliastxhistory_collection = NULL;
-mongoc_collection_t *offer_collection = NULL;
-mongoc_collection_t *offerhistory_collection = NULL;
-mongoc_collection_t *escrow_collection = NULL;
-mongoc_collection_t *escrowbid_collection = NULL;
-mongoc_collection_t *cert_collection = NULL;
-mongoc_collection_t *certhistory_collection = NULL;
-mongoc_collection_t *asset_collection = NULL;
-mongoc_collection_t *assethistory_collection = NULL;
-mongoc_collection_t *assetallocation_collection = NULL;
-mongoc_collection_t *feedback_collection = NULL;
 unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams)
 {
@@ -186,28 +169,6 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		nTime = GetEscrowExpiration(escrow);
 		return true;
 	}
-	else if (asset.UnserializeFromData(vchData, vchHash))
-	{
-		if (!passetdb || !passetdb->ReadAsset(asset.vchAsset, asset))
-		{
-			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
-			return true;
-		}
-		nTime = GetAssetExpiration(asset);
-		return true;
-	}
-	else if (assetallocation.UnserializeFromData(vchData, vchHash))
-	{
-		if (!passetallocationdb || !passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias), assetallocation))
-		{
-			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
-			return true;
-		}
-		nTime = GetAssetAllocationExpiration(assetallocation);
-		return true;
-	}
 	return false;
 }
 bool IsSysServiceExpired(const uint64_t &nTime)
@@ -260,17 +221,6 @@ int getFeePerByte(const uint64_t &paymentOptionMask)
 		return 25;
 	return 25;
 }
-void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index) {
-	int i = aliasList.size() - 1;
-	BOOST_REVERSE_FOREACH(CAliasIndex &o, aliasList) {
-        if(!o.txHash.IsNull() && o.txHash == index.txHash) {
-        	aliasList[i] = index;
-            return;
-        }
-        i--;
-	}
-    aliasList.push_back(index);
-}
 
 bool IsAliasOp(int op) {
 		return op == OP_ALIAS_ACTIVATE
@@ -303,15 +253,15 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
 }
 
 
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool dontaddtodb) {
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bSanityCheck) {
 	if (!paliasdb)
 		return false;
-	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
+	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
 	{
 		LogPrintf("*Trying to add alias in coinbase transaction, skipping...");
 		return true;
 	}
-	if (fDebug && !dontaddtodb)
+	if (fDebug && !bSanityCheck)
 		LogPrintf("*** ALIAS %d %d op=%s %s nOut=%d %s\n", nHeight, chainActive.Tip()->nHeight, aliasFromOp(op).c_str(), tx.GetHash().ToString().c_str(), nOut, fJustCheck ? "JUSTCHECK" : "BLOCK");
 	// alias registration has args size of 1 we don't care to validate it until the activation comes in with args size of 4
 	if (vvchArgs.size() < 4)
@@ -463,6 +413,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5015 - " + _("Guid in data output doesn't match guid in transaction");
 						return error(errorMessage.c_str());
 					}
+					if (vvchArgs.size() <= 1 || theAlias.vchGUID != vvchArgs[1])
+					{
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5010 - " + _("Alias input guid mismatch");
+						return error(errorMessage.c_str());
+					}
 				}
 				break;
 		default:
@@ -525,10 +480,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || vvchPrevArgs[1] != vvchArgs[1] || !pprevCoins->IsAvailable(prevOutputIndex) || !ExtractDestination(pprevCoins->vout[prevOutputIndex].scriptPubKey, aliasDest))
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias input");
+				bDestCheckFailed = true;
 				if (!theAliasNull)
 					theAlias = dbAlias;
-				else
-					bDestCheckFailed = true;
 			}
 			else
 			{
@@ -536,20 +490,19 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (EncodeBase58(dbAlias.vchAddress) != prevaddy.ToString())
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5021 - " + _("You are not the owner of this alias");
+					bDestCheckFailed = true;
 					if (!theAliasNull)
 						theAlias = dbAlias;
-					else
-						bDestCheckFailed = true;
 				}
 			}
 
 			if (dbAlias.vchGUID != vvchArgs[1] || dbAlias.vchAlias != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
+				bDestCheckFailed = true;
 				if (!theAliasNull)
 					theAlias = dbAlias;
-				else
-					bDestCheckFailed = true;
+					
 			}
 			if (!theAliasNull) {
 				COfferLinkWhitelist whiteList;
@@ -600,7 +553,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias = dbAlias;
 						}
 						// let old address be re-occupied by a new alias
-						if (!dontaddtodb && errorMessage.empty())
+						if (!bSanityCheck && errorMessage.empty())
 						{
 							paliasdb->EraseAddress(dbAlias.vchAddress);
 						}
@@ -684,7 +637,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		if (!theAliasNull)
 		{
-			if (!dontaddtodb) {
+			if (!bSanityCheck) {
 				if (strResponse != "") {
 					paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strName);
 				}
@@ -695,7 +648,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			CAliasUnprunable aliasUnprunable;
 			aliasUnprunable.vchGUID = theAlias.vchGUID;
 			aliasUnprunable.nExpireTime = theAlias.nExpireTime;
-			if (!dontaddtodb) {
+			if (!bSanityCheck) {
 				if (!paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, op))
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
@@ -862,10 +815,6 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		pescrowdb->CleanupDatabase(numServicesCleaned);
 	if(pcertdb!= NULL)
 		pcertdb->CleanupDatabase(numServicesCleaned);
-	if (passetdb != NULL)
-		passetdb->CleanupDatabase(numServicesCleaned);
-	if (passetallocationdb != NULL)
-		passetallocationdb->CleanupDatabase(numServicesCleaned);
 	if (paliasdb != NULL) 
 		paliasdb->CleanupDatabase(numServicesCleaned);
 	
@@ -1130,621 +1079,29 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 	}
 	return false;
 }
-void setupAliasHistoryIndexes() {
-	bson_t keys;
-	const char *collection_name = "aliashistory";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
 
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "alias", 1);
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
 
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupAliasTxHistoryIndexes() {
-	bson_t keys;
-	const char *collection_name = "aliastxhistory";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "user1", 1);
-	BSON_APPEND_INT32(&keys, "user2", 1);
-	BSON_APPEND_INT32(&keys, "user3", 1);
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupOfferIndexes() {
-	bson_t keys;
-	const char *collection_name = "offer";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "category", 1);
-	BSON_APPEND_INT32(&keys, "paymentoptions", 1);
-	BSON_APPEND_INT32(&keys, "alias", 1);
-	BSON_APPEND_INT32(&keys, "offertype", 1);
-	BSON_APPEND_UTF8(&keys, "title", "text");
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupOfferHistoryIndexes() {
-	bson_t keys;
-	const char *collection_name = "offerhistory";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "offer", 1);
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupEscrowIndexes() {
-	bson_t keys;
-	const char *collection_name = "escrow";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "offer", 1);
-	BSON_APPEND_INT32(&keys, "seller", 1);
-	BSON_APPEND_INT32(&keys, "arbiter", 1);
-	BSON_APPEND_INT32(&keys, "buyer", 1);
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupEscrowBidIndexes() {
-	bson_t keys;
-	const char *collection_name = "escrowbid";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "offer", 1);
-	BSON_APPEND_INT32(&keys, "escrow", 1);
-	BSON_APPEND_INT32(&keys, "bidder", 1);
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupCertIndexes() {
-	bson_t keys;
-	const char *collection_name = "cert";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "category", 1);
-	BSON_APPEND_INT32(&keys, "alias", 1);
-	BSON_APPEND_UTF8(&keys, "title", "text");
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupCertHistoryIndexes() {
-	bson_t keys;
-	const char *collection_name = "certhistory";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "cert", 1);
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupAssetIndexes() {
-	bson_t keys;
-	const char *collection_name = "asset";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "category", 1);
-	BSON_APPEND_INT32(&keys, "alias", 1);
-	BSON_APPEND_UTF8(&keys, "title", "text");
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupAssetHistoryIndexes() {
-	bson_t keys;
-	const char *collection_name = "assethistory";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "asset", 1);
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupAssetAllocationIndexes() {
-	bson_t keys;
-	const char *collection_name = "assetallocation";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "asset", 1);
-	BSON_APPEND_INT32(&keys, "alias", 1);
-	BSON_APPEND_INT32(&keys, "height", 1);
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void setupFeedbackIndexes() {
-	bson_t keys;
-	const char *collection_name = "feedback";
-	char *index_name;
-	bson_t reply;
-	bson_error_t error;
-	bool r;
-	bson_t *create_indexes;
-
-	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "offer", 1);
-	BSON_APPEND_INT32(&keys, "escrow", 1);
-	BSON_APPEND_INT32(&keys, "feedbackuserfrom", 1);
-	BSON_APPEND_INT32(&keys, "feedbackuserto", 1);
-	index_name = mongoc_collection_keys_to_index_string(&keys);
-	create_indexes = BCON_NEW("createIndexes",
-		BCON_UTF8(collection_name),
-		"indexes",
-		"[",
-		"{",
-		"key",
-		BCON_DOCUMENT(&keys),
-		"name",
-		BCON_UTF8(index_name),
-		"}",
-		"]");
-
-	r = mongoc_database_write_command_with_opts(
-		database, create_indexes, NULL /* opts */, &reply, &error);
-
-	if (!r) {
-		LogPrintf("Error in createIndexes: %s\n", error.message);
-	}
-	bson_destroy(&keys);
-	bson_free(index_name);
-	bson_destroy(&reply);
-	bson_destroy(create_indexes);
-}
-void startMongoDB(){
-	// SYSCOIN
-	nIndexPort = GetArg("-indexport", DEFAULT_INDEXPORT);
-	string uri_str = strprintf("mongodb://127.0.0.1:%d", nIndexPort);
-	if (fDebug)
-		LogPrintf("Detecting the start of mongo indexer: ");
-	if (nIndexPort > 0) {
-		if (fDebug)
-			LogPrintf("Starting mongo c client\n");
-		mongoc_init();
-		client = mongoc_client_new(uri_str.c_str());
-		mongoc_client_set_appname(client, "syscoin-indexer");
-
-		database = mongoc_client_get_database(client, "syscoindb");
-		alias_collection = mongoc_client_get_collection(client, "syscoindb", "alias");
-		aliashistory_collection = mongoc_client_get_collection(client, "syscoindb", "aliashistory");
-		aliastxhistory_collection = mongoc_client_get_collection(client, "syscoindb", "aliastxhistory");
-		offer_collection = mongoc_client_get_collection(client, "syscoindb", "offer");
-		offerhistory_collection = mongoc_client_get_collection(client, "syscoindb", "offerhistory");
-		escrow_collection = mongoc_client_get_collection(client, "syscoindb", "escrow");
-		escrowbid_collection = mongoc_client_get_collection(client, "syscoindb", "escrowbid");
-		cert_collection = mongoc_client_get_collection(client, "syscoindb", "cert");
-		certhistory_collection = mongoc_client_get_collection(client, "syscoindb", "certhistory");
-		feedback_collection = mongoc_client_get_collection(client, "syscoindb", "feedback");
-		asset_collection = mongoc_client_get_collection(client, "syscoindb", "asset");
-		assethistory_collection = mongoc_client_get_collection(client, "syscoindb", "assethistory");
-		assetallocation_collection = mongoc_client_get_collection(client, "syscoindb", "assetallocation");
-		BSON_ASSERT(alias_collection);
-		BSON_ASSERT(aliashistory_collection);
-		BSON_ASSERT(aliastxhistory_collection);
-		BSON_ASSERT(offer_collection);
-		BSON_ASSERT(offerhistory_collection);
-		BSON_ASSERT(escrow_collection);
-		BSON_ASSERT(escrowbid_collection);
-		BSON_ASSERT(cert_collection);
-		BSON_ASSERT(certhistory_collection);
-		BSON_ASSERT(feedback_collection);
-		BSON_ASSERT(asset_collection);
-		BSON_ASSERT(assethistory_collection);
-		BSON_ASSERT(assetallocation_collection);
-		setupAliasHistoryIndexes();
-		setupOfferIndexes();
-		setupOfferHistoryIndexes();
-		setupEscrowIndexes();
-		setupEscrowBidIndexes();
-		setupCertIndexes();
-		setupCertHistoryIndexes();
-		setupFeedbackIndexes();
-		setupAssetIndexes();
-		setupAssetHistoryIndexes();
-		setupAssetAllocationIndexes();
-		LogPrintf("Mongo c client loaded!\n");
-	}
-	else
-	{
-		if (fDebug)
-			LogPrintf("Could not detect mongo db index port, please ensure you specify -indexport in your syscoin.conf file or as a command line argument\n");
-	}
-}
 void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
-	if (!alias_collection)
-		return;
-	bson_error_t error;
-	bson_t *update = NULL;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
-	mongoc_update_flags_t update_flags;
-	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(alias.vchAlias).c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
-	update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-	if (!update || !mongoc_collection_update(alias_collection, update_flags, selector, update, write_concern, &error)) {
-		LogPrintf("MONGODB ALIAS UPDATE ERROR: %s\n", error.message);
-	}
-	if(update)
-		bson_destroy(update);
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
+	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "alias");
 	WriteAliasIndexHistory(alias, op);
 }
 void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
-	if (!aliashistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *insert = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
-
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	BuildAliasIndexerHistoryJson(alias, oName);
 	oName.push_back(Pair("op", aliasFromOp(op)));
-	insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-	if (!insert || !mongoc_collection_insert(aliashistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
-		LogPrintf("MONGODB ALIAS HISTORY ERROR: %s\n", error.message);
-	}
-
-	if (insert)
-		bson_destroy(insert);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
+	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliashistory");
 }
-void CAliasDB::EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias, bool cleanup) {
-	if (!aliashistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("alias", BCON_UTF8(stringFromVch(vchAlias).c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(aliashistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
-		LogPrintf("MONGODB ALIAS HISTORY REMOVE ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-}
-void CAliasDB::EraseAliasIndexHistory(const string& id) {
-	if (!aliashistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(aliashistory_collection, remove_flags, selector, write_concern, &error)) {
-		LogPrintf("MONGODB ALIAS HISTORY REMOVE ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-}
-void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup) {
-	if (!alias_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(vchAlias).c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(alias_collection, remove_flags, selector, cleanup? NULL: write_concern, &error)) {
-		LogPrintf("MONGODB ALIAS REMOVE ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-	EraseAliasIndexHistory(vchAlias, cleanup);
-	EraseAliasIndexTxHistory(vchAlias, cleanup);
-}
-bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, UniValue& oName)
+bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const unsigned int& nHeight, const string &type, const string &guid, UniValue& oName)
 {
 	oName.push_back(Pair("_id", txHash.GetHex()+"-"+guid));
 	oName.push_back(Pair("user1", user1));
 	oName.push_back(Pair("user2", user2));
 	oName.push_back(Pair("user3", user3));
 	oName.push_back(Pair("type", type));
-	oName.push_back(Pair("height", nHeight));
+	oName.push_back(Pair("height", (int)nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= nHeight) {
 		CBlockIndex *pindex = chainActive[nHeight];
@@ -1755,197 +1112,12 @@ bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, co
 	oName.push_back(Pair("time", nTime));
 	return true;
 }
-void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid) {
-	if (!aliastxhistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *insert = NULL;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
+void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const unsigned int& nHeight, const string &type, const string &guid) {
 	UniValue oName(UniValue::VOBJ);
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	const string& id = txHash.GetHex() + "-" + guid;
-	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
-	mongoc_update_flags_t update_flags;
-	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
-	insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-	if (!insert || !mongoc_collection_update(aliastxhistory_collection, update_flags, selector, insert, write_concern, &error)) {
-		LogPrintf("MONGODB ALIAS TX HISTORY ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (insert)
-		bson_destroy(insert);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
+	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
 }
-void CAliasDB::EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias, bool cleanup) {
-	if (!aliastxhistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("alias", BCON_UTF8(stringFromVch(vchAlias).c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(aliastxhistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
-		LogPrintf("MONGODB ALIAS HISTORY REMOVE ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-}
-void CAliasDB::EraseAliasIndexTxHistory(const string& id) {
-	if (!aliastxhistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(aliastxhistory_collection, remove_flags, selector, write_concern, &error)) {
-		LogPrintf("MONGODB ALIAS HISTORY REMOVE ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-}
-void stopMongoDB() {
-	/*
-	* Release our handles and clean up libmongoc
-	*/
-	if (fDebug)
-		LogPrintf("Shutting down mongo indexer...\n");
-	if(alias_collection)
-		mongoc_collection_destroy(alias_collection);
-	if (aliashistory_collection)
-		mongoc_collection_destroy(aliashistory_collection);
-	if (aliastxhistory_collection)
-		mongoc_collection_destroy(aliastxhistory_collection);
-	if(offer_collection)
-		mongoc_collection_destroy(offer_collection);
-	if (offerhistory_collection)
-		mongoc_collection_destroy(offerhistory_collection);
-	if(escrow_collection)
-		mongoc_collection_destroy(escrow_collection);
-	if (escrowbid_collection)
-		mongoc_collection_destroy(escrowbid_collection);
-	if(cert_collection)
-		mongoc_collection_destroy(cert_collection);
-	if (certhistory_collection)
-		mongoc_collection_destroy(certhistory_collection);
-	if(feedback_collection)
-		mongoc_collection_destroy(feedback_collection);
-	if (asset_collection)
-		mongoc_collection_destroy(asset_collection);
-	if (assethistory_collection)
-		mongoc_collection_destroy(assethistory_collection);
-	if (assetallocation_collection)
-		mongoc_collection_destroy(assetallocation_collection);
-	if(database)
-		mongoc_database_destroy(database);
-	if (client) {
-		mongoc_client_destroy(client);
-		mongoc_cleanup();
-	}
-}
-UniValue syscoinquery(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 3 < params.size())
-		throw runtime_error(
-			"syscoinquery <collection> <query> [options]\n"
-			"<collection> Collection name, either: 'alias', 'aliashistory', 'aliastxhistory', 'cert', 'certhistory', 'asset', 'assethistory', 'assetallocation', 'offer', 'offerhistory', 'feedback', 'escrow', 'escrowbid'.\n"
-			"<query> JSON query on the collection to retrieve a set of documents.\n"
-			"<options> Optional. JSON option arguments into the query. Based on mongoc_collection_find_with_opts.\n"
-			+ HelpRequiringPassphrase());
-	string collection = params[0].get_str();
-	mongoc_collection_t *selectedCollection;
-	if (collection == "alias")
-		selectedCollection = alias_collection;
-	else if (collection == "aliashistory")
-		selectedCollection = aliashistory_collection;
-	else if (collection == "aliastxhistory")
-		selectedCollection = aliastxhistory_collection;
-	else if (collection == "cert")
-		selectedCollection = cert_collection;
-	else if (collection == "certhistory")
-		selectedCollection = certhistory_collection;
-	else if (collection == "asset")
-		selectedCollection = asset_collection;
-	else if (collection == "assethistory")
-		selectedCollection = assethistory_collection;
-	else if (collection == "assetallocation")
-		selectedCollection = assetallocation_collection;
-	else if (collection == "offer")
-		selectedCollection = offer_collection;
-	else if (collection == "offerhistory")
-		selectedCollection = offerhistory_collection;
-	else if (collection == "escrow")
-		selectedCollection = escrow_collection;
-	else if (collection == "escrowbid")
-		selectedCollection = escrowbid_collection;
-	else if (collection == "feedback")
-		selectedCollection = feedback_collection;
-	else
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Invalid selection collection name, please specify the collection parameter as either 'alias', 'cert', 'offer', 'feedback' or 'escrow'"));
 
-	string query = params[1].get_str();
-	string options = "";
-	if (CheckParam(params, 2))
-		options = params[2].get_str();
-	
-	bson_t *filter = NULL;
-	bson_t *opts = NULL;
-	mongoc_cursor_t *cursor;
-	bson_error_t error;
-	const bson_t *doc;
-	char *str;
-	try {
-		filter = bson_new_from_json((const uint8_t *)query.c_str(), -1, &error);
-		if (!filter) {
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + boost::lexical_cast<string>(error.message));
-		}
-	}
-	catch (...) {
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot convert query into JSON"));
-	}
-	if (!options.empty()) {
-		opts = bson_new_from_json((const uint8_t *)options.c_str(), -1, &error);
-		if (!opts) {
-			bson_destroy(filter);
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + boost::lexical_cast<string>(error.message));
-		}
-	}
-	cursor = mongoc_collection_find_with_opts(selectedCollection, filter, opts, NULL);
-	UniValue res(UniValue::VARR);
-	while (mongoc_cursor_next(cursor, &doc)) {
-		str = bson_as_relaxed_extended_json(doc, NULL);
-		res.push_back(str);
-		bson_free(str);
-	}
-
-	if (mongoc_cursor_error(cursor, &error)) {
-		mongoc_cursor_destroy(cursor);
-		bson_destroy(filter);
-		if(opts)
-			bson_destroy(opts);
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + boost::lexical_cast<string>(error.message));
-	}
-
-	mongoc_cursor_destroy(cursor);
-	bson_destroy(filter);
-	if (opts)
-		bson_destroy(opts);
-	return res;
-}
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 8 != params.size())
 		throw runtime_error(
@@ -2652,7 +1824,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
             "      ,...\n"
             "    }\n"
 			"3. instantsend				(boolean, optional) Set to true to use InstantSend to send this transaction or false otherwise.\n"
-			"4. subtractfeefromamount   (string, optional) A json array with addresses.\n"
+			"4. subtractfeefromamount   (string, optional) Set to true to subtract fee from amount or false otherwise.\n"
             "\nResult:\n"
 			"\"transaction hex\"          (string) The transaction hex (unsigned) for signing and sending. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
@@ -2970,10 +2142,6 @@ string GetSyscoinTransactionDescription(const int op, string& responseEnglish, c
 			strResponse = _("Asset Activated");
 			responseEnglish = "Asset Activated";
 		}
-		else if (op == OP_ASSET_MINT) {
-			strResponse = _("Asset Minted");
-			responseEnglish = "Asset Minted";
-		}
 		else if (op == OP_ASSET_UPDATE) {
 			strResponse = _("Asset Updated");
 			responseEnglish = "Asset Updated";
@@ -2991,6 +2159,10 @@ string GetSyscoinTransactionDescription(const int op, string& responseEnglish, c
 		if (op == OP_ASSET_ALLOCATION_SEND) {
 			strResponse = _("Asset Allocation Sent");
 			responseEnglish = "Asset Allocation Sent";
+		}
+		else if (op == OP_ASSET_COLLECT_INTEREST) {
+			strResponse = _("Asset Collect Interest");
+			responseEnglish = "Asset Collect Interest";
 		}
 	}
 	else if (type == ESCROW) {

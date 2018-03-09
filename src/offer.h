@@ -22,7 +22,7 @@ class CBlock;
 class CAliasIndex;
 class COfferLinkWhitelistEntry;
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, std::string &errorMessage, bool dontaddtodb=false);
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, std::string &errorMessage, bool bSanityCheck=false);
 
 
 bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
@@ -105,7 +105,7 @@ public:
 	std::vector<unsigned char> vchOffer;
 	std::vector<unsigned char> vchAlias;
     uint256 txHash;
-    uint64_t nHeight;
+	unsigned int nHeight;
 	float fPrice;
 	float fUnits;
 	char nCommission;
@@ -226,8 +226,6 @@ public:
 	bool EraseOffer(const std::vector<unsigned char>& vchOffer, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("offeri"), vchOffer));
 		Erase(make_pair(std::string("offerp"), vchOffer));
-		EraseOfferIndex(vchOffer, cleanup);
-		EraseOfferIndexHistory(vchOffer, cleanup);
 		EraseISArrivalTimes(vchOffer);
 	    return eraseState;
 	}
@@ -255,10 +253,7 @@ public:
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteOfferIndex(const COffer& offer, const int &op);
-	void EraseOfferIndex(const std::vector<unsigned char>& vchOffer, bool cleanup);
 	void WriteOfferIndexHistory(const COffer& offer, const int &op);
-	void EraseOfferIndexHistory(const std::vector<unsigned char>& vchOffer, bool cleanup);
-	void EraseOfferIndexHistory(const std::string& id);
 
 };
 bool GetOffer(const std::vector<unsigned char> &vchOffer, COffer& txPos);

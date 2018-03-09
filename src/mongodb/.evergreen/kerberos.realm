@@ -1,5 +1,0 @@
-[realms]
-  LDAPTEST.10GEN.CC = {
-    kdc = ldaptest.10gen.cc
-    admin_server = ldaptest.10gen.cc
-  }

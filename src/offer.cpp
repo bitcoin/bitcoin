@@ -28,13 +28,10 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <mongoc.h>
 #include <chrono>
 
 using namespace std::chrono;
 using namespace std;
-extern mongoc_collection_t *offer_collection;
-extern mongoc_collection_t *offerhistory_collection;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend=false, bool transferAlias=false);
 bool IsOfferOp(int op) {
 	return op == OP_OFFER_ACTIVATE
@@ -311,7 +308,6 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 bool RevertOffer(const std::vector<unsigned char>& vchOffer, const int op, const uint256 &txHash, sorted_vector<std::vector<unsigned char> > &revertedOffers) {
-	paliasdb->EraseAliasIndexTxHistory(txHash.GetHex() + "-" + stringFromVch(vchOffer));
 	// only revert offer once
 	if (revertedOffers.find(vchOffer) != revertedOffers.end())
 		return true;
@@ -338,16 +334,16 @@ bool RevertOffer(const std::vector<unsigned char>& vchOffer, const int op, const
 	return true;
 
 }
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, string &errorMessage, bool dontaddtodb) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, string &errorMessage, bool bSanityCheck) {
 	if (!pofferdb || !paliasdb)
 		return false;
-	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
+	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
 	{
 		LogPrintf("*Trying to add offer in coinbase transaction, skipping...");
 		return true;
 	}
 	const uint64_t &nTime = chainActive.Tip()->GetMedianTimePast();
-	if (fDebug && !dontaddtodb)
+	if (fDebug && !bSanityCheck)
 		LogPrintf("*** OFFER %d %d %s %s %s %d\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK", " VVCH SIZE: ", vvchArgs.size());
@@ -522,7 +518,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 	}
-	if (!fJustCheck && !dontaddtodb) {
+	if (!fJustCheck && !bSanityCheck) {
 		if (!RevertOffer(theOffer.vchOffer, op, tx.GetHash(), revertedOffers))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert offer");
@@ -674,7 +670,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOffer.auctionOffer = linkOffer.auctionOffer;
 		}
 	}
-	if(!dontaddtodb) {
+	if(!bSanityCheck) {
 		if (strResponse != "") {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer));
 		}
@@ -682,7 +678,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	theOffer.nHeight = nHeight;
 	theOffer.txHash = tx.GetHash();
 	// write offer
-	if (!dontaddtodb) {
+	if (!bSanityCheck) {
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
@@ -1181,38 +1177,13 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 }
 
 void COfferDB::WriteOfferIndex(const COffer& offer, const int &op) {
-	if (!offer_collection)
-		return;
-	bson_error_t error;
-	bson_t *update = NULL;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
-	mongoc_update_flags_t update_flags;
-	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(offer.vchOffer).c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (BuildOfferIndexerJson(offer, oName)) {
-		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-		if (!update || !mongoc_collection_update(offer_collection, update_flags, selector, update, write_concern, &error)) {
-			LogPrintf("MONGODB OFFER UPDATE ERROR: %s\n", error.message);
-		}
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offer");
 	}
-	if (update)
-		bson_destroy(update);
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
 	WriteOfferIndexHistory(offer, op);
 }
 void COfferDB::WriteOfferIndexHistory(const COffer& offer, const int &op) {
-	if (!offerhistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *insert = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
 	string serviceFromOp = "";
 	if (IsEscrowOp(op))
@@ -1220,80 +1191,10 @@ void COfferDB::WriteOfferIndexHistory(const COffer& offer, const int &op) {
 	else if (IsOfferOp(op))
 		serviceFromOp = offerFromOp(op);
 
-
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-
 	if (BuildOfferIndexerHistoryJson(offer, oName)) {
 		oName.push_back(Pair("op", serviceFromOp));
-		insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-		if (!insert || !mongoc_collection_insert(offerhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
-			LogPrintf("MONGODB OFFER HISTORY ERROR: %s\n", error.message);
-		}
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerhistory");
 	}
-
-	if (insert)
-		bson_destroy(insert);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-}
-void COfferDB::EraseOfferIndexHistory(const std::vector<unsigned char>& vchOffer, bool cleanup) {
-	if (!offerhistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("offer", BCON_UTF8(stringFromVch(vchOffer).c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(offerhistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
-		LogPrintf("MONGODB OFFER HISTORY REMOVE ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-}
-void COfferDB::EraseOfferIndexHistory(const string &id) {
-	if (!offerhistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(offerhistory_collection, remove_flags, selector, write_concern, &error)) {
-		LogPrintf("MONGODB OFFER HISTORY REMOVE ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-}
-void COfferDB::EraseOfferIndex(const std::vector<unsigned char>& vchOffer, bool cleanup) {
-	if (!offer_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(vchOffer).c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(offer_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
-		LogPrintf("MONGODB OFFER REMOVE ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-	EraseOfferIndexHistory(vchOffer, cleanup);
 }
 UniValue offerinfo(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size())

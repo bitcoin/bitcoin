@@ -21,13 +21,10 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <mongoc.h>
 #include <chrono>
 
 using namespace std::chrono;
 using namespace std;
-extern mongoc_collection_t *cert_collection;
-extern mongoc_collection_t *certhistory_collection;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend=false, bool transferAlias=false);
 bool IsCertOp(int op) {
     return op == OP_CERT_ACTIVATE
@@ -100,116 +97,21 @@ void CCert::Serialize( vector<unsigned char> &vchData) {
 
 }
 void CCertDB::WriteCertIndex(const CCert& cert, const int& op) {
-	if (!cert_collection)
-		return;
-	bson_error_t error;
-	bson_t *update = NULL;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
-
-	mongoc_update_flags_t update_flags;
-	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(cert.vchCert).c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (BuildCertIndexerJson(cert, oName)) {
-		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-		if (!update || !mongoc_collection_update(cert_collection, update_flags, selector, update, write_concern, &error)) {
-			LogPrintf("MONGODB CERT UPDATE ERROR: %s\n", error.message);
-		}
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "cert");
 	}
-	if (update)
-		bson_destroy(update);
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
+
 	WriteCertIndexHistory(cert, op);
 }
 void CCertDB::WriteCertIndexHistory(const CCert& cert, const int &op) {
-	if (!certhistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *insert = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-
 	if (BuildCertIndexerHistoryJson(cert, oName)) {
 		oName.push_back(Pair("op", certFromOp(op)));
-		insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-		if (!insert || !mongoc_collection_insert(certhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
-			LogPrintf("MONGODB CERT HISTORY ERROR: %s\n", error.message);
-		}
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "certhistory");
 	}
-
-	if (insert)
-		bson_destroy(insert);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
 }
 	
-void CCertDB::EraseCertIndexHistory(const std::vector<unsigned char>& vchCert, bool cleanup) {
-	if (!certhistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("cert", BCON_UTF8(stringFromVch(vchCert).c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(certhistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
-		LogPrintf("MONGODB CERT HISTORY REMOVE ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-}
-void CCertDB::EraseCertIndexHistory(const string& id) {
-	if (!certhistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(certhistory_collection, remove_flags, selector, write_concern, &error)) {
-		LogPrintf("MONGODB CERT HISTORY REMOVE ERROR: %s\n", error.message);
-	}
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-}
-void CCertDB::EraseCertIndex(const std::vector<unsigned char>& vchCert, bool cleanup) {
-	if (!cert_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	mongoc_remove_flags_t remove_flags;
-	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(vchCert).c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(cert_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
-		LogPrintf("MONGODB CERT REMOVE ERROR: %s\n", error.message);
-	}
-	
-	if (selector)
-		bson_destroy(selector);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-	EraseCertIndexHistory(vchCert, cleanup);
-}
 bool CCertDB::CleanupDatabase(int &servicesCleaned)
 {
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
@@ -345,7 +247,6 @@ bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 bool RevertCert(const std::vector<unsigned char>& vchCert, const int op, const uint256 &txHash, sorted_vector<std::vector<unsigned char> > &revertedCerts) {
-	paliasdb->EraseAliasIndexTxHistory(txHash.GetHex() + "-" + stringFromVch(vchCert));
 	// only revert cert once
 	if (revertedCerts.find(vchCert) != revertedCerts.end())
 		return true;
@@ -373,15 +274,15 @@ bool RevertCert(const std::vector<unsigned char>& vchCert, const int op, const u
 
 }
 bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias,
-        bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedCerts, string &errorMessage, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedCerts, string &errorMessage, bool bSanityCheck) {
 	if (!pcertdb || !paliasdb)
 		return false;
-	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
+	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
 	{
 		LogPrintf("*Trying to add cert in coinbase transaction, skipping...");
 		return true;
 	}
-	if (fDebug && !dontaddtodb)
+	if (fDebug && !bSanityCheck)
 		LogPrintf("*** CERT %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
@@ -470,7 +371,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return error(errorMessage.c_str());
 		}
 	}
-	if (!fJustCheck && !dontaddtodb) {
+	if (!fJustCheck && !bSanityCheck) {
 		if (!RevertCert(theCert.vchCert, op, tx.GetHash(), revertedCerts))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert cert");
@@ -558,7 +459,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return true;
 		}
 	}
-	if(!dontaddtodb) {
+	if(!bSanityCheck) {
 		if (strResponse != "") {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert));
 		}
@@ -567,7 +468,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	theCert.nHeight = nHeight;
 	theCert.txHash = tx.GetHash();
     // write cert  
-	if (!dontaddtodb) {
+	if (!bSanityCheck) {
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();

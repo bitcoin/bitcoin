@@ -179,7 +179,15 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "escrownew", 10 },
 	{ "escrownew", 13 },
 	{ "escrownew", 14 },
-	{ "escrowfeedback", 3 }
+	{ "escrowfeedback", 3 },
+	{ "assetallocationinfo", 2 },
+	{ "assetallocationsend", 2 },
+	{ "assetnew", 6 },
+	{ "assetnew", 7 },
+	{ "assetnew", 8 },
+	{ "assetupdate", 4 },
+	{ "assetinfo", 1 },
+	{ "assetsend", 2 }
 };
 
 class CRPCConvertTable

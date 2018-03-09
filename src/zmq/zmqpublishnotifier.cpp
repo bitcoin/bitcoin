@@ -212,3 +212,8 @@ bool CZMQPublishRawTransactionLockNotifier::NotifyTransactionLock(const CTransac
     ss << transaction;
     return SendMessage(MSG_RAWTXLOCK, &(*ss.begin()), ss.size());
 }
+bool CZMQPublishRawSyscoinNotifier::NotifySyscoinUpdate(const char * value, const char * topic)
+{
+	LogPrint("zmq", "zmq: Publish raw syscoin payload for topic %s: %s\n", topic, value);
+	return SendMessage(topic, value, strlen(value));
+}

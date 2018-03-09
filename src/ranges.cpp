@@ -1,14 +1,18 @@
 // A C++ program for merging overlapping ranges
 #include "ranges.h"
-
+using namespace std;
 // Compares two ranges according to their starting range index.
 bool compareRange(const CRange &i1, const CRange &i2)
 {
 	return (i1.start < i2.start);
 }
+bool compareRangeReverse(const CRange &i1, const CRange &i2)
+{
+	return (i1.start > i2.start);
+}
 
 // The main function that takes a set of ranges, merges
-// overlapping ranges and prints the result
+// overlapping ranges and put the result in output
 void mergeRanges(vector<CRange>& arr, vector<CRange>& output)
 {
 	if (arr.empty())
@@ -20,11 +24,13 @@ void mergeRanges(vector<CRange>& arr, vector<CRange>& output)
 	// push the first range to stack
 	output.push_back(arr[0]);
 
+	CRange top;
+
 	// Start from the next range and merge if necessary
 	for (unsigned int i = 1; i < arr.size(); i++)
 	{
 		// get range from stack top
-		CRange top = output.front();
+		top = output.back();
 
 		// if current range is not overlapping with stack top,
 		// push it to the stack
@@ -43,36 +49,28 @@ void mergeRanges(vector<CRange>& arr, vector<CRange>& output)
 }
 
 
-void subtractRanges(vector<CRange> &arr, vector<CRange> &del, vector<CRange> &output)
+void subtractRanges(vector<CRange> &arr, vector<CRange> &deletions, vector<CRange> &output)
 {
 	// Test if the given set has at least one range
-	if (arr.empty() || del.empty())
+	if (arr.empty() || deletions.empty())
 		return;
 
 	// sort the ranges in increasing order of start index
 	std::sort(arr.begin(), arr.end(), compareRange);
 
-	// Create an empty stack of ranges
-	vector<CRange> deletions;
-
-	// sort the deletions in increasing order of start index
-	sort(del.begin(), del.end(), compareRange);
-
-	// add the deletions to the stack, the first deletion is at the top
-	for (int i = del.size() - 1; i >= 0; i--) {
-		deletions.push_back(del[i]);
-	}
-
+	// sort the deletions in decreasing order of start index
+	std::sort(deletions.begin(), deletions.end(), compareRangeReverse);
+	CRange deletion;
 	// Start from the beginning of the main range array from which we'll
 	// delete another array of ranges
 	for (unsigned int i = 0; i < arr.size(); i++)
 	{
 		// find the first deletion range that comes on or after
 		// the current range element in the main array
-		CRange deletion = deletions.front();
+		deletion = deletions.back();
 		while (arr[i].start > deletion.end && deletions.size() > 1) {
 			deletions.pop_back();
-			deletion = deletions.front();
+			deletion = deletions.back();
 		}
 
 		// if the current ranges end is before the deletion start
@@ -129,22 +127,36 @@ void subtractRanges(vector<CRange> &arr, vector<CRange> &del, vector<CRange> &ou
 		}
 	}
 }
-/*
-int main()
-{
-	Range arr1[] = { { 3,3 },{ 5,6 },{ 4,4 },{ 12,13 },{ 8,10 } };
-	int n1 = sizeof(arr1) / sizeof(arr1[0]);
-
-	mergeRanges(arr1, n1);
-
-	Range arr2[] = { { 2,10 },{ 12,15 } };
-	int n2 = sizeof(arr2) / sizeof(arr2[0]);
-
-	Range del[] = { { 5,5 },{ 7,9 },{ 14,14 } };
-	int dn = sizeof(del) / sizeof(del[0]);
-
-	subtractRanges(arr2, n2, del, dn);
-
-	return 0;
+// validate and get count of range at same time. RangeCount > 0 is valid otherwise invalid
+unsigned int validateRangesAndGetCount(const vector<CRange> &arr) {
+	unsigned int total = 0;
+	unsigned int nLastEnd = 0;
+	for (auto& range : arr) {
+		// ensure range is well formed
+		if (range.end < range.start)
+			return 0;
+		if (range.start > 0 && range.start <= nLastEnd)
+			return 0;
+		total += (range.end - range.start) + 1;
+		nLastEnd = range.end;
+	}
+	return total;
 }
-*/
+// does child ranges exist fully in the parent ranges
+bool doesRangeContain(const vector<CRange> &parent, const vector<CRange> &child) {
+	if (parent.empty() || child.empty())
+		return false;
+	// we just need to prove that a single child doesn't exist in parent range's to prove this false, otherwise it must be true
+	for (auto& childRange : child) {
+		bool found = false;
+		for (auto& parentRange : parent) {
+			if (childRange.start >= parentRange.start && childRange.end <= parentRange.end) {
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			return false;
+	}
+	return true;
+}

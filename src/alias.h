@@ -23,6 +23,7 @@ class CSyscoinAddress;
 class COutPoint;
 class CCoinControl;
 struct CRecipient;
+
 static const unsigned int MAX_GUID_LENGTH = 71;
 static const unsigned int MAX_NAME_LENGTH = 256;
 static const unsigned int MAX_VALUE_LENGTH = 512;
@@ -40,7 +41,6 @@ enum {
 enum {
 	ACCEPT_TRANSFER_NONE=0,
 	ACCEPT_TRANSFER_CERTIFICATES,
-	ACCEPT_TRANSFER_ASSETS,
 	ACCEPT_TRANSFER_ALL,
 };
 class CAliasUnprunable
@@ -167,7 +167,7 @@ public:
 	std::vector<unsigned char> vchAlias;
 	std::vector<unsigned char> vchGUID;
     uint256 txHash;
-    uint64_t nHeight;
+    unsigned int nHeight;
 	uint64_t nExpireTime;
 	std::vector<unsigned char> vchAddress;
 	std::vector<unsigned char> vchEncryptionPublicKey;
@@ -191,7 +191,6 @@ public:
 		vchEncryptionPublicKey.clear();
 		vchEncryptionPrivateKey.clear();
 		vchPublicValue.clear();
-		vchGUID.clear();
 		vchAddress.clear();
 		offerWhitelist.SetNull();
 	}
@@ -254,9 +253,6 @@ public:
 
 	bool EraseAlias(const std::vector<unsigned char>& vchAlias, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("namei"), vchAlias));
-		EraseAliasIndex(vchAlias, cleanup);
-		EraseAliasIndexHistory(vchAlias, cleanup);
-		EraseAliasIndexTxHistory(vchAlias, cleanup);
 		return eraseState;
 	}
 	bool ReadAlias(const std::vector<unsigned char>& vchAlias, CAliasIndex& alias) {
@@ -276,13 +272,8 @@ public:
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteAliasIndex(const CAliasIndex& alias, const int &op);
-	void EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup);
 	void WriteAliasIndexHistory(const CAliasIndex& alias, const int &op);
-	void EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias, bool cleanup);
-	void EraseAliasIndexHistory(const std::string& id);
-	void WriteAliasIndexTxHistory(const std::string &user1, const std::string &user2, const std::string &user3, const uint256 &txHash, const uint64_t& nHeight, const std::string &type, const std::string &guid);
-	void EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias, bool cleanup);
-	void EraseAliasIndexTxHistory(const std::string& id);
+	void WriteAliasIndexTxHistory(const std::string &user1, const std::string &user2, const std::string &user3, const uint256 &txHash, const unsigned int& nHeight, const std::string &type, const std::string &guid);
 };
 
 class COfferDB;
@@ -303,7 +294,7 @@ std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
 const int SYSCOIN_TX_VERSION = 0x7400;
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool & bDestCheckFailed,bool dontaddtodb=false);
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool & bDestCheckFailed,bool bSanityCheck=false);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
@@ -335,15 +326,12 @@ bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, uint256& hashBlock, const Consensus::Params& consensusParams);
 bool IsSyscoinScript(const CScript& scriptPubKey, int &op, std::vector<std::vector<unsigned char> > &vvchArgs);
 bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
-void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index);
 void SysTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry, const char& type);
 void AliasTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName);
 void CleanupSyscoinServiceDatabases(int &servicesCleaned);
 int aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outPoint);
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& script, const uint32_t nPaymentOption=1);
-void startMongoDB();
-void stopMongoDB();
 std::string GetSyscoinTransactionDescription(const int op, std::string& responseEnglish, const char &type);
 bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName);
 #endif // ALIAS_H

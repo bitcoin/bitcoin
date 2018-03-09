@@ -35,6 +35,8 @@ RAW_TEST_FILES = test/data/alertTests.raw
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
 SYSCOIN_TESTS =\
+  test/syscoin_asset_tests.cpp \
+  test/syscoin_asset_allocation_tests.cpp \
   test/syscoin_alias_tests.cpp \
   test/syscoin_offer_tests.cpp \
   test/syscoin_cert_tests.cpp \
@@ -110,7 +112,7 @@ endif
 test_test_syscoin_SOURCES = $(SYSCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_syscoin_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
 test_test_syscoin_LDADD = $(LIBSYSCOIN_SERVER) $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(LIBBSON) $(LIBMONGODB)
+  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1)
 test_test_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 if ENABLE_WALLET
 test_test_syscoin_LDADD += $(LIBSYSCOIN_WALLET)

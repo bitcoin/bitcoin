@@ -17,7 +17,7 @@ class CCoinsViewCache;
 class CCoins;
 class CBlock;
 class CAliasIndex;
-bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedCerts, std::string &errorMessage, bool dontaddtodb=false);
+bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedCerts, std::string &errorMessage, bool bSanityCheck=false);
 bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char& type);
 bool DecodeCertScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
@@ -30,7 +30,7 @@ public:
 	std::vector<unsigned char> vchCert;
 	std::vector<unsigned char> vchAlias;
     uint256 txHash;
-    uint64_t nHeight;
+	unsigned int nHeight;
 	// 1 can edit, 2 can edit/transfer
 	unsigned char nAccessFlags;
 	std::vector<unsigned char> vchTitle;
@@ -117,8 +117,6 @@ public:
 		bool eraseState = Erase(make_pair(std::string("certi"), vchCert));
 		Erase(make_pair(std::string("certp"), vchCert));
 		Erase(make_pair(std::string("certf"), vchCert));
-		EraseCertIndex(vchCert, cleanup);
-		EraseCertIndexHistory(vchCert, cleanup);
 		EraseISArrivalTimes(vchCert);
         return eraseState;
     }
@@ -140,10 +138,7 @@ public:
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteCertIndex(const CCert& cert, const int &op);
-	void EraseCertIndex(const std::vector<unsigned char>& vchCert, bool cleanup);
 	void WriteCertIndexHistory(const CCert& cert, const int &op);
-	void EraseCertIndexHistory(const std::vector<unsigned char>& vchCert, bool cleanup);
-	void EraseCertIndexHistory(const std::string& id);
 
 };
 bool GetCert(const std::vector<unsigned char> &vchCert,CCert& txPos);

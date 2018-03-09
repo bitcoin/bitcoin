@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	StopNode("node2");
 	string guid = CertNew("node1", "jagprune1", "jag1", "pubdata");
 	// we can find it as normal first
-	BOOST_CHECK_EQUAL(CertFilter("node1", guid), true);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + guid));
 	// make sure our offer alias doesn't expire
 	string hex_str = AliasUpdate("node1", "jagprune1");
 	BOOST_CHECK(hex_str.empty());
@@ -107,8 +107,6 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	ExpireAlias("jagprune1");
 	StartNode("node2");
 	GenerateBlocks(5, "node2");
-
-	BOOST_CHECK_EQUAL(CertFilter("node1", guid), true);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + guid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
@@ -129,15 +127,14 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 
 	BOOST_CHECK_THROW(CallRPC("node1", "certinfo " + guid), runtime_error);
 
-	BOOST_CHECK_EQUAL(CertFilter("node1", guid), false);
 	// create a new service
 	AliasNew("node1", "jagprune1", "temp");
 	string guid1 = CertNew("node1", "jagprune1", "title", "pubdata");
 	// ensure you can still update before expiry
 	CertUpdate("node1", guid1, "pubdata1");
 	// you can search it still on node1/node2
-	BOOST_CHECK_EQUAL(CertFilter("node1", guid1), true);
-	BOOST_CHECK_EQUAL(CertFilter("node2", guid1), true);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + guid1));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certinfo " + guid1));
 	// make sure our offer alias doesn't expire
 	hex_str = AliasUpdate("node1", "jagprune1");
 	BOOST_CHECK(hex_str.empty());
@@ -146,8 +143,8 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	// now it should be expired
 	BOOST_CHECK_THROW(CallRPC("node1",  "certupdate " + guid1 + " title pubdata3 certificates ''"), runtime_error);
 	GenerateBlocks(5, "node1");
-	BOOST_CHECK_EQUAL(CertFilter("node1", guid1), true);
-	BOOST_CHECK_EQUAL(CertFilter("node2", guid1), true);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + guid1));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certinfo " + guid1));
 	// and it should say its expired
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certinfo " + guid1));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
@@ -156,6 +153,5 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
 	BOOST_CHECK_THROW(CallRPC("node3", "certinfo " + guid1), runtime_error);
-	BOOST_CHECK_EQUAL(CertFilter("node3", guid1), false);
 }
 BOOST_AUTO_TEST_SUITE_END ()

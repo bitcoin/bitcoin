@@ -29,14 +29,8 @@ EXCLUDE = [
     'test/functional/test_framework/bignum.py',
     # python init:
     '*__init__.py',
-    'src/mongodb/src/mongoc/utlist.h',
     'src/crypto/aes_helper.c',
     'src/crypto/sph_types.h',
-    'src/mongodb/src/mongoc/mongoc-memcmp.c',
-    'src/mongodb/doc/taglist.py',
-    'src/mongodb/src/libbson/doc/taglist.py',
-    'src/mongodb/src/snappy-1.1.3/snappy_unittest.cc',
-    'src/mongodb/src/snappy-1.1.3/snappy.h',
     'contrib/devtools/fix-copyright-headers.py',
 ]
 EXCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in EXCLUDE]))

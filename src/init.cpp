@@ -379,7 +379,6 @@ void Shutdown()
 #endif
 	globalVerifyHandle.reset();
 	ECC_Stop();
-	stopMongoDB();
 	LogPrintf("%s: done\n", __func__);
 }
 
@@ -477,8 +476,6 @@ std::string HelpMessage(HelpMessageMode mode)
 	strUsage += HelpMessageOpt("-sysperms", _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)"));
 #endif
 	strUsage += HelpMessageOpt("-txindex", strprintf(_("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)"), DEFAULT_TXINDEX));
-	// SYSCOIN
-	strUsage += HelpMessageOpt("-indexport=<port>", strprintf(_("Connect to indexer for syscoin queries on this port. (default: %u (not using indexer))"), DEFAULT_INDEXPORT));
 	strUsage += HelpMessageOpt("-addressindex", strprintf(_("Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)"), DEFAULT_ADDRESSINDEX));
 	strUsage += HelpMessageOpt("-timestampindex", strprintf(_("Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)"), DEFAULT_TIMESTAMPINDEX));
 	strUsage += HelpMessageOpt("-spentindex", strprintf(_("Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)"), DEFAULT_SPENTINDEX));
@@ -572,6 +569,19 @@ std::string HelpMessage(HelpMessageMode mode)
 	strUsage += HelpMessageOpt("-zmqpubrawblock=<address>", _("Enable publish raw block in <address>"));
 	strUsage += HelpMessageOpt("-zmqpubrawtx=<address>", _("Enable publish raw transaction in <address>"));
 	strUsage += HelpMessageOpt("-zmqpubrawtxlock=<address>", _("Enable publish raw transaction (locked via InstantSend) in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubalias=<address>", _("Enable publish raw alias payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubaliashistory=<address>", _("Enable publish raw alias history payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubaliastxhistory=<address>", _("Enable publish raw alias transaction history payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpuboffer=<address>", _("Enable publish raw offer payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubofferhistory=<address>", _("Enable publish raw offer history payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubescrow=<address>", _("Enable publish raw escrow payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubescrowbid=<address>", _("Enable publish raw escrow bid payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubfeedback=<address>", _("Enable publish raw escrow feedback payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubcert=<address>", _("Enable publish raw certificate payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubcerthistory=<address>", _("Enable publish raw certificate history payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubasset=<address>", _("Enable publish raw asset payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubassethistory=<address>", _("Enable publish raw asset history payload in <address>"));
+	strUsage += HelpMessageOpt("-zmqpubassetallocation=<address>", _("Enable publish raw asset allocation payload in <address>"));
 #endif
 
 	strUsage += HelpMessageGroup(_("Debugging/Testing options:"));
@@ -1634,7 +1644,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 				passetdb = new CAssetDB(nCoinCacheUsage * 2, false, fReindex);
 				passetallocationdb = new CAssetAllocationDB(nCoinCacheUsage * 2, false, fReindex);
 				pescrowdb = new CEscrowDB(nCoinCacheUsage * 2, false, fReindex);
-				startMongoDB();
+				
 				if (fReindex) {
 					pblocktree->WriteReindexing(true);
 					//If we're reindexing in prune mode, wipe away unusable block files and all undo data files

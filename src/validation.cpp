@@ -82,7 +82,6 @@ int nScriptCheckThreads = 0;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = true;
-int nIndexPort = 0;
 bool fAddressIndex = true;
 bool fTimestampIndex = false;
 bool fSpentIndex = false;
@@ -582,7 +581,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 			if (fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
 		}
-		if (!bDestCheckFailed && !vvchAliasArgs.empty() && good && errorMessage.empty())
+		if (!bDestCheckFailed && !vvchAliasArgs.empty() && good)
 		{
 			if (DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
@@ -658,7 +657,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 					if (fDebug && !errorMessage.empty())
 						LogPrintf("%s\n", errorMessage.c_str());
 				}
-				if (!bDestCheckFailed && !vvchAliasArgs.empty() && good && errorMessage.empty())
+				if (!bDestCheckFailed && !vvchAliasArgs.empty() && good)
 				{
 					if (DecodeCertTx(tx, op, nOut, vvchArgs))
 					{

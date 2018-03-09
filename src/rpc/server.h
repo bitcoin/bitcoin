@@ -314,8 +314,6 @@ extern UniValue aliasclearwhitelist(const UniValue& params, bool fHelp);
 extern UniValue aliaswhitelist(const UniValue& params, bool fHelp);
 extern UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp);
-extern UniValue syscoinquery(const UniValue& params, bool fHelp);
-
 extern UniValue offernew(const UniValue& params, bool fHelp);
 extern UniValue offerupdate(const UniValue& params, bool fHelp);
 extern UniValue offerlink(const UniValue& params, bool fHelp);
@@ -343,6 +341,7 @@ extern UniValue assettransfer(const UniValue& params, bool fHelp);
 extern UniValue assetsend(const UniValue& params, bool fHelp);
 extern UniValue assetinfo(const UniValue& params, bool fHelp);
 extern UniValue assetallocationsend(const UniValue& params, bool fHelp);
+extern UniValue assetallocationcollectinterest(const UniValue& params, bool fHelp);
 extern UniValue assetallocationinfo(const UniValue& params, bool fHelp);
 extern UniValue assetallocationsenderstatus(const UniValue& params, bool fHelp);
 bool StartRPC();

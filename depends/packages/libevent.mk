@@ -9,10 +9,9 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_set_vars
-  $(package)_config_opts=--disable-shared --disable-openssl --disable-libevent-regress --disable-samples
+  $(package)_config_opts=--disable-shared --disable-openssl --disable-libevent-regress
   $(package)_config_opts_release=--disable-debug-mode
   $(package)_config_opts_linux=--with-pic
-  $(package)_cxxflags=-std=c++11
 endef
 
 define $(package)_config_cmds

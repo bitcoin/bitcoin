@@ -439,9 +439,6 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	string escrowTxid = find_value(r.get_obj(), "txid").get_str();
 
 	GenerateBlocks(10, "node1");
-	string feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKSELLER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
-	r = FindFeedback("node1", feedbackid);
-	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() != escrowTxid);
 
 	// buyer can leave feedback
 	EscrowFeedback("node2", "buyer", guid, "feedbackseller", "1", "seller");
@@ -459,9 +456,6 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	escrowTxid = find_value(r.get_obj(), "txid").get_str();
 
 	GenerateBlocks(10, "node2");
-	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKBUYER) + CFeedback::FeedbackUserToString(FEEDBACKSELLER);
-	r = FindFeedback("node2", feedbackid);
-	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() != escrowTxid);
 
 	// arbiter leaves feedback
 	EscrowFeedback("node3", "arbiter", guid, "feedbackbuyer", "4", "buyer");
@@ -478,9 +472,6 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "decoderawtransaction " + finalhexstr));
 	escrowTxid = find_value(r.get_obj(), "txid").get_str();
 	GenerateBlocks(10, "node3");
-	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKARBITER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
-	r = FindFeedback("node3", feedbackid);
-	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() != escrowTxid);
 }
 BOOST_AUTO_TEST_CASE(generate_escrow_linked_release)
 {
@@ -560,7 +551,6 @@ BOOST_AUTO_TEST_CASE(generate_escrowpruning)
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowinfo " + guid1), runtime_error);
-	BOOST_CHECK_EQUAL(EscrowFilter("node3", guid1), false);
 	// cannot leave feedback on expired escrow
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowfeedback " + guid1 + " buyer feedback 2 seller ''"), runtime_error);
 	ECC_Stop();

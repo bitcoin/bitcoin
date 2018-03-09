@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE (generate_offernew)
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleralias1", "category", "title", "100", "0.05", "description", "USD");
 	// by default offers are not private and should be searchable
-	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguid), true);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
 
 	// should fail: generate an offer with unknown alias
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew fooalias category title 100 0.05 description USD '' SYS false 1 BUYNOW 0 0 false 0 ''"), runtime_error);
@@ -601,14 +601,14 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	string guid = OfferNew("node1", "pruneoffer", "category", "title", "1", "0.05", "description", "USD");
 	
 	// we can find it as normal first
-	BOOST_CHECK_EQUAL(OfferFilter("node1", guid), true);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerinfo " + guid));
 	GenerateBlocks(5, "node1");
 	// then we let the service expire
 	ExpireAlias("pruneoffer");
 	StartNode("node2");
 	GenerateBlocks(5, "node2");
 	// it can still be found via search because node hasn't restarted and pruned itself
-	BOOST_CHECK_EQUAL(OfferFilter("node1", guid), true);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerinfo " + guid));
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + guid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	GenerateBlocks(5, "node1");
 
 	// after stopping and starting, indexer should remove guid offer from db
-	BOOST_CHECK_EQUAL(OfferFilter("node1", guid), false);
+	BOOST_CHECK_THROW(CallRPC("node1", "offerinfo " + guid), runtime_error);
 
 	// create a new service
 	AliasNew("node1", "pruneoffer", "data");
@@ -637,8 +637,8 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	// ensure you can still update before expiry
 	OfferUpdate("node1", "pruneoffer", guid1, "category", "title", "1", "0.05", "description", "USD");
 	// you can search it still on node1/node2
-	BOOST_CHECK_EQUAL(OfferFilter("node1", guid1), true);
-	BOOST_CHECK_EQUAL(OfferFilter("node2", guid1), true);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerinfo " + guid1));
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "offerinfo " + guid1));
 	
 	GenerateBlocks(5, "node1");
 	// make sure our offer alias doesn't expire
@@ -648,8 +648,8 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	// now it should be expired
 	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate pruneoffer " + guid1 + " category title 1 0.05 description USD false '' 0 SYS BUYNOW 0 0 false 0 ''"), runtime_error);
 	// can still search
-	BOOST_CHECK_EQUAL(OfferFilter("node1", guid1), true);
-	BOOST_CHECK_EQUAL(OfferFilter("node2", guid1), true);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerinfo " + guid1));
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "offerinfo " + guid1));
 	// and it should say its expired
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + guid1));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(),true);	
@@ -658,7 +658,6 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
 	BOOST_CHECK_THROW(CallRPC("node3", "offerinfo " + guid1), runtime_error);
- 	BOOST_CHECK_EQUAL(OfferFilter("node3", guid1), false);
 
 }
 

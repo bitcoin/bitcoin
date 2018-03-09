@@ -1,3 +1,0 @@
-*.txt           text
-*.vcproj        eol=crlf
-*.sh            eol=lf

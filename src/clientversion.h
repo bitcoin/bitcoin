@@ -8,6 +8,19 @@
 
 #if defined(HAVE_CONFIG_H)
 #include "config/syscoin-config.h"
+#else
+
+#define CLIENT_VERSION_MAJOR 2
+#define CLIENT_VERSION_MINOR 2
+#define CLIENT_VERSION_REVISION 0
+#define CLIENT_VERSION_BUILD 0
+#define CLIENT_VERSION_IS_RELEASE true
+#define COPYRIGHT_YEAR 2018
+
+#define DASH_VERSION_MAJOR 0
+#define DASH_VERSION_MINOR 12
+#define DASH_VERSION_REVISION 2
+
 #endif //HAVE_CONFIG_H
 
 // Check that required client information is defined
@@ -51,6 +64,7 @@
 #include <string>
 #include <vector>
  // SYSCOIN
+static const std::string SYSCOIN_CLIENT_VERSION = SYSCOIN_VERSION;
 static const int CLIENT_VERSION =
                            1000000 * CLIENT_VERSION_MAJOR
                          +   10000 * CLIENT_VERSION_MINOR
