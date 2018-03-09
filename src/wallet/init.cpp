@@ -246,7 +246,7 @@ bool InitLoadWallet()
     return true;
 }
 
-bool CWallet::InitAutoBackup()
+bool WalletInitAutoBackup()
 {
     if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
         return true;

@@ -1331,10 +1331,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 5: initialize AutoBackup and verify wallet database integrity
 #ifdef ENABLE_WALLET
-    if (!CWallet::InitAutoBackup())
+    if (!WalletInitAutoBackup())
         return false;
 
-    if (!CWallet::Verify())
+    if (!WalletVerify())
         return false;
 
     // Initialize KeePass Integration
