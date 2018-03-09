@@ -384,3 +384,13 @@ target_link_libraries(crownd
 #crownd_SOURCES += crownd-res.rc
 #endif
 
+add_executable(crown_qt
+  qt/crown.cpp)
+
+target_link_libraries(crown_qt
+  crown_core
+  crown_server
+  crown_common
+  crown_util
+  crown_crypto
+  crown_univalue)
