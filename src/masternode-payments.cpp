@@ -608,6 +608,16 @@ bool CMasternodePayments::IsScheduled(const masternode_info_t& mnInfo, int nNotB
 {
     LOCK(cs_mapMasternodeBlocks);
 
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
+        for (const auto &dmn : projectedPayees) {
+            if (dmn->proTxHash == mnInfo.outpoint.hash) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     if(!masternodeSync.IsMasternodeListSynced()) return false;
 
     CScript mnpayee;
