@@ -280,11 +280,11 @@ std::unique_ptr<CCoinsViewDB> pcoinsdbview;
 std::unique_ptr<CCoinsViewCache> pcoinsTip;
 std::unique_ptr<CBlockTreeDB> pblocktree;
 
-enum FlushStateMode {
-    FLUSH_STATE_NONE,
-    FLUSH_STATE_IF_NEEDED,
-    FLUSH_STATE_PERIODIC,
-    FLUSH_STATE_ALWAYS
+enum class FlushStateMode {
+    NONE,
+    IF_NEEDED,
+    PERIODIC,
+    ALWAYS
 };
 
 // See definition for documentation
@@ -983,7 +983,7 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
     CValidationState stateDummy;
-    FlushStateToDisk(chainparams, stateDummy, FLUSH_STATE_PERIODIC);
+    FlushStateToDisk(chainparams, stateDummy, FlushStateMode::PERIODIC);
     return res;
 }
 
@@ -1685,7 +1685,7 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
 
     for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
         ThresholdState state = VersionBitsState(pindexPrev, params, static_cast<Consensus::DeploymentPos>(i), versionbitscache);
-        if (state == THRESHOLD_LOCKED_IN || state == THRESHOLD_STARTED) {
+        if (state == ThresholdState::LOCKED_IN || state == ThresholdState::STARTED) {
             nVersion |= VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(i));
         }
     }
@@ -1741,7 +1741,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     }
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
-    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == ThresholdState::ACTIVE) {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
@@ -1927,7 +1927,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     int nLockTimeFlags = 0;
-    if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV, versionbitscache) == ThresholdState::ACTIVE) {
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
@@ -2097,15 +2097,15 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
         int64_t cacheSize = pcoinsTip->DynamicMemoryUsage();
         int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
-        bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
+        bool fCacheLarge = mode == FlushStateMode::PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
         // The cache is over the limit, we have to write now.
-        bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && cacheSize > nTotalSpace;
+        bool fCacheCritical = mode == FlushStateMode::IF_NEEDED && cacheSize > nTotalSpace;
         // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload after a crash.
-        bool fPeriodicWrite = mode == FLUSH_STATE_PERIODIC && nNow > nLastWrite + (int64_t)DATABASE_WRITE_INTERVAL * 1000000;
+        bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > nLastWrite + (int64_t)DATABASE_WRITE_INTERVAL * 1000000;
         // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
-        bool fPeriodicFlush = mode == FLUSH_STATE_PERIODIC && nNow > nLastFlush + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
+        bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > nLastFlush + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
         // Combine all conditions that result in a full cache flush.
-        fDoFullFlush = (mode == FLUSH_STATE_ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
+        fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
         // Write blocks and block index to disk.
         if (fDoFullFlush || fPeriodicWrite) {
             // Depend on nMinDiskSpace to ensure we can write block index
@@ -2151,7 +2151,7 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
             nLastFlush = nNow;
         }
     }
-    if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000)) {
+    if (fDoFullFlush || ((mode == FlushStateMode::ALWAYS || mode == FlushStateMode::PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000)) {
         // Update best block in wallet (so we can detect restored wallets).
         GetMainSignals().SetBestChain(chainActive.GetLocator());
         nLastSetChain = nNow;
@@ -2165,14 +2165,14 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
 void FlushStateToDisk() {
     CValidationState state;
     const CChainParams& chainparams = Params();
-    FlushStateToDisk(chainparams, state, FLUSH_STATE_ALWAYS);
+    FlushStateToDisk(chainparams, state, FlushStateMode::ALWAYS);
 }
 
 void PruneAndFlush() {
     CValidationState state;
     fCheckForPruning = true;
     const CChainParams& chainparams = Params();
-    FlushStateToDisk(chainparams, state, FLUSH_STATE_NONE);
+    FlushStateToDisk(chainparams, state, FlushStateMode::NONE);
 }
 
 static void DoWarning(const std::string& strWarning)
@@ -2200,9 +2200,9 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
             WarningBitsConditionChecker checker(bit);
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
-            if (state == THRESHOLD_ACTIVE || state == THRESHOLD_LOCKED_IN) {
+            if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
                 const std::string strWarning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
-                if (state == THRESHOLD_ACTIVE) {
+                if (state == ThresholdState::ACTIVE) {
                     DoWarning(strWarning);
                 } else {
                     warningMessages.push_back(strWarning);
@@ -2268,7 +2268,7 @@ bool CChainState::DisconnectTip(CValidationState& state, const CChainParams& cha
     }
     LogPrint(BCLog::BENCH, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(chainparams, state, FLUSH_STATE_IF_NEEDED))
+    if (!FlushStateToDisk(chainparams, state, FlushStateMode::IF_NEEDED))
         return false;
 
     if (disconnectpool) {
@@ -2406,7 +2406,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint(BCLog::BENCH, "  - Flush: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime4 - nTime3) * MILLI, nTimeFlush * MICRO, nTimeFlush * MILLI / nBlocksTotal);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(chainparams, state, FLUSH_STATE_IF_NEEDED))
+    if (!FlushStateToDisk(chainparams, state, FlushStateMode::IF_NEEDED))
         return false;
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
@@ -2683,7 +2683,7 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
     CheckBlockIndex(chainparams.GetConsensus());
 
     // Write changes periodically to disk, after relay.
-    if (!FlushStateToDisk(chainparams, state, FLUSH_STATE_PERIODIC)) {
+    if (!FlushStateToDisk(chainparams, state, FlushStateMode::PERIODIC)) {
         return false;
     }
 
@@ -3071,7 +3071,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     LOCK(cs_main);
-    return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
+    return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == ThresholdState::ACTIVE);
 }
 
 // Compute at which vout of the block's coinbase transaction the witness
@@ -3190,7 +3190,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 
     // Start enforcing BIP113 (Median Time Past) using versionbits logic.
     int nLockTimeFlags = 0;
-    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == ThresholdState::ACTIVE) {
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
 
@@ -3224,7 +3224,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
     //   multiple, the last one is used.
     bool fHaveWitness = false;
-    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == ThresholdState::ACTIVE) {
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != -1) {
             bool malleated = false;
@@ -3439,7 +3439,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     }
 
     if (fCheckForPruning)
-        FlushStateToDisk(chainparams, state, FLUSH_STATE_NONE); // we just allocated more disk space for block files
+        FlushStateToDisk(chainparams, state, FlushStateMode::NONE); // we just allocated more disk space for block files
 
     CheckBlockIndex(chainparams.GetConsensus());
 
@@ -3592,7 +3592,7 @@ void PruneBlockFilesManual(int nManualPruneHeight)
 {
     CValidationState state;
     const CChainParams& chainparams = Params();
-    FlushStateToDisk(chainparams, state, FLUSH_STATE_NONE, nManualPruneHeight);
+    FlushStateToDisk(chainparams, state, FlushStateMode::NONE, nManualPruneHeight);
 }
 
 /**
@@ -4085,7 +4085,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
             return error("RewindBlockIndex: unable to disconnect block at height %i", pindex->nHeight);
         }
         // Occasionally flush state to disk.
-        if (!FlushStateToDisk(params, state, FLUSH_STATE_PERIODIC))
+        if (!FlushStateToDisk(params, state, FlushStateMode::PERIODIC))
             return false;
     }
 
@@ -4151,7 +4151,7 @@ bool RewindBlockIndex(const CChainParams& params) {
         // and skip it here, we're about to -reindex-chainstate anyway, so
         // it'll get called a bunch real soon.
         CValidationState state;
-        if (!FlushStateToDisk(params, state, FLUSH_STATE_ALWAYS)) {
+        if (!FlushStateToDisk(params, state, FlushStateMode::ALWAYS)) {
             return false;
         }
     }
