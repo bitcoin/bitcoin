@@ -3,7 +3,7 @@ release-notes at release time)
 
 Bitcoin Core version *version* is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-*version*/>
+  <https://bitcoincore.org/bin/bitcoin-core-*version*/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
@@ -48,7 +48,7 @@ Compatibility
 ==============
 
 Bitcoin Core is extensively tested on multiple operating systems using
-the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
+the Linux kernel, macOS 10.8+, and Windows 7 and newer (Windows XP is not supported).
 
 Bitcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
@@ -56,70 +56,42 @@ frequently tested on them.
 Notable changes
 ===============
 
-GCC 4.8.x
---------------
-The minimum version of GCC required to compile Bitcoin Core is now 4.8. No effort will be
-made to support older versions of GCC. See discussion in issue #11732 for more information.
+RPC changes
+------------
 
-HD-wallets by default
+### Low-level changes
+
+- The `fundrawtransaction` rpc will reject the previously deprecated `reserveChangeKey` option.
+
+External wallet files
 ---------------------
-Due to a backward-incompatible change in the wallet database, wallets created
-with version 0.16.0 will be rejected by previous versions. Also, version 0.16.0
-will only create hierarchical deterministic (HD) wallets.
 
-Replace-By-Fee by default in GUI
---------------------------------
-The send screen now uses BIP-125 RBF by default, regardless of `-walletrbf`.
-There is a checkbox to mark the transaction as final.
+The `-wallet=<path>` option now accepts full paths instead of requiring wallets
+to be located in the -walletdir directory.
 
-The RPC default remains unchanged: to use RBF, launch with `-walletrbf=1` or
-use the `replaceable` argument for individual transactions.
+Newly created wallet format
+---------------------------
 
-Wallets directory configuration (`-walletdir`)
-----------------------------------------------
+If `-wallet=<path>` is specified with a path that does not exist, it will now
+create a wallet directory at the specified location (containing a wallet.dat
+data file, a db.log file, and database/log.?????????? files) instead of just
+creating a data file at the path and storing log files in the parent
+directory. This should make backing up wallets more straightforward than
+before because the specified wallet path can just be directly archived without
+having to look in the parent directory for transaction log files.
 
-Bitcoin Core now has more flexibility in where the wallets directory can be
-located. Previously wallet database files were stored at the top level of the
-bitcoin data directory. The behavior is now:
-
-- For new installations (where the data directory doesn't already exist),
-  wallets will now be stored in a new `wallets/` subdirectory inside the data
-  directory by default.
-- For existing nodes (where the data directory already exists), wallets will be
-  stored in the data directory root by default. If a `wallets/` subdirectory
-  already exists in the data directory root, then wallets will be stored in the
-  `wallets/` subdirectory by default.
-- The location of the wallets directory can be overridden by specifying a
-  `-walletdir=<path>` option where `<path>` can be an absolute path to a
-  directory or directory symlink.
-
-Care should be taken when choosing the wallets directory location, as if it
-becomes unavailable during operation, funds may be lost.
+For backwards compatibility, wallet paths that are names of existing data files
+in the `-walletdir` directory will continue to be accepted and interpreted the
+same as before.
 
 Low-level RPC changes
-----------------------
-- The deprecated RPC `getinfo` was removed. It is recommended that the more specific RPCs are used:
-  * `getblockchaininfo`
-  * `getnetworkinfo`
-  * `getwalletinfo`
-  * `getmininginfo`
-- The wallet RPC `getreceivedbyaddress` will return an error if called with an address not in the wallet.
-- The wallet RPC `addwitnessaddress` was deprecated and will be removed in version 0.17,
-  set the `address_type` argument of `getnewaddress`, or option `-addresstype=[bech32|p2sh-segwit]` instead.
+---------------------
 
-Changed command-line options
------------------------------
-- `-debuglogfile=<file>` can be used to specify an alternative debug logging file.
-
-Renamed script for creating JSON-RPC credentials
------------------------------
-The `share/rpcuser/rpcuser.py` script was renamed to `share/rpcauth/rpcauth.py`. This script can be
-used to create `rpcauth` credentials for a JSON-RPC user.
-
-
-- `dumpwallet` now includes hex-encoded scripts from the wallet in the dumpfile, and
-  `importwallet` now imports these scripts, but corresponding addresses may not be added
-  correctly or a manual rescan may be required to find relevant transactions.
+- When bitcoin is not started with any `-wallet=<path>` options, the name of
+  the default wallet returned by `getwalletinfo` and `listwallets` RPCs is
+  now the empty string `""` instead of `"wallet.dat"`. If bitcoin is started
+  with any `-wallet=<path>` options, there is no change in behavior, and the
+  name of any wallet is just its `<path>` string.
 
 Credits
 =======

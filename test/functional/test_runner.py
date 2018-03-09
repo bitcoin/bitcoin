@@ -55,84 +55,85 @@ TEST_EXIT_SKIPPED = 77
 BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'wallet-hd.py',
-    'walletbackup.py',
+    'wallet_hd.py',
+    'wallet_backup.py',
     # vv Tests less than 5m vv
-    'p2p-fullblocktest.py',
-    'fundrawtransaction.py',
-    'p2p-compactblocks.py',
-    'segwit.py',
+    'feature_block.py',
+    'rpc_fundrawtransaction.py',
+    'p2p_compactblocks.py',
+    'feature_segwit.py',
     # vv Tests less than 2m vv
-    'wallet.py',
-    'wallet-accounts.py',
-    'p2p-segwit.py',
-    'wallet-dump.py',
-    'listtransactions.py',
+    'wallet_basic.py',
+    'wallet_accounts.py',
+    'p2p_segwit.py',
+    'wallet_dump.py',
+    'rpc_listtransactions.py',
     # vv Tests less than 60s vv
-    'sendheaders.py',
-    'zapwallettxes.py',
-    'importmulti.py',
+    'p2p_sendheaders.py',
+    'wallet_zapwallettxes.py',
+    'wallet_importmulti.py',
     'mempool_limit.py',
-    'merkle_blocks.py',
-    'receivedby.py',
-    'abandonconflict.py',
-    'bip68-112-113-p2p.py',
-    'rawtransactions.py',
-    'address_types.py',
-    'reindex.py',
+    'rpc_txoutproof.py',
+    'wallet_listreceivedby.py',
+    'wallet_abandonconflict.py',
+    'feature_csv_activation.py',
+    'rpc_rawtransaction.py',
+    'wallet_address_types.py',
+    'feature_reindex.py',
     # vv Tests less than 30s vv
-    'keypool-topup.py',
-    'zmq_test.py',
-    'bitcoin_cli.py',
-    'mempool_resurrect_test.py',
-    'txn_doublespend.py --mineblock',
-    'txn_clone.py',
-    'txn_clone.py --segwit',
-    'getchaintips.py',
-    'rest.py',
-    'mempool_spendcoinbase.py',
+    'wallet_keypool_topup.py',
+    'interface_zmq.py',
+    'interface_bitcoin_cli.py',
+    'mempool_resurrect.py',
+    'wallet_txn_doublespend.py --mineblock',
+    'wallet_txn_clone.py',
+    'wallet_txn_clone.py --segwit',
+    'rpc_getchaintips.py',
+    'interface_rest.py',
+    'mempool_spend_coinbase.py',
     'mempool_reorg.py',
     'mempool_persist.py',
-    'multiwallet.py',
-    'multiwallet.py --usecli',
-    'httpbasics.py',
-    'multi_rpc.py',
-    'proxy_test.py',
-    'signrawtransactions.py',
-    'disconnect_ban.py',
-    'decodescript.py',
-    'blockchain.py',
-    'deprecated_rpc.py',
-    'disablewallet.py',
-    'net.py',
-    'keypool.py',
-    'p2p-mempool.py',
-    'prioritise_transaction.py',
-    'invalidblockrequest.py',
-    'invalidtxrequest.py',
-    'p2p-versionbits-warning.py',
-    'preciousblock.py',
-    'importprunedfunds.py',
-    'signmessages.py',
-    'nulldummy.py',
-    'import-rescan.py',
-    'mining.py',
-    'bumpfee.py',
-    'rpcnamedargs.py',
-    'listsinceblock.py',
-    'p2p-leaktests.py',
-    'wallet-encryption.py',
-    'bipdersig-p2p.py',
-    'bip65-cltv-p2p.py',
-    'uptime.py',
-    'resendwallettransactions.py',
-    'minchainwork.py',
-    'p2p-fingerprint.py',
-    'uacomment.py',
-    'p2p-acceptblock.py',
+    'wallet_multiwallet.py',
+    'wallet_multiwallet.py --usecli',
+    'interface_http.py',
+    'rpc_users.py',
+    'feature_proxy.py',
+    'rpc_signrawtransaction.py',
+    'p2p_disconnect_ban.py',
+    'rpc_decodescript.py',
+    'rpc_blockchain.py',
+    'rpc_deprecated.py',
+    'wallet_disable.py',
+    'rpc_net.py',
+    'wallet_keypool.py',
+    'p2p_mempool.py',
+    'mining_prioritisetransaction.py',
+    'p2p_invalid_block.py',
+    'p2p_invalid_tx.py',
+    'feature_versionbits_warning.py',
+    'rpc_preciousblock.py',
+    'wallet_importprunedfunds.py',
+    'rpc_signmessage.py',
+    'feature_nulldummy.py',
+    'wallet_import_rescan.py',
+    'mining_basic.py',
+    'wallet_bumpfee.py',
+    'rpc_named_arguments.py',
+    'wallet_listsinceblock.py',
+    'p2p_leak.py',
+    'wallet_encryption.py',
+    'feature_dersig.py',
+    'feature_cltv.py',
+    'rpc_uptime.py',
+    'wallet_resendwallettransactions.py',
+    'wallet_fallbackfee.py',
+    'feature_minchainwork.py',
+    'p2p_fingerprint.py',
+    'feature_uacomment.py',
+    'p2p_unrequested_blocks.py',
     'feature_logging.py',
-    'node_network_limited.py',
-    'conf_args.py',
+    'p2p_node_network_limited.py',
+    'feature_config_args.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]
@@ -140,29 +141,29 @@ BASE_SCRIPTS= [
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'pruning.py',
+    'feature_pruning.py',
     # vv Tests less than 20m vv
-    'smartfees.py',
+    'feature_fee_estimation.py',
     # vv Tests less than 5m vv
-    'maxuploadtarget.py',
+    'feature_maxuploadtarget.py',
     'mempool_packages.py',
-    'dbcrash.py',
+    'feature_dbcrash.py',
     # vv Tests less than 2m vv
-    'bip68-sequence.py',
-    'getblocktemplate_longpoll.py',
-    'p2p-timeouts.py',
+    'feature_bip68_sequence.py',
+    'mining_getblocktemplate_longpoll.py',
+    'p2p_timeouts.py',
     # vv Tests less than 60s vv
-    'bip9-softforks.py',
-    'p2p-feefilter.py',
-    'rpcbind_test.py',
+    'feature_bip9_softforks.py',
+    'p2p_feefilter.py',
+    'rpc_bind.py',
     # vv Tests less than 30s vv
-    'assumevalid.py',
+    'feature_assumevalid.py',
     'example_test.py',
-    'txn_doublespend.py',
-    'txn_clone.py --mineblock',
-    'notifications.py',
-    'invalidateblock.py',
-    'replace-by-fee.py',
+    'wallet_txn_doublespend.py',
+    'wallet_txn_clone.py --mineblock',
+    'feature_notifications.py',
+    'rpc_invalidateblock.py',
+    'feature_rbf.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
@@ -268,7 +269,7 @@ def main():
     if args.help:
         # Print help for test_runner.py, then print help of the first script (with args removed) and exit.
         parser.print_help()
-        subprocess.check_call([(config["environment"]["SRCDIR"] + '/test/functional/' + test_list[0].split()[0])] + ['-h'])
+        subprocess.check_call([sys.executable, os.path.join(config["environment"]["SRCDIR"], 'test', 'functional', test_list[0].split()[0]), '-h'])
         sys.exit(0)
 
     check_script_list(config["environment"]["SRCDIR"])
@@ -312,10 +313,10 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     if len(test_list) > 1 and jobs > 1:
         # Populate cache
         try:
-            subprocess.check_output([tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
-        except Exception as e:
-            print(e.output)
-            raise e
+            subprocess.check_output([sys.executable, tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
+        except subprocess.CalledProcessError as e:
+            sys.stdout.buffer.write(e.output)
+            raise
 
     #Run Tests
     job_queue = TestHandler(jobs, tests_dir, tmpdir, test_list, flags)
@@ -342,7 +343,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
                 print('\n============')
                 print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
                 print('============\n')
-                combined_logs, _ = subprocess.Popen([os.path.join(tests_dir, 'combine_logs.py'), '-c', testdir], universal_newlines=True, stdout=subprocess.PIPE).communicate()
+                combined_logs, _ = subprocess.Popen([sys.executable, os.path.join(tests_dir, 'combine_logs.py'), '-c', testdir], universal_newlines=True, stdout=subprocess.PIPE).communicate()
                 print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
 
     print_results(test_results, max_len_name, (int(time.time() - time0)))
@@ -412,7 +413,7 @@ class TestHandler:
             tmpdir_arg = ["--tmpdir={}".format(testdir)]
             self.jobs.append((t,
                               time.time(),
-                              subprocess.Popen([self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
+                              subprocess.Popen([sys.executable, self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
                                                universal_newlines=True,
                                                stdout=log_stdout,
                                                stderr=log_stderr),
@@ -472,25 +473,15 @@ class TestResult():
 
 
 def check_script_prefixes():
-    """Check that no more than `EXPECTED_VIOLATION_COUNT` of the
-       test scripts don't start with one of the allowed name prefixes."""
-    EXPECTED_VIOLATION_COUNT = 77
-
-    # LEEWAY is provided as a transition measure, so that pull-requests
-    # that introduce new tests that don't conform with the naming
-    # convention don't immediately cause the tests to fail.
-    LEEWAY = 10
+    """Check that test scripts start with one of the allowed name prefixes."""
 
     good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
-    if len(bad_script_names) < EXPECTED_VIOLATION_COUNT:
-        print("{}HURRAY!{} Number of functional tests violating naming convention reduced!".format(BOLD[1], BOLD[0]))
-        print("Consider reducing EXPECTED_VIOLATION_COUNT from %d to %d" % (EXPECTED_VIOLATION_COUNT, len(bad_script_names)))
-    elif len(bad_script_names) > EXPECTED_VIOLATION_COUNT:
-        print("INFO: %d tests not meeting naming conventions (expected %d):" % (len(bad_script_names), EXPECTED_VIOLATION_COUNT))
+    if bad_script_names:
+        print("%sERROR:%s %d tests not meeting naming conventions:" % (BOLD[1], BOLD[0], len(bad_script_names)))
         print("  %s" % ("\n  ".join(sorted(bad_script_names))))
-        assert len(bad_script_names) <= EXPECTED_VIOLATION_COUNT + LEEWAY, "Too many tests not following naming convention! (%d found, expected: <= %d)" % (len(bad_script_names), EXPECTED_VIOLATION_COUNT)
+        raise AssertionError("Some tests are not following naming convention!")
 
 
 def check_script_list(src_dir):

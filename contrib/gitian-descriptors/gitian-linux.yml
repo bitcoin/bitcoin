@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-linux-0.16"
+name: "bitcoin-linux-0.17"
 enable_cache: true
 suites:
 - "trusty"

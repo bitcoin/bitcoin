@@ -8,7 +8,7 @@ There are currently two sets of tests in this directory:
 - [functional](/test/functional) which test the functionality of 
 bitcoind and bitcoin-qt by interacting with them through the RPC and P2P
 interfaces.
-- [util](test/util) which tests the bitcoin utilities, currently only
+- [util](/test/util) which tests the bitcoin utilities, currently only
 bitcoin-tx.
 
 The util tests are run as part of `make check` target. The functional
@@ -33,13 +33,13 @@ The ZMQ functional test requires a python ZMQ library. To install it:
 Individual tests can be run by directly calling the test script, eg:
 
 ```
-test/functional/replace-by-fee.py
+test/functional/feature_rbf.py
 ```
 
 or can be run through the test_runner harness, eg:
 
 ```
-test/functional/test_runner.py replace-by-fee.py
+test/functional/test_runner.py feature_rbf.py
 ```
 
 You can run any combination (incl. duplicates) of tests by calling:
