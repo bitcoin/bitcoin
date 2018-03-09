@@ -102,6 +102,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
                                     CConnman& connman)
 {
     if(!mnodeman.Has(vote.GetMasternodeOutpoint())) {
+        LOCK(cs);
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
@@ -117,6 +118,9 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
+    vote_instance_t voteInstance;
+    {
+    LOCK(cs);
     vote_m_it it = mapCurrentMNVotes.find(vote.GetMasternodeOutpoint());
     if(it == mapCurrentMNVotes.end()) {
         it = mapCurrentMNVotes.insert(vote_m_t::value_type(vote.GetMasternodeOutpoint(), vote_rec_t())).first;
@@ -141,7 +145,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     if(it2 == recVote.mapInstances.end()) {
         it2 = recVote.mapInstances.insert(vote_instance_m_t::value_type(int(eSignal), vote_instance_t())).first;
     }
-    vote_instance_t& voteInstance = it2->second;
+    voteInstance = it2->second;
 
     // Reject obsolete votes
     if(vote.GetTimestamp() < voteInstance.nCreationTime) {
@@ -151,6 +155,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
         return false;
     }
+    } // LOCK(cs)
 
     int64_t nNow = GetAdjustedTime();
     int64_t nVoteTimeUpdate = voteInstance.nTime;
@@ -189,6 +194,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR);
         return false;
     }
+    LOCK(cs);
     voteInstance = vote_instance_t(vote.GetOutcome(), nVoteTimeUpdate, vote.GetTimestamp());
     if(!fileVotes.HasVote(vote.GetHash())) {
         fileVotes.AddVote(vote);
@@ -199,6 +205,8 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
 
 void CGovernanceObject::ClearMasternodeVotes()
 {
+    LOCK(cs);
+
     vote_m_it it = mapCurrentMNVotes.begin();
     while(it != mapCurrentMNVotes.end()) {
         if(!mnodeman.Has(it->first)) {
@@ -628,6 +636,8 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 
 int CGovernanceObject::CountMatchingVotes(vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) const
 {
+    LOCK(cs);
+
     int nCount = 0;
     for(vote_m_cit it = mapCurrentMNVotes.begin(); it != mapCurrentMNVotes.end(); ++it) {
         const vote_rec_t& recVote = it->second;
@@ -674,6 +684,8 @@ int CGovernanceObject::GetAbstainCount(vote_signal_enum_t eVoteSignalIn) const
 
 bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord)
 {
+    LOCK(cs);
+
     vote_m_it it = mapCurrentMNVotes.find(mnCollateralOutpoint);
     if (it == mapCurrentMNVotes.end()) {
         return false;

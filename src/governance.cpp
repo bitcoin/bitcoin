@@ -1164,6 +1164,8 @@ bool CGovernanceManager::AcceptMessage(const uint256& nHash, hash_s_t& setHash)
 
 void CGovernanceManager::RebuildIndexes()
 {
+    LOCK(cs);
+
     cmapVoteToObject.Clear();
     for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
         CGovernanceObject& govobj = it->second;

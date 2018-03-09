@@ -130,6 +130,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
 
 void CMasternode::Check(bool fForce)
 {
+    AssertLockHeld(cs_main);
     LOCK(cs);
 
     if(ShutdownRequested()) return;
@@ -144,9 +145,6 @@ void CMasternode::Check(bool fForce)
 
     int nHeight = 0;
     if(!fUnitTest) {
-        TRY_LOCK(cs_main, lockMain);
-        if(!lockMain) return;
-
         Coin coin;
         if(!GetUTXOCoin(outpoint, coin)) {
             nActiveState = MASTERNODE_OUTPOINT_SPENT;
@@ -415,6 +413,8 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
 {
     nDos = 0;
 
+    AssertLockHeld(cs_main);
+
     // make sure addr is valid
     if(!IsValidNetAddr()) {
         LogPrintf("CMasternodeBroadcast::SimpleCheck -- Invalid addr, rejected: masternode=%s  addr=%s\n",
@@ -469,6 +469,8 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
 bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos, CConnman& connman)
 {
     nDos = 0;
+
+    AssertLockHeld(cs_main);
 
     if(pmn->sigTime == sigTime && !fRecovery) {
         // mapSeenMasternodeBroadcast in CMasternodeMan::CheckMnbAndUpdateMasternodeList should filter legit duplicates
@@ -820,6 +822,8 @@ bool CMasternodePing::SimpleCheck(int& nDos)
 
 bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, int& nDos, CConnman& connman)
 {
+    AssertLockHeld(cs_main);
+
     // don't ban by default
     nDos = 0;
 
@@ -845,7 +849,6 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     }
 
     {
-        LOCK(cs_main);
         BlockMap::iterator mi = mapBlockIndex.find(blockHash);
         if ((*mi).second && (*mi).second->nHeight < chainActive.Height() - 24) {
             LogPrintf("CMasternodePing::CheckAndUpdate -- Masternode ping is invalid, block hash is too old: masternode=%s  blockHash=%s\n", masternodeOutpoint.ToStringShort(), blockHash.ToString());

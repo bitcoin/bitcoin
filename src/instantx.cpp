@@ -69,15 +69,11 @@ void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, C
         // Ignore any InstantSend messages until masternode list is synced
         if(!masternodeSync.IsMasternodeListSynced()) return;
 
-        LOCK(cs_main);
-#ifdef ENABLE_WALLET
-        if (pwalletMain)
-            LOCK(pwalletMain->cs_wallet);
-#endif
-        LOCK(cs_instantsend);
-
-        if(mapTxLockVotes.count(nVoteHash)) return;
-        mapTxLockVotes.insert(std::make_pair(nVoteHash, vote));
+        {
+            LOCK(cs_instantsend);
+            auto ret = mapTxLockVotes.emplace(nVoteHash, vote);
+            if (!ret.second) return;
+        }
 
         ProcessNewTxLockVote(pfrom, vote, connman);
 
@@ -87,7 +83,11 @@ void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, C
 
 bool CInstantSend::ProcessTxLockRequest(const CTxLockRequest& txLockRequest, CConnman& connman)
 {
-    LOCK2(cs_main, cs_instantsend);
+    LOCK(cs_main);
+#ifdef ENABLE_WALLET
+    LOCK(pwalletMain ? &pwalletMain->cs_wallet : NULL);
+#endif
+    LOCK2(mempool.cs, cs_instantsend);
 
     uint256 txHash = txLockRequest.GetHash();
 
@@ -183,13 +183,23 @@ void CInstantSend::CreateEmptyTxLockCandidate(const uint256& txHash)
 void CInstantSend::Vote(const uint256& txHash, CConnman& connman)
 {
     AssertLockHeld(cs_main);
-    LOCK(cs_instantsend);
+#ifdef ENABLE_WALLET
+    LOCK(pwalletMain ? &pwalletMain->cs_wallet : NULL);
+#endif
 
-    std::map<uint256, CTxLockCandidate>::iterator itLockCandidate = mapTxLockCandidates.find(txHash);
-    if (itLockCandidate == mapTxLockCandidates.end()) return;
-    Vote(itLockCandidate->second, connman);
+    CTxLockRequest dummyRequest;
+    CTxLockCandidate txLockCandidate(dummyRequest);
+    {
+        LOCK(cs_instantsend);
+        auto itLockCandidate = mapTxLockCandidates.find(txHash);
+        if (itLockCandidate == mapTxLockCandidates.end()) return;
+        txLockCandidate = itLockCandidate->second;
+        Vote(txLockCandidate, connman);
+    }
+
     // Let's see if our vote changed smth
-    TryToFinalizeLockCandidate(itLockCandidate->second);
+    LOCK2(mempool.cs, cs_instantsend);
+    TryToFinalizeLockCandidate(txLockCandidate);
 }
 
 void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
@@ -197,7 +207,8 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
     if(!fMasternodeMode) return;
     if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
 
-    LOCK2(cs_main, cs_instantsend);
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_instantsend);
 
     uint256 txHash = txLockCandidate.GetHash();
     // We should never vote on a Transaction Lock Request that was not (yet) accepted by the mempool
@@ -295,14 +306,6 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
 
 bool CInstantSend::ProcessNewTxLockVote(CNode* pfrom, const CTxLockVote& vote, CConnman& connman)
 {
-    // cs_main, cs_wallet and cs_instantsend should be already locked
-    AssertLockHeld(cs_main);
-#ifdef ENABLE_WALLET
-    if (pwalletMain)
-        AssertLockHeld(pwalletMain->cs_wallet);
-#endif
-    AssertLockHeld(cs_instantsend);
-
     uint256 txHash = vote.GetTxHash();
     uint256 nVoteHash = vote.GetHash();
 
@@ -314,6 +317,12 @@ bool CInstantSend::ProcessNewTxLockVote(CNode* pfrom, const CTxLockVote& vote, C
 
     // relay valid vote asap
     vote.Relay(connman);
+
+    LOCK(cs_main);
+#ifdef ENABLE_WALLET
+    LOCK(pwalletMain ? &pwalletMain->cs_wallet : NULL);
+#endif
+    LOCK2(mempool.cs, cs_instantsend);
 
     // Masternodes will sometimes propagate votes before the transaction is known to the client,
     // will actually process only after the lock request itself has arrived
@@ -457,12 +466,8 @@ void CInstantSend::UpdateVotedOutpoints(const CTxLockVote& vote, CTxLockCandidat
 
 void CInstantSend::ProcessOrphanTxLockVotes()
 {
-    LOCK(cs_main);
-#ifdef ENABLE_WALLET
-    if (pwalletMain)
-        LOCK(pwalletMain->cs_wallet);
-#endif
-    LOCK(cs_instantsend);
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_instantsend);
 
     std::map<uint256, CTxLockVote>::iterator it = mapTxLockVotesOrphan.begin();
     while(it != mapTxLockVotesOrphan.end()) {
@@ -496,12 +501,8 @@ void CInstantSend::TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCand
 {
     if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
 
-    LOCK(cs_main);
-#ifdef ENABLE_WALLET
-    if (pwalletMain)
-        LOCK(pwalletMain->cs_wallet);
-#endif
-    LOCK(cs_instantsend);
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_instantsend);
 
     uint256 txHash = txLockCandidate.txLockRequest.tx->GetHash();
     if(txLockCandidate.IsAllOutPointsReady() && !IsLockedInstantSendTransaction(txHash)) {
@@ -516,7 +517,8 @@ void CInstantSend::TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCand
 
 void CInstantSend::UpdateLockedTransaction(const CTxLockCandidate& txLockCandidate)
 {
-    // cs_wallet and cs_instantsend should be already locked
+    // cs_main, cs_wallet and cs_instantsend should be already locked
+    AssertLockHeld(cs_main);
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         AssertLockHeld(pwalletMain->cs_wallet);
@@ -575,14 +577,15 @@ bool CInstantSend::GetLockedOutPointTxHash(const COutPoint& outpoint, uint256& h
 
 bool CInstantSend::ResolveConflicts(const CTxLockCandidate& txLockCandidate)
 {
-    LOCK2(cs_main, cs_instantsend);
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_instantsend);
 
     uint256 txHash = txLockCandidate.GetHash();
 
     // make sure the lock is ready
     if(!txLockCandidate.IsAllOutPointsReady()) return false;
 
-    LOCK(mempool.cs); // protect mempool.mapNextTx
+    AssertLockHeld(mempool.cs); // protect mempool.mapNextTx
 
     for (const auto& txin : txLockCandidate.txLockRequest.tx->vin) {
         uint256 hashConflicting;
@@ -953,7 +956,7 @@ bool CTxLockRequest::IsValid() const
         LogPrint("instantsend", "CTxLockRequest::IsValid -- WARNING: Too many inputs: tx=%s", ToString());
     }
 
-    LOCK(cs_main);
+    AssertLockHeld(cs_main);
     if(!CheckFinalTx(*tx)) {
         LogPrint("instantsend", "CTxLockRequest::IsValid -- Transaction is not final: tx=%s", ToString());
         return false;
