@@ -129,3 +129,7 @@ dash-qt
 make
 
 /docker/bin
+
+# CLion
+.idea
+cmake-build-debug
