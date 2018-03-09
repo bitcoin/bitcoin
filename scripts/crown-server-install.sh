@@ -24,6 +24,7 @@ Setup crown server or update existing one
   -m, --masternode                  create a masternode
   -s, --systemnode                  create a systemnode
   -p, --privkey=privkey             set private key
+  -v, --version=version             set version, default will be the latest release
   -h, --help                        display this help and exit
 
 "
@@ -56,6 +57,16 @@ handle_arguments()
                 privkey="${key#*=}"
                 shift
                 ;;
+            -v|--version)
+                LATEST_RELEASE="$2"
+                shift
+                shift
+                ;;
+            --version=*)
+                LATEST_RELEASE="${key#*=}"
+                shift
+                ;;
+
             *)    # unknown option
                 unknown+=("$1") # save it in an array
                 shift
@@ -95,6 +106,7 @@ handle_arguments()
     if [ ! -z "$privkey" ]; then
         install=true
     fi
+    echo $LATEST_RELEASE
 }
 
 install_dependencies() {
