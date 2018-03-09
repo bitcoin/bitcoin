@@ -396,6 +396,9 @@ void CMasternodeMan::AddDeterministicMasternodes()
             mn->keyIDVoting = dmn->pdmnState->keyIDVoting;
             mn->addr = dmn->pdmnState->addr;
             mn->nProtocolVersion = dmn->pdmnState->nProtocolVersion;
+
+            // If it appeared in the valid list, it is enabled no matter what
+            mn->nActiveState = CMasternode::MASTERNODE_ENABLED;
         }
 
         added = oldMnCount != mapMasternodes.size();
