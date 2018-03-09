@@ -111,6 +111,7 @@ BITCOIN_CORE_H = \
   memusage.h \
   merkleblock.h \
   miner.h \
+  natpmp/natpmp.h \
   net.h \
   net_processing.h \
   netaddress.h \

@@ -28,7 +28,7 @@
 #endif
 
 #ifdef USE_UPNP
-#include <natpmp.h>
+#include <natpmp/natpmp.h>
 #endif
 
 
