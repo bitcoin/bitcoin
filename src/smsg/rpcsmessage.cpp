@@ -1422,11 +1422,11 @@ UniValue smsgone(const JSONRPCRequest &request)
     PushTime(result, "timereceived", smsgStored.timeReceived);
     result.pushKV("addressto", CBitcoinAddress(smsgStored.addrTo).ToString());
     result.pushKV("addressoutbox", CBitcoinAddress(smsgStored.addrOutbox).ToString());
-    result.pushKV("read", bool(!(smsgStored.status & SMSG_MASK_UNREAD)));
+    result.pushKV("read", UniValue(bool(!(smsgStored.status & SMSG_MASK_UNREAD))));
 
     const smsg::SecureMessage *psmsg = (smsg::SecureMessage*) &smsgStored.vchMessage[0];
     PushTime(result, "timesent", psmsg->timestamp);
-    result.pushKV("paid", psmsg->IsPaidVersion());
+    result.pushKV("paid", UniValue(psmsg->IsPaidVersion()));
 
     smsg::MessageData msg;
     bool fInbox = sType == "inbox" ? true : false;

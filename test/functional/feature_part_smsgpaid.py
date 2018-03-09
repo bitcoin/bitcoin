@@ -118,15 +118,16 @@ class SmsgPaidTest(ParticlTestFramework):
         ro = nodes[1].smsgsend(address1, address0_1, text_3, True, 4)
         assert(ro['result'] == 'Sent.')
         assert(len(ro['txid']) == 64)
+
+        self.sync_all()
+        self.stakeBlocks(1, nStakeNode=1)
+        self.waitForSmsgExchange(4, 1, 0)
+
         msgid = ro['msgid']
         ro = nodes[1].smsg(msgid)
         assert(ro['text'] == text_3)
         assert(ro['addressfrom'] == address1)
         assert(ro['addressto'] == address0_1)
-
-        self.sync_all()
-        self.stakeBlocks(1, nStakeNode=1)
-        self.waitForSmsgExchange(4, 1, 0)
 
         ro = nodes[0].walletpassphrase("qwerty234", 300)
         ro = nodes[0].smsginbox()
