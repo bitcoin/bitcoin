@@ -10,6 +10,7 @@ Test the following RPCs:
     - getbestblockhash
     - getblockhash
     - getblockheader
+    - getchaintxstats
     - getnetworkhashps
     - verifychain
 
@@ -17,10 +18,13 @@ Tests correspond to code in rpc/blockchain.cpp.
 """
 
 from decimal import Decimal
+import http.client
+import subprocess
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import (BitcoinTestFramework, BITCOIND_PROC_WAIT_TIMEOUT)
 from test_framework.util import (
     assert_equal,
+    assert_raises,
     assert_raises_jsonrpc,
     assert_is_hex_string,
     assert_is_hash_string,
@@ -33,13 +37,24 @@ class BlockchainTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = False
         self.num_nodes = 1
+        self.extra_args = [['-stopatheight=207']]
 
     def run_test(self):
+        self._test_getchaintxstats()
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
         self._test_getdifficulty()
         self._test_getnetworkhashps()
-        self.nodes[0].verifychain(4, 0)
+        self._test_stopatheight()
+        assert self.nodes[0].verifychain(4, 0)
+
+    def _test_getchaintxstats(self):
+        chaintxstats = self.nodes[0].getchaintxstats(1)
+        # 200 txs plus genesis tx
+        assert_equal(chaintxstats['txcount'], 201)
+        # tx rate should be 1 per 10 minutes, or 1/600
+        # we have to round because of binary math
+        assert_equal(round(chaintxstats['txrate'] * 600, 10), Decimal(1))
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
@@ -118,6 +133,22 @@ class BlockchainTest(BitcoinTestFramework):
         hashes_per_second = self.nodes[0].getnetworkhashps()
         # This should be 2 hashes every 10 minutes or 1/300
         assert abs(hashes_per_second * 300 - 1) < 0.0001
+
+    def _test_stopatheight(self):
+        assert_equal(self.nodes[0].getblockcount(), 200)
+        self.nodes[0].generate(6)
+        assert_equal(self.nodes[0].getblockcount(), 206)
+        self.log.debug('Node should not stop at this height')
+        assert_raises(subprocess.TimeoutExpired, lambda: self.nodes[0].process.wait(timeout=3))
+        try:
+            self.nodes[0].generate(1)
+        except (ConnectionError, http.client.BadStatusLine):
+            pass  # The node already shut down before response
+        self.log.debug('Node should stop at this height...')
+        self.nodes[0].process.wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir)
+        assert_equal(self.nodes[0].getblockcount(), 207)
+
 
 if __name__ == '__main__':
     BlockchainTest().main()

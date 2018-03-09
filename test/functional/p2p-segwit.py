@@ -17,7 +17,6 @@ from binascii import hexlify
 # The versionbit bit used to signal activation of SegWit
 VB_WITNESS_BIT = 1
 VB_PERIOD = 144
-VB_ACTIVATION_THRESHOLD = 108
 VB_TOP_BITS = 0x20000000
 
 MAX_SIGOP_COST = 80000
@@ -114,7 +113,7 @@ class SegWitTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [["-whitelist=127.0.0.1"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0"], ["-whitelist=127.0.0.1", "-bip9params=segwit:0:0"]]
+        self.extra_args = [["-whitelist=127.0.0.1"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0"]]
 
     def setup_network(self):
         self.setup_nodes()
@@ -1486,7 +1485,7 @@ class SegWitTest(BitcoinTestFramework):
     # nodes would have stored, this requires special handling.
     # To enable this test, pass --oldbinary=<path-to-pre-segwit-bitcoind> to
     # the test.
-    def test_upgrade_after_activation(self, node, node_id):
+    def test_upgrade_after_activation(self, node_id):
         self.log.info("Testing software upgrade after softfork activation")
 
         assert(node_id != 0) # node0 is assumed to be a segwit-active bitcoind
@@ -1495,21 +1494,21 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Restart with the new binary
-        stop_node(node, node_id)
-        self.nodes[node_id] = start_node(node_id, self.options.tmpdir)
+        self.stop_node(node_id)
+        self.nodes[node_id] = self.start_node(node_id, self.options.tmpdir)
         connect_nodes(self.nodes[0], node_id)
 
         sync_blocks(self.nodes)
 
         # Make sure that this peer thinks segwit has activated.
-        assert(get_bip9_status(node, 'segwit')['status'] == "active")
+        assert(get_bip9_status(self.nodes[node_id], 'segwit')['status'] == "active")
 
         # Make sure this peers blocks match those of node0.
-        height = node.getblockcount()
+        height = self.nodes[node_id].getblockcount()
         while height >= 0:
-            block_hash = node.getblockhash(height)
+            block_hash = self.nodes[node_id].getblockhash(height)
             assert_equal(block_hash, self.nodes[0].getblockhash(height))
-            assert_equal(self.nodes[0].getblock(block_hash), node.getblock(block_hash))
+            assert_equal(self.nodes[0].getblock(block_hash), self.nodes[node_id].getblock(block_hash))
             height -= 1
 
 
@@ -1944,7 +1943,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_signature_version_1()
         self.test_non_standard_witness()
         sync_blocks(self.nodes)
-        self.test_upgrade_after_activation(self.nodes[2], 2)
+        self.test_upgrade_after_activation(node_id=2)
         self.test_witness_sigops()
 
 

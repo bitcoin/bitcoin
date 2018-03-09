@@ -146,8 +146,8 @@ class MaxUploadTest(BitcoinTestFramework):
 
         #stop and start node 0 with 1MB maxuploadtarget, whitelist 127.0.0.1
         self.log.info("Restarting nodes with -whitelist=127.0.0.1")
-        stop_node(self.nodes[0], 0)
-        self.nodes[0] = start_node(0, self.options.tmpdir, ["-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000"])
+        self.stop_node(0)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir, ["-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000"])
 
         #recreate/reconnect a test node
         test_nodes = [TestNode()]

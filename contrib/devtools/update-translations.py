@@ -36,12 +36,12 @@ def check_at_repository_root():
     if not os.path.exists('.git'):
         print('No .git directory found')
         print('Execute this script at the root of the repository', file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
 def fetch_all_translations():
     if subprocess.call([TX, 'pull', '-f', '-a']):
         print('Error while fetching translations', file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
 def find_format_specifiers(s):
     '''Find all format specifiers in a string.'''
@@ -64,6 +64,14 @@ def split_format_specifiers(specifiers):
             numeric.append(s)
         else:
             other.append(s)
+
+    # If both numeric format specifiers and "others" are used, assume we're dealing
+    # with a Qt-formatted message. In the case of Qt formatting (see https://doc.qt.io/qt-5/qstring.html#arg)
+    # only numeric formats are replaced at all. This means "(percentage: %1%)" is valid, without needing
+    # any kind of escaping that would be necessary for strprintf. Without this, this function
+    # would wrongly detect '%)' as a printf format specifier.
+    if numeric:
+        other = []
 
     # numeric (Qt) can be present in any order, others (strprintf) must be in specified order
     return set(numeric),other

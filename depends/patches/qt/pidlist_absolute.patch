@@ -1,7 +1,7 @@
 diff -dur old/qtbase/src/plugins/platforms/windows/qwindowscontext.h new/qtbase/src/plugins/platforms/windows/qwindowscontext.h
---- old/qtbase/src/plugins/platforms/windows/qwindowscontext.h	2015-06-29 22:04:40.000000000 +0200
-+++ new/qtbase/src/plugins/platforms/windows/qwindowscontext.h	2015-11-01 12:55:59.751234846 +0100
-@@ -124,10 +124,18 @@
+--- old/qtbase/src/plugins/platforms/windows/qwindowscontext.h
++++ new/qtbase/src/plugins/platforms/windows/qwindowscontext.h
+@@ -136,10 +136,18 @@
      inline void init();
  
      typedef HRESULT (WINAPI *SHCreateItemFromParsingName)(PCWSTR, IBindCtx *, const GUID&, void **);
@@ -21,9 +21,9 @@ diff -dur old/qtbase/src/plugins/platforms/windows/qwindowscontext.h new/qtbase/
      SHCreateItemFromParsingName sHCreateItemFromParsingName;
      SHGetKnownFolderIDList sHGetKnownFolderIDList;
 diff -dur old/qtbase/src/plugins/platforms/windows/qwindowsdialoghelpers.cpp new/qtbase/src/plugins/platforms/windows/qwindowsdialoghelpers.cpp
---- old/qtbase/src/plugins/platforms/windows/qwindowsdialoghelpers.cpp	2015-06-29 22:04:40.000000000 +0200
-+++ new/qtbase/src/plugins/platforms/windows/qwindowsdialoghelpers.cpp	2015-11-01 13:41:09.503149772 +0100
-@@ -1008,7 +1008,11 @@
+--- old/qtbase/src/plugins/platforms/windows/qwindowsdialoghelpers.cpp
++++ new/qtbase/src/plugins/platforms/windows/qwindowsdialoghelpers.cpp
+@@ -1016,7 +1016,11 @@
              qWarning() << __FUNCTION__ << ": Invalid CLSID: " << url.path();
              return Q_NULLPTR;
          }

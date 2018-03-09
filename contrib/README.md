@@ -3,7 +3,7 @@ Repository Tools
 
 ### [Developer tools](/contrib/devtools) ###
 Specific tools for developers working on this repository.
-Contains the script `github-merge.py` for merging github pull requests securely and signing them using GPG.
+Contains the script `github-merge.py` for merging GitHub pull requests securely and signing them using GPG.
 
 ### [Verify-Commits](/contrib/verify-commits) ###
 Tool to verify that every merge commit was signed by a developer using the above `github-merge.py` script.
@@ -35,7 +35,7 @@ PGP keys used for signing Bitcoin Core [Gitian release](/doc/release-process.md)
 Scripts and notes for Mac builds. 
 
 ### [RPM](/contrib/rpm) ###
-RPM spec file for building bitcoin-core on RPM based distributions
+RPM spec file for building bitcoin-core on RPM based distributions.
 
 ### [Gitian-build](/contrib/gitian-build.sh) ###
 Script for running full Gitian builds.

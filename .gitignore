@@ -1260,3 +1260,9 @@ src/config/chaincoin-config.h
 src/config/chaincoin-config.h.in
 libchaincoinconsensus.pc
 test/functional/config.ini
+autom4te.cache/output.2
+autom4te.cache/traces.2
+src/wallet/libbitcoin_wallet_a-fees.o
+src/wallet/libbitcoin_wallet_a-init.o
+src/wallet/.deps/libbitcoin_wallet_a-fees.Po
+src/wallet/.deps/libbitcoin_wallet_a-init.Po

@@ -159,6 +159,6 @@ if __name__ == '__main__':
                 print('%s: NEEDED library %s is not allowed' % (filename, library_name.decode('utf-8')))
                 retval = 1
 
-    exit(retval)
+    sys.exit(retval)
 
 

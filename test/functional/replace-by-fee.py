@@ -270,7 +270,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1a.vin = [CTxIn(tx0_outpoint, nSequence=0)]
         tx1a.vout = [CTxOut(1*COIN, CScript([b'a']))]
         tx1a_hex = txToHex(tx1a)
-        tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, True)
+        self.nodes[0].sendrawtransaction(tx1a_hex, True)
 
         # Higher fee, but the fee per KB is much lower, so the replacement is
         # rejected.
@@ -331,7 +331,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1.vin = [CTxIn(confirmed_utxo)]
         tx1.vout = [CTxOut(1*COIN, CScript([b'a']))]
         tx1_hex = txToHex(tx1)
-        tx1_txid = self.nodes[0].sendrawtransaction(tx1_hex, True)
+        self.nodes[0].sendrawtransaction(tx1_hex, True)
 
         tx2 = CTransaction()
         tx2.vin = [CTxIn(confirmed_utxo), CTxIn(unconfirmed_utxo)]
@@ -499,7 +499,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx2a.vin = [CTxIn(tx1_outpoint, nSequence=0)]
         tx2a.vout = [CTxOut(1*COIN, CScript([b'a']))]
         tx2a_hex = txToHex(tx2a)
-        tx2a_txid = self.nodes[0].sendrawtransaction(tx2a_hex, True)
+        self.nodes[0].sendrawtransaction(tx2a_hex, True)
 
         # Lower fee, but we'll prioritise it
         tx2b = CTransaction()
@@ -531,8 +531,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(json1["vin"][0]["sequence"], 4294967295)
 
         rawtx2 = self.nodes[0].createrawtransaction([], outs)
-        frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"optIntoRbf": True})
-        frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"optIntoRbf": False})
+        frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": True})
+        frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": False})
 
         json0  = self.nodes[0].decoderawtransaction(frawtx2a['hex'])
         json1  = self.nodes[0].decoderawtransaction(frawtx2b['hex'])

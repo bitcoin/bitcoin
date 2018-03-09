@@ -45,7 +45,7 @@ from test_framework.mininode import (CBlockHeader,
                                      msg_headers)
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (start_node, p2p_port, assert_equal)
+from test_framework.util import (p2p_port, assert_equal)
 
 class BaseNode(NodeConnCB):
     def send_header_for_blocks(self, new_blocks):
@@ -63,7 +63,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # Start node0. We don't start the other nodes yet since
         # we need to pre-mine a block with an invalid transaction
         # signature so we can pass in the block hash as assumevalid.
-        self.nodes = [start_node(0, self.options.tmpdir)]
+        self.nodes = [self.start_node(0, self.options.tmpdir)]
 
     def send_blocks_until_disconnected(self, node):
         """Keep sending blocks to the node until we're disconnected."""
@@ -162,14 +162,14 @@ class AssumeValidTest(BitcoinTestFramework):
             height += 1
 
         # Start node1 and node2 with assumevalid so they accept a block with a bad signature.
-        self.nodes.append(start_node(1, self.options.tmpdir,
+        self.nodes.append(self.start_node(1, self.options.tmpdir,
                                      ["-assumevalid=" + hex(block102.sha256)]))
         node1 = BaseNode()  # connects to node1
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], node1))
         node1.add_connection(connections[1])
         node1.wait_for_verack()
 
-        self.nodes.append(start_node(2, self.options.tmpdir,
+        self.nodes.append(self.start_node(2, self.options.tmpdir,
                                      ["-assumevalid=" + hex(block102.sha256)]))
         node2 = BaseNode()  # connects to node2
         connections.append(NodeConn('127.0.0.1', p2p_port(2), self.nodes[2], node2))

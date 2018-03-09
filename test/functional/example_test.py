@@ -23,13 +23,13 @@ from test_framework.mininode import (
     mininode_lock,
     msg_block,
     msg_getdata,
-    wait_until,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes,
     p2p_port,
+    wait_until,
 )
 
 # NodeConnCB is a class containing callbacks to be executed when a P2P
@@ -57,6 +57,10 @@ class BaseNode(NodeConnCB):
         Store the hash of a received block in the dictionary."""
         message.block.calc_sha256()
         self.block_receive_map[message.block.sha256] += 1
+
+    def on_inv(self, conn, message):
+        """Override the standard on_inv callback"""
+        pass
 
 def custom_function():
     """Do some custom behaviour
@@ -198,14 +202,14 @@ class ExampleTest(BitcoinTestFramework):
 
         self.log.info("Wait for node2 reach current tip. Test that it has propagated all the blocks to us")
 
+        getdata_request = msg_getdata()
         for block in blocks:
-            getdata_request = msg_getdata()
             getdata_request.inv.append(CInv(2, block))
-            node2.send_message(getdata_request)
+        node2.send_message(getdata_request)
 
         # wait_until() will loop until a predicate condition is met. Use it to test properties of the
         # NodeConnCB objects.
-        assert wait_until(lambda: sorted(blocks) == sorted(list(node2.block_receive_map.keys())), timeout=5)
+        wait_until(lambda: sorted(blocks) == sorted(list(node2.block_receive_map.keys())), timeout=5, lock=mininode_lock)
 
         self.log.info("Check that each block was received only once")
         # The network thread uses a global lock on data access to the NodeConn objects when sending and receiving

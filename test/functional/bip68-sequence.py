@@ -241,7 +241,7 @@ class BIP68Test(BitcoinTestFramework):
 
         # Now mine some blocks, but make sure tx2 doesn't get mined.
         # Use prioritisetransaction to lower the effective feerate to 0
-        self.nodes[0].prioritisetransaction(tx2.hash, int(-self.relayfee*COIN))
+        self.nodes[0].prioritisetransaction(txid=tx2.hash, fee_delta=int(-self.relayfee*COIN))
         cur_time = int(time.time())
         for i in range(10):
             self.nodes[0].setmocktime(cur_time + 600)
@@ -254,7 +254,7 @@ class BIP68Test(BitcoinTestFramework):
         test_nonzero_locks(tx2, self.nodes[0], self.relayfee, use_height_lock=False)
 
         # Mine tx2, and then try again
-        self.nodes[0].prioritisetransaction(tx2.hash, int(self.relayfee*COIN))
+        self.nodes[0].prioritisetransaction(txid=tx2.hash, fee_delta=int(self.relayfee*COIN))
 
         # Advance the time on the node so that we can test timelocks
         self.nodes[0].setmocktime(cur_time+600)
@@ -387,7 +387,7 @@ class BIP68Test(BitcoinTestFramework):
         tx = FromHex(CTransaction(), rawtxfund)
         tx.nVersion = 2
         tx_signed = self.nodes[1].signrawtransaction(ToHex(tx))["hex"]
-        tx_id = self.nodes[1].sendrawtransaction(tx_signed)
+        self.nodes[1].sendrawtransaction(tx_signed)
 
 if __name__ == '__main__':
     BIP68Test().main()

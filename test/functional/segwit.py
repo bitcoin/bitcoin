@@ -12,7 +12,6 @@ from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash16
 from io import BytesIO
 
 NODE_0 = 0
-NODE_1 = 1
 NODE_2 = 2
 WIT_V0 = 0
 WIT_V1 = 1

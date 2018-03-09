@@ -44,16 +44,6 @@ def script_to_p2sh(script, main = False):
     script = check_script(script)
     return scripthash_to_p2sh(hash160(script), main)
 
-def key_to_p2sh_p2wpkh(key, main = False):
-    key = check_key(key)
-    p2shscript = CScript([OP_0, hash160(key)])
-    return script_to_p2sh(p2shscript, main)
-
-def script_to_p2sh_p2wsh(script, main = False):
-    script = check_script(script)
-    p2shscript = CScript([OP_0, sha256(script)])
-    return script_to_p2sh(p2shscript, main)
-
 def check_key(key):
     if (type(key) is str):
         key = hex_str_to_bytes(key) # Assuming this is hex string

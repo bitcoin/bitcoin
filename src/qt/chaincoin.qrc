@@ -2,7 +2,7 @@
     <qresource prefix="/icons">
         <file alias="prompticon">res/icons/chevron.png</file>
         <file alias="warning">res/icons/warning.png</file>
-        <file alias="bitcoin">res/icons/bitcoin.png</file>
+        <file alias="bitcoin">res/icons/chaincoin.png</file>
     </qresource>
     <qresource prefix="/icons/drkblue">
         <file alias="address-book">res/icons/drkblue/address-book.png</file>
@@ -410,4 +410,5 @@
         <file alias="drkblue_upArrow_small">res/images/green/upArrow_small.png</file>
         <file alias="drkblue_walletFrame_bg">res/images/green/walletFrame_bg.png</file>
     </qresource>
+    <qresource prefix="/"/>
 </RCC>

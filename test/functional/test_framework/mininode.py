@@ -35,7 +35,7 @@ import time
 from threading import RLock, Thread
 
 from test_framework.siphash import siphash256
-from test_framework.util import hex_str_to_bytes, bytes_to_hex_str
+from test_framework.util import hex_str_to_bytes, bytes_to_hex_str, wait_until
 
 BIP0031_VERSION = 60000
 MY_VERSION = 70014  # past bip-31 for ping/pong
@@ -48,9 +48,11 @@ MAX_BLOCK_BASE_SIZE = 1000000
 COIN = 100000000 # 1 btc in satoshis
 
 NODE_NETWORK = (1 << 0)
-NODE_GETUTXO = (1 << 1)
-NODE_BLOOM = (1 << 2)
+# NODE_GETUTXO = (1 << 1)
+# NODE_BLOOM = (1 << 2)
 NODE_WITNESS = (1 << 3)
+NODE_UNSUPPORTED_SERVICE_BIT_5 = (1 << 5)
+NODE_UNSUPPORTED_SERVICE_BIT_7 = (1 << 7)
 
 logger = logging.getLogger("TestFramework.mininode")
 
@@ -1356,23 +1358,6 @@ class msg_reject(object):
         return "msg_reject: %s %d %s [%064x]" \
             % (self.message, self.code, self.reason, self.data)
 
-# Helper function
-def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf')):
-    if attempts == float('inf') and timeout == float('inf'):
-        timeout = 60
-    attempt = 0
-    elapsed = 0
-
-    while attempt < attempts and elapsed < timeout:
-        with mininode_lock:
-            if predicate():
-                return True
-        attempt += 1
-        elapsed += 0.05
-        time.sleep(0.05)
-
-    return False
-
 class msg_feefilter(object):
     command = b"feefilter"
 
@@ -1494,9 +1479,6 @@ class NodeConnCB(object):
         # before acquiring the global lock and delivering the next message.
         self.deliver_sleep_time = None
 
-        # Remember the services our peer has advertised
-        self.peer_services = None
-
     # Message receiving methods
 
     def deliver(self, conn, message):
@@ -1520,10 +1502,6 @@ class NodeConnCB(object):
             except:
                 print("ERROR delivering %s (%s)" % (repr(message),
                                                     sys.exc_info()[0]))
-
-    def set_deliver_sleep_time(self, value):
-        with mininode_lock:
-            self.deliver_sleep_time = value
 
     def get_deliver_sleep_time(self):
         with mininode_lock:
@@ -1589,21 +1567,21 @@ class NodeConnCB(object):
 
     def wait_for_disconnect(self, timeout=60):
         test_function = lambda: not self.connected
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     # Message receiving helper methods
 
     def wait_for_block(self, blockhash, timeout=60):
         test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_getdata(self, timeout=60):
         test_function = lambda: self.last_message.get("getdata")
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_getheaders(self, timeout=60):
         test_function = lambda: self.last_message.get("getheaders")
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_inv(self, expected_inv, timeout=60):
         """Waits for an INV message and checks that the first inv object in the message was as expected."""
@@ -1612,11 +1590,11 @@ class NodeConnCB(object):
         test_function = lambda: self.last_message.get("inv") and \
                                 self.last_message["inv"].inv[0].type == expected_inv[0].type and \
                                 self.last_message["inv"].inv[0].hash == expected_inv[0].hash
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_verack(self, timeout=60):
         test_function = lambda: self.message_count["verack"]
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     # Message sending helper functions
 
@@ -1634,7 +1612,7 @@ class NodeConnCB(object):
     def sync_with_ping(self, timeout=60):
         self.send_message(msg_ping(nonce=self.ping_counter))
         test_function = lambda: self.last_message.get("pong") and self.last_message["pong"].nonce == self.ping_counter
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
         self.ping_counter += 1
         return True
 

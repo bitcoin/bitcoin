@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the fundrawtransaction RPC."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework, BITCOIND_PROC_WAIT_TIMEOUT
 from test_framework.util import *
 
 
@@ -312,7 +312,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         ##############################################
         # test a fundrawtransaction with invalid vin #
         ##############################################
-        listunspent = self.nodes[2].listunspent()
         inputs  = [ {'txid' : "1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1", 'vout' : 0} ] #invalid vin!
         outputs = { self.nodes[0].getnewaddress() : 1.0}
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
@@ -448,13 +447,12 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         ############################################################
         # locked wallet test
-        self.nodes[1].encryptwallet("test")
-        self.nodes.pop(1)
-        stop_node(self.nodes[0], 0)
-        stop_node(self.nodes[1], 2)
-        stop_node(self.nodes[2], 3)
+        self.stop_node(0)
+        self.stop_node(2)
+        self.stop_node(3)
+        self.nodes[1].node_encrypt_wallet("test")
 
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir)
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
         for node in self.nodes:

@@ -1,11 +1,11 @@
-# bash programmable completion for bitcoin-tx(1)
+# bash programmable completion for chaincoin-tx(1)
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-_bitcoin_tx() {
+_chaincoin_tx() {
     local cur prev words=() cword
-    local cahincoin_tx
+    local chaincoin_tx
 
     # save and use original argument to invoke chaincoin-tx for -help
     # it might not be in $PATH

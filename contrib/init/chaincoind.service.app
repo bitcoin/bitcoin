@@ -1,15 +1,15 @@
 [Unit]
-Description=Dash's distributed currency daemon
+Description=Bitcoin's distributed currency daemon
 After=network.target
 
 [Service]
-User=chaincoincore
-Group=chaincoincore
+User=bitcoin
+Group=bitcoin
 
 Type=forking
-PIDFile=/var/lib/chaincoind/chaincoind.pid
-ExecStart=/usr/bin/chaincoind -daemon -pid=/var/lib/chaincoind/chaincoind.pid \
--conf=/etc/chaincoincore/chaincoin.conf -datadir=/var/lib/chaincoind -disablewallet
+PIDFile=/var/lib/bitcoind/bitcoind.pid
+ExecStart=/usr/bin/bitcoind -daemon -pid=/var/lib/bitcoind/bitcoind.pid \
+-conf=/etc/bitcoin/bitcoin.conf -datadir=/var/lib/bitcoind -disablewallet
 
 Restart=always
 PrivateTmp=true
