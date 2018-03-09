@@ -18,7 +18,7 @@ class CZMQNotificationInterface final : public CValidationInterface
 public:
     virtual ~CZMQNotificationInterface();
 
-    static CZMQNotificationInterface* CreateWithArguments();
+    static CZMQNotificationInterface* Create();
 
 protected:
     bool Initialize();

@@ -29,7 +29,7 @@ CZMQNotificationInterface::~CZMQNotificationInterface()
     }
 }
 
-CZMQNotificationInterface* CZMQNotificationInterface::CreateWithArguments()
+CZMQNotificationInterface* CZMQNotificationInterface::Create()
 {
     CZMQNotificationInterface* notificationInterface = nullptr;
     std::map<std::string, CZMQNotifierFactory> factories;
