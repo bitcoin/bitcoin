@@ -7,6 +7,9 @@ amount of embedded Javascript that provide mouseover events and some functions
 for zooming and filtering. They can also be viewed in regular image viewers or
 browsers that have Javascript enabled.
 
+**TODO:** Try to get this hosted on bitcoincore.org, see [this
+PR](https://github.com/bitcoin-core/bitcoincore.org/pull/522).
+
 Example (**[interactive SVG](https://monad.io/bitcoin-flamegraph.svg)**):
 
 ![Example Flamegraph](https://monad.io/bitcoin-flamegraph.svg)
@@ -158,7 +161,6 @@ sudo apt-get install linux-image-`uname -r`-dbg
 # Install kernel debug symbols on Fedora.
 sudo dnf debuginfo-install kernel
 ```
-
 
 ## Generating Flame Graphs On macOS and Windows
 
