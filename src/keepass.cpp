@@ -101,11 +101,11 @@ CKeePassIntegrator::CKeePassIntegrator()
 // Initialze from application context
 void CKeePassIntegrator::init()
 {
-    bIsActive = GetBoolArg("-BCLog::KEEPASS", false);
-    nPort = GetArg("-keepassport", DEFAULT_KEEPASS_HTTP_PORT);
-    sKeyBase64 = SecureString(GetArg("-keepasskey", "").c_str());
-    strKeePassId = GetArg("-keepassid", "");
-    strKeePassEntryName = GetArg("-keepassname", "");
+    bIsActive = gArgs.GetBoolArg("-BCLog::KEEPASS", false);
+    nPort = gArgs.GetArg("-keepassport", DEFAULT_KEEPASS_HTTP_PORT);
+    sKeyBase64 = SecureString(gArgs.GetArg("-keepasskey", "").c_str());
+    strKeePassId = gArgs.GetArg("-keepassid", "");
+    strKeePassEntryName = gArgs.GetArg("-keepassname", "");
     // Convert key if available
     if(sKeyBase64.size() > 0)
     {
