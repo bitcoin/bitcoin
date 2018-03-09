@@ -160,8 +160,8 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
  */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
-if (tx.IsCoinBase())
-    return true; // Coinbases don't use vin normally
+    if (tx.IsCoinBase())
+        return true; // Coinbases don't use vin normally
 
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
