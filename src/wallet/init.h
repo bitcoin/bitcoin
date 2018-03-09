@@ -23,6 +23,6 @@ bool WalletVerify();
 bool InitLoadWallet();
 
 //! Initialize AutoBackup functionality
-static bool InitAutoBackup();
+bool WalletInitAutoBackup();
 
 #endif // BITCOIN_WALLET_INIT_H

@@ -637,7 +637,7 @@ fs::path GetMasternodeConfigFile(const std::string& confPath)
     return pathConfigFile;
 }
 
-void ArgsManager::gArgs.ReadConfigFile(const std::string& confPath)
+void ArgsManager::ReadConfigFile(const std::string& confPath)
 {
     fs::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good()){
