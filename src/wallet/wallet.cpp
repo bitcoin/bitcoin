@@ -2484,6 +2484,20 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
     }
 }
 
+bool CWallet::OutputEligibleForSpending(const COutput& output, const int nConfMine, const int nConfTheirs, const uint64_t nMaxAncestors) const
+{
+    if (!output.fSpendable)
+        return false;
+
+    if (output.nDepth < (output.tx->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
+        return false;
+
+    if (!mempool.TransactionWithinChainLimit(output.tx->GetHash(), nMaxAncestors))
+        return false;
+
+    return true;
+}
+
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMine, const int nConfTheirs, const uint64_t nMaxAncestors, std::vector<COutput> vCoins,
                                  std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const
 {
@@ -2499,20 +2513,10 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
     for (const COutput &output : vCoins)
     {
-        if (!output.fSpendable)
+        if (!OutputEligibleForSpending(output, nConfMine, nConfTheirs, nMaxAncestors))
             continue;
 
-        const CWalletTx *pcoin = output.tx;
-
-        if (output.nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
-            continue;
-
-        if (!mempool.TransactionWithinChainLimit(pcoin->GetHash(), nMaxAncestors))
-            continue;
-
-        int i = output.i;
-
-        CInputCoin coin = CInputCoin(pcoin, i);
+        CInputCoin coin = CInputCoin(output.tx, output.i);
 
         if (coin.txout.nValue == nTargetValue)
         {
