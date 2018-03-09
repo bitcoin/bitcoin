@@ -135,12 +135,12 @@ public:
         memset(mac, 0, 32);
     };
 
-    bool IsPaidVersion()
+    bool IsPaidVersion() const
     {
         return version[0] == 3;
     }
 
-    bool GetFundingTxid(uint256 &txid)
+    bool GetFundingTxid(uint256 &txid) const
     {
         if (version[0] != 3)
             return false;
@@ -395,8 +395,11 @@ public:
         SecureMessage &smsg, std::string &sError, bool fPaid=false,
         size_t nDaysRetention=0, bool fTestFee=false, CAmount *nFee=NULL);
 
+
     int HashMsg(const SecureMessage &smsg, const uint8_t *pPayload, uint32_t nPayload, uint160 &hash);
     int FundMsg(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmount *nFee);
+
+    std::vector<uint8_t> GetMsgID(const SecureMessage &smsg);
 
     int Validate(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload);
     int SetHash (uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);

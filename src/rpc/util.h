@@ -26,4 +26,6 @@ CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey
 UniValue DescribeAddress(const CTxDestination& dest);
 void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::string& strMessage);
 
+bool GetBool(const UniValue &uv);
+
 #endif // BITCOIN_RPC_UTIL_H

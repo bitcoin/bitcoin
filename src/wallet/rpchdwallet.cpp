@@ -16,6 +16,7 @@
 #include <rpc/server.h>
 #include <rpc/mining.h>
 #include <rpc/safemode.h>
+#include <rpc/util.h>
 #include <script/sign.h>
 #include <timedata.h>
 #include <util.h>
@@ -761,17 +762,6 @@ static int ExtractExtKeyId(const std::string &sInKey, CKeyID &keyId, CChainParam
         throw std::runtime_error("Invalid key.");
     };
     return 0;
-};
-
-static bool GetBool(const UniValue &uv)
-{
-    if (uv.isBool())
-        return uv.get_bool();
-    std::string s = uv.get_str();
-    bool rv;
-    if (!part::GetStringBool(s, rv))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Not a bool value.");
-    return rv;
 };
 
 UniValue extkey(const JSONRPCRequest &request)

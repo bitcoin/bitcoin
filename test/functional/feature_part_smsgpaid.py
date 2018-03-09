@@ -118,6 +118,11 @@ class SmsgPaidTest(ParticlTestFramework):
         ro = nodes[1].smsgsend(address1, address0_1, text_3, True, 4)
         assert(ro['result'] == 'Sent.')
         assert(len(ro['txid']) == 64)
+        msgid = ro['msgid']
+        ro = nodes[1].smsg(msgid)
+        assert(ro['text'] == text_3)
+        assert(ro['addressfrom'] == address1)
+        assert(ro['addressto'] == address0_1)
 
         self.sync_all()
         self.stakeBlocks(1, nStakeNode=1)
@@ -136,6 +141,22 @@ class SmsgPaidTest(ParticlTestFramework):
         assert(len(ro['messages']) == 4)
         flat = json.dumps(ro, default=self.jsonDecimal)
         assert(flat.count('Wallet is locked') == 2)
+
+
+        ro = nodes[0].smsg(msgid)
+        assert(ro['read'] == True)
+
+        ro = nodes[0].smsg(msgid, 'setread', False)
+        assert(ro['read'] == False)
+
+        ro = nodes[0].smsg(msgid, 'delete')
+        assert(ro['operation'] == 'Deleted')
+
+        try:
+            ro = nodes[0].smsg(msgid)
+            assert(False), 'Read deleted msg.'
+        except:
+            pass
 
         ro = nodes[0].smsggetpubkey(address0_1)
         assert(ro['publickey'] == 'h2UfzZxbhxQPcXDfYTBRGSC7GM77qrLjhtqcmfAnAia9')

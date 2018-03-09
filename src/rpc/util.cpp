@@ -154,3 +154,15 @@ UniValue DescribeAddress(const CTxDestination& dest)
 {
     return boost::apply_visitor(DescribeAddressVisitor(), dest);
 }
+
+bool GetBool(const UniValue &uv)
+{
+    if (uv.isBool())
+        return uv.get_bool();
+    std::string s = uv.get_str();
+    bool rv;
+    if (!part::GetStringBool(s, rv))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Not a bool value.");
+    return rv;
+};
+

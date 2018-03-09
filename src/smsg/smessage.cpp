@@ -2331,7 +2331,7 @@ int CSMSG::ScanMessage(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t
         SecureMessage *psmsg = (SecureMessage*) pHeader;
 
         uint160 hash;
-        HashMsg(*psmsg, pPayload, nPayload, hash);
+        HashMsg(*psmsg, pPayload, nPayload-(psmsg->IsPaidVersion() ? 32 : 0), hash);
 
         std::string sPrefix("im");
         uint8_t chKey[30];
@@ -2410,9 +2410,10 @@ int CSMSG::GetLocalKey(const CKeyID &ckid, CPubKey &cpkOut)
     {
         return errorN(SMSG_INVALID_PUBKEY, "%s: Public key is invalid %s.", __func__, HexStr(cpkOut));
     };
+    return SMSG_NO_ERROR;
 #endif
 
-    return SMSG_NO_ERROR;
+    return SMSG_WALLET_NO_PUBKEY;
 };
 
 int CSMSG::GetLocalPublicKey(const std::string &strAddress, std::string &strPublicKey)
@@ -3639,6 +3640,15 @@ int CSMSG::FundMsg(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmo
     return SMSG_NO_ERROR;
 };
 
+std::vector<uint8_t> CSMSG::GetMsgID(const SecureMessage &smsg)
+{
+    std::vector<uint8_t> rv(28);
+    memcpy(rv.data(), &smsg.timestamp, 8);
+
+    HashMsg(smsg, smsg.pPayload, smsg.nPayload-(smsg.IsPaidVersion() ? 32 : 0), *((uint160*)&rv[8]));
+
+    return rv;
+}
 
 int CSMSG::Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayload, MessageData &msg)
 {
