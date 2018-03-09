@@ -1388,8 +1388,8 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
         nMinDepth = params[0].get_int();
 
     bool fAddLockConf = false;
-    if(!request.params[1].isNull())
-        if(request.params[1].get_bool())
+    if(!params[1].isNull())
+        if(params[1].get_bool())
             fAddLockConf = true;
 
     // Whether to include empty accounts

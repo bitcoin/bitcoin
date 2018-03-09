@@ -1,12 +1,10 @@
 // Copyright (c) 2014 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <networkstyle.h>
 
 #include <guiconstants.h>
-#include <guiutil.h>
 
 #include <QApplication>
 
@@ -23,60 +21,20 @@ static const struct {
 };
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
-void NetworkStyle::rotateColors(QImage& img, const int iconColorHueShift, const int iconColorSaturationReduction) {
-    int h,s,l,a;
-
-    // traverse though lines
-    for(int y=0;y<img.height();y++)
-    {
-        QRgb *scL = reinterpret_cast< QRgb *>( img.scanLine( y ) );
-
-        // loop through pixels
-        for(int x=0;x<img.width();x++)
-        {
-            // preserve alpha because QColor::getHsl doesen't return the alpha value
-            a = qAlpha(scL[x]);
-            QColor col(scL[x]);
-
-            // get hue value
-            col.getHsl(&h,&s,&l);
-
-            // rotate color on RGB color circle
-            // 70° should end up with the typical "testnet" green (in bitcoin)
-            h+=iconColorHueShift;
-
-            // change saturation value
-            s -= iconColorSaturationReduction;
-            s = std::max(s, 0);
-
-            col.setHsl(h,s,l,a);
-
-            // set the pixel
-            scL[x] = col.rgba();
-        }
-    }
-}
-
 // titleAddText needs to be const char* for tr()
 NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *_titleAddText):
     appName(_appName),
     titleAddText(qApp->translate("SplashScreen", _titleAddText))
 {
-    // Allow for separate UI settings for testnets
-    QApplication::setApplicationName(_appName);
-    // Make sure settings migrated properly
-    GUIUtil::migrateQtSettings();
-    // Grab theme from settings
-    QString theme = GUIUtil::getThemeName();
     // load pixmap
-    QPixmap appIconPixmap(":/icons/bitcoin");
-    QPixmap splashImagePixmap(":/images/" + theme + "/splash");
+    QPixmap pixmap(":/icons/bitcoin");
 
     if(iconColorHueShift != 0 && iconColorSaturationReduction != 0)
     {
         // generate QImage from QPixmap
-        QImage appIconImg = appIconPixmap.toImage();
-        QImage splashImageImg = splashImagePixmap.toImage();
+        QImage img = pixmap.toImage();
+
+        int h,s,l,a;
 
         // traverse though lines
         for(int y=0;y<img.height();y++)
@@ -111,17 +69,14 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
 
         //convert back to QPixmap
 #if QT_VERSION >= 0x040700
-        appIconPixmap.convertFromImage(appIconImg);
-        splashImagePixmap.convertFromImage(splashImageImg);
+        pixmap.convertFromImage(img);
 #else
-        appIconPixmap = QPixmap::fromImage(appIconImg);
-        splashImagePixmap = QPixmap::fromImage(splashImageImg);
+        pixmap = QPixmap::fromImage(img);
 #endif
     }
 
-    appIcon             = QIcon(appIconPixmap);
-    trayAndWindowIcon   = QIcon(appIconPixmap.scaled(QSize(256,256)));
-    splashImage         = splashImagePixmap;
+    appIcon             = QIcon(pixmap);
+    trayAndWindowIcon   = QIcon(pixmap.scaled(QSize(256,256)));
 }
 
 const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)

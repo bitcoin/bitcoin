@@ -24,7 +24,7 @@
 #include <ui_interface.h>
 #include <txmempool.h>
 #include <policy/fees.h>
-#include <wallet/fees.h>.h>
+#include <wallet/fees.h>
 
 #include <privatesend.h>
 

@@ -248,16 +248,16 @@ bool InitLoadWallet()
 
 bool WalletInitAutoBackup()
 {
-    if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
+    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
         return true;
 
     std::string strWarning;
     std::string strError;
 
-    nWalletBackups = GetArg("-createwalletbackups", 10);
+    nWalletBackups = gArgs.GetArg("-createwalletbackups", 10);
     nWalletBackups = std::max(0, std::min(10, nWalletBackups));
 
-    std::string strWalletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
+    std::string strWalletFile = gArgs.GetArg("-wallet", DEFAULT_WALLET_DAT);
 
     if(!AutoBackupWallet(NULL, strWalletFile, strWarning, strError)) {
         if (!strWarning.empty())

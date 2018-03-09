@@ -132,8 +132,9 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     currentWatchOnlyBalance(-1),
     currentWatchUnconfBalance(-1),
     currentWatchImmatureBalance(-1),
-    txdelegate(new TxViewDelegate(platformStyle, this)),
-    timer(nullptr)
+    timer(nullptr),
+    txdelegate(new TxViewDelegate(platformStyle, this))
+
 {
     ui->setupUi(this);
     QString theme = GUIUtil::getThemeName();
