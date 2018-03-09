@@ -131,7 +131,7 @@ int sendnatpmprequest(natpmp_t * p)
     p->has_pending_request = 1;
     p->try_number = 1;
     n = sendpendingrequest(p);
-    gettimeofday(&p->retry_time, NULL);    // check errors !
+    gettimeofday(&p->retry_time, nullptr);    // check errors !
     p->retry_time.tv_usec += 250000;    /* add 250ms */
     if(p->retry_time.tv_usec >= 1000000) {
         p->retry_time.tv_usec -= 1000000;
@@ -147,7 +147,7 @@ NATPMP_LIBSPEC int getnatpmprequesttimeout(natpmp_t * p, struct timeval * timeou
         return NATPMP_ERR_INVALIDARGS;
     if(!p->has_pending_request)
         return NATPMP_ERR_NOPENDINGREQ;
-    if(gettimeofday(&now, NULL) < 0)
+    if(gettimeofday(&now, nullptr) < 0)
         return NATPMP_ERR_GETTIMEOFDAYERR;
     timeout->tv_sec = p->retry_time.tv_sec - now.tv_sec;
     timeout->tv_usec = p->retry_time.tv_usec - now.tv_usec;
@@ -280,7 +280,7 @@ NATPMP_LIBSPEC int readnatpmpresponseorretry(natpmp_t * p, natpmpresp_t * respon
     if(n<0) {
         if(n==NATPMP_TRYAGAIN) {
             struct timeval now;
-            gettimeofday(&now, NULL);    // check errors !
+            gettimeofday(&now, nullptr);    // check errors !
             if(timercmp(&now, &p->retry_time, >=)) {
                 int delay, r;
                 if(p->try_number >= 9) {

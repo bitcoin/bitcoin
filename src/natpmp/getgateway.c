@@ -210,7 +210,7 @@ int getdefaultgateway(in_addr_t * addr)
                     sa_tab[i] = sa;
                     sa = (struct sockaddr *)((char *)sa + ROUNDUP(sa->sa_len));
                 } else {
-                    sa_tab[i] = NULL;
+                    sa_tab[i] = nullptr;
                 }
             }
             if( ((rt->rtm_addrs & (RTA_DST|RTA_GATEWAY)) == (RTA_DST|RTA_GATEWAY))
@@ -248,7 +248,7 @@ int getdefaultgateway(in_addr_t *addr)
   pid_t pid;
   struct sockaddr so_dst, so_mask;
   char *cp = m_rtmsg.m_space;
-  struct sockaddr *gate = NULL, *sa;
+  struct sockaddr *gate = nullptr, *sa;
   struct rt_msghdr *msg_hdr;
 
   pid = getpid();
@@ -303,7 +303,7 @@ int getdefaultgateway(in_addr_t *addr)
   }
 
 
-  if (gate != NULL ) {
+  if (gate != nullptr ) {
       *addr = ((struct sockaddr_in *)gate)->sin_addr.s_addr;
       return SUCCESS;
   } else {
@@ -404,7 +404,7 @@ int getdefaultgateway(in_addr_t * addr)
     }
 
     // Figure out how many subfolders are within the NetworkCards folder
-    RegQueryInfoKey(networkCardsKey, NULL, NULL, NULL, &numSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    RegQueryInfoKey(networkCardsKey, nullptr, nullptr, nullptr, &numSubKeys, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
     //printf( "Number of subkeys: %u\n", (unsigned int)numSubKeys);
 
@@ -416,17 +416,17 @@ int getdefaultgateway(in_addr_t * addr)
                                          i,               // Index of subkey to retrieve
                                          keyName,         // Buffer that receives the name of the subkey
                                          &keyNameLength,  // Variable that receives the size of the above buffer
-                                         NULL,            // Reserved - must be NULL
-                                         NULL,            // Buffer that receives the class string
-                                         NULL,            // Variable that receives the size of the above buffer
-                                         NULL))           // Variable that receives the last write time of subkey
+                                         nullptr,            // Reserved - must be nil 
+                                         nullptr,            // Buffer that receives the class string
+                                         nullptr,            // Variable that receives the size of the above buffer
+                                         nullptr))           // Variable that receives the last write time of subkey
         {
             if(RegOpenKeyEx(networkCardsKey,  keyName, 0, KEY_READ, &networkCardKey) == ERROR_SUCCESS)
             {
                 keyValueLength = MAX_VALUE_LENGTH;
                 if(ERROR_SUCCESS == RegQueryValueEx(networkCardKey,   // Open registry key
                                                     STR_SERVICENAME,    // Name of key to query
-                                                    NULL,             // Reserved - must be NULL
+                                                    nullptr,             // Reserved - must be nil 
                                                     &keyValueType,    // Receives value type
                                                     (LPBYTE)keyValue, // Receives value
                                                     &keyValueLength)) // Receives value length in bytes
@@ -437,7 +437,7 @@ int getdefaultgateway(in_addr_t * addr)
                         gatewayValueLength = MAX_VALUE_LENGTH;
                         if(ERROR_SUCCESS == RegQueryValueEx(interfaceKey,         // Open registry key
                                                             STR_DHCPDEFAULTGATEWAY, // Name of key to query
-                                                            NULL,                 // Reserved - must be NULL
+                                                            nullptr,                 // Reserved - must be nil 
                                                             &gatewayValueType,    // Receives value type
                                                             (LPBYTE)gatewayValue, // Receives value
                                                             &gatewayValueLength)) // Receives value length in bytes
@@ -451,7 +451,7 @@ int getdefaultgateway(in_addr_t * addr)
                         }
                         else if(ERROR_SUCCESS == RegQueryValueEx(interfaceKey,         // Open registry key
                                                             STR_DEFAULTGATEWAY, // Name of key to query
-                                                            NULL,                 // Reserved - must be NULL
+                                                            nullptr,                 // Reserved - must be nil 
                                                             &gatewayValueType,    // Receives value type
                                                             (LPBYTE)gatewayValue,// Receives value
                                                             &gatewayValueLength)) // Receives value length in bytes
@@ -512,7 +512,7 @@ int getdefaultgateway(in_addr_t *addr)
 {
     int fd, ret = -1;
     struct ifconf config;
-    void *buffer = NULL;
+    void *buffer = nullptr;
     struct ifreq *interface;
 
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -524,7 +524,7 @@ int getdefaultgateway(in_addr_t *addr)
     if (config.ifc_value < 1) {
         goto fail; /* No routes */
     }
-    if ((buffer = malloc(config.ifc_value)) == NULL) {
+    if ((buffer = malloc(config.ifc_value)) == nullptr) {
         goto fail;
     }
     config.ifc_len = config.ifc_value;
@@ -542,13 +542,13 @@ int getdefaultgateway(in_addr_t *addr)
             break;
         }
         intfSize = sizeof(route) + IF_NAMESIZE;
-        if (route.destination != NULL) {
+        if (route.destination != nullptr) {
             intfSize += route.destination->sa_len;
         }
-        if (route.mask != NULL) {
+        if (route.mask != nullptr) {
             intfSize += route.mask->sa_len;
         }
-        if (route.gateway != NULL) {
+        if (route.gateway != nullptr) {
             intfSize += route.gateway->sa_len;
         }
         interface = (struct ifreq *)((uint8_t *)interface + intfSize);
