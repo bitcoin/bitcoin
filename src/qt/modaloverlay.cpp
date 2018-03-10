@@ -18,8 +18,7 @@ ui(new Ui::ModalOverlay),
 bestHeaderHeight(0),
 bestHeaderDate(QDateTime()),
 layerIsVisible(false),
-userClosed(false),
-foreverHidden(false)
+userClosed(false)
 {
     ui->setupUi(this);
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));
@@ -152,9 +151,6 @@ void ModalOverlay::toggleVisibility()
 void ModalOverlay::showHide(bool hide, bool userRequested)
 {
     if ( (layerIsVisible && !hide) || (!layerIsVisible && hide) || (!hide && userClosed && !userRequested))
-        return;
-
-    if (!hide && foreverHidden)
         return;
 
     if (!isVisible() && !hide)

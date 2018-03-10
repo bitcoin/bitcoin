@@ -964,8 +964,6 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         if(secs < 25*60) // 90*60 in bitcoin
         {
             modalOverlay->showHide(true, true);
-            // TODO instead of hiding it forever, we should add meaningful information about MN sync to the overlay
-            modalOverlay->hideForever();
         }
         else
         {
