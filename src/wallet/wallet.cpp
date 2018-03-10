@@ -2872,68 +2872,6 @@ const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int out
     return ptx->vout[n];
 }
 
-static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
-                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
-{
-    std::vector<char> vfIncluded;
-
-    vfBest.assign(vValue.size(), true);
-    nBest = nTotalLower;
-
-    FastRandomContext insecure_rand;
-
-    for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
-    {
-        vfIncluded.assign(vValue.size(), false);
-        CAmount nTotal = 0;
-        bool fReachedTarget = false;
-        for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
-        {
-            for (unsigned int i = 0; i < vValue.size(); i++)
-            {
-                //The solver here uses a randomized algorithm,
-                //the randomness serves no real security purpose but is just
-                //needed to prevent degenerate behavior and it is important
-                //that the rng is fast. We do not use a constant random sequence,
-                //because there may be some privacy improvement by making
-                //the selection random.
-                if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
-                {
-                    nTotal += vValue[i].txout.nValue;
-                    vfIncluded[i] = true;
-                    if (nTotal >= nTargetValue)
-                    {
-                        fReachedTarget = true;
-                        if (nTotal < nBest)
-                        {
-                            nBest = nTotal;
-                            vfBest = vfIncluded;
-                        }
-                        nTotal -= vValue[i].txout.nValue;
-                        vfIncluded[i] = false;
-                    }
-                }
-            }
-        }
-    }
-}
-
-// move denoms down
-bool less_then_denom (const COutput& out1, const COutput& out2)
-{
-    const CWalletTx *pcoin1 = out1.tx;
-    const CWalletTx *pcoin2 = out2.tx;
-
-    bool found1 = false;
-    bool found2 = false;
-    for (const auto& d : CPrivateSend::GetStandardDenominations()) // loop through predefined denoms
-    {
-        if(pcoin1->tx->vout[out1.i].nValue == d) found1 = true;
-        if(pcoin2->tx->vout[out2.i].nValue == d) found2 = true;
-    }
-    return (!found1 && found2);
-}
-
 bool CWallet::OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibilty_filter) const
 {
     if (!output.fSpendable)
@@ -2954,129 +2892,25 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     setCoinsRet.clear();
     nValueRet = 0;
 
-    // List of values less than target
-    boost::optional<CInputCoin> coinLowestLarger;
-    std::vector<CInputCoin> vValue;
-    CAmount nTotalLower = 0;
-
-    random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
-
-    // move denoms down on the list
-    std::sort(vCoins.begin(), vCoins.end(), less_then_denom);
+    std::vector<CInputCoin> utxo_pool;
 
     // try to find nondenom first to prevent unneeded spending of mixed coins
     for (unsigned int tryDenom = 0; tryDenom < 2; tryDenom++)
     {
         LogPrint(BCLog::SELECTCOINS, "tryDenom: %d\n", tryDenom);
-        vValue.clear();
-        nTotalLower = 0;
         for (const COutput &output : vCoins)
         {
-            if (!output.fSpendable)
-                continue;
-
-            const CWalletTx *pcoin = output.tx;
-
-            if (output.nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
-                continue;
-
-            if (!mempool.TransactionWithinChainLimit(pcoin->GetHash(), nMaxAncestors))
-                continue;
-
-            int i = output.i;
-
-            if (tryDenom == 0 && CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue; // we don't want denom values on first run
+            if (tryDenom == 0 && CPrivateSend::IsDenominatedAmount(output.tx->tx->vout[output.i].nValue))
+                continue; // we don't want denom values on first run
 
             if (!OutputEligibleForSpending(output, eligibilty_filter))
                 continue;
 
             CInputCoin coin = CInputCoin(output.tx->tx, output.i);
-
-            if (coin.txout.nValue == nTargetValue)
-            {
-                setCoinsRet.insert(coin);
-                nValueRet += coin.txout.nValue;
-                return true;
-            }
-            else if (coin.txout.nValue < nTargetValue + MIN_CHANGE)
-            {
-                vValue.push_back(coin);
-                nTotalLower += coin.txout.nValue;
-            }
-            else if (!coinLowestLarger || coin.txout.nValue <= coinLowestLarger->txout.nValue)
-            {
-                coinLowestLarger = coin;
-            }
-        }
-
-        if (nTotalLower == nTargetValue)
-        {
-            for (const auto& input : vValue)
-            {
-                setCoinsRet.insert(input);
-                nValueRet += input.txout.nValue;
-            }
-            return true;
-        }
-
-        if (nTotalLower < nTargetValue)
-        {
-            if (!coinLowestLarger) // there is no input larger than nTargetValue
-            {
-                if (tryDenom == 0)
-                    // we didn't look at denom yet, let's do it
-                    continue;
-                else
-                    // we looked at everything possible and didn't find anything, no luck
-                    return false;
-            }
-            setCoinsRet.insert(coinLowestLarger.get());
-            nValueRet += coinLowestLarger->txout.nValue;
-            return true;
-        }
-
-        // nTotalLower > nTargetValue
-        break;
-    }
-
-    // Solve subset sum by stochastic approximation
-    std::sort(vValue.rbegin(), vValue.rend(), CompareValueOnly());
-    std::reverse(vValue.begin(), vValue.end());
-    std::vector<char> vfBest;
-    CAmount nBest;
-
-    ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest);
-    if (nBest != nTargetValue && nTotalLower >= nTargetValue + MIN_CHANGE)
-        ApproximateBestSubset(vValue, nTotalLower, nTargetValue + MIN_CHANGE, vfBest, nBest);
-
-    // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
-    //                                   or the next bigger coin is closer), return the bigger coin
-    if (coinLowestLarger &&
-        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger->txout.nValue <= nBest))
-    {
-        setCoinsRet.insert(coinLowestLarger.get());
-        nValueRet += coinLowestLarger->txout.nValue;
-    }
-    else {
-        for (unsigned int i = 0; i < vValue.size(); i++)
-            if (vfBest[i])
-            {
-                setCoinsRet.insert(vValue[i]);
-                nValueRet += vValue[i].txout.nValue;
-            }
-
-        if (LogAcceptCategory(BCLog::SELECTCOINS)) {
-            LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: ");
-            for (unsigned int i = 0; i < vValue.size(); i++) {
-                if (vfBest[i]) {
-                    LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(vValue[i].txout.nValue));
-                }
-            }
-            LogPrint(BCLog::SELECTCOINS, "total %s\n", FormatMoney(nBest));
+            utxo_pool.push_back(coin);
         }
     }
-
-    return true;
+    return KnapsackSolver(nTargetValue, utxo_pool, setCoinsRet, nValueRet);
 }
 
 bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, AvailableCoinsType nCoinType) const
