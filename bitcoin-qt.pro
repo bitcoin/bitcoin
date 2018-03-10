@@ -234,6 +234,9 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/mintingview.h \
     src/qt/mintingtablemodel.h \
     src/qt/mintingfilterproxy.h \
+    src/qt/multisigaddressentry.h \
+    src/qt/multisiginputentry.h \
+    src/qt/multisigdialog.h \
     src/kernelrecord.h
 
 SOURCES += src/qt/bitcoin.cpp \
@@ -313,6 +316,9 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/mintingview.cpp \
     src/qt/mintingtablemodel.cpp \
     src/qt/mintingfilterproxy.cpp \
+    src/qt/multisigaddressentry.cpp \
+    src/qt/multisiginputentry.cpp \
+    src/qt/multisigdialog.cpp \
     src/kernelrecord.cpp
 
 RESOURCES += src/qt/bitcoin.qrc
@@ -328,6 +334,9 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/askpassphrasedialog.ui \
     src/qt/forms/coincontroldialog.ui \
     src/qt/forms/rpcconsole.ui \
+    src/qt/forms/multisigaddressentry.ui \
+    src/qt/forms/multisiginputentry.ui \
+    src/qt/forms/multisigdialog.ui \
     src/qt/forms/optionsdialog.ui
 
 contains(USE_QRCODE, 1) {

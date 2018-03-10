@@ -4668,7 +4668,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
 
 
-#ifdef ENABLE_MINING
+#ifndef DISABLE_MINING
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -4771,11 +4771,11 @@ public:
 };
 
 
-#endif // ENABLE_MINING
+#endif // DISABLE_MINING
 uint64 nLastBlockTx = 0;
 uint64 nLastBlockSize = 0;
 int64 nLastCoinStakeSearchInterval = 0;
-#ifdef ENABLE_MINING
+#ifndef DISABLE_MINING
 
 // We want to sort transactions by priority and fee, so:
 typedef boost::tuple<double, double, CTransaction*> TxPriority;
@@ -5229,7 +5229,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     string strMintDisabledMessage = _("Info: Minting disabled by 'nominting' option.");
     string strMintBlockMessage = _("Info: Minting suspended due to block creation failure.");
 
-    try { loop {
+    try { ploop {
         if (GetBoolArg("-nominting"))
         {
             strMintWarning = strMintDisabledMessage;
@@ -5317,7 +5317,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
         uint256 hashbuf[2];
         uint256& hash = *alignup<16>(hashbuf);
-        loop
+        ploop
         {
             unsigned int nHashesDone = 0;
             unsigned int nNonceFound;
@@ -5458,7 +5458,7 @@ void MintStake(boost::thread_group& threadGroup, CWallet* pwallet)
     // ppcoin: mint proof-of-stake blocks in the background
     threadGroup.create_thread(boost::bind(&ThreadStakeMinter, pwallet));
 }
-#endif // ENABLE_MINING
+#endif // DISABLE_MINING
 
 // Amount compression:
 // * If the amount is 0, output 0

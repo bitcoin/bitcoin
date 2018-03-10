@@ -1,4 +1,4 @@
-peercoin-qt usr/bin
+usr/local/bin/peercoin-qt usr/bin
 share/pixmaps/peercoin32.xpm usr/share/pixmaps
 share/pixmaps/peercoin16.xpm usr/share/pixmaps
 share/pixmaps/peercoin128.png usr/share/pixmaps

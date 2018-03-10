@@ -13,6 +13,7 @@ class BitcoinGUI;
 class ClientModel;
 class WalletModel;
 class TransactionView;
+class MultisigDialog;
 class MintingView;
 class OverviewPage;
 class AddressBookPage;
@@ -62,6 +63,7 @@ private:
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     QWidget *mintingPage;
+    MultisigDialog *multisigPage;
     AddressBookPage *addressBookPage;
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
@@ -75,6 +77,8 @@ public slots:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch to multisig page */
+    void gotoMultisigPage();
     /** Switch to minting page */
     void gotoMintingPage();
     /** Switch to address book page */

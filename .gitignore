@@ -127,3 +127,6 @@ peercoin-qt
 
 #db4/
 db4/
+
+#ignore in top level directory only
+/debian

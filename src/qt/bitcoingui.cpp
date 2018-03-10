@@ -216,6 +216,9 @@ void BitcoinGUI::createActions()
     addressBookAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
     tabGroup->addAction(addressBookAction);
 
+    multisigAction = new QAction(QIcon(":/icons/multisig"), tr("Multisig"), this);
+    tabGroup->addAction(multisigAction);
+
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -228,6 +231,8 @@ void BitcoinGUI::createActions()
     connect(mintingAction, SIGNAL(triggered()), this, SLOT(gotoMintingPage()));
     connect(addressBookAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(addressBookAction, SIGNAL(triggered()), this, SLOT(gotoAddressBookPage()));
+    connect(multisigAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(multisigAction, SIGNAL(triggered()), this, SLOT(gotoMultisigPage()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
@@ -299,6 +304,7 @@ void BitcoinGUI::createMenuBar()
     file->addAction(backupWalletAction);
     file->addAction(signMessageAction);
     file->addAction(verifyMessageAction);
+    file->addAction(multisigAction);
     file->addSeparator();
     file->addAction(quitAction);
 
@@ -331,9 +337,9 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(sendCoinsAction);
     toolbar->addAction(receiveCoinsAction);
     toolbar->addAction(historyAction);
-#ifdef ENABLE_MINING
+#ifndef DISABLE_MINING
     toolbar->addAction(mintingAction);
-#endif
+#endif // DISABLE_MINING
     toolbar->addAction(addressBookAction);
 }
 
@@ -440,6 +446,7 @@ void BitcoinGUI::createTrayIconMenu()
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(signMessageAction);
     trayIconMenu->addAction(verifyMessageAction);
+    trayIconMenu->addAction(multisigAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
     trayIconMenu->addAction(openRPCConsoleAction);
@@ -506,6 +513,11 @@ void BitcoinGUI::gotoOverviewPage()
 void BitcoinGUI::gotoHistoryPage()
 {
     if (walletFrame) walletFrame->gotoHistoryPage();
+}
+
+void BitcoinGUI::gotoMultisigPage()
+{
+    if (walletFrame) walletFrame->gotoMultisigPage();
 }
 
 void BitcoinGUI::gotoMintingPage()

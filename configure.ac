@@ -1,8 +1,8 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
-define(_CLIENT_VERSION_MINOR, 6)
-define(_CLIENT_VERSION_REVISION, 0)
+define(_CLIENT_VERSION_MINOR, 8)
+define(_CLIENT_VERSION_REVISION, 6)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2018)
@@ -50,10 +50,10 @@ AC_ARG_ENABLE([wallet],
   [enable_wallet=yes])
 
 AC_ARG_ENABLE([mining],
-  [AS_HELP_STRING([--enable-mining],
-  [enable mining and minting (default is yes)])],
-  [enable_mining=$enableval],
-  [enable_mining=yes])
+  [AS_HELP_STRING([--disable-mining],
+  [disable mining and minting (default is no)])],
+  [disable_mining=$enableval],
+  [disable_mining=no])
 
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
@@ -567,10 +567,10 @@ else
 fi
 
 dnl enable mining
-AC_MSG_CHECKING([if mining should be enabled])
-if test x$enable_mining != xno; then
+AC_MSG_CHECKING([if mining/minting should be disabled])
+if test x$disable_mining != xno; then
   AC_MSG_RESULT(yes)
-  AC_DEFINE_UNQUOTED([ENABLE_MINING],[1],[Define to 1 to enable mining functions])
+  AC_DEFINE_UNQUOTED([DISABLE_MINING],[1],[Define to 1 to disable mining/minting functions])
 
 else
   AC_MSG_RESULT(no)
@@ -673,7 +673,7 @@ AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet == xyes])
-AM_CONDITIONAL([ENABLE_MINING],[test x$enable_mining == xyes])
+AM_CONDITIONAL([DISABLE_MINING],[test x$disable_mining == xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$use_tests == xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt == xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$use_tests$bitcoin_enable_qt_test = xyesyes])

@@ -67,6 +67,7 @@ public:
     QAction * getOverviewAction() { return overviewAction; }
     QAction * getHistoryAction() { return historyAction; }
     QAction * getMintingAction() { return mintingAction; }
+    QAction * getMultisigAction() { return multisigAction; }
     QAction * getAddressBookAction() { return addressBookAction; }
     QAction * getReceiveCoinsAction() { return receiveCoinsAction; }
     QAction * getSendCoinsAction() { return sendCoinsAction; }
@@ -92,6 +93,7 @@ private:
     QAction *overviewAction;
     QAction *historyAction;
     QAction *mintingAction;
+    QAction *multisigAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *addressBookAction;
@@ -173,6 +175,8 @@ private slots:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch to multisig page */
+    void gotoMultisigPage();
     /** Switch to minting page */
     void gotoMintingPage();
     /** Switch to address book page */
