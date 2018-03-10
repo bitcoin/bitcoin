@@ -1920,7 +1920,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         // Process custom logic, no matter if tx will be accepted to mempool later or not
         if (strCommand == NetMsgType::TXLOCKREQUEST) {
-            if(!instantsend.ProcessTxLockRequest(tx, connman)) {
+            if(!instantsend.ProcessTxLockRequest(tx, *connman)) {
                 LogPrint(BCLog::INSTSEND, "TXLOCKREQUEST -- failed %s\n", tx.GetHash().ToString());
                 return false;
             }
@@ -1975,11 +1975,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 LogPrintf("TXLOCKREQUEST -- Transaction Lock Request accepted, txid=%s, peer=%d\n",
                         tx.GetHash().ToString(), pfrom->GetId());
                 instantsend.AcceptLockRequest(txLockRequest);
-                instantsend.Vote(tx.GetHash(), connman);
+                instantsend.Vote(tx.GetHash(), *connman);
             }
 
             mempool.check(pcoinsTip);
-            connman.RelayTransaction(tx);
+            connman->RelayTransaction(tx);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 vWorkQueue.emplace_back(inv.hash, i);
             }
@@ -2814,13 +2814,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (found)
         {
             //probably one the extensions
-            privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            mnodeman.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            mnpayments.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            instantsend.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, *connman);
+            privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, *connman);
+            mnodeman.ProcessMessage(pfrom, strCommand, vRecv, *connman);
+            mnpayments.ProcessMessage(pfrom, strCommand, vRecv, *connman);
+            instantsend.ProcessMessage(pfrom, strCommand, vRecv, *connman);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
-            governance.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            governance.ProcessMessage(pfrom, strCommand, vRecv, *connman);
         } else {
             // Ignore unknown commands for extensibility
             LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->GetId());
