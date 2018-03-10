@@ -3,6 +3,8 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #if !defined(LEVELDB_PLATFORM_WINDOWS)
 
+#include <util.h>  // Bitcoin util.h for RenameThread()
+
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -642,6 +644,7 @@ void PosixEnv::Schedule(void (*function)(void*), void* arg) {
 }
 
 void PosixEnv::BGThread() {
+  RenameThread("leveldb-bgcompact");
   while (true) {
     // Wait until there is an item that is ready to run
     PthreadCall("lock", pthread_mutex_lock(&mu_));
