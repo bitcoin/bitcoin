@@ -170,7 +170,7 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &t
 
 bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransactionRef &transaction)
 {
-    uint256 hash = transaction.GetHash();
+    uint256 hash = transaction->GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashtxlock %s\n", hash.GetHex());
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
