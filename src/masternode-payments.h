@@ -204,7 +204,7 @@ public:
 
     void Clear();
 
-    bool AddPaymentVote(const CMasternodePaymentVote& vote);
+    bool AddOrUpdatePaymentVote(const CMasternodePaymentVote& vote);
     bool HasVerifiedPaymentVote(const uint256& hashIn) const;
     bool ProcessBlock(int nBlockHeight, CConnman& connman);
     void CheckBlockVotes(int nBlockHeight);

@@ -345,7 +345,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
             }
 
             // Mark vote as non-verified when it's seen for the first time,
-            // AddPaymentVote() below should take care of it if vote is actually ok
+            // AddOrUpdatePaymentVote() below should take care of it if vote is actually ok
             res.first->second.MarkAsNotVerified();
         }
 
@@ -399,7 +399,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
         LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- vote: address=%s, nBlockHeight=%d, nHeight=%d, prevout=%s, hash=%s new\n",
                     address2.ToString(), vote.nBlockHeight, nCachedBlockHeight, vote.masternodeOutpoint.ToStringShort(), nHash.ToString());
 
-        if(AddPaymentVote(vote)){
+        if(AddOrUpdatePaymentVote(vote)){
             vote.Relay(connman);
             masternodeSync.BumpAssetLastTime("MASTERNODEPAYMENTVOTE");
         }
@@ -487,7 +487,7 @@ bool CMasternodePayments::IsScheduled(const masternode_info_t& mnInfo, int nNotB
     return false;
 }
 
-bool CMasternodePayments::AddPaymentVote(const CMasternodePaymentVote& vote)
+bool CMasternodePayments::AddOrUpdatePaymentVote(const CMasternodePaymentVote& vote)
 {
     uint256 blockHash = uint256();
     if(!GetBlockHash(blockHash, vote.nBlockHeight - 101)) return false;
@@ -498,12 +498,12 @@ bool CMasternodePayments::AddPaymentVote(const CMasternodePaymentVote& vote)
 
     LOCK2(cs_mapMasternodeBlocks, cs_mapMasternodePaymentVotes);
 
-    mapMasternodePaymentVotes.emplace(nVoteHash, vote);
+    mapMasternodePaymentVotes[nVoteHash] = vote;
 
     auto it = mapMasternodeBlocks.emplace(vote.nBlockHeight, CMasternodeBlockPayees(vote.nBlockHeight)).first;
     it->second.AddPayee(vote);
 
-    LogPrint("mnpayments", "CMasternodePayments::AddPaymentVote -- added, hash=%s\n", nVoteHash.ToString());
+    LogPrint("mnpayments", "CMasternodePayments::AddOrUpdatePaymentVote -- added, hash=%s\n", nVoteHash.ToString());
 
     return true;
 }
@@ -784,9 +784,9 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight, CConnman& connman)
 
     LogPrintf("CMasternodePayments::ProcessBlock -- Signing vote\n");
     if (voteNew.Sign()) {
-        LogPrintf("CMasternodePayments::ProcessBlock -- AddPaymentVote()\n");
+        LogPrintf("CMasternodePayments::ProcessBlock -- AddOrUpdatePaymentVote()\n");
 
-        if (AddPaymentVote(voteNew)) {
+        if (AddOrUpdatePaymentVote(voteNew)) {
             voteNew.Relay(connman);
             return true;
         }
