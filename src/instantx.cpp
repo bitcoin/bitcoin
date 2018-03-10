@@ -964,6 +964,8 @@ bool CTxLockRequest::IsValid() const
 
     CAmount nValueIn = 0;
 
+    int nInstantSendConfirmationsRequired = Params().GetConsensus().nInstantSendConfirmationsRequired;
+
     for (const auto& txin : tx->vin) {
 
         Coin coin;
@@ -975,7 +977,7 @@ bool CTxLockRequest::IsValid() const
 
         int nTxAge = chainActive.Height() - coin.nHeight + 1;
         // 1 less than the "send IX" gui requires, in case of a block propagating the network at the time
-        int nConfirmationsRequired = INSTANTSEND_CONFIRMATIONS_REQUIRED - 1;
+        int nConfirmationsRequired = nInstantSendConfirmationsRequired - 1;
 
         if(nTxAge < nConfirmationsRequired) {
             LogPrint("instantsend", "CTxLockRequest::IsValid -- outpoint %s too new: nTxAge=%d, nConfirmationsRequired=%d, txid=%s\n",

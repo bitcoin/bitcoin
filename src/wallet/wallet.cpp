@@ -2569,6 +2569,8 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed, 
 
     {
         LOCK2(cs_main, cs_wallet);
+        int nInstantSendConfirmationsRequired = Params().GetConsensus().nInstantSendConfirmationsRequired;
+
         for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const uint256& wtxid = it->first;
@@ -2584,8 +2586,8 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed, 
                 continue;
 
             int nDepth = pcoin->GetDepthInMainChain(false);
-            // do not use IX for inputs that have less then INSTANTSEND_CONFIRMATIONS_REQUIRED blockchain confirmations
-            if (fUseInstantSend && nDepth < INSTANTSEND_CONFIRMATIONS_REQUIRED)
+            // do not use IX for inputs that have less then nInstantSendConfirmationsRequired blockchain confirmations
+            if (fUseInstantSend && nDepth < nInstantSendConfirmationsRequired)
                 continue;
 
             // We should not consider coins which aren't at least in our mempool
@@ -3464,6 +3466,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         {
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, coinControl, false, nCoinType, fUseInstantSend);
+            int nInstantSendConfirmationsRequired = Params().GetConsensus().nInstantSendConfirmationsRequired;
 
             nFeeRet = 0;
             if(nFeePay > 0) nFeeRet = nFeePay;
@@ -3526,7 +3529,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                         strFailReason = _("Insufficient funds.");
                         if (fUseInstantSend) {
                             // could be not true but most likely that's the reason
-                            strFailReason += " " + strprintf(_("InstantSend requires inputs with at least %d confirmations, you might need to wait a few minutes and try again."), INSTANTSEND_CONFIRMATIONS_REQUIRED);
+                            strFailReason += " " + strprintf(_("InstantSend requires inputs with at least %d confirmations, you might need to wait a few minutes and try again."), nInstantSendConfirmationsRequired);
                         }
                     }
 
