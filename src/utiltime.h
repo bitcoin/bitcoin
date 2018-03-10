@@ -34,6 +34,14 @@ void MilliSleep(int64_t n);
 template <typename T>
 T GetTime();
 
+/**
+ * ISO 8601 formatting is preferred. Use the FormatISO8601{DateTime,Date,Time}
+ * helper functions if possible.
+ */
 std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime);
+
+std::string FormatISO8601DateTime(int64_t nTime);
+std::string FormatISO8601Date(int64_t nTime);
+std::string FormatISO8601Time(int64_t nTime);
 
 #endif // BITCOIN_UTILTIME_H
