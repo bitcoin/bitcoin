@@ -898,7 +898,7 @@ static const CRPCCommand commands[] =
     { "chaincoin",          "getpoolinfo",            &getpoolinfo,            {} },
     { "chaincoin",          "sentinelping",           &sentinelping,           {} },
 #ifdef ENABLE_WALLET
-    { "chaincoin",          "privatesend",            &privatesend,            false, {} },
+    { "chaincoin",          "privatesend",            &privatesend,            {} },
 #endif // ENABLE_WALLET
 };
 
