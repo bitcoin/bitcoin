@@ -679,6 +679,14 @@ private:
     std::vector<char> _ssExtra;
 };
 
+struct CoinEligibilityFilter
+{
+    const int conf_mine;
+    const int conf_theirs;
+    const uint64_t max_ancestors;
+
+    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors) {}
+};
 
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /** 
@@ -881,7 +889,7 @@ public:
      * completion the coin set and corresponding actual target value is
      * assembled
      */
-    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const;
+    bool SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibilty_filter, std::vector<COutput> vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const;
 
@@ -1192,7 +1200,7 @@ public:
     CTxDestination AddAndGetDestinationForScript(const CScript& script, OutputType);
 
     /** Whether a given output is spendable by this wallet */
-    bool OutputEligibleForSpending(const COutput& output, const int nConfMine, const int nConfTheirs, const uint64_t nMaxAncestors) const;
+    bool OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibilty_filter) const;
 };
 
 /** A key allocated from the key pool. */
