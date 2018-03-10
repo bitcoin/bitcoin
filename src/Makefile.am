@@ -205,6 +205,9 @@ libbitcoin_server_a_SOURCES = \
   merkleblock.cpp \
   miner.cpp \
   net.cpp \
+  natpmp/natpmp.c \
+  natpmp/getgateway.c \
+  natpmp/wingettimeofday.c \
   net_processing.cpp \
   noui.cpp \
   policy/fees.cpp \
