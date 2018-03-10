@@ -1475,8 +1475,8 @@ void ThreadMapPort()
     fd_set fds;
     int i;
     int protocol = 0;
-    uint16_t privateport = std::atoi(port);
-    uint16_t publicport = std::atoi(port);
+    uint16_t privateport = std::atoi(port.c_str());
+    uint16_t publicport = std::atoi(port.c_str());
     uint32_t lifetime = 3600;
     int command = 0;
     int forcegw = 0;
@@ -1566,20 +1566,9 @@ void ThreadMapPort()
 
 void StartMapPort()
 {
-    static std::unique_ptr<boost::thread> natpmp_thread;
-
-    if (fUseUPnP)
-    {
-        if (natpmp_thread) {
-            natpmp_thread->interrupt();
-            natpmp_thread->join();
-        }
-        natpmp_thread.reset(new boost::thread(boost::bind(&TraceThread<void (*)()>, "upnp", &ThreadMapPort)));
-    }
-    else if (natpmp_thread) {
-        natpmp_thread->interrupt();
-        natpmp_thread->join();
-        natpmp_thread.reset();
+    if (!g_upnp_thread.joinable()) {
+        assert(!g_upnp_interrupt);
+        g_upnp_thread = std::thread((std::bind(&TraceThread<void (*)()>, "upnp", &ThreadMapPort)));
     }
 }
 
