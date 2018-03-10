@@ -1572,6 +1572,21 @@ void StartMapPort()
     }
 }
 
+void InterruptMapPort()
+{
+    if(g_upnp_thread.joinable()) {
+        g_upnp_interrupt();
+    }
+}
+
+void StopMapPort()
+{
+    if(g_upnp_thread.joinable()) {
+        g_upnp_thread.join();
+        g_upnp_interrupt.reset();
+    }
+}
+
 #else
 void StartMapPort()
 {
