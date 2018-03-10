@@ -210,7 +210,7 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
 
 bool CZMQPublishRawTransactionLockNotifier::NotifyTransactionLock(const CTransactionRef &transaction)
 {
-    uint256 hash = transaction.GetHash();
+    uint256 hash = transaction->GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish rawtxlock %s\n", hash.GetHex());
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     ss << transaction;
