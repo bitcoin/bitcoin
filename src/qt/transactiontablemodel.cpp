@@ -73,7 +73,7 @@ public:
 
     /* Query entire wallet anew from core.
      */
-    void refreshWallet(interfaces::Wallet& wallet)
+    void refreshWallet(interfaces::Wallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {
         qDebug() << "TransactionTablePriv::refreshWallet";
         cachedWallet.clear();
@@ -91,7 +91,7 @@ public:
 
        Call with transaction that was added, removed or changed.
      */
-    void updateWallet(interfaces::Wallet& wallet, const uint256 &hash, int status, bool showTransaction)
+    void updateWallet(interfaces::Wallet& wallet, const uint256 &hash, int status, bool showTransaction) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {
         qDebug() << "TransactionTablePriv::updateWallet: " + QString::fromStdString(hash.ToString()) + " " + QString::number(status);
 
@@ -176,7 +176,7 @@ public:
         return cachedWallet.size();
     }
 
-    TransactionRecord *index(interfaces::Wallet& wallet, int idx)
+    TransactionRecord *index(interfaces::Wallet& wallet, int idx) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {
         if(idx >= 0 && idx < cachedWallet.size())
         {
@@ -244,7 +244,7 @@ void TransactionTableModel::updateAmountColumnTitle()
     Q_EMIT headerDataChanged(Qt::Horizontal,Amount,Amount);
 }
 
-void TransactionTableModel::updateTransaction(const QString &hash, int status, bool showTransaction)
+void TransactionTableModel::updateTransaction(const QString &hash, int status, bool showTransaction) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     uint256 updated;
     updated.SetHex(hash.toStdString());
@@ -669,7 +669,7 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
     return QVariant();
 }
 
-QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex &parent) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     Q_UNUSED(parent);
     TransactionRecord *data = priv->index(walletModel->wallet(), row);
@@ -680,7 +680,7 @@ QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex 
     return QModelIndex();
 }
 
-void TransactionTableModel::updateDisplayUnit()
+void TransactionTableModel::updateDisplayUnit() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // emit dataChanged to update Amount column with the current unit
     updateAmountColumnTitle();
