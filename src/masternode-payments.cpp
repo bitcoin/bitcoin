@@ -271,11 +271,10 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
     txoutMasternodeRet = CTxOut(masternodePayment, payee);
     txNew.vout.push_back(txoutMasternodeRet);
 
-    CTxDestination address1;
-    ExtractDestination(payee, address1);
-    CBitcoinAddress address2(address1);
+    CTxDestination address;
+    ExtractDestination(payee, address);
 
-    LogPrintf("CMasternodePayments::FillBlockPayee -- Masternode payment %lld to %s\n", masternodePayment, address2.ToString());
+    LogPrintf("CMasternodePayments::FillBlockPayee -- Masternode payment %lld to %s\n", masternodePayment, EncodeDestination(address));
 }
 
 int CMasternodePayments::GetMinMasternodePaymentsProto() {
@@ -377,12 +376,11 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
             return;
         }
 
-        CTxDestination address1;
-        ExtractDestination(vote.payee, address1);
-        CBitcoinAddress address2(address1);
+        CTxDestination address;
+        ExtractDestination(vote.payee, address);
 
         LogPrint(BCLog::MNODEPAY, "MASTERNODEPAYMENTVOTE -- vote: address=%s, nBlockHeight=%d, nHeight=%d, prevout=%s, hash=%s new\n",
-                    address2.ToString(), vote.nBlockHeight, nCachedBlockHeight, vote.masternodeOutpoint.ToStringShort(), nHash.ToString());
+                    EncodeDestination(address), vote.nBlockHeight, nCachedBlockHeight, vote.masternodeOutpoint.ToStringShort(), nHash.ToString());
 
         if(AddPaymentVote(vote)){
             vote.Relay(connman);
@@ -561,14 +559,13 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
                 }
             }
 
-            CTxDestination address1;
-            ExtractDestination(payee.GetPayee(), address1);
-            CBitcoinAddress address2(address1);
+            CTxDestination address;
+            ExtractDestination(payee.GetPayee(), address);
 
             if(strPayeesPossible == "") {
-                strPayeesPossible = address2.ToString();
+                strPayeesPossible = EncodeDestination(address);
             } else {
-                strPayeesPossible += "," + address2.ToString();
+                strPayeesPossible += "," + EncodeDestination(address);
             }
         }
     }
@@ -585,14 +582,13 @@ std::string CMasternodeBlockPayees::GetRequiredPaymentsString()
 
     for (const auto& payee : vecPayees)
     {
-        CTxDestination address1;
-        ExtractDestination(payee.GetPayee(), address1);
-        CBitcoinAddress address2(address1);
+        CTxDestination address;
+        ExtractDestination(payee.GetPayee(), address);
 
         if (!strRequiredPayments.empty())
             strRequiredPayments += ", ";
 
-        strRequiredPayments += strprintf("%s:%d", address2.ToString(), payee.GetVoteCount());
+        strRequiredPayments += strprintf("%s:%d", EncodeDestination(address), payee.GetVoteCount());
     }
 
     if (strRequiredPayments.empty())
@@ -738,11 +734,10 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight, CConnman& connman)
 
     CMasternodePaymentVote voteNew(activeMasternode.outpoint, nBlockHeight, payee);
 
-    CTxDestination address1;
-    ExtractDestination(payee, address1);
-    CBitcoinAddress address2(address1);
+    CTxDestination address;
+    ExtractDestination(payee, address);
 
-    LogPrintf("CMasternodePayments::ProcessBlock -- vote: payee=%s, nBlockHeight=%d\n", address2.ToString(), nBlockHeight);
+    LogPrintf("CMasternodePayments::ProcessBlock -- vote: payee=%s, nBlockHeight=%d\n", EncodeDestination(address), nBlockHeight);
 
     // SIGN MESSAGE TO NETWORK WITH OUR MASTERNODE KEYS
 
@@ -806,12 +801,11 @@ void CMasternodePayments::CheckPreviousBlockVotes(int nPrevBlockHeight)
             continue;
         }
 
-        CTxDestination address1;
-        ExtractDestination(payee, address1);
-        CBitcoinAddress address2(address1);
+        CTxDestination address;
+        ExtractDestination(payee, address);
 
         debugStr += strprintf("CMasternodePayments::CheckPreviousBlockVotes --   %s - voted for %s\n",
-                              mn.second.outpoint.ToStringShort(), address2.ToString());
+                              mn.second.outpoint.ToStringShort(), EncodeDestination(address));
     }
     debugStr += "CMasternodePayments::CheckPreviousBlockVotes -- Masternodes which missed a vote in the past:\n";
     for (const auto& item : mapMasternodesDidNotVote) {

@@ -154,17 +154,19 @@ bool CProposalValidator::ValidatePaymentAddress()
         return false;
     }
 
-    CBitcoinAddress address(strPaymentAddress);
-    if(!address.IsValid()) {
+    CTxDestination destination = DecodeDestination(strPaymentAddress);
+    if(!IsValidDestination(destination)) {
         strErrorMessages += "payment_address is invalid;";
         return false;
     }
 
+// TODO: find a way to determine the address type or accept script addresses
+/*
     if(address.IsScript()) {
         strErrorMessages += "script addresses are not supported;";
         return false;
     }
-
+*/
     return true;
 }
 

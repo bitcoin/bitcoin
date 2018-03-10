@@ -1268,3 +1268,5 @@ src/wallet/.deps/libbitcoin_wallet_a-fees.Po
 src/wallet/.deps/libbitcoin_wallet_a-init.Po
 src/rpc/.deps/libbitcoin_server_a-misc.Tpo
 src/rpc/.deps/libbitcoin_server_a-safemode.Po
+src/crypto/crypto_libbitcoin_crypto_a-sha256_sse4.o
+src/rpc/libbitcoin_server_a-safemode.o

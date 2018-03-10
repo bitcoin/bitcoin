@@ -415,14 +415,13 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBl
 
             // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
 
-            CTxDestination address1;
-            ExtractDestination(payment.script, address1);
-            CBitcoinAddress address2(address1);
+            CTxDestination address;
+            ExtractDestination(payment.script, address);
 
             // TODO: PRINT NICE N.N DASH OUTPUT
 
             DBG( std::cout << "CSuperblockManager::CreateSuperblock Before LogPrintf call, nAmount = " << payment.nAmount << std::endl; );
-            LogPrintf("NEW Superblock : output %d (addr %s, amount %d)\n", i, address2.ToString(), payment.nAmount);
+            LogPrintf("NEW Superblock : output %d (addr %s, amount %d)\n", i, EncodeDestination(address), payment.nAmount);
             DBG( std::cout << "CSuperblockManager::CreateSuperblock After LogPrintf call " << std::endl; );
         } else {
             DBG( std::cout << "CSuperblockManager::CreateSuperblock Payment not found " << std::endl; );
@@ -589,8 +588,9 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
     DBG( std::cout << "CSuperblock::ParsePaymentSchedule vecParsed1.size() = " << vecParsed1.size() << std::endl; );
 
     for (int i = 0; i < (int)vecParsed1.size(); i++) {
-        CBitcoinAddress address(vecParsed1[i]);
-        if (!address.IsValid()) {
+        std::string address(vecParsed1[i]);
+        CTxDestination destination = DecodeDestination(address);
+        if (!IsValidDestination(destination)) {
             std::ostringstream ostr;
             ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Dash Address : " <<  vecParsed1[i];
             LogPrintf("%s\n", ostr.str());
@@ -608,14 +608,14 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
              << ", nAmount = " << nAmount
              << std::endl; );
 
-        CGovernancePayment payment(address, nAmount);
+        CGovernancePayment payment(destination, nAmount);
         if(payment.IsValid()) {
             vecPayments.push_back(payment);
         }
         else {
             vecPayments.clear();
             std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid payment found: address = " << address.ToString()
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid payment found: address = " << address
                  << ", amount = " << nAmount;
             LogPrintf("%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
@@ -725,10 +725,9 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
         if(!fPaymentMatch) {
             // Superblock payment not found!
 
-            CTxDestination address1;
-            ExtractDestination(payment.script, address1);
-            CBitcoinAddress address2(address1);
-            LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid: %d payment %d to %s not found\n", i, payment.nAmount, address2.ToString());
+            CTxDestination address;
+            ExtractDestination(payment.script, address);
+            LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid: %d payment %d to %s not found\n", i, payment.nAmount, EncodeDestination(address));
 
             return false;
         }
@@ -799,17 +798,16 @@ std::string CSuperblockManager::GetRequiredPaymentsString(int nBlockHeight)
         if(pSuperblock->GetPayment(i, payment)) {
             // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
 
-            CTxDestination address1;
-            ExtractDestination(payment.script, address1);
-            CBitcoinAddress address2(address1);
+            CTxDestination address;
+            ExtractDestination(payment.script, address);
 
             // RETURN NICE OUTPUT FOR CONSOLE
 
             if(ret != "Unknown") {
-                ret += ", " + address2.ToString();
+                ret += ", " + EncodeDestination(address);
             }
             else {
-                ret = address2.ToString();
+                ret = EncodeDestination(address);
             }
         }
     }

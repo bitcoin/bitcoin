@@ -396,6 +396,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 
             CTxOut out(0, CScript() << OP_RETURN << data);
             rawTx.vout.push_back(out);
+        } else {
             CTxDestination destination = DecodeDestination(name_);
             if (!IsValidDestination(destination)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Chaincoin address: ") + name_);
