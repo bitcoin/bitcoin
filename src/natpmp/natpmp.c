@@ -43,7 +43,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef ECONNREFUSED
 #define ECONNREFUSED WSAECONNREFUSED
 #endif
-#include <wingettimeofday.h>
+#include <natpmp/wingettimeofday.h>
 #define gettimeofday natpmp_gettimeofday
 #else
 #include <errno.h>
@@ -53,8 +53,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/socket.h>
 #define closesocket close
 #endif
-#include <natpmp.h>
-#include <getgateway.h>
+#include <natpmp/natpmp.h>
+#include <natpmp/getgateway.h>
 #include <stdio.h>
 
 NATPMP_LIBSPEC int initnatpmp(natpmp_t * p, int forcegw, in_addr_t forcedgw)
