@@ -93,6 +93,10 @@ Low-level RPC changes
   with any `-wallet=<path>` options, there is no change in behavior, and the
   name of any wallet is just its `<path>` string.
 
+### Logging
+
+- The log timestamp format is now ISO 8601 (e.g. "2018-02-28T12:34:56Z").
+
 Credits
 =======
 
