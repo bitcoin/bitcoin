@@ -902,6 +902,11 @@ public:
         return m_block_template->vTxSigOpsCost;
     }
 
+    const std::vector<double>& getTxCoinAgePriorities() const override
+    {
+        return m_block_template->vTxPriorities;
+    }
+
     CTransactionRef getCoinbaseTx() const override
     {
         return m_block_template->block.vtx[0];

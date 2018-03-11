@@ -199,6 +199,8 @@ void BlockAssembler::addPriorityTxs(const CTxMemPool& mempool, int &nPackagesSel
     vecPriority.reserve(mempool.mapTx.size());
     for (auto mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi) {
         double dPriority = mi->GetPriority(nHeight);
+        CAmount dummy;
+        mempool.ApplyDeltas(mi->GetTx().GetHash(), dPriority, dummy);
         vecPriority.emplace_back(dPriority, mi);
     }
     std::make_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
@@ -225,7 +227,7 @@ void BlockAssembler::addPriorityTxs(const CTxMemPool& mempool, int &nPackagesSel
 
         // If this tx fits in the block add it, otherwise keep looping
         if (TestForBlock(iter)) {
-            AddToBlock(iter);
+            AddToBlock(mempool, iter);
 
             ++nPackagesSelected;
 

@@ -161,7 +161,9 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
     {
         LOCK(pool.cs);
         for (const auto &i : pool.mapDeltas) {
-            mapDeltas[i.first] = i.second;
+            if (i.second.second) {  // fee delta
+                mapDeltas[i.first] = i.second.second;
+            }
         }
         vinfo = pool.infoAll();
         unbroadcast_txids = pool.GetUnbroadcastTxs();

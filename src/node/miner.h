@@ -189,7 +189,7 @@ private:
     /** Clear the block's state and prepare for assembling a new block */
     void resetBlock();
     /** Add a tx to the block */
-    void AddToBlock(CTxMemPool::txiter iter);
+    void AddToBlock(const CTxMemPool& mempool, CTxMemPool::txiter iter) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
 
     // Methods for how to add transactions to a block.
     /** Add transactions based on tx "priority" */

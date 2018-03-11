@@ -500,9 +500,10 @@ static RPCHelpMan prioritisetransaction()
                 "Accepts the transaction into mined blocks at a higher (or lower) priority\n",
                 {
                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id."},
-                    {"dummy", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "API-Compatibility for previous API. Must be zero or null.\n"
-            "                  DEPRECATED. For forward compatibility use named arguments and omit this parameter."},
-                    {"fee_delta", RPCArg::Type::NUM, RPCArg::Optional::NO, "The fee value (in satoshis) to add (or subtract, if negative).\n"
+                    {"priority_delta", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The priority to add or subtract.\n"
+            "                  The transaction selection algorithm considers the tx as it would have a higher priority.\n"
+            "                  (priority of a transaction is calculated: coinage * value_in_satoshis / txsize)\n"},
+                    {"fee_delta", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The fee value (in satoshis) to add (or subtract, if negative).\n"
             "                  Note, that this value is not a fee rate. It is a value to modify absolute fee of the TX.\n"
             "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
             "                  considers the transaction as it would have paid a higher (or lower) fee."},
@@ -518,11 +519,14 @@ static RPCHelpMan prioritisetransaction()
     LOCK(cs_main);
 
     uint256 hash(ParseHashV(request.params[0], "txid"));
-    const auto dummy{self.MaybeArg<double>("dummy")};
-    CAmount nAmount = request.params[2].getInt<int64_t>();
+    double priority_delta = 0;
+    CAmount nAmount = 0;
 
-    if (dummy && *dummy != 0) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.");
+    if (!request.params[1].isNull()) {
+        priority_delta = request.params[1].get_real();
+    }
+    if (!request.params[2].isNull()) {
+        nAmount = request.params[2].getInt<int64_t>();
     }
 
     CTxMemPool& mempool = EnsureAnyMemPool(request.context);
@@ -533,7 +537,7 @@ static RPCHelpMan prioritisetransaction()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is not supported for transactions with dust outputs.");
     }
 
-    mempool.PrioritiseTransaction(hash, nAmount);
+    mempool.PrioritiseTransaction(hash, priority_delta, nAmount);
     return true;
 },
     };
@@ -877,6 +881,7 @@ static UniValue TemplateToJSON(const Consensus::Params& consensusParams, const C
     std::map<uint256, int64_t> setTxIndex;
     const std::vector<CAmount>& tx_fees{block_template->getTxFees()};
     const std::vector<CAmount>& tx_sigops{block_template->getTxSigops()};
+    const std::vector<double>& tx_coin_age_priorities{block_template->getTxCoinAgePriorities()};
 
     int i = 0;
     for (const auto& it : block.vtx) {
@@ -910,6 +915,9 @@ static UniValue TemplateToJSON(const Consensus::Params& consensusParams, const C
         }
         entry.pushKV("sigops", nTxSigOps);
         entry.pushKV("weight", GetTransactionWeight(tx));
+        if (index_in_template && !tx_coin_age_priorities.empty()) {
+            entry.pushKV("priority", tx_coin_age_priorities.at(index_in_template));
+        }
 
         transactions.push_back(std::move(entry));
     }
