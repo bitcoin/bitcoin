@@ -4,7 +4,9 @@
 
 #include <bench/bench.h>
 #include <rpc/blockchain.h>
+#include <test/util/setup_common.h>
 #include <txmempool.h>
+#include <validation.h>
 
 #include <univalue.h>
 
@@ -17,6 +19,16 @@ static void AddTx(const CTransactionRef& tx, const CAmount& fee, CTxMemPool& poo
 
 static void RpcMempool(benchmark::Bench& bench)
 {
+    TestingSetup test_setup{
+        CBaseChainParams::REGTEST,
+        /* extra_args */ {
+            "-nodebuglogfile",
+            "-nodebug",
+        },
+    };
+
+    auto& chainman = *test_setup.m_node.chainman;
+
     CTxMemPool pool;
     LOCK2(cs_main, pool.cs);
 
@@ -33,7 +45,7 @@ static void RpcMempool(benchmark::Bench& bench)
     }
 
     bench.run([&] {
-        (void)MempoolToJSON(pool, /*verbose*/ true);
+        (void)MempoolToJSON(chainman, pool, /*verbose*/ true);
     });
 }
 
