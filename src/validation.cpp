@@ -25,6 +25,7 @@
 #include <node/blockstorage.h>
 #include <node/coinstats.h>
 #include <node/ui_interface.h>
+#include <policy/coin_age_priority.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <pow.h>
@@ -700,6 +701,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     nModifiedFees = ws.m_base_fees;
     m_pool.ApplyDelta(hash, nModifiedFees);
 
+    CAmount inChainInputValue;
+    // Since entries arrive *after* the tip's height, their priority is for the height+1
+    double dPriority = GetPriority(tx, m_view, m_active_chainstate.m_chain.Height() + 1, inChainInputValue);
+
     // Keep track of transactions that spend a coinbase, which we re-scan
     // during reorgs to ensure COINBASE_MATURITY is still met.
     bool fSpendsCoinbase = false;
@@ -711,8 +716,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         }
     }
 
-    entry.reset(new CTxMemPoolEntry(ptx, ws.m_base_fees, nAcceptTime, m_active_chainstate.m_chain.Height(),
-            fSpendsCoinbase, nSigOpsCost, lp));
+    entry.reset(new CTxMemPoolEntry(ptx, ws.m_base_fees, nAcceptTime, dPriority, m_active_chainstate.m_chain.Height(),
+            inChainInputValue, fSpendsCoinbase, nSigOpsCost, lp));
     unsigned int nSize = entry->GetTxSize();
 
     if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
@@ -2282,6 +2287,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
     if (disconnectpool && m_mempool) {
         // Save transactions to re-add to mempool at end of reorg
         for (auto it = block.vtx.rbegin(); it != block.vtx.rend(); ++it) {
+            m_mempool->UpdateDependentPriorities(*(*it), pindexDelete->nHeight, false);
             disconnectpool->addTransaction(*it);
         }
         while (disconnectpool->DynamicMemoryUsage() > MAX_DISCONNECTED_TX_POOL_SIZE * 1000) {

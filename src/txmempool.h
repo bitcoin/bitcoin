@@ -94,9 +94,14 @@ private:
     const size_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
     const size_t nUsageSize;        //!< ... and total memory usage
     const int64_t nTime;            //!< Local time when entering the mempool
+    const double entryPriority;     //!< Priority when entering the mempool
     const unsigned int entryHeight; //!< Chain height when entering the mempool
+    double cachedPriority;    //!< Last calculated priority
+    unsigned int cachedHeight; //!< Height at which priority was last calculated
+    CAmount inChainInputValue; //!< Sum of all txin values that are already in blockchain
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
+    const size_t nModSize;          //!< Cached modified size for priority
     int64_t feeDelta;          //!< Used for determining the priority of the transaction for mining in a block
     LockPoints lockPoints;     //!< Track the height and time at which tx was final
 
@@ -115,12 +120,23 @@ private:
 
 public:
     CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
-                    int64_t _nTime, unsigned int _entryHeight,
-                    bool spendsCoinbase,
+                    int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
+                    CAmount _inChainInputValue, bool spendsCoinbase,
                     int64_t nSigOpsCost, LockPoints lp);
 
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
+    double GetStartingPriority() const {return entryPriority; }
+    /**
+     * Fast calculation of priority as update from cached value, but only valid if
+     * currentHeight is greater than last height it was recalculated.
+     */
+    double GetPriority(unsigned int currentHeight) const;
+    /**
+     * Recalculate the cached priority as of currentHeight and adjust inChainInputValue by
+     * valueInCurrentBlock which represents input that was just added to or removed from the blockchain.
+     */
+    void UpdateCachedPriority(unsigned int currentHeight, CAmount valueInCurrentBlock);
     const CAmount& GetFee() const { return nFee; }
     size_t GetTxSize() const;
     size_t GetTxWeight() const { return nTxWeight; }
@@ -634,6 +650,12 @@ public:
      * the tx is not dependent on other mempool transactions to be included in a block.
      */
     bool HasNoInputsOf(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    /**
+     * Update all transactions in the mempool which depend on tx to recalculate their priority
+     * and adjust the input value that will age to reflect that the inputs from this transaction have
+     * either just been added to the chain or just been removed.
+     */
+    void UpdateDependentPriorities(const CTransaction &tx, unsigned int nBlockHeight, bool addToChain);
 
     /** Affect CreateNewBlock prioritisation of transactions */
     void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta);

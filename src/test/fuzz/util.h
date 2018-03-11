@@ -164,6 +164,7 @@ template <typename WeakEnumType, size_t size>
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
 }
 
+[[nodiscard]] bool SanityCheckForConsumeTxMemPoolEntry(const CTransaction&);
 [[nodiscard]] CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept;
 
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
