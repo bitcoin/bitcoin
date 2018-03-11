@@ -51,20 +51,25 @@ if showdiff | grep -E -q '^\+.*\s+$'; then
   echo "The following changes were suspected:"
   FILENAME=""
   SEEN=0
+  SEENLN=0
   while read -r line; do
     if [[ "$line" =~ ^diff ]]; then
       FILENAME="$line"
       SEEN=0
     elif [[ "$line" =~ ^@@ ]]; then
       LINENUMBER="$line"
+      SEENLN=0
     else
       if [ "$SEEN" -eq 0 ]; then
         # The first time a file is seen with trailing whitespace, we print the
         # filename (preceded by a newline).
         echo
         echo "$FILENAME"
-        echo "$LINENUMBER"
         SEEN=1
+      fi
+      if [ "$SEENLN" -eq 0 ]; then
+        echo "$LINENUMBER"
+        SEENLN=1
       fi
       echo "$line"
     fi
@@ -78,20 +83,25 @@ if showcodediff | perl -nle '$MATCH++ if m{^\+.*\t}; END{exit 1 unless $MATCH>0}
   echo "The following changes were suspected:"
   FILENAME=""
   SEEN=0
+  SEENLN=0
   while read -r line; do
     if [[ "$line" =~ ^diff ]]; then
       FILENAME="$line"
       SEEN=0
     elif [[ "$line" =~ ^@@ ]]; then
       LINENUMBER="$line"
+      SEENLN=0
     else
       if [ "$SEEN" -eq 0 ]; then
         # The first time a file is seen with a tab character, we print the
         # filename (preceded by a newline).
         echo
         echo "$FILENAME"
-        echo "$LINENUMBER"
         SEEN=1
+      fi
+      if [ "$SEENLN" -eq 0 ]; then
+        echo "$LINENUMBER"
+        SEENLN=1
       fi
       echo "$line"
     fi
