@@ -195,6 +195,8 @@ void BlockAssembler::addPriorityTxs(int &nPackagesSelected)
     vecPriority.reserve(m_mempool.mapTx.size());
     for (auto mi = m_mempool.mapTx.begin(); mi != m_mempool.mapTx.end(); ++mi) {
         double dPriority = mi->GetPriority(nHeight);
+        CAmount dummy;
+        m_mempool.ApplyDeltas(mi->GetTx().GetHash(), dPriority, dummy);
         vecPriority.push_back(TxCoinAgePriority(dPriority, mi));
     }
     std::make_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
