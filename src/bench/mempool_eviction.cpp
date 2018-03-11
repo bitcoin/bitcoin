@@ -22,13 +22,15 @@
 static void AddTx(const CTransactionRef& tx, const CAmount& nFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
     int64_t nTime = 0;
+    double dPriority = 10.0;
     unsigned int nHeight = 1;
     uint64_t sequence = 0;
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
     AddToMempool(pool, CTxMemPoolEntry(
-        tx, nFee, nTime, nHeight, sequence,
+        tx, nFee, nTime, dPriority, nHeight, sequence,
+        tx->GetValueOut(),
         spendsCoinbase, sigOpCost, lp));
 }
 

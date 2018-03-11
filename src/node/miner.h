@@ -38,6 +38,7 @@ struct CBlockTemplate
     CBlock block;
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOpsCost;
+    std::vector<double> vTxPriorities;
     std::vector<unsigned char> vchCoinbaseCommitment;
     /* A vector of package fee rates, ordered by the sequence in which
      * packages are selected for inclusion in the block template.*/
@@ -163,6 +164,10 @@ private:
     const CTxMemPool* const m_mempool;
     Chainstate& m_chainstate;
 
+    // Variables used for addPriorityTxs
+    int lastFewTxs;
+    bool blockFinished;
+
 public:
     using Options = BlockCreateOptions;
 
@@ -187,10 +192,18 @@ private:
     void AddToBlock(CTxMemPool::txiter iter);
 
     // Methods for how to add transactions to a block.
+    /** Add transactions based on tx "priority" */
+    void addPriorityTxs(const CTxMemPool& mempool, int &nPackagesSelected) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
       * statistics from the package selection (for logging statistics). */
     void addPackageTxs(const CTxMemPool& mempool, int& nPackagesSelected, int& nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
+
+    // helper function for addPriorityTxs
+    /** Test if tx will still "fit" in the block */
+    bool TestForBlock(CTxMemPool::txiter iter);
+    /** Test if tx still has unconfirmed parents not yet in block */
+    bool isStillDependent(const CTxMemPool& mempool, CTxMemPool::txiter iter) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */

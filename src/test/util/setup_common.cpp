@@ -546,7 +546,8 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             LockPoints lp;
             auto changeset = m_node.mempool->GetChangeSet();
             changeset->StageAddition(ptx, /*fee=*/(total_in - num_outputs * amount_per_output),
-                    /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
+                    /*time=*/0, /*entry_priority=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
+                    /*in_chain_input_value=*/0,
                     /*spends_coinbase=*/false, /*sigops_cost=*/4, lp);
             changeset->Apply();
         }
@@ -579,7 +580,8 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
     {
         auto changeset = m_node.mempool->GetChangeSet();
         changeset->StageAddition(tx, /*fee=*/tx_fee,
-                /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
+                /*time=*/0, /*entry_priority=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
+                /*in_chain_input_value=*/0,
                 /*spends_coinbase=*/true, /*sigops_cost=*/1, lp);
         changeset->Apply();
     }

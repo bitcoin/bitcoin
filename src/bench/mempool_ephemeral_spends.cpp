@@ -30,7 +30,8 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_R
     uint64_t fee{0};
     LockPoints lp;
     AddToMempool(pool, CTxMemPoolEntry(
-        tx, fee, nTime, nHeight, sequence,
+        tx, fee, nTime, /*entry_priority=*/0.0, nHeight, sequence,
+        /*in_chain_input_value=*/0,
         spendsCoinbase, sigOpCost, lp));
 }
 
