@@ -201,6 +201,8 @@ BASE_SCRIPTS = [
     'tool_signet_miner.py --descriptors',
     'wallet_txn_clone.py',
     'wallet_txn_clone.py --segwit',
+    'mining_coin_age_priority.py',
+    'mining_coin_age_priority.py --gbt',
     'rpc_getchaintips.py',
     'rpc_misc.py',
     'p2p_1p1c_network.py',
