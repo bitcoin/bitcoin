@@ -9,6 +9,7 @@
 #include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <util/chaintype.h>
+#include <validation.h>
 
 #include <univalue.h>
 
@@ -21,7 +22,8 @@ static void AddTx(const CTransactionRef& tx, const CAmount& fee, CTxMemPool& poo
 
 static void RpcMempool(benchmark::Bench& bench)
 {
-    const auto testing_setup = MakeNoLogFileContext<const ChainTestingSetup>(ChainType::MAIN);
+    const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN);
+    auto& chainman = *testing_setup->m_node.chainman;
     CTxMemPool& pool = *Assert(testing_setup->m_node.mempool);
     LOCK2(cs_main, pool.cs);
 
@@ -38,7 +40,7 @@ static void RpcMempool(benchmark::Bench& bench)
     }
 
     bench.run([&] {
-        (void)MempoolToJSON(pool, /*verbose=*/true);
+        (void)MempoolToJSON(chainman, pool, /*verbose=*/true);
     });
 }
 
