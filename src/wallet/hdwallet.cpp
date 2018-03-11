@@ -288,10 +288,10 @@ bool CHDWallet::InitLoadWallet()
                 LogPrintf("%s", sWarning);
                 */
             }
-        } else
+        };
         if (pwallet->idDefaultAccount.IsNull())
         {
-            std::string sWarning = "Warning: Wallet " + pwallet->GetName() + " has no default account set, please view the readme.";
+            std::string sWarning = "Warning: Wallet " + pwallet->GetName() + " has no active account, please view the readme.";
             #ifndef ENABLE_QT
             fprintf(stdout, "%s\n", sWarning.c_str());
             #endif
