@@ -438,8 +438,10 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     indexed_transaction_set::iterator newit = mapTx.emplace(CTxMemPoolEntry::ExplicitCopy, entry).first;
 
     // Update transaction for any feeDelta created by PrioritiseTransaction
+    double priority_delta{0.};
     CAmount delta{0};
-    ApplyDelta(entry.GetTx().GetHash(), delta);
+    ApplyDeltas(entry.GetTx().GetHash(), priority_delta, delta);
+    // NOTE: priority_delta is handled in addPriorityTxs
     // The following call to UpdateModifiedFee assumes no previous fee modifications
     Assume(entry.GetFee() == entry.GetModifiedFee());
     if (delta) {
@@ -883,15 +885,17 @@ TxMempoolInfo CTxMemPool::info_for_relay(const GenTxid& gtxid, uint64_t last_seq
     }
 }
 
-void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)
+void CTxMemPool::PrioritiseTransaction(const uint256& hash, double dPriorityDelta, const CAmount& nFeeDelta)
 {
     {
         LOCK(cs);
-        CAmount &delta = mapDeltas[hash];
-        delta = SaturatingAdd(delta, nFeeDelta);
+        std::pair<double, CAmount> &deltas = mapDeltas[hash];
+        deltas.first += dPriorityDelta;
+        deltas.second = SaturatingAdd(deltas.second, nFeeDelta);
         txiter it = mapTx.find(hash);
         if (it != mapTx.end()) {
             mapTx.modify(it, [&nFeeDelta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(nFeeDelta); });
+
             // Now update all ancestors' modified fees with descendants
             auto ancestors{AssumeCalculateMemPoolAncestors(__func__, *it, Limits::NoLimits(), /*fSearchForParents=*/false)};
             for (txiter ancestorIt : ancestors) {
@@ -906,27 +910,29 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
             }
             ++nTransactionsUpdated;
         }
-        if (delta == 0) {
+        if (deltas.first == 0. && deltas.second == 0) {
             mapDeltas.erase(hash);
             LogPrintf("PrioritiseTransaction: %s (%sin mempool) delta cleared\n", hash.ToString(), it == mapTx.end() ? "not " : "");
         } else {
-            LogPrintf("PrioritiseTransaction: %s (%sin mempool) fee += %s, new delta=%s\n",
+            LogPrintf("PrioritiseTransaction: %s (%sin mempool) priority += %f, fee += %s, new delta=%s\n",
                       hash.ToString(),
                       it == mapTx.end() ? "not " : "",
+                      dPriorityDelta,
                       FormatMoney(nFeeDelta),
-                      FormatMoney(delta));
+                      FormatMoney(deltas.second));
         }
     }
 }
 
-void CTxMemPool::ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const
+void CTxMemPool::ApplyDeltas(const uint256& hash, double &dPriorityDelta, CAmount &nFeeDelta) const
 {
     AssertLockHeld(cs);
-    std::map<uint256, CAmount>::const_iterator pos = mapDeltas.find(hash);
+    std::map<uint256, std::pair<double, CAmount> >::const_iterator pos = mapDeltas.find(hash);
     if (pos == mapDeltas.end())
         return;
-    const CAmount &delta = pos->second;
-    nFeeDelta += delta;
+    const std::pair<double, CAmount> &deltas = pos->second;
+    dPriorityDelta += deltas.first;
+    nFeeDelta += deltas.second;
 }
 
 void CTxMemPool::ClearPrioritisation(const uint256& hash)
@@ -946,7 +952,7 @@ std::vector<CTxMemPool::delta_info> CTxMemPool::GetPrioritisedTransactions() con
         const bool in_mempool{iter != mapTx.end()};
         std::optional<CAmount> modified_fee;
         if (in_mempool) modified_fee = iter->GetModifiedFee();
-        result.emplace_back(delta_info{in_mempool, delta, modified_fee, txid});
+        result.emplace_back(delta_info{in_mempool, delta.second, modified_fee, txid});
     }
     return result;
 }

@@ -933,7 +933,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // ws.m_modified_fees includes any fee deltas from PrioritiseTransaction
     ws.m_modified_fees = ws.m_base_fees;
-    m_pool.ApplyDelta(hash, ws.m_modified_fees);
+    double nPriorityDummy{0};
+    m_pool.ApplyDeltas(hash, nPriorityDummy, ws.m_modified_fees);
 
     CAmount inChainInputValue;
     // Since entries arrive *after* the tip's height, their priority is for the height+1
