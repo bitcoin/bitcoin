@@ -158,7 +158,7 @@ int MnemonicDetectLanguage(const std::string &sWordList)
         int m = mnLanguageLens[l];
 
         // The chinese dialects have many words in common, match full phrase
-        int maxTries = l == WLL_CHINESE_S || l == WLL_CHINESE_T ? 24 : 8;
+        int maxTries = (l == WLL_CHINESE_S || l == WLL_CHINESE_T) ? 24 : 8;
 
         int nHit = 0;
         int nMiss = 0;

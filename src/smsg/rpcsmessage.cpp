@@ -936,6 +936,7 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
     };
 
     UniValue result(UniValue::VOBJ);
+    UniValue arrBuckets(UniValue::VARR);
 
     char cbuf[256];
     if (mode == "stats")
@@ -990,7 +991,7 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
                     };
                 };
 
-                result.pushKV("bucket", objM);
+                arrBuckets.push_back(objM);
             };
         }; // cs_smsg
 
@@ -998,7 +999,8 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
         std::string snMessages = std::to_string(nMessages);
 
         UniValue objM(UniValue::VOBJ);
-        objM.pushKV("buckets", snBuckets);
+        objM.pushKV("buckets", arrBuckets);
+        objM.pushKV("numbuckets", snBuckets);
         objM.pushKV("messages", snMessages);
         objM.pushKV("size", part::BytesReadable(nBytes));
         result.pushKV("total", objM);

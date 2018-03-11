@@ -92,6 +92,12 @@ boost::signals2::signal<void ()> NotifySecMsgWalletUnlocked;
 
 secp256k1_context *secp256k1_context_smsg = nullptr;
 
+uint32_t SMSGGetSecondsInDay()
+{
+    static bool fIsRegTest = Params().NetworkIDString() == "regtest";
+    return fIsRegTest ? 600 : SMSG_SECONDS_IN_DAY;
+}
+
 void SecMsgBucket::hashBucket()
 {
     void *state = XXH32_init(1);
@@ -103,7 +109,7 @@ void SecMsgBucket::hashBucket()
     std::set<SecMsgToken>::iterator it;
     for (it = setTokens.begin(); it != setTokens.end(); ++it)
     {
-        if (it->timestamp + it->ttl * SMSG_SECONDS_IN_DAY < now)
+        if (it->timestamp + it->ttl * SMSGGetSecondsInDay() < now)
             continue;
 
         XXH32_update(state, it->sample, 8);
@@ -134,7 +140,7 @@ size_t SecMsgBucket::CountActive()
     std::set<SecMsgToken>::iterator it;
     for (it = setTokens.begin(); it != setTokens.end(); ++it)
     {
-        if (it->timestamp + it->ttl * SMSG_SECONDS_IN_DAY < now)
+        if (it->timestamp + it->ttl * SMSGGetSecondsInDay() < now)
             continue;
         nMessages++;
     };
@@ -168,13 +174,11 @@ void ThreadSecureMsg()
                 bool fErase = it->first < cutoffTime;
 
                 if (!fErase
-                    && it->second.nLeastTTL
-                    && it->first + it->second.nLeastTTL * SMSG_SECONDS_IN_DAY > now)
+                    && it->first + it->second.nLeastTTL * SMSGGetSecondsInDay() < now)
                 {
                     it->second.hashBucket();
 
                     // TODO: periodically prune files
-
                     if (it->second.nActive < 1)
                         fErase = true;
                 };
@@ -571,6 +575,7 @@ int CSMSG::BuildBucketSet()
                 token.timestamp = smsg.timestamp;
 
                 uint32_t nDaysToLive = smsg.version[0] < 3 ? 2 : smsg.nonce[0];
+                token.ttl = nDaysToLive;
                 if (bucket.nLeastTTL == 0 || nDaysToLive < bucket.nLeastTTL)
                     bucket.nLeastTTL = nDaysToLive;
 
@@ -1247,7 +1252,7 @@ int CSMSG::ReceiveData(CNode *pfrom, const std::string &strCommand, CDataStream 
                 uint8_t *p = &vchDataOut[8];
                 for (it = tokenSet.begin(); it != tokenSet.end(); ++it)
                 {
-                    if (it->timestamp + it->ttl * SMSG_SECONDS_IN_DAY < now)
+                    if (it->timestamp + it->ttl * SMSGGetSecondsInDay() < now)
                         continue;
                     memcpy(p, &it->timestamp, 8);
                     memcpy(p+8, &it->sample, 8);
@@ -2989,8 +2994,8 @@ int CSMSG::Validate(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nP
         };
 
         size_t nDaysRetention = psmsg->nonce[0];
-        int64_t ttl = SMSG_SECONDS_IN_DAY * nDaysRetention;
-        if (ttl < SMSG_SECONDS_IN_DAY || ttl > SMSG_MAX_PAID_TTL)
+        int64_t ttl = SMSGGetSecondsInDay() * nDaysRetention;
+        if (ttl < SMSGGetSecondsInDay() || ttl > SMSG_MAX_PAID_TTL)
         {
             LogPrint(BCLog::SMSG, "TTL out of range %d.\n", ttl);
             return SMSG_GENERAL_ERROR;
