@@ -237,6 +237,7 @@ public:
     }
 
     bool ProcessBlock(int nBlockHeight);
+    int GetMinSystemnodePaymentsProto() const;
     void ProcessMessageSystemnodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void Sync(CNode* node, int nCountNeeded);
     void CleanPaymentList();

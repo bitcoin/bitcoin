@@ -449,7 +449,7 @@ CSystemnode* CSystemnodeMan::GetNextSystemnodeInQueueForPayment(int nBlockHeight
         if(!sn.IsEnabled()) continue;
 
         // //check protocol version
-        if(sn.protocolVersion < MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION) continue;
+        if(sn.protocolVersion < systemnodePayments.GetMinSystemnodePaymentsProto()) continue;
 
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
         if(systemnodePayments.IsScheduled(sn, nBlockHeight)) continue;
@@ -576,7 +576,7 @@ void CSystemnodeMan::Remove(CTxIn vin)
 int CSystemnodeMan::CountEnabled(int protocolVersion)
 {
     int i = 0;
-    protocolVersion = protocolVersion == -1 ? MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION : protocolVersion;
+    protocolVersion = protocolVersion == -1 ? systemnodePayments.GetMinSystemnodePaymentsProto() : protocolVersion;
 
     BOOST_FOREACH(CSystemnode& sn, vSystemnodes) {
         sn.Check();
@@ -711,7 +711,7 @@ void CSystemnodeMan::CheckAndRemove(bool forceExpiredRemoval)
         if((*it).activeState == CSystemnode::SYSTEMNODE_REMOVE ||
                 (*it).activeState == CSystemnode::SYSTEMNODE_VIN_SPENT ||
                 (forceExpiredRemoval && (*it).activeState == CSystemnode::SYSTEMNODE_EXPIRED) ||
-                (*it).protocolVersion < MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION) {
+                (*it).protocolVersion < systemnodePayments.GetMinSystemnodePaymentsProto()) {
             LogPrint("systemnode", "CSystemnodeMan: Removing inactive Systemnode %s - %i now\n", (*it).addr.ToString(), size() - 1);
 
             //erase all of the broadcasts we've seen from this vin

@@ -246,7 +246,7 @@ void CSystemnodeSync::Process()
             return;
         }
 
-        if (pnode->nVersion >= MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION) {
+        if (pnode->nVersion >= systemnodePayments.GetMinSystemnodePaymentsProto()) {
 
             if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_LIST) {
                 if(fDebug) LogPrintf("CSystemnodeSync::Process() - lastSystemnodeList %lld (GetTime() - SYSTEMNODE_SYNC_TIMEOUT) %lld\n", lastSystemnodeList, GetTime() - SYSTEMNODE_SYNC_TIMEOUT);
