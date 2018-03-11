@@ -484,6 +484,12 @@ public:
      * the tx is not dependent on other mempool transactions to be included in a block.
      */
     bool HasNoInputsOf(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    /**
+     * Update all transactions in the mempool which depend on tx to recalculate their priority
+     * and adjust the input value that will age to reflect that the inputs from this transaction have
+     * either just been added to the chain or just been removed.
+     */
+    void UpdateDependentPriorities(const CTransaction &tx, unsigned int nBlockHeight, bool addToChain);
 
     /** Affect CreateNewBlock prioritisation of transactions */
     void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta);
