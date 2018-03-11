@@ -1486,7 +1486,7 @@ void ThreadMapPort()
 
     try{
         /* initnatpmp() */
-        r = initnatpmp(&natpmp, forcegw, gateway);
+        r = initnatpmp(&natpmp, forcegw, gateway, port.c_str());
         LogPrintf("NATPMP: initnatpmp returned %d\n", r);
 
         gateway_in_use.s_addr = natpmp.gateway;

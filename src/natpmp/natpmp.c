@@ -56,8 +56,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <natpmp/natpmp.h>
 #include <natpmp/getgateway.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-NATPMP_LIBSPEC int initnatpmp(natpmp_t * p, int forcegw, in_addr_t forcedgw)
+NATPMP_LIBSPEC int initnatpmp(natpmp_t * p, int forcegw, in_addr_t forcedgw, const char *port)
 {
 #ifdef WIN32
     u_long ioctlArg = 1;
@@ -90,7 +91,7 @@ NATPMP_LIBSPEC int initnatpmp(natpmp_t * p, int forcegw, in_addr_t forcedgw)
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(NATPMP_PORT);
+    addr.sin_port = port;
     addr.sin_addr.s_addr = p->gateway;
     if(connect(p->s, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         return NATPMP_ERR_CONNECTERR;
@@ -131,7 +132,7 @@ int sendnatpmprequest(natpmp_t * p)
     p->has_pending_request = 1;
     p->try_number = 1;
     n = sendpendingrequest(p);
-    gettimeofday(&p->retry_time, nullptr);    // check errors !
+    gettimeofday(&p->retry_time, NULL);    // check errors !
     p->retry_time.tv_usec += 250000;    /* add 250ms */
     if(p->retry_time.tv_usec >= 1000000) {
         p->retry_time.tv_usec -= 1000000;
@@ -147,7 +148,7 @@ NATPMP_LIBSPEC int getnatpmprequesttimeout(natpmp_t * p, struct timeval * timeou
         return NATPMP_ERR_INVALIDARGS;
     if(!p->has_pending_request)
         return NATPMP_ERR_NOPENDINGREQ;
-    if(gettimeofday(&now, nullptr) < 0)
+    if(gettimeofday(&now, NULL) < 0)
         return NATPMP_ERR_GETTIMEOFDAYERR;
     timeout->tv_sec = p->retry_time.tv_sec - now.tv_sec;
     timeout->tv_usec = p->retry_time.tv_usec - now.tv_usec;
@@ -280,7 +281,7 @@ NATPMP_LIBSPEC int readnatpmpresponseorretry(natpmp_t * p, natpmpresp_t * respon
     if(n<0) {
         if(n==NATPMP_TRYAGAIN) {
             struct timeval now;
-            gettimeofday(&now, nullptr);    // check errors !
+            gettimeofday(&now, NULL);    // check errors !
             if(timercmp(&now, &p->retry_time, >=)) {
                 int delay, r;
                 if(p->try_number >= 9) {
