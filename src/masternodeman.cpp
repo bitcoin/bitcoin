@@ -710,7 +710,7 @@ void CMasternodeMan::ProcessMasternodeConnections(CConnman& connman)
     //we don't care about this for regtest
     if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
 
-    connman.ForEachNode(CConnman::AllNodes, [](CNode* pnode) {
+    connman.ForEachNode([](CNode* pnode) {
 #ifdef ENABLE_WALLET
         if(pnode->fMasternode && !privateSendClient.IsMixingMasternode(pnode)) {
 #else

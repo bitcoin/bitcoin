@@ -243,7 +243,7 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     {
         LOCK(cs_main);
         CValidationState validationState;
-        if(!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(txCollateral), false, nullptr, nullptr, false, maxTxFee, true)) {
+        if(!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(txCollateral), nullptr, nullptr, false, maxTxFee, true)) {
             LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
             return false;
         }

@@ -6,9 +6,9 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <amount.h>
 #include <addrdb.h>
 #include <addrman.h>
+#include <amount.h>
 #include <bloom.h>
 #include <compat.h>
 #include <hash.h>
@@ -20,7 +20,6 @@
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
-#include <util.h>
 #include <threadinterrupt.h>
 
 #include <atomic>
@@ -178,28 +177,14 @@ public:
     bool OpenMasternodeConnection(const CAddress& addrConnect);
     bool CheckIncomingNonce(uint64_t nonce);
 
-    struct CFullyConnectedOnly {
-        bool operator() (const CNode* pnode) const {
-            return NodeFullyConnected(pnode);
-        }
-    };
-
-    constexpr static const CFullyConnectedOnly FullyConnectedOnly{};
-
-    struct CAllNodes {
-        bool operator() (const CNode*) const {return true;}
-    };
-
-    constexpr static const CAllNodes AllNodes{};
-
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
     bool ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
     bool ForNode(const CService& addr, std::function<bool(CNode* pnode)> func);
     bool ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
 
-    bool IsConnected(const CService& addr, std::function<bool(const CNode* pnode)> cond)
+    bool IsConnected(const CService& addr, std::function<bool(const CNode* pnode)>)
     {
-        return ForNode(addr, cond, [](CNode* pnode){
+        return ForNode(addr, [](CNode* pnode){
             return true;
         });
     }
@@ -208,14 +193,13 @@ public:
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
-    template<typename Condition, typename Callable>
-    bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
+    template<typename Callable>
+    bool ForEachNodeContinueIf(Callable&& func)
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes)
-            if (cond(node))
-                if(!func(node))
-                    return false;
+            if(!func(node))
+                return false;
         return true;
     }
 
@@ -271,7 +255,6 @@ public:
         post();
     }
 
-    std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
     std::vector<CNode*> CopyNodeVector();
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
@@ -384,7 +367,7 @@ private:
     CNode* FindNode(const CService& addr);
 
     bool AttemptToEvictConnection();
-    CNode* ConnectNode(CAddress addrConnect, const char *pszDest = nullptr, bool fCountFailure = false);
+    CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
     void DeleteNode(CNode* pnode);
@@ -429,7 +412,7 @@ private:
     unsigned int nReceiveFloodSize;
 
     std::vector<ListenSocket> vhListenSocket;
-    bool fNetworkActive;
+    std::atomic<bool> fNetworkActive;
     banmap_t setBanned;
     CCriticalSection cs_setBanned;
     bool setBannedIsDirty;
@@ -445,7 +428,6 @@ private:
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
-    boost::condition_variable messageHandlerCondition;
 
     /** Services this instance offers */
     ServiceFlags nLocalServices;
@@ -479,7 +461,6 @@ private:
     std::thread threadOpenConnections;
     std::thread threadOpenMasternodeConnections;
     std::thread threadMessageHandler;
-
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover(boost::thread_group& threadGroup);
@@ -691,7 +672,7 @@ public:
     // a) it allows us to not relay tx invs before receiving the peer's version message
     // b) the peer may tell us in its version message that we should not relay tx invs
     //    unless it loads a bloom filter.
-    bool fRelayTxes;
+    bool fRelayTxes; //protected by cs_filter
     // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
     bool fMasternode;
     bool fSentAddr;
@@ -894,14 +875,6 @@ public:
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
 };
-
-class CExplicitNetCleanup
-{
-public:
-    static void callCleanup();
-};
-
-
 
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
 int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds);

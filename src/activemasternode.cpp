@@ -144,7 +144,7 @@ void CActiveMasternode::ManageStateInitial(CConnman& connman)
     if(!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        connman.ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty, this](CNode* pnode) {
+        connman.ForEachNodeContinueIf([&fFoundLocal, &empty, this](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
                 fFoundLocal = GetLocal(service, &pnode->addr) && CMasternode::IsValidNetAddr(service);
@@ -184,7 +184,7 @@ void CActiveMasternode::ManageStateInitial(CConnman& connman)
     // Check socket connectivity
     LogPrintf("CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
     SOCKET hSocket;
-    bool fConnected = ConnectSocket(service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
+    bool fConnected = ConnectSocketDirectly(service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
     CloseSocket(hSocket);
 
     if (!fConnected) {

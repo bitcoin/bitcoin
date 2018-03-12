@@ -90,7 +90,7 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
             //try to activate our masternode if possible
             activeMasternode.ManageState(connman);
 
-            connman.ForEachNode(CConnman::AllNodes, [](CNode* pnode) {
+            connman.ForEachNode([](CNode* pnode) {
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
             });
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Sync has finished\n");
@@ -133,7 +133,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand
 
 void CMasternodeSync::ClearFulfilledRequests(CConnman& connman)
 {
-    connman.ForEachNode(CConnman::AllNodes, [](CNode* pnode) {
+    connman.ForEachNode([](CNode* pnode) {
         netfulfilledman.RemoveFulfilledRequest(pnode->addr, "masternode-list-sync");
         netfulfilledman.RemoveFulfilledRequest(pnode->addr, "masternode-payment-sync");
         netfulfilledman.RemoveFulfilledRequest(pnode->addr, "governance-sync");
@@ -169,7 +169,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
     // gradually request the rest of the votes after sync finished
     if(IsSynced()) {
-        std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
+        std::vector<CNode*> vNodesCopy = connman.CopyNodeVector();
         governance.RequestGovernanceObjectVotes(vNodesCopy, connman);
         connman.ReleaseNodeVector(vNodesCopy);
         return;
@@ -180,8 +180,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nRequestedMasternodeAttempt %d nSyncProgress %f\n", nTick, nRequestedMasternodeAssets, nRequestedMasternodeAttempt, nSyncProgress);
     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
-    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
-
+    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector();
     for (auto& pnode : vNodesCopy)
     {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());

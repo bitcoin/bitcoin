@@ -1274,3 +1274,9 @@ src/crypto/libchaincoinconsensus_la-sha256_sse4.lo
 src/crypto/libchaincoinconsensus_la-sha256_sse4.o
 test_test_bitcoin-script_standard_tests.Po
 qt_libbitcoinqt_a-transactionview.Tpo
+src/.deps/libbitcoin_common_a-bech32.Po
+src/.deps/libbitcoin_server_a-privatesend.Tpo
+src/crypto/.libs/libchaincoinconsensus_la-sha256_sse4.o
+src/test/.deps/test_test_bitcoin-bech32_tests.Po
+src/test/.deps/test_test_bitcoin-merkleblock_tests.Po
+test/config.ini
