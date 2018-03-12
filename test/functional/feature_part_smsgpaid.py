@@ -6,6 +6,7 @@
 from test_framework.test_particl import ParticlTestFramework
 from test_framework.test_particl import isclose
 from test_framework.util import *
+import binascii
 
 
 class SmsgPaidTest(ParticlTestFramework):
@@ -177,7 +178,7 @@ class SmsgPaidTest(ParticlTestFramework):
         assert(ro['result'] == 'Sent.')
         msgid = ro['msgid']
 
-        ro = nodes[1].smsgsend(address1, address0_1, msg.hex(), True, 4, False, False, True)
+        ro = nodes[1].smsgsend(address1, address0_1, binascii.hexlify(msg).decode("utf-8"), True, 4, False, False, True)
         msgid2 = ro['msgid']
         self.stakeBlocks(1, nStakeNode=1)
 
