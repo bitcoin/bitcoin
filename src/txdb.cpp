@@ -16,6 +16,13 @@
 #include <stdint.h>
 
 #include <boost/thread.hpp>
+// SYSCOIN snapshot
+#include <ostream>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/stream.hpp>
+#include "script/standard.h"
+#include "base58.h"
+namespace io = boost::iostreams;
 
 using namespace std;
 
@@ -105,6 +112,11 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
        that restriction.  */
     boost::scoped_ptr<CDBIterator> pcursor(const_cast<CDBWrapper*>(&db)->NewIterator());
     pcursor->Seek(DB_COINS);
+	// SYSCOIN snapshot code
+	CTxDestination address;
+	io::stream_buffer<io::file_sink> buf("utxo.json");
+	std::ostream ta(&buf);
+	ta << "[";
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = GetBestBlock();
@@ -124,6 +136,11 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
                         ss << VARINT(i+1);
                         ss << out;
                         nTotalAmount += out.nValue;
+						// SYSCOIN snapshot
+						if(ExtractDestination(out.scriptPubKey, address))
+							ta << "[\"" << CSyscoinAddress(address).ToString().c_str() << "\"," << out.nValue << "]" << endl;
+						else
+							LogPrintf("Could not extract address for pubkey %s\n", HexStr(out.scriptPubKey).c_str()))
                     }
                 }
                 stats.nSerializedSize += 32 + pcursor->GetValueSize();
@@ -142,6 +159,8 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     }
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
+	// SYSCOIN snapshot
+	ta << "]";
     return true;
 }
 
