@@ -1,7 +1,7 @@
 Syscoin Core staging tree 
 =========================
 
-`master:` [![Build Status](https://travis-ci.org/syscoin/syscoin2.svg?branch=master)](https://travis-ci.org/syscoin/syscoin2) `dev-2.2-assets:` [![Build Status](https://travis-ci.org/syscoin/syscoin2.svg?branch=dev-2.2-assets-inputranges)](https://travis-ci.org/syscoin/syscoin2/branches) 
+`master:` [![Build Status](https://travis-ci.org/syscoin/syscoin2.svg?branch=master)](https://travis-ci.org/syscoin/syscoin2) `dev-2.2:` [![Build Status](https://travis-ci.org/syscoin/syscoin2.svg?branch=dev-2.2)](https://travis-ci.org/syscoin/syscoin2/branches) 
 
 http://www.syscoin.org
 
