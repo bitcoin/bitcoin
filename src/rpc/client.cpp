@@ -224,6 +224,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_createpayload_canceltradesbypair", 0 },
     { "omni_createpayload_canceltradesbypair", 1 },
     { "omni_createpayload_cancelalltrades", 0 },
+    { "omni_createpayload_enablefreezing", 0 },
+    { "omni_createpayload_disablefreezing", 0 },
+    { "omni_createpayload_freeze", 1 },
+    { "omni_createpayload_unfreeze", 1 },
 
     /* Omni Core - backwards compatibility */
     { "getcrowdsale_MP", 0 },
