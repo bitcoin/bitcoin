@@ -30,6 +30,11 @@ static std::vector<COutput> vCoins;
 static const CWallet testWallet("dummy", CWalletDBWrapper::CreateDummy());
 static CAmount balance = 0;
 
+CoinEligibilityFilter filter_standard(1, 6, 0);
+CoinEligibilityFilter filter_confirmed(1, 1, 0);
+CoinEligibilityFilter filter_standard_extra(6, 6, 0);
+CoinSelectionParams coin_selection_params(false, 0, 0, CFeeRate(0), 0);
+
 static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>& set)
 {
     CMutableTransaction tx;
@@ -207,12 +212,17 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     for (int i = 0; i < 100; ++i) {
         BOOST_CHECK(!SelectCoinsBnB(utxo_pool, 1 * CENT, 2 * CENT, selection, value_ret, not_input_fees));
     }
-}
 
-CoinEligibilityFilter filter_standard(1, 6, 0);
-CoinEligibilityFilter filter_confirmed(1, 1, 0);
-CoinEligibilityFilter filter_standard_extra(6, 6, 0);
-CoinSelectionParams coin_selection_params(false, 0, 0, CFeeRate(0), 0);
+    // Make sure that effective value is working in SelectCoinsMinConf when BnB is used
+    CoinSelectionParams coin_selection_params_bnb(true, 0, 0, CFeeRate(3000), 0);
+    CoinSet setCoinsRet;
+    CAmount nValueRet;
+    bool bnb_used;
+    empty_wallet();
+    add_coin(1);
+    vCoins.at(0).nInputBytes = 40; // Make sure that it has a negative effective value. The next check should assert if this somehow got through. Otherwise it will fail
+    BOOST_CHECK(!testWallet.SelectCoinsMinConf( 1 * CENT, filter_standard, vCoins, setCoinsRet, nValueRet, coin_selection_params_bnb, bnb_used));
+}
 
 BOOST_AUTO_TEST_CASE(knapsack_solver_test)
 {
