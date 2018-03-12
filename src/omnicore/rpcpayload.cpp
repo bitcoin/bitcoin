@@ -23,6 +23,8 @@ UniValue omni_createpayload_simplesend(const UniValue& params, bool fHelp)
 
             "\nCreate the payload for a simple send transaction.\n"
 
+            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
+
             "\nArguments:\n"
             "1. propertyid           (number, required) the identifier of the tokens to send\n"
             "2. amount               (string, required) the amount to send\n"
@@ -36,7 +38,6 @@ UniValue omni_createpayload_simplesend(const UniValue& params, bool fHelp)
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
-    RequireExistingProperty(propertyId);
     int64_t amount = ParseAmount(params[1], isPropertyDivisible(propertyId));
 
     std::vector<unsigned char> payload = CreatePayload_SimpleSend(propertyId, amount);
@@ -119,9 +120,11 @@ UniValue omni_createpayload_dexaccept(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "omni_senddexaccept propertyid \"amount\"\n"
+            "omni_createpayload_dexaccept propertyid \"amount\"\n"
 
             "\nCreate the payload for an accept offer for the specified token and amount.\n"
+
+            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
 
             "\nArguments:\n"
             "1. propertyid           (number, required) the identifier of the token to purchase\n"
@@ -136,8 +139,7 @@ UniValue omni_createpayload_dexaccept(const UniValue& params, bool fHelp)
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
-    RequirePrimaryToken(propertyId);
-    int64_t amount = ParseAmount(params[1], true);
+    int64_t amount = ParseAmount(params[1], isPropertyDivisible(propertyId));
 
     std::vector<unsigned char> payload = CreatePayload_DExAccept(propertyId, amount);
 
@@ -152,6 +154,8 @@ UniValue omni_createpayload_sto(const UniValue& params, bool fHelp)
 
             "\nCreates the payload for a send-to-owners transaction.\n"
 
+            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
+
             "\nArguments:\n"
             "1. propertyid             (number, required) the identifier of the tokens to distribute\n"
             "2. amount                 (string, required) the amount to distribute\n"
@@ -165,7 +169,6 @@ UniValue omni_createpayload_sto(const UniValue& params, bool fHelp)
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
-    RequireExistingProperty(propertyId);
     int64_t amount = ParseAmount(params[1], isPropertyDivisible(propertyId));
     uint32_t distributionPropertyId = (params.size() > 2) ? ParsePropertyId(params[2]) : propertyId;
 
@@ -264,7 +267,6 @@ UniValue omni_createpayload_issuancecrowdsale(const UniValue& params, bool fHelp
     uint8_t issuerPercentage = ParseIssuerBonus(params[12]);
 
     RequirePropertyName(name);
-    RequireExistingProperty(propertyIdDesired);
     RequireSameEcosystem(ecosystem, propertyIdDesired);
 
     std::vector<unsigned char> payload = CreatePayload_IssuanceVariable(ecosystem, type, previousId, category, subcategory, name, url, data, propertyIdDesired, numTokens, deadline, earlyBonus, issuerPercentage);
@@ -335,8 +337,6 @@ UniValue omni_createpayload_closecrowdsale(const UniValue& params, bool fHelp)
 
     uint32_t propertyId = ParsePropertyId(params[0]);
 
-    // checks bypassed because someone may wish to prepare the payload to close a crowdsale creation not yet broadcast
-
     std::vector<unsigned char> payload = CreatePayload_CloseCrowdsale(propertyId);
 
     return HexStr(payload.begin(), payload.end());
@@ -349,6 +349,8 @@ UniValue omni_createpayload_grant(const UniValue& params, bool fHelp)
             "omni_createpayload_grant propertyid \"amount\" ( \"memo\" )\n"
 
             "\nCreates the payload to issue or grant new units of managed tokens.\n"
+
+            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
 
             "\nArguments:\n"
             "1. propertyid           (number, required) the identifier of the tokens to grant\n"
@@ -364,8 +366,6 @@ UniValue omni_createpayload_grant(const UniValue& params, bool fHelp)
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
-    RequireExistingProperty(propertyId);
-    RequireManagedProperty(propertyId);
     int64_t amount = ParseAmount(params[1], isPropertyDivisible(propertyId));
     std::string memo = (params.size() > 2) ? ParseText(params[2]): "";
 
@@ -382,6 +382,8 @@ UniValue omni_createpayload_revoke(const UniValue& params, bool fHelp)
 
             "\nCreates the payload to revoke units of managed tokens.\n"
 
+            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
+
             "\nArguments:\n"
             "1. propertyid           (number, required) the identifier of the tokens to revoke\n"
             "2. amount               (string, required) the amount of tokens to revoke\n"
@@ -396,8 +398,6 @@ UniValue omni_createpayload_revoke(const UniValue& params, bool fHelp)
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
-    RequireExistingProperty(propertyId);
-    RequireManagedProperty(propertyId);
     int64_t amount = ParseAmount(params[1], isPropertyDivisible(propertyId));
     std::string memo = (params.size() > 2) ? ParseText(params[2]): "";
 
@@ -426,7 +426,6 @@ UniValue omni_createpayload_changeissuer(const UniValue& params, bool fHelp)
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
-    RequireExistingProperty(propertyId);
 
     std::vector<unsigned char> payload = CreatePayload_ChangeIssuer(propertyId);
 
@@ -440,6 +439,8 @@ UniValue omni_createpayload_trade(const UniValue& params, bool fHelp)
             "omni_createpayload_trade propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
 
             "\nCreates the payload to place a trade offer on the distributed token exchange.\n"
+
+            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
 
             "\nArguments:\n"
             "1. propertyidforsale    (number, required) the identifier of the tokens to list for sale\n"
@@ -456,10 +457,8 @@ UniValue omni_createpayload_trade(const UniValue& params, bool fHelp)
         );
 
     uint32_t propertyIdForSale = ParsePropertyId(params[0]);
-    RequireExistingProperty(propertyIdForSale);
     int64_t amountForSale = ParseAmount(params[1], isPropertyDivisible(propertyIdForSale));
     uint32_t propertyIdDesired = ParsePropertyId(params[2]);
-    RequireExistingProperty(propertyIdDesired);
     int64_t amountDesired = ParseAmount(params[3], isPropertyDivisible(propertyIdDesired));
     RequireSameEcosystem(propertyIdForSale, propertyIdDesired);
     RequireDifferentIds(propertyIdForSale, propertyIdDesired);
@@ -478,6 +477,8 @@ UniValue omni_createpayload_canceltradesbyprice(const UniValue& params, bool fHe
 
             "\nCreates the payload to cancel offers on the distributed token exchange with the specified price.\n"
 
+            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
+
             "\nArguments:\n"
             "1. propertyidforsale    (number, required) the identifier of the tokens listed for sale\n"
             "2. amountforsale        (string, required) the amount of tokens to listed for sale\n"
@@ -493,10 +494,8 @@ UniValue omni_createpayload_canceltradesbyprice(const UniValue& params, bool fHe
         );
 
     uint32_t propertyIdForSale = ParsePropertyId(params[0]);
-    RequireExistingProperty(propertyIdForSale);
     int64_t amountForSale = ParseAmount(params[1], isPropertyDivisible(propertyIdForSale));
     uint32_t propertyIdDesired = ParsePropertyId(params[2]);
-    RequireExistingProperty(propertyIdDesired);
     int64_t amountDesired = ParseAmount(params[3], isPropertyDivisible(propertyIdDesired));
     RequireSameEcosystem(propertyIdForSale, propertyIdDesired);
     RequireDifferentIds(propertyIdForSale, propertyIdDesired);
@@ -527,9 +526,7 @@ UniValue omni_createpayload_canceltradesbypair(const UniValue& params, bool fHel
         );
 
     uint32_t propertyIdForSale = ParsePropertyId(params[0]);
-    RequireExistingProperty(propertyIdForSale);
     uint32_t propertyIdDesired = ParsePropertyId(params[1]);
-    RequireExistingProperty(propertyIdDesired);
     RequireSameEcosystem(propertyIdForSale, propertyIdDesired);
     RequireDifferentIds(propertyIdForSale, propertyIdDesired);
 
@@ -584,8 +581,6 @@ UniValue omni_createpayload_enablefreezing(const UniValue& params, bool fHelp)
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
-    RequireExistingProperty(propertyId);
-    RequireManagedProperty(propertyId);
 
     std::vector<unsigned char> payload = CreatePayload_EnableFreezing(propertyId);
 
@@ -613,8 +608,6 @@ UniValue omni_createpayload_disablefreezing(const UniValue& params, bool fHelp)
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
-    RequireExistingProperty(propertyId);
-    RequireManagedProperty(propertyId);
 
     std::vector<unsigned char> payload = CreatePayload_DisableFreezing(propertyId);
 
@@ -629,25 +622,24 @@ UniValue omni_createpayload_freeze(const UniValue& params, bool fHelp)
 
             "\nCreates the payload to freeze an address for a centrally managed token.\n"
 
+            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
+
             "\nArguments:\n"
             "1. toaddress            (string, required) the address to freeze tokens for\n"
             "2. propertyid           (number, required) the property to freeze tokens for (must be managed type and have freezing option enabled)\n"
-            "3. amount               (number, required) the amount of tokens to freeze (note: this is unused - once frozen an address cannot send any transactions)\n"
+            "3. amount               (string, required) the amount of tokens to freeze (note: this is unused - once frozen an address cannot send any transactions)\n"
 
             "\nResult:\n"
             "\"payload\"             (string) the hex-encoded payload\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_freeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 0")
-            + HelpExampleRpc("omni_createpayload_freeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, 0")
+            + HelpExampleCli("omni_createpayload_freeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 \"100\"")
+            + HelpExampleRpc("omni_createpayload_freeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, \"100\"")
         );
 
     std::string refAddress = ParseAddress(params[0]);
     uint32_t propertyId = ParsePropertyId(params[1]);
     int64_t amount = ParseAmount(params[2], isPropertyDivisible(propertyId));
-
-    RequireExistingProperty(propertyId);
-    RequireManagedProperty(propertyId);
 
     std::vector<unsigned char> payload = CreatePayload_FreezeTokens(propertyId, amount, refAddress);
 
@@ -662,25 +654,24 @@ UniValue omni_createpayload_unfreeze(const UniValue& params, bool fHelp)
 
             "\nCreates the payload to unfreeze an address for a centrally managed token.\n"
 
+            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
+
             "\nArguments:\n"
             "1. toaddress            (string, required) the address to unfreeze tokens for\n"
             "2. propertyid           (number, required) the property to unfreeze tokens for (must be managed type and have freezing option enabled)\n"
-            "3. amount               (number, required) the amount of tokens to unfreeze (note: this is unused)\n"
+            "3. amount               (string, required) the amount of tokens to unfreeze (note: this is unused)\n"
 
             "\nResult:\n"
             "\"payload\"             (string) the hex-encoded payload\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_unfreeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 0")
-            + HelpExampleRpc("omni_createpayload_unfreeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, 0")
+            + HelpExampleCli("omni_createpayload_unfreeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 \"100\"")
+            + HelpExampleRpc("omni_createpayload_unfreeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, \"100\"")
         );
 
     std::string refAddress = ParseAddress(params[0]);
     uint32_t propertyId = ParsePropertyId(params[1]);
     int64_t amount = ParseAmount(params[2], isPropertyDivisible(propertyId));
-
-    RequireExistingProperty(propertyId);
-    RequireManagedProperty(propertyId);
 
     std::vector<unsigned char> payload = CreatePayload_UnfreezeTokens(propertyId, amount, refAddress);
 
