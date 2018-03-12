@@ -20,6 +20,7 @@
 #include "masternodeconfig.h"
 #include "systemnodeconfig.h"
 #include "masternodelist.h"
+#include "updatedialog.h"
 
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
@@ -77,6 +78,8 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     progressBar(0),
     progressDialog(0),
     appMenuBar(0),
+    toolbar(0),
+    tabGroup(0),
     overviewAction(0),
     historyAction(0),
     masternodeAction(0),
@@ -88,6 +91,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     signMessageAction(0),
     verifyMessageAction(0),
     aboutAction(0),
+    updateAction(0),
     receiveCoinsAction(0),
     optionsAction(0),
     toggleHideAction(0),
@@ -103,7 +107,8 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     notificator(0),
     rpcConsole(0),
     prevBlocks(0),
-    spinnerFrame(0)
+    spinnerFrame(0),
+    updateChecked(false)
 {
     /* Open CSS when configured */
     this->setStyleSheet(GUIUtil::loadStyleSheet());
@@ -247,6 +252,12 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
 
     // Subscribe to notifications from core
     subscribeToCoreSignals();
+
+    if (GetBoolArg("-updateautocheck", true))
+    {
+        // Check update after 10 seconds
+        QTimer::singleShot(10000, this, SLOT(checkUpdate()));
+    }
 }
 
 BitcoinGUI::~BitcoinGUI()
@@ -265,7 +276,7 @@ BitcoinGUI::~BitcoinGUI()
 
 void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 {
-    QActionGroup *tabGroup = new QActionGroup(this);
+    tabGroup = new QActionGroup(this);
 
     overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Dashboard"), this);
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
@@ -311,36 +322,6 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(historyAction);
 
-    if (masternodeConfig.getCount() >= 0) {
-        masternodeAction = new QAction(QIcon(":/icons/masternode"), tr("&Masternodes"), this);
-        masternodeAction->setStatusTip(tr("Browse masternodes"));
-        masternodeAction->setToolTip(masternodeAction->statusTip());
-        masternodeAction->setCheckable(true);
-#ifdef Q_OS_MAC
-        masternodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
-#else
-        masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
-#endif
-        tabGroup->addAction(masternodeAction);
-        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
-    }
-
-    if (systemnodeConfig.getCount() >= 0) {
-        systemnodeAction = new QAction(QIcon(":/icons/systemnode"), tr("&Systemnodes"), this);
-        systemnodeAction->setStatusTip(tr("Browse systemnodes"));
-        systemnodeAction->setToolTip(systemnodeAction->statusTip());
-        systemnodeAction->setCheckable(true);
-#ifdef Q_OS_MAC
-        systemnodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
-#else
-        systemnodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
-#endif
-        tabGroup->addAction(systemnodeAction);
-        connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(gotoSystemnodePage()));
-    }
-
 #ifdef Q_OS_MAC
     receiveCoinsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
 #else
@@ -372,6 +353,8 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     aboutAction = new QAction(networkStyle->getAppIcon(), tr("&About Crown Core"), this);
     aboutAction->setStatusTip(tr("Show information about Crown Core"));
     aboutAction->setMenuRole(QAction::AboutRole);
+    updateAction = new QAction(QIcon(":/icons/notsynced"), tr("&Check for Updates"), this);
+    updateAction->setStatusTip(tr("Check for availalbe updates"));
 #if QT_VERSION < 0x050000
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
 #else
@@ -430,6 +413,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
+    connect(updateAction, SIGNAL(triggered()), this, SLOT(updateClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
@@ -508,6 +492,7 @@ void BitcoinGUI::createMenuBar()
     help->addAction(showHelpMessageAction);
     help->addSeparator();
     help->addAction(aboutAction);
+    help->addAction(updateAction);
     help->addAction(aboutQtAction);
 }
 
@@ -515,7 +500,7 @@ void BitcoinGUI::createToolBars()
 {
     if(walletFrame)
     {
-        QToolBar *toolbar = new QToolBar(tr("Tabs toolbar"));
+        toolbar = new QToolBar(tr("Tabs toolbar"));
         toolbar->setObjectName("toolbar");
         addToolBar(Qt::LeftToolBarArea, toolbar);
         toolbar->setMovable(false);
@@ -540,14 +525,6 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
-        if (masternodeConfig.getCount() >= 0)
-        {
-            toolbar->addAction(masternodeAction);
-        }
-        if (systemnodeConfig.getCount() >= 0)
-        {
-            toolbar->addAction(systemnodeAction);
-        }
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
 
@@ -612,6 +589,14 @@ bool BitcoinGUI::addWallet(const QString& name, WalletModel *walletModel)
 {
     if(!walletFrame)
         return false;
+    if (walletModel->getOptionsModel()->getSystemnodesEnabled())
+    {
+        enableSystemnodes();
+    }
+    if (walletModel->getOptionsModel()->getMasternodesEnabled())
+    {
+        enableMasternodes();
+    }
     setWalletActionsEnabled(true);
     return walletFrame->addWallet(name, walletModel);
 }
@@ -638,10 +623,10 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     sendCoinsAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
-    if (masternodeConfig.getCount() >= 0) {
+    if (masternodeAction != NULL) {
         masternodeAction->setEnabled(enabled);
     }
-    if (systemnodeConfig.getCount() >= 0) {
+    if (systemnodeAction != NULL) {
         systemnodeAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
@@ -741,6 +726,11 @@ void BitcoinGUI::aboutClicked()
     dlg.exec();
 }
 
+void BitcoinGUI::updateClicked()
+{
+    checkUpdate(true);
+}
+
 void BitcoinGUI::showHelpMessageClicked()
 {
     HelpMessageDialog *help = new HelpMessageDialog(this, false);
@@ -772,7 +762,7 @@ void BitcoinGUI::gotoHistoryPage()
 
 void BitcoinGUI::gotoMasternodePage()
 {
-    if (masternodeConfig.getCount() >= 0) {
+    if (clientModel->getOptionsModel()->getMasternodesEnabled()) {
         masternodeAction->setChecked(true);
         if (walletFrame) walletFrame->gotoMasternodePage();
     }
@@ -780,7 +770,7 @@ void BitcoinGUI::gotoMasternodePage()
 
 void BitcoinGUI::gotoSystemnodePage()
 {
-    if (systemnodeConfig.getCount() >= 0) {
+    if (clientModel->getOptionsModel()->getSystemnodesEnabled()) {
         systemnodeAction->setChecked(true);
         if (walletFrame) walletFrame->gotoSystemnodePage();
     }
@@ -1084,6 +1074,68 @@ void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmoun
 }
 #endif // ENABLE_WALLET
 
+void BitcoinGUI::enableSystemnodes()
+{
+    if (systemnodeAction == NULL)
+    {
+        systemnodeAction = new QAction(QIcon(":/icons/systemnode"), tr("&Systemnodes"), this);
+        systemnodeAction->setStatusTip(tr("Browse systemnodes"));
+        systemnodeAction->setToolTip(systemnodeAction->statusTip());
+        systemnodeAction->setCheckable(true);
+#ifdef Q_OS_MAC
+        systemnodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
+#else
+        systemnodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+#endif
+        tabGroup->addAction(systemnodeAction);
+        connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(gotoSystemnodePage()));
+    }
+    toolbar->addAction(systemnodeAction);
+}
+
+void BitcoinGUI::disableSystemnodes()
+{
+    toolbar->removeAction(systemnodeAction);
+    gotoOverviewPage();
+}
+
+void BitcoinGUI::enableMasternodes()
+{
+    if (masternodeAction == NULL)
+    {
+        masternodeAction = new QAction(QIcon(":/icons/masternode"), tr("&Masternodes"), this);
+        masternodeAction->setStatusTip(tr("Browse masternodes"));
+        masternodeAction->setToolTip(masternodeAction->statusTip());
+        masternodeAction->setCheckable(true);
+#ifdef Q_OS_MAC
+        masternodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
+#else
+        masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+#endif
+        tabGroup->addAction(masternodeAction);
+        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
+    }
+    toolbar->addAction(masternodeAction);
+}
+
+void BitcoinGUI::disableMasternodes()
+{
+    toolbar->removeAction(masternodeAction);
+    gotoOverviewPage();
+}
+
+void BitcoinGUI::guiEnableSystemnodesChanged(bool enabled)
+{
+    enabled ? enableSystemnodes() : disableSystemnodes();
+}
+
+void BitcoinGUI::guiEnableMasternodesChanged(bool enabled)
+{
+    enabled ? enableMasternodes() : disableMasternodes();
+}
+
 void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)
 {
     // Accept only URIs
@@ -1261,6 +1313,37 @@ void BitcoinGUI::handleRestart(QStringList args)
 {
     if (!ShutdownRequested())
         emit requestedRestart(args);
+}
+
+void BitcoinGUI::checkUpdate(bool askedToCheck)
+{
+    UpdateDialog::GetInstance()->setParent(this, Qt::Dialog);
+    try
+    {
+        if (!askedToCheck && updateChecked)
+        {
+            // Do nothing if update status is checked once by user.
+            return;
+        }
+        updateChecked = true;
+        bool hasUpdate = updater.GetStatus();
+        if (hasUpdate)
+        {
+            UpdateDialog::GetInstance()->exec();
+        }
+        else if (askedToCheck)
+        {
+            QMessageBox::information(this, tr("Check for Update"),
+                    tr("You are running the latest version of Crown - %1")
+                    .arg(QString::fromStdString(FormatVersion(CLIENT_VERSION))));
+
+        }
+    }
+    catch(const std::exception& e)
+    {
+        QMessageBox::warning(this, tr("Update Check Error"),
+                tr(e.what()));
+    }
 }
 
 UnitDisplayStatusBarControl::UnitDisplayStatusBarControl() :

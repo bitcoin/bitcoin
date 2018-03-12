@@ -749,8 +749,8 @@ Address: %4
     <name>ClientModel</name>
     <message>
         <location filename="../clientmodel.cpp" line="+73"/>
-        <source>Total: %1 (DS compatible: %2 / Enabled: %3)</source>
-        <translation>Total: %1 (DS compatible: %2 / Enabled: %3)</translation>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>Total: %1 (Enabled: %2)</translation>
     </message>
     <message>
         <location line="+107"/>

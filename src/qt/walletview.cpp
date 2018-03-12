@@ -18,6 +18,10 @@
 #include "signverifymessagedialog.h"
 #include "transactiontablemodel.h"
 #include "transactionview.h"
+#include "transactionrecord.h"
+#include "createsystemnodedialog.h"
+#include "createmasternodedialog.h"
+
 #include "walletmodel.h"
 
 #include "ui_interface.h"
@@ -34,7 +38,9 @@
 WalletView::WalletView(QWidget *parent):
     QStackedWidget(parent),
     clientModel(0),
-    walletModel(0)
+    walletModel(0),
+    masternodeListPage(0),
+    systemnodeListPage(0)
 {
     // Create tabs
     overviewPage = new OverviewPage();
@@ -69,23 +75,10 @@ WalletView::WalletView(QWidget *parent):
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
-    if (masternodeConfig.getCount() >= 0) {
-        masternodeListPage = new MasternodeList();
-    }
-    if (systemnodeConfig.getCount() >= 0) {
-        systemnodeListPage = new SystemnodeList();
-    }
-
     addWidget(overviewPage);
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    if (masternodeConfig.getCount() >= 0) {
-        addWidget(masternodeListPage);
-    }
-    if (systemnodeConfig.getCount() >= 0) {
-        addWidget(systemnodeListPage);
-    }
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
@@ -124,6 +117,12 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         // Pass through transaction notifications
         connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString)));
+
+        connect(this, SIGNAL(guiEnableSystemnodesChanged(bool)), gui, SLOT(guiEnableSystemnodesChanged(bool)));
+        connect(this, SIGNAL(guiEnableMasternodesChanged(bool)), gui, SLOT(guiEnableMasternodesChanged(bool)));
+
+        connect(this, SIGNAL(guiGotoMasternodePage()), gui, SLOT(gotoMasternodePage()));
+        connect(this, SIGNAL(guiGotoSystemnodePage()), gui, SLOT(gotoSystemnodePage()));
     }
 }
 
@@ -133,11 +132,17 @@ void WalletView::setClientModel(ClientModel *clientModel)
 
     overviewPage->setClientModel(clientModel);
     sendCoinsPage->setClientModel(clientModel);
-    if (masternodeConfig.getCount() >= 0) {
-        masternodeListPage->setClientModel(clientModel);
-    }
-    if (systemnodeConfig.getCount() >= 0) {
+    
+    if (clientModel->getOptionsModel()->getSystemnodesEnabled())
+    {
+        enableSystemnodes();
         systemnodeListPage->setClientModel(clientModel);
+    }
+
+    if (clientModel->getOptionsModel()->getMasternodesEnabled())
+    {
+        enableMasternodes();
+        masternodeListPage->setClientModel(clientModel);
     }
 }
 
@@ -150,11 +155,17 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     overviewPage->setWalletModel(walletModel);
     receiveCoinsPage->setModel(walletModel);
     sendCoinsPage->setModel(walletModel);
-    if (masternodeConfig.getCount() >= 0) {
-        masternodeListPage->setWalletModel(walletModel);
-    }
-    if (systemnodeConfig.getCount() >= 0) {
+
+    if (walletModel->getOptionsModel()->getSystemnodesEnabled())
+    {
+        enableSystemnodes();
         systemnodeListPage->setWalletModel(walletModel);
+    }
+
+    if (walletModel->getOptionsModel()->getMasternodesEnabled())
+    {
+        enableMasternodes();
+        masternodeListPage->setWalletModel(walletModel);
     }
 
     if (walletModel)
@@ -175,6 +186,97 @@ void WalletView::setWalletModel(WalletModel *walletModel)
 
         // Show progress dialog
         connect(walletModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
+
+        // Enable systemnodes tab 
+        connect(walletModel->getOptionsModel(), SIGNAL(enableSystemnodesChanged(bool)), this, SLOT(enableSystemnodesChanged(bool)));
+        
+        // Enable masternodes tab 
+        connect(walletModel->getOptionsModel(), SIGNAL(enableMasternodesChanged(bool)), this, SLOT(enableMasternodesChanged(bool)));
+    }
+}
+
+void WalletView::addSystemnode(CNodeEntry nodeEntry)
+{
+    systemnodeConfig.add(nodeEntry);
+    systemnodeConfig.write();
+    emit guiGotoSystemnodePage();
+    systemnodeListPage->updateMyNodeList(true);
+    systemnodeListPage->selectAliasRow(QString::fromStdString(nodeEntry.getAlias()));
+}
+
+void WalletView::addMasternode(CNodeEntry nodeEntry)
+{
+    masternodeConfig.add(nodeEntry);
+    masternodeConfig.write();
+    emit guiGotoMasternodePage();
+    masternodeListPage->updateMyNodeList(true);
+    masternodeListPage->selectAliasRow(QString::fromStdString(nodeEntry.getAlias()));
+}
+
+void WalletView::checkAndCreateNode(const COutput& out)
+{
+    bool systemnodePayment = false;
+    bool masternodePayment = false;
+    CAmount credit = out.tx->vout[out.i].nValue;
+    if (credit == SYSTEMNODE_COLLATERAL * COIN) {
+        systemnodePayment = true;
+    } else if (credit == MASTERNODE_COLLATERAL * COIN) {
+        masternodePayment = true;
+    } else {
+        return;
+    }
+
+    CreateNodeDialog *dialog = new CreateSystemnodeDialog(this);
+    QString title = tr("Payment to yourself - ") +
+        BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), credit);
+    QString body = tr("Do you want to create a new ");
+    if (systemnodePayment)
+    {
+        if (systemnodeListPage->getSendCollateralDialog()->fAutoCreate) {
+            return;
+        }
+        body += "Systemnode?";
+        dialog = new CreateSystemnodeDialog(this);
+    } else if (masternodePayment) {
+        if (masternodeListPage->getSendCollateralDialog()->fAutoCreate) {
+            return;
+        }
+        body += "Masternode?";
+        dialog = new CreateMasternodeDialog(this);
+    }
+    // Display message box
+    QMessageBox::StandardButton retval = QMessageBox::question(this, title, body,
+            QMessageBox::Yes | QMessageBox::Cancel,
+            QMessageBox::Cancel);
+
+    if (retval == QMessageBox::Yes)
+    {
+        dialog->setWindowModality(Qt::ApplicationModal);
+        dialog->setEditMode();
+
+        std::string port = "9340";
+        if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+            port = "19340";
+        }
+        if (dialog->exec())
+        {
+            std::string alias = dialog->getAlias().toStdString();
+            std::string ip = dialog->getIP().toStdString() + ":" + port;
+            uint256 hash = out.tx->GetHash();
+            COutPoint outpoint = COutPoint(hash, boost::lexical_cast<unsigned int>(out.i));
+            pwalletMain->LockCoin(outpoint);
+
+            // Generate a key
+            CKey secret;
+            secret.MakeNewKey(false);
+            std::string privateKey = CBitcoinSecret(secret).ToString();
+            CNodeEntry entry(alias, ip, privateKey, hash.ToString(), strprintf("%d", out.i));
+            if (systemnodePayment) {
+                addSystemnode(entry);
+            } else if (masternodePayment) {
+                addMasternode(entry);
+            }
+        }
     }
 }
 
@@ -192,8 +294,18 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent).data(Qt::EditRole).toULongLong();
     QString type = ttm->index(start, TransactionTableModel::Type, parent).data().toString();
     QString address = ttm->index(start, TransactionTableModel::ToAddress, parent).data().toString();
-
     emit incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address);
+
+    int typeEnum = ttm->index(start, 0, parent).data(TransactionTableModel::TypeRole).toInt();
+    if (typeEnum == TransactionRecord::SendToSelf)
+    {
+        uint256 hash = ttm->index(start, 0, parent).data(TransactionTableModel::TxHashRole).value<uint256>();
+        boost::optional<COutput> res = pwalletMain->FindCollateralOutput(hash);
+        if (res) {
+            COutput out = res.get();
+            checkAndCreateNode(out);
+        }
+    }
 }
 
 void WalletView::gotoOverviewPage()
@@ -221,14 +333,14 @@ void WalletView::gotoSendCoinsPage(QString addr)
 
 void WalletView::gotoMasternodePage()
 {
-    if (masternodeConfig.getCount() >= 0) {
+    if (walletModel->getOptionsModel()->getMasternodesEnabled()) {
         setCurrentWidget(masternodeListPage);
     }
 }
 
 void WalletView::gotoSystemnodePage()
 {
-    if (systemnodeConfig.getCount() >= 0) {
+    if (walletModel->getOptionsModel()->getSystemnodesEnabled()) {
         setCurrentWidget(systemnodeListPage);
     }
 }
@@ -387,4 +499,50 @@ void WalletView::showProgress(const QString &title, int nProgress)
 void WalletView::trxAmount(QString amount)
 {
     transactionSum->setText(amount);
+}
+
+void WalletView::enableSystemnodes()
+{
+    if (systemnodeListPage == NULL)
+    {
+        systemnodeListPage = new SystemnodeList();
+        connect(systemnodeListPage->getSendCollateralDialog(), SIGNAL(message(QString,QString,unsigned int)), 
+                this, SIGNAL(message(QString,QString,unsigned int)));
+        addWidget(systemnodeListPage);
+    }
+}
+
+void WalletView::enableMasternodes()
+{
+    if (masternodeListPage == NULL)
+    {
+        masternodeListPage = new MasternodeList();
+        connect(masternodeListPage->getSendCollateralDialog(), SIGNAL(message(QString,QString,unsigned int)), 
+                this, SIGNAL(message(QString,QString,unsigned int)));
+        addWidget(masternodeListPage);
+    }
+}
+
+/** Enable systemnodes tab */
+void WalletView::enableSystemnodesChanged(bool enabled)
+{
+    if (enabled)
+    {
+        enableSystemnodes();
+        systemnodeListPage->setWalletModel(walletModel);
+        systemnodeListPage->setClientModel(clientModel);
+    }
+    emit guiEnableSystemnodesChanged(enabled);
+}
+
+/** Enabled masternodes tab */
+void WalletView::enableMasternodesChanged(bool enabled)
+{
+    if (enabled)
+    {
+        enableMasternodes();
+        masternodeListPage->setWalletModel(walletModel);
+        masternodeListPage->setClientModel(clientModel);
+    }
+    emit guiEnableMasternodesChanged(enabled);
 }

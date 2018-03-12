@@ -85,7 +85,7 @@ bool CLegacySigner::SignMessage(std::string strMessage, std::string& errorMessag
     return true;
 }
 
-bool CLegacySigner::VerifyMessage(CPubKey pubkey, vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage)
+bool CLegacySigner::VerifyMessage(CPubKey pubkey, const vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage)
 {
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;

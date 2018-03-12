@@ -235,6 +235,17 @@ Value stop(const Array& params, bool fHelp)
     return "Crown server stopping";
 }
 
+Value restart(const Array& params, bool fHelp)
+{
+    // Accept the deprecated and ignored 'detach' boolean argument
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "restart\n"
+            "\nRestart Crown server.");
+    // Restart will take long enough that the response should get back
+    StartRestart();
+    return "Crown server restarting";
+}
 
 
 /**
@@ -247,6 +258,7 @@ static const CRPCCommand vRPCCommands[] =
     { "control",            "getinfo",                &getinfo,                true,      false,      false }, /* uses wallet if enabled */
     { "control",            "help",                   &help,                   true,      true,       false },
     { "control",            "stop",                   &stop,                   true,      true,       false },
+    { "control",            "restart",                &restart,                true,      true,       false },
 
     /* P2P networking */
     { "network",            "getnetworkinfo",         &getnetworkinfo,         true,      false,      false },
@@ -322,6 +334,7 @@ static const CRPCCommand vRPCCommands[] =
     { "crown",               "systemnode",           &systemnode,            true,      true,       false },
     { "crown",               "systemnodelist",       &systemnodelist,        true,      true,       false },
     { "crown",               "systemnodebroadcast",  &systemnodebroadcast,   true,      true,       false },
+    { "crown",               "node",  &node,   true,      true,       false },
 
     /* API features */
     { "api",                 "service",               &service,                true,      true,       false },
@@ -369,6 +382,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "walletlock",             &walletlock,             true,      false,      true },
     { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true,      false,      true },
     { "wallet",             "walletpassphrase",       &walletpassphrase,       true,      false,      true },
+    { "wallet",             "update",                 &update,                 true,      false,      true },
 #endif // ENABLE_WALLET
 };
 

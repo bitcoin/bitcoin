@@ -593,8 +593,8 @@ Adresse: %4</translation>
 <context>
     <name>ClientModel</name>
     <message>
-        <source>Total: %1 (DS compatible: %2 / Enabled: %3)</source>
-        <translation>Gesamt: %1 (DS kompatibel: %2 / Aktiviert: %3)</translation>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>Gesamt: %1 (Aktiviert: %2)</translation>
     </message>
     <message>
         <source>Network Alert</source>

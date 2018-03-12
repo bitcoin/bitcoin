@@ -78,15 +78,13 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
 QString ClientModel::getMasternodeCountString() const
 {
-    return tr("Total: %1 (DS compatible: %2 / Enabled: %3)").arg(QString::number((int)mnodeman.size()))
-            .arg(QString::number((int)mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)))
+    return tr("Total: %1 (Enabled: %2)").arg(QString::number((int)mnodeman.size()))
             .arg(QString::number((int)mnodeman.CountEnabled()));
 }
 
 QString ClientModel::getSystemnodeCountString() const
 {
-    return tr("Total: %1 (DS compatible: %2 / Enabled: %3)").arg(QString::number((int)snodeman.size()))
-            .arg(QString::number((int)snodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)))
+    return tr("Total: %1 (Enabled: %2)").arg(QString::number((int)snodeman.size()))
             .arg(QString::number((int)snodeman.CountEnabled()));
 }
 

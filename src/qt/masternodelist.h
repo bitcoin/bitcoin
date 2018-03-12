@@ -4,6 +4,7 @@
 #include "masternode.h"
 #include "sync.h"
 #include "util.h"
+#include "sendcollateraldialog.h"
 
 #include <QMenu>
 #include <QTimer>
@@ -38,6 +39,7 @@ public:
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
     void VoteMany(std::string strCommand);
+    void selectAliasRow(const QString& alias);
 
 private:
     QMenu *contextMenu;
@@ -48,6 +50,10 @@ public Q_SLOTS:
     void updateMyNodeList(bool reset = false);
     void updateNodeList();
     void updateVoteList(bool reset = false);
+    SendCollateralDialog* getSendCollateralDialog()
+    {
+        return sendDialog;
+    }
 
 Q_SIGNALS:
 
@@ -56,6 +62,7 @@ private:
     Ui::MasternodeList *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
+    SendCollateralDialog *sendDialog;
     CCriticalSection cs_mnlistupdate;
     QString strCurrentFilter;
 
@@ -63,6 +70,7 @@ private Q_SLOTS:
     void showContextMenu(const QPoint &);
     void on_filterLineEdit_textChanged(const QString &filterString);
     void on_startButton_clicked();
+    void on_editButton_clicked();
     void on_startAllButton_clicked();
     void on_startMissingButton_clicked();
     void on_tableWidgetMyMasternodes_itemSelectionChanged();
@@ -73,5 +81,6 @@ private Q_SLOTS:
     void on_voteManyAbstainButton_clicked();
     void on_tableWidgetVoting_itemSelectionChanged();
     void on_UpdateVotesButton_clicked();
+    void on_CreateNewMasternode_clicked();
 };
 #endif // MASTERNODELIST_H

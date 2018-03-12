@@ -45,6 +45,7 @@
         <file alias="unit_tucrown">res/icons/unit_tucrown.png</file>
         <file alias="unit_tcsats">res/icons/unit_tcsats.png</file>
         <file alias="lock_closed">res/icons/lock_closed.png</file>
+        <file alias="notsynced">res/icons/notsynced.png</file>
         <file alias="lock_open">res/icons/lock_open.png</file>
         <file alias="key">res/icons/key.png</file>
         <file alias="filesave">res/icons/filesave.png</file>
@@ -56,6 +57,9 @@
         <file alias="drkblue_remove">res/icons/drkblue_remove.png</file>
         <file alias="masternode">res/icons/masternode.png</file>
         <file alias="systemnode">res/icons/systemnode.png</file>
+        <file alias="show">res/icons/show.png</file>
+        <file alias="hide">res/icons/hide.png</file>
+        <file alias="copy">res/icons/copy.png</file>
         <file alias="browse">res/icons/browse.png</file>
         <file alias="toolbar">res/icons/toolbar.png</file>
     </qresource>

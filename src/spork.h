@@ -37,6 +37,8 @@ using namespace boost;
 #define SPORK_12_RECONSIDER_BLOCKS                            10011
 #define SPORK_13_ENABLE_SUPERBLOCKS                           10012
 #define SPORK_14_SYSTEMNODE_PAYMENT_ENFORCEMENT               10013
+// TODO: Use better name
+#define SPORK_15_SYSTEMNODE_PAY_UPDATED_NODES                 10014
 
 #define SPORK_2_INSTANTX_DEFAULT                              978307200     //2001-1-1
 #define SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT              1424217600    //2015-2-18
@@ -49,6 +51,7 @@ using namespace boost;
 #define SPORK_12_RECONSIDER_BLOCKS_DEFAULT                    0
 #define SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT                   4070908800   //OFF
 #define SPORK_14_SYSTEMNODE_PAYMENT_ENFORCEMENT_DEFAULT       4070908800   //OFF
+#define SPORK_15_SYSTEMNODE_PAY_UPDATED_NODES_DEFAULT         4070908800   //OFF
     
 class CSporkMessage;
 class CSporkManager;

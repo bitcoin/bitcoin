@@ -231,6 +231,7 @@ public:
     bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
 
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX = false) const;
+    boost::optional<COutput> FindCollateralOutput(uint256 hash) const;
     bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const;
@@ -901,7 +902,17 @@ public:
         tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn;
     }
 
+    COutput(const CWalletTx *txIn, int iIn)
+    {
+        assert(txIn);
+        tx = txIn; i = iIn; nDepth = tx->GetDepthInMainChain(false);
+    }
+
     std::string ToString() const;
+    friend bool operator==(const COutput& a, const COutput& b)
+    {
+        return a.tx == b.tx && a.i == b.i;
+    }
 };
 
 

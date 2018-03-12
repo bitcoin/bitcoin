@@ -1172,6 +1172,28 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
     return nTotal;
 }
 
+boost::optional<COutput> CWallet::FindCollateralOutput(uint256 hash) const
+{
+    const CWalletTx* tx = GetWalletTx(hash);
+    if (tx != NULL)
+    {
+        if (IsFinalTx(*tx) && tx->IsTrusted() && !(tx->IsCoinBase() && tx->GetBlocksToMaturity() > 0))
+        {
+            for (unsigned int i = 0; i < tx->vout.size(); i++)
+            {
+                if (IsChange(tx->vout[i]))
+                    continue;
+                CAmount value = tx->vout[i].nValue;
+                if (value == SYSTEMNODE_COLLATERAL * COIN || value == MASTERNODE_COLLATERAL * COIN)
+                {
+                    return COutput(tx, i);
+                }
+            }
+        }
+    }
+    return boost::none;
+}
+
 /**
  * populate vCoins with vector of available COutputs.
  */

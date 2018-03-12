@@ -122,9 +122,17 @@ void StartShutdown()
 {
     fRequestShutdown = true;
 }
+void StartRestart()
+{
+    fRestartRequested = true;
+}
 bool ShutdownRequested()
 {
     return fRequestShutdown || fRestartRequested;
+}
+bool RestartRequested()
+{
+    return fRestartRequested;
 }
 
 class CCoinsViewErrorCatcher : public CCoinsViewBacked
@@ -460,6 +468,9 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -rpcsslcertificatechainfile=<file.cert>  " + strprintf(_("Server certificate file (default: %s)"), "server.cert") + "\n";
     strUsage += "  -rpcsslprivatekeyfile=<file.pem>         " + strprintf(_("Server private key (default: %s)"), "server.pem") + "\n";
     strUsage += "  -rpcsslciphers=<ciphers>                 " + strprintf(_("Acceptable ciphers (default: %s)"), "TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH") + "\n";
+    strUsage += "\n" + _("Updater options:") + "\n";
+    strUsage += "  -updateurl             " + _("Url of json file which holds update information") + "\n";
+    strUsage += "  -updateautocheck       " + _("Check for updates automatically") + "\n";
 
     return strUsage;
 }
@@ -1594,7 +1605,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         LOCK(pwalletMain->cs_wallet);
         LogPrintf("Locking Masternodes:\n");
         uint256 mnTxHash;
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, masternodeConfig.getEntries()) {
             LogPrintf("  %s %s\n", mne.getTxHash(), mne.getOutputIndex());
             mnTxHash.SetHex(mne.getTxHash());
             COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(mne.getOutputIndex()));
@@ -1606,7 +1617,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         LOCK(pwalletMain->cs_wallet);
         LogPrintf("Locking Systemnodes:\n");
         uint256 mnTxHash;
-        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry sne, systemnodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry sne, systemnodeConfig.getEntries()) {
             LogPrintf("  %s %s\n", sne.getTxHash(), sne.getOutputIndex());
             mnTxHash.SetHex(sne.getTxHash());
             COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(sne.getOutputIndex()));

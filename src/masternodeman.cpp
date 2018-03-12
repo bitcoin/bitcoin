@@ -474,8 +474,9 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
         if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
 
-        //it's too new, wait for a cycle
-        if(fFilterSigTime && mn.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
+        // For security reasons and for network stability there is a delay to get the first reward.
+        // The time is calculated as a product of 60 block and node count.
+        if(fFilterSigTime && mn.sigTime + (nMnCount * 1 * 60) > GetAdjustedTime()) continue;
 
         //make sure it has as many confirmations as there are masternodes
         if(mn.GetMasternodeInputAge() < nMnCount) continue;

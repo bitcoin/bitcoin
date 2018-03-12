@@ -1,13 +1,15 @@
 Crown Core staging tree 0.12
 ===============================
-
-`master:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=master)](https://travis-ci.org/crownpay/crown) `v0.12.0.x:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=0.12.0.x)](https://travis-ci.org/Crowndev/crowncoin/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=0.12.1.x)](https://travis-ci.org/Crowndev/crowncoin/branches)
+Travis:  
+`master:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=master)](https://travis-ci.org/crownpay/crown) `v0.12.0.x:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=0.12.0.x)](https://travis-ci.org/Crowndev/crowncoin/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=0.12.1.x)](https://travis-ci.org/Crowndev/crowncoin/branches)  
+Gitlab:  
+`master:` [![pipeline status](http://gitlab.crown.tech/crown/crown-core/badges/master/pipeline.svg)](http://gitlab.crown.tech/crown/crown-core/commits/master)
 
 http://www.crown.tech
 
 Copyright (c) 2009-2015 Bitcoin Core Developers
 
-Copyright (c) 2014-2017 Crown Core Developers
+Copyright (c) 2014-2018 Crown Core Developers
 
 
 What is Crown?

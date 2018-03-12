@@ -89,6 +89,8 @@ private:
     QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
+    QToolBar *toolbar;
+    QActionGroup *tabGroup;
     QAction *overviewAction;
     QAction *historyAction;
     QAction *masternodeAction;
@@ -101,6 +103,7 @@ private:
     QAction *verifyMessageAction;
     QAction *multisigAction;
     QAction *aboutAction;
+    QAction *updateAction;
     QAction *receiveCoinsAction;
     QAction *optionsAction;
     QAction *toggleHideAction;
@@ -133,6 +136,8 @@ private:
     /** Keep track of previous number of blocks, to detect progress */
     int prevBlocks;
     int spinnerFrame;
+
+    bool updateChecked;
 
     /** Create the main UI actions. */
     void createActions(const NetworkStyle *networkStyle);
@@ -175,6 +180,8 @@ public slots:
        @param[in] ret       pointer to a bool that will be modified to whether Ok was clicked (modal only)
     */
     void message(const QString &title, const QString &message, unsigned int style, bool *ret = NULL);
+    void guiEnableSystemnodesChanged(bool);
+    void guiEnableMasternodesChanged(bool);
 
 #ifdef ENABLE_WALLET
     /** Set the encryption status as shown in the UI.
@@ -188,6 +195,12 @@ public slots:
     /** Show incoming transaction notification for new transactions. */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
 #endif // ENABLE_WALLET
+
+private:
+    void enableSystemnodes();
+    void disableSystemnodes();
+    void enableMasternodes();
+    void disableMasternodes();
 
 private slots:
 #ifdef ENABLE_WALLET
@@ -213,11 +226,18 @@ private slots:
 
     /** Show open dialog */
     void openClicked();
+
+    /** Check if update is available and ask to download it.
+      @param[in] askedToCheck true when the check is initiated by user.
+    */
+    void checkUpdate(bool askedToCheck=false);
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();
     /** Show about dialog */
     void aboutClicked();
+    /** Show update dialog */
+    void updateClicked();
     /** Show help message dialog */
     void showHelpMessageClicked();
 #ifndef Q_OS_MAC

@@ -5,6 +5,7 @@
 #ifndef BITCOIN_QT_TRANSACTIONTABLEMODEL_H
 #define BITCOIN_QT_TRANSACTIONTABLEMODEL_H
 
+#include "uint256.h"
 #include "bitcoinunits.h"
 
 #include <QAbstractTableModel>
@@ -15,6 +16,8 @@ class TransactionTablePriv;
 class WalletModel;
 
 class CWallet;
+
+Q_DECLARE_METATYPE(uint256)
 
 /** UI model for the transaction table of a wallet.
  */
@@ -32,7 +35,8 @@ public:
         Date = 2,
         Type = 3,
         ToAddress = 4,
-        Amount = 5
+        Amount = 5,
+        AmountCredit = 6
     };
 
     /** Roles to get specific information from a transaction row.
@@ -59,6 +63,8 @@ public:
         TxIDRole,
         /** Transaction hash */
         TxHashRole,
+        /** Transaction hash as a String*/
+        TxHashStringRole,
         /** Is transaction confirmed? */
         ConfirmedRole,
         /** Formatted amount, without brackets when unconfirmed */

@@ -62,7 +62,6 @@ bool AppInit(int argc, char* argv[])
     boost::thread* detectShutdownThread = NULL;
 
     bool fRet = false;
-
     //
     // Parameters
     //
@@ -185,6 +184,22 @@ bool AppInit(int argc, char* argv[])
         detectShutdownThread->join();
         delete detectShutdownThread;
         detectShutdownThread = NULL;
+    }
+    if (RestartRequested())
+    {
+        // If restart requested cleanup resources and run application again.
+        // The old one will be exited below.
+        PrepareShutdown();
+        CExplicitNetCleanup::callCleanup();
+
+        if (argc > 0)
+        {
+            runCommand(std::string(argv[0]) + " &");
+        }
+        else
+        {
+            fprintf(stderr, "Error: Application name couldn't be detected.");
+        }
     }
     Shutdown();
 
