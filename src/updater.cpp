@@ -105,6 +105,7 @@ void Updater::LoadUpdateInfo()
     if (curl)
     {
         curl_easy_setopt(curl, CURLOPT_URL, updaterInfoUrl.c_str());
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, GetUpdateData);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &updateData);
         res = curl_easy_perform(curl);
@@ -236,6 +237,7 @@ CURLcode Updater::DownloadFile(std::string url, std::string fileName, void(progr
     curl_global_init(CURL_GLOBAL_ALL);
     curl_handle = curl_easy_init();
     curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, false);
     curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
