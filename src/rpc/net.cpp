@@ -212,17 +212,16 @@ static UniValue addnode(const JSONRPCRequest& request)
     std::string strCommand;
     if (!request.params[1].isNull())
         strCommand = request.params[1].get_str();
-    if (request.fHelp || request.params.size() != 2 ||
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3 ||
         (strCommand != "onetry" && strCommand != "add" && strCommand != "remove"))
         throw std::runtime_error(
             RPCHelpMan{"addnode",
                 "\nAttempts to add or remove a node from the addnode list.\n"
-                "Or try a connection to a node once.\n"
-                "Nodes added using addnode (or -connect) are protected from DoS disconnection and are not required to be\n"
-                "full nodes/support SegWit as other outbound peers are (though such peers will not be synced from).\n",
+                "Or try a connection to a node once.\n",
                 {
                     {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The node (see getpeerinfo for nodes)"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
+                    {"privileged", RPCArg::Type::BOOL, /* default */ "true", "If true, nodes added will be protected from DoS disconnection and not required to be full nodes or support segwit as other outbound peers are (though such peers will not be synced from). Only supported for command \"onetry\" for now."},
                 },
                 RPCResults{},
                 RPCExamples{
@@ -235,12 +234,17 @@ static UniValue addnode(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     std::string strNode = request.params[0].get_str();
+    const bool privileged = request.params[2].isNull() ? true : request.params[2].get_bool();
 
     if (strCommand == "onetry")
     {
         CAddress addr;
-        g_connman->OpenNetworkConnection(addr, false, nullptr, strNode.c_str(), false, false, true);
+        g_connman->OpenNetworkConnection(addr, false, nullptr, strNode.c_str(), false, false, privileged);
         return NullUniValue;
+    }
+
+    if (!privileged) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unprivileged connections are only supported for the \"onetry\" command for now");
     }
 
     if (strCommand == "add")
@@ -745,7 +749,7 @@ static const CRPCCommand commands[] =
     { "network",            "getconnectioncount",     &getconnectioncount,     {} },
     { "network",            "ping",                   &ping,                   {} },
     { "network",            "getpeerinfo",            &getpeerinfo,            {} },
-    { "network",            "addnode",                &addnode,                {"node","command"} },
+    { "network",            "addnode",                &addnode,                {"node","command","privileged"} },
     { "network",            "disconnectnode",         &disconnectnode,         {"address", "nodeid"} },
     { "network",            "getaddednodeinfo",       &getaddednodeinfo,       {"node"} },
     { "network",            "getnettotals",           &getnettotals,           {} },
