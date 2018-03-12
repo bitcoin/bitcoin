@@ -124,7 +124,12 @@ class SmsgPaidTest(ParticlTestFramework):
         self.waitForSmsgExchange(4, 1, 0)
 
         msgid = ro['msgid']
-        ro = nodes[1].smsg(msgid)
+        for i in range(5):
+            try:
+                ro = nodes[1].smsg(msgid)
+                break
+            except:
+                time.sleep(1)
         assert(ro['text'] == text_3)
         assert(ro['addressfrom'] == address1)
         assert(ro['addressto'] == address0_1)
@@ -147,10 +152,10 @@ class SmsgPaidTest(ParticlTestFramework):
         ro = nodes[0].smsg(msgid)
         assert(ro['read'] == True)
 
-        ro = nodes[0].smsg(msgid, 'setread', False)
+        ro = nodes[0].smsg(msgid, {'setread':False})
         assert(ro['read'] == False)
 
-        ro = nodes[0].smsg(msgid, 'delete')
+        ro = nodes[0].smsg(msgid, {'delete':True})
         assert(ro['operation'] == 'Deleted')
 
         try:
@@ -161,6 +166,41 @@ class SmsgPaidTest(ParticlTestFramework):
 
         ro = nodes[0].smsggetpubkey(address0_1)
         assert(ro['publickey'] == 'h2UfzZxbhxQPcXDfYTBRGSC7GM77qrLjhtqcmfAnAia9')
+
+
+        filepath = tmpdir+'/sendfile.txt'
+        msg = b"msg in file\0after null sep"
+        with open(filepath,'wb') as fp:
+            fp.write(msg)
+
+        ro = nodes[1].smsgsend(address1, address0_1, filepath, True, 4, False, True)
+        assert(ro['result'] == 'Sent.')
+        msgid = ro['msgid']
+
+        ro = nodes[1].smsgsend(address1, address0_1, msg.hex(), True, 4, False, False, True)
+        msgid2 = ro['msgid']
+        self.stakeBlocks(1, nStakeNode=1)
+
+        for i in range(5):
+            try:
+                ro = nodes[1].smsg(msgid, {'encoding':'hex'})
+                break
+            except:
+                time.sleep(1)
+        assert(msg == bytes.fromhex(ro['hex'][:-2])) # extra null byte gets tacked on
+
+        for i in range(5):
+            try:
+                ro = nodes[1].smsg(msgid2, {'encoding':'hex'})
+                break
+            except:
+                time.sleep(1)
+        assert(msg == bytes.fromhex(ro['hex'][:-2]))
+
+
+
+
+
 
 
 

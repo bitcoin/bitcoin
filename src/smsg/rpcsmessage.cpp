@@ -601,7 +601,7 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
 
 UniValue smsgsend(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() < 3 || request.params.size() > 6)
+    if (request.fHelp || request.params.size() < 3 || request.params.size() > 8)
         throw std::runtime_error(
             "smsgsend \"address_from\" \"address_to\" \"message\" ( paid_msg days_retention testfee )\n"
             "Send an encrypted message from \"address_from\" to \"address_to\".\n"
@@ -612,6 +612,8 @@ UniValue smsgsend(const JSONRPCRequest &request)
             "4. paid_msg             (bool, optional, default=false) Send as paid message.\n"
             "5. days_retention       (int, optional, default=1) Days paid message will be retained by network.\n"
             "6. testfee              (bool, optional, default=false) Don't send the message, only estimate the fee.\n"
+            "7. fromfile             (bool, optional, default=false) Send file as message, path specified in \"message\".\n"
+            "8. decodehex            (bool, optional, default=false) Decode \"message\" from hex before sending.\n"
             "\nResult:\n"
             "{\n"
             "  \"result\": \"Sent\"/\"Not Sent\"       (string) address of public key\n"
@@ -636,6 +638,20 @@ UniValue smsgsend(const JSONRPCRequest &request)
     bool fPaid = request.params[3].isNull() ? false : request.params[3].get_bool();
     int nRetention = request.params[4].isNull() ? 1 : request.params[4].get_int();
     bool fTestFee = request.params[5].isNull() ? false : request.params[5].get_bool();
+    bool fFromFile = request.params[6].isNull() ? false : request.params[6].get_bool();
+    bool fDecodeHex = request.params[7].isNull() ? false : request.params[7].get_bool();
+
+    if (fFromFile && fDecodeHex)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use decodehex with fromfile.");
+
+    if (fDecodeHex)
+    {
+        if (!IsHex(msg))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Expect hex encoded message with decodehex.");
+        std::vector<uint8_t> vData = ParseHex(msg);
+        msg = std::string(vData.begin(), vData.end());
+    };
+
     CAmount nFee;
 
     if (fPaid && Params().GetConsensus().nPaidSmsgTime > GetTime())
@@ -657,7 +673,7 @@ UniValue smsgsend(const JSONRPCRequest &request)
     UniValue result(UniValue::VOBJ);
     std::string sError;
     smsg::SecureMessage smsgOut;
-    if (smsgModule.Send(kiFrom, kiTo, msg, smsgOut, sError, fPaid, nRetention, fTestFee, &nFee) != 0)
+    if (smsgModule.Send(kiFrom, kiTo, msg, smsgOut, sError, fPaid, nRetention, fTestFee, &nFee, fFromFile) != 0)
     {
         result.pushKV("result", "Send failed.");
         result.pushKV("error", sError);
@@ -1337,12 +1353,16 @@ UniValue smsgone(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "smsg \"msgid\" ( \"option\" \"value\")\n"
+            "smsg \"msgid\" ( options )\n"
             "View smsg by msgid.\n"
             "\nArguments:\n"
             "1. \"msgid\"              (string, required) The id of the message to view.\n"
-            "2. \"option\"             (string, optional) An operation to apply to msg.\n"
-            "                              values: delete | setread true/false"
+            "2. options              (json, optional) Options object.\n"
+            "{\n"
+            "       \"delete\": bool                 (bool, optional) Delete msg if true.\n"
+            "       \"setread\": bool                (bool, optional) Set read status to value.\n"
+            "       \"encoding\": str                (string, optional, default=\"ascii\") Display message data in encoding, values: \"hex\".\n"
+            "}\n"
             "\nResult:\n"
             "{\n"
             "  \"msgid\": \"...\"                    (string) the message identifier\n"
@@ -1356,8 +1376,7 @@ UniValue smsgone(const JSONRPCRequest &request)
     RPCTypeCheckObj(request.params,
         {
             {"msgid",             UniValueType(UniValue::VSTR)},
-            {"option",            UniValueType(UniValue::VSTR)},
-            {"value",             UniValueType(UniValue::VSTR)},
+            {"option",            UniValueType(UniValue::VOBJ)},
         }, true, false);
 
     std::string sMsgId = request.params[0].get_str();
@@ -1367,14 +1386,13 @@ UniValue smsgone(const JSONRPCRequest &request)
     std::vector<uint8_t> vMsgId = ParseHex(sMsgId.c_str());
     std::string sType;
 
-    std::string sOp = request.params[1].isStr() ? request.params[1].get_str() : "";
-
     uint8_t chKey[30];
     chKey[1] = 'm';
     memcpy(chKey+2, vMsgId.data(), 28);
     smsg::SecMsgStored smsgStored;
     UniValue result(UniValue::VOBJ);
 
+    UniValue options = request.params[1];
     {
         LOCK(smsg::cs_smsgDB);
         smsg::SecMsgDB dbMsg;
@@ -1393,28 +1411,29 @@ UniValue smsgone(const JSONRPCRequest &request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unknown message id.");
         };
 
-        if (sOp.size() > 0)
+        if (options.isObject())
         {
-            if (sOp == "delete")
+            options = request.params[1].get_obj();
+            if (options["delete"].isBool() && options["delete"].get_bool() == true)
             {
                 if (!dbMsg.EraseSmesg(chKey))
                     throw JSONRPCError(RPC_INTERNAL_ERROR, "EraseSmesg failed.");
                 result.pushKV("operation", "Deleted");
             } else
-            if (sOp == "setread")
             {
-                bool nv = GetBool(request.params[2]);
-                if (nv)
-                    smsgStored.status &= ~SMSG_MASK_UNREAD;
-                else
-                    smsgStored.status |= SMSG_MASK_UNREAD;
+                // Can't mix delete and other operations
+                if (options["setread"].isBool())
+                {
+                    bool nv = options["setread"].get_bool();
+                    if (nv)
+                        smsgStored.status &= ~SMSG_MASK_UNREAD;
+                    else
+                        smsgStored.status |= SMSG_MASK_UNREAD;
 
-                if (!dbMsg.WriteSmesg(chKey, smsgStored))
-                    throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteSmesg failed.");
-                result.pushKV("operation", strprintf("Set read status to: %s", nv ? "true" : "false"));
-            } else
-            {
-                throw JSONRPCError(RPC_INTERNAL_ERROR, std::string("Unknown operation: ") + sOp);
+                    if (!dbMsg.WriteSmesg(chKey, smsgStored))
+                        throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteSmesg failed.");
+                    result.pushKV("operation", strprintf("Set read status to: %s", nv ? "true" : "false"));
+                };
             };
         };
     }
@@ -1423,7 +1442,7 @@ UniValue smsgone(const JSONRPCRequest &request)
     result.pushKV("location", sType);
     PushTime(result, "timereceived", smsgStored.timeReceived);
     result.pushKV("addressto", CBitcoinAddress(smsgStored.addrTo).ToString());
-    result.pushKV("addressoutbox", CBitcoinAddress(smsgStored.addrOutbox).ToString());
+    //result.pushKV("addressoutbox", CBitcoinAddress(smsgStored.addrOutbox).ToString());
     result.pushKV("read", UniValue(bool(!(smsgStored.status & SMSG_MASK_UNREAD))));
 
     const smsg::SecureMessage *psmsg = (smsg::SecureMessage*) &smsgStored.vchMessage[0];
@@ -1433,12 +1452,36 @@ UniValue smsgone(const JSONRPCRequest &request)
     smsg::MessageData msg;
     bool fInbox = sType == "inbox" ? true : false;
     uint32_t nPayload = smsgStored.vchMessage.size() - smsg::SMSG_HDR_LEN;
+    result.pushKV("payloadsize", (int)nPayload);
+
+    std::string sEnc;
+    if (options.isObject() && options["encoding"].isStr())
+        sEnc = options["encoding"].get_str();
+
     int rv;
     if ((rv = smsgModule.Decrypt(false, fInbox ? smsgStored.addrTo : smsgStored.addrOutbox,
         &smsgStored.vchMessage[0], &smsgStored.vchMessage[smsg::SMSG_HDR_LEN], nPayload, msg)) == 0)
     {
         result.pushKV("addressfrom", msg.sFromAddress);
-        result.pushKV("text", std::string((char*)&msg.vchMessage[0]));
+
+        if (sEnc == "")
+        {
+            if (msg.vchMessage.size() < 4096)
+                result.pushKV("text", std::string((char*)&msg.vchMessage[0]));
+            else
+                result.pushKV("hex", HexStr(msg.vchMessage));
+        } else
+        if (sEnc == "ascii")
+        {
+            result.pushKV("text", std::string((char*)&msg.vchMessage[0]));
+        } else
+        if (sEnc == "hex")
+        {
+            result.pushKV("hex", HexStr(msg.vchMessage));
+        } else
+        {
+            result.pushKV("unknown_encoding", sEnc);
+        };
     } else
     {
         result.pushKV("error", "decrypt failed");
@@ -1462,13 +1505,13 @@ static const CRPCCommand commands[] =
     { "smsg",               "smsgaddlocaladdress",    &smsgaddlocaladdress,    {"address"} },
     { "smsg",               "smsgimportprivkey",      &smsgimportprivkey,      {"privkey","label"} },
     { "smsg",               "smsggetpubkey",          &smsggetpubkey,          {"address"} },
-    { "smsg",               "smsgsend",               &smsgsend,               {"address_from","address_to","message","paid_msg","days_retention","testfee"} },
+    { "smsg",               "smsgsend",               &smsgsend,               {"address_from","address_to","message","paid_msg","days_retention","testfee","fromfile","decodehex"} },
     { "smsg",               "smsgsendanon",           &smsgsendanon,           {"address_to","message"} },
     { "smsg",               "smsginbox",              &smsginbox,              {"mode"} },
     { "smsg",               "smsgoutbox",             &smsgoutbox,             {"mode"} },
     { "smsg",               "smsgbuckets",            &smsgbuckets,            {"mode"} },
     { "smsg",               "smsgview",               &smsgview,               {}},
-    { "smsg",               "smsg",                   &smsgone,                {"msgid","operation","value"}},
+    { "smsg",               "smsg",                   &smsgone,                {"msgid","options"}},
 };
 
 void RegisterSmsgRPCCommands(CRPCTable &tableRPC)

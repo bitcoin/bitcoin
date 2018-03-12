@@ -2919,9 +2919,7 @@ int CSMSG::Store(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayl
     FILE *fp;
     errno = 0;
     if (!(fp = fopen(fullpath.string().c_str(), "ab")))
-    {
         return errorN(SMSG_GENERAL_ERROR, "fopen failed: %s.", strerror(errno));
-    };
 
     // On windows ftell will always return 0 after fopen(ab), call fseek to set.
     errno = 0;
@@ -3371,7 +3369,7 @@ int CSMSG::Encrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyID 
 
 int CSMSG::Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
     SecureMessage &smsg, std::string &sError, bool fPaid,
-    size_t nDaysRetention, bool fTestFee, CAmount *nFee)
+    size_t nDaysRetention, bool fTestFee, CAmount *nFee, bool fFromFile)
 {
 #ifdef ENABLE_WALLET
     /* Encrypt secure message, and place it on the network
@@ -3398,17 +3396,49 @@ int CSMSG::Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
         return errorN(SMSG_WALLET_LOCKED, "%s: %s.", __func__, sError);
     };
 
+    std::string sFromFile;
+    if (fFromFile)
+    {
+        FILE *fp;
+        errno = 0;
+        if (!(fp = fopen(message.c_str(), "rb")))
+            return errorN(SMSG_GENERAL_ERROR, sError, __func__, "fopen failed: %s.", strerror(errno));
+
+        if (fseek(fp, 0, SEEK_END) != 0)
+        {
+            fclose(fp);
+            return errorN(SMSG_GENERAL_ERROR, "fseek failed: %s.", strerror(errno));
+        };
+
+        int64_t ofs = ftell(fp);
+        if (ofs > SMSG_MAX_MSG_BYTES_PAID)
+        {
+            fclose(fp);
+            return errorN(SMSG_MESSAGE_TOO_LONG, sError, __func__, "Message is too long, %d > %d", ofs, SMSG_MAX_MSG_BYTES_PAID);
+        };
+        rewind(fp);
+
+        sFromFile.resize(ofs);
+
+        int64_t nRead = fread(&sFromFile[0], 1, ofs, fp);
+        fclose(fp);
+        if (ofs != nRead)
+            return errorN(SMSG_GENERAL_ERROR, sError, __func__, "fread failed: %s.", strerror(errno));
+    };
+
+    std::string &sData = fFromFile ? sFromFile : message;
+
     if (fPaid)
     {
-        if (message.size() > SMSG_MAX_MSG_BYTES_PAID)
+        if (sData.size() > SMSG_MAX_MSG_BYTES_PAID)
         {
-            sError = strprintf("Message is too long, %d > %d", message.size(), SMSG_MAX_MSG_BYTES_PAID);
+            sError = strprintf("Message is too long, %d > %d", sData.size(), SMSG_MAX_MSG_BYTES_PAID);
             return errorN(SMSG_MESSAGE_TOO_LONG, "%s: %s.", __func__, sError);
         };
     } else
-    if (message.size() > (fSendAnonymous ? SMSG_MAX_AMSG_BYTES : SMSG_MAX_MSG_BYTES))
+    if (sData.size() > (fSendAnonymous ? SMSG_MAX_AMSG_BYTES : SMSG_MAX_MSG_BYTES))
     {
-        sError = strprintf("Message is too long, %d > %d", message.size(), fSendAnonymous ? SMSG_MAX_AMSG_BYTES : SMSG_MAX_MSG_BYTES);
+        sError = strprintf("Message is too long, %d > %d", sData.size(), fSendAnonymous ? SMSG_MAX_AMSG_BYTES : SMSG_MAX_MSG_BYTES);
         return errorN(SMSG_MESSAGE_TOO_LONG, "%s: %s.", __func__, sError);
     };
 
@@ -3417,7 +3447,7 @@ int CSMSG::Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
     if (fPaid)
         smsg.nonce[0] = nDaysRetention;
 
-    if ((rv = Encrypt(smsg, addressFrom, addressTo, message)) != 0)
+    if ((rv = Encrypt(smsg, addressFrom, addressTo, sData)) != 0)
     {
         sError = GetString(rv);
         return errorN(rv, "%s: %s.", __func__, sError);
@@ -3498,7 +3528,7 @@ int CSMSG::Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
             LogPrintf("Encrypting a copy for outbox, using address %s\n", CBitcoinAddress(addressOutbox).ToString());
 
         SecureMessage smsgForOutbox(fPaid);
-        if ((rv = Encrypt(smsgForOutbox, addressFrom, addressOutbox, message)) != 0)
+        if ((rv = Encrypt(smsgForOutbox, addressFrom, addressOutbox, sData)) != 0)
         {
             LogPrintf("%s: Encrypt for outbox failed, %d.\n", __func__, rv);
         } else
