@@ -535,7 +535,7 @@ private:
     typedef std::map<uint256, std::vector<CSpentIndexKey> > mapSpentIndexInserted;
     mapSpentIndexInserted mapSpentInserted;
 
-    std::map<CService, uint256> mapProTxRegisterAddresses;
+    std::map<CService, uint256> mapProTxAddresses;
     std::map<CKeyID, uint256> mapProTxPubKeyIDs;
 
     void UpdateParent(txiter entry, txiter parent, bool add);

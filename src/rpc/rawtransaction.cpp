@@ -130,12 +130,19 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
         entry.push_back(Pair("extraPayload", HexStr(tx.vExtraPayload)));
     }
 
-    if (tx.nVersion >= 3 && tx.nType == TRANSACTION_PROVIDER_REGISTER) {
+    if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue proTxObj;
             proTx.ToJson(proTxObj);
             entry.push_back(Pair("proTx", proTxObj));
+        }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        CProUpServTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue proTxObj;
+            proTx.ToJson(proTxObj);
+            entry.push_back(Pair("proUpServTx", proTxObj));
         }
     }
 

@@ -573,7 +573,8 @@ bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state,
         // check version 3 transaction types
         if (tx.nVersion >= 3) {
             if (tx.nType != TRANSACTION_NORMAL &&
-                tx.nType != TRANSACTION_PROVIDER_REGISTER) {
+                tx.nType != TRANSACTION_PROVIDER_REGISTER &&
+                tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_NORMAL)
