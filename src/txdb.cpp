@@ -140,7 +140,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
 						if(ExtractDestination(out.scriptPubKey, address))
 							ta << "[\"" << CSyscoinAddress(address).ToString().c_str() << "\"," << out.nValue << "]" << endl;
 						else
-							LogPrintf("Could not extract address for pubkey %s\n", HexStr(out.scriptPubKey).c_str()))
+							LogPrintf("Could not extract address for pubkey %s\n", HexStr(out.scriptPubKey).c_str()));
                     }
                 }
                 stats.nSerializedSize += 32 + pcursor->GetValueSize();
