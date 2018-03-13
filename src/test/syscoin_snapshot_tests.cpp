@@ -22,6 +22,17 @@ void SendSnapShotPayment(const std::string &strSend)
 	std::string strSendMany = "sendmany \"\" {" + strSend + "}";
 	UniValue r;
 	BOOST_CHECK_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
+	string strSendSendNewAddress = "";
+	BOOST_CHECK_THROW(r = CallRPC("mainnet1", "getnewaddress", false), runtime_error);
+	string newaddress = r.get_str();
+	for (int i = 0; i < 250; i++)
+	{
+		if (strSendSendNewAddress != "")
+			strSendSendNewAddress += ",";
+		strSendSendNewAddress += "\\\"" + newaddress + "\\\":10";
+	}
+	strSendMany = "sendmany \"\" {" + strSendSendNewAddress + "}";
+	BOOST_CHECK_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
