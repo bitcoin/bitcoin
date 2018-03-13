@@ -318,6 +318,18 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->externalSignerPath, OptionsModel::ExternalSignerPath);
     mapper->addMapping(ui->m_enable_psbt_controls, OptionsModel::EnablePSBTControls);
 
+    {
+        QString radio_name_lower = "addresstype" + model->data(model->index(OptionsModel::addresstype, 0), Qt::EditRole).toString().toLower();
+        radio_name_lower.replace("-", "_");
+        for (int i = ui->layoutAddressType->count(); i--; ) {
+            QRadioButton * const radio = qobject_cast<QRadioButton*>(ui->layoutAddressType->itemAt(i)->widget());
+            if (!radio) {
+                continue;
+            }
+            radio->setChecked(radio->objectName().toLower() == radio_name_lower);
+        }
+    }
+
     /* Network */
     mapper->addMapping(ui->networkPort, OptionsModel::NetworkPort);
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -458,6 +470,20 @@ void OptionsDialog::on_okButton_clicked()
 
     model->setData(model->index(OptionsModel::FontForMoney, 0), ui->moneyFont->itemData(ui->moneyFont->currentIndex()));
     model->setData(model->index(OptionsModel::FontForQRCodes, 0), ui->qrFont->itemData(ui->qrFont->currentIndex()));
+
+    {
+        QString new_addresstype;
+        for (int i = ui->layoutAddressType->count(); i--; ) {
+            QRadioButton * const radio = qobject_cast<QRadioButton*>(ui->layoutAddressType->itemAt(i)->widget());
+            if (!(radio && radio->objectName().startsWith("addressType") && radio->isChecked())) {
+                continue;
+            }
+            new_addresstype = radio->objectName().mid(11).toLower();
+            new_addresstype.replace("_", "-");
+            break;
+        }
+        model->setData(model->index(OptionsModel::addresstype, 0), new_addresstype);
+    }
 
     if (ui->maxuploadtargetCheckbox->isChecked()) {
         model->setData(model->index(OptionsModel::maxuploadtarget, 0), ui->maxuploadtarget->value());
