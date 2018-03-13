@@ -48,7 +48,7 @@ void StartNodes()
 		boost::filesystem::remove(boost::filesystem::system_complete("node2//wallet.dat"));
 	if(boost::filesystem::exists(boost::filesystem::system_complete("node3/wallet.dat")))
 		boost::filesystem::remove(boost::filesystem::system_complete("node3//wallet.dat"));
-	//StopMainNetNodes();
+	StopMainNetNodes();
 	printf("Starting 3 nodes in a regtest setup...\n");
 	StartNode("node1");
 	StartNode("node2");
@@ -2499,9 +2499,9 @@ SyscoinTestingSetup::~SyscoinTestingSetup()
 }
 SyscoinMainNetSetup::SyscoinMainNetSetup()
 {
-	//StartMainNetNodes();
+	StartMainNetNodes();
 }
 SyscoinMainNetSetup::~SyscoinMainNetSetup()
 {
-	//StopMainNetNodes();
+	StopMainNetNodes();
 }
