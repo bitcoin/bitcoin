@@ -390,42 +390,36 @@ public:
         nOrderPos = -1;
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        if (ser_action.ForRead())
-            Init(nullptr);
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
         char fSpent = false;
+        mapValue_t mapValueCopy = mapValue;
 
-        if (!ser_action.ForRead())
-        {
-            mapValue["fromaccount"] = strFromAccount;
-
-            WriteOrderPos(nOrderPos, mapValue);
-
-            if (nTimeSmart)
-                mapValue["timesmart"] = strprintf("%u", nTimeSmart);
+        mapValueCopy["fromaccount"] = strFromAccount;
+        WriteOrderPos(nOrderPos, mapValueCopy);
+        if (nTimeSmart) {
+            mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
         }
 
-        READWRITE(*static_cast<CMerkleTx*>(this));
+        s << *static_cast<const CMerkleTx*>(this);
         std::vector<CMerkleTx> vUnused; //!< Used to be vtxPrev
-        READWRITE(vUnused);
-        READWRITE(mapValue);
-        READWRITE(vOrderForm);
-        READWRITE(fTimeReceivedIsTxTime);
-        READWRITE(nTimeReceived);
-        READWRITE(fFromMe);
-        READWRITE(fSpent);
+        s << vUnused << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << fSpent;
+    }
 
-        if (ser_action.ForRead())
-        {
-            strFromAccount = mapValue["fromaccount"];
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        Init(nullptr);
+        char fSpent;
 
-            ReadOrderPos(nOrderPos, mapValue);
+        s >> *static_cast<CMerkleTx*>(this);
+        std::vector<CMerkleTx> vUnused; //!< Used to be vtxPrev
+        s >> vUnused >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> fSpent;
 
-            nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(mapValue["timesmart"]) : 0;
-        }
+        strFromAccount = std::move(mapValue["fromaccount"]);
+        ReadOrderPos(nOrderPos, mapValue);
+        nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(mapValue["timesmart"]) : 0;
 
         mapValue.erase("fromaccount");
         mapValue.erase("spent");
@@ -608,48 +602,49 @@ public:
         nEntryNo = 0;
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    template <typename Stream>
+    void Serialize(Stream& s) const {
         int nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH))
-            READWRITE(nVersion);
-        //! Note: strAccount is serialized as part of the key, not here.
-        READWRITE(nCreditDebit);
-        READWRITE(nTime);
-        READWRITE(LIMITED_STRING(strOtherAccount, 65536));
-
-        if (!ser_action.ForRead())
-        {
-            WriteOrderPos(nOrderPos, mapValue);
-
-            if (!(mapValue.empty() && _ssExtra.empty()))
-            {
-                CDataStream ss(s.GetType(), s.GetVersion());
-                ss.insert(ss.begin(), '\0');
-                ss << mapValue;
-                ss.insert(ss.end(), _ssExtra.begin(), _ssExtra.end());
-                strComment.append(ss.str());
-            }
+        if (!(s.GetType() & SER_GETHASH)) {
+            s << nVersion;
         }
+        //! Note: strAccount is serialized as part of the key, not here.
+        s << nCreditDebit << nTime << strOtherAccount;
 
-        READWRITE(LIMITED_STRING(strComment, 65536));
+        mapValue_t mapValueCopy = mapValue;
+        WriteOrderPos(nOrderPos, mapValueCopy);
+
+        std::string strCommentCopy = strComment;
+        if (!mapValueCopy.empty() || !_ssExtra.empty()) {
+            CDataStream ss(s.GetType(), s.GetVersion());
+            ss.insert(ss.begin(), '\0');
+            ss << mapValueCopy;
+            ss.insert(ss.end(), _ssExtra.begin(), _ssExtra.end());
+            strCommentCopy.append(ss.str());
+        }
+        s << strCommentCopy;
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s) {
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH)) {
+            s >> nVersion;
+        }
+        //! Note: strAccount is serialized as part of the key, not here.
+        s >> nCreditDebit >> nTime >> LIMITED_STRING(strOtherAccount, 65536) >> LIMITED_STRING(strComment, 65536);
 
         size_t nSepPos = strComment.find("\0", 0, 1);
-        if (ser_action.ForRead())
-        {
-            mapValue.clear();
-            if (std::string::npos != nSepPos)
-            {
-                CDataStream ss(std::vector<char>(strComment.begin() + nSepPos + 1, strComment.end()), s.GetType(), s.GetVersion());
-                ss >> mapValue;
-                _ssExtra = std::vector<char>(ss.begin(), ss.end());
-            }
-            ReadOrderPos(nOrderPos, mapValue);
+        mapValue.clear();
+        if (std::string::npos != nSepPos) {
+            CDataStream ss(std::vector<char>(strComment.begin() + nSepPos + 1, strComment.end()), s.GetType(), s.GetVersion());
+            ss >> mapValue;
+            _ssExtra = std::vector<char>(ss.begin(), ss.end());
         }
-        if (std::string::npos != nSepPos)
+        ReadOrderPos(nOrderPos, mapValue);
+        if (std::string::npos != nSepPos) {
             strComment.erase(nSepPos);
+        }
 
         mapValue.erase("n");
     }
