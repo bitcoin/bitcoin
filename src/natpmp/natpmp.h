@@ -46,7 +46,7 @@ typedef unsigned short uint16_t;
 #include <netinet/in.h>
 #endif
 
-#include <natpmp_declspec.h>
+#include <natpmp/natpmp_declspec.h>
 
 typedef struct {
     int s;    /* socket */
