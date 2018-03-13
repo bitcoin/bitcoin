@@ -394,26 +394,26 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman)
     }
 }
 
-void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
+void CMasternodeSync::BlockChecked(const CBlock& block)
 {
-    LogPrint(BCLog::MNODESYNC, "CMasternodeSync::AcceptedBlockHeader -- pindexNew->nHeight: %d\n", pindexNew->nHeight);
+    LogPrint(BCLog::MNODESYNC, "CMasternodeSync::BlockChecked -- block hash: %s\n", block.GetHash().ToString());
 
     if (!IsBlockchainSynced()) {
         // Postpone timeout each time new block header arrives while we are still syncing blockchain
-        BumpAssetLastTime("CMasternodeSync::AcceptedBlockHeader");
+        BumpAssetLastTime("CMasternodeSync::BlockChecked");
     }
 }
 
-void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman)
+void CMasternodeSync::NewPoWValidBlock(const CBlockIndex *pindex)
 {
-    LogPrint(BCLog::MNODESYNC, "CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
+    LogPrint(BCLog::MNODESYNC, "CMasternodeSync::NewPoWValidBlock -- pindex->nHeight: %d\n", pindex->nHeight);
 
     if (IsFailed() || IsSynced() || !pindexBestHeader)
         return;
 
     if (!IsBlockchainSynced()) {
         // Postpone timeout each time new block arrives while we are still syncing blockchain
-        BumpAssetLastTime("CMasternodeSync::NotifyHeaderTip");
+        BumpAssetLastTime("CMasternodeSync::NewPoWValidBlock");
     }
 }
 

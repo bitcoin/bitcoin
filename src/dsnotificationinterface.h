@@ -18,8 +18,8 @@ public:
 
 protected:
     // CValidationInterface
-    void AcceptedBlockHeader(const CBlockIndex *pindexNew);
-    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
+    void BlockChecked(const CBlock& block, const CValidationState& state) override;
+    void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
     void TransactionAddedToMempool(const CTransactionRef& tx) override;
 

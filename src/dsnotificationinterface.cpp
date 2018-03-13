@@ -20,14 +20,14 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
     UpdatedBlockTip(chainActive.Tip(), nullptr, IsInitialBlockDownload());
 }
 
-void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
+void CDSNotificationInterface::BlockChecked(const CBlock& block, const CValidationState& state)
 {
-    masternodeSync.AcceptedBlockHeader(pindexNew);
+    masternodeSync.BlockChecked(block);
 }
 
-void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
+void CDSNotificationInterface::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block)
 {
-    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
+    masternodeSync.NewPoWValidBlock(pindex);
 }
 
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
