@@ -2646,20 +2646,6 @@ bool CConnman::DisconnectNode(NodeId id)
     return false;
 }
 
-void CConnman::RelayTransaction(const CTransaction& tx)
-{
-    uint256 hash = tx.GetHash();
-    int nInv = static_cast<bool>(CPrivateSend::GetDSTX(hash)) ? MSG_DSTX :
-                (instantsend.HasTxLockRequest(hash) ? MSG_TXLOCK_REQUEST : MSG_TX);
-    CInv inv(nInv, hash);
-
-    LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes)
-    {
-        pnode->PushInventory(inv);
-    }
-}
-
 void CConnman::RelayInv(CInv &inv, const int minProtoVersion) {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes)
