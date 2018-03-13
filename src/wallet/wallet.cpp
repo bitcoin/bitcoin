@@ -408,7 +408,7 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool fForMixingOnl
     }
 
     CCrypter crypter;
-    CKeyingMaterial vMasterKey;
+    CKeyingMaterial _vMasterKey;
 
     {
         LOCK(cs_wallet);
@@ -416,9 +416,9 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool fForMixingOnl
         {
             if (!crypter.SetKeyFromPassphrase(strWalletPassphraseFinal, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
-            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
+            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, _vMasterKey))
                 continue; // try another master key
-            if (CCryptoKeyStore::Unlock(vMasterKey, fForMixingOnly))
+            if (CCryptoKeyStore::Unlock(_vMasterKey, fForMixingOnly))
                 if(nWalletBackups == -2) {
                     TopUpKeyPool();
                     LogPrintf("Keypool replenished, re-initializing automatic backups.\n");
@@ -672,10 +672,10 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     if (IsCrypted())
         return false;
 
-    CKeyingMaterial vMasterKey;
+    CKeyingMaterial _vMasterKey;
 
-    vMasterKey.resize(WALLET_CRYPTO_KEY_SIZE);
-    GetStrongRandBytes(&vMasterKey[0], WALLET_CRYPTO_KEY_SIZE);
+    _vMasterKey.resize(WALLET_CRYPTO_KEY_SIZE);
+    GetStrongRandBytes(&_vMasterKey[0], WALLET_CRYPTO_KEY_SIZE);
 
     CMasterKey kMasterKey;
 
@@ -698,7 +698,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
     if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod))
         return false;
-    if (!crypter.Encrypt(vMasterKey, kMasterKey.vchCryptedKey))
+    if (!crypter.Encrypt(_vMasterKey, kMasterKey.vchCryptedKey))
         return false;
 
     {
@@ -713,7 +713,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         }
         pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
 
-        if (!EncryptKeys(vMasterKey))
+        if (!EncryptKeys(_vMasterKey))
         {
             pwalletdbEncryption->TxnAbort();
             delete pwalletdbEncryption;
@@ -1498,7 +1498,7 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
 CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) const
 {
     if (!MoneyRange(txout.nValue))
-        throw std::runtime_error("CWallet::GetCredit(): value out of range");
+        throw std::runtime_error(std::string(__func__) + ": value out of range");
     return ((IsMine(txout) & filter) ? txout.nValue : 0);
 }
 
@@ -1931,7 +1931,7 @@ CAmount CWalletTx::GetDebit(const isminefilter& filter) const
             debit += nDebitCached;
         else
         {
-            nDebitCached = pwallet->GetDebit(*tx, ISMINE_SPENDABLE);
+            nDebitCached = pwallet->GetDebit(*this, ISMINE_SPENDABLE);
             fDebitCached = true;
             debit += nDebitCached;
         }
@@ -1942,7 +1942,7 @@ CAmount CWalletTx::GetDebit(const isminefilter& filter) const
             debit += nWatchDebitCached;
         else
         {
-            nWatchDebitCached = pwallet->GetDebit(*tx, ISMINE_WATCH_ONLY);
+            nWatchDebitCached = pwallet->GetDebit(*this, ISMINE_WATCH_ONLY);
             fWatchDebitCached = true;
             debit += nWatchDebitCached;
         }
@@ -1956,7 +1956,7 @@ CAmount CWalletTx::GetCredit(const isminefilter& filter) const
     if (IsCoinBase() && GetBlocksToMaturity() > 0)
         return 0;
 
-    int64_t credit = 0;
+    CAmount credit = 0;
     if (filter & ISMINE_SPENDABLE)
     {
         // GetBalance can assume transactions in mapWallet won't change
@@ -1964,7 +1964,7 @@ CAmount CWalletTx::GetCredit(const isminefilter& filter) const
             credit += nCreditCached;
         else
         {
-            nCreditCached = pwallet->GetCredit(*tx, ISMINE_SPENDABLE);
+            nCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
             fCreditCached = true;
             credit += nCreditCached;
         }
@@ -1975,7 +1975,7 @@ CAmount CWalletTx::GetCredit(const isminefilter& filter) const
             credit += nWatchCreditCached;
         else
         {
-            nWatchCreditCached = pwallet->GetCredit(*tx, ISMINE_WATCH_ONLY);
+            nWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY);
             fWatchCreditCached = true;
             credit += nWatchCreditCached;
         }
@@ -1989,7 +1989,7 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
     {
         if (fUseCache && fImmatureCreditCached)
             return nImmatureCreditCached;
-        nImmatureCreditCached = pwallet->GetCredit(*tx, ISMINE_SPENDABLE);
+        nImmatureCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
         fImmatureCreditCached = true;
         return nImmatureCreditCached;
     }
@@ -2027,13 +2027,13 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
     return nCredit;
 }
 
-CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool fUseCache) const
+CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
 {
     if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
     {
         if (fUseCache && fImmatureWatchCreditCached)
             return nImmatureWatchCreditCached;
-        nImmatureWatchCreditCached = pwallet->GetCredit(*tx, ISMINE_WATCH_ONLY);
+        nImmatureWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY);
         fImmatureWatchCreditCached = true;
         return nImmatureWatchCreditCached;
     }
@@ -2041,7 +2041,7 @@ CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool fUseCache) const
     return 0;
 }
 
-CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool fUseCache) const
+CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
 {
     if (pwallet == nullptr)
         return 0;
@@ -2153,7 +2153,7 @@ CAmount CWalletTx::GetChange() const
 {
     if (fChangeCached)
         return nChangeCached;
-    nChangeCached = pwallet->GetChange(*tx);
+    nChangeCached = pwallet->GetChange(*this);
     fChangeCached = true;
     return nChangeCached;
 }
@@ -2167,7 +2167,7 @@ bool CWalletTx::InMempool() const
 bool CWalletTx::IsTrusted() const
 {
     // Quick answer in most cases
-    if (!CheckFinalTx(*tx))
+    if (!CheckFinalTx(*this))
         return false;
     int nDepth = GetDepthInMainChain();
     if (nDepth >= 1)
@@ -2542,7 +2542,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 
-void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth, AvailableCoinsType nCoinType, bool fUseInstantSend) const
+void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, AvailableCoinsType nCoinType, bool fUseInstantSend, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth) const
 {
     vCoins.clear();
 
@@ -2556,7 +2556,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             const uint256& wtxid = it->first;
             const CWalletTx* pcoin = &(*it).second;
 
-            if (!CheckFinalTx(*pcoin->tx))
+            if (!CheckFinalTx(*pcoin))
                 continue;
 
             if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
@@ -2637,7 +2637,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint((*it).first, i)))
                     continue;
 
-                if (IsLockedCoin((*it).first, i) || nCoinType != ONLY_1000)
+                if (IsLockedCoin((*it).first, i) && !(nCoinType == ONLY_1000))
                     continue;
 
                 if (IsSpent(wtxid, i))
@@ -2645,6 +2645,9 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
                 isminetype mine = IsMine(pcoin->tx->vout[i]);
 
+                if (mine == ISMINE_NO) {
+                    continue;
+                }
 
                 bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
                 bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
@@ -2930,7 +2933,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     // Note: this function should never be used for "always free" tx types like dstx
 
     std::vector<COutput> vCoins(vAvailableCoins);
-    AvailableCoins(vCoins, true, coinControl, false, nCoinType, fUseInstantSend);
+    AvailableCoins(vCoins, true, coinControl, nCoinType, fUseInstantSend);
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
@@ -3119,7 +3122,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     nValueRet = 0;
 
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, nullptr, false, ONLY_DENOMINATED);
+    AvailableCoins(vCoins, true, nullptr, ONLY_DENOMINATED);
 
     std::random_shuffle(vCoins.rbegin(), vCoins.rend(), GetRandInt);
 
@@ -3287,7 +3290,7 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
     nValueRet = 0;
 
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl, false, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
+    AvailableCoins(vCoins, true, coinControl, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
 
     //order the array so largest nondenom are first, then denominations, then very small inputs.
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
@@ -3341,7 +3344,7 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubK
 
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
-    AvailableCoins(vPossibleCoins, true, nullptr, false, ONLY_1000);
+    AvailableCoins(vPossibleCoins, true, nullptr, ONLY_1000);
     if(vPossibleCoins.empty()) {
         LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate any valid masternode vin\n");
         return false;
@@ -3421,7 +3424,7 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount)
 bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 {
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, fOnlyConfirmed, nullptr, false, ONLY_PRIVATESEND_COLLATERAL);
+    AvailableCoins(vCoins, fOnlyConfirmed, nullptr, ONLY_PRIVATESEND_COLLATERAL);
 
     return !vCoins.empty();
 }
@@ -3580,7 +3583,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         {
             std::vector<CTxDSIn> vecTxDSInTmp;
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, true, &coin_control, false, nCoinType, fUseInstantSend);
+            AvailableCoins(vAvailableCoins, true, &coin_control, nCoinType, fUseInstantSend);
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservekey so
@@ -3664,33 +3667,25 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 // Choose coins to use
-                nValueIn = 0;
-                setCoins.clear();
-
-                if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, &coin_control, nCoinType, fUseInstantSend))
-                {
-                    if (nCoinType == ONLY_NONDENOMINATED) {
-                        strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction that are not equal 1000 CHC.");
-                    } else if (nCoinType == ONLY_DENOMINATED) {
-                        strFailReason = _("Unable to locate enough PrivateSend denominated funds for this transaction.");
-                        strFailReason += " " + _("PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
-                    } else if (nValueIn < nValueToSelect) {
-                        strFailReason = _("Insufficient funds.");
-                        if (fUseInstantSend) {
-                            // could be not true but most likely that's the reason
-                            strFailReason += " " + strprintf(_("InstantSend requires inputs with at least %d confirmations, you might need to wait a few minutes and try again."), INSTANTSEND_CONFIRMATIONS_REQUIRED);
-                        }
-                    }
-
-                    return false;
-                }
-
                 if (pick_new_inputs) {
                     nValueIn = 0;
                     setCoins.clear();
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, &coin_control))
+
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, &coin_control, nCoinType, fUseInstantSend))
                     {
-                        strFailReason = _("Insufficient funds");
+                        if (nCoinType == ONLY_NONDENOMINATED) {
+                            strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction that are not equal 1000 CHC.");
+                        } else if (nCoinType == ONLY_DENOMINATED) {
+                            strFailReason = _("Unable to locate enough PrivateSend denominated funds for this transaction.");
+                            strFailReason += " " + _("PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
+                        } else if (nValueIn < nValueToSelect) {
+                            strFailReason = _("Insufficient funds.");
+                            if (fUseInstantSend) {
+                                // could be not true but most likely that's the reason
+                                strFailReason += " " + strprintf(_("InstantSend requires inputs with at least %d confirmations, you might need to wait a few minutes and try again."), INSTANTSEND_CONFIRMATIONS_REQUIRED);
+                            }
+                        }
+
                         return false;
                     }
                 }
