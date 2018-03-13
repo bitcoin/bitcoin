@@ -174,7 +174,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
  *
  * Note that only the non-witness portion of the transaction is checked here.
  */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, bool taproot_active, const std::string& reason_prefix, std::string& out_reason)
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, bool taproot_active, const std::string& reason_prefix, std::string& out_reason, const ignore_rejects_type& ignore_rejects)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
@@ -186,38 +186,42 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
         std::vector<std::vector<unsigned char> > vSolutions;
         TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);
         if (whichType == TxoutType::NONSTANDARD) {
-            out_reason = reason_prefix + "script-unknown";
-            return false;
+            MaybeReject("script-unknown");
         } else if (whichType == TxoutType::WITNESS_UNKNOWN) {
             // WITNESS_UNKNOWN failures are typically also caught with a policy
             // flag in the script interpreter, but it can be helpful to catch
             // this type of NONSTANDARD transaction earlier in transaction
             // validation.
-            out_reason = reason_prefix + "witness-unknown";
-            return false;
+            MaybeReject("witness-unknown");
         } else if (whichType == TxoutType::SCRIPTHASH) {
+            if (!tx.vin[i].scriptSig.IsPushOnly()) {
+                // The only way we got this far, is if the user ignored scriptsig-not-pushonly.
+                // However, this case is invalid, and will be caught later on.
+                // But for now, we don't want to run the [possibly expensive] script here.
+                continue;
+            }
             std::vector<std::vector<unsigned char> > stack;
             // convert the scriptSig into a stack, so we can inspect the redeemScript
             if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
             {
+                // This case is also invalid or a bug
                 out_reason = reason_prefix + "scriptsig-failure";
                 return false;
             }
             if (stack.empty())
             {
+                // Also invalid
                 out_reason = reason_prefix + "scriptcheck-missing";
                 return false;
             }
             CScript subscript(stack.back().begin(), stack.back().end());
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
-                out_reason = reason_prefix + "scriptcheck-sigops";
-                return false;
+                MaybeReject("scriptcheck-sigops");
             }
         } else if (whichType == TxoutType::WITNESS_V1_TAPROOT) {
             // Don't allow Taproot spends unless Taproot is active.
             if (!taproot_active) {
-                out_reason = reason_prefix + "witness-taproot";
-                return false;
+                MaybeReject("witness-taproot");
             }
         }
     }
