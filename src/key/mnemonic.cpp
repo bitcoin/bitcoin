@@ -80,7 +80,13 @@ static void NormaliseUnicode(std::string &str)
     ufal::unilib::utf8::decode(str, u32);
     ufal::unilib::uninorms::nfkd(u32);
     ufal::unilib::utf8::encode(u32, str);
-}
+};
+
+static void NormaliseInput(std::string &str)
+{
+    part::TrimWhitespace(str);
+    NormaliseUnicode(str);
+};
 
 int GetWord(int o, const char *pwl, int max, std::string &sWord)
 {
@@ -287,7 +293,7 @@ int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<ui
     LogPrint(BCLog::HDWALLET, "%s: Language %d.\n", __func__, nLanguage);
 
     std::string sWordList = sWordListIn;
-    NormaliseUnicode(sWordList);
+    NormaliseInput(sWordList);
 
     if (nLanguage == -1)
         nLanguage = MnemonicDetectLanguage(sWordList);
@@ -461,10 +467,10 @@ int MnemonicToSeed(const std::string &sMnemonic, const std::string &sPasswordIn,
     vSeed.resize(64);
 
     std::string sWordList = sMnemonic;
-    NormaliseUnicode(sWordList);
+    NormaliseInput(sWordList);
 
     std::string sPassword = sPasswordIn;
-    NormaliseUnicode(sPassword);
+    NormaliseInput(sPassword);
 
 
     int nIterations = 2048;

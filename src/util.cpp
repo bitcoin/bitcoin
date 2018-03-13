@@ -647,6 +647,35 @@ std::string &TrimQuotes(std::string &s)
     return s;
 };
 
+std::string &TrimWhitespace(std::string &s)
+{
+    LTrimWhitespace(s);
+    RTrimWhitespace(s);
+    return s;
+};
+
+std::string &LTrimWhitespace(std::string &s)
+{
+    std::string::iterator i;
+    for (i = s.begin(); i != s.end(); ++i)
+        if (!std::isspace(*i))
+            break;
+    if (i != s.begin())
+        s.erase(s.begin(), i);
+    return s;
+};
+
+std::string &RTrimWhitespace(std::string &s)
+{
+    std::string::reverse_iterator i;
+    for (i = s.rbegin(); i != s.rend(); ++i)
+        if (!std::isspace(*i))
+            break;
+    if (i != s.rbegin())
+        s.erase(i.base(), s.end());
+    return s;
+};
+
 static int daysInMonth(int year, int month)
 {
     return month == 2 ? (year % 4 ? 28 : (year % 100 ? 29 : (year % 400 ? 28 : 29))) : ((month - 1) % 7 % 2 ? 30 : 31);

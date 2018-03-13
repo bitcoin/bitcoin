@@ -258,6 +258,9 @@ namespace part
     bool stringsMatchI(const std::string &sString, const std::string &sFind, int type);
     std::string AmountToString(CAmount nValue);
     std::string &TrimQuotes(std::string &s);
+    std::string &LTrimWhitespace(std::string &s);
+    std::string &RTrimWhitespace(std::string &s);
+    std::string &TrimWhitespace(std::string &s);
     int64_t strToEpoch(const char *input, bool fFillMax=false);
 }
 
