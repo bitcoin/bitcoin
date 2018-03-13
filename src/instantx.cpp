@@ -44,7 +44,7 @@ CInstantSend instantsend;
 // CInstantSend
 //
 
-void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
 {
     if(fLiteMode) return; // disable all Dash specific functionality
 
@@ -82,7 +82,7 @@ void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, C
     }
 }
 
-bool CInstantSend::ProcessTxLockRequest(const CTxLockRequest& txLockRequest, CConnman& connman)
+bool CInstantSend::ProcessTxLockRequest(const CTxLockRequest& txLockRequest, CConnman* connman)
 {
     LOCK2(cs_main, cs_instantsend);
 
@@ -176,7 +176,7 @@ void CInstantSend::CreateEmptyTxLockCandidate(const uint256& txHash)
     mapTxLockCandidates.insert(std::make_pair(txHash, CTxLockCandidate(txLockRequest)));
 }
 
-void CInstantSend::Vote(const uint256& txHash, CConnman& connman)
+void CInstantSend::Vote(const uint256& txHash, CConnman* connman)
 {
     AssertLockHeld(cs_main);
     LOCK(cs_instantsend);
@@ -188,7 +188,7 @@ void CInstantSend::Vote(const uint256& txHash, CConnman& connman)
     TryToFinalizeLockCandidate(itLockCandidate->second);
 }
 
-void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
+void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman* connman)
 {
     if(!fMasternodeMode) return;
 
@@ -289,7 +289,7 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
 }
 
 //received a consensus vote
-bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman& connman)
+bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman* connman)
 {
     // cs_main, cs_wallet and cs_instantsend should be already locked
     AssertLockHeld(cs_main);
@@ -421,7 +421,7 @@ bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman& 
     return true;
 }
 
-void CInstantSend::ProcessOrphanTxLockVotes(CConnman& connman)
+void CInstantSend::ProcessOrphanTxLockVotes(CConnman* connman)
 {
     LOCK(cs_main);
 #ifdef ENABLE_WALLET
@@ -845,7 +845,7 @@ bool CInstantSend::IsTxLockCandidateTimedOut(const uint256& txHash)
     return false;
 }
 
-void CInstantSend::Relay(const uint256& txHash, CConnman& connman)
+void CInstantSend::Relay(const uint256& txHash, CConnman* connman)
 {
     LOCK(cs_instantsend);
 
@@ -1000,7 +1000,7 @@ int CTxLockRequest::GetMaxSignatures() const
 // CTxLockVote
 //
 
-bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
+bool CTxLockVote::IsValid(CNode* pnode, CConnman* connman) const
 {
     if(!mnodeman.Has(outpointMasternode)) {
         LogPrint(BCLog::INSTSEND, "CTxLockVote::IsValid -- Unknown masternode %s\n", outpointMasternode.ToStringShort());
@@ -1088,10 +1088,10 @@ bool CTxLockVote::Sign()
     return true;
 }
 
-void CTxLockVote::Relay(CConnman& connman) const
+void CTxLockVote::Relay(CConnman* connman) const
 {
     CInv inv(MSG_TXLOCK_VOTE, GetHash());
-    connman.RelayInv(inv);
+    connman->RelayInv(inv);
 }
 
 bool CTxLockVote::IsExpired(int nHeight) const
@@ -1138,7 +1138,7 @@ bool COutPointLock::HasMasternodeVoted(const COutPoint& outpointMasternodeIn) co
     return mapMasternodeVotes.count(outpointMasternodeIn);
 }
 
-void COutPointLock::Relay(CConnman& connman) const
+void COutPointLock::Relay(CConnman* connman) const
 {
     std::map<COutPoint, CTxLockVote>::const_iterator itVote = mapMasternodeVotes.begin();
     while(itVote != mapMasternodeVotes.end()) {
@@ -1219,7 +1219,6 @@ void CTxLockCandidate::Relay(CConnman* connman) const
         {
             pnode->PushInventory(inv);
         });
-        return true;
     }
     std::map<COutPoint, COutPointLock>::const_iterator itOutpointLock = mapOutPointLocks.begin();
     while(itOutpointLock != mapOutPointLocks.end()) {

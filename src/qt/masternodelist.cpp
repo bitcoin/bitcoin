@@ -15,8 +15,6 @@
 #include <QTimer>
 #include <QMessageBox>
 
-CConnman& connman = *g_connman;
-
 int GetOffsetFromUtc()
 {
 #if QT_VERSION < 0x050200
@@ -114,14 +112,14 @@ void MasternodeList::StartAlias(std::string strAlias)
             bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
             int nDoS;
-            if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, *g_connman)) {
+            if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, g_connman.get())) {
                 strError = "Failed to verify MNB";
                 fSuccess = false;
             }
 
             if(fSuccess) {
                 strStatusHtml += "<br>Successfully started masternode.";
-                mnodeman.NotifyMasternodeUpdates(*g_connman);
+                mnodeman.NotifyMasternodeUpdates(g_connman.get());
             } else {
                 strStatusHtml += "<br>Failed to start masternode.<br>Error: " + strError;
             }
@@ -159,14 +157,14 @@ void MasternodeList::StartAll(std::string strCommand)
         bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
         int nDoS;
-        if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, *g_connman)) {
+        if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, g_connman.get())) {
             strError = "Failed to verify MNB";
             fSuccess = false;
         }
 
         if(fSuccess) {
             nCountSuccessful++;
-            mnodeman.NotifyMasternodeUpdates(*g_connman);
+            mnodeman.NotifyMasternodeUpdates(g_connman.get());
         } else {
             nCountFailed++;
             strFailedHtml += "\nFailed to start " + mne.getAlias() + ". Error: " + strError;

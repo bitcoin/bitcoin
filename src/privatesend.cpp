@@ -79,12 +79,12 @@ bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMasternode) const
     return true;
 }
 
-bool CDarksendQueue::Relay(CConnman& connman)
+bool CDarksendQueue::Relay(CConnman* connman)
 {
-    connman.ForEachNode([&connman, this](CNode* pnode) {
+    connman->ForEachNode([&connman, this](CNode* pnode) {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
         if (pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
-            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSQUEUE, (*this)));
+            connman->PushMessage(pnode, msgMaker.Make(NetMsgType::DSQUEUE, (*this)));
     });
     return true;
 }
@@ -480,7 +480,7 @@ void ThreadCheckPrivateSend(CConnman& connman)
         MilliSleep(1000);
 
         // try to sync from all available nodes, one step at a time
-        masternodeSync.ProcessTick(connman);
+        masternodeSync.ProcessTick(&connman);
 
         if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
 
@@ -489,26 +489,26 @@ void ThreadCheckPrivateSend(CConnman& connman)
             // make sure to check all masternodes first
             mnodeman.Check();
 
-            mnodeman.ProcessPendingMnbRequests(connman);
-            mnodeman.ProcessPendingMnvRequests(connman);
+            mnodeman.ProcessPendingMnbRequests(&connman);
+            mnodeman.ProcessPendingMnvRequests(&connman);
 
             // check if we should activate or ping every few minutes,
             // slightly postpone first run to give net thread a chance to connect to some peers
             if(nTick % MASTERNODE_MIN_MNP_SECONDS == 15)
-                activeMasternode.ManageState(connman);
+                activeMasternode.ManageState(&connman);
 
             if(nTick % 60 == 0) {
-                mnodeman.ProcessMasternodeConnections(connman);
-                mnodeman.CheckAndRemove(connman);
+                mnodeman.ProcessMasternodeConnections(&connman);
+                mnodeman.CheckAndRemove(&connman);
                 mnpayments.CheckAndRemove();
                 instantsend.CheckAndRemove();
             }
             if(fMasternodeMode && (nTick % (60 * 5) == 0)) {
-                mnodeman.DoFullVerificationStep(connman);
+                mnodeman.DoFullVerificationStep(&connman);
             }
 
             if(nTick % (60 * 5) == 0) {
-                governance.DoMaintenance(connman);
+                governance.DoMaintenance(&connman);
             }
         }
     }

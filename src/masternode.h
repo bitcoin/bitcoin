@@ -69,8 +69,8 @@ public:
     bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
     bool CheckSignature(const CPubKey& pubKeyMasternode, int &nDos) const;
     bool SimpleCheck(int& nDos);
-    bool CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, int& nDos, CConnman& connman);
-    void Relay(CConnman& connman);
+    bool CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, int& nDos, CConnman* connman);
+    void Relay(CConnman* connman);
 
     explicit operator bool() const;
 };
@@ -202,7 +202,7 @@ public:
     // CALCULATE A RANK AGAINST OF GIVEN BLOCK
     arith_uint256 CalculateScore(const uint256& blockHash) const;
 
-    bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& connman);
+    bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman* connman);
 
     static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey);
     static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey, int& nHeightRet);
@@ -340,12 +340,12 @@ public:
     static bool Create(const std::string& strService, const std::string& strKey, const std::string& strTxHash, const std::string& strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline = false);
 
     bool SimpleCheck(int& nDos);
-    bool Update(CMasternode* pmn, int& nDos, CConnman& connman);
+    bool Update(CMasternode* pmn, int& nDos, CConnman* connman);
     bool CheckOutpoint(int& nDos);
 
     bool Sign(const CKey& keyCollateralAddress);
     bool CheckSignature(int& nDos) const;
-    void Relay(CConnman& connman) const;
+    void Relay(CConnman* connman) const;
 };
 
 class CMasternodeVerification

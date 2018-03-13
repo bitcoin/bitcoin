@@ -577,8 +577,7 @@ void OverviewPage::privateSendStatus()
 }
 
 void OverviewPage::privateSendAuto(){
-    CConnman& connman = *g_connman;
-    privateSendClient.DoAutomaticDenominating(connman);
+    privateSendClient.DoAutomaticDenominating(g_connman.get());
 }
 
 void OverviewPage::privateSendReset(){

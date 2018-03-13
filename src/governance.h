@@ -299,12 +299,12 @@ public:
      */
     bool ConfirmInventoryRequest(const CInv& inv);
 
-    void SyncSingleObjAndItsVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
-    void SyncAll(CNode* pnode, CConnman& connman);
+    void SyncSingleObjAndItsVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman* connman);
+    void SyncAll(CNode* pnode, CConnman* connman);
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
 
-    void DoMaintenance(CConnman& connman);
+    void DoMaintenance(CConnman* connman);
 
     CGovernanceObject *FindGovernanceObject(const uint256& nHash);
 
@@ -313,7 +313,7 @@ public:
     std::vector<CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime);
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
-    void AddGovernanceObject(CGovernanceObject& govobj, CConnman& connman, CNode* pfrom = nullptr);
+    void AddGovernanceObject(CGovernanceObject& govobj, CConnman* connman, CNode* pfrom = nullptr);
 
     std::string GetRequiredPaymentsString(int nBlockHeight);
 
@@ -366,7 +366,7 @@ public:
         }
     }
 
-    void UpdatedBlockTip(const CBlockIndex *pindex, CConnman& connman);
+    void UpdatedBlockTip(const CBlockIndex *pindex, CConnman* connman);
     int64_t GetLastDiffTime() { return nTimeLastDiff; }
     void UpdateLastDiffTime(int64_t nTimeIn) { nTimeLastDiff = nTimeIn; }
 
@@ -399,7 +399,7 @@ public:
 
     bool MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateFailStatus, bool fForce, bool& fRateCheckBypassed);
 
-    bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman) {
+    bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception, CConnman* connman) {
         bool fOK = ProcessVote(nullptr, vote, exception, connman);
         if(fOK) {
             vote.Relay(connman);
@@ -407,11 +407,11 @@ public:
         return fOK;
     }
 
-    void CheckMasternodeOrphanVotes(CConnman& connman);
+    void CheckMasternodeOrphanVotes(CConnman* connman);
 
-    void CheckMasternodeOrphanObjects(CConnman& connman);
+    void CheckMasternodeOrphanObjects(CConnman* connman);
 
-    void CheckPostponedObjects(CConnman& connman);
+    void CheckPostponedObjects(CConnman* connman);
 
     bool AreRateChecksEnabled() const {
         LOCK(cs);
@@ -420,11 +420,11 @@ public:
 
     void InitOnLoad();
 
-    int RequestGovernanceObjectVotes(CNode* pnode, CConnman& connman);
-    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman);
+    int RequestGovernanceObjectVotes(CNode* pnode, CConnman* connman);
+    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman* connman);
 
 private:
-    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false);
+    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman* connman, bool fUseFilter = false);
 
     void AddInvalidVote(const CGovernanceVote& vote)
     {
@@ -436,7 +436,7 @@ private:
         cmmapOrphanVotes.Insert(vote.GetHash(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME));
     }
 
-    bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman);
+    bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman* connman);
 
     /// Called to indicate a requested object has been received
     bool AcceptObjectMessage(const uint256& nHash);
@@ -446,7 +446,7 @@ private:
 
     static bool AcceptMessage(const uint256& nHash, hash_s_t& setHash);
 
-    void CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception, CConnman& connman);
+    void CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception, CConnman* connman);
 
     void RebuildIndexes();
 
@@ -454,7 +454,7 @@ private:
 
     bool UpdateCurrentWatchdog(CGovernanceObject& watchdogNew);
 
-    void RequestOrphanObjects(CConnman& connman);
+    void RequestOrphanObjects(CConnman* connman);
 
     void CleanOrphanObjects();
 

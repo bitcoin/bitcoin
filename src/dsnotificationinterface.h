@@ -10,7 +10,7 @@
 class CDSNotificationInterface : public CValidationInterface
 {
 public:
-    CDSNotificationInterface(CConnman& connmanIn): connman(connmanIn) {}
+    CDSNotificationInterface(CConnman* connmanIn): connman(connmanIn) {}
     virtual ~CDSNotificationInterface() = default;
 
     // a small helper to initialize current block height in sub-modules on startup
@@ -24,7 +24,7 @@ protected:
     void TransactionAddedToMempool(const CTransactionRef& tx) override;
 
 private:
-    CConnman& connman;
+    CConnman* connman;
 };
 
 #endif // BITCOIN_DSNOTIFICATIONINTERFACE_H

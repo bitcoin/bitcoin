@@ -60,7 +60,7 @@ UniValue privatesend(const JSONRPCRequest& request)
             return "Mixing is not supported from masternodes";
 
         privateSendClient.fEnablePrivateSend = true;
-        bool result = privateSendClient.DoAutomaticDenominating(*g_connman);
+        bool result = privateSendClient.DoAutomaticDenominating(g_connman.get());
         return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClient.GetStatus() + ", will retry"));
     }
 
@@ -296,7 +296,7 @@ UniValue masternode(const JSONRPCRequest& request)
                 bool fResult = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
                 int nDoS;
-                if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, *g_connman)) {
+                if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, g_connman.get())) {
                     strError = "Failed to verify MNB";
                     fResult = false;
                 }
@@ -305,7 +305,7 @@ UniValue masternode(const JSONRPCRequest& request)
                 if(!fResult) {
                     statusObj.push_back(Pair("errorMessage", strError));
                 }
-                mnodeman.NotifyMasternodeUpdates(*g_connman);
+                mnodeman.NotifyMasternodeUpdates(g_connman.get());
                 break;
             }
         }
@@ -349,7 +349,7 @@ UniValue masternode(const JSONRPCRequest& request)
             bool fResult = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
             int nDoS;
-            if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, *g_connman)) {
+            if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, g_connman.get())) {
                 strError = "Failed to verify MNB";
                 fResult = false;
             }
@@ -367,7 +367,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
             resultsObj.push_back(Pair("status", statusObj));
         }
-        mnodeman.NotifyMasternodeUpdates(*g_connman);
+        mnodeman.NotifyMasternodeUpdates(g_connman.get());
 
         UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Successfully started %d masternodes, failed to start %d, total %d", nSuccessful, nFailed, nSuccessful + nFailed)));
@@ -844,8 +844,8 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             int nDos = 0;
             bool fResult;
             if (mnb.CheckSignature(nDos)) {
-                fResult = mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDos, *g_connman);
-                mnodeman.NotifyMasternodeUpdates(*g_connman);
+                fResult = mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDos, g_connman.get());
+                mnodeman.NotifyMasternodeUpdates(g_connman.get());
             } else fResult = false;
 
             if(fResult) {
