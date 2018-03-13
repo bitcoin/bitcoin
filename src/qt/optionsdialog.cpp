@@ -252,6 +252,18 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->subFeeFromAmount, OptionsModel::SubFeeFromAmount);
     mapper->addMapping(ui->externalSignerPath, OptionsModel::ExternalSignerPath);
 
+    {
+        QString radio_name_lower = "addresstype" + model->data(model->index(OptionsModel::addresstype, 0), Qt::EditRole).toString().toLower();
+        radio_name_lower.replace("-", "_");
+        for (int i = ui->layoutAddressType->count(); i--; ) {
+            QRadioButton * const radio = qobject_cast<QRadioButton*>(ui->layoutAddressType->itemAt(i)->widget());
+            if (!radio) {
+                continue;
+            }
+            radio->setChecked(radio->objectName().toLower() == radio_name_lower);
+        }
+    }
+
     /* Network */
     mapper->addMapping(ui->networkPort, OptionsModel::NetworkPort);
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -363,6 +375,20 @@ void OptionsDialog::on_okButton_clicked()
                 return;
             }
         }
+    }
+
+    {
+        QString new_addresstype;
+        for (int i = ui->layoutAddressType->count(); i--; ) {
+            QRadioButton * const radio = qobject_cast<QRadioButton*>(ui->layoutAddressType->itemAt(i)->widget());
+            if (!(radio && radio->objectName().startsWith("addressType") && radio->isChecked())) {
+                continue;
+            }
+            new_addresstype = radio->objectName().mid(11).toLower();
+            new_addresstype.replace("_", "-");
+            break;
+        }
+        model->setData(model->index(OptionsModel::addresstype, 0), new_addresstype);
     }
 
     if (ui->maxuploadtargetCheckbox->isChecked()) {
