@@ -2379,7 +2379,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 
     if (semMasternodeOutbound == nullptr) {
         // initialize semaphore
-        semMasternodeOutbound = new CSemaphore(MAX_OUTBOUND_MASTERNODE_CONNECTIONS);
+        semMasternodeOutbound = MakeUnique<CSemaphore>(MAX_OUTBOUND_MASTERNODE_CONNECTIONS);
     }
 
     //
