@@ -117,7 +117,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
 	io::stream_buffer<io::file_sink> buf("utxo.json");
 	std::ostream ta(&buf);
 	ta << "[";
-
+	map<string, CAmount> mapAddressToAmount;
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = GetBestBlock();
     ss << stats.hashBlock;
@@ -137,8 +137,9 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
                         ss << out;
                         nTotalAmount += out.nValue;
 						// SYSCOIN snapshot
-						if(ExtractDestination(out.scriptPubKey, address))
-							ta << "[\"" << CSyscoinAddress(address).ToString().c_str() << "\"," << out.nValue << "]" << endl;
+						if (ExtractDestination(out.scriptPubKey, address)) {
+							mapAddressToAmount[CSyscoinAddress(address).ToString()] += out.nValue;
+						}
 						else
 							LogPrintf("Could not extract address for pubkey %s\n", HexStr(out.scriptPubKey).c_str());
                     }
@@ -160,6 +161,9 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
 	// SYSCOIN snapshot
+	for (auto &addressAmount : mapAddressToAmount) {
+		ta << "[\"" << addressAmount.first.c_str() << "\"," << addressAmount.second << "]" << endl;
+	}
 	ta << "]";
     return true;
 }
