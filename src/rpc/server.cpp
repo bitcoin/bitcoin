@@ -52,12 +52,11 @@ void RPCServer::OnStopped(std::function<void ()> slot)
 }
 
 void RPCTypeCheck(const UniValue& params,
-                  const std::list<UniValue::VType>& typesExpected,
+                  const std::list<UniValueType>& typesExpected,
                   bool fAllowNull)
 {
     unsigned int i = 0;
-    for (UniValue::VType t : typesExpected)
-    {
+    for (const UniValueType& t : typesExpected) {
         if (params.size() <= i)
             break;
 
@@ -69,10 +68,10 @@ void RPCTypeCheck(const UniValue& params,
     }
 }
 
-void RPCTypeCheckArgument(const UniValue& value, UniValue::VType typeExpected)
+void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected)
 {
-    if (value.type() != typeExpected) {
-        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s, got %s", uvTypeName(typeExpected), uvTypeName(value.type())));
+    if (!typeExpected.typeAny && value.type() != typeExpected.type) {
+        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s, got %s", uvTypeName(typeExpected.type), uvTypeName(value.type())));
     }
 }
 
