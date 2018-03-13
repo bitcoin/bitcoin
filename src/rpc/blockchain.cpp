@@ -687,6 +687,7 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
 	io::stream_buffer<io::file_sink> buf("utxo.json");
 	std::ostream ta(&buf);
 	ta << "[";
+	map<string, CAmount> mapAddressToAmount;
     boost::scoped_ptr<CCoinsViewCursor> pcursor(view->Cursor());
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
@@ -713,7 +714,7 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
                     nTotalAmount += out.nValue;
 					// SYSCOIN snapshot
 					if (ExtractDestination(out.scriptPubKey, address))
-						ta << "[\"" << CSyscoinAddress(address, CChainParams::ADDRESS_OLDSYS).ToString() << "\"," << out.nValue << "]" << endl;
+						mapAddressToAmount[CSyscoinAddress(address, CChainParams::ADDRESS_OLDSYS).ToString()] += out.nValue;
 					else
 						LogPrintf("Could not extract address for pubkey %s\n", HexStr(out.scriptPubKey).c_str());
                 }
@@ -728,6 +729,9 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
 	// SYSCOIN snapshot
+	for (auto &addressAmount : mapAddressToAmount) {
+		ta << "[\"" << addressAmount.first << "\"," << addressAmount.second << "]" << endl;
+	}
 	ta << "]";
     return true;
 }
