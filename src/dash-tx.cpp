@@ -507,7 +507,6 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     // starts as a clone of the raw tx:
     CMutableTransaction mergedTx{tx};
     const CTransaction txv{tx};
-    bool fComplete = true;
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
 
@@ -595,7 +594,6 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         const CTxIn& txin = mergedTx.vin[i];
         const Coin& coin = view.AccessCoin(txin.prevout);
         if (coin.IsSpent()) {
-            fComplete = false;
             continue;
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
@@ -609,13 +607,6 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         // ... and merge in other signatures:
         sigdata = CombineSignatures(prevPubKey, MutableTransactionSignatureChecker(&mergedTx, i, amount), sigdata, DataFromTransaction(txv, i));
         UpdateTransaction(mergedTx, i, sigdata);
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i, amount)))
-            fComplete = false;
-    }
-
-    if (fComplete) {
-        // do nothing... for now
-        // perhaps store this for later optional JSON output
     }
 
     tx = mergedTx;
