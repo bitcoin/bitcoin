@@ -1424,6 +1424,8 @@ bool AppInitMain()
 
         uiInterface.InitMessage(_("Loading block index..."));
 
+        LOCK(cs_main);
+
         nStart = GetTimeMillis();
         do {
             try {
@@ -1457,8 +1459,9 @@ bool AppInitMain()
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
-                if (!mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashGenesisBlock) == 0)
+                if (!mapBlockIndex.empty() && !LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
+                }
 
                 // Check for changed -txindex state
                 if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
@@ -1532,16 +1535,13 @@ bool AppInitMain()
                             MIN_BLOCKS_TO_KEEP);
                     }
 
-                    {
-                        LOCK(cs_main);
-                        CBlockIndex* tip = chainActive.Tip();
-                        RPCNotifyBlockChange(true, tip);
-                        if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
-                            strLoadError = _("The block database contains a block which appears to be from the future. "
-                                    "This may be due to your computer's date and time being set incorrectly. "
-                                    "Only rebuild the block database if you are sure that your computer's date and time are correct");
-                            break;
-                        }
+                    CBlockIndex* tip = chainActive.Tip();
+                    RPCNotifyBlockChange(true, tip);
+                    if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
+                        strLoadError = _("The block database contains a block which appears to be from the future. "
+                                "This may be due to your computer's date and time being set incorrectly. "
+                                "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                        break;
                     }
 
                     if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview.get(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
