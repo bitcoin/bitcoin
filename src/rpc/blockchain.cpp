@@ -713,7 +713,7 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
                     nTotalAmount += out.nValue;
 					// SYSCOIN snapshot
 					if (ExtractDestination(out.scriptPubKey, address))
-						ta << "[\"" << CSyscoinAddress(address).ToString() << "\"," << out.nValue << "]" << endl;
+						ta << "[\"" << CSyscoinAddress(address, CChainParams::ADDRESS_OLDSYS).ToString() << "\"," << out.nValue << "]" << endl;
 					else
 						LogPrintf("Could not extract address for pubkey %s\n", HexStr(out.scriptPubKey).c_str());
                 }
