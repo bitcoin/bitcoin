@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <addresstablemodel.h>
+#include <qt/addresstablemodel.h>
 
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>

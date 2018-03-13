@@ -25,19 +25,19 @@
 #include <qt/utilitydialog.h>
 
 #ifdef ENABLE_WALLET
-#include <walletframe.h>
-#include <walletmodel.h>
+#include <qt/walletframe.h>
+#include <qt/walletmodel.h>
 #endif // ENABLE_WALLET
 
 #ifdef Q_OS_MAC
-#include <macdockiconhandler.h>
+#include <qt/macdockiconhandler.h>
 #endif
 
 #include <init.h>
 #include <ui_interface.h>
 #include <util.h>
 #include <masternode-sync.h>
-#include <masternodelist.h>
+#include <qt/masternodelist.h>
 
 #include <iostream>
 

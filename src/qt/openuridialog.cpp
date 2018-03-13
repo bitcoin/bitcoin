@@ -5,7 +5,7 @@
 #include <qt/openuridialog.h>
 #include <qt/forms/ui_openuridialog.h>
 
-#include <gqt/uiutil.h>
+#include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
 #include <QUrl>

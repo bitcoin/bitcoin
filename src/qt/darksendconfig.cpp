@@ -5,7 +5,7 @@
 #include <qt/guiconstants.h>
 #include <qt/optionsmodel.h>
 #include <privatesend-client.h>
-#include <walletmodel.h>
+#include <qt/walletmodel.h>
 
 #include <QMessageBox>
 #include <QPushButton>

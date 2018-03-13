@@ -14,12 +14,11 @@
 
 #include <amount.h>
 #include <init.h>
-#include <intro.h>
+#include <qt/intro.h>
 #include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
 #include <net.h>
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
-#include <qt/intro.h>
 
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>

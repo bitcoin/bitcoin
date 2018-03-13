@@ -1,4 +1,4 @@
-#include <masternodelist.h>
+#include <qt/masternodelist.h>
 #include <qt/forms/ui_masternodelist.h>
 
 #include <activemasternode.h>

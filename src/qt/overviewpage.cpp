@@ -19,7 +19,7 @@
 #include <qt/walletmodel.h>
 
 #include <instantx.h>
-#include <darksendconfig.h>
+#include <qt/darksendconfig.h>
 #include <masternode-sync.h>
 #include <privatesend-client.h>
 
