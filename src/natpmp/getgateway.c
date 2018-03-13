@@ -117,7 +117,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <iphlpapi.h>
 #endif
 
-#include "getgateway.h"
+#include <getgateway.h>
 
 #ifndef _WIN32
 #define SUCCESS (0)
