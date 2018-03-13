@@ -263,11 +263,7 @@ private:
     void startThread();
 };
 
-<<<<<<< HEAD:src/qt/chaincoin.cpp
-#include <chaincoin.moc>
-=======
-#include <qt/bitcoin.moc>
->>>>>>> e7b3163... qt: refactor: Changes to make include paths absolute:src/qt/bitcoin.cpp
+#include <qt/chaincoin.moc>
 
 BitcoinCore::BitcoinCore():
     QObject()
