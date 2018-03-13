@@ -771,32 +771,38 @@ UniValue extkey(const JSONRPCRequest &request)
         return NullUniValue;
 
     static const char *help = ""
-        "extkey [info|list|account|gen|import|importAccount|setMaster|setDefaultAccount|deriveAccount|options]\n"
-        "extkey [\"info\"] [key] [path]\n"
-        "extkey list [show_secrets] - default\n"
+        "extkey \"mode\"\n"
+        "\"mode\" can be: info|list|account|gen|import|importAccount|setMaster|setDefaultAccount|deriveAccount|options\n"
+        "    Default: list, or info when called like: extkey \"key\"\n"
+        "\n"
+        "extkey info \"key\" ( \"path\" )\n"
+        "    Return info for provided \"key\" or key at \"path\" from \"key\"\n"
+        "extkey list ( show_secrets )\n"
         "    List loose and account ext keys.\n"
-        "extkey account <key/id> [show_secrets]\n"
+        "extkey account ( \"key/id\" show_secrets )\n"
         "    Display details of account.\n"
-        "extkey key <key/id> [show_secrets]\n"
-        "    Display details of loose key.\n"
-        "extkey gen [passphrase] [num hashes] [seed string]\n"
+        "    Show default account when called without parameters.\n"
+        "extkey key \"key/id\" ( show_secrets )\n"
+        "    Display details of loose extkey in wallet.\n"
+        "extkey gen \"passphrase\" ( numhashes \"seedstring\" )\n"
+        "    DEPRECATED\n"
         "    If no passhrase is specified key will be generated from random data.\n"
         "    Warning: It is recommended to not use the passphrase\n"
-        "extkey import <key> [label] [bip44] [save_bip44_key]\n"
+        "extkey import \"key\" ( \"label\" bip44 save_bip44_key )\n"
         "    Add loose key to wallet.\n"
         "    If bip44 is set import will add the key derived from <key> on the bip44 path.\n"
         "    If save_bip44_key is set import will save the bip44 key to the wallet.\n"
-        "extkey importAccount <key> [time_scan_from] [label] \n"
+        "extkey importAccount \"key\" ( time_scan_from \"label\" ) \n"
         "    Add account key to wallet.\n"
         "        time_scan_from: N no check, Y-m-d date to start scanning the blockchain for owned txns.\n"
-        "extkey setMaster <key/id>\n"
+        "extkey setMaster \"key/id\"\n"
         "    Set a private ext key as current master key.\n"
         "    key can be a extkeyid or full key, but must be in the wallet.\n"
-        "extkey setDefaultAccount <id>\n"
+        "extkey setDefaultAccount \"id\"\n"
         "    Set an account as the default.\n"
-        "extkey deriveAccount [label] [path]\n"
-        "    Make a new account from the current master key, saves to wallet.\n"
-        "extkey options <key> [optionName] [newValue]\n"
+        "extkey deriveAccount ( \"label\" \"path\" )\n"
+        "    Make a new account from the current master key, save to wallet.\n"
+        "extkey options \"key\" ( \"optionName\" \"newValue\" )\n"
         "    Manage keys and accounts\n"
         "\n";
 
@@ -1759,92 +1765,6 @@ UniValue extkeygenesisimport(const JSONRPCRequest &request)
     return extkeyimportinternal(request, true);
 }
 
-
-UniValue keyinfo(const JSONRPCRequest &request)
-{
-    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
-
-    static const char *help = ""
-        "keyinfo \"key\" ( show_secret )\n"
-        "Return public key.\n"
-        "\n";
-
-    if (request.fHelp) // defaults to info, will always take at least 1 parameter
-        throw std::runtime_error(help);
-
-    if (request.params.size() < 1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Please specify a key."));
-
-    // TODO: show public keys with unlocked wallet?
-    EnsureWalletIsUnlocked(pwallet);
-
-
-    std::string sKey = request.params[0].get_str();
-
-    UniValue result(UniValue::VOBJ);
-
-
-    CExtKey58 eKey58;
-    CExtKeyPair ekp;
-    if (eKey58.Set58(sKey.c_str()) == 0)
-    {
-        // Key was provided directly
-        ekp = eKey58.GetKey();
-        result.pushKV("key_type", "extaddress");
-        result.pushKV("mode", ekp.IsValidV() ? "private" : "public");
-
-        CKeyID id = ekp.GetID();
-
-        result.pushKV("owned", pwallet->HaveExtKey(id) ? "true" : "false");
-
-        std::string sError;
-        std::vector<uint8_t> vchOut;
-
-        if (!DecodeBase58(sKey.c_str(), vchOut))
-            throw std::runtime_error("DecodeBase58 failed.");
-        if (!VerifyChecksum(vchOut))
-            throw std::runtime_error("VerifyChecksum failed.");
-
-        if (ekp.IsValidV())
-        {
-            if (0 != ExtractBip32InfoV(vchOut, result, sError))
-                throw std::runtime_error(strprintf("ExtractBip32InfoV failed %s.", sError.c_str()));
-        } else
-        {
-            if (0 != ExtractBip32InfoP(vchOut, result, sError))
-                throw std::runtime_error(strprintf("ExtractBip32InfoP failed %s.", sError.c_str()));
-        };
-
-        return result;
-    }
-
-    CBitcoinAddress addr;
-    if (addr.SetString(sKey))
-    {
-        result.pushKV("key_type", "address");
-
-        CKeyID id;
-        CPubKey pk;
-        if (!addr.GetKeyID(id))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, _("GetKeyID failed."));
-
-        if (!pwallet->GetPubKey(id, pk))
-        {
-            result.pushKV("result", "Address not in wallet.");
-            return result;
-        };
-
-        result.pushKV("public_key", HexStr(pk.begin(), pk.end()));
-
-        result.pushKV("result", "Success.");
-        return result;
-    }
-
-    throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown keytype."));
-};
-
 UniValue extkeyaltversion(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() > 1)
@@ -2667,25 +2587,21 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "clearwallettransactions ( remove_all )\n"
-            + HelpRequiringPassphrase(pwallet) +
-            "[remove_all] remove all transactions.\n"
             "Delete transactions from the wallet.\n"
             "By default removes only failed stakes.\n"
-            "Wallet must be unlocked.\n"
-            "Warning: Backup your wallet first!");
+            "Warning: Backup your wallet before using!\n"
+            + HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. remove_all           (bool, optional, default=false) Remove all transactions.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("clearwallettransactions", "")
+            + HelpExampleRpc("clearwallettransactions", "true"));
 
     ObserveSafeMode();
 
     EnsureWalletIsUnlocked(pwallet);
 
-    bool fRemoveAll = false;
-    if (request.params.size() > 0)
-    {
-        std::string s = request.params[0].get_str();
-
-        if (!part::GetStringBool(s, fRemoveAll))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown argument for remove_all: %s.", s.c_str()));
-    };
+    bool fRemoveAll = request.params.size() > 0 ? GetBool(request.params[0]) : false;
 
     int rv;
     size_t nRemoved = 0;
@@ -6112,7 +6028,6 @@ static const CRPCCommand commands[] =
     { "wallet",             "extkey",                   &extkey,                   {} },
     { "wallet",             "extkeyimportmaster",       &extkeyimportmaster,       {"source","passphrase","save_bip44_root","master_label","account_label","scan_chain_from"} }, // import, set as master, derive account, set default account, force users to run mnemonic new first make them copy the key
     { "wallet",             "extkeygenesisimport",      &extkeygenesisimport,      {"source","passphrase","save_bip44_root","master_label","account_label","scan_chain_from"} },
-    { "wallet",             "keyinfo",                  &keyinfo,                  {"key","show_secret"} },
     { "wallet",             "extkeyaltversion",         &extkeyaltversion,         {"ext_key"} },
     { "wallet",             "getnewextaddress",         &getnewextaddress,         {"label","childNo","bech32","hardened"} },
     { "wallet",             "getnewstealthaddress",     &getnewstealthaddress,     {"label","num_prefix_bits","prefix_num","bech32","makeV2"} },
