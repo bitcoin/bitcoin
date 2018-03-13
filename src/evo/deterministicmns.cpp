@@ -402,6 +402,39 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             LogPrintf("CDeterministicMNManager::%s -- MN %s added to MN list. nHeight=%d, mapCurMNs.size=%d\n",
                       __func__, tx.GetHash().ToString(), nHeight, newList.size());
+        } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+            CProUpServTx proTx;
+            if (!GetTxPayload(tx, proTx)) {
+                assert(false); // this should have been handled already
+            }
+
+            if (newList.HasUniqueProperty(proTx.addr) && newList.GetUniquePropertyMN(proTx.addr)->proTxHash != proTx.proTxHash)
+                return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-addr");
+
+            CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
+            if (!dmn) {
+                return _state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
+            }
+            auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+            newState->addr = proTx.addr;
+            newState->nProtocolVersion = proTx.nProtocolVersion;
+            newState->scriptOperatorPayout = proTx.scriptOperatorPayout;
+
+            if (newState->nPoSeBanHeight != -1) {
+                // only revive when all keys are set
+                if (!newState->keyIDOperator.IsNull() && !newState->keyIDVoting.IsNull() && !newState->keyIDOwner.IsNull()) {
+                    newState->nPoSeBanHeight = -1;
+                    newState->nPoSeRevivedHeight = nHeight;
+
+                    LogPrintf("CDeterministicMNManager::%s -- MN %s revived at height %d\n",
+                              __func__, proTx.proTxHash.ToString(), nHeight);
+                }
+            }
+
+            newList.UpdateMN(proTx.proTxHash, newState);
+
+            LogPrintf("CDeterministicMNManager::%s -- MN %s updated with addr=%s, nProtocolVersion=%d. height=%d\n",
+                      __func__, proTx.proTxHash.ToString(), proTx.addr.ToString(false), proTx.nProtocolVersion, height);
         }
     }
 
