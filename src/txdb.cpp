@@ -162,7 +162,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     stats.nTotalAmount = nTotalAmount;
 	// SYSCOIN snapshot
 	for (auto &addressAmount : mapAddressToAmount) {
-		ta << "[\"" << addressAmount.first.c_str() << "\"," << addressAmount.second << "]" << endl;
+		ta << "[\"" << addressAmount.first << "\"," << addressAmount.second << "]" << endl;
 	}
 	ta << "]";
     return true;
