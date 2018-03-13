@@ -23,13 +23,13 @@ void SendSnapShotPayment(const std::string &strSend)
 	UniValue r;
 	BOOST_CHECK_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
 	string strSendSendNewAddress = "";
-	BOOST_CHECK_THROW(r = CallRPC("mainnet1", "getnewaddress", false), runtime_error);
-	string newaddress = r.get_str();
 	for (int i = 0; i < 250; i++)
 	{
+		BOOST_CHECK_THROW(r = CallRPC("mainnet1", "getnewaddress", false), runtime_error);
+		string newaddress = r.get_str();
 		if (strSendSendNewAddress != "")
 			strSendSendNewAddress += ",";
-		strSendSendNewAddress += "\\\"" + newaddress + "\\\":10";
+		strSendSendNewAddress += "\\\"" + newaddress + "\\\":1";
 	}
 	strSendMany = "sendmany \"\" {" + strSendSendNewAddress + "}";
 	BOOST_CHECK_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
