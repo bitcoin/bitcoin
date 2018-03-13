@@ -151,21 +151,20 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         CInv inv(MSG_CLSIG, hash);
         g_connman->RelayInv(inv, LLMQS_PROTO_VERSION);
 
-        auto blockIt = mapBlockIndex.find(clsig.blockHash);
-        if (blockIt == mapBlockIndex.end()) {
+        const CBlockIndex* pindex = LookupBlockIndex(clsig.blockHash);
+        if (!pindex) {
             // we don't know the block/header for this CLSIG yet, so bail out for now
             // when the block or the header later comes in, we will enforce the correct chain
             return;
         }
 
-        if (blockIt->second->nHeight != clsig.nHeight) {
+        if (pindex->nHeight != clsig.nHeight) {
             // Should not happen, same as the conflict check from above.
             LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the specified block's height (%d)\n",
-                    __func__, clsig.ToString(), blockIt->second->nHeight);
+                    __func__, clsig.ToString(), pindex->nHeight);
             return;
         }
 
-        const CBlockIndex* pindex = blockIt->second;
         bestChainLockWithKnownBlock = bestChainLock;
         bestChainLockBlockIndex = pindex;
     }
@@ -431,7 +430,7 @@ CChainLocksHandler::BlockTxs::mapped_type CChainLocksHandler::GetBlockTxs(const 
         uint32_t blockTime;
         {
             LOCK(cs_main);
-            auto pindex = mapBlockIndex.at(blockHash);
+            auto pindex = LookupBlockIndex(blockHash);
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
                 return nullptr;
@@ -536,7 +535,7 @@ void CChainLocksHandler::EnforceBestChainLock()
         // the trigger later appears, this should bring us to the correct chain eventually. Please note that this does
         // NOT enforce invalid blocks in any way, it just causes re-validation.
         if (!currentBestChainLockBlockIndex->IsValid()) {
-            ResetBlockFailureFlags(mapBlockIndex.at(currentBestChainLockBlockIndex->GetBlockHash()));
+            ResetBlockFailureFlags(LookupBlockIndex(currentBestChainLockBlockIndex->GetBlockHash()));
         }
 
         activateNeeded = chainActive.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex;
@@ -596,7 +595,7 @@ void CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex)
     auto& params = Params();
 
     // get the non-const pointer
-    CBlockIndex* pindex2 = mapBlockIndex[pindex->GetBlockHash()];
+    CBlockIndex* pindex2 = LookupBlockIndex(pindex->GetBlockHash());
 
     CValidationState state;
     if (!InvalidateBlock(state, params, pindex2)) {
@@ -693,7 +692,7 @@ void CChainLocksHandler::Cleanup()
     }
 
     for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {
-        auto pindex = mapBlockIndex.at(it->first);
+        auto pindex = LookupBlockIndex(it->first);
         if (InternalHasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             for (auto& txid : *it->second) {
                 txFirstSeenTime.erase(txid);
@@ -712,7 +711,7 @@ void CChainLocksHandler::Cleanup()
             // tx has vanished, probably due to conflicts
             it = txFirstSeenTime.erase(it);
         } else if (!hashBlock.IsNull()) {
-            auto pindex = mapBlockIndex.at(hashBlock);
+            auto pindex = LookupBlockIndex(hashBlock);
             if (chainActive.Tip()->GetAncestor(pindex->nHeight) == pindex && chainActive.Height() - pindex->nHeight >= 6) {
                 // tx got confirmed >= 6 times, so we can stop keeping track of it
                 it = txFirstSeenTime.erase(it);

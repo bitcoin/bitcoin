@@ -187,19 +187,18 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
 
     const CBlockIndex* baseBlockIndex = chainActive.Genesis();
     if (!baseBlockHash.IsNull()) {
-        auto it = mapBlockIndex.find(baseBlockHash);
-        if (it == mapBlockIndex.end()) {
+        baseBlockIndex = LookupBlockIndex(blockHash);
+        if (!baseBlockIndex) {
             errorRet = strprintf("block %s not found", baseBlockHash.ToString());
             return false;
         }
-        baseBlockIndex = it->second;
     }
-    auto blockIt = mapBlockIndex.find(blockHash);
-    if (blockIt == mapBlockIndex.end()) {
+
+    const CBlockIndex* blockIndex = LookupBlockIndex(blockHash);
+    if (!blockIndex) {
         errorRet = strprintf("block %s not found", blockHash.ToString());
         return false;
     }
-    const CBlockIndex* blockIndex = blockIt->second;
 
     if (!chainActive.Contains(baseBlockIndex) || !chainActive.Contains(blockIndex)) {
         errorRet = strprintf("block %s and %s are not in the same chain", baseBlockHash.ToString(), blockHash.ToString());

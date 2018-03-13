@@ -343,9 +343,10 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) == merkleBlock.header.hashMerkleRoot) {
 
         LOCK(cs_main);
-
-        if (!mapBlockIndex.count(merkleBlock.header.GetHash()) || !chainActive.Contains(mapBlockIndex[merkleBlock.header.GetHash()]))
+        const CBlockIndex* pindex = LookupBlockIndex(merkleBlock.header.GetHash());
+        if (!pindex || !chainActive.Contains(pindex)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
+        }
 
         std::vector<uint256>::const_iterator it;
         if ((it = std::find(vMatch.begin(), vMatch.end(), hashTx))==vMatch.end()) {

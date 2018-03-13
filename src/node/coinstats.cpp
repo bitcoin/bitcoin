@@ -49,8 +49,7 @@ bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     stats.hashBlock = pcursor->GetBestBlock();
     {
         LOCK(cs_main);
-        // stats.nHeight = LookupBlockIndex(stats.hashBlock)->nHeight;
-        stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
+        stats.nHeight = LookupBlockIndex(stats.hashBlock)->nHeight;
     }
     ss << stats.hashBlock;
     uint256 prevkey;

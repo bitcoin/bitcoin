@@ -527,7 +527,7 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
     int nTxAge;
     {
         LOCK(cs_main);
-        pindexMined = mapBlockIndex.at(hashBlock);
+        pindexMined = LookupBlockIndex(hashBlock);
         nTxAge = chainActive.Height() - pindexMined->nHeight + 1;
     }
 
@@ -895,7 +895,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         if (!hashBlock.IsNull()) {
             {
                 LOCK(cs_main);
-                pindexMined = mapBlockIndex.at(hashBlock);
+                pindexMined = LookupBlockIndex(hashBlock);
             }
 
             // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,
@@ -1308,7 +1308,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
         LOCK(cs_main);
         CValidationState state;
         // need non-const pointer
-        auto pindex2 = mapBlockIndex.at(pindex->GetBlockHash());
+        auto pindex2 = LookupBlockIndex(pindex->GetBlockHash());
         if (!InvalidateBlock(state, Params(), pindex2)) {
             LogPrintf("CInstantSendManager::%s -- InvalidateBlock failed: %s\n", __func__, FormatStateMessage(state));
             // This should not have happened and we are in a state were it's not safe to continue anymore
