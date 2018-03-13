@@ -25,7 +25,7 @@ void SendSnapShotPayment(const std::string &strSend)
 	string strSendSendNewAddress = "";
 	for (int i = 0; i < 250; i++)
 	{
-		BOOST_CHECK_THROW(r = CallRPC("mainnet1", "getnewaddress", false), runtime_error);
+		BOOST_CHECK_THROW(r = CallRPC("mainnet1", "getnewaddress", false, false), runtime_error);
 		string newaddress = r.get_str();
 		if (strSendSendNewAddress != "")
 			strSendSendNewAddress += ",";
