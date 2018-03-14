@@ -128,6 +128,7 @@ bool CActiveMasternode::UpdateSentinelPing(int version)
 
 void CActiveMasternode::ManageStateInitial(CConnman* connman)
 {
+    const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
     LogPrint(BCLog::MNODE, "CActiveMasternode::ManageStateInitial -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
 
     // Check that our local network configuration is correct
@@ -166,7 +167,7 @@ void CActiveMasternode::ManageStateInitial(CConnman* connman)
         return;
     }
 
-    int mainnetDefaultPort = Params().GetDefaultPort();
+    int mainnetDefaultPort = defaultChainParams->GetDefaultPort();
     if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if(service.GetPort() != mainnetDefaultPort) {
             nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
