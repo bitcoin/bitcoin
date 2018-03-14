@@ -48,6 +48,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 }
 BOOST_AUTO_TEST_CASE(generate_alias_fullblock)
 {
+	printf("Running generate_alias_fullblock...Generating 10k blocks\n");
 	StopNode("node2");
 	StopNode("node3");
 	GenerateBlocks(10000, "node1");
