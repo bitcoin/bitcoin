@@ -26,7 +26,6 @@
 #include <masternode-sync.h>
 #include <masternodeman.h>
 
-#include <memory>
 #ifdef WIN32
 #include <string.h>
 #else
