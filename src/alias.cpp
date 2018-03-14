@@ -1117,7 +1117,56 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
 }
-UniValue aliasnew_helper(const UniValue& params) {
+UniValue aliasnewspecial(const UniValue& params, bool fHelp) {
+	UniValue returnRes;
+	UniValue r;
+	string aliasbase = "basename";
+	// 512 bytes long
+	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
+
+	for (int i = 0; i < 10000; i++) {
+		UniValue arraySendParams(UniValue::VARR);
+		arraySendParams.push_back(aliasbase + boost::lexical_cast<std::string>(i));
+		arraySendParams.push_back(gooddata);
+		arraySendParams.push_back(3);
+		UniValue vObj;
+		vObj.setInt(0);
+		arraySendParams.push_back(vObj);
+		arraySendParams.push_back("");
+		arraySendParams.push_back("");
+		arraySendParams.push_back("");
+		arraySendParams.push_back("");
+		try
+		{
+			returnRes = aliasnew(arraySendParams, false);
+		}
+		catch (UniValue& objError)
+		{
+			throw runtime_error(find_value(objError, "message").get_str());
+		}
+		UniValue varray = returnRes.get_array();
+		UniValue signParam(UniValue::VARR);
+		signParam.push_back(varray[0].get_str());
+		r = signrawtransaction(signParam, false);
+		UniValue sendParam(UniValue::VARR);
+		sendParam.push_back(find_value(r.get_obj(), "hex").get_str());
+		syscoinsendrawtransaction(sendParam, false);
+	}
+	return returnRes;
+}
+UniValue aliasnew(const UniValue& params, bool fHelp) {
+	if (fHelp || 8 != params.size())
+		throw runtime_error(
+			"aliasnew [aliasname] [public value] [accept_transfers_flags=3] [expire_timestamp] [address] [encryption_privatekey] [encryption_publickey] [witness]\n"
+						"<aliasname> alias name.\n"
+						"<public value> alias public profile data, 256 characters max.\n"
+						"<accept_transfers_flags> 0 for none, 1 for accepting certificate transfers, 2 for accepting asset transfers and 3 for all. Default is 3.\n"	
+						"<expire_timestamp> Epoch time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 hour.\n"	
+						"<address> Address for this alias.\n"		
+						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. Should be encrypted to publickey.\n"
+						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias.\n"						
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"							
+						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
 	string strName = stringFromVch(vchAlias);
 	/*Above pattern makes sure domain name matches the following criteria :
@@ -1277,58 +1326,6 @@ UniValue aliasnew_helper(const UniValue& params) {
 	res.push_back(EncodeHexTx(wtx));
 	res.push_back(strAddress);
 	return res;
-}
-UniValue aliasnewspecial(const UniValue& params, bool fHelp) {
-	UniValue returnRes;
-	UniValue r;
-	string aliasbase = "basename";
-	// 512 bytes long
-	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
-
-	for (int i = 0; i < 10000; i++) {
-		UniValue arraySendParams(UniValue::VARR);
-		arraySendParams.push_back(aliasbase + boost::lexical_cast<std::string>(i));
-		arraySendParams.push_back(gooddata);
-		arraySendParams.push_back(3);
-		UniValue vObj;
-		vObj.setInt(0);
-		arraySendParams.push_back(vObj);
-		arraySendParams.push_back("");
-		arraySendParams.push_back("");
-		arraySendParams.push_back("");
-		arraySendParams.push_back("");
-		try
-		{
-			returnRes = aliasnew_helper(arraySendParams);
-		}
-		catch (UniValue& objError)
-		{
-			throw runtime_error(find_value(objError, "message").get_str());
-		}
-		UniValue varray = returnRes.get_array();
-		UniValue signParam(UniValue::VARR);
-		signParam.push_back(varray[0].get_str());
-		r = tableRPC.execute("signrawtransaction", signParam);
-		UniValue sendParam(UniValue::VARR);
-		sendParam.push_back(find_value(r.get_obj(), "hex").get_str());
-		tableRPC.execute("syscoinsendrawtransaction", sendParam);
-	}
-	return returnRes;
-}
-UniValue aliasnew(const UniValue& params, bool fHelp) {
-	if (fHelp || 8 != params.size())
-		throw runtime_error(
-			"aliasnew [aliasname] [public value] [accept_transfers_flags=3] [expire_timestamp] [address] [encryption_privatekey] [encryption_publickey] [witness]\n"
-						"<aliasname> alias name.\n"
-						"<public value> alias public profile data, 256 characters max.\n"
-						"<accept_transfers_flags> 0 for none, 1 for accepting certificate transfers, 2 for accepting asset transfers and 3 for all. Default is 3.\n"	
-						"<expire_timestamp> Epoch time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 hour.\n"	
-						"<address> Address for this alias.\n"		
-						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. Should be encrypted to publickey.\n"
-						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias.\n"						
-						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"							
-						+ HelpRequiringPassphrase());
-	return aliasnew_helper(params);
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (fHelp || 8 != params.size())
