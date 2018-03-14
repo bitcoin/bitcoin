@@ -101,8 +101,9 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
                                     CGovernanceException& exception,
                                     CConnman& connman)
 {
+    LOCK(cs);
+
     if(!mnodeman.Has(vote.GetMasternodeOutpoint())) {
-        LOCK(cs);
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
@@ -118,9 +119,6 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    vote_instance_t voteInstance;
-    {
-    LOCK(cs);
     vote_m_it it = mapCurrentMNVotes.find(vote.GetMasternodeOutpoint());
     if(it == mapCurrentMNVotes.end()) {
         it = mapCurrentMNVotes.insert(vote_m_t::value_type(vote.GetMasternodeOutpoint(), vote_rec_t())).first;
@@ -145,7 +143,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     if(it2 == recVote.mapInstances.end()) {
         it2 = recVote.mapInstances.insert(vote_instance_m_t::value_type(int(eSignal), vote_instance_t())).first;
     }
-    voteInstance = it2->second;
+    vote_instance_t& voteInstance = it2->second;
 
     // Reject obsolete votes
     if(vote.GetTimestamp() < voteInstance.nCreationTime) {
@@ -155,7 +153,6 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
         return false;
     }
-    } // LOCK(cs)
 
     int64_t nNow = GetAdjustedTime();
     int64_t nVoteTimeUpdate = voteInstance.nTime;
@@ -194,7 +191,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR);
         return false;
     }
-    LOCK(cs);
+
     voteInstance = vote_instance_t(vote.GetOutcome(), nVoteTimeUpdate, vote.GetTimestamp());
     if(!fileVotes.HasVote(vote.GetHash())) {
         fileVotes.AddVote(vote);
