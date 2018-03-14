@@ -77,6 +77,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         fee = rawtxfund['fee']
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         assert(len(dec_tx['vin']) > 0) #test that we have enough inputs
+        assert(len(
+            self.nodes[2].decoderawtransaction(
+                self.nodes[2].fundrawtransaction(hexstring=rawtx, verbose=False)
+            )
+        ) > 0)
 
         ##############################
         # simple test with two coins #
@@ -90,6 +95,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         fee = rawtxfund['fee']
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         assert(len(dec_tx['vin']) > 0) #test if we have enough inputs
+        assert(len(
+            self.nodes[2].decoderawtransaction(
+                self.nodes[2].fundrawtransaction(hexstring=rawtx, verbose=False)
+            )
+        ))
 
         ##############################
         # simple test with two coins #
@@ -104,7 +114,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         assert(len(dec_tx['vin']) > 0)
         assert_equal(dec_tx['vin'][0]['scriptSig']['hex'], '')
-
+        assert_equal(
+            '',
+            self.nodes[2].decoderawtransaction(
+                self.nodes[2].fundrawtransaction(hexstring=rawtx, verbose=False)
+            )['vin'][0]['scriptSig']['hex']
+        )
 
         ################################
         # simple test with two outputs #
@@ -123,6 +138,12 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         assert(len(dec_tx['vin']) > 0)
         assert_equal(dec_tx['vin'][0]['scriptSig']['hex'], '')
+        assert_equal(
+            '',
+            self.nodes[2].decoderawtransaction(
+                self.nodes[2].fundrawtransaction(hexstring=rawtx, verbose=False)
+            )['vin'][0]['scriptSig']['hex']
+        )
 
 
         #########################################################################
