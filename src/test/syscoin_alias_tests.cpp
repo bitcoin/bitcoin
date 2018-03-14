@@ -46,7 +46,23 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew jag2 pub 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	GenerateBlocks(5);	
 }
-
+BOOST_AUTO_TEST_CASE(generate_alias_fullblock)
+{
+	GenerateBlocks(10000, "node1");
+	UniValue r;
+	string aliasbasename = "aliasfullblock";
+	// 512 bytes long
+	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
+	for (int i = 0; i < 10000; i++) {
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew aliasbasename" + itoa(i) + " " + gooddata + " 3 0 '' '' '' ''"));
+		UniValue varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	}
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getmempoolinfo"));
+	printf("mempool size %lld\n", find_value(r.get_obj(), "bytes").get_int64());
+	GenerateBlocks(5);
+}
 BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 {
 	printf("Running generate_aliaswitness...\n");
