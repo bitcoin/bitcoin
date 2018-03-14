@@ -62,6 +62,8 @@ installing the toolchain will be different.
 
 First, install the general dependencies:
 
+    sudo apt update
+    sudo apt upgrade
     sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git
 
 A host toolchain (`build-essential`) is necessary because some dependency
