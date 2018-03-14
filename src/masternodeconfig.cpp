@@ -18,6 +18,7 @@ void CMasternodeConfig::add(const std::string& alias, const std::string& ip, con
 
 bool CMasternodeConfig::read(std::string& strErrRet) {
     int linenumber = 1;
+    const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
     fs::path pathMasternodeConfigFile = GetMasternodeConfigFile(MASTERNODE_CONF_FILENAME);
     fs::ifstream streamConfig(pathMasternodeConfigFile);
 
@@ -66,7 +67,7 @@ bool CMasternodeConfig::read(std::string& strErrRet) {
             streamConfig.close();
             return false;
         }
-        int mainnetDefaultPort = Params().GetDefaultPort();
+        int mainnetDefaultPort = defaultChainParams->GetDefaultPort();
         if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
             if(port != mainnetDefaultPort) {
                 strErrRet = _("Invalid port detected in masternode.conf") + "\n" +
