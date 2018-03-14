@@ -163,7 +163,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
 	// SYSCOIN snapshot
 	for (map<string, CAmount>::iterator &addressAmountIter = mapAddressToAmount.begin(); i != mapAddressToAmount.end(); i++) {
 		ta << "[\"" << addressAmount.first << "\"," << addressAmount.second;
-		if(addressAmountIter != (mapAddressToAmount.end()-1))
+		if((addressAmountIter+1) != mapAddressToAmount.end())
 			ta  << "]," << endl;
 		else
 			ta << "]" << endl;
