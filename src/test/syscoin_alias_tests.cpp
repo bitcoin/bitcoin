@@ -55,12 +55,12 @@ BOOST_AUTO_TEST_CASE(generate_alias_fullblock)
 	GenerateBlocks(10000, "node1");
 	UniValue r;
 	
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewspecial " + aliasbasename + " " + gooddata + " 3 0 '' '' '' ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewspecial"));
 	
 	printf("Completed alias registrations, now on to activation...\n");
 	GenerateBlocks(100, "node1");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewspecial " + aliasbasename + " " + gooddata + " 3 0 '' '' '' ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewspecial"));
 	
 	
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getmempoolinfo"));
