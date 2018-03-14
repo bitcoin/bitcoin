@@ -48,16 +48,16 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 }
 BOOST_AUTO_TEST_CASE(generate_alias_fullblock)
 {
-	printf("Running generate_alias_fullblock...Generating 10k blocks\n");
+	printf("Running generate_alias_fullblock...Generating 10k blocks this will take a few seconds...\n");
 	StopNode("node2");
 	StopNode("node3");
 	GenerateBlocks(10000, "node1");
 	UniValue r;
-	string aliasbasename = "aliasfullblock";
+	string aliasbasename = "";
 	// 512 bytes long
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	for (int i = 0; i < 10000; i++) {
-		aliasbasename += boost::lexical_cast<std::string>(i);;
+		aliasbasename = "aliasfullblock" + boost::lexical_cast<std::string>(i);;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasbasename + " " + gooddata + " 3 0 '' '' '' ''"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
