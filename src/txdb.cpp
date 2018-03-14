@@ -161,7 +161,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
 	// SYSCOIN snapshot
-	for (auto iter = mapAddressToAmount.begin(); mapAddressToAmount != charMap.end(); )
+	for (auto iter = mapAddressToAmount.begin(); mapAddressToAmount != charMap.end(); ){
 		ta << "[\"" << iter->first << "\"," << iter->second;
 		if (++iter != mapAddressToAmount.end())
 			ta  << "]," << endl;
