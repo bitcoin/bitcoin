@@ -56,11 +56,12 @@ void SyncWithValidationInterfaceQueue();
 class CValidationInterface {
 protected:
     /**
-     * Notifies listeners when the block chain tip advances.
-     *
-     * When multiple blocks are connected at once, UpdatedBlockTip will be called on the final tip
-     * but may not be called on every intermediate tip. If the latter behavior is desired,
-     * subscribe to BlockConnected() instead.
+     * Protected destructor so that instances can only be deleted by derived classes.
+     * If that restriction is no longer desired, this should be made public and virtual.
+     */
+    ~CValidationInterface() = default;
+    /**
+     * Notifies listeners of updated block chain tip
      *
      * Called on a background thread.
      */
