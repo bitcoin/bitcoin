@@ -479,13 +479,14 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             checktxtime = std::chrono::steady_clock::now() + std::chrono::minutes(1);
 
             WaitableLock lock(csBestBlock);
-            auto KeepRunning = [&]() -> bool {
-                LOCK(cs_main);
-                assert(chainActive.Tip());
-                return chainActive.Tip()->GetBlockHash() == hashWatchedChain && IsRPCRunning();
-            };
-            while (KeepRunning())
+            while (IsRPCRunning())
             {
+                {
+                    LOCK(cs_main);
+                    if (chainActive.Tip()->GetBlockHash() != hashWatchedChain) {
+                        break;
+                    }
+                }
                 if (cvBlockChange.wait_until(lock, checktxtime) == std::cv_status::timeout)
                 {
                     // Timeout: Check transactions for update
