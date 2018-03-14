@@ -14,8 +14,8 @@
 #include <qt/platformstyle.h>
 #include <qt/sendcoinsentry.h>
 
-#include <base58.h>
 #include <chainparams.h>
+#include <key_io.h>
 #include <wallet/coincontrol.h>
 #include <validation.h> // mempool and minRelayTxFee
 #include <ui_interface.h>
@@ -68,7 +68,7 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
         ui->sendButton->setIcon(_platformStyle->SingleColorIcon(":/icons/send"));
     }
 
-    GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
+    GUIUtil::setupScriptAddressWidget(ui->lineEditCoinControlChange, this);
 
     addEntry();
 
@@ -376,6 +376,12 @@ void SendCoinsDialog::on_sendButton_clicked()
 
 void SendCoinsDialog::clear()
 {
+    // Clear coin control settings
+    CoinControlDialog::coinControl()->UnSelectAll();
+    ui->checkBoxCoinControlChange->setChecked(false);
+    ui->lineEditCoinControlChange->clear();
+    coinControlUpdateLabels();
+
     // Remove entries until only one left
     while(ui->entries->count())
     {

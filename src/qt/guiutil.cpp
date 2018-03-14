@@ -9,7 +9,10 @@
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
+#include <base58.h>
+#include <chainparams.h>
 #include <primitives/transaction.h>
+#include <key_io.h>
 #include <init.h>
 #include <policy/policy.h>
 #include <protocol.h>
@@ -107,6 +110,21 @@ static const uint8_t dummydata[] = {0xeb,0x15,0x23,0x1d,0xfc,0xeb,0x60,0x92,0x58
 // Generate a dummy address with invalid CRC, starting with the network prefix.
 static std::string DummyAddress(const CChainParams &params)
 {
+    std::vector<unsigned char> sourcedata = params.Base58Prefix(CChainParams::PUBKEY_ADDRESS);
+    sourcedata.insert(sourcedata.end(), dummydata, dummydata + sizeof(dummydata));
+    for(int i=0; i<256; ++i) { // Try every trailing byte
+        std::string s = EncodeBase58(sourcedata.data(), sourcedata.data() + sourcedata.size());
+        if (!IsValidDestinationString(s)) {
+            return s;
+        }
+        sourcedata[sourcedata.size()-1] += 1;
+    }
+    return "";
+}
+
+// Generate a dummy script address with invalid CRC, starting with the network prefix.
+static std::string DummyScriptAddress(const CChainParams &params)
+{
     std::vector<unsigned char> sourcedata = params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
     sourcedata.insert(sourcedata.end(), dummydata, dummydata + sizeof(dummydata));
     for(int i=0; i<256; ++i) { // Try every trailing byte
@@ -129,6 +147,21 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
     // and this is the only place, where this address is supplied.
     widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. %1)").arg(
         QString::fromStdString(DummyAddress(Params()))));
+#endif
+    widget->setValidator(new BitcoinAddressEntryValidator(parent));
+    widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
+}
+
+void setupScriptAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
+{
+    parent->setFocusProxy(widget);
+
+    widget->setFont(fixedPitchFont());
+#if QT_VERSION >= 0x040700
+    // We don't want translators to use own addresses in translations
+    // and this is the only place, where this address is supplied.
+    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. %1)").arg(
+        QString::fromStdString(DummyScriptAddress(Params()))));
 #endif
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
