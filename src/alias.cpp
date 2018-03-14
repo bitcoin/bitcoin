@@ -1117,6 +1117,167 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
 }
+UniValue aliasnew_helper(const UniValue& params) {
+	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
+	string strName = stringFromVch(vchAlias);
+	/*Above pattern makes sure domain name matches the following criteria :
+
+	The domain name should be a-z | 0-9 and hyphen(-)
+	The domain name should between 3 and 63 characters long
+	Last Tld can be 2 to a maximum of 6 characters
+	The domain name should not start or end with hyphen (-) (e.g. -syscoin.org or syscoin-.org)
+	The domain name can be a subdomain (e.g. sys.blogspot.com)*/
+
+	using namespace boost::xpressive;
+	using namespace boost::algorithm;
+	to_lower(strName);
+	smatch nameparts;
+	sregex domainwithtldregex = sregex::compile("^((?!-)[a-z0-9-]{3,64}(?<!-)\\.)+[a-z]{2,6}$");
+	sregex domainwithouttldregex = sregex::compile("^((?!-)[a-z0-9-]{3,64}(?<!-))");
+
+	if (find_first(strName, "."))
+	{
+		if (!regex_search(strName, nameparts, domainwithtldregex) || string(nameparts[0]) != strName)
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters"));
+	}
+	else
+	{
+		if (!regex_search(strName, nameparts, domainwithouttldregex) || string(nameparts[0]) != strName)
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes"));
+	}
+
+
+
+	vchAlias = vchFromString(strName);
+
+	vector<unsigned char> vchPublicValue;
+	string strPublicValue = "";
+	strPublicValue = params[1].get_str();
+	vchPublicValue = vchFromString(strPublicValue);
+
+	unsigned char nAcceptTransferFlags = 3;
+	nAcceptTransferFlags = params[2].get_int();
+	uint64_t nTime = 0;
+	nTime = params[3].get_int64();
+	// sanity check set to 1 hr
+	if (nTime < chainActive.Tip()->GetMedianTimePast() + 3600)
+		nTime = chainActive.Tip()->GetMedianTimePast() + 3600;
+
+	string strAddress = "";
+	strAddress = params[4].get_str();
+
+	string strEncryptionPrivateKey = "";
+	strEncryptionPrivateKey = params[5].get_str();
+	string strEncryptionPublicKey = "";
+	strEncryptionPublicKey = params[6].get_str();
+	vector<unsigned char> vchWitness;
+	vchWitness = vchFromValue(params[7]);
+
+	CWalletTx wtx;
+
+	CAliasIndex oldAlias;
+	if (GetAlias(vchAlias, oldAlias))
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("This alias already exists"));
+
+
+	const vector<unsigned char> &vchRandAlias = vchFromString(GenerateSyscoinGuid());
+
+	// build alias
+	CAliasIndex newAlias;
+	newAlias.vchGUID = vchRandAlias;
+	newAlias.vchAlias = vchAlias;
+	if (!strEncryptionPublicKey.empty())
+		newAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
+	if (!strEncryptionPrivateKey.empty())
+		newAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
+	newAlias.vchPublicValue = vchPublicValue;
+	newAlias.nExpireTime = nTime;
+	newAlias.nAcceptTransferFlags = nAcceptTransferFlags;
+	if (strAddress.empty())
+	{
+		// generate new address in this wallet if not passed in
+		CKey privKey;
+		privKey.MakeNewKey(true);
+		CPubKey pubKey = privKey.GetPubKey();
+		vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
+		CSyscoinAddress addressAlias(pubKey.GetID());
+		strAddress = addressAlias.ToString();
+		if (pwalletMain && !pwalletMain->AddKeyPubKey(privKey, pubKey))
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Error adding key to wallet"));
+	}
+	DecodeBase58(strAddress, newAlias.vchAddress);
+	CScript scriptPubKeyOrig;
+
+
+	vector<unsigned char> data;
+	vector<unsigned char> vchHashAlias;
+	uint256 hash;
+	bool bActivation = false;
+
+	if (mapAliasRegistrationData.count(vchAlias) > 0)
+	{
+		data = mapAliasRegistrationData[vchAlias];
+		hash = Hash(data.begin(), data.end());
+		vchHashAlias = vchFromValue(hash.GetHex());
+		if (!newAlias.UnserializeFromData(data, vchHashAlias))
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
+		bActivation = true;
+	}
+	else
+	{
+		newAlias.Serialize(data);
+		hash = Hash(data.begin(), data.end());
+		vchHashAlias = vchFromValue(hash.GetHex());
+		mapAliasRegistrationData.insert(make_pair(vchAlias, data));
+	}
+
+
+	CScript scriptPubKey;
+	if (bActivation)
+		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	else
+		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias << OP_2DROP << OP_DROP;
+
+	CSyscoinAddress newAddress;
+	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
+	scriptPubKey += scriptPubKeyOrig;
+
+	vector<CRecipient> vecSend;
+	CRecipient recipient;
+	CreateRecipient(scriptPubKey, recipient);
+	CRecipient recipientPayment;
+	CreateAliasRecipient(scriptPubKeyOrig, recipientPayment);
+	CScript scriptData;
+
+	scriptData << OP_RETURN << data;
+	CRecipient fee;
+	CreateFeeRecipient(scriptData, data, fee);
+	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
+	uint64_t nTimeExpiry = nTime - chainActive.Tip()->GetMedianTimePast();
+	if (nTimeExpiry < 3600)
+		nTimeExpiry = 3600;
+	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
+	if (fYears < 1)
+		fYears = 1;
+	fee.nAmount = GetDataFee(scriptData) * powf(2.88, fYears);
+	CCoinControl coinControl;
+	if (bActivation && mapAliasRegistrations.count(vchHashAlias) > 0)
+	{
+		if (pwalletMain)
+			pwalletMain->UnlockCoin(mapAliasRegistrations[vchHashAlias]);
+		vecSend.push_back(fee);
+		// add the registration input to the alias activation transaction
+		coinControl.Select(mapAliasRegistrations[vchHashAlias]);
+	}
+	coinControl.fAllowOtherInputs = true;
+	coinControl.fAllowWatchOnly = true;
+
+	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
+	UniValue res(UniValue::VARR);
+	res.push_back(EncodeHexTx(wtx));
+	res.push_back(strAddress);
+	return res;
+}
 UniValue aliasnewspecial(const UniValue& params, bool fHelp) {
 	UniValue returnRes;
 	UniValue r;
@@ -1138,7 +1299,7 @@ UniValue aliasnewspecial(const UniValue& params, bool fHelp) {
 		arraySendParams.push_back("");
 		try
 		{
-			returnRes = tableRPC.execute("aliasnew", arraySendParams);
+			returnRes = aliasnew_helper(arraySendParams);
 		}
 		catch (UniValue& objError)
 		{
@@ -1167,165 +1328,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias.\n"						
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"							
 						+ HelpRequiringPassphrase());
-	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
-	string strName = stringFromVch(vchAlias);
-	/*Above pattern makes sure domain name matches the following criteria :
-
-	The domain name should be a-z | 0-9 and hyphen(-)
-	The domain name should between 3 and 63 characters long
-	Last Tld can be 2 to a maximum of 6 characters
-	The domain name should not start or end with hyphen (-) (e.g. -syscoin.org or syscoin-.org)
-	The domain name can be a subdomain (e.g. sys.blogspot.com)*/
-
-	using namespace boost::xpressive;
-	using namespace boost::algorithm;
-	to_lower(strName);
-	smatch nameparts;
-	sregex domainwithtldregex = sregex::compile("^((?!-)[a-z0-9-]{3,64}(?<!-)\\.)+[a-z]{2,6}$");
-	sregex domainwithouttldregex = sregex::compile("^((?!-)[a-z0-9-]{3,64}(?<!-))");
-
-	if(find_first(strName, "."))
-	{
-		if (!regex_search(strName, nameparts, domainwithtldregex) || string(nameparts[0]) != strName)
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters"));	
-	}
-	else
-	{
-		if (!regex_search(strName, nameparts, domainwithouttldregex)  || string(nameparts[0]) != strName)
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes"));
-	}
-	
-
-
-	vchAlias = vchFromString(strName);
-
-	vector<unsigned char> vchPublicValue;
-	string strPublicValue = "";
-	strPublicValue = params[1].get_str();
-	vchPublicValue = vchFromString(strPublicValue);
-
-	unsigned char nAcceptTransferFlags = 3;
-	nAcceptTransferFlags = params[2].get_int();
-	uint64_t nTime = 0;
-	nTime = params[3].get_int64();
-	// sanity check set to 1 hr
-	if(nTime < chainActive.Tip()->GetMedianTimePast() +3600)
-		nTime = chainActive.Tip()->GetMedianTimePast() +3600;
-
-	string strAddress = "";
-	strAddress = params[4].get_str();
-	
-	string strEncryptionPrivateKey = "";
-	strEncryptionPrivateKey = params[5].get_str();
-	string strEncryptionPublicKey = "";
-	strEncryptionPublicKey = params[6].get_str();
-	vector<unsigned char> vchWitness;
-	vchWitness = vchFromValue(params[7]);
-
-	CWalletTx wtx;
-
-	CAliasIndex oldAlias;
-	if(GetAlias(vchAlias, oldAlias))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("This alias already exists"));
-
-
-	const vector<unsigned char> &vchRandAlias = vchFromString(GenerateSyscoinGuid());
-
-    // build alias
-    CAliasIndex newAlias;
-	newAlias.vchGUID = vchRandAlias;
-	newAlias.vchAlias = vchAlias;
-	if(!strEncryptionPublicKey.empty())
-		newAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
-	if(!strEncryptionPrivateKey.empty())
-		newAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
-	newAlias.vchPublicValue = vchPublicValue;
-	newAlias.nExpireTime = nTime;
-	newAlias.nAcceptTransferFlags = nAcceptTransferFlags;
-	if(strAddress.empty())
-	{
-		// generate new address in this wallet if not passed in
-		CKey privKey;
-		privKey.MakeNewKey(true);
-		CPubKey pubKey = privKey.GetPubKey();
-		vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
-		CSyscoinAddress addressAlias(pubKey.GetID());
-		strAddress = addressAlias.ToString();
-		if (pwalletMain && !pwalletMain->AddKeyPubKey(privKey, pubKey))
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Error adding key to wallet"));
-	}
-	DecodeBase58(strAddress, newAlias.vchAddress);
-	CScript scriptPubKeyOrig;
-	
-
-	vector<unsigned char> data;
-	vector<unsigned char> vchHashAlias;
-	uint256 hash;
-	bool bActivation = false;
-
-	if(mapAliasRegistrationData.count(vchAlias) > 0)
-	{
-		data = mapAliasRegistrationData[vchAlias];
-		hash = Hash(data.begin(), data.end());
-		vchHashAlias = vchFromValue(hash.GetHex());
-		if(!newAlias.UnserializeFromData(data, vchHashAlias))
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
-		bActivation = true;
-	}
-	else
-	{
-		newAlias.Serialize(data);
-		hash = Hash(data.begin(), data.end());
-		vchHashAlias = vchFromValue(hash.GetHex());
-		mapAliasRegistrationData.insert(make_pair(vchAlias, data));
-	}
-
-
-	CScript scriptPubKey;
-	if(bActivation)
-		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-	else
-		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias << OP_2DROP << OP_DROP;
-
-	CSyscoinAddress newAddress;
-	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
-	scriptPubKey += scriptPubKeyOrig;
-
-    vector<CRecipient> vecSend;
-	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
-	CRecipient recipientPayment;
-	CreateAliasRecipient(scriptPubKeyOrig, recipientPayment);
-	CScript scriptData;
-	
-	scriptData << OP_RETURN << data;
-	CRecipient fee;
-	CreateFeeRecipient(scriptData, data, fee);
-	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
-	uint64_t nTimeExpiry = nTime - chainActive.Tip()->GetMedianTimePast();
-	if (nTimeExpiry < 3600)
-		nTimeExpiry = 3600;
-	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
-	if(fYears < 1)
-		fYears = 1;
-	fee.nAmount = GetDataFee(scriptData) * powf(2.88,fYears);
-	CCoinControl coinControl;
-	if(bActivation && mapAliasRegistrations.count(vchHashAlias) > 0)
-	{
-		if (pwalletMain)
-			pwalletMain->UnlockCoin(mapAliasRegistrations[vchHashAlias]);
-		vecSend.push_back(fee);
-		// add the registration input to the alias activation transaction
-		coinControl.Select(mapAliasRegistrations[vchHashAlias]);
-	}
-	coinControl.fAllowOtherInputs = true;
-	coinControl.fAllowWatchOnly = true;
-
-	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	res.push_back(strAddress);
-	return res;
+	return aliasnew_helper(params);
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (fHelp || 8 != params.size())
