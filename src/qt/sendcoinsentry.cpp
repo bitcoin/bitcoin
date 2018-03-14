@@ -37,7 +37,7 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
 #endif
 
     // normal bitcoin address field
-    GUIUtil::setupAddressWidget(ui->payTo, this);
+    GUIUtil::setupScriptAddressWidget(ui->payTo, this);
     // just a label for displaying bitcoin address(es)
     ui->payTo_is->setFont(GUIUtil::fixedPitchFont());
 
