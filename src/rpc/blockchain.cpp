@@ -729,8 +729,12 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
 	// SYSCOIN snapshot
-	for (auto &addressAmount : mapAddressToAmount) {
-		ta << "[\"" << addressAmount.first << "\"," << addressAmount.second << "]" << endl;
+	for (auto iter = mapAddressToAmount.begin(); iter != mapAddressToAmount.end(); ) {
+		ta << "[\"" << iter->first << "\"," << iter->second;
+		if (++iter != mapAddressToAmount.end())
+			ta << "]," << endl;
+		else
+			ta << "]" << endl;
 	}
 	ta << "]";
     return true;
