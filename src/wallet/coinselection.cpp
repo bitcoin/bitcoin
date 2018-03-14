@@ -324,3 +324,30 @@ bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_f
         && m_ancestors <= eligibility_filter.max_ancestors
         && m_descendants <= eligibility_filter.max_descendants;
 }
+
+bool SingleRandomDraw(const CAmount& recipient_value, std::vector<OutputGroup>& utxo_pool, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount non_input_fees)
+{
+    FastRandomContext random_ctx;
+    CAmount curr_value = 0;
+    value_ret = 0;
+    out_set.clear();
+    for (size_t i = 0; i < utxo_pool.size(); ++i) {
+        size_t pos = i + random_ctx.randrange(utxo_pool.size() - i); // randomly pick one of the remaining elements
+        std::swap(utxo_pool[i], utxo_pool[pos]);
+        const OutputGroup& utxo = utxo_pool[i];
+
+        // Assert that this utxo is not negative. It should never be negative, effective value calculation should have removed it
+        assert(utxo.effective_value > 0);
+
+        // Add this coin
+        curr_value += utxo.effective_value;
+        value_ret += utxo.m_value;
+        util::insert(out_set, utxo.m_outputs);
+
+        // We have enough coins, stop selecting
+        if (curr_value >= recipient_value + non_input_fees) {
+            return true;
+        }
+    }
+    return false;
+}

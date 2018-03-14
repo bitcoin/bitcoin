@@ -96,6 +96,10 @@ struct OutputGroup
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees);
 
 // Original coin selection algorithm as a fallback
-bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
+bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
 
+/**
+ * Randomly selects coins until the target value is exceeded. Uses effective values
+ */
+bool SingleRandomDraw(const CAmount& recipient_value, std::vector<OutputGroup>& utxo_pool, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount non_input_fees);
 #endif // BITCOIN_WALLET_COINSELECTION_H
