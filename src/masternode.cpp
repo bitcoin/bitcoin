@@ -347,6 +347,7 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
     CKey keyCollateralAddressNew;
     CPubKey pubKeyMasternodeNew;
     CKey keyMasternodeNew;
+    const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
 
     auto Log = [&strErrorRet](std::string sErr)->bool
     {
@@ -373,7 +374,7 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
     CService service;
     if (!Lookup(strService.c_str(), service, 0, false))
         return Log(strprintf("Invalid address %s for masternode.", strService));
-    int mainnetDefaultPort = Params().GetDefaultPort();
+    int mainnetDefaultPort = defaultChainParams->GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if (service.GetPort() != mainnetDefaultPort)
             return Log(strprintf("Invalid port %u for masternode %s, only %d is supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort));
