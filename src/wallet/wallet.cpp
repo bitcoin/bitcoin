@@ -4964,12 +4964,7 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx) const
 {
     unsigned int nTimeSmart = wtx.nTimeReceived;
     if (!wtx.hashUnset()) {
-        const CBlockIndex* pindex = nullptr;
-        {
-            LOCK(cs_main);
-            pindex = LookupBlockIndex(wtx.hashBlock);
-        }
-        if (pindex) {
+        if (const CBlockIndex* pindex = LookupBlockIndex(wtx.hashBlock)) {
             int64_t latestNow = wtx.nTimeReceived;
             int64_t latestEntry = 0;
 
