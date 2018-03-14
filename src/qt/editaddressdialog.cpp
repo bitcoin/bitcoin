@@ -22,7 +22,7 @@ EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setupAddressWidget(ui->addressEdit, this);
+    GUIUtil::setupScriptAddressWidget(ui->addressEdit, this);
 
     switch(mode)
     {
