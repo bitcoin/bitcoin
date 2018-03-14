@@ -578,10 +578,12 @@ UniValue listaddressbalances(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    // Whether to include addresses with zero balances
     CAmount nMinAmount = 0;
     if (request.params.size() > 0)
-        nMinAmount = request.params[0].get_int64() * COIN;
+        nMinAmount = AmountFromValue(request.params[0]);
+
+    if (nMinAmount < 0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
 
     UniValue jsonBalances(UniValue::VOBJ);
     std::map<CTxDestination, CAmount> balances = pwalletMain->GetAddressBalances();
