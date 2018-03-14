@@ -9,7 +9,7 @@ cache:
   - depends/sdk-sources
   - $HOME/.ccache
 git:
-  depth: false  # full clone for git subtree check, this works around issue #12388
+  depth: 1
 env:
   global:
     - MAKEJOBS=-j3
@@ -48,6 +48,7 @@ install:
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then travis_retry pip3 install flake8 --user; fi
 before_script:
+    - if [ "$CHECK_DOC" = 1 ]; then git fetch --unshallow; fi
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then contrib/devtools/commit-script-check.sh $TRAVIS_COMMIT_RANGE; fi
     - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/crypto/ctaes; fi
     - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/secp256k1; fi
