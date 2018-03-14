@@ -1130,10 +1130,10 @@ UniValue aliasnewspecial(const UniValue& params, bool fHelp) {
 		arraySendParams.push_back(gooddata);
 		arraySendParams.push_back(3);
 		arraySendParams.push_back(0);
-		arraySendParams.push_back("");
-		arraySendParams.push_back("");
-		arraySendParams.push_back("");
-		arraySendParams.push_back("");
+		arraySendParams.push_back(UniValue::VNULL);
+		arraySendParams.push_back(UniValue::VNULL);
+		arraySendParams.push_back(UniValue::VNULL);
+		arraySendParams.push_back(UniValue::VNULL);
 		try
 		{
 			returnRes = tableRPC.execute("aliasnew", arraySendParams);
