@@ -1147,7 +1147,7 @@ UniValue aliasnewspecial(const UniValue& params, bool fHelp) {
 		UniValue varray = returnRes.get_array();
 		UniValue signParam(UniValue::VARR);
 		signParam.push_back(varray[0].get_str());
-		r = tableRPC.execute("signrawtransaction", arraySendParams);
+		r = tableRPC.execute("signrawtransaction", signParam);
 		UniValue sendParam(UniValue::VARR);
 		sendParam.push_back(find_value(r.get_obj(), "hex").get_str());
 		tableRPC.execute("syscoinsendrawtransaction", sendParam);
