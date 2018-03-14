@@ -54,29 +54,15 @@ BOOST_AUTO_TEST_CASE(generate_alias_fullblock)
 	printf("Generating 10k blocks this will take a few seconds...\n");
 	GenerateBlocks(10000, "node1");
 	UniValue r;
-	string aliasbasename = "";
-	// 512 bytes long
-	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
-	for (int i = 0; i < 10000; i++) {
-		aliasbasename = "aliasfullblock" + boost::lexical_cast<std::string>(i);;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasbasename + " " + gooddata + " 3 0 '' '' '' ''"));
-		UniValue varray = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	}
+	
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewspecial " + aliasbasename + " " + gooddata + " 3 0 '' '' '' ''"));
+	
 	printf("Completed alias registrations, now on to activation...\n");
 	GenerateBlocks(100, "node1");
-	for (int i = 0; i < 10000; i++) {
-		aliasbasename = "aliasfullblock" + boost::lexical_cast<std::string>(i);;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasbasename + " " + gooddata + " 3 0 '' '' '' ''"));
-		UniValue varray = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-		if ((i % 200) == 0) {
-			BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getmempoolinfo"));
-			printf("mempool size %lld\n", find_value(r.get_obj(), "bytes").get_int64());
-		}
-	}
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewspecial " + aliasbasename + " " + gooddata + " 3 0 '' '' '' ''"));
+	
+	
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getmempoolinfo"));
 	printf("mempool size %lld\n", find_value(r.get_obj(), "bytes").get_int64());
 	GenerateBlocks(5);

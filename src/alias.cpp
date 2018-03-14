@@ -1117,7 +1117,41 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
 }
+UniValue aliasnewspecial(const UniValue& params, bool fHelp) {
+	UniValue returnRes;
+	UniValue r;
+	string aliasbase = "basename";
+	// 512 bytes long
+	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 
+	for (int i = 0; i < 10000; i++) {
+		UniValue arraySendParams(UniValue::VARR);
+		arraySendParams.push_back(aliasbase + boost::lexical_cast<std::string>(i));
+		arraySendParams.push_back(gooddata);
+		arraySendParams.push_back(3);
+		arraySendParams.push_back(0);
+		arraySendParams.push_back("");
+		arraySendParams.push_back("");
+		arraySendParams.push_back("");
+		arraySendParams.push_back("");
+		try
+		{
+			returnRes = tableRPC.execute("aliasnew", arraySendParams);
+		}
+		catch (UniValue& objError)
+		{
+			throw runtime_error(find_value(objError, "message").get_str());
+		}
+		UniValue varray = returnRes.get_array();
+		UniValue signParam(UniValue::VARR);
+		signParam.push_back(varray[0].get_str());
+		r = tableRPC.execute("signrawtransaction", arraySendParams);
+		UniValue sendParam(UniValue::VARR);
+		sendParam.push_back(find_value(r.get_obj(), "hex").get_str());
+		tableRPC.execute("syscoinsendrawtransaction", sendParam);
+	}
+	return returnRes;
+}
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 8 != params.size())
 		throw runtime_error(
