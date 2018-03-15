@@ -50,7 +50,7 @@ UniValue gobject(const JSONRPCRequest& request)
 #endif // ENABLE_WALLET
                 "  submit             - Submit governance object to network\n"
                 "  deserialize        - Deserialize governance object from hex string to JSON\n"
-                "  count              - Count governance objects and votes\n"
+                "  count              - Count governance objects and votes (additional param: 'json' or 'all', default: 'json')\n"
                 "  get                - Get governance object by hash\n"
                 "  getvotes           - Get all votes for a governance object hash (including old votes)\n"
                 "  getcurrentvotes    - Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
@@ -62,8 +62,19 @@ UniValue gobject(const JSONRPCRequest& request)
                 );
 
 
-    if(strCommand == "count")
-        return governance.ToString();
+    if(strCommand == "count") {
+        std::string strMode{"json"};
+
+        if (request.params.size() == 2) {
+            strMode = request.params[1].get_str();
+        }
+
+        if (request.params.size() > 2 || (strMode != "json" && strMode != "all")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject count ( \"json\"|\"all\" )'");
+        }
+
+        return strMode == "json" ? governance.ToJson() : governance.ToString();
+    }
     /*
         ------ Example Governance Item ------
 

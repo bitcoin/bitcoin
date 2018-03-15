@@ -19,6 +19,8 @@
 #include "timedata.h"
 #include "util.h"
 
+#include <univalue.h>
+
 class CGovernanceManager;
 class CGovernanceTriggerManager;
 class CGovernanceObject;
@@ -326,6 +328,7 @@ public:
     }
 
     std::string ToString() const;
+    UniValue ToJson() const;
 
     ADD_SERIALIZE_METHODS;
 

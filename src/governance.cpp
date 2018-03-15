@@ -1252,6 +1252,38 @@ std::string CGovernanceManager::ToString() const
                     (int)cmapVoteToObject.GetSize());
 }
 
+UniValue CGovernanceManager::ToJson() const
+{
+    LOCK(cs);
+
+    int nProposalCount = 0;
+    int nTriggerCount = 0;
+    int nOtherCount = 0;
+
+    for (const auto& objpair : mapObjects) {
+        switch(objpair.second.GetObjectType()) {
+            case GOVERNANCE_OBJECT_PROPOSAL:
+                nProposalCount++;
+                break;
+            case GOVERNANCE_OBJECT_TRIGGER:
+                nTriggerCount++;
+                break;
+            default:
+                nOtherCount++;
+                break;
+        }
+    }
+
+    UniValue jsonObj(UniValue::VOBJ);
+    jsonObj.push_back(Pair("objects_total", (int)mapObjects.size()));
+    jsonObj.push_back(Pair("proposals", nProposalCount));
+    jsonObj.push_back(Pair("triggers", nTriggerCount));
+    jsonObj.push_back(Pair("other", nOtherCount));
+    jsonObj.push_back(Pair("erased", (int)mapErasedGovernanceObjects.size()));
+    jsonObj.push_back(Pair("votes", (int)cmapVoteToObject.GetSize()));
+    return jsonObj;
+}
+
 void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex, CConnman& connman)
 {
     // Note this gets called from ActivateBestChain without cs_main being held
