@@ -1295,9 +1295,6 @@ public:
      */
     void LearnAllRelatedScripts(const CPubKey& key);
 
-    /** Whether a given output is spendable by this wallet */
-    bool OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const;
-
     /** set a single wallet flag */
     void SetWalletFlag(uint64_t flags);
 
