@@ -5,6 +5,7 @@
 #include "activemasternode.h"
 #include "addrman.h"
 #include "alert.h"
+#include "clientversion.h"
 #include "governance.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -16,6 +17,7 @@
 #include "privatesend-client.h"
 #endif // ENABLE_WALLET
 #include "script/standard.h"
+#include "ui_interface.h"
 #include "util.h"
 #include "warnings.h"
 
