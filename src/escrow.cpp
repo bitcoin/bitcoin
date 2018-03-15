@@ -1406,7 +1406,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CScript redeemScript;
 	try
 	{
-		resCreate = tableRPC.execute("createmultisig", arrayParams);
+		resCreate = createmultisig(arrayParams, false);
 	}
 	catch (UniValue& objError)
 	{
@@ -1739,7 +1739,7 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	UniValue resCreate;
 	try
 	{
-		resCreate = tableRPC.execute("createrawtransaction", arrayCreateParams);
+		resCreate = createrawtransaction(arrayCreateParams, false);
 	}
 	catch (UniValue& objError)
 	{
@@ -1960,7 +1960,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	{
 		// broadcast the payment transaction to syscoin network if not external transaction
 		if (!extPayment)
-			returnRes = tableRPC.execute("sendrawtransaction", sendParams);
+			returnRes = sendrawtransaction(sendParams, false);
 	}
 	catch (UniValue& objError)
 	{
@@ -2165,7 +2165,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	{
 		// broadcast the payment transaction to syscoin network if not external transaction
 		if (!extPayment)
-			returnRes = tableRPC.execute("sendrawtransaction", sendParams);
+			returnRes = sendrawtransaction(sendParams, false);
 	}
 	catch (UniValue& objError)
 	{

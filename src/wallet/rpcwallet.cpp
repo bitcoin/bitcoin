@@ -523,7 +523,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	// step 3
 	UniValue param(UniValue::VARR);
 	param.push_back(stringFromVch(vchAlias));
-	const UniValue &result = tableRPC.execute("aliasbalance", param);
+	const UniValue &result = aliasbalance(param, false);
 	CAmount nBalance = AmountFromValue(find_value(result.get_obj(), "balance"));
 	// if fee placement utxo's have been used up (or we are creating a new alias) use balance(alias or wallet) for funding as well as create more fee placeholders
 	bool bNeedNewAliasPaymentInputs = numFeeCoinsLeft <= 0;

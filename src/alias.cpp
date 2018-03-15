@@ -1535,7 +1535,7 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	UniValue returnRes;
 	try
 	{
-		returnRes = tableRPC.execute("sendrawtransaction", arraySendParams);
+		returnRes = sendrawtransaction(arraySendParams, false);
 	}
 	catch (UniValue& objError)
 	{
@@ -1614,7 +1614,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 	utxoParams.push_back(strAddressFrom);
 	param.push_back(Pair("addresses", utxoParams));
 	paramsUTXO.push_back(param);
-	const UniValue &resUTXOs = tableRPC.execute("getaddressutxos", paramsUTXO);
+	const UniValue &resUTXOs = getaddressutxos(paramsUTXO, false);
 	UniValue utxoArray(UniValue::VARR);
 	if (resUTXOs.isArray())
 		utxoArray = resUTXOs.get_array();
@@ -1672,7 +1672,7 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 	utxoParams.push_back(strAddressFrom);
 	param.push_back(Pair("addresses", utxoParams));
 	paramsUTXO.push_back(param);
-	const UniValue &resUTXOs = tableRPC.execute("getaddressutxos", paramsUTXO);
+	const UniValue &resUTXOs = getaddressutxos(paramsUTXO, false);
 	UniValue utxoArray(UniValue::VARR);
 	if (resUTXOs.isArray())
 		utxoArray = resUTXOs.get_array();
@@ -1742,7 +1742,7 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 	utxoParams.push_back(strAddressFrom);
 	param.push_back(Pair("addresses", utxoParams));
 	paramsUTXO.push_back(param);
-	const UniValue &resUTXOs = tableRPC.execute("getaddressutxos", paramsUTXO);
+	const UniValue &resUTXOs = getaddressutxos(paramsUTXO, false);
 	UniValue utxoArray(UniValue::VARR);
 	if (resUTXOs.isArray())
 		utxoArray = resUTXOs.get_array();
@@ -1934,7 +1934,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
     // Check funds
 	UniValue balanceParams(UniValue::VARR);
 	balanceParams.push_back(strFrom);
-	const UniValue &resBalance = tableRPC.execute("aliasbalance", balanceParams);
+	const UniValue &resBalance = aliasbalance(balanceParams, false);
 	CAmount nBalance = AmountFromValue(find_value(resBalance.get_obj(), "balance"));
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Alias has insufficient funds");
