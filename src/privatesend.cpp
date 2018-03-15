@@ -267,7 +267,8 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     for (const auto& txout : txCollateral.vout) {
         nValueOut += txout.nValue;
 
-        if(!txout.scriptPubKey.IsPayToPublicKeyHash()) {
+        bool fAllowData = mnpayments.GetMinMasternodePaymentsProto() > 70208;
+        if(!txout.scriptPubKey.IsPayToPublicKeyHash() && !(fAllowData && txout.scriptPubKey.IsUnspendable())) {
             LogPrintf ("CPrivateSend::IsCollateralValid -- Invalid Script, txCollateral=%s", txCollateral.ToString());
             return false;
         }
@@ -304,10 +305,16 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
 bool CPrivateSend::IsCollateralAmount(CAmount nInputAmount)
 {
-    // collateral inputs should always be a 2x..4x of mixing collateral
-    return  nInputAmount >  GetCollateralAmount() &&
-            nInputAmount <= GetMaxCollateralAmount() &&
-            nInputAmount %  GetCollateralAmount() == 0;
+    if (mnpayments.GetMinMasternodePaymentsProto() > 70208) {
+        // collateral input should be smth between 1x and 2x OR exactly Nx of mixing collateral (1x..4x)
+        return (nInputAmount > GetCollateralAmount() && nInputAmount < GetCollateralAmount() * 2) ||
+               (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount() && nInputAmount % GetCollateralAmount() == 0);
+    } else { // <= 70208
+        // collateral input should be exactly Nx of mixing collateral (2x..4x)
+        return (nInputAmount >= GetCollateralAmount() * 2 &&
+                nInputAmount <= GetMaxCollateralAmount() &&
+                nInputAmount % GetCollateralAmount() == 0);
+    }
 }
 
 /*  Create a nice string to show the denominations

@@ -3323,18 +3323,25 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
         return false;
     }
 
-    // make our change address
-    CScript scriptChange;
-    CPubKey vchPubKey;
-    assert(reservekey.GetReservedKey(vchPubKey, true)); // should never fail, as we just unlocked
-    scriptChange = GetScriptForDestination(vchPubKey.GetID());
-    reservekey.KeepKey();
-
     txCollateral.vin.push_back(txdsinCollateral);
 
-    //pay collateral charge in fees
-    CTxOut txout = CTxOut(nValue - CPrivateSend::GetCollateralAmount(), scriptChange);
-    txCollateral.vout.push_back(txout);
+    // pay collateral charge in fees
+    // NOTE: no need for protobump patch here,
+    // CPrivateSend::IsCollateralAmount in GetCollateralTxDSIn should already take care of this
+    if (nValue >= CPrivateSend::GetCollateralAmount() * 2) {
+        // make our change address
+        CScript scriptChange;
+        CPubKey vchPubKey;
+        bool success = reservekey.GetReservedKey(vchPubKey, true);
+        assert(success); // should never fail, as we just unlocked
+        scriptChange = GetScriptForDestination(vchPubKey.GetID());
+        reservekey.KeepKey();
+        // return change
+        txCollateral.vout.push_back(CTxOut(nValue - CPrivateSend::GetCollateralAmount(), scriptChange));
+    } else { // nValue < CPrivateSend::GetCollateralAmount() * 2
+        // create dummy data output only and pay everything as a fee
+        txCollateral.vout.push_back(CTxOut(0, CScript() << OP_RETURN));
+    }
 
     if(!SignSignature(*this, txdsinCollateral.prevPubKey, txCollateral, 0, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) {
         strReason = "Unable to sign collateral transaction!";
