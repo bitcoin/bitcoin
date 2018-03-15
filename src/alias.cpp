@@ -1856,19 +1856,30 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 			"1. \"aliasfrom\"			(string, required) Alias to pay from\n"
             "2. \"amounts\"             (string, required) A json object with aliases and amounts\n"
             "    {\n"
-            "      \"address\":amount   (numeric or string) The syscoin alias is the key, the numeric amount (can be string) in SYS is the value\n"
+            "      \"address\":amount   (numeric or string) The syscoin address or alias is the key, the numeric amount (can be string) in SYS is the value\n"
             "      ,...\n"
             "    }\n"
-			"3. instantsend				(boolean, optional) Set to true to use InstantSend to send this transaction or false otherwise.\n"
-			"4. subtractfeefromamount   (string, optional) Set to true to subtract fee from amount or false otherwise.\n"
+			"3. instantsend				(boolean, optional) Set to true to use InstantSend to send this transaction or false otherwise. Default is false.\n"
+			"4. subtractfeefromamount   (string, optional) A json array with addresses or aliases.\n"
+			"                           The fee will be equally deducted from the amount of each selected address or alias.\n"
+			"                           Those recipients will receive less syscoins than you enter in their corresponding amount field.\n"
+			"                           If no addresses or aliases are specified here, the sender pays the fee.\n"
+			"    [\n"
+			"      \"address\"            (string) Subtract fee from this address or alias\n"
+			"      ,...\n"
+			"    ]\n"
             "\nResult:\n"
 			"\"transaction hex\"          (string) The transaction hex (unsigned) for signing and sending. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
-            "\nExamples:\n"
-            "\nSend two amounts to two different address or aliases, sends 0.01/0.02 SYS representing USD:\n"
-            + HelpExampleCli("aliaspay", "\"myalias\" \"USD\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"alias2\\\":0.02}\"") +
-            "\nSend two amounts to two different address or aliases while also adding a comment, sends 0.01/0.02 SYS representing USD:\n"
-            + HelpExampleCli("aliaspay", "\"myalias\" \"USD\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" \"testing\"")
+			"\nExamples:\n"
+			"\nSend two amounts to two different aliases:\n"
+			+ HelpExampleCli("aliaspay", "\"senderalias\" \"{\\\"alias1\\\":0.01,\\\"alias2\\\":0.02}\"") +
+			"\nSend two amounts to two different addresses setting IS and comment:\n"
+			+ HelpExampleCli("aliaspay", "\"senderalias\" \"{\\\"Sa8H1Mq4pd6z3N4xFzxvVah9AWzZyykJiJ\\\":0.01,\\\"SkbcpmjqkERwvPPqke3puu9k9bCdHLaVoP\\\":0.02}\" true \"testing\"") +
+			"\nSend two amounts to two different addresses, subtract fee from amount:\n"
+			+ HelpExampleCli("aliaspay", "\"senderalias\" \"{\\\"Sa8H1Mq4pd6z3N4xFzxvVah9AWzZyykJiJ\\\":0.01,\\\"SkbcpmjqkERwvPPqke3puu9k9bCdHLaVoP\\\":0.02}\" false \"\" \"[\\\"Sa8H1Mq4pd6z3N4xFzxvVah9AWzZyykJiJ\\\",\\\"SkbcpmjqkERwvPPqke3puu9k9bCdHLaVoP\\\"]\"") +
+			"\nAs a json rpc call\n"
+			+ HelpExampleRpc("aliaspay", "\"senderalias\", {\"Sa8H1Mq4pd6z3N4xFzxvVah9AWzZyykJiJ\":0.01,\"SkbcpmjqkERwvPPqke3puu9k9bCdHLaVoP\":0.02}, false, \"testing\"")
         );
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
