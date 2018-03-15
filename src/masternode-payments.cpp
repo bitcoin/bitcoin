@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "activemasternode.h"
+#include "consensus/validation.h"
 #include "governance-classes.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -294,6 +295,13 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 
     if (strCommand == NetMsgType::MASTERNODEPAYMENTSYNC) { //Masternode Payments Request Sync
 
+        if(pfrom->nVersion < GetMinMasternodePaymentsProto()) {
+            LogPrint("mnpayments", "MASTERNODEPAYMENTSYNC -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", GetMinMasternodePaymentsProto())));
+            return;
+        }
+
         // Ignore such requests until we are fully synced.
         // We could start processing this after masternode list is synced
         // but this is a heavy one so it's better to finish sync first.
@@ -321,7 +329,12 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
         CMasternodePaymentVote vote;
         vRecv >> vote;
 
-        if(pfrom->nVersion < GetMinMasternodePaymentsProto()) return;
+        if(pfrom->nVersion < GetMinMasternodePaymentsProto()) {
+            LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", GetMinMasternodePaymentsProto())));
+            return;
+        }
 
         uint256 nHash = vote.GetHash();
 

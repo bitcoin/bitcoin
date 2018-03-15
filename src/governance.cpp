@@ -2,6 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "consensus/validation.h"
 #include "governance.h"
 #include "governance-object.h"
 #include "governance-vote.h"
@@ -100,11 +101,16 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     if(fLiteMode) return;
     if(!masternodeSync.IsBlockchainSynced()) return;
 
-    if(pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) return;
-
     // ANOTHER USER IS ASKING US TO HELP THEM SYNC GOVERNANCE OBJECT DATA
     if (strCommand == NetMsgType::MNGOVERNANCESYNC)
     {
+
+        if(pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
+            LogPrint("gobject", "MNGOVERNANCESYNC -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", MIN_GOVERNANCE_PEER_PROTO_VERSION)));
+            return;
+        }
 
         // Ignore such requests until we are fully synced.
         // We could start processing this after masternode list is synced
@@ -143,6 +149,13 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         uint256 nHash = govobj.GetHash();
 
         pfrom->setAskFor.erase(nHash);
+
+        if(pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
+            LogPrint("gobject", "MNGOVERNANCEOBJECT -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", MIN_GOVERNANCE_PEER_PROTO_VERSION)));
+            return;
+        }
 
         if(!masternodeSync.IsMasternodeListSynced()) {
             LogPrint("gobject", "MNGOVERNANCEOBJECT -- masternode list not synced\n");
@@ -227,6 +240,12 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         uint256 nHash = vote.GetHash();
 
         pfrom->setAskFor.erase(nHash);
+
+        if(pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
+            LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", MIN_GOVERNANCE_PEER_PROTO_VERSION)));
+        }
 
         // Ignore such messages until masternode list is synced
         if(!masternodeSync.IsMasternodeListSynced()) {

@@ -10,6 +10,7 @@
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "net.h"
+#include "netmessagemaker.h"
 #include "protocol.h"
 #include "spork.h"
 #include "sync.h"
@@ -56,7 +57,12 @@ void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, C
 
     if (strCommand == NetMsgType::TXLOCKVOTE) // InstantSend Transaction Lock Consensus Votes
     {
-        if(pfrom->nVersion < MIN_INSTANTSEND_PROTO_VERSION) return;
+        if(pfrom->nVersion < MIN_INSTANTSEND_PROTO_VERSION) {
+            LogPrint("instantsend", "TXLOCKVOTE -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", MIN_INSTANTSEND_PROTO_VERSION)));
+            return;
+        }
 
         CTxLockVote vote;
         vRecv >> vote;
