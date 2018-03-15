@@ -2414,23 +2414,6 @@ const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int out
     return ptx->vout[n];
 }
 
-bool CWallet::OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const
-{
-    if (!output.fSpendable)
-        return false;
-
-    if (output.nDepth < (output.tx->IsFromMe(ISMINE_ALL) ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs))
-        return false;
-
-    size_t ancestors, descendants;
-    mempool.GetTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
-    if (ancestors > eligibility_filter.max_ancestors || descendants > eligibility_filter.max_descendants) {
-        return false;
-    }
-
-    return true;
-}
-
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
                                  std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const
 {
