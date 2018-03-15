@@ -1281,7 +1281,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             push = true;
                         }
                     }
-                    else if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
+                    else if (inv.type == MSG_TXLOCK_VOTE) {
                         CTxLockVote vote;
                         if(instantsend.GetTxLockVote(inv.hash, vote)) {
                             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TXLOCKVOTE, vote));
@@ -1328,7 +1328,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             push = true;
                         }
                     }
-                    else if (!pushed && inv.type == MSG_GOVERNANCE_OBJECT) {
+                    else if (inv.type == MSG_GOVERNANCE_OBJECT) {
                             LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
                             CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                             bool topush = false;
