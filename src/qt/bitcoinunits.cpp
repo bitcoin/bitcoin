@@ -189,7 +189,7 @@ QString BitcoinUnits::floorWithUnit(int unit, const CAmount& amount, bool plussi
     QString result = format(unit, amount, plussign, separators);
     if(decimals(unit) > digits) result.chop(decimals(unit) - digits);
 
-    return result + QString(" ") + name(unit);
+    return result + QString(" ") + shortName(unit);
 }
 
 QString BitcoinUnits::floorHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
