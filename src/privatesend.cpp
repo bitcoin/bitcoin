@@ -543,6 +543,7 @@ void ThreadCheckPrivateSend(CConnman& connman)
             if(nTick % 60 == 0) {
                 mnodeman.ProcessMasternodeConnections(connman);
                 mnodeman.CheckAndRemove(connman);
+                mnodeman.WarnMasternodeDaemonUpdates();
                 mnpayments.CheckAndRemove();
                 instantsend.CheckAndRemove();
             }
