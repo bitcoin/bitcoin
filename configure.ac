@@ -249,14 +249,22 @@ AC_LANG_PUSH([C++])
 AX_CHECK_COMPILE_FLAG([-Werror],[CXXFLAG_WERROR="-Werror"],[CXXFLAG_WERROR=""])
 
 if test "x$enable_debug" = xyes; then
-    CPPFLAGS="$CPPFLAGS -DDEBUG -DDEBUG_LOCKORDER"
-    if test "x$GCC" = xyes; then
-        CFLAGS="$CFLAGS -g3 -O0"
-    fi
+  # Prefer -Og, fall back to -O0 if that is unavailable.
+  AX_CHECK_COMPILE_FLAG(
+    [-Og],
+    [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -Og"]],
+    [AX_CHECK_COMPILE_FLAG([-O0],[[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"]],,[[$CXXFLAG_WERROR]])],
+    [[$CXXFLAG_WERROR]])
 
-    if test "x$GXX" = xyes; then
-        CXXFLAGS="$CXXFLAGS -g3 -O0"
-    fi
+  # Prefer -g3, fall back to -g if that is unavailable.
+  AX_CHECK_COMPILE_FLAG(
+    [-g3],
+    [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g3"]],
+    [AX_CHECK_COMPILE_FLAG([-g],[[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g"]],,[[$CXXFLAG_WERROR]])],
+    [[$CXXFLAG_WERROR]])
+
+  AX_CHECK_PREPROC_FLAG([-DDEBUG],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG"]],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_PREPROC_FLAG([-DDEBUG_LOCKORDER],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_LOCKORDER"]],,[[$CXXFLAG_WERROR]])
 fi
 
 if test x$use_sanitizers != x; then
@@ -1321,6 +1329,8 @@ AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
 
 AC_SUBST(RELDFLAGS)
+AC_SUBST(DEBUG_CPPFLAGS)
+AC_SUBST(DEBUG_CXXFLAGS)
 AC_SUBST(ERROR_CXXFLAGS)
 AC_SUBST(GPROF_CXXFLAGS)
 AC_SUBST(GPROF_LDFLAGS)
@@ -1431,9 +1441,9 @@ echo "  build os      = $BUILD_OS"
 echo
 echo "  CC            = $CC"
 echo "  CFLAGS        = $CFLAGS"
-echo "  CPPFLAGS      = $CPPFLAGS"
+echo "  CPPFLAGS      = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CPPFLAGS"
 echo "  CXX           = $CXX"
-echo "  CXXFLAGS      = $CXXFLAGS"
-echo "  LDFLAGS       = $LDFLAGS"
+echo "  CXXFLAGS      = $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CXXFLAGS"
+echo "  LDFLAGS       = $PTHREAD_CFLAGS $HARDENED_LDFLAGS $GPROF_LDFLAGS $LDFLAGS"
 echo "  ARFLAGS       = $ARFLAGS"
 echo 
