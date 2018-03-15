@@ -777,7 +777,8 @@ bool WalletModel::bumpFee(uint256 hash)
     }
 
     // sign bumped transaction
-    if (!feebumper::SignTransaction(wallet, mtx)) {        QMessageBox::critical(0, tr("Fee bump error"), tr("Can't sign transaction."));
+    if (!feebumper::SignTransaction(wallet, mtx)) {
+        QMessageBox::critical(0, tr("Fee bump error"), tr("Can't sign transaction."));
         return false;
     }
     // commit the bumped transaction
