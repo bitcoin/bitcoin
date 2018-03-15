@@ -184,9 +184,15 @@ void CActiveMasternode::ManageStateInitial(CConnman* connman)
 
     // Check socket connectivity
     LogPrintf("CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
-    SOCKET hSocket;
-    bool fConnected = ConnectSocketDirectly(service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
-    CloseSocket(hSocket);
+    SOCKET hSocket = CreateSocket(service);
+    if (hSocket == INVALID_SOCKET) {
+        nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
+        strNotCapableReason = "Could open connection to " + service.ToString();
+        LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
+        return;
+    }
+
+    bool fConnected = ConnectSocketDirectly(service, hSocket, nConnectTimeout);
 
     if (!fConnected) {
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
@@ -195,6 +201,7 @@ void CActiveMasternode::ManageStateInitial(CConnman* connman)
         return;
     }
 
+    CloseSocket(hSocket);
     // Default to REMOTE
     eType = MASTERNODE_REMOTE;
 
