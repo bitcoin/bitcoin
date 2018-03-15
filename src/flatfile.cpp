@@ -92,6 +92,7 @@ bool FlatFileSeq::Flush(const FlatFilePos& pos, bool finalize)
         fclose(file);
         return error("%s: failed to commit file %d", __func__, pos.nFile);
     }
+    DirectoryCommit(m_dir);
 
     fclose(file);
     return true;
