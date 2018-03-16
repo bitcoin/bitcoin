@@ -1080,11 +1080,13 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 	return false;
 }
 
-
 void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
+	assert(pwalletMain != NULL);
 	UniValue oName(UniValue::VOBJ);
 	oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
-	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
+	CSyscoinAddress address(EncodeBase58(alias.vchAddress));
+	oName.push_back(Pair("address", address.ToString()));
+	oName.push_back(Pair("is_mine", IsMine(*pwalletMain, address.Get())));
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "alias");
 	WriteAliasIndexHistory(alias, op);
 }
@@ -2110,6 +2112,103 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	return res;
 }
 
+UniValue SyscoinListReceived()
+{
+	assert(pwalletMain != NULL);
+	map<string, int> mapAddress;
+	UniValue ret(UniValue::VARR);
+	BOOST_FOREACH(const PAIRTYPE(CSyscoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
+	{
+		const CSyscoinAddress& address = item.first;
+		const string& strAccount = item.second.name;
+
+		isminefilter mine = IsMine(*pwalletMain, address.Get());
+		if (!(mine & filter))
+			continue;
+		const string& strAddress = address.ToString();
+		vector<unsigned char> vchMyAlias;
+		paliasdb->ReadAddress(DecodeBase58(strAddress), vchMyAlias);
+		
+		UniValue paramsBalance(UniValue::VARR);
+		UniValue param(UniValue::VOBJ);
+		UniValue balanceParams(UniValue::VARR);
+		balanceParams.push_back(strAddress);
+		param.push_back(Pair("addresses", balanceParams));
+		paramsBalance.push_back(param);
+		const UniValue &resBalance = getaddressbalance(paramsBalance, false);
+		UniValue obj(UniValue::VOBJ);
+		obj.push_back(Pair("address", address.ToString()));
+		obj.push_back(Pair("balance", AmountFromValue(find_value(resBalance.get_obj(), "balance"))));
+		obj.push_back(Pair("label", strAccount));
+		obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+		ret.push_back(obj);
+		mapAddress[strAddress] = 1;
+	}
+
+	vector<COutput> vecOutputs;
+	LOCK2(cs_main, pwalletMain->cs_wallet);
+	pwalletMain->AvailableCoins(vecOutputs, false, NULL, true);
+	BOOST_FOREACH(const COutput& out, vecOutputs) {
+		CTxDestination address;
+		if (!ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
+			continue;
+
+		CSyscoinAddress sysAddress(address);
+		const string& strAddress = sysAddress.ToString();
+
+		if (mapAddress.count(strAddress) > 0)
+			continue;
+		
+		
+		vector<unsigned char> vchMyAlias;
+		paliasdb->ReadAddress(DecodeBase58(strAddress), vchMyAlias);
+
+		UniValue paramsBalance(UniValue::VARR);
+		UniValue param(UniValue::VOBJ);
+		UniValue balanceParams(UniValue::VARR);
+		balanceParams.push_back(strAddress);
+		param.push_back(Pair("addresses", balanceParams));
+		paramsBalance.push_back(param);
+		const UniValue &resBalance = getaddressbalance(paramsBalance, false);
+		UniValue obj(UniValue::VOBJ);
+		obj.push_back(Pair("address", address.ToString()));
+		obj.push_back(Pair("balance", AmountFromValue(find_value(resBalance.get_obj(), "balance"))));
+		obj.push_back(Pair("label", ""));
+		obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+		ret.push_back(obj);
+		mapAddress[strAddress] = 1;
+
+	}
+	return ret;
+}
+UniValue syscoinlistreceivedbyaddress(const UniValue& params, bool fHelp)
+{
+	if (!EnsureWalletIsAvailable(fHelp))
+		return NullUniValue;
+
+	if (fHelp || params.size() != 0)
+		throw runtime_error(
+			"syscoinlistreceivedbyaddress\n"
+			"\nList balances by receiving address.\n"
+			"
+			"\nResult:\n"
+			"[\n"
+			"  {\n"
+			"   
+			"    \"address\" : \"receivingaddress\",    (string) The receiving address\n"
+			"    \"amount\" : x.xxx,					(numeric) The total amount in " + CURRENCY_UNIT + " received by the address\n"
+			"    \"label\" : \"label\"                  (string) A comment for the address/transaction, if any\n"
+			"    \"alias\" : \"alias\"                  (string) Associated alias to this address, if any\n"
+			"  }\n"
+			"  ,...\n"
+			"]\n"
+
+			"\nExamples:\n"
+			+ HelpExampleCli("syscoinlistreceivedbyaddress", "")
+		);
+
+	return SyscoinListReceived();
+}
 UniValue aliaswhitelist(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() != 1)
 		throw runtime_error("aliaswhitelist <alias>\n"
