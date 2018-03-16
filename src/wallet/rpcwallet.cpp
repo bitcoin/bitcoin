@@ -1742,7 +1742,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			if (wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs, type))))
+			if (wtx.nVersion == SYSCOIN_TX_VERSION && (IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs, type))))
 			{
 				if (mapSysTx[wtx.GetHash()])
 					continue;
@@ -1793,7 +1793,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				if (wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs, type))))
+				if (wtx.nVersion == SYSCOIN_TX_VERSION && (IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs, type))))
 				{
 					if (mapSysTx[wtx.GetHash()])
 						continue;
