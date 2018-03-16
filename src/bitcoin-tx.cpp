@@ -77,6 +77,7 @@ static int AppInitRawTx(int argc, char* argv[])
         strUsage += HelpMessageOpt("delin=N", _("Delete input N from TX"));
         strUsage += HelpMessageOpt("delout=N", _("Delete output N from TX"));
         strUsage += HelpMessageOpt("in=TXID:VOUT(:SEQUENCE_NUMBER)", _("Add input to TX"));
+        strUsage += HelpMessageOpt("witness=N:HEX1(:HEX2...:HEXN)", _("Add witness data to input N"));
         strUsage += HelpMessageOpt("locktime=N", _("Set TX lock time to N"));
         strUsage += HelpMessageOpt("nversion=N", _("Set TX version to N"));
         strUsage += HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
@@ -285,6 +286,34 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
     // append to transaction input list
     CTxIn txin(txid, vout, CScript(), nSequenceIn);
     tx.vin.push_back(txin);
+}
+
+static void MutateTxAddWitness(CMutableTransaction& tx, const std::string& strInput)
+{
+    std::vector<std::string> vStrInputParts;
+    boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
+
+    if (vStrInputParts.size() < 2) {
+        std::string strErr = "Bad input '" + strInput + "'";
+        throw std::runtime_error(strErr.c_str());
+    }
+
+    int inIdx = atoi(vStrInputParts[0]);
+    if (inIdx < 0 || inIdx >= (int)tx.vin.size()) {
+        std::string strErr = "Invalid TX input index '" + vStrInputParts[0] + "'";
+        throw std::runtime_error(strErr.c_str());
+    }
+
+    CTxIn &txin = tx.vin[inIdx];
+
+    for (size_t i = 1; i < vStrInputParts.size(); ++i) {
+        if (!IsHex(vStrInputParts[i])) {
+            std::string strErr = "Expecting hex input '" + vStrInputParts[i] + "'";
+            throw std::runtime_error(strErr.c_str());
+        }
+        std::vector<uint8_t> vScript = ParseHex(vStrInputParts[i]);
+        txin.scriptWitness.stack.push_back(vScript);
+    }
 }
 
 static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strInput)
@@ -787,6 +816,8 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
         MutateTxDelInput(tx, commandVal);
     else if (command == "in")
         MutateTxAddInput(tx, commandVal);
+    else if (command == "witness")
+        MutateTxAddWitness(tx, commandVal);
 
     else if (command == "delout")
         MutateTxDelOutput(tx, commandVal);

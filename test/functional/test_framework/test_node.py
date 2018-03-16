@@ -204,6 +204,28 @@ class TestNode():
             p.peer_disconnect()
         del self.p2ps[:]
 
+    def tx(self, args):
+        binary = self.binary[:-1] + '-tx'
+        p_args = [binary, '-regtest'] + args
+
+        self.log.debug("Running bitcoin-tx command: %s" % ' '.join(args))
+        process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        cli_stdout, cli_stderr = process.communicate()
+        returncode = process.poll()
+        if returncode:
+            match = re.match(r'error code: ([-0-9]+)\nerror message:\n(.*)', cli_stderr)
+            if match:
+                code, message = match.groups()
+                raise JSONRPCException(dict(code=int(code), message=message))
+            # Ignore cli_stdout, raise with cli_stderr
+            raise subprocess.CalledProcessError(returncode, self.binary, output=cli_stderr)
+        try:
+            return json.loads(cli_stdout, parse_float=decimal.Decimal)
+        except JSONDecodeError:
+            return cli_stdout.rstrip("\n")
+
+
+
 class TestNodeCLIAttr:
     def __init__(self, cli, command):
         self.cli = cli

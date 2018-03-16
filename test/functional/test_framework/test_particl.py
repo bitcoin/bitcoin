@@ -8,6 +8,11 @@ from .util import *
 
 import decimal
 
+def jsonDecimal(obj):
+    if isinstance(obj, decimal.Decimal):
+        return str(obj)
+    raise TypeError
+
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     a = decimal.Decimal(a)
     b = decimal.Decimal(b)

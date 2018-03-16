@@ -190,6 +190,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendtypeto", 8, "coincontrol" },
 
     { "buildscript", 0, "json" },
+    { "createsignaturewithwallet", 1, "prevtx" },
+
 
     { "walletsettings", 1, "json" },
 
