@@ -27,6 +27,7 @@ void SendSnapShotPayment(const std::string &strSend)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getnewaddress", false, false));
 		string newaddress = r.get_str();
+		newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 		if (strSendSendNewAddress != "")
 			strSendSendNewAddress += ",";
 		strSendSendNewAddress += "\\\"" + newaddress + "\\\":1";
