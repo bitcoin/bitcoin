@@ -106,6 +106,8 @@ UniValue importprivkey(const JSONRPCRequest& request)
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "\nNote: This call can take minutes to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported key exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
+            "\nTip: If you pass rescan=false and later change your mind, you can redo the call with an explicit\n"
+            "rescan=true. A rescan will begin even if the private key is already known.\n"
             "\nExamples:\n"
             "\nDump a private key\n"
             + HelpExampleCli("dumpprivkey", "\"myaddress\"") +
@@ -158,6 +160,10 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
             // Don't throw error in case a key is already there
             if (pwallet->HaveKey(vchAddress)) {
+                // If the user explicitly wanted a rescan, start it
+                if (!request.params[2].isNull() && fRescan) {
+                    pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
+                }
                 return NullUniValue;
             }
 
