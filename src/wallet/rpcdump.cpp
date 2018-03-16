@@ -798,12 +798,12 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
     try {
         bool success = false;
 
-        // Required fields.
+        // Required fields (optional if privkey field provided).
         const UniValue& scriptPubKey = data["scriptPubKey"];
 
-        // Should have script or JSON with "address".
-        if (!(scriptPubKey.getType() == UniValue::VOBJ && scriptPubKey.exists("address")) && !(scriptPubKey.getType() == UniValue::VSTR)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid scriptPubKey");
+        // Should have script or JSON with "address", if privkey is null.
+        if (!data.exists("privkey") && !(scriptPubKey.getType() == UniValue::VOBJ && scriptPubKey.exists("address")) && !(scriptPubKey.getType() == UniValue::VSTR)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid scriptPubKey/privkey");
         }
 
         // Optional fields.
@@ -813,6 +813,20 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
         const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
         const bool watchOnly = data.exists("watchonly") ? data["watchonly"].get_bool() : false;
         const std::string& label = data.exists("label") && !internal ? data["label"].get_str() : "";
+
+        if (data.exists("privkey")) {
+            const UniValue& privkey = data["privkey"];
+            if (data.exists("scriptPubKey"))           throw JSONRPCError(RPC_INVALID_PARAMETER, "Must provide either a privkey or a scriptPubKey");
+            if (strRedeemScript != "")                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Redeem script not supported for privkey import");
+            if (pubKeys.size() > 0 || keys.size() > 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "Keys/pubkeys not supported for privkey import");
+            if (watchOnly)                             throw JSONRPCError(RPC_INVALID_PARAMETER, "Privkeys cannot be imported watch-only");
+            if (!ImportPrivateKey(pwallet, privkey, label, timestamp)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the given private key");
+            }
+            UniValue result = UniValue(UniValue::VOBJ);
+            result.pushKV("success", UniValue(true));
+            return result;
+        }
 
         bool isScript = scriptPubKey.getType() == UniValue::VSTR;
         bool isP2SH = strRedeemScript.length() > 0;
@@ -1123,6 +1137,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             "1. requests     (array, required) Data to be imported\n"
             "  [     (array of json objects)\n"
             "    {\n"
+            "      \"privkey\": \"<privkey>\",                               (string) A WIF private key, instead of scriptPubKey below\n"
             "      \"scriptPubKey\": \"<script>\" | { \"address\":\"<address>\" }, (string / json, required) Type of scriptPubKey (string for script, json for address)\n"
             "      \"timestamp\": timestamp | \"now\"                        , (integer / string, required) Creation time of the key in seconds since epoch (Jan 1 1970 GMT),\n"
             "                                                              or the string \"now\" to substitute the current synced blockchain time. The timestamp of the oldest\n"
@@ -1234,7 +1249,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                 if (scannedTime <= GetImportTimestamp(request, now) || results.at(i).exists("error")) {
                     response.push_back(results.at(i));
                 } else {
-                    UniValue result = UniValue(UniValue::VOBJ);
+                    UniValue result(UniValue::VOBJ);
                     result.pushKV("success", UniValue(false));
                     result.pushKV(
                         "error",
