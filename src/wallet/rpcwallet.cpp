@@ -27,9 +27,7 @@
 #include <boost/assign/list_of.hpp>
 
 #include <univalue.h>
-#include <chrono>
 
-using namespace std::chrono;
 using namespace std;
 // SYSCOIN
 #include "alias.h"
@@ -442,8 +440,6 @@ When to pay with this method:
 4) if transaction completely funded, try to sign and send to network*/
 void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend=false, bool transferAlias = false)
 {
-	int64_t start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-	
 	int op;
 	vector<vector<unsigned char> > vvch;
 	vector<vector<unsigned char> > vvchAlias;
@@ -466,7 +462,6 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		}
 		coinControl->Select(aliasOutPointWitness);
 	}
-	int64_t start1 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 	COutPoint aliasOutPoint;
 	int numResults = 0;
 	// if alias inputs used, need to ensure new alias utxo's are created as prev ones need to be used for proof of ownership
@@ -487,7 +482,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 				coinControl->Select(aliasOutPoint);
 		}
 	}
-	int64_t start2 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+
 	CWalletTx wtxNew1, wtxNew2;
 	// get total output required
 	// if aliasRecipient.scriptPubKey.empty() then it is not a syscoin tx, so don't set tx flag for syscoin tx in createtransaction()
@@ -495,7 +490,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	if (!pwalletMain->CreateTransaction(vecSend, wtxNew1, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty(), ALL_COINS, fUseInstantSend)) {
 		throw runtime_error(strError);
 	}
-	int64_t start3 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+
 	CAmount nTotal = nFeeRequired;
 	BOOST_FOREACH(const CRecipient& recp, vecSend)
 	{
@@ -524,11 +519,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 			}
 		}
 	}
-	int64_t start5 = start;
-	int64_t start6 = start;
-	int64_t start7 = start;
-	int64_t start8 = start;
-	int64_t start4 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+
 	// step 3
 	UniValue param(UniValue::VARR);
 	param.push_back(stringFromVch(vchAlias));
@@ -543,14 +534,12 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 			vecSend.push_back(aliasFeePlaceholderRecipient);
 		}
 	}
-	start5 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 	if (nBalance > 0 && !bAliasRegistration)
 	{
 		// get total output required
 		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty(), ALL_COINS, fUseInstantSend)) {
 			throw runtime_error(strError);
 		}
-		int64_t start6 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 		CAmount nOutputTotal = 0;
 		BOOST_FOREACH(const CRecipient& recp, vecSend)
 		{
@@ -569,7 +558,6 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 					vecSend.push_back(recipient);
 			}
 		}
-		start7 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 		if (nTotal > 0 || transferAlias)
 		{
 			vector<COutPoint> outPoints;
@@ -587,7 +575,6 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 						coinControl->Select(outpoint);
 				}
 			}
-			start8 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
 			{
 				if (!coinControl->IsSelected(outpoint))
@@ -600,8 +587,6 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty(), ALL_COINS, fUseInstantSend)) {
 		throw runtime_error(strError);
 	}
-	int64_t start9 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
-	int64_t start10 = start;
 	// run a check on the inputs without putting them into the db, just to ensure it will go into the mempool without issues
 	int nOut;
 	bool fJustCheck = true;
@@ -666,9 +651,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 				throw runtime_error(errorMessage.c_str());
 
 		}
-		int64_t start10 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 	}
-	printf("rpcwallet sendsyscoin start1 %lld start2 %lld start3 %lld start4 %lld start5 %lld start6 %lld start7 %lld start8 %lld start9 %lld start10 %lld\n", start1, start2, start3, start4, start5, start6, start7, start8, start9, start10);
 }
 static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, bool fUseInstantSend=false, bool fUsePrivateSend=false)
 {

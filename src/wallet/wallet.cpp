@@ -40,6 +40,9 @@
 #include <boost/thread.hpp>
 // SYSCOIN services
 #include "alias.h"
+#include <chrono>
+
+using namespace std::chrono;
 using namespace std;
 
 extern CWallet* pwalletMain;
@@ -3275,6 +3278,18 @@ bool CWallet::ConvertList(std::vector<CTxIn> vecTxIn, std::vector<CAmount>& vecA
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
 	int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, bool sysTx, AvailableCoinsType nCoinType, bool fUseInstantSend)
 {
+	int64_t start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	int64_t start1 = 0;
+	int64_t start2 = 0;
+	int64_t start3 = 0;
+	int64_t start4 = 0;
+	int64_t start5 = 0;
+	int64_t start6 = 0;
+	int64_t start7 = 0;
+	int64_t start8 = 0;
+	int64_t start9 = 0;
+	int64_t start10 = 0;
+	int64_t start11 = 0;
 	CAmount nFeePay = fUseInstantSend ? CTxLockRequest().GetMinFee() : 0;
 
 	CAmount nValue = 0;
@@ -3385,7 +3400,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					}
 					txNew.vout.push_back(txout);
 				}
-
+				start1 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 				// Choose coins to use
 				set<pair<const CWalletTx*, unsigned int> > setCoins;
 				CAmount nValueIn = 0;
@@ -3421,7 +3436,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					if (sign)
 						return false;
 				}
-
+				start2 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 				if (fUseInstantSend && nValueIn > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN) {
 					strFailReason += " " + strprintf(_("InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 SYS."), sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE));
 					return false;
@@ -3439,7 +3454,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 						age += 1;
 					dPriority += (double)nCredit * age;
 				}
-
+				start3 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 				const CAmount nChange = nValueIn - nValueToSelect;
 				CTxOut newTxOut;
 				// SYSCOIN 
@@ -3510,6 +3525,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 								scriptChange = GetScriptForDestination(vchPubKey.GetID());
 							}
 						}
+						start4 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 						newTxOut = CTxOut(nChange, scriptChange);
 
 						// We do not move dust-change to fees, because the sender would end up paying more than requested.
@@ -3533,7 +3549,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 								}
 							}
 						}
-
+						start5 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 						// Never create dust outputs; if we would, just
 						// add the dust to the fee.
 						if (newTxOut.IsDust(::minRelayTxFee))
@@ -3563,7 +3579,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					txin.prevPubKey = coin.first->vout[coin.second].scriptPubKey;
 					txNew.vin.push_back(txin);
 				}
-
+				start6 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 				sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
 				sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
 
@@ -3580,7 +3596,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 						i++;
 					}
 				}
-
+				start7 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 				// Sign
 				int nIn = 0;
 				CTransaction txNewConst(txNew);
@@ -3602,6 +3618,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					}
 					nIn++;
 				}
+				start8 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 				// SYSCOIN
 				for (CWalletTx* wtx : mapWtxToDelete)
 					delete wtx;
@@ -3613,7 +3630,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					BOOST_FOREACH(CTxIn& txin, txNew.vin)
 						txin.scriptSig = CScript();
 				}
-
+				start9 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 				// Embed the constructed transaction data in wtxNew.
 				*static_cast<CTransaction*>(&wtxNew) = CTransaction(txNew);
 
@@ -3641,6 +3658,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					//                        break;
 
 				}
+				start10 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 				CAmount nFeeNeeded = max(nFeePay, GetMinimumFee(nBytes, nTxConfirmTarget, mempool));
 				if (coinControl && nFeeNeeded > 0 && coinControl->nMinimumTotalFee > nFeeNeeded) {
 					nFeeNeeded = coinControl->nMinimumTotalFee;
@@ -3662,11 +3680,12 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
 						   // Include more fee and try again.
 				nFeeRet = nFeeNeeded;
+				start11 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 				continue;
 			}
 		}
 	}
-
+	printf("rpcwallet sendsyscoin start1 %lld start2 %lld start3 %lld start4 %lld start5 %lld start6 %lld start7 %lld start8 %lld start9 %lld start10 %lld start11 %lld\n", start1, start2, start3, start4, start5, start6, start7, start8, start9, start10, start11);
 	return true;
 }
 
