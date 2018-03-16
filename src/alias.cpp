@@ -2189,9 +2189,6 @@ UniValue SyscoinListReceived()
 }
 UniValue syscoinlistreceivedbyaddress(const UniValue& params, bool fHelp)
 {
-	if (!EnsureWalletIsAvailable(fHelp))
-		return NullUniValue;
-
 	if (fHelp || params.size() != 0)
 		throw runtime_error(
 			"syscoinlistreceivedbyaddress\n"
