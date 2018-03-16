@@ -524,6 +524,10 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 			}
 		}
 	}
+	int64_t start5 = start;
+	int64_t start6 = start;
+	int64_t start7 = start;
+	int64_t start8 = start;
 	int64_t start4 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 	// step 3
 	UniValue param(UniValue::VARR);
@@ -539,7 +543,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 			vecSend.push_back(aliasFeePlaceholderRecipient);
 		}
 	}
-	int64_t start5 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+	start5 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 	if (nBalance > 0 && !bAliasRegistration)
 	{
 		// get total output required
@@ -565,7 +569,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 					vecSend.push_back(recipient);
 			}
 		}
-		int64_t start7 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+		start7 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 		if (nTotal > 0 || transferAlias)
 		{
 			vector<COutPoint> outPoints;
@@ -583,7 +587,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 						coinControl->Select(outpoint);
 				}
 			}
-			int64_t start8 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+			start8 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
 			{
 				if (!coinControl->IsSelected(outpoint))
@@ -597,6 +601,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		throw runtime_error(strError);
 	}
 	int64_t start9 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+	int64_t start10 = start;
 	// run a check on the inputs without putting them into the db, just to ensure it will go into the mempool without issues
 	int nOut;
 	bool fJustCheck = true;
