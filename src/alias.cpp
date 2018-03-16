@@ -2196,7 +2196,6 @@ UniValue syscoinlistreceivedbyaddress(const UniValue& params, bool fHelp)
 		throw runtime_error(
 			"syscoinlistreceivedbyaddress\n"
 			"\nList balances by receiving address.\n"
-			"
 			"\nResult:\n"
 			"[\n"
 			"  {\n"
