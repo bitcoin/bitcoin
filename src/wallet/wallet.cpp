@@ -40,9 +40,6 @@
 #include <boost/thread.hpp>
 // SYSCOIN services
 #include "alias.h"
-#include <chrono>
-
-using namespace std::chrono;
 using namespace std;
 
 extern CWallet* pwalletMain;
@@ -2673,19 +2670,11 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*, unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, AvailableCoinsType nCoinType, bool fUseInstantSend) const
 {
 	// Note: this function should never be used for "always free" tx types like dstx
-	int64_t start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-	int64_t start1 = 0;
-	int64_t start2 = 0;
-	int64_t start3 = 0;
-	int64_t start4 = 0;
-	int64_t start5 = 0;
-	int64_t start6 = 0;
-	int64_t start7 = 0;
-	int64_t start8 = 0;
+
 	vector<COutput> vCoins;
 	// SYSCOIN
 	AvailableCoins(vCoins, true, coinControl, false, nCoinType, fUseInstantSend);
-	start1 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+
 	// SYSCOIN
 	set<pair<const CWalletTx*, uint32_t> > setPresetCoins;
 	if (coinControl && coinControl->HasSelected())
@@ -2698,7 +2687,6 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 		std::vector<COutPoint> vInputs;
 		if (coinControl)
 			coinControl->ListSelected(vInputs);
-		start2 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 		BOOST_FOREACH(const COutPoint& outpoint, vInputs)
 		{
 			coins = view.AccessCoins(outpoint.hash);
@@ -2721,7 +2709,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 			mapWtxToDelete.push_back(wtx);
 			setPresetCoins.insert(make_pair(wtx, outpoint.n));
 		}
-		start3 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+
 		if (nValueRet >= nTargetValue)
 		{
 			setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
@@ -2747,7 +2735,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 			return (nValueRet >= nTargetValue);
 		}
 	}
-	start4 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+
 	//if we're doing only denominated, we need to round up to the nearest smallest denomination
 	if (nCoinType == ONLY_DENOMINATED) {
 		std::vector<CAmount> vecPrivateSendDenominations = CPrivateSend::GetStandardDenominations();
@@ -2770,7 +2758,6 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 		}
 		return (nValueRet >= nTargetValue);
 	}
-	start5 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
 	// calculate value from preset inputs and store them
 	// SYSCOIN
 	//set<pair<const CWalletTx*, uint32_t> > setPresetCoins;
@@ -2805,7 +2792,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 		else
 			return false; // TODO: Allow non-wallet inputs
 	}
-	start6 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+
 	// remove preset inputs from vCoins
 	for (vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coinControl && coinControl->HasSelected();)
 	{
@@ -2814,7 +2801,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 		else
 			++it;
 	}
-	start7 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
+
 	bool res = nTargetValue <= nValueFromPresetInputs ||
 		SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, vCoins, setCoinsRet, nValueRet, fUseInstantSend) ||
 		SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, vCoins, setCoinsRet, nValueRet, fUseInstantSend) ||
@@ -2825,8 +2812,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 
 	// add preset inputs to the total value selected
 	nValueRet += nValueFromPresetInputs;
-	start8 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
-	printf("rpcwallet sendsyscoin start1 %lld start2 %lld start3 %lld start4 %lld start5 %lld start6 %lld start7 %lld start8 %lld\n", start1, start2, start3, start4, start5, start6, start7, start8);
+
 	return res;
 }
 

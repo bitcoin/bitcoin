@@ -46,29 +46,6 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew jag2 pub 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	GenerateBlocks(5);	
 }
-BOOST_AUTO_TEST_CASE(generate_alias_fullblock)
-{
-	printf("Running generate_alias_fullblock...\n");
-	StopNode("node2");
-	StopNode("node3");
-	printf("Generating 10k blocks this will take a few seconds...\n");
-	GenerateBlocks(10000, "node1");
-	UniValue r;
-	
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewspecial"));
-	
-	printf("Completed alias registrations, now on to activation...\n");
-	GenerateBlocks(100, "node1");
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewspecial"));
-	
-	
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getmempoolinfo"));
-	printf("mempool size %lld\n", find_value(r.get_obj(), "bytes").get_int64());
-	GenerateBlocks(5);
-	StartNode("node2");
-	StartNode("node3");
-}
 BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 {
 	printf("Running generate_aliaswitness...\n");

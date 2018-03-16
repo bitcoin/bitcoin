@@ -303,7 +303,6 @@ extern UniValue sentinelping(const UniValue& params, bool fHelp);
 // SYSCOIN service rpc functions
 extern UniValue getauxblock(const UniValue& params, bool fHelp);
 extern UniValue aliasnew(const UniValue& params, bool fHelp);
-extern UniValue aliasnewspecial(const UniValue& params, bool fHelp);
 extern UniValue aliasupdate(const UniValue& params, bool fHelp);
 extern UniValue aliasinfo(const UniValue& params, bool fHelp);
 extern UniValue aliasbalance(const UniValue& params, bool fHelp);
