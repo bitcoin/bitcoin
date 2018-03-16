@@ -1150,6 +1150,9 @@ UniValue sendmany(const JSONRPCRequest& request)
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
+    // Shuffle recipient list
+    std::shuffle(vecSend.begin(), vecSend.end(), FastRandomContext());
+
     // Send
     CReserveKey keyChange(pwallet);
     CAmount nFeeRequired = 0;
