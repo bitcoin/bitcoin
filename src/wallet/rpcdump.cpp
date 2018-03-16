@@ -1132,7 +1132,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             "  ]\n"
             "2. options                 (json, optional)\n"
             "  {\n"
-            "     \"rescan\": <false>,         (boolean, optional, default: true) Stating if should rescan the blockchain after all imports\n"
+            "     \"rescan\": <bool>,          (boolean, optional, default: true) Whether a rescan of the blockchain after all imports should be executed\n"
             "  }\n"
             "\nNote: This call can take minutes to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported keys, addresses or scripts exists but related transactions are still missing.\n"
