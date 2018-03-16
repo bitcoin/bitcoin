@@ -2122,13 +2122,17 @@ UniValue SyscoinListReceived()
 		const CSyscoinAddress& address = item.first;
 		const string& strAccount = item.second.name;
 
+		isminefilter filter = ISMINE_SPENDABLE;
 		isminefilter mine = IsMine(*pwalletMain, address.Get());
 		if (!(mine & filter))
 			continue;
 		const string& strAddress = address.ToString();
+
 		vector<unsigned char> vchMyAlias;
-		paliasdb->ReadAddress(DecodeBase58(strAddress), vchMyAlias);
-		
+		vector<unsigned char> vchAddress;
+		DecodeBase58(strAddress, vchAddress);
+		paliasdb->ReadAddress(vchAddress, vchMyAlias);
+
 		UniValue paramsBalance(UniValue::VARR);
 		UniValue param(UniValue::VOBJ);
 		UniValue balanceParams(UniValue::VARR);
@@ -2137,7 +2141,7 @@ UniValue SyscoinListReceived()
 		paramsBalance.push_back(param);
 		const UniValue &resBalance = getaddressbalance(paramsBalance, false);
 		UniValue obj(UniValue::VOBJ);
-		obj.push_back(Pair("address", address.ToString()));
+		obj.push_back(Pair("address", strAddress));
 		obj.push_back(Pair("balance", AmountFromValue(find_value(resBalance.get_obj(), "balance"))));
 		obj.push_back(Pair("label", strAccount));
 		obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
@@ -2161,7 +2165,9 @@ UniValue SyscoinListReceived()
 		
 		
 		vector<unsigned char> vchMyAlias;
-		paliasdb->ReadAddress(DecodeBase58(strAddress), vchMyAlias);
+		vector<unsigned char> vchAddress;
+		DecodeBase58(strAddress, vchAddress);
+		paliasdb->ReadAddress(vchAddress, vchMyAlias);
 
 		UniValue paramsBalance(UniValue::VARR);
 		UniValue param(UniValue::VOBJ);
@@ -2171,7 +2177,7 @@ UniValue SyscoinListReceived()
 		paramsBalance.push_back(param);
 		const UniValue &resBalance = getaddressbalance(paramsBalance, false);
 		UniValue obj(UniValue::VOBJ);
-		obj.push_back(Pair("address", address.ToString()));
+		obj.push_back(Pair("address", strAddress));
 		obj.push_back(Pair("balance", AmountFromValue(find_value(resBalance.get_obj(), "balance"))));
 		obj.push_back(Pair("label", ""));
 		obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
