@@ -201,8 +201,10 @@ void CZMQNotificationInterface::NotifySyscoinUpdate(const char *value, const cha
 		std::string strTopic(topic);
 
 		// look for topic in notifier list, if finds it, sends an update
-		if (notifier->GetType() != "pub" + strTopic)
+		if (notifier->GetType() != "pub" + strTopic) {
+			i++;
 			continue;
+		}
 
 		if (notifier->NotifySyscoinUpdate(value, topic))
 		{
