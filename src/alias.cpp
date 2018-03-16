@@ -2156,7 +2156,7 @@ UniValue SyscoinListReceived()
 		CSyscoinAddress sysAddress(address);
 		const string& strAddress = sysAddress.ToString();
 
-		if (mapAddress.count(strAddress) > 0)
+		if (mapAddress.find(strAddress) != mapAddress.end())
 			continue;
 		
 		
