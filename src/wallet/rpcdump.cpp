@@ -88,6 +88,38 @@ bool GetWalletAddressesForKey(CWallet * const pwallet, const CKeyID &keyid, std:
     return fLabelFound;
 }
 
+static bool ImportPrivateKey(CWallet * const pwallet, const UniValue& privkey, const std::string& label = "", const int64_t timestamp = 1)
+{
+    CKey key = DecodeSecret(privkey.get_str());
+    if (!key.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+    }
+
+    CPubKey pubkey = key.GetPubKey();
+    assert(key.VerifyPubKey(pubkey));
+    CKeyID address = pubkey.GetID();
+    pwallet->MarkDirty();
+    // We don't know which corresponding address will be used; label them all
+    for (const auto& dest : GetAllDestinationsForKey(pubkey)) {
+        pwallet->SetAddressBook(dest, label, "receive");
+    }
+
+    // Don't throw error in case a key is already there
+    if (pwallet->HaveKey(address)) {
+        return false;
+    }
+
+    // whenever a key is imported, we need to scan the whole chain
+    pwallet->UpdateTimeFirstKey(timestamp);
+    pwallet->mapKeyMetadata[address].nCreateTime = timestamp;
+
+    if (!pwallet->AddKeyPubKey(key, pubkey)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
+    }
+    pwallet->LearnAllRelatedScripts(pubkey);
+
+    return true;
+}
 
 UniValue importprivkey(const JSONRPCRequest& request)
 {
@@ -127,7 +159,6 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
         EnsureWalletIsUnlocked(pwallet);
 
-        std::string strSecret = request.params[0].get_str();
         std::string strLabel = "";
         if (!request.params[1].isNull())
             strLabel = request.params[1].get_str();
@@ -143,32 +174,10 @@ UniValue importprivkey(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
         }
 
-        CKey key = DecodeSecret(strSecret);
-        if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
-
-        CPubKey pubkey = key.GetPubKey();
-        assert(key.VerifyPubKey(pubkey));
-        CKeyID vchAddress = pubkey.GetID();
-        {
-            pwallet->MarkDirty();
-            // We don't know which corresponding address will be used; label them all
-            for (const auto& dest : GetAllDestinationsForKey(pubkey)) {
-                pwallet->SetAddressBook(dest, strLabel, "receive");
-            }
-
-            // Don't throw error in case a key is already there
-            if (pwallet->HaveKey(vchAddress)) {
-                return NullUniValue;
-            }
-
-            // whenever a key is imported, we need to scan the whole chain
-            pwallet->UpdateTimeFirstKey(1);
-            pwallet->mapKeyMetadata[vchAddress].nCreateTime = 1;
-
-            if (!pwallet->AddKeyPubKey(key, pubkey)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
-            }
-            pwallet->LearnAllRelatedScripts(pubkey);
+        // If the import failed (due to key already known) we silently exit
+        // without rescanning
+        if (!ImportPrivateKey(pwallet, request.params[0], strLabel)) {
+            return NullUniValue;
         }
     }
     if (fRescan) {
