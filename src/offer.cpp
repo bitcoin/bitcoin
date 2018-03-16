@@ -1330,9 +1330,9 @@ bool BuildOfferIndexerJson(const COffer& theOffer, UniValue& oOffer)
 		oOffer.push_back(Pair("offer_units", theOffer.fUnits));
 		offerTypeStr = GetOfferTypeString(theOffer.offerType);
 	}
-
 	oOffer.push_back(Pair("quantity", nQty));
 	oOffer.push_back(Pair("private", theOffer.bPrivate));
+	oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 	oOffer.push_back(Pair("alias", stringFromVch(theOffer.vchAlias)));
 	oOffer.push_back(Pair("offertype", offerTypeStr));
 	oOffer.push_back(Pair("auction_expires_on", auctionOffer.nExpireTime));

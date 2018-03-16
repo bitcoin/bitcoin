@@ -859,6 +859,7 @@ bool BuildCertIndexerJson(const CCert& cert, UniValue& oCert)
 	oCert.push_back(Pair("height", (int)cert.nHeight));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
 	oCert.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
+	oCert.push_back(Pair("expires_on", GetCertExpiration(cert)));
 	return true;
 }
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)

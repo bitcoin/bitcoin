@@ -1087,6 +1087,7 @@ void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
 	CSyscoinAddress address(EncodeBase58(alias.vchAddress));
 	oName.push_back(Pair("address", address.ToString()));
 	oName.push_back(Pair("is_mine", IsMine(*pwalletMain, address.Get())));
+	oName.push_back(Pair("expires_on", alias.nExpireTime));
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "alias");
 	WriteAliasIndexHistory(alias, op);
 }
