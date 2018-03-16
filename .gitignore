@@ -1291,3 +1291,6 @@ src/qt/.deps/qt_libbitcoinqt_a-moc_qrdialog.Po
 src/qt/.deps/qt_libbitcoinqt_a-qrdialog.Po
 src/qt/forms/ui_qrdialog.h
 src/test/.deps/test_test_bitcoin-blockchain_tests.Po
+src/libbitcoin_common_a-bech32.o
+src/rpc/libbitcoin_util_a-util.o
+src/rpc/.deps/libbitcoin_util_a-util.Po

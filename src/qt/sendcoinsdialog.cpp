@@ -98,14 +98,14 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
         ui->checkUsePrivateSend->setChecked(false);
         ui->checkUsePrivateSend->setVisible(false);
         ui->checkUseInstantSend->setVisible(false);
-        CoinControlDialog::coinControl->fUsePrivateSend = false;
-        CoinControlDialog::coinControl->fUseInstantSend = false;
+        CoinControlDialog::coinControl()->fUsePrivateSend = false;
+        CoinControlDialog::coinControl()->fUseInstantSend = false;
     }
     else{
         ui->checkUsePrivateSend->setChecked(fUsePrivateSend);
         ui->checkUseInstantSend->setChecked(fUseInstantSend);
-        CoinControlDialog::coinControl->fUsePrivateSend = fUsePrivateSend;
-        CoinControlDialog::coinControl->fUseInstantSend = fUseInstantSend;
+        CoinControlDialog::coinControl()->fUsePrivateSend = fUsePrivateSend;
+        CoinControlDialog::coinControl()->fUseInstantSend = fUseInstantSend;
     }
 
     connect(ui->checkUsePrivateSend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
@@ -599,7 +599,7 @@ void SendCoinsDialog::updateDisplayUnit()
 {
     setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-    CoinControlDialog::coinControl->fUsePrivateSend = ui->checkUsePrivateSend->isChecked();
+    CoinControlDialog::coinControl()->fUsePrivateSend = ui->checkUsePrivateSend->isChecked();
     coinControlUpdateLabels();
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
@@ -610,7 +610,7 @@ void SendCoinsDialog::updateInstantSend()
 {
     QSettings settings;
     settings.setValue("bUseInstantX", ui->checkUseInstantSend->isChecked());
-    CoinControlDialog::coinControl->fUseInstantSend = ui->checkUseInstantSend->isChecked();
+    CoinControlDialog::coinControl()->fUseInstantSend = ui->checkUseInstantSend->isChecked();
     coinControlUpdateLabels();
 }
 

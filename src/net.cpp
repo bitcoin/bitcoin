@@ -1974,7 +1974,7 @@ void CConnman::ThreadOpenMasternodeConnections()
         std::vector<CService>::iterator it = vPendingMasternodes.begin();
         while (it != vPendingMasternodes.end()) {
             if (!IsMasternodeOrDisconnectRequested(*it)) {
-                OpenMasternodeConnection(CAddress(*it, NODE_NETWORK));
+                OpenNetworkConnection(CAddress(*it, NODE_NETWORK), false, nullptr, nullptr, false, false, false, true);
                 // should be in the list now if connection was opened
                 ForNode(*it, [&](CNode* pnode) {
                     if (pnode->fDisconnect) {

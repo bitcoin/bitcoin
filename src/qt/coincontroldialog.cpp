@@ -429,10 +429,10 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
         else if (item->isDisabled()) // locked (this happens if "check all" through parent node)
             item->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
         else {
-            coinControl->Select(outpt);
+            coinControl()->Select(outpt);
             CWalletRef pwallet = vpwallets.empty() ? nullptr : vpwallets[0];
             int nRounds = pwallet->GetOutpointPrivateSendRounds(outpt);
-            if (coinControl->fUsePrivateSend && nRounds < privateSendClient.nPrivateSendRounds) {
+            if (coinControl()->fUsePrivateSend && nRounds < privateSendClient.nPrivateSendRounds) {
                 QMessageBox::warning(this, windowTitle(),
                     tr("Non-anonymized input selected. <b>PrivateSend will be disabled.</b><br><br>If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again."),
                     QMessageBox::Ok, QMessageBox::Ok);
@@ -544,7 +544,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         else nBytesInputs += 148;
 
         // Add inputs to calculate InstantSend Fee later
-        if(coinControl->fUseInstantSend)
+        if(coinControl()->fUseInstantSend)
             txDummy.vin.push_back(CTxIn());
     }
 
@@ -571,7 +571,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nPayFee = GetMinimumFee(nBytes, *coinControl(), ::mempool, ::feeEstimator, nullptr /* FeeCalculation */);
 
         // InstantSend Fee
-        if (coinControl->fUseInstantSend) nPayFee = std::max(nPayFee, CTxLockRequest(txDummy).GetMinFee());
+        if (coinControl()->fUseInstantSend) nPayFee = std::max(nPayFee, CTxLockRequest(txDummy).GetMinFee());
 
         if (nPayAmount > 0)
         {
@@ -580,7 +580,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nChange -= nPayFee;
 
             // PrivateSend Fee = overpay
-            if(coinControl->fUsePrivateSend && nChange > 0)
+            if(coinControl()->fUsePrivateSend && nChange > 0)
             {
                 nPayFee += nChange;
                 nChange = 0;

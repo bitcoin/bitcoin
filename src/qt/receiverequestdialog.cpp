@@ -44,7 +44,7 @@ QImage QRImageWidget::exportImage()
 {
     if(!pixmap())
         return QImage();
-    return pixmap()->toImage().scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE);
+    return pixmap()->toImage();
 }
 
 void QRImageWidget::mousePressEvent(QMouseEvent *event)
@@ -166,14 +166,14 @@ void ReceiveRequestDialog::update()
                 ui->lblQRCode->setText(tr("Error encoding URI into QR Code."));
                 return;
             }
-            QImage myImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
-            myImage.fill(0xffffff);
+            QImage qrImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
+            qrImage.fill(0xffffff);
             unsigned char *p = code->data;
             for (int y = 0; y < code->width; y++)
             {
                 for (int x = 0; x < code->width; x++)
                 {
-                    myImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
+                    qrImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
                     p++;
                 }
             }
