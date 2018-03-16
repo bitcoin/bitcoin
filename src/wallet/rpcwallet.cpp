@@ -54,6 +54,7 @@ extern std::vector<unsigned char> vchFromString(const std::string &str);
 extern unsigned int MAX_ALIAS_UPDATES_PER_BLOCK;
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
 extern int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll, bool bNoAliasRecipient);
+extern string GetSyscoinTransactionDescription(const int op, string& responseEnglish, const char &type);
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
@@ -1719,6 +1720,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 	vector<vector<unsigned char> > vvchArgs;
 	int op, nOut;
 	string strResponse = "";
+	char type;
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
@@ -1739,6 +1741,19 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             if (fLong)
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
+			// SYSCOIN
+			if (wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs, type))))
+			{
+				if (mapSysTx[wtx.GetHash()])
+					continue;
+				mapSysTx[wtx.GetHash()] = true;
+				string strResponseEnglish = "";
+				string strResponseGUID = stringFromVch(vvchArgs[0]);
+				strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, type) + " " + strResponseGUID;
+				entry.push_back(Pair("systx", strResponse));
+				entry.push_back(Pair("systype", strResponseEnglish));
+				entry.push_back(Pair("sysguid", strResponseGUID));
+			}
             ret.push_back(entry);
         }
     }
@@ -1777,6 +1792,19 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 entry.push_back(Pair("vout", r.vout));
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
+				// SYSCOIN
+				if (wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs, type))))
+				{
+					if (mapSysTx[wtx.GetHash()])
+						continue;
+					mapSysTx[wtx.GetHash()] = true;
+					string strResponseEnglish = "";
+					string strResponseGUID = stringFromVch(vvchArgs[0]);
+					strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, type) + " " + strResponseGUID;
+					entry.push_back(Pair("systx", strResponse));
+					entry.push_back(Pair("systype", strResponseEnglish));
+					entry.push_back(Pair("sysguid", strResponseGUID));
+				}
                 ret.push_back(entry);
             }
         }
