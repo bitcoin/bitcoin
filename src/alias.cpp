@@ -2114,7 +2114,8 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 
 UniValue SyscoinListReceived()
 {
-	assert(pwalletMain != NULL);
+	if (!pwalletMain)
+		return NullUniValue;
 	map<string, int> mapAddress;
 	UniValue ret(UniValue::VARR);
 	BOOST_FOREACH(const PAIRTYPE(CSyscoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
