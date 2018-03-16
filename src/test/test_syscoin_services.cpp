@@ -218,12 +218,14 @@ UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regT
 		path += " ";
 	path += commandWithArgs;
 	string rawJson = CallExternal(path);
-	if(readJson)
+	if (readJson)
 	{
 		val.read(rawJson);
-		if(val.isNull())
+		if (val.isNull())
 			throw runtime_error("Could not parse rpc results");
 	}
+	else
+		val.setStr(rawJson);
 	return val;
 }
 int fsize(FILE *fp){
