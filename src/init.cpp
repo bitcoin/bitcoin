@@ -821,14 +821,13 @@ void InitLogging()
     fLogTimeMicros = gArgs.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 
-    LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     std::string version_string = FormatFullVersion();
 #ifdef DEBUG
     version_string += " (debug build)";
 #else
     version_string += " (release build)";
 #endif
-    LogPrintf(PACKAGE_NAME " version %s\n", version_string);
+    LogPrintf(PACKAGE_NAME " version %s. Logging started.\n", version_string);
 }
 
 namespace { // Variables internal to initialization process only
