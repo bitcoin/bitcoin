@@ -236,11 +236,11 @@ def main():
         sys.exit(0)
 
     # Build list of tests
+    test_list = []
     if tests:
         # Individual tests have been specified. Run specified tests that exist
         # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
         tests = [re.sub("\.py$", "", test) + ".py" for test in tests]
-        test_list = []
         for test in tests:
             if test in ALL_SCRIPTS:
                 test_list.append(test)
@@ -248,10 +248,10 @@ def main():
                 print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], test))
     elif args.extended:
         # Include extended tests
-        test_list = ALL_SCRIPTS
+        test_list += ALL_SCRIPTS
     else:
         # Run base tests only
-        test_list = BASE_SCRIPTS
+        test_list += BASE_SCRIPTS
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
