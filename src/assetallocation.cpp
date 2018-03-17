@@ -763,7 +763,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	// check for alias existence in DB
 	CAliasIndex fromAlias;
 	if (!GetAlias(vchAliasFrom, fromAlias))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read transfer alias from DB"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read sender alias from DB"));
 
 	// this is a syscoin txn
 	CWalletTx wtx;
@@ -856,7 +856,7 @@ UniValue assetallocationcollectinterest(const UniValue& params, bool fHelp) {
 	// check for alias existence in DB
 	CAliasIndex fromAlias;
 	if (!GetAlias(vchAliasFrom, fromAlias))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read transfer alias from DB"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read alias from DB"));
 
 	// this is a syscoin txn
 	CWalletTx wtx;
