@@ -108,6 +108,7 @@ Acquire the source in the usual way:
     git clone https://github.com/bitcoin/bitcoin.git
 
 Once the source code is ready the build steps are below.
+cd bitcoin
 
     PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
     cd depends
