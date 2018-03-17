@@ -4596,7 +4596,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             const CStealthAddress &sxAddr = boost::get<CStealthAddress>(dest);
             mine = phdw->HaveStealthAddress(sxAddr);
         } else
-        if (dest.type() == typeid(CKeyID))
+        if (dest.type() == typeid(CKeyID)
+            || dest.type() == typeid(CKeyID256))
         {
             CKeyID idk;
             const CEKAKey *pak = nullptr;
