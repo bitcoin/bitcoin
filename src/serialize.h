@@ -442,6 +442,10 @@ I ReadVarInt(Stream& is)
     }
 }
 
+/** Wrap a serializable object with a serialization wrapper. */
+template<typename W, typename T>
+static inline typename W::template Wrapper<typename std::remove_reference<T>::type> Wrap(T&& t) { return typename W::template Wrapper<typename std::remove_reference<T>::type>(t); }
+
 #define VARINT(obj, ...) WrapVarInt<__VA_ARGS__>(REF(obj))
 #define COMPACTSIZE(obj) CCompactSize(REF(obj))
 #define LIMITED_STRING(obj,n) LimitedString< n >(REF(obj))
