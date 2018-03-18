@@ -8,9 +8,10 @@
 
 #include <script/interpreter.h>
 
+class CKey;
 class CKeyID;
-class CKeyStore;
 class CScript;
+class CScriptID;
 class CTransaction;
 
 struct CMutableTransaction;
@@ -71,8 +72,8 @@ struct SignatureData {
 bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreator& creator, const CScript& scriptPubKey, SignatureData& sigdata);
 
 /** Produce a script signature for a transaction. */
-bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType);
-bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
+bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType);
+bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
 
 /** Combine two script signatures using a generic signature checker, intelligently, possibly with OP_0 placeholders. */
 SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignatureChecker& checker, const SignatureData& scriptSig1, const SignatureData& scriptSig2);
@@ -84,8 +85,8 @@ void UpdateInput(CTxIn& input, const SignatureData& data);
 
 /* Check whether we know how to sign for an output like this, assuming we
  * have all private keys. While this function does not need private keys, the passed
- * keystore is used to look up public keys and redeemscripts by hash.
+ * provider is used to look up public keys and redeemscripts by hash.
  * Solvability is unrelated to whether we consider this output to be ours. */
-bool IsSolvable(const CKeyStore& store, const CScript& script);
+bool IsSolvable(const SigningProvider& provider, const CScript& script);
 
 #endif // BITCOIN_SCRIPT_SIGN_H

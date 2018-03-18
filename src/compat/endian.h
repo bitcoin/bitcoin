@@ -19,51 +19,6 @@
 #include <sys/endian.h>
 #endif
 
-#ifndef HAVE_CONFIG_H
-// While not technically a supported configuration, defaulting to defining these
-// DECLs when we were compiled without autotools makes it easier for other build
-// systems to build things like libbitcoinconsensus for strange targets.
-#ifdef htobe16
-#define HAVE_DECL_HTOBE16 1
-#endif
-#ifdef htole16
-#define HAVE_DECL_HTOLE16 1
-#endif
-#ifdef be16toh
-#define HAVE_DECL_BE16TOH 1
-#endif
-#ifdef le16toh
-#define HAVE_DECL_LE16TOH 1
-#endif
-
-#ifdef htobe32
-#define HAVE_DECL_HTOBE32 1
-#endif
-#ifdef htole32
-#define HAVE_DECL_HTOLE32 1
-#endif
-#ifdef be32toh
-#define HAVE_DECL_BE32TOH 1
-#endif
-#ifdef le32toh
-#define HAVE_DECL_LE32TOH 1
-#endif
-
-#ifdef htobe64
-#define HAVE_DECL_HTOBE64 1
-#endif
-#ifdef htole64
-#define HAVE_DECL_HTOLE64 1
-#endif
-#ifdef be64toh
-#define HAVE_DECL_BE64TOH 1
-#endif
-#ifdef le64toh
-#define HAVE_DECL_LE64TOH 1
-#endif
-
-#endif // HAVE_CONFIG_H
-
 #if defined(WORDS_BIGENDIAN)
 
 #if HAVE_DECL_HTOBE16 == 0
@@ -153,10 +108,10 @@ inline uint64_t le64toh(uint64_t little_endian_64bits)
 #else // WORDS_BIGENDIAN
 
 #if HAVE_DECL_HTOBE16 == 0
-/*inline uint16_t htobe16(uint16_t host_16bits)
+inline uint16_t htobe16(uint16_t host_16bits)
 {
     return bswap_16(host_16bits);
-} */
+}
 #endif // HAVE_DECL_HTOBE16
 
 #if HAVE_DECL_HTOLE16 == 0
