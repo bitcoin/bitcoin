@@ -2015,7 +2015,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "  ],\n"
             "  \"removed\": [\n"
             "    <structure is the same as \"transactions\" above, only present if include_removed=true>\n"
-            "    Note: transactions that were readded in the active chain will appear as-is in this array, and may thus have a positive confirmation count.\n"
+            "    Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count.\n"
             "  ],\n"
             "  \"lastblock\": \"lastblockhash\"     (string) The hash of the block (target_confirmations-1) from the best block on the main chain. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones\n"
             "}\n"
@@ -3578,7 +3578,7 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid stop_height");
             }
             else if (pindexStop->nHeight < pindexStart->nHeight) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "stop_height must be greater then start_height");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "stop_height must be greater than start_height");
             }
         }
     }

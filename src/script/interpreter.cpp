@@ -110,7 +110,7 @@ bool static IsValidSignatureEncoding(const std::vector<unsigned char> &sig) {
     //   excluding the sighash byte.
     // * R-length: 1-byte length descriptor of the R value that follows.
     // * R: arbitrary-length big-endian encoded R value. It must use the shortest
-    //   possible encoding for a positive integers (which means no null bytes at
+    //   possible encoding for a positive integer (which means no null bytes at
     //   the start, except a single one when the next byte has its highest bit set).
     // * S-length: 1-byte length descriptor of the S value that follows.
     // * S: arbitrary-length big-endian encoded S value. The same rules apply.
