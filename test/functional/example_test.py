@@ -38,7 +38,7 @@ class BaseNode(P2PInterface):
     def __init__(self):
         """Initialize the P2PInterface
 
-        Used to inialize custom properties for the Node that aren't
+        Used to initialize custom properties for the Node that aren't
         included by default in the base class. Be aware that the P2PInterface
         base class already stores a counter for each P2P message type and the
         last received message of each type, which should be sufficient for the

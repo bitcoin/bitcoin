@@ -29,7 +29,7 @@ Test is as follows:
     transactions in its mempool. This tests that -persistmempool=0
     does not overwrite a previously valid mempool stored on disk.
   - Remove node0 mempool.dat and verify savemempool RPC recreates it
-    and verify that node1 can load it and has 5 transaction in its
+    and verify that node1 can load it and has 5 transactions in its
     mempool.
   - Verify that savemempool throws when the RPC is called if
     node1 can't write to disk.
