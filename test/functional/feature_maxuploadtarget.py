@@ -6,7 +6,7 @@
 
 * Verify that getdata requests for old blocks (>1week) are dropped
 if uploadtarget has been reached.
-* Verify that getdata requests for recent blocks are respecteved even
+* Verify that getdata requests for recent blocks are respected even
 if uploadtarget has been reached.
 * Verify that the upload counters are reset after 24 hours.
 """
