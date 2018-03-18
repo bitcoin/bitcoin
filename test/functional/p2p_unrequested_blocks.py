@@ -166,7 +166,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.log.info("Unrequested more-work block accepted")
 
         # 4c. Now mine 288 more blocks and deliver; all should be processed but
-        # the last (height-too-high) on node (as long as its not missing any headers)
+        # the last (height-too-high) on node (as long as it is not missing any headers)
         tip = block_h3
         all_blocks = []
         for i in range(288):

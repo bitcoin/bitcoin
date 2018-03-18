@@ -698,7 +698,7 @@ bool WalletModel::bumpFee(uint256 hash)
     confirmationDialog.exec();
     QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
 
-    // cancel sign&broadcast if users doesn't want to bump the fee
+    // cancel sign&broadcast if user doesn't want to bump the fee
     if (retval != QMessageBox::Yes) {
         return false;
     }
