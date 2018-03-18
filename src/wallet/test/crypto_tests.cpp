@@ -10,7 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(wallet_crypto, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(crypto_tests, BasicTestingSetup)
 
 class TestCrypter
 {
