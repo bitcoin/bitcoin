@@ -433,7 +433,7 @@ class TestHandler:
                     proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
-                    [stdout, stderr] = [file.read().decode('utf-8') for file in (log_out, log_err)]
+                    [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
                     log_out.close(), log_err.close()
                     if proc.returncode == TEST_EXIT_PASSED and stderr == "":
                         status = "Passed"
@@ -490,7 +490,7 @@ def check_script_list(src_dir):
     Check that there are no scripts in the functional tests directory which are
     not being run by pull-tester.py."""
     script_dir = src_dir + '/test/functional/'
-    python_files = set([file for file in os.listdir(script_dir) if file.endswith(".py")])
+    python_files = set([test_file for test_file in os.listdir(script_dir) if test_file.endswith(".py")])
     missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS)))
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
@@ -550,8 +550,8 @@ class RPCCoverage():
         if not os.path.isfile(coverage_ref_filename):
             raise RuntimeError("No coverage reference found")
 
-        with open(coverage_ref_filename, 'r') as file:
-            all_cmds.update([line.strip() for line in file.readlines()])
+        with open(coverage_ref_filename, 'r') as coverage_ref_file:
+            all_cmds.update([line.strip() for line in coverage_ref_file.readlines()])
 
         for root, dirs, files in os.walk(self.dir):
             for filename in files:
@@ -559,8 +559,8 @@ class RPCCoverage():
                     coverage_filenames.add(os.path.join(root, filename))
 
         for filename in coverage_filenames:
-            with open(filename, 'r') as file:
-                covered_cmds.update([line.strip() for line in file.readlines()])
+            with open(filename, 'r') as coverage_file:
+                covered_cmds.update([line.strip() for line in coverage_file.readlines()])
 
         return all_cmds - covered_cmds
 
