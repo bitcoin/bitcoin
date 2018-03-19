@@ -20,8 +20,12 @@ CGovernanceObjectVoteFile::CGovernanceObjectVoteFile(const CGovernanceObjectVote
 
 void CGovernanceObjectVoteFile::AddVote(const CGovernanceVote& vote)
 {
+    uint256 nHash = vote.GetHash();
+    // make sure to never add/update already known votes
+    if (HasVote(nHash))
+        return;
     listVotes.push_front(vote);
-    mapVoteIndex[vote.GetHash()] = listVotes.begin();
+    mapVoteIndex.emplace(nHash, listVotes.begin());
     ++nMemoryVotes;
 }
 

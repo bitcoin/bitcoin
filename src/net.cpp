@@ -2459,7 +2459,6 @@ void CConnman::Interrupt()
             semMasternodeOutbound->post();
         }
     }
-
 }
 
 void CConnman::Stop()
