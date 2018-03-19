@@ -725,6 +725,7 @@ UniValue sendtoaddress(const UniValue& params, bool fHelp)
 	CSyscoinAddress address(params[0].get_str());
 	// SYSCOIN
 	vector<unsigned char> vchPubKey;
+	string strAddress;
 	if (GetAddressFromAlias(params[0].get_str(), strAddress, vchPubKey))
 	{
 		address = CSyscoinAddress(strAddress);
