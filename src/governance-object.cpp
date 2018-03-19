@@ -103,6 +103,16 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
 {
     LOCK(cs);
 
+    // do not process already known valid votes twice
+    if (fileVotes.HasVote(vote.GetHash())) {
+        // nothing to do here, not an error
+        std::ostringstream ostr;
+        ostr << "CGovernanceObject::ProcessVote -- Already known valid vote";
+        LogPrint("gobject", "%s\n", ostr.str());
+        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
+        return false;
+    }
+
     if(!mnodeman.Has(vote.GetMasternodeOutpoint())) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
@@ -193,9 +203,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     }
 
     voteInstance = vote_instance_t(vote.GetOutcome(), nVoteTimeUpdate, vote.GetTimestamp());
-    if(!fileVotes.HasVote(vote.GetHash())) {
-        fileVotes.AddVote(vote);
-    }
+    fileVotes.AddVote(vote);
     fDirtyCache = true;
     return true;
 }
@@ -510,19 +518,6 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
             return false;
     }
 
-    /*
-        TODO
-
-        - There might be an issue with multisig in the coinbase on mainnet, we will add support for it in a future release.
-        - Post 12.2+ (test multisig coinbase transaction)
-    */
-
-    // 12.1 - todo - compile error
-    // if(address.IsPayToScriptHash()) {
-    //     strError = "Governance system - multisig is not currently supported";
-    //     return false;
-    // }
-
     return true;
 }
 
@@ -551,6 +546,12 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 
     if(!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, true)){
         strError = strprintf("Can't find collateral tx %s", txCollateral->ToString());
+        LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
+        return false;
+    }
+
+    if(nBlockHash == uint256()) {
+        strError = strprintf("Collateral tx %s is not mined yet", txCollateral->ToString());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
