@@ -1874,6 +1874,12 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
     BOOST_FOREACH(const string& name_, keys)
     {
         CSyscoinAddress address(name_);
+		vector<unsigned char> vchPubKey;
+		string strAddress;
+		if (GetAddressFromAlias(params[0].get_str(), strAddress, vchPubKey))
+		{
+			address = CSyscoinAddress(strAddress);
+		}
         if (!address.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Syscoin address: ")+name_);
 
