@@ -424,11 +424,8 @@ void CMasternodeMan::DsegUpdate(CNode* pnode, CConnman* connman)
         }
     }
 
-    if (pnode->GetSendVersion() == 70208) {
-        connman->PushMessage(pnode, msgMaker.Make(NetMsgType::DSEG, CTxIn()));
-    } else {
-        connman->PushMessage(pnode, msgMaker.Make(NetMsgType::DSEG, COutPoint()));
-    }
+    connman->PushMessage(pnode, msgMaker.Make(NetMsgType::DSEG, COutPoint()));
+
     int64_t askAgain = GetTime() + DSEG_UPDATE_SECONDS;
     mWeAskedForMasternodeList[addrSquashed] = askAgain;
 
@@ -551,7 +548,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
         return GetNextMasternodeInQueueForPayment(nBlockHeight, false, nCountRet, mnInfoRet);
 
     // Sort them low to high
-    sort(vecMasternodeLastPaid.begin(), vecMasternodeLastPaid.end(), CompareLastPaidBlock());
+    std::sort(vecMasternodeLastPaid.begin(), vecMasternodeLastPaid.end(), CompareLastPaidBlock());
 
     uint256 blockHash;
     if(!GetBlockHash(blockHash, nBlockHeight - 101)) {
@@ -642,7 +639,7 @@ bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeM
         }
     }
 
-    sort(vecMasternodeScoresRet.rbegin(), vecMasternodeScoresRet.rend(), CompareScoreMN());
+    std::sort(vecMasternodeScoresRet.rbegin(), vecMasternodeScoresRet.rend(), CompareScoreMN());
     return !vecMasternodeScoresRet.empty();
 }
 
@@ -1037,7 +1034,7 @@ void CMasternodeMan::DoFullVerificationStep(CConnman* connman)
         vSortedByAddr.push_back(&mnpair.second);
     }
 
-    sort(vSortedByAddr.begin(), vSortedByAddr.end(), CompareByAddr());
+    std::sort(vSortedByAddr.begin(), vSortedByAddr.end(), CompareByAddr());
 
     it = vecMasternodeRanks.begin() + nOffset;
     while(it != vecMasternodeRanks.end()) {
@@ -1088,7 +1085,7 @@ void CMasternodeMan::CheckSameAddr()
             vSortedByAddr.push_back(&mnpair.second);
         }
 
-        sort(vSortedByAddr.begin(), vSortedByAddr.end(), CompareByAddr());
+        std::sort(vSortedByAddr.begin(), vSortedByAddr.end(), CompareByAddr());
 
         for (const auto& pmn : vSortedByAddr) {
             // check only (pre)enabled masternodes
