@@ -49,6 +49,7 @@ extern bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsi
 extern bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, string &errorMessage, bool bSanityCheck);
 extern bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, string &errorMessage, bool bSanityCheck);
 extern int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outPoint);
+extern bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey);
 extern std::string stringFromVch(const std::vector<unsigned char> &vch);
 extern std::vector<unsigned char> vchFromString(const std::string &str);
 extern unsigned int MAX_ALIAS_UPDATES_PER_BLOCK;
@@ -721,8 +722,14 @@ UniValue sendtoaddress(const UniValue& params, bool fHelp)
         );
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
-
-    CSyscoinAddress address(params[0].get_str());
+	CSyscoinAddress address(params[0].get_str());
+	// SYSCOIN
+	vector<unsigned char> vchPubKey;
+	if (GetAddressFromAlias(params[0].get_str(), strAddress, vchPubKey))
+	{
+		address = CSyscoinAddress(strAddress);
+	}
+   
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Syscoin address");
 
