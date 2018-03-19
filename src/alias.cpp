@@ -1875,8 +1875,8 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
     {
         CSyscoinAddress address(name_);
 		vector<unsigned char> vchPubKey;
-		string strAddress;
-		if (GetAddressFromAlias(params[0].get_str(), strAddress, vchPubKey))
+		string strAddress = name_;
+		if (GetAddressFromAlias(name_, strAddress, vchPubKey))
 		{
 			address = CSyscoinAddress(strAddress);
 		}
@@ -1894,7 +1894,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 		bool fSubtractFeeFromAmount = false;
 		for (unsigned int idx = 0; idx < subtractFeeFromAmount.size(); idx++) {
 			const UniValue& addr = subtractFeeFromAmount[idx];
-			if (addr.get_str() == name_)
+			if (addr.get_str() == strAddress)
 				fSubtractFeeFromAmount = true;
 		}
         CRecipient recipient = {scriptPubKey, nAmount, fSubtractFeeFromAmount };
