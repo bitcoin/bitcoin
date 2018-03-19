@@ -29,7 +29,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <univalue.h>
-
+extern bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, std::vector<unsigned char> &vchPubKey);
 using namespace std;
 
 /**

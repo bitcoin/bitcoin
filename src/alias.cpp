@@ -861,21 +861,6 @@ bool GetAlias(const vector<unsigned char> &vchAlias,
 	
 	return true;
 }
-bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey) {
-
-	string strLowerAlias = strAlias;
-	boost::algorithm::to_lower(strLowerAlias);
-	const vector<unsigned char> &vchAlias = vchFromValue(strLowerAlias);
-
-	CAliasIndex alias;
-	// check for alias existence in DB
-	if (!GetAlias(vchAlias, alias))
-		return false;
-
-	strAddress = EncodeBase58(alias.vchAddress);
-	vchPubKey = alias.vchEncryptionPublicKey;
-	return true;
-}
 
 bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, std::vector<unsigned char> &vchPubKey) {
 
