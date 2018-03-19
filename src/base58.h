@@ -104,11 +104,6 @@ public:
  */
 class CSyscoinAddress : public CBase58Data {
 public:
-	// SYSCOIN
-	bool isAlias;
-	std::string aliasName;
-	std::vector<unsigned char> vchPubKey;
-
 	bool Set(const CKeyID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
 	bool Set(const CScriptID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
 	bool Set(const CTxDestination &dest, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);

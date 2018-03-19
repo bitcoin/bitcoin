@@ -15,9 +15,6 @@
 #include <string>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
-// SYSCOIN use aliases as addresses
-extern bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey);
-extern bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, std::vector<unsigned char> &vchPubKey);
 /** All alphanumeric characters except for "0", "I", "O", and "l" */
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -240,75 +237,17 @@ public:
 };
 
 } // anon namespace
-  // SYSCOIN aliases as addresses
 CSyscoinAddress::CSyscoinAddress() {
-	isAlias = false;
-	aliasName = "";
-	vchPubKey.clear();
 }
 // SYSCOIN support old sys
 CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest, CChainParams::AddressType sysVer) {
-	isAlias = false;
-	aliasName = "";
-	vchPubKey.clear();
 	Set(dest, sysVer);
 }
 CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) {
-	isAlias = false;
-	aliasName = "";
 	SetString(strAddress);
-	// try to resolve alias address from alias name
-	if (!IsValid())
-	{
-
-		std::string strAliasAddress;
-		if (GetAddressFromAlias(strAddress, strAliasAddress, vchPubKey))
-		{
-			SetString(strAliasAddress);
-			aliasName = strAddress;
-			isAlias = true;
-		}
-
-	}
-	// try to resolve alias name from alias address
-	else
-	{
-
-		std::string strAliasAddress = strAddress;
-		SetString(strAliasAddress);
-		if (GetAliasFromAddress(strAliasAddress, aliasName, vchPubKey))
-		{
-			SetString(strAliasAddress);
-			isAlias = true;
-		}
-	}
-
 }
 CSyscoinAddress::CSyscoinAddress(const char* pszAddress) {
-	isAlias = false;
 	SetString(pszAddress);
-	// try to resolve alias address
-	if (!IsValid())
-	{
-
-		std::string strAliasAddress;
-		if (GetAddressFromAlias(std::string(pszAddress), strAliasAddress, vchPubKey))
-		{
-			SetString(strAliasAddress);
-			aliasName = std::string(pszAddress);
-			isAlias = true;
-		}
-	}
-	else
-	{
-
-		std::string strAliasAddress = std::string(pszAddress);
-		SetString(strAliasAddress);
-		if (GetAliasFromAddress(strAliasAddress, aliasName, vchPubKey))
-		{
-			isAlias = true;
-		}
-	}
 }
 // SYSCOIN support old sys
 bool CSyscoinAddress::Set(const CKeyID& id, CChainParams::AddressType sysVer)

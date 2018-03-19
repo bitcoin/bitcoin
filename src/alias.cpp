@@ -1822,16 +1822,16 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 			"1. \"aliasfrom\"			(string, required) Alias to pay from\n"
             "2. \"amounts\"             (string, required) A json object with aliases and amounts\n"
             "    {\n"
-            "      \"address\":amount   (numeric or string) The syscoin address or alias is the key, the numeric amount (can be string) in SYS is the value\n"
+            "      \"address\":amount   (numeric or string) The syscoin address is the key, the numeric amount (can be string) in SYS is the value\n"
             "      ,...\n"
             "    }\n"
 			"3. instantsend				(boolean, optional) Set to true to use InstantSend to send this transaction or false otherwise. Default is false.\n"
-			"4. subtractfeefromamount   (string, optional) A json array with addresses or aliases.\n"
-			"                           The fee will be equally deducted from the amount of each selected address or alias.\n"
+			"4. subtractfeefromamount   (string, optional) A json array with addresses.\n"
+			"                           The fee will be equally deducted from the amount of each selected address.\n"
 			"                           Those recipients will receive less syscoins than you enter in their corresponding amount field.\n"
-			"                           If no addresses or aliases are specified here, the sender pays the fee.\n"
+			"                           If no addresses are specified here, the sender pays the fee.\n"
 			"    [\n"
-			"      \"address\"            (string) Subtract fee from this address or alias\n"
+			"      \"address\"            (string) Subtract fee from this address\n"
 			"      ,...\n"
 			"    ]\n"
             "\nResult:\n"
@@ -2075,7 +2075,10 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
-
+bool DoesAliasExist(const vector<unsigned char> &vchAddress) {
+	vector<unsigned char> vchMyAlias;
+	return paliasdb->ReadAddress(vchAddress, vchMyAlias);
+}
 UniValue SyscoinListReceived()
 {
 	if (!pwalletMain)

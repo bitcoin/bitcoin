@@ -327,7 +327,10 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
 		ret.push_back(Pair("btcaddress", btcaddr.ToString()));
 
 		// SYSCOIN alias from address
-		ret.push_back(Pair("alias", address.aliasName));
+		string strAlias;
+		std::vector<unsigned char> vchPubKey;
+		GetAliasFromAddress(address.ToString(), strAlias, vchPubKey);
+		ret.push_back(Pair("alias", strAlias));
 
 		CScript scriptPubKey = GetScriptForDestination(dest);
 		ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
@@ -378,7 +381,9 @@ CScript _createmultisig_redeemScript(const UniValue& params)
 		// Case 1: Syscoin address and we have full public key:
 		CSyscoinAddress address(ks);
 		// SYSCOIN
-		if (address.isAlias && address.IsValid())
+		string strAlias;
+		std::vector<unsigned char> vchPubKey;
+		if (GetAliasFromAddress(ks, strAlias, vchPubKey) && address.IsValid())
 			pubkeys[i] = address.vchPubKey;
 		else if (pwalletMain && address.IsValid())
 		{

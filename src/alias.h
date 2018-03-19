@@ -334,4 +334,5 @@ int aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outPoint
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& script, const uint32_t nPaymentOption=1);
 std::string GetSyscoinTransactionDescription(const int op, std::string& responseEnglish, const char &type);
 bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName);
+bool DoesAliasExist(const std::vector<unsigned char> &vchAddress);
 #endif // ALIAS_H
