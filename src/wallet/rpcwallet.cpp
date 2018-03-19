@@ -3643,7 +3643,7 @@ UniValue setbip69enabled(const JSONRPCRequest& request)
                 "\nArguments:\n"
                 "1. enable  (bool, required) true or false"
         );
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST)
+    if (Params().NetworkIDString() != "regtest")
         throw std::runtime_error("setbip69enabled for regression testing (-regtest mode) only");
 
     bBIP69Enabled = request.params[0].get_bool();

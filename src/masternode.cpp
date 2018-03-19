@@ -234,7 +234,7 @@ void CMasternode::Check(bool fForce)
 
     // Allow MNs to become ENABLED immediately in regtest/devnet
     // On mainnet/testnet, we require them to be in PRE_ENABLED state for some time before they get into ENABLED state
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+    if (Params().NetworkIDString() != "regtest") {
         if (lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {
             nActiveState = MASTERNODE_PRE_ENABLED;
             if (nActiveStatePrev != nActiveState) {
@@ -259,7 +259,7 @@ bool CMasternode::IsValidNetAddr(CService addrIn)
 {
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this
-    return Params().NetworkIDString() == CBaseChainParams::REGTEST ||
+    return Params().NetworkIDString() == "regtest" ||
             (addrIn.IsIPv4() && IsReachable(addrIn) && addrIn.IsRoutable());
 }
 
@@ -372,7 +372,7 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
     if (!Lookup(strService.c_str(), service, 0, false))
         return Log(strprintf("Invalid address %s for masternode.", strService));
     int mainnetDefaultPort = defaultChainParams->GetDefaultPort();
-    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
+    if (Params().NetworkIDString() == "main") {
         if (service.GetPort() != mainnetDefaultPort)
             return Log(strprintf("Invalid port %u for masternode %s, only %d is supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort));
     } else if (service.GetPort() == mainnetDefaultPort)
@@ -465,7 +465,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
     }
 
     int mainnetDefaultPort = Params().GetDefaultPort();
-    if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
+    if(Params().NetworkIDString() == "main") {
         if(addr.GetPort() != mainnetDefaultPort) return false;
     } else if(addr.GetPort() == mainnetDefaultPort) return false;
 

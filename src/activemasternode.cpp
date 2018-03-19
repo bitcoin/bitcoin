@@ -20,7 +20,7 @@ void CActiveMasternode::ManageState(CConnman* connman)
         return;
     }
 
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST && !masternodeSync.IsBlockchainSynced()) {
+    if(Params().NetworkIDString() != "regtest" && !masternodeSync.IsBlockchainSynced()) {
         nState = ACTIVE_MASTERNODE_SYNC_IN_PROCESS;
         LogPrintf("CActiveMasternode::ManageState -- %s: %s\n", GetStateString(), GetStatus());
         return;
@@ -168,7 +168,7 @@ void CActiveMasternode::ManageStateInitial(CConnman* connman)
     }
 
     int mainnetDefaultPort = defaultChainParams->GetDefaultPort();
-    if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
+    if(Params().NetworkIDString() == "main") {
         if(service.GetPort() != mainnetDefaultPort) {
             nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
             strNotCapableReason = strprintf("Invalid port: %u - only %d is supported on mainnet.", service.GetPort(), mainnetDefaultPort);

@@ -414,7 +414,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode, CConnman* connman)
     LOCK(cs);
 
     CService addrSquashed = Params().AllowMultiplePorts() ? (CService)pnode->addr : CService(pnode->addr, 0);
-    if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
+    if(Params().NetworkIDString() == "main") {
         if(!(pnode->addr.IsRFC1918() || pnode->addr.IsLocal())) {
             auto it = mWeAskedForMasternodeList.find(addrSquashed);
             if(it != mWeAskedForMasternodeList.end() && GetTime() < (*it).second) {
@@ -710,7 +710,7 @@ bool CMasternodeMan::GetMasternodeRanks(CMasternodeMan::rank_pair_vec_t& vecMast
 void CMasternodeMan::ProcessMasternodeConnections(CConnman* connman)
 {
     //we don't care about this for regtest
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
+    if(Params().NetworkIDString() == "regtest") return;
 
     connman->ForEachNode([](CNode* pnode) {
 #ifdef ENABLE_WALLET
@@ -951,7 +951,7 @@ void CMasternodeMan::SyncAll(CNode* pnode, CConnman* connman)
 
     CService addrSquashed = Params().AllowMultiplePorts() ? (CService)pnode->addr : CService(pnode->addr, 0);
     // should only ask for this once
-    if(!isLocal && Params().NetworkIDString() == CBaseChainParams::MAIN) {
+    if(!isLocal && Params().NetworkIDString() == "main") {
         auto it = mAskedUsForMasternodeList.find(addrSquashed);
         if (it != mAskedUsForMasternodeList.end() && it->second > GetTime()) {
             Misbehaving(pnode->GetId(), 34);

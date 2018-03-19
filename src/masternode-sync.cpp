@@ -192,7 +192,7 @@ void CMasternodeSync::ProcessTick(CConnman* connman)
         if(pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) continue;
 
         // QUICK MODE (REGTEST ONLY!)
-        if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
+        if(Params().NetworkIDString() == "regtest")
         {
             if(nRequestedMasternodeAttempt <= 2) {
                 // connman->PushMessageWithVersion(pnode, INIT_PROTO_VERSION, NetMsgType::GETSPORKS); //get current network sporks

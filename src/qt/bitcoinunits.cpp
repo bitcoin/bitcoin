@@ -43,7 +43,7 @@ bool BitcoinUnits::valid(int unit)
 
 QString BitcoinUnits::longName(int unit)
 {
-    if(Params().NetworkIDString() == CBaseChainParams::MAIN)
+    if(Params().NetworkIDString() == "main")
     {
         switch(unit)
         {
@@ -78,7 +78,7 @@ QString BitcoinUnits::shortName(int unit)
 
 QString BitcoinUnits::description(int unit)
 {
-    if(Params().NetworkIDString() == CBaseChainParams::MAIN)
+    if(Params().NetworkIDString() == "main")
     {
         switch(unit)
         {

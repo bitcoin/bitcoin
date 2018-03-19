@@ -68,7 +68,7 @@ bool CMasternodeConfig::read(std::string& strErrRet) {
             return false;
         }
         int mainnetDefaultPort = defaultChainParams->GetDefaultPort();
-        if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
+        if(Params().NetworkIDString() == "main") {
             if(port != mainnetDefaultPort) {
                 strErrRet = _("Invalid port detected in masternode.conf") + "\n" +
                         strprintf(_("Port: %d"), port) + "\n" +
