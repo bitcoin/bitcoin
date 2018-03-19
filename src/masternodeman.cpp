@@ -813,6 +813,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
             vAddr.push_back(CAddress(mnb.addr, NODE_NETWORK));
             connman->AddNewAddresses(vAddr, pfrom->addr, 2*60*60);
         } else if(nDos > 0) {
+            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), nDos);
         }
 
@@ -876,8 +877,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         LogPrint(BCLog::MNODE, "DSEG -- Masternode list, masternode=%s\n", masternodeOutpoint.ToStringShort());
 
-        LOCK(cs);
-
         if(masternodeOutpoint.IsNull()) {
             SyncAll(pfrom, connman);
         } else {
@@ -932,14 +931,13 @@ void CMasternodeMan::SyncAll(CNode* pnode, CConnman* connman)
     // do not provide any data until our node is synced
     if (!masternodeSync.IsSynced()) return;
 
-    LOCK(cs);
-
     // local network
     bool isLocal = (pnode->addr.IsRFC1918() || pnode->addr.IsLocal());
 
     CService addrSquashed = Params().AllowMultiplePorts() ? (CService)pnode->addr : CService(pnode->addr, 0);
     // should only ask for this once
     if(!isLocal && Params().NetworkIDString() == CBaseChainParams::MAIN) {
+        LOCK2(cs_main, cs);
         auto it = mAskedUsForMasternodeList.find(addrSquashed);
         if (it != mAskedUsForMasternodeList.end() && it->second > GetTime()) {
             Misbehaving(pnode->GetId(), 34);
@@ -951,6 +949,8 @@ void CMasternodeMan::SyncAll(CNode* pnode, CConnman* connman)
     }
 
     int nInvCount = 0;
+
+    LOCK(cs);
 
     for (const auto& mnpair : mapMasternodes) {
         if (mnpair.second.addr.IsRFC1918() || mnpair.second.addr.IsLocal()) continue; // do not send local network masternode
@@ -1163,6 +1163,8 @@ void CMasternodeMan::ProcessPendingMnvRequests(CConnman* connman)
 
 void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman* connman)
 {
+    AssertLockHeld(cs_main);
+
     // only masternodes can sign this, why would someone ask regular node?
     if(!fMasternodeMode) {
         // do not ban, malicious node might be using my IP
@@ -1204,6 +1206,8 @@ void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv,
 
 void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv)
 {
+    AssertLockHeld(cs_main);
+
     std::string strError;
 
     // did we even ask for it? if that's the case we should have matching fulfilled request
@@ -1318,6 +1322,8 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
 
 void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv)
 {
+    AssertLockHeld(cs_main);
+
     std::string strError;
 
     if(mapSeenMasternodeVerification.find(mnv.GetHash()) != mapSeenMasternodeVerification.end()) {
