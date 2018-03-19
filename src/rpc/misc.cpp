@@ -30,6 +30,7 @@
 
 #include <univalue.h>
 extern bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, std::vector<unsigned char> &vchPubKey);
+extern bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey);
 using namespace std;
 
 /**
