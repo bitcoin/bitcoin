@@ -381,9 +381,15 @@ CScript _createmultisig_redeemScript(const UniValue& params)
 		// Case 1: Syscoin address and we have full public key:
 		CSyscoinAddress address(ks);
 		// SYSCOIN
+		vector<unsigned char> vchPubKey;
+		string strAddress;
 		string strAlias;
-		std::vector<unsigned char> vchPubKey;
-		if (GetAliasFromAddress(ks, strAlias, vchPubKey) && address.IsValid())
+		if (GetAddressFromAlias(ks, strAddress, vchPubKey))
+		{
+			address = CSyscoinAddress(strAddress);
+			pubkeys[i] = vchPubKey;
+		}
+		else if (GetAliasFromAddress(ks, strAlias, vchPubKey) && address.IsValid())
 			pubkeys[i] = vchPubKey;
 		else if (pwalletMain && address.IsValid())
 		{
