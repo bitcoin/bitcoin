@@ -51,7 +51,7 @@ void URITests::uriTests()
     QVERIFY(rv.address == QString("CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU"));
     QVERIFY(rv.label == QString());
 
-    QVERIFY(GUIUtil::parseBitcoinURI("chaincoin://CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?message=Genesis Example Address", &rv));
+    QVERIFY(GUIUtil::parseBitcoinURI("bitcoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?message=Genesis Example Address", &rv));
     QVERIFY(rv.address == QString("CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU"));
     QVERIFY(rv.label == QString());
 

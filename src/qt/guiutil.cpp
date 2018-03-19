@@ -211,14 +211,6 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 
 bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 {
-    // Convert chaincoin:// to chaincoin:
-    //
-    //    Cannot handle this later, because chaincoin:// will cause Qt to see the part after // as host,
-    //    which will lower-case it (and thus invalidate the address).
-    if(uri.startsWith("chaincoin://", Qt::CaseInsensitive))
-    {
-        uri.replace(0, 7, "chaincoin:");
-    }
     QUrl uriInstance(uri);
     return parseBitcoinURI(uriInstance, out);
 }
