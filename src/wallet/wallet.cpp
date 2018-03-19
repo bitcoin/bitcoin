@@ -2411,7 +2411,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 						if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
 							continue;
 						CSyscoinAddress address = CSyscoinAddress(sysdestination);
-						if (DoesAliasExist(address.ToString())
+						if (DoesAliasExist(address.ToString()))
 							continue;
 					}
 				}
@@ -2576,7 +2576,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 				if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
 					continue;
 				CSyscoinAddress address = CSyscoinAddress(sysdestination);
-				if (DoesAliasExist(address.ToString())
+				if (DoesAliasExist(address.ToString()))
 					continue;
 			}
 			if (tryDenom == 0 && IsDenominatedAmount(n)) continue; // we don't want denom values on first run
@@ -3486,7 +3486,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 							{
 								address = CSyscoinAddress(payDest);
 								// if not paying from an alias fall back to pay to new change address
-								if (!DoesAliasExist(address.ToString())
+								if (!DoesAliasExist(address.ToString()))
 								{
 									CPubKey vchPubKey;
 									bool ret;
