@@ -1094,12 +1094,18 @@ TxMempoolInfo CTxMemPool::info(const uint256& hash) const
 
 bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     LOCK(cs);
-    if (tx.nVersion < 3 || tx.nType != TRANSACTION_PROVIDER_REGISTER)
-        return false;
-    CProRegTx proTx;
-    if (!GetTxPayload(tx, proTx))
-        assert(false);
-    return mapProTxAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxPubKeyIDs.count(proTx.keyIDOperator);
+    if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
+        CProRegTx proTx;
+        if (!GetTxPayload(tx, proTx))
+            assert(false);
+        return mapProTxAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxPubKeyIDs.count(proTx.keyIDOperator);
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        CProUpServTx proTx;
+        if (!GetTxPayload(tx, proTx))
+            assert(false);
+        return mapProTxAddresses.count(proTx.addr) && mapProTxAddresses[proTx.addr] != proTx.proTxHash;
+    }
+    return false;
 }
 
 CFeeRate CTxMemPool::estimateFee(int nBlocks) const
