@@ -114,9 +114,6 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 // than or equal to key birthday.
 BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 {
-    g_address_type = OUTPUT_TYPE_DEFAULT;
-    g_change_type = OUTPUT_TYPE_DEFAULT;
-
     // Create two blocks with same timestamp to verify that importwallet rescan
     // will pick up both blocks, not just the first.
     const int64_t BLOCK_TIME = chainActive.Tip()->GetBlockTimeMax() + 5;
@@ -272,8 +269,6 @@ public:
     ListCoinsTestingSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        g_address_type = OUTPUT_TYPE_DEFAULT;
-        g_change_type = OUTPUT_TYPE_DEFAULT;
         wallet = MakeUnique<CWallet>("mock", CWalletDBWrapper::CreateMock());
         bool firstRun;
         wallet->LoadWallet(firstRun);

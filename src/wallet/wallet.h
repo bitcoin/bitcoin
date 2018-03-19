@@ -43,6 +43,7 @@ extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
 extern bool g_wallet_allow_fallback_fee;
 
+//! Default for -keypool
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
@@ -96,18 +97,15 @@ enum WalletFeature
     FEATURE_LATEST = FEATURE_COMPRPUBKEY // HD is optional, use FEATURE_COMPRPUBKEY as latest version
 };
 
-enum OutputType : int
-{
-    OUTPUT_TYPE_NONE,
-    OUTPUT_TYPE_LEGACY,
-    OUTPUT_TYPE_P2SH_SEGWIT,
-    OUTPUT_TYPE_BECH32,
-
-    OUTPUT_TYPE_DEFAULT = OUTPUT_TYPE_P2SH_SEGWIT
+enum class OutputType {
+    NONE,
+    LEGACY,
+    P2SH_SEGWIT,
+    BECH32,
 };
 
-extern OutputType g_address_type;
-extern OutputType g_change_type;
+//! Default for -addresstype
+constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::P2SH_SEGWIT};
 
 
 /** A key pool entry */
@@ -989,6 +987,8 @@ public:
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;
     static CFeeRate m_discard_rate;
+    OutputType m_default_address_type{DEFAULT_ADDRESS_TYPE};
+    OutputType m_default_change_type{OutputType::NONE}; // Default to OutputType::NONE if not set by -changetype
 
     bool NewKeyPool();
     size_t KeypoolCountExternalKeys();
@@ -1232,7 +1232,7 @@ public:
     }
 };
 
-OutputType ParseOutputType(const std::string& str, OutputType default_type = OUTPUT_TYPE_DEFAULT);
+OutputType ParseOutputType(const std::string& str, OutputType default_type);
 const std::string& FormatOutputType(OutputType type);
 
 /**
