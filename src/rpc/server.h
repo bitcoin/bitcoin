@@ -162,8 +162,17 @@ public:
 
     /**
      * Appends a CRPCCommand to the dispatch table.
+     *
      * Returns false if RPC server is already running (dump concurrency protection).
+     *
      * Commands cannot be overwritten (returns false).
+     *
+     * Commands with different method names but the same callback function will
+     * be considered aliases, and only the first registered method name will
+     * show up in the help text command listing. Aliased commands do not have
+     * to have the same behavior. Server and client code can distinguish
+     * between calls based on method name, and aliased commands can also
+     * register different names, types, and numbers of parameters.
      */
     bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
 };
