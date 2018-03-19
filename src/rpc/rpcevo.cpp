@@ -374,6 +374,60 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     return SignAndSendSpecialTx(tx);
 }
 
+void protx_revoke_help()
+{
+    throw std::runtime_error(
+            "protx revoke \"proTxHash\"\n"
+            "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the masternode and\n"
+            "put it into the PoSe-banned state. It will also set the service and protocol version fields of the masternode\n"
+            "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
+            "to the masternode owner.\n"
+            "The operator key of the masternode must be known to your wallet.\n"
+            "\nArguments:\n"
+            "1. \"proTxHash\"           (string, required) The hash of the initial ProRegTx.\n"
+            "2. reason                  (numeric, optional) The reason for revocation.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("protx", "revoke \"0123456701234567012345670123456701234567012345670123456701234567\" \"<operatorKeyAddr>\"")
+    );
+}
+
+UniValue protx_revoke(const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() != 2 && request.params.size() != 3))
+        protx_revoke_help();
+
+    CProUpRevTx ptx;
+    ptx.nVersion = CProRegTx::CURRENT_VERSION;
+    ptx.proTxHash = ParseHashV(request.params[1], "proTxHash");
+
+    if (request.params.size() > 2) {
+        int32_t nReason = ParseInt32V(request.params[2], "reason");
+        if (nReason < 0 || nReason >= CProUpRevTx::REASON_LAST)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
+        ptx.nReason = (uint16_t)nReason;
+    }
+
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    if (!dmn) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
+    }
+
+    CKey keyOperator;
+    if (!pwalletMain->GetKey(dmn->pdmnState->keyIDOperator, keyOperator)) {
+        throw std::runtime_error(strprintf("operator key %s not found in your wallet", dmn->pdmnState->keyIDOwner.ToString()));
+    }
+
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
+
+    FundSpecialTx(tx, ptx);
+    SignSpecialTxPayload(tx, ptx, keyOperator);
+    SetTxPayload(tx, ptx);
+
+    return SignAndSendSpecialTx(tx);
+}
+
 void protx_list_help()
 {
     throw std::runtime_error(
@@ -518,6 +572,7 @@ UniValue protx(const JSONRPCRequest& request)
                 "  list              - List ProTxs\n"
                 "  update_service    - Create and send ProUpServTx to network\n"
                 "  update_registrar  - Create and send ProUpRegTx to network\n"
+                "  revoke            - Create and send ProUpRevTx to network\n"
         );
     }
 
@@ -531,6 +586,8 @@ UniValue protx(const JSONRPCRequest& request)
         return protx_update_service(request);
     } else if (command == "update_registrar") {
         return protx_update_registrar(request);
+    } else if (command == "revoke") {
+        return protx_revoke(request);
     } else {
         throw std::runtime_error("invalid command: " + command);
     }
