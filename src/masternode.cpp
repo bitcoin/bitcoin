@@ -419,6 +419,8 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
 {
     nDos = 0;
 
+    const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
+
     AssertLockHeld(cs_main);
 
     // make sure addr is valid
@@ -464,7 +466,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
         return false;
     }
 
-    int mainnetDefaultPort = Params().GetDefaultPort();
+    int mainnetDefaultPort = defaultChainParams->GetDefaultPort();
     if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if(addr.GetPort() != mainnetDefaultPort) return false;
     } else if(addr.GetPort() == mainnetDefaultPort) return false;
