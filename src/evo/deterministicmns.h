@@ -30,6 +30,7 @@ public:
     int nPoSePenalty{0};
     int nPoSeRevivedHeight{-1};
     int nPoSeBanHeight{-1};
+    uint16_t nRevocationReason{CProUpRevTx::REASON_NOT_SPECIFIED};
 
     CKeyID keyIDOwner;
     CKeyID keyIDOperator;
@@ -63,6 +64,7 @@ public:
         READWRITE(nPoSePenalty);
         READWRITE(nPoSeRevivedHeight);
         READWRITE(nPoSeBanHeight);
+        READWRITE(nRevocationReason);
         READWRITE(keyIDOwner);
         READWRITE(keyIDOperator);
         READWRITE(keyIDVoting);
@@ -78,7 +80,7 @@ public:
         addr = CService();
         nProtocolVersion = 0;
         scriptOperatorPayout = CScript();
-        revocationReason = CProUpRevTx::REASON_NOT_SPECIFIED;
+        nRevocationReason = CProUpRevTx::REASON_NOT_SPECIFIED;
     }
     void BanIfNotBanned(int height)
     {
@@ -94,6 +96,7 @@ public:
                nPoSePenalty == rhs.nPoSePenalty &&
                nPoSeRevivedHeight == rhs.nPoSeRevivedHeight &&
                nPoSeBanHeight == rhs.nPoSeBanHeight &&
+               nRevocationReason == rhs.nRevocationReason &&
                keyIDOwner == rhs.keyIDOwner &&
                keyIDOperator == rhs.keyIDOperator &&
                keyIDVoting == rhs.keyIDVoting &&

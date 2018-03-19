@@ -217,6 +217,33 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     return true;
 }
 
+bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+    AssertLockHeld(cs_main);
+
+    CProUpRevTx ptx;
+    if (!GetTxPayload(tx, ptx))
+        return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+
+    if (ptx.nVersion > CProRegTx::CURRENT_VERSION)
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-version");
+
+    if (ptx.nReason < CProUpRevTx::REASON_NOT_SPECIFIED || ptx.nReason > CProUpRevTx::REASON_LAST)
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-reason");
+
+    if (pindexPrev) {
+        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev->GetBlockHash());
+        auto dmn = mnList.GetMN(ptx.proTxHash);
+        if (!dmn)
+            return state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
+
+        if (!CheckInputsHashAndSig(tx, ptx, dmn->pdmnState->keyIDOperator, state))
+            return false;
+    }
+
+    return true;
+}
+
 std::string CProRegTx::ToString() const
 {
     CTxDestination dest;
@@ -304,6 +331,22 @@ void CProUpRegTx::ToJson(UniValue& obj) const
         CBitcoinAddress bitcoinAddress(dest);
         obj.push_back(Pair("payoutAddress", bitcoinAddress.ToString()));
     }
+    obj.push_back(Pair("inputsHash", inputsHash.ToString()));
+}
+
+std::string CProUpRevTx::ToString() const
+{
+    return strprintf("CProUpRevTx(nVersion=%d, proTxHash=%s, nReason=%d)",
+                     nVersion, proTxHash.ToString(), nReason);
+}
+
+void CProUpRevTx::ToJson(UniValue& obj) const
+{
+    obj.clear();
+    obj.setObject();
+    obj.push_back(Pair("version", nVersion));
+    obj.push_back(Pair("proTxHash", proTxHash.ToString()));
+    obj.push_back(Pair("reason", (int)nReason));
     obj.push_back(Pair("inputsHash", inputsHash.ToString()));
 }
 

@@ -151,6 +151,13 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
             proTx.ToJson(proTxObj);
             entry.push_back(Pair("proUpRegTx", proTxObj));
         }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
+        CProUpRevTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue proTxObj;
+            proTx.ToJson(proTxObj);
+            entry.push_back(Pair("proUpRevTx", proTxObj));
+        }
     }
 
     if (!hashBlock.IsNull()) {
