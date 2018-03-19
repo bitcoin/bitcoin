@@ -280,7 +280,10 @@ class AddressTypeTest(BitcoinTestFramework):
         self.log.info('getrawchangeaddress defaults to addresstype if -changetype is not set and argument is absent')
         self.test_address(3, self.nodes[3].getrawchangeaddress(), multisig=False, typ='bech32')
 
-        self.log.info('getrawchangeaddress fails with invalid changetype argument')
+        self.log.info('test invalid address type arguments')
+        assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].addmultisigaddress, 2, [compressed_1, compressed_2], None, '')
+        assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].getnewaddress, None, '')
+        assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].getrawchangeaddress, '')
         assert_raises_rpc_error(-5, "Unknown address type 'bech23'", self.nodes[3].getrawchangeaddress, 'bech23')
 
         self.log.info("Nodes with changetype=p2sh-segwit never use a P2WPKH change output")

@@ -224,7 +224,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         outputs = { self.nodes[0].getnewaddress() : Decimal(4.0) }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         assert_raises_rpc_error(-1, "JSON value is not a string as expected", self.nodes[2].fundrawtransaction, rawtx, {'change_type': None})
-        assert_raises_rpc_error(-5, "Unknown change type", self.nodes[2].fundrawtransaction, rawtx, {'change_type': ''})
+        assert_raises_rpc_error(-5, "Unknown change type ''", self.nodes[2].fundrawtransaction, rawtx, {'change_type': ''})
         rawtx = self.nodes[2].fundrawtransaction(rawtx, {'change_type': 'bech32'})
         dec_tx = self.nodes[2].decoderawtransaction(rawtx['hex'])
         assert_equal('witness_v0_keyhash', dec_tx['vout'][rawtx['changepos']]['scriptPubKey']['type'])
