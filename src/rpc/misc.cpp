@@ -384,7 +384,7 @@ CScript _createmultisig_redeemScript(const UniValue& params)
 		string strAlias;
 		std::vector<unsigned char> vchPubKey;
 		if (GetAliasFromAddress(ks, strAlias, vchPubKey) && address.IsValid())
-			pubkeys[i] = address.vchPubKey;
+			pubkeys[i] = vchPubKey;
 		else if (pwalletMain && address.IsValid())
 		{
 			CKeyID keyID;
