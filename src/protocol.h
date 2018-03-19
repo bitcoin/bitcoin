@@ -404,6 +404,11 @@ enum GetDataMsg
     // Dash message types
     // NOTE: declare non-implmented here in future, we must keep this enum consistent and backwards compatible
     // PM-Tech We aren't backwards compatible, so clean up here. TODO: Check for pre-fork issues with old nodes
+    MSG_SPARE1,
+    MSG_SPARE2,
+    MSG_SPARE3,
+    MSG_SPARE4,
+    MSG_SPARE5,
     MSG_TXLOCK_REQUEST,
     MSG_TXLOCK_VOTE,
     MSG_MASTERNODE_PAYMENT_VOTE,
@@ -423,7 +428,6 @@ class CInv
 public:
     CInv();
     CInv(int typeIn, const uint256& hashIn);
-    CInv(const std::string& strType, const uint256& hashIn);
 
     ADD_SERIALIZE_METHODS;
 
@@ -436,7 +440,6 @@ public:
 
     friend bool operator<(const CInv& a, const CInv& b);
 
-    bool IsKnownType() const;
     std::string GetCommand() const;
     std::string ToString() const;
 

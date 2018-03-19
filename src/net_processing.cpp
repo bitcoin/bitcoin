@@ -1269,7 +1269,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     push = true;
                 }
             }
-            else if (!push && inv.IsKnownType())
+            else if (!push)
             {
                 // Send from relay memory
                 auto mi1 = mapRelayInv.find(inv.hash);
