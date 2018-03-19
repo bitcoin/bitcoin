@@ -1649,12 +1649,18 @@ bool AppInitMain()
     if (!CheckDiskSpace() && !CheckDiskSpace(0, true))
         return false;
 
-    // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
-    // No locking, as this happens before any background thread is started.
-    if (chainActive.Tip() == nullptr) {
-        uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
-    } else {
-        fHaveGenesis = true;
+    // Either install a handler to notify us when genesis activates, or set
+    // fHaveGenesis directly.
+    // Locking is not needed as this happens before any background thread is
+    // started. A lock is added nevertheless to please Clang's thread safety
+    // analysis (chainActive is guarded by cs_main).
+    {
+        LOCK(cs_main);
+        if (chainActive.Tip() == nullptr) {
+            uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
+        } else {
+            fHaveGenesis = true;
+        }
     }
 
     if (gArgs.IsArgSet("-blocknotify"))
