@@ -453,7 +453,7 @@ bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, C
 bool ResetBlockFailureFlags(CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** The currently-connected chain of blocks (protected by cs_main). */
-extern CChain& chainActive;
+extern CChain& chainActive GUARDED_BY(cs_main);
 
 /** Global variable that points to the coins database (protected by cs_main) */
 extern std::unique_ptr<CCoinsViewDB> pcoinsdbview;
