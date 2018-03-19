@@ -101,9 +101,11 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
                                     CGovernanceException& exception,
                                     CConnman* connman)
 {
+    LOCK(cs);
+
     if(!mnodeman.Has(vote.GetMasternodeOutpoint())) {
         std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Masternode index not found";
+        ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
         if(cmmapOrphanVotes.Insert(vote.GetMasternodeOutpoint(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
             if(pfrom) {
@@ -199,6 +201,8 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
 
 void CGovernanceObject::ClearMasternodeVotes()
 {
+    LOCK(cs);
+
     vote_m_it it = mapCurrentMNVotes.begin();
     while(it != mapCurrentMNVotes.end()) {
         if(!mnodeman.Has(it->first)) {
@@ -305,9 +309,13 @@ UniValue CGovernanceObject::GetJSONObject()
     UniValue objResult(UniValue::VOBJ);
     GetData(objResult);
 
-    std::vector<UniValue> arr1 = objResult.getValues();
-    std::vector<UniValue> arr2 = arr1.at( 0 ).getValues();
-    obj = arr2.at( 1 );
+    if (objResult.isObject()) {
+        obj = objResult;
+    } else {
+        std::vector<UniValue> arr1 = objResult.getValues();
+        std::vector<UniValue> arr2 = arr1.at( 0 ).getValues();
+        obj = arr2.at( 1 );
+    }
 
     return obj;
 }
@@ -419,9 +427,11 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
     }
 
     switch(nObjectType) {
+        case GOVERNANCE_OBJECT_WATCHDOG:
+            // watchdogs are deprecated
+            return false;
         case GOVERNANCE_OBJECT_PROPOSAL:
         case GOVERNANCE_OBJECT_TRIGGER:
-        case GOVERNANCE_OBJECT_WATCHDOG:
             if (vchData.size() > MAX_GOVERNANCE_OBJECT_DATA_SIZE) {
                 strError = strprintf("Invalid object size %d", vchData.size());
                 return false;
@@ -437,7 +447,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
     // CHECK COLLATERAL IF REQUIRED (HIGH CPU USAGE)
 
     if(fCheckCollateral) {
-        if((nObjectType == GOVERNANCE_OBJECT_TRIGGER) || (nObjectType == GOVERNANCE_OBJECT_WATCHDOG)) {
+        if(nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
             std::string strOutpoint = masternodeOutpoint.ToStringShort();
             masternode_info_t infoMn;
             if(!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
@@ -594,6 +604,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 
 int CGovernanceObject::CountMatchingVotes(vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) const
 {
+    LOCK(cs);
     int nCount = 0;
     for(vote_m_cit it = mapCurrentMNVotes.begin(); it != mapCurrentMNVotes.end(); ++it) {
         const vote_rec_t& recVote = it->second;
@@ -640,6 +651,8 @@ int CGovernanceObject::GetAbstainCount(vote_signal_enum_t eVoteSignalIn) const
 
 bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord)
 {
+    LOCK(cs);
+
     vote_m_it it = mapCurrentMNVotes.find(mnCollateralOutpoint);
     if (it == mapCurrentMNVotes.end()) {
         return false;

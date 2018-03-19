@@ -16,8 +16,8 @@ class CConnman;
 static const int MASTERNODE_CHECK_SECONDS               =   5;
 static const int MASTERNODE_MIN_MNB_SECONDS             =   5 * 60;
 static const int MASTERNODE_MIN_MNP_SECONDS             =  10 * 60;
-static const int MASTERNODE_EXPIRATION_SECONDS          =  65 * 60;
-static const int MASTERNODE_WATCHDOG_MAX_SECONDS        = 120 * 60;
+static const int MASTERNODE_SENTINEL_PING_MAX_SECONDS   =  60 * 60;
+static const int MASTERNODE_EXPIRATION_SECONDS          = 120 * 60;
 static const int MASTERNODE_NEW_START_REQUIRED_SECONDS  = 180 * 60;
 
 static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
@@ -100,12 +100,11 @@ struct masternode_info_t
 
     masternode_info_t(int activeState, int protoVer, int64_t sTime,
                       COutPoint const& outpnt, CService const& addr,
-                      CPubKey const& pkCollAddr, CPubKey const& pkMN,
-                      int64_t tWatchdogV = 0) :
+                      CPubKey const& pkCollAddr, CPubKey const& pkMN) :
+
         nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime},
         outpoint{outpnt}, addr{addr},
-        pubKeyCollateralAddress{pkCollAddr}, pubKeyMasternode{pkMN},
-        nTimeLastWatchdogVote{tWatchdogV} {}
+        pubKeyCollateralAddress{pkCollAddr}, pubKeyMasternode{pkMN} {}
 
     int nActiveState = 0;
     int nProtocolVersion = 0;
@@ -115,7 +114,6 @@ struct masternode_info_t
     CService addr{};
     CPubKey pubKeyCollateralAddress{};
     CPubKey pubKeyMasternode{};
-    int64_t nTimeLastWatchdogVote = 0;
 
     int64_t nLastDsq = 0; //the dsq count from the last dsq broadcast of this node
     int64_t nTimeLastChecked = 0;
@@ -141,7 +139,7 @@ public:
         MASTERNODE_EXPIRED,
         MASTERNODE_OUTPOINT_SPENT,
         MASTERNODE_UPDATE_REQUIRED,
-        MASTERNODE_WATCHDOG_EXPIRED,
+        MASTERNODE_SENTINEL_PING_EXPIRED,
         MASTERNODE_NEW_START_REQUIRED,
         MASTERNODE_POSE_BAN
     };
@@ -187,7 +185,6 @@ public:
         READWRITE(nLastDsq);
         READWRITE(nTimeLastChecked);
         READWRITE(nTimeLastPaid);
-        READWRITE(nTimeLastWatchdogVote);
         READWRITE(nActiveState);
         READWRITE(nCollateralMinConfBlockHash);
         READWRITE(nBlockLastPaid);
@@ -228,7 +225,7 @@ public:
     bool IsExpired() const { return nActiveState == MASTERNODE_EXPIRED; }
     bool IsOutpointSpent() const { return nActiveState == MASTERNODE_OUTPOINT_SPENT; }
     bool IsUpdateRequired() const { return nActiveState == MASTERNODE_UPDATE_REQUIRED; }
-    bool IsWatchdogExpired() const { return nActiveState == MASTERNODE_WATCHDOG_EXPIRED; }
+    bool IsSentinelPingExpired() const { return nActiveState == MASTERNODE_SENTINEL_PING_EXPIRED; }
     bool IsNewStartRequired() const { return nActiveState == MASTERNODE_NEW_START_REQUIRED; }
 
     static bool IsValidStateForAutoStart(int nActiveStateIn)
@@ -236,7 +233,7 @@ public:
         return  nActiveStateIn == MASTERNODE_ENABLED ||
                 nActiveStateIn == MASTERNODE_PRE_ENABLED ||
                 nActiveStateIn == MASTERNODE_EXPIRED ||
-                nActiveStateIn == MASTERNODE_WATCHDOG_EXPIRED;
+                nActiveStateIn == MASTERNODE_SENTINEL_PING_EXPIRED;
     }
 
     bool IsValidForPayment() const
@@ -270,8 +267,6 @@ public:
     void FlagGovernanceItemsAsDirty();
 
     void RemoveGovernanceObject(uint256 nGovernanceObjectHash);
-
-    void UpdateWatchdogVoteTime(uint64_t nVoteTime = 0);
 
     CMasternode& operator=(CMasternode const& from)
     {

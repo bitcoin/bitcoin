@@ -5,39 +5,32 @@
 #include <governance-validators.h>
 
 #include <base58.h>
+#include <tinyformat.h>
 #include <utilstrencodings.h>
 
 #include <algorithm>
 
-CProposalValidator::CProposalValidator(const std::string& strDataHexIn)
-    : strDataHex(),
-      objJSON(UniValue::VOBJ),
-      fJSONValid(false),
-      strErrorMessages()
+const size_t MAX_NAME_SIZE  = 40;
+
+CProposalValidator::CProposalValidator(const std::string& strHexData) :
+    objJSON(UniValue::VOBJ),
+    fJSONValid(false),
+    strErrorMessages()
 {
-    if(!strDataHexIn.empty()) {
-        SetHexData(strDataHexIn);
+    if(!strHexData.empty()) {
+        ParseStrHexData(strHexData);
     }
 }
 
-void CProposalValidator::Clear()
+void CProposalValidator::ParseStrHexData(const std::string& strHexData)
 {
-    strDataHex = std::string();
-    objJSON = UniValue(UniValue::VOBJ);
-    fJSONValid = false;
-    strErrorMessages = std::string();
-}
-
-void CProposalValidator::SetHexData(const std::string& strDataHexIn)
-{
-    std::vector<unsigned char> v = ParseHex(strDataHexIn);
-    strDataHex = std::string(v.begin(), v.end());
-    ParseJSONData();
+    std::vector<unsigned char> v = ParseHex(strHexData);
+    ParseJSONData(std::string(v.begin(), v.end()));
 }
 
 bool CProposalValidator::Validate()
 {
-    if(!ValidateJSON()) {
+    if(!fJSONValid) {
         strErrorMessages += "JSON parsing error;";
         return false;
     }
@@ -64,11 +57,6 @@ bool CProposalValidator::Validate()
     return true;
 }
 
-bool CProposalValidator::ValidateJSON()
-{
-    return fJSONValid;
-}
-
 bool CProposalValidator::ValidateName()
 {
     std::string strName;
@@ -77,15 +65,8 @@ bool CProposalValidator::ValidateName()
         return false;
     }
 
-    if(strName.size() > 40) {
-        strErrorMessages += "name exceeds 40 characters;";
-        return false;
-    }
-
-    std::string strNameStripped = StripWhitespace(strName);
-
-    if(strNameStripped.empty()) {
-        strErrorMessages += "name is empty;";
+    if(strName.size() > MAX_NAME_SIZE) {
+        strErrorMessages += strprintf("name exceeds %lu characters;", MAX_NAME_SIZE);
         return false;
     }
 
@@ -154,19 +135,25 @@ bool CProposalValidator::ValidatePaymentAddress()
         return false;
     }
 
+    if(std::find_if(strPaymentAddress.begin(), strPaymentAddress.end(), ::isspace) != strPaymentAddress.end()) {
+        strErrorMessages += "payment_address can't have whitespaces;";
+        return false;
+    }
+
     CTxDestination destination = DecodeDestination(strPaymentAddress);
     if(!IsValidDestination(destination)) {
         strErrorMessages += "payment_address is invalid;";
         return false;
     }
 
-// TODO: find a way to determine the address type or accept script addresses
-/*
+    // TODO: find a way to determine the address type or accept script addresses
+    /*
+
     if(address.IsScript()) {
         strErrorMessages += "script addresses are not supported;";
         return false;
     }
-*/
+    */
     return true;
 }
 
@@ -178,9 +165,12 @@ bool CProposalValidator::ValidateURL()
         return false;
     }
 
-    std::string strURLStripped = StripWhitespace(strURL);
+    if(std::find_if(strURL.begin(), strURL.end(), ::isspace) != strURL.end()) {
+        strErrorMessages += "url can't have whitespaces;";
+        return false;
+    }
 
-    if(strURLStripped.size() < 4U) {
+    if(strURL.size() < 4U) {
         strErrorMessages += "url too short;";
         return false;
     }
@@ -193,20 +183,27 @@ bool CProposalValidator::ValidateURL()
     return true;
 }
 
-void CProposalValidator::ParseJSONData()
+void CProposalValidator::ParseJSONData(const std::string& strJSONData)
 {
     fJSONValid = false;
 
-    if(strDataHex.empty()) {
+    if(strJSONData.empty()) {
         return;
     }
 
     try {
         UniValue obj(UniValue::VOBJ);
-        obj.read(strDataHex);
-        std::vector<UniValue> arr1 = obj.getValues();
-        std::vector<UniValue> arr2 = arr1.at(0).getValues();
-        objJSON = arr2.at(1);
+
+        obj.read(strJSONData);
+
+        if (obj.isObject()) {
+            objJSON = obj;
+        } else {
+            std::vector<UniValue> arr1 = obj.getValues();
+            std::vector<UniValue> arr2 = arr1.at(0).getValues();
+            objJSON = arr2.at(1);
+        }
+
         fJSONValid = true;
     }
     catch(std::exception& e) {
@@ -217,11 +214,11 @@ void CProposalValidator::ParseJSONData()
     }
 }
 
-bool CProposalValidator::GetDataValue(const std::string& strKey, std::string& strValue)
+bool CProposalValidator::GetDataValue(const std::string& strKey, std::string& strValueRet)
 {
     bool fOK = false;
     try  {
-        strValue = objJSON[strKey].get_str();
+        strValueRet = objJSON[strKey].get_str();
         fOK = true;
     }
     catch(std::exception& e) {
@@ -233,14 +230,14 @@ bool CProposalValidator::GetDataValue(const std::string& strKey, std::string& st
     return fOK;
 }
 
-bool CProposalValidator::GetDataValue(const std::string& strKey, int64_t& nValue)
+bool CProposalValidator::GetDataValue(const std::string& strKey, int64_t& nValueRet)
 {
     bool fOK = false;
     try  {
         const UniValue uValue = objJSON[strKey];
         switch(uValue.getType()) {
         case UniValue::VNUM:
-            nValue = uValue.get_int64();
+            nValueRet = uValue.get_int64();
             fOK = true;
             break;
         default:
@@ -256,14 +253,14 @@ bool CProposalValidator::GetDataValue(const std::string& strKey, int64_t& nValue
     return fOK;
 }
 
-bool CProposalValidator::GetDataValue(const std::string& strKey, double& dValue)
+bool CProposalValidator::GetDataValue(const std::string& strKey, double& dValueRet)
 {
     bool fOK = false;
     try  {
         const UniValue uValue = objJSON[strKey];
         switch(uValue.getType()) {
         case UniValue::VNUM:
-            dValue = uValue.get_real();
+            dValueRet = uValue.get_real();
             fOK = true;
             break;
         default:
@@ -277,20 +274,6 @@ bool CProposalValidator::GetDataValue(const std::string& strKey, double& dValue)
         strErrorMessages += "Unknown exception;";
     }
     return fOK;
-}
-
-std::string CProposalValidator::StripWhitespace(const std::string& strIn)
-{
-    static const std::string strWhitespace = " \f\n\r\t\v";
-
-    std::string::size_type nStart = strIn.find_first_not_of(strWhitespace);
-    std::string::size_type nEnd = strIn.find_last_not_of(strWhitespace);
-
-    if((nStart == std::string::npos) || (nEnd == std::string::npos)) {
-        return std::string();
-    }
-
-    return strIn.substr(nStart, nEnd - nStart + 1);
 }
 
 /*

@@ -217,13 +217,13 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     for (const auto& txout : txCollateral.vout) {
         nValueOut += txout.nValue;
 
-        if(!txout.scriptPubKey.IsPayToPublicKeyHash()) {
+        if((!txout.scriptPubKey.IsPayToPublicKeyHash()) && !(txout.scriptPubKey.IsUnspendable())) {
             LogPrintf ("CPrivateSend::IsCollateralValid -- Invalid Script, txCollateral=%s", txCollateral.ToString());
             return false;
         }
     }
 
-    for (const auto txin : txCollateral.vin) {
+    for (const auto& txin : txCollateral.vin) {
         Coin coin;
         if(!GetUTXOCoin(txin.prevout, coin)) {
             LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString());
@@ -254,10 +254,9 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
 bool CPrivateSend::IsCollateralAmount(CAmount nInputAmount)
 {
-    // collateral inputs should always be a 2x..4x of mixing collateral
-    return  nInputAmount >  GetCollateralAmount() &&
-            nInputAmount <= GetMaxCollateralAmount() &&
-            nInputAmount %  GetCollateralAmount() == 0;
+    // collateral input should be smth between 1x and 2x OR exactly Nx of mixing collateral (1x..4x)
+    return (nInputAmount > GetCollateralAmount() && nInputAmount < GetCollateralAmount() * 2) ||
+           (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount() && nInputAmount % GetCollateralAmount() == 0);
 }
 
 /*  Create a nice string to show the denominations
@@ -295,10 +294,10 @@ std::string CPrivateSend::GetDenominationsToString(int nDenom)
 /*  Return a bitshifted integer representing the denominations in this list
     Function returns as follows (for 4 denominations):
         ( bit on if present )
-        10       - bit 0
-        1        - bit 1
-        .1         - bit 2
-        .01        - bit 3
+        10        - bit 0
+        1         - bit 1
+        .1        - bit 2
+        .01       - bit 3
         non-denom - 0, all bits off
 */
 int CPrivateSend::GetDenominations(const std::vector<CTxOut>& vecTxOut, bool fSingleRandomDenom)

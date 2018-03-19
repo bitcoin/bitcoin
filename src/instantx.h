@@ -18,14 +18,13 @@ extern CInstantSend instantsend;
 
 /*
     At 15 signatures, 1/2 of the masternode network can be owned by
-    one party without comprimising the security of InstantSend
+    one party without compromising the security of InstantSend
     (1000/2150.0)**10 = 0.00047382219560689856
     (1000/2900.0)**10 = 2.3769498616783657e-05
 
     ### getting 5 of 10 signatures w/ 1000 nodes of 2900
     (1000/2900.0)**5 = 0.004875397277841433
 */
-static const int INSTANTSEND_CONFIRMATIONS_REQUIRED = 6;
 
 static const int MIN_INSTANTSEND_DEPTH              = 0;
 static const int MAX_INSTANTSEND_DEPTH              = 60;
@@ -71,9 +70,10 @@ private:
     void Vote(CTxLockCandidate& txLockCandidate, CConnman* connman);
 
     //process consensus vote message
-    bool ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman* connman);
-    void ProcessOrphanTxLockVotes(CConnman* connman);
-    bool IsEnoughOrphanVotesForTx(const CTxLockRequest& txLockRequest);
+    bool ProcessNewTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman* connman);
+    void UpdateVotedOutpoints(const CTxLockVote& vote, CTxLockCandidate& txLockCandidate);
+    bool ProcessOrphanTxLockVote(const CTxLockVote& vote);
+    void ProcessOrphanTxLockVotes();
     bool IsEnoughOrphanVotesForTxAndOutPoint(const uint256& txHash, const COutPoint& outpoint);
     int64_t GetAverageMasternodeOrphanVoteTime();
 

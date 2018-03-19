@@ -124,6 +124,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="useBech32">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -144,6 +147,12 @@
             </property>
             <property name="text">
              <string>Generate Bech32 address</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="tristate">
+             <bool>true</bool>
             </property>
            </widget>
           </item>

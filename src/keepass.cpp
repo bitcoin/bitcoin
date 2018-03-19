@@ -101,7 +101,7 @@ CKeePassIntegrator::CKeePassIntegrator()
 // Initialze from application context
 void CKeePassIntegrator::init()
 {
-    bIsActive = gArgs.GetBoolArg("-BCLog::KEEPASS", false);
+    bIsActive = gArgs.GetBoolArg("-keepass", false);
     nPort = gArgs.GetArg("-keepassport", DEFAULT_KEEPASS_HTTP_PORT);
     sKeyBase64 = SecureString(gArgs.GetArg("-keepasskey", "").c_str());
     strKeePassId = gArgs.GetArg("-keepassid", "");
@@ -122,12 +122,12 @@ void CKeePassIntegrator::init()
     }
 }
 
-void CKeePassIntegrator::CKeePassRequest::addStrParameter(std::string strName, std::string strValue)
+void CKeePassIntegrator::CKeePassRequest::addStrParameter(const std::string& strName, const std::string& strValue)
 {
     requestObj.push_back(Pair(strName, strValue));
 }
 
-void CKeePassIntegrator::CKeePassRequest::addStrParameter(std::string strName, SecureString sValue)
+void CKeePassIntegrator::CKeePassRequest::addStrParameter(const std::string& strName, const SecureString& sValue)
 {
     std::string sCipherValue;
 
@@ -155,7 +155,7 @@ void CKeePassIntegrator::CKeePassRequest::init()
     addStrParameter("RequestType", strType);
 }
 
-void CKeePassIntegrator::CKeePassResponse::parseResponse(std::string strResponse)
+void CKeePassIntegrator::CKeePassResponse::parseResponse(const std::string& strResponse)
 {
     UniValue responseValue;
     if(!responseValue.read(strResponse))
@@ -171,12 +171,12 @@ void CKeePassIntegrator::CKeePassResponse::parseResponse(std::string strResponse
     strIV = DecodeBase64(getStr("Nonce"));
 }
 
-std::string CKeePassIntegrator::CKeePassResponse::getStr(std::string strName)
+std::string CKeePassIntegrator::CKeePassResponse::getStr(const std::string& strName)
 {
     return responseObj[strName].get_str();
 }
 
-SecureString CKeePassIntegrator::CKeePassResponse::getSecureStr(std::string strName)
+SecureString CKeePassIntegrator::CKeePassResponse::getSecureStr(const std::string& strName)
 {
     std::string strValueBase64Encrypted(responseObj[strName].get_str());
     SecureString sValue;
@@ -193,7 +193,7 @@ SecureString CKeePassIntegrator::CKeePassResponse::getSecureStr(std::string strN
     return sValue;
 }
 
-SecureString CKeePassIntegrator::CKeePassResponse::decrypt(std::string strValueBase64Encrypted)
+SecureString CKeePassIntegrator::CKeePassResponse::decrypt(const std::string& strValueBase64Encrypted)
 {
     std::string strValueEncrypted = DecodeBase64(strValueBase64Encrypted);
     SecureString sValue;
@@ -230,7 +230,7 @@ SecureString CKeePassIntegrator::generateRandomKey(size_t nSize)
     SecureString sKey;
     sKey.resize(nSize);
 
-    GetRandBytes((unsigned char *) &sKey[0], nSize);
+    GetStrongRandBytes((unsigned char *) &sKey[0], nSize);
 
     return sKey;
 }
@@ -240,13 +240,13 @@ std::string CKeePassIntegrator::constructHTTPPost(const std::string& strMsg, con
 {
     std::ostringstream streamOut;
     streamOut << "POST / HTTP/1.1\r\n"
-      << "User-Agent: chaincoin-json-rpc/" << FormatFullVersion() << "\r\n"
+      << "User-Agent: dash-json-rpc/" << FormatFullVersion() << "\r\n"
       << "Host: localhost\r\n"
       << "Content-Type: application/json\r\n"
       << "Content-Length: " << strMsg.size() << "\r\n"
       << "Connection: close\r\n"
       << "Accept: application/json\r\n";
-    for (const std::pair<std::string, std::string>& item : mapRequestHeaders)
+    for (const auto& item : mapRequestHeaders)
         streamOut << item.first << ": " << item.second << "\r\n";
     streamOut << "\r\n" << strMsg;
 
@@ -264,8 +264,8 @@ static void http_request_done(struct evhttp_request *req, void *ctx)
 {
     HTTPReply *reply = static_cast<HTTPReply*>(ctx);
 
-    if (req == nullptr) {
-        /* If req is nullptr, it means an error occurred while connecting, but
+    if (req == NULL) {
+        /* If req is NULL, it means an error occurred while connecting, but
          * I'm not sure how to find out which one. We also don't really care.
          */
         reply->nStatus = 0;
@@ -286,7 +286,7 @@ static void http_request_done(struct evhttp_request *req, void *ctx)
 }
 
 // Send RPC message to KeePassHttp
-void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatus, std::string& strResponse)
+void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatusRet, std::string& strResponseRet)
 {
 //    // Prepare communication
 //    boost::asio::io_service io_service;
@@ -316,8 +316,8 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatus, s
         throw std::runtime_error("cannot create event_base");
 
     // Synchronously look up hostname
-    struct evhttp_connection *evcon = evhttp_connection_base_new(base, nullptr, KEEPASS_HTTP_HOST, DEFAULT_KEEPASS_HTTP_PORT); // TODO RAII
-    if (evcon == nullptr)
+    struct evhttp_connection *evcon = evhttp_connection_base_new(base, NULL, KEEPASS_HTTP_HOST, DEFAULT_KEEPASS_HTTP_PORT); // TODO RAII
+    if (evcon == NULL)
         throw std::runtime_error("create connection failed");
     evhttp_connection_set_timeout(evcon, KEEPASS_HTTP_CONNECT_TIMEOUT);
 
@@ -327,13 +327,13 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatus, s
 
     HTTPReply response;
     struct evhttp_request *req = evhttp_request_new(http_request_done, (void*)&response); // TODO RAII
-    if (req == nullptr)
+    if (req == NULL)
         throw std::runtime_error("create http request failed");
 
     struct evkeyvalq *output_headers = evhttp_request_get_output_headers(req);
     assert(output_headers);
 //    s << "POST / HTTP/1.1\r\n"
-    evhttp_add_header(output_headers, "User-Agent", ("chaincoin-json-rpc/" + FormatFullVersion()).c_str());
+    evhttp_add_header(output_headers, "User-Agent", ("dash-json-rpc/" + FormatFullVersion()).c_str());
     evhttp_add_header(output_headers, "Host", KEEPASS_HTTP_HOST);
     evhttp_add_header(output_headers, "Accept", "application/json");
     evhttp_add_header(output_headers, "Content-Type", "application/json");
@@ -402,7 +402,7 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatus, s
 //    ReadHTTPMessage(response_stream, mapHeaders, strResponse, nProto, std::numeric_limits<size_t>::max());
 //    LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::doHTTPPost -- Processed body\n");
 
-    nStatus = response.nStatus;
+    nStatusRet = response.nStatus;
     if (response.nStatus == 0)
         throw std::runtime_error("couldn't connect to server");
     else if (response.nStatus >= 400 && response.nStatus != HTTP_BAD_REQUEST && response.nStatus != HTTP_NOT_FOUND && response.nStatus != HTTP_INTERNAL_SERVER_ERROR)
@@ -418,7 +418,7 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatus, s
     if (reply.empty())
         throw std::runtime_error("expected reply to have result, error and id properties");
 
-    strResponse = valReply.get_str();
+    strResponseRet = valReply.get_str();
 }
 
 void CKeePassIntegrator::rpcTestAssociation(bool bTriggerUnlock)
@@ -491,7 +491,7 @@ void CKeePassIntegrator::rpcSetLogin(const SecureString& sWalletPass, const Secu
     LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::rpcSetLogin -- send Url: %s\n", sUrl);
 
     //request.addStrParameter("SubmitUrl", sSubmitUrl); // Is used to construct the entry title
-    request.addStrParameter("Login", SecureString("chaincoin"));
+    request.addStrParameter("Login", SecureString("dash"));
     request.addStrParameter("Password", sWalletPass);
     if(sEntryId.size() != 0)
     {
@@ -534,13 +534,13 @@ SecureString CKeePassIntegrator::generateKeePassKey()
     return sKeyBase64;
 }
 
-void CKeePassIntegrator::rpcAssociate(std::string& strId, SecureString& sKeyBase64)
+void CKeePassIntegrator::rpcAssociate(std::string& strIdRet, SecureString& sKeyBase64Ret)
 {
     sKey = generateRandomKey(KEEPASS_CRYPTO_KEY_SIZE);
     CKeePassRequest request(sKey, "associate");
 
-    sKeyBase64 = EncodeBase64Secure(sKey);
-    request.addStrParameter("Key", std::string(&sKeyBase64[0], sKeyBase64.size()));
+    sKeyBase64Ret = EncodeBase64Secure(sKey);
+    request.addStrParameter("Key", std::string(&sKeyBase64Ret[0], sKeyBase64Ret.size()));
 
     int nStatus;
     std::string strResponse;
@@ -569,7 +569,7 @@ void CKeePassIntegrator::rpcAssociate(std::string& strId, SecureString& sKeyBase
     }
 
     // If we got here, we were successful. Return the information
-    strId = response.getStr("Id");
+    strIdRet = response.getStr("Id");
 }
 
 // Retrieve wallet passphrase from KeePass
@@ -606,7 +606,7 @@ SecureString CKeePassIntegrator::retrievePassphrase()
     return vecEntries[0].getPassword();
 }
 
-// Update wallet passphrase in BCLog::KEEPASS
+// Update wallet passphrase in keepass
 void CKeePassIntegrator::updatePassphrase(const SecureString& sWalletPassphrase)
 {
     // Check we have all required information

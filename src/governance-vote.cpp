@@ -288,7 +288,7 @@ bool CGovernanceVote::CheckSignature(const CPubKey& pubKeyMasternode) const
         uint256 hash = GetSignatureHash();
 
         if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
-            LogPrint(BCLog::GOV, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
+            LogPrintf("CGovernanceVote::Sign -- SignHash() failed\n");
             return false;
         }
 

@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 PM-Tech
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,16 +50,17 @@ private:
     // map to hold all MNs
     std::map<COutPoint, CMasternode> mapMasternodes;
     // who's asked for the Masternode list and the last time
-    std::map<CNetAddr, int64_t> mAskedUsForMasternodeList;
+    std::map<CService, int64_t> mAskedUsForMasternodeList;
     // who we asked for the Masternode list and the last time
-    std::map<CNetAddr, int64_t> mWeAskedForMasternodeList;
+    std::map<CService, int64_t> mWeAskedForMasternodeList;
     // which Masternodes we've asked for
-    std::map<COutPoint, std::map<CNetAddr, int64_t> > mWeAskedForMasternodeListEntry;
+    std::map<COutPoint, std::map<CService, int64_t> > mWeAskedForMasternodeListEntry;
+
     // who we asked for the masternode verification
-    std::map<CNetAddr, CMasternodeVerification> mWeAskedForVerification;
+    std::map<CService, CMasternodeVerification> mWeAskedForVerification;
 
     // these maps are used for masternode recovery from MASTERNODE_NEW_START_REQUIRED state
-    std::map<uint256, std::pair< int64_t, std::set<CNetAddr> > > mMnbRecoveryRequests;
+    std::map<uint256, std::pair< int64_t, std::set<CService> > > mMnbRecoveryRequests;
     std::map<uint256, std::vector<CMasternodeBroadcast> > mMnbRecoveryGoodReplies;
     std::list< std::pair<CService, uint256> > listScheduledMnbRequestConnections;
     std::map<CService, std::pair<int64_t, std::set<uint256> > > mapPendingMNB;
@@ -73,7 +75,7 @@ private:
 
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
 
-    int64_t nLastWatchdogVoteTime;
+    int64_t nLastSentinelPingTime;
 
     friend class CMasternodeSync;
     /// Find an entry
@@ -107,16 +109,17 @@ public:
             READWRITE(strVersion);
         }
         else {
-            strVersion = SERIALIZATION_VERSION_STRING; 
+            strVersion = SERIALIZATION_VERSION_STRING;
             READWRITE(strVersion);
         }
+
         READWRITE(mapMasternodes);
         READWRITE(mAskedUsForMasternodeList);
         READWRITE(mWeAskedForMasternodeList);
         READWRITE(mWeAskedForMasternodeListEntry);
         READWRITE(mMnbRecoveryRequests);
         READWRITE(mMnbRecoveryGoodReplies);
-        READWRITE(nLastWatchdogVoteTime);
+        READWRITE(nLastSentinelPingTime);
         READWRITE(nDsqCount);
 
         READWRITE(mapSeenMasternodeBroadcast);
@@ -222,8 +225,8 @@ public:
         return vecTmp;;
     }
 
-    bool IsWatchdogActive();
-    void UpdateWatchdogVoteTime(const COutPoint& outpoint, uint64_t nVoteTime = 0);
+    bool IsSentinelPingActive();
+    void UpdateLastSentinelPingTime();
     bool AddGovernanceVote(const COutPoint& outpoint, uint256 nGovernanceObjectHash);
     void RemoveGovernanceObject(uint256 nGovernanceObjectHash);
 
