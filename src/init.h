@@ -17,6 +17,7 @@ class thread_group;
 } // namespace boost
 
 void StartShutdown();
+void StartRestart();
 bool ShutdownRequested();
 /** Interrupt threads */
 void Interrupt(boost::thread_group& threadGroup);
