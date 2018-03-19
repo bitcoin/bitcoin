@@ -520,8 +520,11 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             bitmap[i / 8] |= ((uint8_t)hit) << (i % 8);
         }
 
-        chainActiveHeight = chainActive.Height();
-        chainActiveTipBlockHash = chainActive.Tip()->GetBlockHash();
+        {
+            LOCK(cs_main);
+            chainActiveHeight = chainActive.Height();
+            chainActiveTipBlockHash = chainActive.Tip()->GetBlockHash();
+        }
     }
 
     switch (rf) {
