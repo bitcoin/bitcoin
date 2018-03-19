@@ -7,8 +7,6 @@
 Tests correspond to code in rpc/net.cpp.
 """
 
-import time
-
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -71,12 +69,8 @@ class NetTest(BitcoinTestFramework):
 
         self.nodes[0].setnetworkactive(False)
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], False)
-        timeout = 3
-        while self.nodes[0].getnetworkinfo()['connections'] != 0:
-            # Wait a bit for all sockets to close
-            assert timeout > 0, 'not all connections closed in time'
-            timeout -= 0.1
-            time.sleep(0.1)
+        # Wait a bit for all sockets to close
+        wait_until(lambda: self.nodes[0].getnetworkinfo()['connections'] == 0, timeout=3)
 
         self.nodes[0].setnetworkactive(True)
         connect_nodes_bi(self.nodes, 0, 1)
