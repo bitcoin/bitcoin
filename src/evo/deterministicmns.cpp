@@ -400,8 +400,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             newList.AddMN(dmn);
 
-            LogPrintf("CDeterministicMNManager::%s -- MN %s added to MN list. nHeight=%d, mapCurMNs.size=%d\n",
-                      __func__, tx.GetHash().ToString(), nHeight, newList.size());
+            LogPrintf("CDeterministicMNManager::%s -- MN %s added at height %d: %s\n",
+                      __func__, tx.GetHash().ToString(), nHeight, proTx.ToString());
         } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
             CProUpServTx proTx;
             if (!GetTxPayload(tx, proTx)) {
@@ -433,8 +433,32 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             newList.UpdateMN(proTx.proTxHash, newState);
 
-            LogPrintf("CDeterministicMNManager::%s -- MN %s updated with addr=%s, nProtocolVersion=%d. height=%d\n",
-                      __func__, proTx.proTxHash.ToString(), proTx.addr.ToString(false), proTx.nProtocolVersion, height);
+            LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
+                      __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+        } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
+            CProUpRegTx proTx;
+            if (!GetTxPayload(tx, proTx)) {
+                assert(false); // this should have been handled already
+            }
+
+            CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
+            if (!dmn) {
+                return _state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
+            }
+            auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+            if (newState->keyIDOperator != proTx.keyIDOperator) {
+                // reset all operator related fields and put MN into PoSe-banned state in case the operator key changes
+                newState->ResetOperatorFields();
+                newState->BanIfNotBanned(nHeight);
+            }
+            newState->keyIDOperator = proTx.keyIDOperator;
+            newState->keyIDVoting = proTx.keyIDVoting;
+            newState->scriptPayout = proTx.scriptPayout;
+
+            newList.UpdateMN(proTx.proTxHash, newState);
+
+            LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
+                      __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
         }
     }
 

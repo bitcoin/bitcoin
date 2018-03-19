@@ -574,7 +574,8 @@ bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state,
         if (tx.nVersion >= 3) {
             if (tx.nType != TRANSACTION_NORMAL &&
                 tx.nType != TRANSACTION_PROVIDER_REGISTER &&
-                tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+                tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE &&
+                tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_NORMAL)
