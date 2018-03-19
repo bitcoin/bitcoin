@@ -254,9 +254,8 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
 bool CPrivateSend::IsCollateralAmount(CAmount nInputAmount)
 {
-    // collateral input should be smth between 1x and 2x OR exactly Nx of mixing collateral (1x..4x)
-    return (nInputAmount > GetCollateralAmount() && nInputAmount < GetCollateralAmount() * 2) ||
-           (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount() && nInputAmount % GetCollateralAmount() == 0);
+    // collateral input can be anything between 1x and "max" (including both)
+    return (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount());
 }
 
 /*  Create a nice string to show the denominations
