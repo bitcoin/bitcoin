@@ -144,7 +144,7 @@ private:
     template <typename K, typename T>
     bool WriteIC(const K& key, const T& value, bool fOverwrite = true)
     {
-        if (!batch.Write(key, value, fOverwrite)) {
+        if (!m_batch.Write(key, value, fOverwrite)) {
             return false;
         }
         m_database.IncrementUpdateCounter();
@@ -154,7 +154,7 @@ private:
     template <typename K>
     bool EraseIC(const K& key)
     {
-        if (!batch.Erase(key)) {
+        if (!m_batch.Erase(key)) {
             return false;
         }
         m_database.IncrementUpdateCounter();
@@ -163,7 +163,7 @@ private:
 
 public:
     explicit WalletBatch(WalletDatabase& database, const char* pszMode = "r+", bool _fFlushOnClose = true) :
-        batch(database, pszMode, _fFlushOnClose),
+        m_batch(database, pszMode, _fFlushOnClose),
         m_database(database)
     {
     }
@@ -244,7 +244,7 @@ public:
     //! Write wallet version
     bool WriteVersion(int nVersion);
 private:
-    BerkeleyBatch batch;
+    BerkeleyBatch m_batch;
     WalletDatabase& m_database;
 };
 
