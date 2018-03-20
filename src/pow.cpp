@@ -28,7 +28,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 	// Genesis block
 	// SYSCOIN
 	const arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
-	if (params.fPowNoRetargeting || pindexLast->nHeight <= 300)
+	if (params.fPowNoRetargeting)
 		return pindexLast->nBits;
 	const CBlockIndex *BlockLastSolved = pindexLast;
 	const CBlockIndex *BlockReading = pindexLast;
@@ -40,9 +40,9 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 	arith_uint256 PastDifficultyAverage;
 	arith_uint256 PastDifficultyAveragePrev;
 
-	// 110 needed for snapshot unit test
-	if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < 200) {
-		return nProofOfWorkLimit.GetCompact();
+	// SYSCOIN 300 needed for snapshot unit test
+	if (BlockLastSolved == NULL || BlockLastSolved->nHeight <= 300 ) {
+		return UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit).GetCompact();
 	}
 
 	for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
