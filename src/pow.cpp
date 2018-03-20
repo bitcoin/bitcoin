@@ -24,9 +24,9 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
 	/* current difficulty formula, syscoin - DarkGravity v3, written by Evan Duffield - evan@dashpay.io */
 	// Genesis block
-
+	// SYSCOIN
 	const arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
-	if (params.fPowNoRetargeting)
+	if (params.fPowNoRetargeting || pindexLast->nHeight <= 300)
 		return pindexLast->nBits;
 	const CBlockIndex *BlockLastSolved = pindexLast;
 	const CBlockIndex *BlockReading = pindexLast;
@@ -90,9 +90,12 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     arith_uint256 bnTarget;
 
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
-
+	// SYSCOIN
+	arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
+	if(chainActive.Height() <= 300)
+		nProofOfWorkLimit = Params(CBaseChainParams::REGTEST).GetConsensus().powLimit;
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > nProofOfWorkLimit)
         return error("CheckProofOfWork(): nBits below minimum work");
 
     // Check proof of work matches claimed amount
