@@ -1,5 +1,5 @@
 ---
-name: "syscoin-raspberry-0.12"
+name: "syscoin-raspberry-3.0"
 enable_cache: true
 suites:
 - "precise"
@@ -15,9 +15,9 @@ packages:
 - "faketime"
 - "bsdmainutils"
 - "binutils-gold"
-reference_datetime: "2017-01-01 00:00:00"
+reference_datetime: "2018-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/syscoin/syscoin2.git"
+- "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
 files:
 - "raspberrypi-tools.tar.gz"

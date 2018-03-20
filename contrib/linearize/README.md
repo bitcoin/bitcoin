@@ -3,7 +3,7 @@ Construct a linear, no-fork, best version of the blockchain.
 
 ## Step 0: Install syscoin_hash
 
-https://github.com/syscoin/syscoin2_hash
+https://github.com/syscoin/syscoin_hash
 
 ## Step 1: Download hash list
 

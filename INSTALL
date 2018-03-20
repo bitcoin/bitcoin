@@ -21,7 +21,7 @@ use the autogen script to prepare the build environment.
     make
 
 Precompiled binaries are available at github, see
-https://github.com/syscoin/syscoin2-binaries
+https://github.com/syscoin/syscoin-binaries
 
 Always verify the signatures and checksums.
 

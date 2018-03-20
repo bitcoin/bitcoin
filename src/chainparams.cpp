@@ -172,12 +172,12 @@ public:
         nMaxTipAge = 6 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in syscoin
 		nPruneAfterHeight = 1000000;
 		uint256 hash;
-		genesis = CreateGenesisBlock(1481766668, 5486119, 0x1e0ffff0, 1, 8.88 * COIN);
+		genesis = CreateGenesisBlock(1521568250, 6206162, 0x1e0ffff0, 1, 8.88 * COIN);
 		/*CBlockHeader genesisHeader = genesis.GetBlockHeader();
 		GenerateGenesisBlock(genesisHeader, &hash);*/
 
 		consensus.hashGenesisBlock = genesis.GetHash();
-		assert(consensus.hashGenesisBlock == uint256S("0x00000284314053c52b605095a1ddb7926b4ef0f348a6923749b65cc4c85b8f8f"));
+		assert(consensus.hashGenesisBlock == uint256S("0x0000006086e066c3e9df26340d6324982c031e1e8d37f66c2f4cb5d76a3db7da"));
 		assert(genesis.hashMerkleRoot == uint256S("0x68519c429727677424e712d467bf835a88f52bc648dc491155a9da18b0ec3ffd"));
 
 		vSeeds.push_back(CDNSSeedData("seed1.syscoin.org", "seed1.syscoin.org"));
@@ -314,11 +314,13 @@ public:
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
         nPruneAfterHeight = 1000;
 
-		genesis = CreateGenesisBlock(1520626246, 7239482, 0x1e0ffff0, 1, 8.88 * COIN);
-		/*CBlockHeader genesisHeader = genesis.GetBlockHeader();
+		genesis = CreateGenesisBlock(1521568716, 7736744, 0x1e0ffff0, 1, 8.88 * COIN);
+		/*
+		uint256 hash;
+		CBlockHeader genesisHeader = genesis.GetBlockHeader();
 		GenerateGenesisBlock(genesisHeader, &hash);*/
 		consensus.hashGenesisBlock = genesis.GetHash();
-		assert(consensus.hashGenesisBlock == uint256S("0x000005a516da27729a9a9913ef1bc244fd87e8f9b0af036b1306c945399b34a0"));
+		assert(consensus.hashGenesisBlock == uint256S("0x00000d070aa618e6549464d948b37e92df680312a38e22f4c14fa9e0c3ab494f"));
 		assert(genesis.hashMerkleRoot == uint256S("0x68519c429727677424e712d467bf835a88f52bc648dc491155a9da18b0ec3ffd"));
 
         vFixedSeeds.clear();
@@ -421,11 +423,13 @@ public:
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
 
-		genesis = CreateGenesisBlock(1481766878, 6582433, 0x207fffff, 1, 8.88 * COIN);
-		/*CBlockHeader genesisHeader = genesis.GetBlockHeader();
+		genesis = CreateGenesisBlock(1521568774, 6882848, 0x207fffff, 1, 8.88 * COIN);
+		/*
+		uint256 hash;
+		CBlockHeader genesisHeader = genesis.GetBlockHeader();
 		GenerateGenesisBlock(genesisHeader, &hash);*/
 		consensus.hashGenesisBlock = genesis.GetHash();
-		assert(consensus.hashGenesisBlock == uint256S("0x00001b7a561561ce82a5e2e7df4b500fba958e1d63ff3261729874441f64ba96"));
+		assert(consensus.hashGenesisBlock == uint256S("0x0000759a55207eef80469f0ab3ff14308783f53b7635b66ac63319dab8dd5637"));
 		assert(genesis.hashMerkleRoot == uint256S("0x68519c429727677424e712d467bf835a88f52bc648dc491155a9da18b0ec3ffd"));
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.

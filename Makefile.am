@@ -209,7 +209,7 @@ cov: test_syscoin.coverage/.dirstamp total.coverage/.dirstamp
 endif
 
 # Syscoin: disable the test until upstream switches from convoluted comparison tool
-# Ref https://github.com/syscoin/syscoin2/issues/4545
+# Ref https://github.com/syscoin/syscoin/issues/4545
 if USE_COMPARISON_TOOL
 check-local:
 	## $(MKDIR_P) qa/tmp

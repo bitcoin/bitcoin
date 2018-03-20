@@ -6,7 +6,7 @@ This is a new major version release, bringing new features and other improvement
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/syscoin/syscoin2/issues>
+  <https://github.com/syscoin/syscoin/issues>
 
 Upgrading and downgrading
 =========================
@@ -326,7 +326,7 @@ practice. In future releases, a higher value may also help the network
 as a whole: stored blocks could be served to other nodes.
 
 For further information about pruning, you may also consult the [release
-notes of v0.11.0](https://github.com/syscoin/syscoin2/blob/v0.11.0/doc/release-notes.md#block-file-pruning).
+notes of v0.11.0](https://github.com/syscoin/syscoin/blob/v0.11.0/doc/release-notes.md#block-file-pruning).
 
 `NODE_BLOOM` service bit
 ------------------------

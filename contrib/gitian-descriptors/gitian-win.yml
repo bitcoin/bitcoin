@@ -1,5 +1,5 @@
 ---
-name: "syscoin-win-2.2"
+name: "syscoin-win-3.0"
 enable_cache: true
 suites:
 - "trusty"
@@ -21,9 +21,9 @@ packages:
 - "pkg-config"
 - "python"
 - "zip"
-reference_datetime: "2017-01-01 00:00:00"
+reference_datetime: "2018-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/syscoin/syscoin2.git"
+- "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
 files: []
 script: |
@@ -71,7 +71,7 @@ script: |
 
   # Create per-host linker wrapper
   # This is only needed for trusty, as the mingw linker leaks a few bytes of
-  # heap, causing non-determinism. See discussion in https://github.com/syscoin/syscoin2/pull/6900
+  # heap, causing non-determinism. See discussion in https://github.com/syscoin/syscoin/pull/6900
   for i in $HOSTS; do
     mkdir -p ${WRAP_DIR}/${i}
     for prog in collect2; do

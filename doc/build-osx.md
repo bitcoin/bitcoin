@@ -41,7 +41,7 @@ NOTE: Building with Qt4 is still supported, however, could result in a broken UI
 
 1. Clone the GitHub tree to get the source code and go into the directory.
 
-        git clone https://github.com/syscoin/syscoin2.git
+        git clone https://github.com/syscoin/syscoin.git
         cd syscoin
 
 2.  Build Syscoin Core:

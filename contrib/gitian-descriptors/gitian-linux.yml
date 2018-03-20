@@ -1,5 +1,5 @@
 ---
-name: "syscoin-linux-2.2"
+name: "syscoin-linux-3.0"
 enable_cache: true
 suites:
 - "trusty"
@@ -27,9 +27,9 @@ packages:
 - "pkg-config"
 - "libtool"
 - "python"
-reference_datetime: "2017-01-01 00:00:00"
+reference_datetime: "2018-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/syscoin/syscoin2.git"
+- "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
 files: []
 script: |

@@ -95,7 +95,7 @@ Issue the following:
 Make note of the hash (which is your collateral_output) and index.
 
 ### Enter your Masternode details into your masternode.conf file
-[From the syscoin github repo](https://github.com/syscoin/syscoin2/blob/master/doc/masternode_conf.md)
+[From the syscoin github repo](https://github.com/syscoin/syscoin/blob/master/doc/masternode_conf.md)
 
 `masternode.conf` format is a space seperated text file. Each line consisting of an alias, IP address followed by port, masternode private key, collateral output transaction id and collateral output index.
 
@@ -135,7 +135,7 @@ You can confirm that remote server is on the correct block by issuing
 
 ```syscoin-cli getinfo```
 
-and comparing with the official explorer at https://explorer.syscoin.org/chain/Syscoin
+and comparing with the official explorer at https://chainz.cryptoid.info/sys/ 
 
 ### Local
 
@@ -171,9 +171,3 @@ syscoin-cli masternode status
 }
 ```
 Command output should have "_Masternode successfully started_" in its `status` field now. If it says "_not capable_" instead, you should check your config again.
-
-### Local
-
-Search your Masternodes on https://syscoinninja.pl/masternodes.html
-
-_Hint: Bookmark it, you definitely will be using this site a lot._

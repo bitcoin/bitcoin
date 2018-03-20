@@ -2,7 +2,7 @@ Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Syscoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
  irc://#syscoin@freenode.net
-Source: https://github.com/syscoin/syscoin2
+Source: https://github.com/syscoin/syscoin
 
 Files: *
 Copyright: 2009-2016, Syscoin Core Developers

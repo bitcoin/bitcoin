@@ -41,7 +41,7 @@ Debian Linux was chosen as the host distribution because it has a lightweight in
 Any kind of virtualization can be used, for example:
 - [VirtualBox](https://www.virtualbox.org/) (covered by this guide)
 - [KVM](http://www.linux-kvm.org/page/Main_Page)
-- [LXC](https://linuxcontainers.org/), see also [Gitian host docker container](https://github.com/gdm85/tenku/tree/master/docker/gitian-syscoin-host/README.md).
+- [LXC](https://linuxcontainers.org/)
 
 You can also install Gitian on actual hardware instead of using virtualization.
 
@@ -304,7 +304,7 @@ Clone the git repositories for Syscoin Core and Gitian.
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
-git clone https://github.com/syscoin/syscoin2
+git clone https://github.com/syscoin/syscoin
 ```
 
 Setting up the Gitian image
@@ -368,7 +368,7 @@ Output from `gbuild` will look something like
     remote: Total 57959 (delta 0), reused 0 (delta 0), pack-reused 57958
     Receiving objects: 100% (57959/57959), 53.76 MiB | 484.00 KiB/s, done.
     Resolving deltas: 100% (41590/41590), done.
-    From https://github.com/syscoin/syscoin2
+    From https://github.com/syscoin/syscoin
     ... (new tags, new branch etc)
     --- Building for precise amd64 ---
     Stopping target if it is up
@@ -394,7 +394,7 @@ and inputs.
 
 For example:
 ```bash
-URL=https://github.com/crowning-/syscoin.git
+URL=https://github.com/syscoin/syscoin.git
 COMMIT=b616fb8ef0d49a919b72b0388b091aaec5849b96
 ./bin/gbuild --commit syscoin=${COMMIT} --url syscoin=${URL} ../syscoin/contrib/gitian-descriptors/gitian-linux.yml
 ./bin/gbuild --commit syscoin=${COMMIT} --url syscoin=${URL} ../syscoin/contrib/gitian-descriptors/gitian-win.yml
@@ -444,7 +444,7 @@ Then when building, override the remote URLs that gbuild would otherwise pull fr
 ```bash
 
 cd /some/root/path/
-git clone https://github.com/syscoin/syscoin2-detached-sigs.git
+git clone https://github.com/syscoin/syscoin-detached-sigs.git
 
 SYSPATH=/some/root/path/syscoin.git
 SIGPATH=/some/root/path/syscoin-detached-sigs.git
@@ -472,10 +472,9 @@ in `gitian.sigs` to your signing machine and do
 This will create the `.sig` files that can be committed together with the `.assert` files to assert your
 Gitian build.
 
-Uploading signatures (not yet implemented)
+Uploading signatures 
 ---------------------
 
-In the future it will be possible to push your signatures (both the `.assert` and `.assert.sig` files) to the
+Push your signatures (both the `.assert` and `.assert.sig` files) to the
 [syscoin/gitian.sigs](https://github.com/syscoin/gitian.sigs/) repository, or if that's not possible to create a pull
 request.
-There will be an official announcement when this repository is online.
