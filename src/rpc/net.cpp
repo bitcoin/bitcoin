@@ -26,7 +26,8 @@
 UniValue getconnectioncount(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getconnectioncount\n"
             "\nReturns the number of connections to other nodes.\n"
             "\nResult:\n"
@@ -45,7 +46,8 @@ UniValue getconnectioncount(const JSONRPCRequest& request)
 UniValue ping(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "ping\n"
             "\nRequests that a ping be sent to all other nodes, to measure ping time.\n"
             "Results provided in getpeerinfo, pingtime and pingwait fields are decimal seconds.\n"
@@ -68,7 +70,8 @@ UniValue ping(const JSONRPCRequest& request)
 UniValue getpeerinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getpeerinfo\n"
             "\nReturns data about each connected network node as a json array of objects.\n"
             "\nResult:\n"
@@ -197,7 +200,8 @@ UniValue addnode(const JSONRPCRequest& request)
         strCommand = request.params[1].get_str();
     if (request.fHelp || request.params.size() != 2 ||
         (strCommand != "onetry" && strCommand != "add" && strCommand != "remove"))
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "addnode \"node\" \"add|remove|onetry\"\n"
             "\nAttempts to add or remove a node from the addnode list.\n"
             "Or try a connection to a node once.\n"
@@ -240,7 +244,8 @@ UniValue addnode(const JSONRPCRequest& request)
 UniValue disconnectnode(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() == 0 || request.params.size() >= 3)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "disconnectnode \"[address]\" [nodeid]\n"
             "\nImmediately disconnects from the specified peer node.\n"
             "\nStrictly one out of 'address' and 'nodeid' can be provided to identify the node.\n"
@@ -283,7 +288,8 @@ UniValue disconnectnode(const JSONRPCRequest& request)
 UniValue getaddednodeinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getaddednodeinfo ( \"node\" )\n"
             "\nReturns information about the given added node, or all added nodes\n"
             "(note that onetry addnodes are not listed here)\n"
@@ -350,7 +356,8 @@ UniValue getaddednodeinfo(const JSONRPCRequest& request)
 UniValue getnettotals(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getnettotals\n"
             "\nReturns information about network traffic, including bytes in, bytes out,\n"
             "and current time.\n"
@@ -416,7 +423,8 @@ static UniValue GetNetworksInfo()
 UniValue getnetworkinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getnetworkinfo\n"
             "Returns an object containing various state info regarding P2P networking.\n"
             "\nResult:\n"
@@ -496,7 +504,8 @@ UniValue setban(const JSONRPCRequest& request)
         strCommand = request.params[1].get_str();
     if (request.fHelp || request.params.size() < 2 ||
         (strCommand != "add" && strCommand != "remove"))
-        throw std::runtime_error(
+        throw JSONRPCError(
+                            RPC_INVALID_REQUEST,
                             "setban \"subnet\" \"add|remove\" (bantime) (absolute)\n"
                             "\nAttempts to add or remove an IP/Subnet from the banned list.\n"
                             "\nArguments:\n"
@@ -556,7 +565,8 @@ UniValue setban(const JSONRPCRequest& request)
 UniValue listbanned(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
                             "listbanned\n"
                             "\nList all banned IPs/Subnets.\n"
                             "\nExamples:\n"
@@ -589,7 +599,8 @@ UniValue listbanned(const JSONRPCRequest& request)
 UniValue clearbanned(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+                            RPC_INVALID_REQUEST,
                             "clearbanned\n"
                             "\nClear all banned IPs.\n"
                             "\nExamples:\n"
@@ -607,7 +618,8 @@ UniValue clearbanned(const JSONRPCRequest& request)
 UniValue setnetworkactive(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "setnetworkactive true|false\n"
             "\nDisable/enable all p2p network activity.\n"
             "\nArguments:\n"

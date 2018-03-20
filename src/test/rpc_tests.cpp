@@ -336,4 +336,15 @@ BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
     BOOST_CHECK_EQUAL(result[2].get_int(), 9);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_help)
+{
+    UniValue result;
+
+    std::vector<std::string> commandList = tableRPC.listCommands();
+    for (size_t i = 0; i < commandList.size(); ++i)
+    {
+        BOOST_CHECK_NO_THROW(CallRPC("help " + commandList[i]));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
