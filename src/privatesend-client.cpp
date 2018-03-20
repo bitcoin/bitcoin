@@ -1152,10 +1152,12 @@ bool CPrivateSendClient::PrepareDenominate(int nMinRounds, int nMaxRounds, std::
     }
 
     if (CPrivateSend::GetDenominations(vecTxOutRet) != nSessionDenom) {
-        // unlock used coins on failure
-        LOCK(pwallet->cs_wallet);
-        for (const auto& txin : vecTxDSInRet) {
-            pwallet->UnlockCoin(txin.prevout);
+        {
+            // unlock used coins on failure
+            LOCK(pwallet->cs_wallet);
+            for (const auto& txin : vecTxDSInRet) {
+                pwallet->UnlockCoin(txin.prevout);
+            }
         }
         keyHolderStorage.ReturnAll();
         strErrorRet = "Can't make current denominated outputs";
