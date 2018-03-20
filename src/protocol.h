@@ -404,22 +404,17 @@ enum GetDataMsg
     // Dash message types
     // NOTE: declare non-implmented here in future, we must keep this enum consistent and backwards compatible
     // PM-Tech We aren't backwards compatible, so clean up here. TODO: Check for pre-fork issues with old nodes
-    MSG_SPARE1,
-    MSG_SPARE2,
-    MSG_SPARE3,
-    MSG_SPARE4,
-    MSG_SPARE5,
-    MSG_TXLOCK_REQUEST,
-    MSG_TXLOCK_VOTE,
-    MSG_MASTERNODE_PAYMENT_VOTE,
-    MSG_MASTERNODE_PAYMENT_BLOCK, // reusing, was MSG_MASTERNODE_SCANNING_ERROR previousely, was NOT used in 12.0
-    MSG_MASTERNODE_QUORUM, // not implemented
-    MSG_MASTERNODE_ANNOUNCE,
-    MSG_MASTERNODE_PING,
-    MSG_DSTX,
-    MSG_GOVERNANCE_OBJECT,
-    MSG_GOVERNANCE_OBJECT_VOTE,
-    MSG_MASTERNODE_VERIFY,
+    MSG_TXLOCK_REQUEST = 10,
+    MSG_TXLOCK_VOTE = 11,
+    MSG_MASTERNODE_PAYMENT_VOTE = 12,
+    MSG_MASTERNODE_PAYMENT_BLOCK = 13,
+    MSG_MASTERNODE_QUORUM = 14, // not implemented
+    MSG_MASTERNODE_ANNOUNCE = 15,
+    MSG_MASTERNODE_PING = 16,
+    MSG_DSTX = 17,
+    MSG_GOVERNANCE_OBJECT = 18,
+    MSG_GOVERNANCE_OBJECT_VOTE = 19,
+    MSG_MASTERNODE_VERIFY = 20,
 };
 
 /** inv message data */

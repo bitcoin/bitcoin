@@ -4,6 +4,7 @@
 
 #include <activemasternode.h>
 #include <base58.h>
+#include <clientversion.h>
 #include <chainparams.h>
 #include <consensus/tx_verify.h>
 #include <init.h>

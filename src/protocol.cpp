@@ -217,17 +217,17 @@ std::string CInv::GetCommand() const
     case MSG_BLOCK:                     return cmd.append(NetMsgType::BLOCK);
     case MSG_FILTERED_BLOCK:            return cmd.append(NetMsgType::MERKLEBLOCK);
     case MSG_CMPCT_BLOCK:               return cmd.append(NetMsgType::CMPCTBLOCK);
-    case MSG_TXLOCK_REQUEST:            return cmd.append(NetMsgType::TXLOCKREQUEST);
-    case MSG_TXLOCK_VOTE:               return cmd.append(NetMsgType::TXLOCKVOTE);
-    case MSG_MASTERNODE_PAYMENT_VOTE:   return cmd.append(NetMsgType::MASTERNODEPAYMENTVOTE);
-    case MSG_MASTERNODE_PAYMENT_BLOCK:  return cmd.append(NetMsgType::MNGOVERNANCEOBJECT);
-    case MSG_MASTERNODE_QUORUM:         return cmd.append(NetMsgType::MNQUORUM);
-    case MSG_MASTERNODE_ANNOUNCE:       return cmd.append(NetMsgType::MNANNOUNCE);
-    case MSG_MASTERNODE_PING:           return cmd.append(NetMsgType::MNPING);
-    case MSG_DSTX:                      return cmd.append(NetMsgType::DSTX);
-    case MSG_GOVERNANCE_OBJECT:         return cmd.append(NetMsgType::MNGOVERNANCEOBJECT);
-    case MSG_GOVERNANCE_OBJECT_VOTE:    return cmd.append(NetMsgType::MNGOVERNANCEOBJECTVOTE);
-    case MSG_MASTERNODE_VERIFY:         return cmd.append(NetMsgType::MNVERIFY);
+    case MSG_TXLOCK_REQUEST:            return NetMsgType::TXLOCKREQUEST;
+    case MSG_TXLOCK_VOTE:               return NetMsgType::TXLOCKVOTE;
+    case MSG_MASTERNODE_PAYMENT_VOTE:   return NetMsgType::MASTERNODEPAYMENTVOTE;
+    case MSG_MASTERNODE_PAYMENT_BLOCK:  return NetMsgType::MNGOVERNANCEOBJECT;
+    case MSG_MASTERNODE_QUORUM:         return NetMsgType::MNQUORUM;
+    case MSG_MASTERNODE_ANNOUNCE:       return NetMsgType::MNANNOUNCE;
+    case MSG_MASTERNODE_PING:           return NetMsgType::MNPING;
+    case MSG_DSTX:                      return NetMsgType::DSTX;
+    case MSG_GOVERNANCE_OBJECT:         return NetMsgType::MNGOVERNANCEOBJECT;
+    case MSG_GOVERNANCE_OBJECT_VOTE:    return NetMsgType::MNGOVERNANCEOBJECTVOTE;
+    case MSG_MASTERNODE_VERIFY:         return NetMsgType::MNVERIFY;
     default:
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
     }
