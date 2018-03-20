@@ -14,6 +14,8 @@
 #include "util.h"
 
 #include <math.h>
+// SYSCOIN
+#include "validation.h"
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
 	return CalculateNextWorkRequired(pindexLast, 0, params);
@@ -93,7 +95,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 	// SYSCOIN
 	arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
 	if(chainActive.Height() <= 300)
-		nProofOfWorkLimit = Params(CBaseChainParams::REGTEST).GetConsensus().powLimit;
+		nProofOfWorkLimit = UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit);
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > nProofOfWorkLimit)
         return error("CheckProofOfWork(): nBits below minimum work");
