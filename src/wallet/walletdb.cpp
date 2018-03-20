@@ -123,8 +123,8 @@ bool WalletBatch::WriteBestBlock(const CBlockLocator& locator)
 
 bool WalletBatch::ReadBestBlock(CBlockLocator& locator)
 {
-    if (batch.Read(std::string("bestblock"), locator) && !locator.vHave.empty()) return true;
-    return batch.Read(std::string("bestblock_nomerkle"), locator);
+    if (m_batch.Read(std::string("bestblock"), locator) && !locator.vHave.empty()) return true;
+    return m_batch.Read(std::string("bestblock_nomerkle"), locator);
 }
 
 bool WalletBatch::WriteOrderPosNext(int64_t nOrderPosNext)
@@ -134,7 +134,7 @@ bool WalletBatch::WriteOrderPosNext(int64_t nOrderPosNext)
 
 bool WalletBatch::ReadPool(int64_t nPool, CKeyPool& keypool)
 {
-    return batch.Read(std::make_pair(std::string("pool"), nPool), keypool);
+    return m_batch.Read(std::make_pair(std::string("pool"), nPool), keypool);
 }
 
 bool WalletBatch::WritePool(int64_t nPool, const CKeyPool& keypool)
@@ -155,7 +155,7 @@ bool WalletBatch::WriteMinVersion(int nVersion)
 bool WalletBatch::ReadAccount(const std::string& strAccount, CAccount& account)
 {
     account.SetNull();
-    return batch.Read(std::make_pair(std::string("acc"), strAccount), account);
+    return m_batch.Read(std::make_pair(std::string("acc"), strAccount), account);
 }
 
 bool WalletBatch::WriteAccount(const std::string& strAccount, const CAccount& account)
@@ -184,7 +184,7 @@ void WalletBatch::ListAccountCreditDebit(const std::string& strAccount, std::lis
 {
     bool fAllAccounts = (strAccount == "*");
 
-    Dbc* pcursor = batch.GetCursor();
+    Dbc* pcursor = m_batch.GetCursor();
     if (!pcursor)
         throw std::runtime_error(std::string(__func__) + ": cannot create DB cursor");
     bool setRange = true;
@@ -195,7 +195,7 @@ void WalletBatch::ListAccountCreditDebit(const std::string& strAccount, std::lis
         if (setRange)
             ssKey << std::make_pair(std::string("acentry"), std::make_pair((fAllAccounts ? std::string("") : strAccount), uint64_t(0)));
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        int ret = batch.ReadAtCursor(pcursor, ssKey, ssValue, setRange);
+        int ret = m_batch.ReadAtCursor(pcursor, ssKey, ssValue, setRange);
         setRange = false;
         if (ret == DB_NOTFOUND)
             break;
@@ -560,7 +560,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     LOCK2(cs_main, pwallet->cs_wallet);
     try {
         int nMinVersion = 0;
-        if (batch.Read((std::string)"minversion", nMinVersion))
+        if (m_batch.Read((std::string)"minversion", nMinVersion))
         {
             if (nMinVersion > CLIENT_VERSION)
                 return DB_TOO_NEW;
@@ -568,7 +568,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         }
 
         // Get cursor
-        Dbc* pcursor = batch.GetCursor();
+        Dbc* pcursor = m_batch.GetCursor();
         if (!pcursor)
         {
             LogPrintf("Error getting wallet database cursor\n");
@@ -580,7 +580,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             // Read next record
             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-            int ret = batch.ReadAtCursor(pcursor, ssKey, ssValue);
+            int ret = m_batch.ReadAtCursor(pcursor, ssKey, ssValue);
             if (ret == DB_NOTFOUND)
                 break;
             else if (ret != 0)
@@ -668,14 +668,14 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CW
 
     try {
         int nMinVersion = 0;
-        if (batch.Read((std::string)"minversion", nMinVersion))
+        if (m_batch.Read((std::string)"minversion", nMinVersion))
         {
             if (nMinVersion > CLIENT_VERSION)
                 return DB_TOO_NEW;
         }
 
         // Get cursor
-        Dbc* pcursor = batch.GetCursor();
+        Dbc* pcursor = m_batch.GetCursor();
         if (!pcursor)
         {
             LogPrintf("Error getting wallet database cursor\n");
@@ -687,7 +687,7 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CW
             // Read next record
             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-            int ret = batch.ReadAtCursor(pcursor, ssKey, ssValue);
+            int ret = m_batch.ReadAtCursor(pcursor, ssKey, ssValue);
             if (ret == DB_NOTFOUND)
                 break;
             else if (ret != 0)
@@ -889,25 +889,25 @@ bool WalletBatch::WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& k
 
 bool WalletBatch::TxnBegin()
 {
-    return batch.TxnBegin();
+    return m_batch.TxnBegin();
 }
 
 bool WalletBatch::TxnCommit()
 {
-    return batch.TxnCommit();
+    return m_batch.TxnCommit();
 }
 
 bool WalletBatch::TxnAbort()
 {
-    return batch.TxnAbort();
+    return m_batch.TxnAbort();
 }
 
 bool WalletBatch::ReadVersion(int& nVersion)
 {
-    return batch.ReadVersion(nVersion);
+    return m_batch.ReadVersion(nVersion);
 }
 
 bool WalletBatch::WriteVersion(int nVersion)
 {
-    return batch.WriteVersion(nVersion);
+    return m_batch.WriteVersion(nVersion);
 }
