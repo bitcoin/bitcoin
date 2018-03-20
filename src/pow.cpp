@@ -26,7 +26,6 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
 	/* current difficulty formula, syscoin - DarkGravity v3, written by Evan Duffield - evan@dashpay.io */
 	// Genesis block
-	// SYSCOIN
 	const arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
 	if (params.fPowNoRetargeting)
 		return pindexLast->nBits;
