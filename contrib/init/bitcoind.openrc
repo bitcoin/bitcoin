@@ -18,7 +18,7 @@ BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/bitcoind}
 BITCOIND_NICE=${BITCOIND_NICE:-${NICELEVEL:-0}}
 BITCOIND_OPTS="${BITCOIND_OPTS:-${BITCOIN_OPTS}}"
 
-name="Bitcoin Core daemon"
+name="Bitcoin Knots daemon"
 description="Bitcoin cryptocurrency P2P network daemon"
 
 required_files="${BITCOIND_CONFIGFILE}"

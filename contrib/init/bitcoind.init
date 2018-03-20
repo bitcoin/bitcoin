@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-#  bitcoind The bitcoin core server.
+#  bitcoind The Bitcoin Knots server.
 #
 #
 # chkconfig: 345 80 20
