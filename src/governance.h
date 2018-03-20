@@ -293,17 +293,17 @@ public:
     bool ConfirmInventoryRequest(const CInv& inv);
 
     void SyncSingleObjAndItsVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
-    void SyncAll(CNode* pnode, CConnman& connman);
+    void SyncAll(CNode* pnode, CConnman& connman) const;
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
     void DoMaintenance(CConnman& connman);
 
-    CGovernanceObject *FindGovernanceObject(const uint256& nHash);
+    CGovernanceObject* FindGovernanceObject(const uint256& nHash);
 
-    std::vector<CGovernanceVote> GetMatchingVotes(const uint256& nParentHash);
-    std::vector<CGovernanceVote> GetCurrentVotes(const uint256& nParentHash, const COutPoint& mnCollateralOutpointFilter);
-    std::vector<CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime);
+    std::vector<CGovernanceVote> GetMatchingVotes(const uint256& nParentHash) const;
+    std::vector<CGovernanceVote> GetCurrentVotes(const uint256& nParentHash, const COutPoint& mnCollateralOutpointFilter) const;
+    std::vector<const CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime) const;
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
     void AddGovernanceObject(CGovernanceObject& govobj, CConnman& connman, CNode* pfrom = NULL);
@@ -356,21 +356,21 @@ public:
     }
 
     void UpdatedBlockTip(const CBlockIndex *pindex, CConnman& connman);
-    int64_t GetLastDiffTime() { return nTimeLastDiff; }
+    int64_t GetLastDiffTime() const { return nTimeLastDiff; }
     void UpdateLastDiffTime(int64_t nTimeIn) { nTimeLastDiff = nTimeIn; }
 
-    int GetCachedBlockHeight() { return nCachedBlockHeight; }
+    int GetCachedBlockHeight() const { return nCachedBlockHeight; }
 
     // Accessors for thread-safe access to maps
-    bool HaveObjectForHash(uint256 nHash);
+    bool HaveObjectForHash(const uint256& nHash) const;
 
-    bool HaveVoteForHash(uint256 nHash);
+    bool HaveVoteForHash(const uint256& nHash) const;
 
     int GetVoteCount() const;
 
-    bool SerializeObjectForHash(uint256 nHash, CDataStream& ss);
+    bool SerializeObjectForHash(const uint256& nHash, CDataStream& ss) const;
 
-    bool SerializeVoteForHash(uint256 nHash, CDataStream& ss);
+    bool SerializeVoteForHash(const uint256& nHash, CDataStream& ss) const;
 
     void AddPostponedObject(const CGovernanceObject& govobj)
     {
@@ -378,9 +378,9 @@ public:
         mapPostponedObjects.insert(std::make_pair(govobj.GetHash(), govobj));
     }
 
-    void AddSeenGovernanceObject(uint256 nHash, int status);
+    void AddSeenGovernanceObject(const uint256& nHash, int status);
 
-    void AddSeenVote(uint256 nHash, int status);
+    void AddSeenVote(const uint256& nHash, int status);
 
     void MasternodeRateUpdate(const CGovernanceObject& govobj);
 

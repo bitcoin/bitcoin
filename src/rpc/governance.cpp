@@ -661,7 +661,7 @@ UniValue gobject(const JSONRPCRequest& request)
 
         LOCK2(cs_main, governance.cs);
 
-        std::vector<CGovernanceObject*> objs = governance.GetAllNewerThan(nStartTime);
+        std::vector<const CGovernanceObject*> objs = governance.GetAllNewerThan(nStartTime);
         governance.UpdateLastDiffTime(GetTime());
 
         // CREATE RESULTS FOR USER
