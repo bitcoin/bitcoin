@@ -578,6 +578,32 @@ struct LimitedString
     };
 };
 
+template<typename F> struct Convert
+{
+    template<typename T> class Wrapper
+    {
+    protected:
+        T& m_val;
+    public:
+        explicit Wrapper(T& val) : m_val(val) {}
+
+        template<typename Stream>
+        void Serialize(Stream& s) const
+        {
+            F tmp(m_val);
+            s << tmp;
+        }
+
+        template<typename Stream>
+        void Unserialize(Stream& s)
+        {
+            F tmp;
+            s >> tmp;
+            m_val = T(tmp);
+        }
+    };
+};
+
 /**
  * Forward declarations
  */
