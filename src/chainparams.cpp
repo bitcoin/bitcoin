@@ -514,9 +514,9 @@ public:
         // This is fine at runtime as we'll fall back to using them as a oneshot if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("mainnet-seed.particl.io", true);
-        vSeeds.emplace_back("dnsseed-mainnet.particl.io", true);
-        vSeeds.emplace_back("mainnet.particl.io", true);
+        vSeeds.emplace_back("mainnet-seed.particl.io");
+        vSeeds.emplace_back("dnsseed-mainnet.particl.io");
+        vSeeds.emplace_back("mainnet.particl.io");
 
 
         vDevFundSettings.emplace_back(0,
@@ -670,8 +670,8 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("testnet-seed.particl.io", true);
-        vSeeds.emplace_back("dnsseed-testnet.particl.io", true);
+        vSeeds.emplace_back("testnet-seed.particl.io");
+        vSeeds.emplace_back("dnsseed-testnet.particl.io");
 
         vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("rTvv9vsbu269mjYYEecPYinDG8Bt7D86qD", 10, 60)));
 
