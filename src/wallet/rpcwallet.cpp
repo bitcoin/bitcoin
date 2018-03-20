@@ -2653,7 +2653,7 @@ UniValue lockunspent(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds");
         }
 
-        if (pwallet->IsSpent(outpt.hash, outpt.n)) {
+        if (!fUnlock && pwallet->IsSpent(outpt.hash, outpt.n)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected unspent output");
         }
 
