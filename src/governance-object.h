@@ -246,7 +246,7 @@ public:
         fDirtyCache = true;
     }
 
-    CGovernanceObjectVoteFile& GetVoteFile() {
+    const CGovernanceObjectVoteFile& GetVoteFile() const {
         return fileVotes;
     }
 
@@ -254,25 +254,25 @@ public:
 
     void SetMasternodeOutpoint(const COutPoint& outpoint);
     bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
-    bool CheckSignature(const CPubKey& pubKeyMasternode);
+    bool CheckSignature(const CPubKey& pubKeyMasternode) const;
 
     std::string GetSignatureMessage() const;
     uint256 GetSignatureHash() const;
 
     // CORE OBJECT FUNCTIONS
 
-    bool IsValidLocally(std::string& strError, bool fCheckCollateral);
+    bool IsValidLocally(std::string& strError, bool fCheckCollateral) const;
 
-    bool IsValidLocally(std::string& strError, bool& fMissingMasternode, bool& fMissingConfirmations, bool fCheckCollateral);
+    bool IsValidLocally(std::string& strError, bool& fMissingMasternode, bool& fMissingConfirmations, bool fCheckCollateral) const;
 
     /// Check the collateral transaction for the budget proposal/finalized budget
-    bool IsCollateralValid(std::string& strError, bool &fMissingConfirmations);
+    bool IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const;
 
     void UpdateLocalValidity();
 
     void UpdateSentinelVariables();
 
-    CAmount GetMinCollateralFee();
+    CAmount GetMinCollateralFee() const;
 
     UniValue GetJSONObject();
 
@@ -290,7 +290,7 @@ public:
     int GetNoCount(vote_signal_enum_t eVoteSignalIn) const;
     int GetAbstainCount(vote_signal_enum_t eVoteSignalIn) const;
 
-    bool GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord);
+    bool GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord) const;
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
 
