@@ -17,10 +17,6 @@
 // Set to true for release, false for prerelease or test build
 #define CLIENT_VERSION_IS_RELEASE  true
 
-// Copyright year (2009-this)
-// Todo: update this when changing our copyright comments in the source
-#define COPYRIGHT_YEAR 2013
-
 #endif //HAVE_CONFIG_H
 
 // ppcoin version - intended for display purpose ONLY
