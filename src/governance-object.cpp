@@ -7,6 +7,7 @@
 #include "governance-classes.h"
 #include "governance-object.h"
 #include "governance-vote.h"
+#include "governance-validators.h"
 #include "instantx.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
@@ -472,6 +473,15 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
             return false;
         }
         case GOVERNANCE_OBJECT_PROPOSAL: {
+            CProposalValidator validator(GetDataAsHexString());
+            // Note: It's ok to have expired proposals
+            // they are going to be cleared by CGovernanceManager::UpdateCachesAndClean()
+            // TODO: should they be tagged as "expired" to skip vote downloading?
+            // DO NOT USE THIS UNTIL MAY, 2018 on mainnet
+            if ((GetAdjustedTime() >= 1526423380 || Params().NetworkIDString() != CBaseChainParams::MAIN) && !validator.Validate(false)) {
+                strError = strprintf("Invalid proposal data, error messages: %s", validator.GetErrorMessages());
+                return false;
+            }
             if (fCheckCollateral && !IsCollateralValid(strError, fMissingConfirmations)) {
                 strError = "Invalid proposal collateral";
                 return false;

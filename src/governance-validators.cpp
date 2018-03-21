@@ -5,6 +5,7 @@
 #include "governance-validators.h"
 
 #include "base58.h"
+#include "timedata.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 
@@ -28,7 +29,7 @@ void CProposalValidator::ParseStrHexData(const std::string& strHexData)
     ParseJSONData(std::string(v.begin(), v.end()));
 }
 
-bool CProposalValidator::Validate()
+bool CProposalValidator::Validate(bool fCheckExpiration)
 {
     if(!fJSONValid) {
         strErrorMessages += "JSON parsing error;";
@@ -38,7 +39,7 @@ bool CProposalValidator::Validate()
         strErrorMessages += "Invalid name;";
         return false;
     }
-    if(!ValidateStartEndEpoch()) {
+    if(!ValidateStartEndEpoch(fCheckExpiration)) {
         strErrorMessages += "Invalid start:end range;";
         return false;
     }
@@ -82,7 +83,7 @@ bool CProposalValidator::ValidateName()
     return true;
 }
 
-bool CProposalValidator::ValidateStartEndEpoch()
+bool CProposalValidator::ValidateStartEndEpoch(bool fCheckExpiration)
 {
     int64_t nStartEpoch = 0;
     int64_t nEndEpoch = 0;
@@ -99,6 +100,11 @@ bool CProposalValidator::ValidateStartEndEpoch()
 
     if(nEndEpoch <= nStartEpoch) {
         strErrorMessages += "end_epoch <= start_epoch;";
+        return false;
+    }
+
+    if(fCheckExpiration && nEndEpoch <= GetAdjustedTime()) {
+        strErrorMessages += "expired;";
         return false;
     }
 
