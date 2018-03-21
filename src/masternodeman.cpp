@@ -25,6 +25,7 @@
 CMasternodeMan mnodeman;
 
 const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-7";
+const int CMasternodeMan::LAST_PAID_SCAN_BLOCKS = 100;
 
 struct CompareLastPaidBlock
 {
@@ -1603,19 +1604,19 @@ void CMasternodeMan::UpdateLastPaid(const CBlockIndex* pindex)
 
     if(fLiteMode || !masternodeSync.IsWinnersListSynced() || mapMasternodes.empty()) return;
 
-    static bool IsFirstRun = true;
-    // Do full scan on first run or if we are not a masternode
-    // (MNs should update this info on every block, so limited scan should be enough for them)
-    int nMaxBlocksToScanBack = (IsFirstRun || !fMasternodeMode) ? mnpayments.GetStorageLimit() : LAST_PAID_SCAN_BLOCKS;
+    static int nLastRunBlockHeight = 0;
+    // Scan at least LAST_PAID_SCAN_BLOCKS but no more than mnpayments.GetStorageLimit()
+    int nMaxBlocksToScanBack = std::max(LAST_PAID_SCAN_BLOCKS, nCachedBlockHeight - nLastRunBlockHeight);
+    nMaxBlocksToScanBack = std::min(nMaxBlocksToScanBack, mnpayments.GetStorageLimit());
 
-    // LogPrint("mnpayments", "CMasternodeMan::UpdateLastPaid -- nHeight=%d, nMaxBlocksToScanBack=%d, IsFirstRun=%s\n",
-    //                         nCachedBlockHeight, nMaxBlocksToScanBack, IsFirstRun ? "true" : "false");
+    LogPrint("masternode", "CMasternodeMan::UpdateLastPaid -- nCachedBlockHeight=%d, nLastRunBlockHeight=%d, nMaxBlocksToScanBack=%d\n",
+                            nCachedBlockHeight, nLastRunBlockHeight, nMaxBlocksToScanBack);
 
-    for (auto& mnpair: mapMasternodes) {
+    for (auto& mnpair : mapMasternodes) {
         mnpair.second.UpdateLastPaid(pindex, nMaxBlocksToScanBack);
     }
 
-    IsFirstRun = false;
+    nLastRunBlockHeight = nCachedBlockHeight;
 }
 
 void CMasternodeMan::UpdateLastSentinelPingTime()
