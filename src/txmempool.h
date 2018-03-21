@@ -726,7 +726,7 @@ private:
 };
 
 /** 
- * CCoinsView that brings transactions from a memorypool into view.
+ * CCoinsView that brings transactions from a mempool into view.
  * It does not check for spendings by memory pool transactions.
  * Instead, it provides access to all Coins which are either unspent in the
  * base CCoinsView, or are outputs from any mempool transaction!

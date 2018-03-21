@@ -35,7 +35,7 @@ ToMemPool(CMutableTransaction& tx)
 
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 {
-    // Make sure skipping validation of transctions that were
+    // Make sure skipping validation of transactions that were
     // validated going into the memory pool does not allow
     // double-spends in blocks to pass validation when they should not.
 

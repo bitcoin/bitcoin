@@ -428,7 +428,7 @@ class P2PInterface(P2PConnection):
 
 
 # Keep our own socket map for asyncore, so that we can track disconnects
-# ourselves (to workaround an issue with closing an asyncore socket when
+# ourselves (to work around an issue with closing an asyncore socket when
 # using select)
 mininode_socket_map = dict()
 
@@ -447,7 +447,7 @@ class NetworkThread(threading.Thread):
     def run(self):
         while mininode_socket_map:
             # We check for whether to disconnect outside of the asyncore
-            # loop to workaround the behavior of asyncore when using
+            # loop to work around the behavior of asyncore when using
             # select
             disconnected = []
             for fd, obj in mininode_socket_map.items():

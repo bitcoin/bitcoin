@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
                     auto utxod = FindRandomFrom(coinbase_coins);
                     // Reuse the exact same coinbase
                     tx = std::get<0>(utxod->second);
-                    // shouldn't be available for reconnection if its been duplicated
+                    // shouldn't be available for reconnection if it's been duplicated
                     disconnected_coins.erase(utxod->first);
 
                     duplicate_coins.insert(utxod->first);
