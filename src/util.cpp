@@ -178,10 +178,10 @@ instance_of_cinit;
  * the mutex).
  */
 
-static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
+static std::once_flag debugPrintInitFlag;
 
 /**
- * We use boost::call_once() to make sure mutexDebugLog and
+ * We use std::call_once() to make sure mutexDebugLog and
  * vMsgsBeforeOpenLog are initialized in a thread-safe manner.
  *
  * NOTE: fileout, mutexDebugLog and sometimes vMsgsBeforeOpenLog
@@ -190,7 +190,7 @@ static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
  * tested, explicit destruction of these objects can be implemented.
  */
 static FILE* fileout = nullptr;
-static boost::mutex* mutexDebugLog = nullptr;
+static std::mutex* mutexDebugLog = nullptr;
 static std::list<std::string>* vMsgsBeforeOpenLog;
 
 static int FileWriteStr(const std::string &str, FILE *fp)
@@ -201,7 +201,7 @@ static int FileWriteStr(const std::string &str, FILE *fp)
 static void DebugPrintInit()
 {
     assert(mutexDebugLog == nullptr);
-    mutexDebugLog = new boost::mutex();
+    mutexDebugLog = new std::mutex();
     vMsgsBeforeOpenLog = new std::list<std::string>;
 }
 
@@ -213,8 +213,8 @@ fs::path GetDebugLogPath()
 
 bool OpenDebugLog()
 {
-    boost::call_once(&DebugPrintInit, debugPrintInitFlag);
-    boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
+    std::call_once(debugPrintInitFlag, &DebugPrintInit);
+    std::lock_guard<std::mutex> scoped_lock(*mutexDebugLog);
 
     assert(fileout == nullptr);
     assert(vMsgsBeforeOpenLog);
@@ -440,8 +440,8 @@ int LogPrintStr(const std::string &str)
     }
     else if (fPrintToDebugLog)
     {
-        boost::call_once(&DebugPrintInit, debugPrintInitFlag);
-        boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
+        std::call_once(debugPrintInitFlag, &DebugPrintInit);
+        std::lock_guard<std::mutex> scoped_lock(*mutexDebugLog);
 
         // buffer if we haven't opened the log yet
         if (fileout == nullptr) {
