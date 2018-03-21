@@ -396,7 +396,12 @@ void PaymentServer::handleURIOrFile(const QString& s)
         return;
     }
 
-    if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // dash: URI
+    if (s.startsWith("dash://", Qt::CaseInsensitive))
+    {
+        Q_EMIT message(tr("URI handling"), tr("'dash://' is not a valid URI. Use 'dash:' instead."),
+            CClientUIInterface::MSG_ERROR);
+    }
+    else if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // dash: URI
     {
         QUrlQuery uri((QUrl(s)));
         if (uri.hasQueryItem("r")) // payment request URI

@@ -423,14 +423,6 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 
 bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 {
-    // Convert dash:// to dash:
-    //
-    //    Cannot handle this later, because dash:// will cause Qt to see the part after // as host,
-    //    which will lower-case it (and thus invalidate the address).
-    if(uri.startsWith("dash://", Qt::CaseInsensitive))
-    {
-        uri.replace(0, 7, "dash:");
-    }
     QUrl uriInstance(uri);
     return parseBitcoinURI(uriInstance, out);
 }
