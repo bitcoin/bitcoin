@@ -5,6 +5,7 @@
 #include <consensus/validation.h>
 #include <governance.h>
 #include <governance-object.h>
+#include <governance-validators.h>
 #include <governance-vote.h>
 #include <governance-classes.h>
 #include <net_processing.h>
@@ -14,6 +15,7 @@
 #include <masternodeman.h>
 #include <messagesigner.h>
 #include <netfulfilledman.h>
+#include <util.h>
 
 CGovernanceManager governance;
 
@@ -442,6 +444,17 @@ void CGovernanceManager::UpdateCachesAndClean()
             mapErasedGovernanceObjects.insert(std::make_pair(nHash, nTimeExpired));
             mapObjects.erase(it++);
         } else {
+            // DO NOT USE THIS UNTIL MAY, 2018 on mainnet
+            if ((GetAdjustedTime() >= 1526423380 || Params().NetworkIDString() != CBaseChainParams::MAIN) && pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+                CProposalValidator validator(pObj->GetDataAsHexString());
+                if (!validator.Validate()) {
+                    LogPrintf("CGovernanceManager::UpdateCachesAndClean -- set for deletion expired obj %s\n", (*it).first.ToString());
+                    pObj->fCachedDelete = true;
+                    if (pObj->nDeletionTime == 0) {
+                        pObj->nDeletionTime = nNow;
+                    }
+                }
+            }
             ++it;
         }
     }
