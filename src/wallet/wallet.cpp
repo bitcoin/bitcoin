@@ -1967,13 +1967,6 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman)
             uint256 hash = GetHash();
             LogPrintf("Relaying wtx %s\n", hash.ToString());
 
-            if (strCommand == NetMsgType::TXLOCKREQUEST) {
-                if (instantsend.ProcessTxLockRequest((CTxLockRequest)*this, connman)) {
-                    instantsend.AcceptLockRequest((CTxLockRequest)*this);
-                } else {
-                    instantsend.RejectLockRequest((CTxLockRequest)*this);
-                }
-            }
             if (connman) {
                 CInv inv(MSG_TX, GetHash());
                 connman->ForEachNode([&inv](CNode* pnode)
@@ -3545,7 +3538,7 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
         txCollateral.vout.push_back(CTxOut(0, CScript() << OP_RETURN));
     }
 
-    if (!SignSignature(*this, txdsinCollateral.prevPubKey, txCollateral, 0, nValue)) {
+    if (!SignSignature(*this, txdsinCollateral.prevPubKey, txCollateral, 0, nValue, SIGHASH_ALL)) {
         strReason = "Unable to sign collateral transaction!";
         return false;
     }

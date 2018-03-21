@@ -202,7 +202,7 @@ void CMasternodeMan::CheckAndRemove(CConnman* connman)
                             masternodeSync.IsSynced() &&
                             it->second.IsNewStartRequired() &&
                             !IsMnbRecoveryRequested(hash) &&
-                            !IsArgSet("-connect");
+                            !gArgs.IsArgSet("-connect");
                 if(fAsk) {
                     // this mn is in a non-recoverable state and we haven't asked other nodes yet
                     std::set<CService> setRequested;
