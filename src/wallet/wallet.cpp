@@ -1964,7 +1964,16 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman)
         CValidationState state;
         /* GetDepthInMainChain already catches known conflicts. */
         if (InMempool() || AcceptToMemoryPool(maxTxFee, state)) {
-            LogPrintf("Relaying wtx %s\n", GetHash().ToString());
+            uint256 hash = GetHash();
+            LogPrintf("Relaying wtx %s\n", hash.ToString());
+
+            if (strCommand == NetMsgType::TXLOCKREQUEST) {
+                if (instantsend.ProcessTxLockRequest((CTxLockRequest)*this, connman)) {
+                    instantsend.AcceptLockRequest((CTxLockRequest)*this);
+                } else {
+                    instantsend.RejectLockRequest((CTxLockRequest)*this);
+                }
+            }
             if (connman) {
                 CInv inv(MSG_TX, GetHash());
                 connman->ForEachNode([&inv](CNode* pnode)
