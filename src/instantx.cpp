@@ -796,7 +796,7 @@ bool CInstantSend::GetTxLockRequest(const uint256& txHash, CTxLockRequest& txLoc
     LOCK(cs_instantsend);
 
     std::map<uint256, CTxLockCandidate>::iterator it = mapTxLockCandidates.find(txHash);
-    if(it == mapTxLockCandidates.end()) return false;
+    if(it == mapTxLockCandidates.end() || !it->second.txLockRequest) return false;
     txLockRequestRet = it->second.txLockRequest;
 
     return true;
