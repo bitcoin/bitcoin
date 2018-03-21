@@ -144,12 +144,12 @@
   { "exec": "./bitcoin-tx",
     "args": ["02000000000100000000000000000000000000"],
     "output_cmp": "txcreate2.hex",
-    "description": "Parses a transation with no inputs and a single output script"
+    "description": "Parses a transaction with no inputs and a single output script"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-json", "02000000000100000000000000000000000000"],
     "output_cmp": "txcreate2.json",
-    "description": "Parses a transation with no inputs and a single output script (output in json)"
+    "description": "Parses a transaction with no inputs and a single output script (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-create", "outscript=0:OP_DROP", "nversion=1"],
