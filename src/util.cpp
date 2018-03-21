@@ -71,7 +71,6 @@
 #endif
 
 #include <boost/interprocess/sync/file_lock.hpp>
-#include <boost/program_options/detail/config_file.hpp>
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
@@ -662,26 +661,46 @@ fs::path GetConfigFile(const std::string& confPath)
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
 
+inline bool not_space(int c) { return !std::isspace(c); }
+
 void ArgsManager::ReadConfigFile(const std::string& confPath)
 {
-    fs::ifstream streamConfig(GetConfigFile(confPath));
-    if (!streamConfig.good())
+    fs::ifstream config_file(GetConfigFile(confPath));
+    if (!config_file.good())
         return; // No bitcoin.conf file is OK
 
     {
-        LOCK(cs_args);
-        std::set<std::string> setOptions;
-        setOptions.insert("*");
+        // left and right trim for strings
+        auto ltrim = [](std::string &s) { s.erase(s.begin(), std::find_if(s.begin(), s.end(), not_space)); };
+        auto rtrim = [](std::string &s) { s.erase(std::find_if(s.rbegin(), s.rend(), not_space).base(), s.end()); };
 
-        for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
-        {
-            // Don't overwrite existing settings so command line settings override bitcoin.conf
-            std::string strKey = std::string("-") + it->string_key;
-            std::string strValue = it->value[0];
-            InterpretNegatedOption(strKey, strValue);
-            if (mapArgs.count(strKey) == 0)
-                mapArgs[strKey] = strValue;
-            mapMultiArgs[strKey].push_back(strValue);
+        LOCK(cs_args);
+        std::string line;
+        while (std::getline(config_file, line)) {
+            size_t eqpos = line.find('=');
+            std::string key, val;
+            if (eqpos == std::string::npos) {
+                key = line;
+            } else {
+                key = line.substr(0, eqpos);
+                val = line.substr(eqpos + 1);
+            }
+
+            // trim whitespace on the key and value
+            ltrim(key);
+            rtrim(key);
+            ltrim(val);
+            rtrim(val);
+
+            // convert to cli argument form
+            key = "-" + key;
+
+            // handle -nofoo options
+            InterpretNegatedOption(key, val);
+
+            if (mapArgs.count(key) == 0)
+                mapArgs[key] = val;
+            mapMultiArgs[key].push_back(val);
         }
     }
     // If datadir is changed in .conf file:
