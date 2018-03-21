@@ -224,7 +224,7 @@ private:
      *
      * Instead we treat the 32-bit random number as a Q32 fixed-point number in the range
      *  [0,1) and simply multiply it by the size.  Then we just shift the result down by
-     *  32-bits to get our bucket number.  The results has non-uniformity the same as a
+     *  32-bits to get our bucket number.  The result has non-uniformity the same as a
      *  mod, but it is much faster to compute. More about this technique can be found at
      *  http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
      *
