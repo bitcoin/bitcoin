@@ -1511,7 +1511,7 @@ class SegWitTest(BitcoinTestFramework):
         # Make sure that this peer thinks segwit has activated.
         assert(get_bip9_status(self.nodes[node_id], 'segwit')['status'] == "active")
 
-        # Make sure this peers blocks match those of node0.
+        # Make sure this peer's blocks match those of node0.
         height = self.nodes[node_id].getblockcount()
         while height >= 0:
             block_hash = self.nodes[node_id].getblockhash(height)

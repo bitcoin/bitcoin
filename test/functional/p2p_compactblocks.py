@@ -548,7 +548,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Note that it's possible for bitcoind to be smart enough to know we're
         # lying, since it could check to see if the shortid matches what we're
         # sending, and eg disconnect us for misbehavior.  If that behavior
-        # change were made, we could just modify this test by having a
+        # change was made, we could just modify this test by having a
         # different peer provide the block further down, so that we're still
         # verifying that the block isn't marked bad permanently. This is good
         # enough for now.
