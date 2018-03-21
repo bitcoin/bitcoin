@@ -27,7 +27,7 @@ private:
 
     static const int DSEG_UPDATE_SECONDS        = 3 * 60 * 60;
 
-    static const int LAST_PAID_SCAN_BLOCKS      = 100;
+    static const int LAST_PAID_SCAN_BLOCKS;
 
     static const int MIN_POSE_PROTO_VERSION     = 70203;
     static const int MAX_POSE_CONNECTIONS       = 10;
