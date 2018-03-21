@@ -328,24 +328,24 @@ void CPrivateSendClient::CheckPool()
 //
 void CPrivateSendClient::CheckTimeout()
 {
+    if(fMasternodeMode) return;
+
     CheckQueue();
 
-    if(!fEnablePrivateSend && !fMasternodeMode) return;
+    if(!fEnablePrivateSend) return;
 
     // catching hanging sessions
-    if(!fMasternodeMode) {
-        switch(nState) {
-            case POOL_STATE_ERROR:
-                LogPrint("privatesend", "CPrivateSendClient::CheckTimeout -- Pool error -- Running CheckPool\n");
-                CheckPool();
-                break;
-            case POOL_STATE_SUCCESS:
-                LogPrint("privatesend", "CPrivateSendClient::CheckTimeout -- Pool success -- Running CheckPool\n");
-                CheckPool();
-                break;
-            default:
-                break;
-        }
+    switch(nState) {
+        case POOL_STATE_ERROR:
+            LogPrint("privatesend", "CPrivateSendClient::CheckTimeout -- Pool error -- Running CheckPool\n");
+            CheckPool();
+            break;
+        case POOL_STATE_SUCCESS:
+            LogPrint("privatesend", "CPrivateSendClient::CheckTimeout -- Pool success -- Running CheckPool\n");
+            CheckPool();
+            break;
+        default:
+            break;
     }
 
     int nLagTime = 10; // give the server a few extra seconds before resetting.

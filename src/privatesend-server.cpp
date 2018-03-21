@@ -275,22 +275,22 @@ void CPrivateSendServer::SetNull()
 //
 void CPrivateSendServer::CheckPool(CConnman& connman)
 {
-    if(fMasternodeMode) {
-        LogPrint("privatesend", "CPrivateSendServer::CheckPool -- entries count %lu\n", GetEntriesCount());
+    if (!fMasternodeMode) return;
 
-        // If entries are full, create finalized transaction
-        if(nState == POOL_STATE_ACCEPTING_ENTRIES && GetEntriesCount() >= CPrivateSend::GetMaxPoolTransactions()) {
-            LogPrint("privatesend", "CPrivateSendServer::CheckPool -- FINALIZE TRANSACTIONS\n");
-            CreateFinalTransaction(connman);
-            return;
-        }
+    LogPrint("privatesend", "CPrivateSendServer::CheckPool -- entries count %lu\n", GetEntriesCount());
 
-        // If we have all of the signatures, try to compile the transaction
-        if(nState == POOL_STATE_SIGNING && IsSignaturesComplete()) {
-            LogPrint("privatesend", "CPrivateSendServer::CheckPool -- SIGNING\n");
-            CommitFinalTransaction(connman);
-            return;
-        }
+    // If entries are full, create finalized transaction
+    if (nState == POOL_STATE_ACCEPTING_ENTRIES && GetEntriesCount() >= CPrivateSend::GetMaxPoolTransactions()) {
+        LogPrint("privatesend", "CPrivateSendServer::CheckPool -- FINALIZE TRANSACTIONS\n");
+        CreateFinalTransaction(connman);
+        return;
+    }
+
+    // If we have all of the signatures, try to compile the transaction
+    if (nState == POOL_STATE_SIGNING && IsSignaturesComplete()) {
+        LogPrint("privatesend", "CPrivateSendServer::CheckPool -- SIGNING\n");
+        CommitFinalTransaction(connman);
+        return;
     }
 
     // reset if we're here for 10 seconds
@@ -471,9 +471,9 @@ void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 //
 void CPrivateSendServer::CheckTimeout(CConnman& connman)
 {
-    CheckQueue();
-
     if(!fMasternodeMode) return;
+
+    CheckQueue();
 
     int nTimeout = (nState == POOL_STATE_SIGNING) ? PRIVATESEND_SIGNING_TIMEOUT : PRIVATESEND_QUEUE_TIMEOUT;
     bool fTimeout = GetTime() - nTimeLastSuccessfulStep >= nTimeout;
@@ -838,7 +838,9 @@ void CPrivateSendServer::RelayCompletedTransaction(PoolMessage nMessageID, CConn
 
 void CPrivateSendServer::SetState(PoolState nStateNew)
 {
-    if(fMasternodeMode && (nStateNew == POOL_STATE_ERROR || nStateNew == POOL_STATE_SUCCESS)) {
+    if(!fMasternodeMode) return;
+
+    if(nStateNew == POOL_STATE_ERROR || nStateNew == POOL_STATE_SUCCESS) {
         LogPrint("privatesend", "CPrivateSendServer::SetState -- Can't set state to ERROR or SUCCESS as a Masternode. \n");
         return;
     }
@@ -851,6 +853,7 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
 void ThreadCheckPrivateSendServer(CConnman& connman)
 {
     if(fLiteMode) return; // disable all Dash specific functionality
+    if(!fMasternodeMode) return; // only run on masternodes
 
     static bool fOneThread;
     if(fOneThread) return;
