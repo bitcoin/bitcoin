@@ -293,12 +293,6 @@ void CPrivateSendServer::CheckPool(CConnman* connman)
         CommitFinalTransaction(connman);
         return;
     }
-
-    // reset if we're here for 10 seconds
-    if((nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) && GetTimeMillis() - nTimeLastSuccessfulStep >= 10000) {
-        LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::CheckPool -- timeout, RESETTING\n");
-        SetNull();
-    }
 }
 
 void CPrivateSendServer::CreateFinalTransaction(CConnman* connman)
@@ -496,7 +490,6 @@ void CPrivateSendServer::CheckTimeout(CConnman* connman)
                 (nState == POOL_STATE_SIGNING) ? "Signing" : "Session", nTimeout);
         ChargeFees(connman);
         SetNull();
-        SetState(POOL_STATE_ERROR);
     }
 }
 
