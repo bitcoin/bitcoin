@@ -149,10 +149,10 @@ class BlindTest(ParticlTestFramework):
         txnHash2 = nodes[0].sendtoaddress(addrTo0_2, availableBalance, '', '', True, 'node0 spend remaining')
         txnHashes.append(txnHash2)
 
+
+        nodes[0].syncwithvalidationinterfacequeue()
         ro = nodes[0].getwalletinfo()
-        assert(isclose(ro['total_balance'], 99996.09294874))
-
-
+        assert(isclose(ro['total_balance'], 99996.09292874))
 
         ro = nodes[1].getwalletinfo()
         assert(isclose(ro['blind_balance'], 2.691068))

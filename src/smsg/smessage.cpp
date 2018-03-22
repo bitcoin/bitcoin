@@ -3217,7 +3217,8 @@ int CSMSG::Encrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyID 
             CBitcoinAddress(addressTo).ToString());
     };
 
-    smsg.timestamp = GetTime();
+    if (smsg.timestamp == 0)
+        smsg.timestamp = GetTime();
 
     CBitcoinAddress coinAddrFrom;
     CKeyID ckidFrom;
@@ -3528,6 +3529,7 @@ int CSMSG::Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
             LogPrintf("Encrypting a copy for outbox, using address %s\n", CBitcoinAddress(addressOutbox).ToString());
 
         SecureMessage smsgForOutbox(fPaid);
+        smsgForOutbox.timestamp = smsg.timestamp;
         if ((rv = Encrypt(smsgForOutbox, addressFrom, addressOutbox, sData)) != 0)
         {
             LogPrintf("%s: Encrypt for outbox failed, %d.\n", __func__, rv);
