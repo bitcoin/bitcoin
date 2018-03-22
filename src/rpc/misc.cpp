@@ -36,7 +36,8 @@
 UniValue validateaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "validateaddress \"address\"\n"
             "\nReturn information about the given bitcoin address.\n"
             "DEPRECATION WARNING: Parts of this command have been deprecated and moved to getaddressinfo. Clients must\n"
@@ -117,7 +118,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
             "\nAs a json rpc call\n"
             + HelpExampleRpc("createmultisig", "2, \"[\\\"03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd\\\",\\\"03dbc6764b8884a92e871274b87583e6d5c2a58819473e17e107ef3f6aa5a61626\\\"]\"")
         ;
-        throw std::runtime_error(msg);
+        throw JSONRPCError(RPC_INVALID_REQUEST, msg);
     }
 
     int required = request.params[0].get_int();
@@ -148,7 +149,8 @@ UniValue createmultisig(const JSONRPCRequest& request)
 UniValue verifymessage(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "verifymessage \"address\" \"signature\" \"message\"\n"
             "\nVerify a signed message\n"
             "\nArguments:\n"
@@ -204,7 +206,8 @@ UniValue verifymessage(const JSONRPCRequest& request)
 UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "signmessagewithprivkey \"privkey\" \"message\"\n"
             "\nSign a message with the private key of an address\n"
             "\nArguments:\n"
@@ -243,7 +246,8 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 UniValue setmocktime(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "setmocktime timestamp\n"
             "\nSet the local time to given timestamp (-regtest only)\n"
             "\nArguments:\n"
@@ -305,7 +309,8 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
      * as users will undoubtedly confuse it with the other "memory pool"
      */
     if (request.fHelp || request.params.size() > 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getmemoryinfo (\"mode\")\n"
             "Returns an object containing information about memory usage.\n"
             "Arguments:\n"
@@ -366,7 +371,8 @@ uint32_t getCategoryMask(UniValue cats) {
 UniValue logging(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "logging ( <include> <exclude> )\n"
             "Gets and sets the logging configuration.\n"
             "When called without an argument, returns the list of categories with status that are currently being debug logged or not.\n"
@@ -435,7 +441,8 @@ UniValue logging(const JSONRPCRequest& request)
 UniValue echo(const JSONRPCRequest& request)
 {
     if (request.fHelp)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "echo|echojson \"message\" ...\n"
             "\nSimply echo back the input arguments. This command is for testing.\n"
             "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in"

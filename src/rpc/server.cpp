@@ -153,6 +153,7 @@ std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
 std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;
+    std::string strHelp;
     std::string category;
     std::set<rpcfn_type> setDone;
     std::vector<std::pair<std::string, const CRPCCommand*> > vCommands;
@@ -178,27 +179,32 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
             if (setDone.insert(pfn).second)
                 (*pfn)(jreq);
         }
+        catch (const UniValue& objError) {
+            // Help text is returned in the message key
+            strHelp = find_value(objError, "message").get_str();
+        }
         catch (const std::exception& e)
         {
             // Help text is returned in an exception
-            std::string strHelp = std::string(e.what());
-            if (strCommand == "")
-            {
-                if (strHelp.find('\n') != std::string::npos)
-                    strHelp = strHelp.substr(0, strHelp.find('\n'));
-
-                if (category != pcmd->category)
-                {
-                    if (!category.empty())
-                        strRet += "\n";
-                    category = pcmd->category;
-                    std::string firstLetter = category.substr(0,1);
-                    boost::to_upper(firstLetter);
-                    strRet += "== " + firstLetter + category.substr(1) + " ==\n";
-                }
-            }
-            strRet += strHelp + "\n";
+            strHelp = std::string(e.what());
         }
+
+        if (strCommand == "")
+        {
+            if (strHelp.find('\n') != std::string::npos)
+                strHelp = strHelp.substr(0, strHelp.find('\n'));
+
+            if (category != pcmd->category)
+            {
+                if (!category.empty())
+                    strRet += "\n";
+                category = pcmd->category;
+                std::string firstLetter = category.substr(0,1);
+                boost::to_upper(firstLetter);
+                strRet += "== " + firstLetter + category.substr(1) + " ==\n";
+            }
+        }
+        strRet += strHelp + "\n";
     }
     if (strRet == "")
         strRet = strprintf("help: unknown command: %s\n", strCommand);
@@ -209,7 +215,8 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 UniValue help(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "help ( \"command\" )\n"
             "\nList all commands, or get help for a specified command.\n"
             "\nArguments:\n"
@@ -230,7 +237,8 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
 {
     // Accept the deprecated and ignored 'detach' boolean argument
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "stop\n"
             "\nStop Bitcoin server.");
     // Event loop will exit after current HTTP requests have been handled, so
@@ -242,7 +250,8 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
 UniValue uptime(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+                RPC_INVALID_REQUEST,
                 "uptime\n"
                         "\nReturns the total uptime of the server.\n"
                         "\nResult:\n"

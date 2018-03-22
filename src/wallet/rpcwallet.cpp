@@ -140,7 +140,8 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getnewaddress ( \"account\" \"address_type\" )\n"
             "\nReturns a new Bitcoin address for receiving payments.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
@@ -206,7 +207,8 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getaccountaddress \"account\"\n"
             "\nDEPRECATED. Returns the current Bitcoin address for receiving payments to this account.\n"
             "\nArguments:\n"
@@ -240,7 +242,8 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getrawchangeaddress ( \"address_type\" )\n"
             "\nReturns a new Bitcoin address, for receiving change.\n"
             "This is for use with raw transactions, NOT normal use.\n"
@@ -289,7 +292,8 @@ UniValue setaccount(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "setaccount \"address\" \"account\"\n"
             "\nDEPRECATED. Sets the account associated with the given address.\n"
             "\nArguments:\n"
@@ -337,7 +341,8 @@ UniValue getaccount(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getaccount \"address\"\n"
             "\nDEPRECATED. Returns the account associated with the given address.\n"
             "\nArguments:\n"
@@ -373,7 +378,8 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getaddressesbyaccount \"account\"\n"
             "\nDEPRECATED. Returns the list of addresses for the given account.\n"
             "\nArguments:\n"
@@ -452,7 +458,8 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount replaceable conf_target \"estimate_mode\")\n"
             "\nSend an amount to a given address.\n"
             + HelpRequiringPassphrase(pwallet) +
@@ -541,7 +548,8 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "listaddressgroupings\n"
             "\nLists groups of addresses which have had their common ownership\n"
             "made public by common use as inputs or as the resulting change\n"
@@ -600,7 +608,8 @@ UniValue signmessage(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "signmessage \"address\" \"message\"\n"
             "\nSign a message with the private key of an address"
             + HelpRequiringPassphrase(pwallet) + "\n"
@@ -661,7 +670,8 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getreceivedbyaddress \"address\" ( minconf )\n"
             "\nReturns the total amount received by the given address in transactions with at least minconf confirmations.\n"
             "\nArguments:\n"
@@ -728,7 +738,8 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getreceivedbyaccount \"account\" ( minconf )\n"
             "\nDEPRECATED. Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.\n"
             "\nArguments:\n"
@@ -793,7 +804,8 @@ UniValue getbalance(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 3)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getbalance ( \"account\" minconf include_watchonly )\n"
             "\nIf account is not specified, returns the server's total available balance.\n"
             "The available balance is what the wallet considers currently spendable, and is\n"
@@ -873,7 +885,8 @@ UniValue getunconfirmedbalance(const JSONRPCRequest &request)
     }
 
     if (request.fHelp || request.params.size() > 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+                RPC_INVALID_REQUEST,
                 "getunconfirmedbalance\n"
                 "Returns the server's total unconfirmed balance\n");
 
@@ -897,7 +910,8 @@ UniValue movecmd(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 5)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "move \"fromaccount\" \"toaccount\" amount ( minconf \"comment\" )\n"
             "\nDEPRECATED. Move a specified amount from one account in your wallet to another.\n"
             "\nArguments:\n"
@@ -948,7 +962,8 @@ UniValue sendfrom(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 6)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "sendfrom \"fromaccount\" \"toaddress\" amount ( minconf \"comment\" \"comment_to\" )\n"
             "\nDEPRECATED (use sendtoaddress). Sent an amount from an account to a bitcoin address."
             + HelpRequiringPassphrase(pwallet) + "\n"
@@ -1023,7 +1038,8 @@ UniValue sendmany(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] replaceable conf_target \"estimate_mode\")\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
@@ -1199,7 +1215,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "\nAs json rpc call\n"
             + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
         ;
-        throw std::runtime_error(msg);
+        throw JSONRPCError(RPC_INVALID_REQUEST, msg);
     }
 
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -1321,7 +1337,7 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
             "\"witnessaddress\",  (string) The value of the new address (P2SH or BIP173).\n"
             "}\n"
         ;
-        throw std::runtime_error(msg);
+        throw JSONRPCError(RPC_INVALID_REQUEST, msg);
     }
 
     if (!IsDeprecatedRPCEnabled("addwitnessaddress")) {
@@ -1539,7 +1555,8 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 4)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "listreceivedbyaddress ( minconf include_empty include_watchonly address_filter )\n"
             "\nList balances by receiving address.\n"
             "\nArguments:\n"
@@ -1590,7 +1607,8 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 3)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "listreceivedbyaccount ( minconf include_empty include_watchonly)\n"
             "\nDEPRECATED. List balances by account.\n"
             "\nArguments:\n"
@@ -1750,7 +1768,8 @@ UniValue listtransactions(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 4)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "listtransactions ( \"account\" count skip include_watchonly)\n"
             "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
             "\nArguments:\n"
@@ -1889,7 +1908,8 @@ UniValue listaccounts(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "listaccounts ( minconf include_watchonly)\n"
             "\nDEPRECATED. Returns Object that has account names as keys, account balances as values.\n"
             "\nArguments:\n"
@@ -1977,7 +1997,8 @@ UniValue listsinceblock(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 4)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "listsinceblock ( \"blockhash\" target_confirmations include_watchonly include_removed )\n"
             "\nGet all transactions in blocks since block [blockhash], or all transactions if omitted.\n"
             "If \"blockhash\" is no longer a part of the main chain, transactions from the fork point onward are included.\n"
@@ -2118,7 +2139,8 @@ UniValue gettransaction(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "gettransaction \"txid\" ( include_watchonly )\n"
             "\nGet detailed information about in-wallet transaction <txid>\n"
             "\nArguments:\n"
@@ -2214,7 +2236,8 @@ UniValue abandontransaction(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 1) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "abandontransaction \"txid\"\n"
             "\nMark in-wallet transaction <txid> as abandoned\n"
             "This will mark this transaction and all its in-wallet descendants as abandoned which will allow\n"
@@ -2260,7 +2283,8 @@ UniValue backupwallet(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "backupwallet \"destination\"\n"
             "\nSafely copies current wallet file to destination, which can be a directory or a path with filename.\n"
             "\nArguments:\n"
@@ -2293,7 +2317,8 @@ UniValue keypoolrefill(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "keypoolrefill ( newsize )\n"
             "\nFills the keypool."
             + HelpRequiringPassphrase(pwallet) + "\n"
@@ -2340,7 +2365,8 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 2) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "walletpassphrase \"passphrase\" timeout\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
             "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
@@ -2392,7 +2418,8 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
         }
     }
     else
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "walletpassphrase <passphrase> <timeout>\n"
             "Stores the wallet decryption key in memory for <timeout> seconds.");
 
@@ -2413,7 +2440,8 @@ UniValue walletpassphrasechange(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 2) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "walletpassphrasechange \"oldpassphrase\" \"newpassphrase\"\n"
             "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n"
             "\nArguments:\n"
@@ -2442,7 +2470,8 @@ UniValue walletpassphrasechange(const JSONRPCRequest& request)
     strNewWalletPass = request.params[1].get_str().c_str();
 
     if (strOldWalletPass.length() < 1 || strNewWalletPass.length() < 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
             "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
 
@@ -2462,7 +2491,8 @@ UniValue walletlock(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 0) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "walletlock\n"
             "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
             "After calling this method, you will need to call walletpassphrase again\n"
@@ -2500,7 +2530,8 @@ UniValue encryptwallet(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 1) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "encryptwallet \"passphrase\"\n"
             "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
             "After this, any calls that interact with private keys such as sending or signing \n"
@@ -2537,7 +2568,8 @@ UniValue encryptwallet(const JSONRPCRequest& request)
     strWalletPass = request.params[0].get_str().c_str();
 
     if (strWalletPass.length() < 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "encryptwallet <passphrase>\n"
             "Encrypts the wallet with <passphrase>.");
 
@@ -2560,7 +2592,8 @@ UniValue lockunspent(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "lockunspent unlock ([{\"txid\":\"txid\",\"vout\":n},...])\n"
             "\nUpdates list of temporarily unspendable outputs.\n"
             "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
@@ -2687,7 +2720,8 @@ UniValue listlockunspent(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "listlockunspent\n"
             "\nReturns list of temporarily unspendable outputs.\n"
             "See the lockunspent call to lock and unlock transactions for spending.\n"
@@ -2739,7 +2773,8 @@ UniValue settxfee(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "settxfee amount\n"
             "\nSet the transaction fee per kB. Overwrites the paytxfee parameter.\n"
             "\nArguments:\n"
@@ -2768,7 +2803,8 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getwalletinfo\n"
             "Returns an object containing various wallet state info.\n"
             "\nResult:\n"
@@ -2826,7 +2862,8 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
 UniValue listwallets(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "listwallets\n"
             "Returns a list of currently loaded wallets.\n"
             "For full information on the wallet, use \"getwalletinfo\"\n"
@@ -2864,7 +2901,8 @@ UniValue resendwallettransactions(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "resendwallettransactions\n"
             "Immediately re-broadcast unconfirmed wallet transactions to all peers.\n"
             "Intended only for testing; the wallet code periodically re-broadcasts\n"
@@ -2899,7 +2937,8 @@ UniValue listunspent(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 5)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "listunspent ( minconf maxconf  [\"addresses\",...] [include_unsafe] [query_options])\n"
             "\nReturns array of unspent transaction outputs\n"
             "with between minconf and maxconf (inclusive) confirmations.\n"
@@ -3063,7 +3102,8 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
-        throw std::runtime_error(
+        throw JSONRPCError(
+                            RPC_INVALID_REQUEST,
                             "fundrawtransaction \"hexstring\" ( options iswitness )\n"
                             "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
                             "This will not modify existing inputs, and will add at most one change output to the outputs.\n"
@@ -3264,7 +3304,8 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "signrawtransactionwithwallet \"hexstring\" ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] sighashtype )\n"
             "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
             "The second optional argument (may be null) is an array of previous transaction outputs that\n"
@@ -3333,7 +3374,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
         return NullUniValue;
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "bumpfee \"txid\" ( options ) \n"
             "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
             "An opt-in RBF transaction with the given txid must be in the wallet.\n"
@@ -3483,7 +3525,8 @@ UniValue generate(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "generate nblocks ( maxtries )\n"
             "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n"
             "\nArguments:\n"
@@ -3527,7 +3570,8 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() > 2) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "rescanblockchain (\"start_height\") (\"stop_height\")\n"
             "\nRescan the local blockchain for wallet related transactions.\n"
             "\nArguments:\n"
@@ -3721,7 +3765,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     }
 
     if (request.fHelp || request.params.size() != 1) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getaddressinfo \"address\"\n"
             "\nReturn information about the given bitcoin address. Some information requires the address\n"
             "to be in the wallet.\n"

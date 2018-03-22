@@ -64,7 +64,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 UniValue getrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "getrawtransaction \"txid\" ( verbose \"blockhash\" )\n"
 
             "\nNOTE: By default this function only works for mempool transactions. If the -txindex option is\n"
@@ -196,7 +197,8 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
 UniValue gettxoutproof(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 1 && request.params.size() != 2))
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "gettxoutproof [\"txid\",...] ( blockhash )\n"
             "\nReturns a hex-encoded proof that \"txid\" was included in a block.\n"
             "\nNOTE: By default this function only works sometimes. This is when there is an\n"
@@ -283,7 +285,8 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
 UniValue verifytxoutproof(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "verifytxoutproof \"proof\"\n"
             "\nVerifies that a proof points to a transaction in a block, returning the transaction it commits to\n"
             "and throwing an RPC error if the block is not in our best chain\n"
@@ -319,7 +322,8 @@ UniValue verifytxoutproof(const JSONRPCRequest& request)
 UniValue createrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 4) {
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             // clang-format off
             "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable )\n"
             "\nCreate a transaction spending the given inputs and creating new outputs.\n"
@@ -479,7 +483,8 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 UniValue decoderawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "decoderawtransaction \"hexstring\" ( iswitness )\n"
             "\nReturn a JSON object representing the serialized, hex-encoded transaction.\n"
 
@@ -554,7 +559,8 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
 UniValue decodescript(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "decodescript \"hexstring\"\n"
             "\nDecode a hex-encoded script.\n"
             "\nArguments:\n"
@@ -621,7 +627,8 @@ UniValue combinerawtransaction(const JSONRPCRequest& request)
 {
 
     if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "combinerawtransaction [\"hexstring\",...]\n"
             "\nCombine multiple partially signed transactions into one transaction.\n"
             "The combined transaction may be another partially signed transaction or a \n"
@@ -862,7 +869,8 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
 UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "signrawtransactionwithkey \"hexstring\" [\"privatekey1\",...] ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] sighashtype )\n"
             "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
             "The second argument is an array of base58-encoded private\n"
@@ -945,7 +953,8 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 #endif
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "signrawtransaction \"hexstring\" ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] [\"privatekey1\",...] sighashtype )\n"
             "\nDEPRECATED. Sign inputs for raw transaction (serialized, hex-encoded).\n"
             "The second optional argument (may be null) is an array of previous transaction outputs that\n"
@@ -1040,7 +1049,8 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 UniValue sendrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
+        throw JSONRPCError(
+            RPC_INVALID_REQUEST,
             "sendrawtransaction \"hexstring\" ( allowhighfees )\n"
             "\nSubmits raw transaction (serialized, hex-encoded) to local node and network.\n"
             "\nAlso see createrawtransaction and signrawtransaction calls.\n"
