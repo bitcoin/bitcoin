@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef BITCOIN_QT_TEST_PAYMENTREQUESTDATA_H
+#define BITCOIN_QT_TEST_PAYMENTREQUESTDATA_H
+
 //
 // Data for paymentservertests.cpp
 //
@@ -458,3 +461,5 @@ iEBFUrBDJZU+UEezGwr7/zoECjo5ZY3PmtZcM2sILNjyweJF6XVzGqTxUw6pN6sW\
 XR2T3Gy2LzRvhVA25QgGqpz0/juS2BtmNbsZPkN9gMMwKimgzc+PuCzmEKwPK9cQ\
 YQ==\
 ";
+
+#endif // BITCOIN_QT_TEST_PAYMENTREQUESTDATA_H
