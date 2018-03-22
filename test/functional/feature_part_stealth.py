@@ -205,9 +205,10 @@ class StealthTest(ParticlTestFramework):
         ro = nodes[0].filtertransactions({ 'use_bech32': True })
         assert(ro[0]['outputs'][0]['stealth_address'] == sx1_b32)
 
-
-
-
+        ro = nodes[0].derivefromstealthaddress(sx2_b32)
+        assert(len(ro) == 3)
+        assert(len(ro['pubkey']) == 66)
+        assert(len(ro['ephemeral']) == 66)
 
 
 

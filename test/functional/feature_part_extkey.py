@@ -46,11 +46,15 @@ class ExtKeyTest(ParticlTestFramework):
         ro = node1.extkeyimportmaster('drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate')
         assert(ro['account_id'] == 'ahL1QdHhzNCtZWJzv36ScfPipJP1cUzAD8')
 
-        extAddrTo = node1.getnewextaddress()
+        extAddrTo = node1.getnewextaddress('test label')
         assert(extAddrTo == 'pparszNYZ1cpWxnNieFqHCV2rtXmG74a4WAXHHhXaRATzzU6kMixjy1rXDM1UM4LVgkXRpLNM1rQNvkgLf7kUeMXiyaBMK8aSR3td4b4cX4epnHF')
 
+        ro = node1.filteraddresses()
+        assert(len(ro) == 1)
+        assert(ro[0]['label'] == 'test label')
+
+
         ro = node1.getaddressinfo(extAddrTo)
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         assert(ro['ismine'] == True)
         assert(ro['isextkey'] == True)
 

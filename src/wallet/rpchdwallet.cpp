@@ -1827,7 +1827,7 @@ UniValue getnewextaddress(const JSONRPCRequest &request)
     uint32_t *pChild = nullptr;
     std::string strLabel;
     const char *pLabel = nullptr;
-    if (request.params[1].isStr())
+    if (request.params[0].isStr())
     {
         strLabel = request.params[0].get_str();
         if (strLabel.size() > 0)
@@ -5908,6 +5908,108 @@ UniValue walletsettings(const JSONRPCRequest &request)
     return result;
 };
 
+UniValue transactionblinds(const JSONRPCRequest &request)
+{
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "transactionblinds \"txnid\"\n"
+            "\nShow known blinding factors for transaction.\n"
+            + HelpRequiringPassphrase(pwallet) + "\n"
+            "\nArguments:\n"
+            "1. \"txnid\"                          (string, required) The transaction id\n"
+            "\nResult:\n"
+            "   {\n"
+            "     \"n\":\"hex\",                   (string) The blinding factor for output n, hex encoded\n"
+            "   }\n"
+            "\nExamples:\n"
+            + HelpExampleCli("transactionblinds", "\"txnid\"")
+            + HelpExampleRpc("transactionblinds", "\"txnid\"")
+        );
+
+    ObserveSafeMode();
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    uint256 hash;
+    hash.SetHex(request.params[0].get_str());
+
+    MapRecords_t::const_iterator mri = pwallet->mapRecords.find(hash);
+
+    if (mri == pwallet->mapRecords.end())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    //const CTransactionRecord &rtx = mri->second;
+
+    UniValue result(UniValue::VOBJ);
+    CStoredTransaction stx;
+    if (!CHDWalletDB(pwallet->GetDBHandle()).ReadStoredTx(hash, stx))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No stored data found for txn");
+
+    for (size_t i = 0; i < stx.tx->vpout.size(); ++i)
+    {
+        uint256 tmp;
+        if (stx.GetBlind(i, tmp.begin()))
+            result.pushKV(strprintf("%i", i), tmp.GetHex());
+    };
+
+    return result;
+};
+
+UniValue derivefromstealthaddress(const JSONRPCRequest &request)
+{
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "derivefromstealthaddress \"stealthaddress\"\n"
+            "\nDerive a pubkey from a stealth address and random value.\n"
+            "\nArguments:\n"
+            "1. \"stealthaddress\"                 (string, required) The stealth address\n"
+            "\nResult:\n"
+            "   {\n"
+            "     \"address\":\"base58\",            (string) The derived address\n"
+            "     \"pubkey\":\"hex\",                (string) The derived public key\n"
+            "     \"ephemeral\":\"hex\",             (string) The ephemeral value\n"
+            "   }\n"
+            "\nExamples:\n"
+            + HelpExampleCli("derivefromstealthaddress", "\"stealthaddress\"")
+            + HelpExampleRpc("derivefromstealthaddress", "\"stealthaddress\"")
+        );
+
+    ObserveSafeMode();
+
+    CBitcoinAddress addr(request.params[0].get_str());
+    if (!addr.IsValidStealthAddress())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Must input a stealthaddress."));
+
+    CStealthAddress sx = boost::get<CStealthAddress>(addr.Get());
+
+
+    UniValue result(UniValue::VOBJ);
+
+    CKey sShared, sEphem;
+    ec_point pkSendTo;
+    sEphem.MakeNewKey(true);
+    if (0 != StealthSecret(sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, _("StealthSecret failed, try again."));
+
+    CPubKey pkEphem = sEphem.GetPubKey();
+    CPubKey pkDest(pkSendTo);
+    CTxDestination dest = GetDestinationForKey(pkDest, OUTPUT_TYPE_LEGACY);
+
+    result.pushKV("address", EncodeDestination(dest));
+    result.pushKV("pubkey", HexStr(pkDest));
+    result.pushKV("ephemeral", HexStr(pkEphem));
+
+
+    return result;
+};
+
 
 UniValue setvote(const JSONRPCRequest &request)
 {
@@ -6216,6 +6318,8 @@ static const CRPCCommand commands[] =
 
     { "wallet",             "walletsettings",                   &walletsettings,                {"setting","json"} },
 
+    { "wallet",             "transactionblinds",                &transactionblinds,             {"txnid"} },
+    { "wallet",             "derivefromstealthaddress",         &derivefromstealthaddress,      {"stealthaddress"} },
 
     { "governance",         "setvote",                          &setvote,                       {"proposal","option","height_start","height_end"} },
     { "governance",         "votehistory",                      &votehistory,                   {"current_only"} },

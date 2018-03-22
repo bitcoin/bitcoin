@@ -53,6 +53,9 @@ class BlindTest(ParticlTestFramework):
         ro = nodes[1].getwalletinfo()
         assert(isclose(ro['unconfirmed_blind'], 3.4))
 
+        ro = nodes[1].transactionblinds(txnHash)
+        assert(len(ro) == 2)
+
         ro = nodes[1].listtransactions()
         assert(len(ro) == 2)
 
