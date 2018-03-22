@@ -30,7 +30,7 @@ void SendSnapShotPayment(const std::string &strSend)
 		newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 		if (strSendSendNewAddress != "")
 			strSendSendNewAddress += ",";
-		strSendSendNewAddress += "\\\"" + newaddress + "\\\":1";
+		strSendSendNewAddress += "\\\"" + newaddress + "\\\":10";
 	}
 	strSendMany = "sendmany \"\" {" + strSendSendNewAddress + "}";
 	BOOST_CHECK_THROW(CallRPC("mainnet1", strSendMany, false), runtime_error);
