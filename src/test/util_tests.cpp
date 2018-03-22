@@ -185,17 +185,11 @@ BOOST_AUTO_TEST_CASE(util_FormatISO8601Time)
     BOOST_CHECK_EQUAL(FormatISO8601Time(1317425777), "23:36:17Z");
 }
 
-class TestArgsManager : public ArgsManager
+struct TestArgsManager : public ArgsManager
 {
-public:
-    std::map<std::string, std::string>& GetMapArgs()
-    {
-        return mapArgs;
-    };
-    const std::map<std::string, std::vector<std::string> >& GetMapMultiArgs()
-    {
-        return mapMultiArgs;
-    };
+    std::map<std::string, std::string>& GetMapArgs() { return mapArgs; }
+    const std::map<std::string, std::vector<std::string> >& GetMapMultiArgs() { return mapMultiArgs; }
+    const std::unordered_set<std::string>& GetNegatedArgs() { return m_negated_args; }
 };
 
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
@@ -241,6 +235,11 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
     // The -no prefix should get stripped on the way in.
     BOOST_CHECK(!testArgs.IsArgSet("-nob"));
 
+    // The -b option is flagged as negated, and nothing else is
+    BOOST_CHECK(testArgs.IsArgNegated("-b"));
+    BOOST_CHECK(testArgs.GetNegatedArgs().size() == 1);
+    BOOST_CHECK(!testArgs.IsArgNegated("-a"));
+
     // Check expected values.
     BOOST_CHECK(testArgs.GetBoolArg("-a", false) == true);
     BOOST_CHECK(testArgs.GetBoolArg("-b", true) == false);
@@ -249,6 +248,23 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
     BOOST_CHECK(testArgs.GetBoolArg("-e", true) == false);
     BOOST_CHECK(testArgs.GetBoolArg("-f", true) == false);
 }
+
+BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
+{
+    // Test some awful edge cases that hopefully no user will ever exercise.
+    TestArgsManager testArgs;
+    const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
+    testArgs.ParseParameters(4, (char**)argv_test);
+
+    // This was passed twice, second one overrides the negative setting.
+    BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
+    BOOST_CHECK(testArgs.GetBoolArg("-foo", false) == true);
+
+    // A double negative is a positive.
+    BOOST_CHECK(testArgs.IsArgNegated("-bar"));
+    BOOST_CHECK(testArgs.GetBoolArg("-bar", false) == true);
+}
+
 BOOST_AUTO_TEST_CASE(util_GetArg)
 {
     TestArgsManager testArgs;
