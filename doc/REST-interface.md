@@ -4,7 +4,7 @@ Unauthenticated REST Interface
 The REST API can be enabled with the `-rest` option.
 
 The interface runs on the same port as the JSON-RPC interface, by default port 8712 for mainnet, port 18712 for testnet,
-and port 18443 for regtest.
+and port 28712 for regtest.
 
 Supported API
 -------------
