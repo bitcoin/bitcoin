@@ -13,6 +13,7 @@ import logging
 import os.path
 import re
 import subprocess
+import tempfile
 import time
 
 from .authproxy import JSONRPCException
@@ -205,6 +206,41 @@ class TestNode():
             for expected_msg in expected_msgs:
                 if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
                     self._raise_assertion_error('Expected message "{}" does not partially match log:\n\n{}\n\n'.format(expected_msg, print_log))
+
+    def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, partial_match=False, *args, **kwargs):
+        """Attempt to start the node and expect it to raise an error.
+
+        extra_args: extra arguments to pass through to dashd
+        expected_msg: regex that stderr should match when dashd fails
+
+        Will throw if dashd starts without an error.
+        Will throw if an expected_msg is provided and it does not match dashd's stdout."""
+        with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
+            try:
+                self.start(extra_args, stderr=log_stderr, *args, **kwargs)
+                self.wait_for_rpc_connection()
+                self.stop_node()
+                self.wait_util_stopped()
+            except Exception as e:
+                assert 'dashd exited' in str(e)  # node must have shutdown
+                self.running = False
+                self.process = None
+                # Check stderr for expected message
+                if expected_msg is not None:
+                    log_stderr.seek(0)
+                    stderr = log_stderr.read().decode('utf-8').strip()
+                    if partial_match:
+                        if re.search(expected_msg, stderr, flags=re.MULTILINE) is None:
+                            raise AssertionError('Expected message "{}" does not partially match stderr:\n"{}"'.format(expected_msg, stderr))
+                    else:
+                        if re.fullmatch(expected_msg, stderr) is None:
+                            raise AssertionError('Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
+            else:
+                if expected_msg is None:
+                    assert_msg = "dashd should have exited with an error"
+                else:
+                    assert_msg = "dashd should have exited with expected error " + expected_msg
+                raise AssertionError(assert_msg)
 
     def node_encrypt_wallet(self, passphrase):
         """"Encrypts the wallet.
