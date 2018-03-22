@@ -25,6 +25,7 @@
 #include <map>
 #include <stdint.h>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
@@ -224,6 +225,8 @@ protected:
     mutable CCriticalSection cs_args;
     std::map<std::string, std::string> mapArgs;
     std::map<std::string, std::vector<std::string>> mapMultiArgs;
+    std::unordered_set<std::string> m_negated_args;
+
 public:
     void ParseParameters(int argc, const char*const argv[]);
     void ReadConfigFile(const std::string& confPath);
@@ -243,6 +246,15 @@ public:
      * @return true if the argument has been set
      */
     bool IsArgSet(const std::string& strArg) const;
+
+    /**
+     * Return true if the argument was originally passed as a negated option,
+     * i.e. -nofoo.
+     *
+     * @param strArg Argument to get (e.g. "-foo")
+     * @return true if the argument was passed negated
+     */
+    bool IsArgNegated(const std::string& strArg) const;
 
     /**
      * Return string argument or default value
@@ -292,6 +304,11 @@ public:
     // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
     // been set. Also called directly in testing.
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
+
+private:
+
+    // Munge -nofoo into -foo=0 and track the value as negated.
+    void InterpretNegatedOption(std::string &key, std::string &val);
 };
 
 extern ArgsManager gArgs;
