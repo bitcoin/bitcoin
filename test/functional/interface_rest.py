@@ -18,7 +18,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
-    connect_nodes_bi,
     hex_str_to_bytes,
 )
 
@@ -40,13 +39,8 @@ def filter_output_indices_by_value(vouts, value):
 class RESTTest (BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 3
-        self.extra_args = [["-rest"]] * self.num_nodes
-
-    def setup_network(self, split=False):
-        super().setup_network()
-        connect_nodes_bi(self.nodes, 0, 2)
-        self.url = urllib.parse.urlparse(self.nodes[0].url)
+        self.num_nodes = 2
+        self.extra_args = [["-rest"], []]
 
     def test_rest_request(self, uri, http_method='GET', req_type=ReqType.JSON, body='', status=200, ret_type=RetType.JSON):
         rest_uri = '/rest' + uri
@@ -75,18 +69,22 @@ class RESTTest (BitcoinTestFramework):
             return json.loads(resp.read().decode('utf-8'), parse_float=Decimal)
 
     def run_test(self):
+        self.url = urllib.parse.urlparse(self.nodes[0].url)
         self.log.info("Mine blocks and send Bitcoin to node 1")
+
+        # Random address so node1's balance doesn't increase
+        not_related_address = "2MxqoHEdNQTyYeX1mHcbrrpzgojbosTpCvJ"
 
         self.nodes[0].generate(1)
         self.sync_all()
-        self.nodes[2].generate(100)
+        self.nodes[1].generatetoaddress(100, not_related_address)
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 50)
 
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
-        self.nodes[2].generate(1)
+        self.nodes[1].generatetoaddress(1, not_related_address)
         self.sync_all()
         bb_hash = self.nodes[0].getbestblockhash()
 
@@ -260,9 +258,9 @@ class RESTTest (BitcoinTestFramework):
 
         # Make 3 tx and mine them on node 1
         txs = []
-        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
-        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
-        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
+        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
+        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
+        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
         self.sync_all()
 
         # Check that there are exactly 3 transactions in the TX memory pool before generating the block
