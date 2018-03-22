@@ -55,7 +55,8 @@ class RESTTest (BitcoinTestFramework):
 
     def run_test(self):
         url = urllib.parse.urlparse(self.nodes[0].url)
-        self.log.info("Mining blocks...")
+
+        self.log.info("Mine blocks and send Bitcoin to node 1")
 
         self.nodes[0].generate(1)
         self.sync_all()
@@ -70,9 +71,10 @@ class RESTTest (BitcoinTestFramework):
         self.sync_all()
         bb_hash = self.nodes[0].getbestblockhash()
 
-        assert_equal(self.nodes[1].getbalance(), Decimal("0.1"))  # balance now should be 0.1 on node 1
+        assert_equal(self.nodes[1].getbalance(), Decimal("0.1"))
 
-        # load the latest 0.1 tx over the REST API
+        self.log.info("Load the transaction using the /tx URI")
+
         json_string = http_get_call(url.hostname, url.port, '/rest/tx/' + txid + self.FORMAT_SEPARATOR + "json")
         json_obj = json.loads(json_string)
         vintx = json_obj['vin'][0]['txid']  # get the vin to later check for utxo (should be spent by then)
@@ -82,9 +84,8 @@ class RESTTest (BitcoinTestFramework):
             if vout['value'] == 0.1:
                 n = vout['n']
 
-        #######################################
-        # GETUTXOS: query an unspent outpoint #
-        #######################################
+        self.log.info("Query an unspent TXO using the /getutxos URI")
+
         json_request = '/' + txid + '-' + str(n)
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos' + json_request + self.FORMAT_SEPARATOR + 'json')
         json_obj = json.loads(json_string)
@@ -96,9 +97,8 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(len(json_obj['utxos']), 1)
         assert_equal(json_obj['utxos'][0]['value'], 0.1)
 
-        #################################################
-        # GETUTXOS: now query an already spent outpoint #
-        #################################################
+        self.log.info("Query a spent TXO using the /getutxos URI")
+
         json_request = '/' + vintx + '-0'
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos' + json_request + self.FORMAT_SEPARATOR + 'json')
         json_obj = json.loads(json_string)
@@ -112,16 +112,16 @@ class RESTTest (BitcoinTestFramework):
         # Check bitmap
         assert_equal(json_obj['bitmap'], "0")
 
-        ##################################################
-        # GETUTXOS: now check both with the same request #
-        ##################################################
+        self.log.info("Query two TXOs using the /getutxos URI")
+
         json_request = '/' + txid + '-' + str(n) + '/' + vintx + '-0'
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos' + json_request + self.FORMAT_SEPARATOR + 'json')
         json_obj = json.loads(json_string)
         assert_equal(len(json_obj['utxos']), 1)
         assert_equal(json_obj['bitmap'], "10")
 
-        # Test binary response
+        self.log.info("Query the TXOs using the /getutxos URI with a binary response")
+
         bb_hash = self.nodes[0].getbestblockhash()
 
         bin_request = b'\x01\x02'
@@ -140,9 +140,10 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(bb_hash, response_hash)  # check if getutxo's chaintip during calculation was fine
         assert_equal(chain_height, 102)  # chain height must be 102
 
-        ############################
-        # GETUTXOS: mempool checks #
-        ############################
+        self.log.info("Test the /getutxos URI with and without /checkmempool")
+        # Create a transaction, check that it's found with /checkmempool, but
+        # not found without. Then confirm the transaction and check that it's
+        # found with or without /checkmempool.
 
         # do a tx and don't sync
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
@@ -160,22 +161,22 @@ class RESTTest (BitcoinTestFramework):
         json_request = '/' + spending
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos' + json_request + self.FORMAT_SEPARATOR + 'json')
         json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 0)  # there should be no outpoint because it has just added to the mempool
+        assert_equal(len(json_obj['utxos']), 0)
 
         json_request = '/checkmempool/' + spending
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos' + json_request + self.FORMAT_SEPARATOR + 'json')
         json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 1)  # there should be an outpoint because it has just added to the mempool
+        assert_equal(len(json_obj['utxos']), 1)
 
         json_request = '/' + spent
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos' + json_request + self.FORMAT_SEPARATOR + 'json')
         json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 1)  # there should be an outpoint because its spending tx is not confirmed
+        assert_equal(len(json_obj['utxos']), 1)
 
         json_request = '/checkmempool/' + spent
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos' + json_request + self.FORMAT_SEPARATOR + 'json')
         json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 0)  # there should be no outpoint because it has just spent (by mempool tx)
+        assert_equal(len(json_obj['utxos']), 0)
 
         self.nodes[0].generate(1)
         self.sync_all()
@@ -183,12 +184,12 @@ class RESTTest (BitcoinTestFramework):
         json_request = '/' + spending
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos' + json_request + self.FORMAT_SEPARATOR + 'json')
         json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 1)  # there should be an outpoint because it was mined
+        assert_equal(len(json_obj['utxos']), 1)
 
         json_request = '/checkmempool/' + spending
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos' + json_request + self.FORMAT_SEPARATOR + 'json')
         json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 1)  # there should be an outpoint because it was mined
+        assert_equal(len(json_obj['utxos']), 1)
 
         # Do some invalid requests
         json_request = '{"checkmempool'
@@ -220,9 +221,7 @@ class RESTTest (BitcoinTestFramework):
         self.nodes[0].generate(1)  # generate block to not affect upcoming tests
         self.sync_all()
 
-        ################
-        # /rest/block/ #
-        ################
+        self.log.info("Test the /block and /headers URIs")
 
         # Check binary format
         response = http_get_call(url.hostname, url.port, '/rest/block/' + bb_hash + self.FORMAT_SEPARATOR + "bin", True)
@@ -279,7 +278,8 @@ class RESTTest (BitcoinTestFramework):
         json_obj = json.loads(response_header_json_str)
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
 
-        # Do tx test
+        self.log.info("Test the /tx URI")
+
         tx_hash = block_json_obj['tx'][0]['txid']
         json_string = http_get_call(url.hostname, url.port, '/rest/tx/' + tx_hash + self.FORMAT_SEPARATOR + "json")
         json_obj = json.loads(json_string)
@@ -290,8 +290,9 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(hex_string.status, 200)
         assert_greater_than(int(response.getheader('content-length')), 10)
 
-        # Check block tx details
-        # Let's make 3 tx and mine them on node 1
+        self.log.info("Test tx inclusion in the /mempool and /block URIs")
+
+        # Make 3 tx and mine them on node 1
         txs = []
         txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
         txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
@@ -330,7 +331,8 @@ class RESTTest (BitcoinTestFramework):
         for tx in txs:
             assert_equal(tx in json_obj['tx'], True)
 
-        # Test rest bestblock
+        self.log.info("Test the /chaininfo URI")
+
         bb_hash = self.nodes[0].getbestblockhash()
 
         json_string = http_get_call(url.hostname, url.port, '/rest/chaininfo.json')
