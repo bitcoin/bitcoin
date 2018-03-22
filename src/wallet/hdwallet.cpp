@@ -9181,6 +9181,9 @@ int CHDWallet::OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdat
     else
         rout.nFlags |= ORF_WATCHONLY;
 
+    if (mine & ISMINE_HARDWARE_DEVICE)
+        rout.nFlags |= ORF_HARDWARE_DEVICE;
+
     rout.nValue = pout->nValue;
     rout.scriptPubKey = pout->scriptPubKey;
     rout.nFlags &= ~ORF_LOCKED;
@@ -9224,6 +9227,9 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
         rout.nFlags |= ORF_OWNED;
     else
         rout.nFlags |= ORF_WATCHONLY;
+
+    if (mine & ISMINE_HARDWARE_DEVICE)
+        rout.nFlags |= ORF_HARDWARE_DEVICE;
 
     if (IsLocked())
     {
@@ -9954,7 +9960,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
             if (r.nType != OUTPUT_STANDARD)
                 continue;
 
-            if (!(r.nFlags & ORF_OWNED) && !(r.nFlags & ORF_STAKEONLY))
+            if (!(r.nFlags & ORF_OWN_ANY))
                 continue;
 
             if (IsSpent(txid, r.n))
@@ -9980,8 +9986,10 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
                 };
             };
 
-            bool fSpendableIn = r.nFlags & ORF_OWNED;
-            vCoins.emplace_back(&twi->second, r.n, nDepth, fSpendableIn, true, safeTx);
+            bool fSpendableIn = (coinControl && !coinControl->fAllowWatchOnly && !(r.nFlags & ORF_OWNED)) ? false : true;
+            bool fNeedHardwareKey = (r.nFlags & ORF_HARDWARE_DEVICE);
+
+            vCoins.emplace_back(&twi->second, r.n, nDepth, fSpendableIn, true, safeTx, true, fNeedHardwareKey);
 
             if (nMinimumSumAmount != MAX_MONEY) {
                 nTotal += r.nValue;
@@ -10134,7 +10142,7 @@ void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyS
             if (r.nType != OUTPUT_CT)
                 continue;
 
-            if (!(r.nFlags & ORF_OWNED))
+            if (!(r.nFlags & ORF_OWN_ANY))
                 continue;
 
             if (IsSpent(txid, r.n))
@@ -10150,7 +10158,11 @@ void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyS
                 continue;
 
             bool fMature = true;
-            vCoins.emplace_back(txid, it, r.n, nDepth, safeTx, fMature);
+            bool fSpendable = (coinControl && !coinControl->fAllowWatchOnly && !(r.nFlags & ORF_OWNED)) ? false : true;
+            bool fSolvable = true;
+            bool fNeedHardwareKey = (r.nFlags & ORF_HARDWARE_DEVICE);
+
+            vCoins.emplace_back(txid, it, r.n, nDepth, fSpendable, fSolvable, safeTx, fMature, fNeedHardwareKey);
 
             if (nMinimumSumAmount != MAX_MONEY) {
                 nTotal += r.nValue;
@@ -10318,7 +10330,12 @@ void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe
             if (IsLockedCoin(txid, r.n))
                 continue;
 
-            vCoins.emplace_back(txid, it, r.n, nDepth, safeTx, fMature);
+            bool fMature = true;
+            bool fSpendable = (coinControl && !coinControl->fAllowWatchOnly && !(r.nFlags & ORF_OWNED)) ? false : true;
+            bool fSolvable = true;
+            bool fNeedHardwareKey = (r.nFlags & ORF_HARDWARE_DEVICE);
+
+            vCoins.emplace_back(txid, it, r.n, nDepth, fSpendable, fSolvable, safeTx, fMature, fNeedHardwareKey);
 
             if (nMinimumSumAmount != MAX_MONEY) {
                 nTotal += r.nValue;

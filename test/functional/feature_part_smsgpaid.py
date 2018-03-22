@@ -128,6 +128,7 @@ class SmsgPaidTest(ParticlTestFramework):
         for i in range(5):
             try:
                 ro = nodes[1].smsg(msgid)
+                assert(ro['location'] == 'inbox')
                 break
             except:
                 time.sleep(1)
@@ -185,6 +186,7 @@ class SmsgPaidTest(ParticlTestFramework):
         for i in range(5):
             try:
                 ro = nodes[1].smsg(msgid, {'encoding':'hex'})
+                assert(ro['location'] == 'outbox')
                 break
             except:
                 time.sleep(1)
@@ -193,6 +195,7 @@ class SmsgPaidTest(ParticlTestFramework):
         for i in range(5):
             try:
                 ro = nodes[1].smsg(msgid2, {'encoding':'hex'})
+                assert(ro['location'] == 'outbox')
                 break
             except:
                 time.sleep(1)

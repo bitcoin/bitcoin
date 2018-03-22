@@ -122,7 +122,7 @@ static void AddAnonTxn(CHDWallet *pwallet, CBitcoinAddress &address, CAmount amo
     std::string sError;
     CTempRecipient r;
     r.nType = OUTPUT_RINGCT;
-    r.SetAmount(10);
+    r.SetAmount(amount);
     r.address = address.Get();
     vecSend.push_back(r);
 
@@ -336,18 +336,19 @@ BOOST_AUTO_TEST_CASE(stake_test)
         CBitcoinAddress address(sSxAddr);
 
 
-        AddAnonTxn(pwallet, address, 10);
+        AddAnonTxn(pwallet, address, 10 * COIN);
 
-        AddAnonTxn(pwallet, address, 20);
+        AddAnonTxn(pwallet, address, 20 * COIN);
 
-        StakeNBlocks(pwallet, 1);
-
+        StakeNBlocks(pwallet, 2);
+        CCoinControl coinControl;
+        BOOST_CHECK(30 * COIN == pwallet->GetAvailableAnonBalance(&coinControl));
 
         int64_t nLastRCTOutIndex = 0;
         pblocktree->ReadLastRCTOutput(nLastRCTOutIndex);
         BOOST_CHECK(nLastRCTOutIndex == 4);
 
-
+        for (size_t i = 0; i < 2; ++i)
         {
             // Disconnect last block
             uint256 prevTipHash = chainActive.Tip()->pprev->GetBlockHash();

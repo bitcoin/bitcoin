@@ -378,6 +378,17 @@ class AtomicSwapTest(ParticlTestFramework):
         assert(ftxA[n]['outputs'][0]['amount'] > 5.9 and ftxA[n]['outputs'][0]['amount'] < 6.0)
 
 
+        addrA_sx = nodes[0].getnewstealthaddress() # party A
+        addrB_sx = nodes[1].getnewstealthaddress() # party B
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

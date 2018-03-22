@@ -29,19 +29,20 @@ class UniValue;
 const uint16_t PLACEHOLDER_N = 0xFFFF;
 enum OutputRecordFlags
 {
-    ORF_OWNED        = (1 << 0),
-    ORF_FROM         = (1 << 1),
-    ORF_CHANGE       = (1 << 2),
-    ORF_SPENT        = (1 << 3),
-    ORF_LOCKED       = (1 << 4), // Needs wallet to be unlocked for further processing
-    ORF_STAKEONLY    = (1 << 5),
-    ORF_WATCHONLY    = (1 << 6),
+    ORF_OWNED               = (1 << 0),
+    ORF_FROM                = (1 << 1),
+    ORF_CHANGE              = (1 << 2),
+    ORF_SPENT               = (1 << 3),
+    ORF_LOCKED              = (1 << 4), // Needs wallet to be unlocked for further processing
+    ORF_STAKEONLY           = (1 << 5),
+    ORF_WATCHONLY           = (1 << 6),
+    ORF_HARDWARE_DEVICE     = (1 << 7),
 
-    ORF_OWN_WATCH    = ORF_STAKEONLY | ORF_WATCHONLY,
-    ORF_OWN_ANY      = ORF_OWNED | ORF_OWN_WATCH,
+    ORF_OWN_WATCH           = ORF_STAKEONLY | ORF_WATCHONLY,
+    ORF_OWN_ANY             = ORF_OWNED | ORF_OWN_WATCH,
 
-    ORF_BLIND_IN     = (1 << 14),
-    ORF_ANON_IN      = (1 << 15),
+    ORF_BLIND_IN            = (1 << 14),
+    ORF_ANON_IN             = (1 << 15),
 };
 
 enum OutputRecordAddressTypes
@@ -255,8 +256,10 @@ class COutputR
 public:
     COutputR() {};
 
-    COutputR(const uint256 &txhash_, MapRecords_t::const_iterator rtx_, int i_, int nDepth_, bool fSafe_, bool fMature_)
-        : txhash(txhash_), rtx(rtx_), i(i_), nDepth(nDepth_), fSafe(fSafe_), fMature(fMature_) {};
+    COutputR(const uint256 &txhash_, MapRecords_t::const_iterator rtx_, int i_, int nDepth_,
+        bool fSpendable_, bool fSolvable_, bool fSafe_, bool fMature_, bool fNeedHardwareKey_)
+        : txhash(txhash_), rtx(rtx_), i(i_), nDepth(nDepth_),
+        fSpendable(fSpendable_), fSolvable(fSolvable_), fSafe(fSafe_), fMature(fMature_), fNeedHardwareKey(fNeedHardwareKey_) {};
 
     uint256 txhash;
     MapRecords_t::const_iterator rtx;
@@ -266,6 +269,7 @@ public:
     bool fSolvable;
     bool fSafe;
     bool fMature;
+    bool fNeedHardwareKey;
 };
 
 
