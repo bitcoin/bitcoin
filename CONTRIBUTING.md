@@ -15,6 +15,24 @@ merging pull requests as well as a "lead maintainer" who is responsible for the
 release cycle, overall merging, moderation and appointment of maintainers.
 
 
+Communication Channels
+----------------------
+
+Most communication about Bitcoin Core development happens on IRC, in the
+#bitcoin-core-dev channel on Freenode. The easiest way to participate on IRC is
+with the web client, [webchat.freenode.net](https://webchat.freenode.net/). Chat
+history logs can be found
+on [botbot.me](https://botbot.me/freenode/bitcoin-core-dev/).
+
+Discussion about code base improvements happens in GitHub issues and on pull
+requests.
+
+The developer
+[mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
+should be used to discuss complicated or controversial changes before working on
+a patch set.
+
+
 Contributor Workflow
 --------------------
 
