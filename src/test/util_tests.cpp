@@ -223,6 +223,32 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
 }
 
+BOOST_AUTO_TEST_CASE(util_GetBoolArg)
+{
+    TestArgsManager testArgs;
+    const char *argv_test[] = {
+        "ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"};
+    testArgs.ParseParameters(7, (char**)argv_test);
+
+    // Each letter should be set.
+    for (char opt : "abcdef")
+        BOOST_CHECK(testArgs.IsArgSet({'-', opt}) || !opt);
+
+    // Nothing else should be in the map
+    BOOST_CHECK(testArgs.GetMapArgs().size() == 6 &&
+                testArgs.GetMapMultiArgs().size() == 6);
+
+    // The -no prefix should get stripped on the way in.
+    BOOST_CHECK(!testArgs.IsArgSet("-nob"));
+
+    // Check expected values.
+    BOOST_CHECK(testArgs.GetBoolArg("-a", false) == true);
+    BOOST_CHECK(testArgs.GetBoolArg("-b", true) == false);
+    BOOST_CHECK(testArgs.GetBoolArg("-c", true) == false);
+    BOOST_CHECK(testArgs.GetBoolArg("-d", false) == true);
+    BOOST_CHECK(testArgs.GetBoolArg("-e", true) == false);
+    BOOST_CHECK(testArgs.GetBoolArg("-f", true) == false);
+}
 BOOST_AUTO_TEST_CASE(util_GetArg)
 {
     TestArgsManager testArgs;
