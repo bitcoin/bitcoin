@@ -1651,7 +1651,6 @@ int mastercore_init()
     int64_t exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
     PrintToLog("Exodus balance after initialization: %s\n", FormatDivisibleMP(exodus_balance));
 
-    PrintToConsole("Exodus balance: %s OMNI\n", FormatDivisibleMP(exodus_balance));
     PrintToConsole("Omni Core initialization completed\n");
 
     return 0;
