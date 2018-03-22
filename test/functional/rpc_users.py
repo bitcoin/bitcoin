@@ -5,7 +5,11 @@
 """Test multiple RPC users."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import str_to_b64str, assert_equal
+from test_framework.util import (
+    assert_equal,
+    get_datadir_path,
+    str_to_b64str,
+)
 
 import os
 import http.client
@@ -15,7 +19,8 @@ from random import SystemRandom
 import string
 import configparser
 
-class HTTPBasicsTest (BitcoinTestFramework):
+
+class HTTPBasicsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
@@ -36,11 +41,11 @@ class HTTPBasicsTest (BitcoinTestFramework):
         rpcauth3 = lines[1]
         self.password = lines[3]
 
-        with open(os.path.join(self.options.tmpdir+"/node0", "dash.conf"), 'a', encoding='utf8') as f:
+        with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "dash.conf"), 'a', encoding='utf8') as f:
             f.write(rpcauth+"\n")
             f.write(rpcauth2+"\n")
             f.write(rpcauth3+"\n")
-        with open(os.path.join(self.options.tmpdir+"/node1", "dash.conf"), 'a', encoding='utf8') as f:
+        with open(os.path.join(get_datadir_path(self.options.tmpdir, 1), "dash.conf"), 'a', encoding='utf8') as f:
             f.write(rpcuser+"\n")
             f.write(rpcpassword+"\n")
 
