@@ -1045,6 +1045,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// should fail: generate a cert using expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "certnew aliasexpire2 jag1 pubdata certificates ''"), runtime_error);
 	// renew alias after expiry
-	AliasNew("node2", "aliasexpirednode2", "somedata");
+	AliasNew("node2", "aliasexpirednode2", "somedata1");
 }
 BOOST_AUTO_TEST_SUITE_END ()
