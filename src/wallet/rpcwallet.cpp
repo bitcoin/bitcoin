@@ -2784,7 +2784,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
             "  \"keypoolsize_hd_internal\": xxxx, (numeric) how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)\n"
             "  \"unlocked_until\": ttt,           (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
             "  \"paytxfee\": x.xxxx,              (numeric) the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB\n"
-            "  \"hdmasterkeyid\": \"<hash160>\"     (string, optional) the Hash160 of the HD master pubkey (only present when HD is enabled)\n"
+            "  \"hdseedkeyid\": \"<hash160>\"       (string) the Hash160 of the HD seed pubkey (only present when HD is enabled)\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getwalletinfo", "")
@@ -2810,16 +2810,16 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     obj.pushKV("txcount",       (int)pwallet->mapWallet.size());
     obj.pushKV("keypoololdest", pwallet->GetOldestKeyPoolTime());
     obj.pushKV("keypoolsize", (int64_t)kpExternalSize);
-    CKeyID masterKeyID = pwallet->GetHDChain().masterKeyID;
-    if (!masterKeyID.IsNull() && pwallet->CanSupportFeature(FEATURE_HD_SPLIT)) {
+    CKeyID seedKeyID = pwallet->GetHDChain().seedKeyID;
+    if (!seedKeyID.IsNull() && pwallet->CanSupportFeature(FEATURE_HD_SPLIT)) {
         obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize));
     }
     if (pwallet->IsCrypted()) {
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
     }
     obj.pushKV("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK()));
-    if (!masterKeyID.IsNull())
-         obj.pushKV("hdmasterkeyid", masterKeyID.GetHex());
+    if (!seedKeyID.IsNull())
+         obj.pushKV("hdseedkeyid", seedKeyID.GetHex());
     return obj;
 }
 
@@ -3751,7 +3751,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "  \"account\" : \"account\"         (string) The account associated with the address, \"\" is the default account\n"
             "  \"timestamp\" : timestamp,      (number, optional) The creation time of the key if available in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
-            "  \"hdmasterkeyid\" : \"<hash160>\" (string, optional) The Hash160 of the HD master pubkey\n"
+            "  \"hdseedkeyid\" : \"<hash160>\"   (string, optional) The Hash160 of the HD seed pubkey\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getaddressinfo", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
@@ -3801,7 +3801,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         ret.pushKV("timestamp", meta->nCreateTime);
         if (!meta->hdKeypath.empty()) {
             ret.pushKV("hdkeypath", meta->hdKeypath);
-            ret.pushKV("hdmasterkeyid", meta->hdMasterKeyID.GetHex());
+            ret.pushKV("hdseedkeyid", meta->hdSeedKeyID.GetHex());
         }
     }
     return ret;
