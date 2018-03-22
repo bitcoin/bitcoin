@@ -45,7 +45,7 @@ static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
 static const unsigned int DEFAULT_BYTES_PER_SIGOP_STRICT = 20;
 /** Default for -mempoolreplacement */
 static const bool DEFAULT_ENABLE_REPLACEMENT = true;
-static const bool DEFAULT_REPLACEMENT_HONOUR_OPTOUT = true;
+static const bool DEFAULT_REPLACEMENT_HONOUR_OPTOUT = false;
 /** Default for -permitbaremultisig */
 static const bool DEFAULT_PERMIT_BAREMULTISIG = false;
 /** The maximum number of witness stack items in a standard P2WSH script */
