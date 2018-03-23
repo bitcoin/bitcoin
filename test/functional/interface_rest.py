@@ -3,21 +3,22 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the REST API."""
+
+import binascii
 from decimal import Decimal
 from enum import Enum
 from io import BytesIO
 import json
-from codecs import encode
 from struct import pack, unpack
 
 import http.client
 import urllib.parse
 
-from test_framework.messages import deser_uint256
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
+    assert_greater_than_or_equal,
     hex_str_to_bytes,
 )
 
@@ -131,19 +132,15 @@ class RESTTest (BitcoinTestFramework):
 
         self.log.info("Query the TXOs using the /getutxos URI with a binary response")
 
-        bb_hash = self.nodes[0].getbestblockhash()
-
         bin_request = b'\x01\x02'
         for txid, n in [spending, spent]:
             bin_request += hex_str_to_bytes(txid)
             bin_request += pack("i", n)
 
         bin_response = self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.BIN, body=bin_request, ret_type=RetType.BYTES)
-        output = BytesIO()
-        output.write(bin_response)
-        output.seek(0)
-        chain_height = unpack("i", output.read(4))[0]
-        response_hash = hex(deser_uint256(output))[2:].zfill(64)
+        output = BytesIO(bin_response)
+        chain_height, = unpack("i", output.read(4))
+        response_hash = binascii.hexlify(output.read(32)[::-1]).decode('ascii')
 
         assert_equal(bb_hash, response_hash)  # check if getutxo's chaintip during calculation was fine
         assert_equal(chain_height, 102)  # chain height must be 102
@@ -199,30 +196,30 @@ class RESTTest (BitcoinTestFramework):
         self.sync_all()
 
         self.log.info("Test the /block and /headers URIs")
+        bb_hash = self.nodes[0].getbestblockhash()
 
         # Check binary format
         response = self.test_rest_request("/block/{}".format(bb_hash), req_type=ReqType.BIN, ret_type=RetType.OBJ)
         assert_greater_than(int(response.getheader('content-length')), 80)
-        response_str = response.read()
+        response_bytes = response.read()
 
         # Compare with block header
         response_header = self.test_rest_request("/headers/1/{}".format(bb_hash), req_type=ReqType.BIN, ret_type=RetType.OBJ)
         assert_equal(int(response_header.getheader('content-length')), 80)
-        response_header_str = response_header.read()
-        assert_equal(response_str[0:80], response_header_str)
+        response_header_bytes = response_header.read()
+        assert_equal(response_bytes[:80], response_header_bytes)
 
         # Check block hex format
         response_hex = self.test_rest_request("/block/{}".format(bb_hash), req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_greater_than(int(response_hex.getheader('content-length')), 160)
-        response_hex_str = response_hex.read()
-        assert_equal(encode(response_str, "hex_codec")[0:160], response_hex_str[0:160])
+        response_hex_bytes = response_hex.read().strip(b'\n')
+        assert_equal(binascii.hexlify(response_bytes), response_hex_bytes)
 
         # Compare with hex block header
         response_header_hex = self.test_rest_request("/headers/1/{}".format(bb_hash), req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_greater_than(int(response_header_hex.getheader('content-length')), 160)
-        response_header_hex_str = response_header_hex.read()
-        assert_equal(response_hex_str[0:160], response_header_hex_str[0:160])
-        assert_equal(encode(response_header_str, "hex_codec")[0:160], response_header_hex_str[0:160])
+        response_header_hex_bytes = response_header_hex.read(160)
+        assert_equal(binascii.hexlify(response_bytes[:80]), response_header_hex_bytes)
 
         # Check json format
         block_json_obj = self.test_rest_request("/block/{}".format(bb_hash))
@@ -252,7 +249,8 @@ class RESTTest (BitcoinTestFramework):
 
         # Check hex format response
         hex_response = self.test_rest_request("/tx/{}".format(tx_hash), req_type=ReqType.HEX, ret_type=RetType.OBJ)
-        assert_greater_than(int(hex_response.getheader('content-length')), 10)
+        assert_greater_than_or_equal(int(hex_response.getheader('content-length')),
+                                     json_obj['size']*2)
 
         self.log.info("Test tx inclusion in the /mempool and /block URIs")
 
