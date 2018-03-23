@@ -17,9 +17,6 @@
 /** A virtual base class for key stores */
 class CKeyStore
 {
-protected:
-    mutable CCriticalSection cs_KeyStore;
-
 public:
     virtual ~CKeyStore() {}
 
@@ -54,6 +51,8 @@ typedef std::set<CScript> WatchOnlySet;
 class CBasicKeyStore : public CKeyStore
 {
 protected:
+    mutable CCriticalSection cs_KeyStore;
+
     KeyMap mapKeys;
     WatchKeyMap mapWatchKeys;
     ScriptMap mapScripts;
