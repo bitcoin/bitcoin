@@ -722,8 +722,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         masternodeObj.push_back(Pair("amount", pblock->txoutMasternode.nValue));
     }
     result.push_back(Pair("masternode", masternodeObj));
-    result.push_back(Pair("masternode_payments_started", pindexPrev->nHeight + 1 > Params().GetConsensus().nMasternodePaymentsStartBlock));
-    result.push_back(Pair("masternode_payments_enforced", pindexPrev->nHeight + 1 > Params().GetConsensus().nMasternodePaymentsStartBlock));
+    result.push_back(Pair("masternode_payments_started", IsWitnessEnabled(pindexPrev, Params().GetConsensus())));
+    result.push_back(Pair("masternode_payments_enforced", IsWitnessEnabled(pindexPrev, Params().GetConsensus())));
 
     UniValue superblockObjArray(UniValue::VARR);
     if(pblock->voutSuperblock.size()) {

@@ -79,14 +79,10 @@ public:
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 700800; // PM-Tech: ChainCoin // 2 years
         consensus.nMasternodePaymentsStartBlock = 1500000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
-        consensus.nMasternodePaymentsIncreaseBlock = 2580000; // PM-Tech: to be defined
+        consensus.nMasternodePaymentsIncreaseBlock = 500000; // PM-Tech: to be defined
         consensus.nMasternodePaymentsIncreasePeriod = 576*30; // PM-Tech: to be defined
         consensus.nInstantSendConfirmationsRequired = 6;
         consensus.nInstantSendKeepLock = 24;
-        consensus.nBudgetPaymentsStartBlock = 1500000; // PM-Tech: to be defined
-        consensus.nBudgetPaymentsCycleBlocks = 28800; // PM-Tech: to be defined
-        consensus.nBudgetPaymentsWindowBlocks = 100;
-        consensus.nBudgetProposalEstablishingTime = 60*60*24;
         consensus.nSuperblockStartBlock = 1600000; // PM-Tech: to be defined
         consensus.nSuperblockCycle = 28800; // PM-Tech: to be defined
         consensus.nGovernanceMinQuorum = 10;
@@ -98,7 +94,7 @@ public:
         consensus.BIP16Height = 1;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("0x00000012f1c40ff12a9e6b0e9076fe4fa7ad27012e256a5ad7bcb80dc02c0409"); // PM-Tech: ChainCoin
-        consensus.BIP65Height = 1500000;
+        consensus.BIP65Height = 1600000;
         consensus.BIP66Height = 1000000;
         consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000"); // PM-Tech: ChainCoin
         consensus.nPowTargetTimespan = 90; // PM-Tech: ChainCoin re-target at every block
@@ -214,15 +210,11 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 56600;
-        consensus.nMasternodePaymentsStartBlock = 35000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsStartBlock = 25000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 4030;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
         consensus.nInstantSendConfirmationsRequired = 2;
         consensus.nInstantSendKeepLock = 6;
-        consensus.nBudgetPaymentsStartBlock = 35000;
-        consensus.nBudgetPaymentsCycleBlocks = 50;
-        consensus.nBudgetPaymentsWindowBlocks = 10;
-        consensus.nBudgetProposalEstablishingTime = 60*20;
         consensus.nSuperblockStartBlock = 4200; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPeymentsStartBlock
         consensus.nSuperblockCycle = 24; // Superblocks can be issued hourly on testnet
         consensus.nGovernanceMinQuorum = 1;
@@ -332,10 +324,6 @@ public:
         consensus.nMasternodePaymentsIncreasePeriod = 10;
         consensus.nInstantSendConfirmationsRequired = 2;
         consensus.nInstantSendKeepLock = 6;
-        consensus.nBudgetPaymentsStartBlock = 1000;
-        consensus.nBudgetPaymentsCycleBlocks = 50;
-        consensus.nBudgetPaymentsWindowBlocks = 10;
-        consensus.nBudgetProposalEstablishingTime = 60*20;
         consensus.nSuperblockStartBlock = 1500;
         consensus.nSuperblockCycle = 10;
         consensus.nGovernanceMinQuorum = 1;

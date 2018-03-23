@@ -45,27 +45,8 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
     if(nBlockHeight < consensusParams.nSuperblockStartBlock) {
-        int nOffset = nBlockHeight % consensusParams.nBudgetPaymentsCycleBlocks;
-        if(nBlockHeight >= consensusParams.nBudgetPaymentsStartBlock &&
-            nOffset < consensusParams.nBudgetPaymentsWindowBlocks) {
-            // NOTE: old budget system is disabled since 12.1
-            if(masternodeSync.IsSynced()) {
-                // no old budget blocks should be accepted here on mainnet,
-                // testnet/devnet/regtest should produce regular blocks only
-                LogPrint(BCLog::GOV, "IsBlockValueValid -- WARNING: Client synced but old budget system is disabled, checking block value against block reward\n");
-                if(!isBlockRewardValueMet) {
-                    strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, old budgets are disabled",
-                                            nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
-                }
-                return isBlockRewardValueMet;
-            }
-            // when not synced, rely on online nodes (all networks)
-            LogPrint(BCLog::GOV, "IsBlockValueValid -- WARNING: Skipping old budget block value checks, accepting block\n");
-            return true;
-        }
-        // LogPrint(BCLog::GOV, "IsBlockValueValid -- Block is not in budget cycle window, checking block value against block reward\n");
         if(!isBlockRewardValueMet) {
-            strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, block is not in old budget cycle window",
+            strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward",
                                     nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
         }
         return isBlockRewardValueMet;
@@ -133,23 +114,11 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
 bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
 {
     if(!masternodeSync.IsSynced()) {
-        //there is no budget data to use to check anything, let's just accept the longest chain
         LogPrint(BCLog::MNODESYNC, "IsBlockPayeeValid -- WARNING: Client not synced, skipping block payee checks\n");
         return true;
     }
 
-    // we are still using budgets, but we have no data about them anymore,
-    // we can only check masternode payments
-
     const Consensus::Params& consensusParams = Params().GetConsensus();
-
-    if(nBlockHeight < consensusParams.nSuperblockStartBlock) {
-        // NOTE: old budget system is disabled since 12.1 and we should never enter this branch
-        // anymore when sync is finished (on mainnet). We have no old budget data but these blocks
-        // have tons of confirmations and can be safely accepted without payee verification
-        LogPrint(BCLog::GOV, "IsBlockPayeeValid -- WARNING: Client synced but old budget system is disabled, accepting any payee\n");
-        return true;
-    }
 
     // superblocks started
     // SEE IF THIS IS A VALID SUPERBLOCK
@@ -178,7 +147,8 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
         return true;
     }
 
-    if(nBlockHeight >= consensusParams.nMasternodePaymentsStartBlock) {
+    if (IsWitnessEnabled(chainActive.Tip(), consensusParams)) {
+    // PM-Tech: switch after activation if(nBlockHeight >= consensusParams.nMasternodePaymentsStartBlock) {
         LogPrintf("IsBlockPayeeValid -- ERROR: Invalid masternode payment detected at height %d: %s", nBlockHeight, txNew.ToString());
         return false;
     }
