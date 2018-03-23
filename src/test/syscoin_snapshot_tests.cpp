@@ -22,18 +22,6 @@ void SendSnapShotPayment(const std::string &strSend)
 	std::string strSendMany = "sendmany \"\" {" + strSend + "}";
 	UniValue r;
 	BOOST_CHECK_THROW(CallRPC("mainnet1", strSendMany, false), runtime_error);
-	string strSendSendNewAddress = "";
-	for (int i = 0; i < 10; i++)
-	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getnewaddress", false, false));
-		string newaddress = r.get_str();
-		newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-		if (strSendSendNewAddress != "")
-			strSendSendNewAddress += ",";
-		strSendSendNewAddress += "\\\"" + newaddress + "\\\":10";
-	}
-	strSendMany = "sendmany \"\" {" + strSendSendNewAddress + "}";
-	BOOST_CHECK_THROW(CallRPC("mainnet1", strSendMany, false), runtime_error);
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
@@ -67,7 +55,20 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 		SendSnapShotPayment(sendManyString);
 		GenerateMainNetBlocks(1, "mainnet1");
 	}
-	
+	printf("Creating 1000 inputs...");
+	string strSendSendNewAddress = "";
+	for (int i = 0; i < 1000; i++)
+	{
+		BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getnewaddress", false, false));
+		string newaddress = r.get_str();
+		newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+		if (strSendSendNewAddress != "")
+			strSendSendNewAddress += ",";
+		strSendSendNewAddress += "\\\"" + newaddress + "\\\":10";
+	}
+	strSendMany = "sendmany \"\" {" + strSendSendNewAddress + "}";
+	BOOST_CHECK_THROW(CallRPC("mainnet1", strSendMany, false), runtime_error);
+	printf("done!\n");
 }
 void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
 {
