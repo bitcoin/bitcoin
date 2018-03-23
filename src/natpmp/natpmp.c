@@ -91,7 +91,7 @@ NATPMP_LIBSPEC int initnatpmp(natpmp_t * p, int forcegw, in_addr_t forcedgw, con
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = port;
+    addr.sin_port = atoi(port);
     addr.sin_addr.s_addr = p->gateway;
     if(connect(p->s, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         return NATPMP_ERR_CONNECTERR;
