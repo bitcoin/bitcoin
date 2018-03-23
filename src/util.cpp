@@ -799,9 +799,18 @@ void ClearDatadirCache()
     g_blocks_path_cache_net_specific = fs::path();
 }
 
-fs::path GetConfigFile(const std::string& confPath)
+static fs::path PathForConfigFile(const std::string& confPath)
 {
     return AbsPathForConfigVal(fs::path(confPath), false);
+}
+
+fs::path ArgsManager::GetConfigFile() const
+{
+    if (!m_current_config_path.empty()) {
+        return m_current_config_path;
+    } else {
+        return PathForConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+    }
 }
 
 bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys)
@@ -838,8 +847,8 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         m_config_args.clear();
     }
 
-    const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
-    fs::ifstream stream(GetConfigFile(confPath));
+    m_current_config_path = GetConfigFile();
+    fs::ifstream stream(m_current_config_path);
 
     // ok to not have a config file
     if (stream.good()) {
@@ -866,7 +875,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             }
 
             for (const std::string& to_include : includeconf) {
-                fs::ifstream include_config(GetConfigFile(to_include));
+                fs::ifstream include_config(PathForConfigFile(to_include));
                 if (include_config.good()) {
                     if (!ReadConfigStream(include_config, error, ignore_invalid_keys)) {
                         return false;

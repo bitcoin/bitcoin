@@ -5,6 +5,7 @@
 #include <util.h>
 #include <test/test_bitcoin.h>
 
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,11 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(getarg_tests, BasicTestingSetup)
+
+namespace conf_tests
+{
+#include <test/data/conf.raw.h>
+}
 
 static void ResetArgs(const std::string& strArg)
 {
@@ -37,6 +43,58 @@ static void SetupArgs(const std::vector<std::string>& args)
     for (const std::string& arg : args) {
         gArgs.AddArg(arg, "", false, OptionsCategory::OPTIONS);
     }
+}
+
+BOOST_AUTO_TEST_CASE(configfile)
+{
+    const fs::path configPath = fs::temp_directory_path() / "bitcoin.conf";
+
+    std::ofstream file(configPath.string().c_str());
+    file << std::string(conf_tests::conf, conf_tests::conf + sizeof(conf_tests::conf));
+    file.close();
+
+    ClearDatadirCache();
+    ResetArgs(strprintf("-datadir=%s", fs::temp_directory_path().string()));
+    BOOST_CHECK_EQUAL(gArgs.GetConfigFile(), configPath);
+    gArgs.ReadConfigFiles();
+
+    // boolarg
+    BOOST_CHECK(gArgs.GetBoolArg("-foo", false));
+    BOOST_CHECK(gArgs.GetBoolArg("-foo", true));
+
+    BOOST_CHECK(!gArgs.GetBoolArg("-bar", false));
+    BOOST_CHECK(!gArgs.GetBoolArg("-bar", true));
+
+    // stringarg
+    BOOST_CHECK_EQUAL(gArgs.GetArg("-baz", ""), "11");
+    BOOST_CHECK_EQUAL(gArgs.GetArg("-baz", "eleven"), "11");
+
+    BOOST_CHECK_EQUAL(gArgs.GetArg("-qux", ""), "eleven");
+    BOOST_CHECK_EQUAL(gArgs.GetArg("-qux", "eleven"), "eleven");
+
+    // intarg
+    BOOST_CHECK_EQUAL(gArgs.GetArg("-baz", 0), 11);
+    BOOST_CHECK_EQUAL(gArgs.GetArg("-qux", 11), 0);
+
+    // boolargno
+    BOOST_CHECK(!gArgs.GetBoolArg("-quux", true));
+    BOOST_CHECK(!gArgs.GetBoolArg("-quux", false));
+
+    // command line settings override bitcoin.conf
+    ResetArgs(strprintf("-nofoo -datadir=%s", fs::temp_directory_path().string()));
+    gArgs.ReadConfigFiles();
+
+    BOOST_CHECK(!gArgs.GetBoolArg("-foo", false));
+    BOOST_CHECK(!gArgs.GetBoolArg("-foo", true));
+
+    // throws when the config file sets the datadir to a non-directory
+    // note we can't set test the missing datadir via a config file itself because
+    // we must set the datadir arg in order to access a test config file, and the
+    // arg will override the config file setting.
+    // We can not rely on the default config file location due to the test binary
+    // being independently distributable.
+    ResetArgs(strprintf("-datadir=%s", (fs::path("test") / "data" / "nonexistent").string()));
+    BOOST_CHECK_THROW(gArgs.ReadConfigFiles(), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)
