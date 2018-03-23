@@ -1179,7 +1179,11 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     }
 
                     // Compute Merkle root hash
-                    uint256 result = branch.GetHash();
+                    bool invalid;
+                    uint256 result = branch.GetHash(&invalid);
+                    if (invalid) {
+                        return set_error(serror, SCRIPT_ERR_BAD_DECODE_ARG);
+                    }
 
                     // Do not pop arguments from the stack as we
                     // retain soft- fork compatibility. Scripts must
