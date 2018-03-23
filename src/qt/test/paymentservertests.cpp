@@ -146,7 +146,7 @@ void PaymentServerTests::paymentServerTests()
     // Ensure the request is initialized, because network "main" is default, even for
     // uninitialized payment requests and that will fail our test here.
     QVERIFY(r.paymentRequest.IsInitialized());
-    QCOMPARE(PaymentServer::verifyNetwork(r.paymentRequest.getDetails()), false);
+    QCOMPARE(PaymentServer::verifyNetwork(*node, r.paymentRequest.getDetails()), false);
 
     // Expired payment request (expires is set to 1 = 1970-01-01 00:00:01):
     data = DecodeBase64(paymentrequest2_cert2_BASE64);

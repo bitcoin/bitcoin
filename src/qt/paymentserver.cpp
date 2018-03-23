@@ -11,6 +11,7 @@
 
 #include <base58.h>
 #include <chainparams.h>
+#include <interface/node.h>
 #include <policy/policy.h>
 #include <ui_interface.h>
 #include <util.h>
@@ -190,7 +191,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
 // Warning: ipcSendCommandLine() is called early in init,
 // so don't use "Q_EMIT message()", but "QMessageBox::"!
 //
-void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
+void PaymentServer::ipcParseCommandLine(interface::Node& node, int argc, char* argv[])
 {
     for (int i = 1; i < argc; i++)
     {
@@ -212,11 +213,11 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
                 auto tempChainParams = CreateChainParams(CBaseChainParams::MAIN);
 
                 if (IsValidDestinationString(r.address.toStdString(), *tempChainParams)) {
-                    SelectParams(CBaseChainParams::MAIN);
+                    node.selectParams(CBaseChainParams::MAIN);
                 } else {
                     tempChainParams = CreateChainParams(CBaseChainParams::TESTNET);
                     if (IsValidDestinationString(r.address.toStdString(), *tempChainParams)) {
-                        SelectParams(CBaseChainParams::TESTNET);
+                        node.selectParams(CBaseChainParams::TESTNET);
                     }
                 }
             }
@@ -230,11 +231,11 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             {
                 if (request.getDetails().network() == "main")
                 {
-                    SelectParams(CBaseChainParams::MAIN);
+                    node.selectParams(CBaseChainParams::MAIN);
                 }
                 else if (request.getDetails().network() == "test")
                 {
-                    SelectParams(CBaseChainParams::TESTNET);
+                    node.selectParams(CBaseChainParams::TESTNET);
                 }
             }
         }
@@ -508,7 +509,7 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
 
     if (request.IsInitialized()) {
         // Payment request network matches client network?
-        if (!verifyNetwork(request.getDetails())) {
+        if (!verifyNetwork(optionsModel->node(), request.getDetails())) {
             Q_EMIT message(tr("Payment request rejected"), tr("Payment request network doesn't match client network."),
                 CClientUIInterface::MSG_ERROR);
 
@@ -565,7 +566,7 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
 
         // Extract and check amounts
         CTxOut txOut(sendingTo.second, sendingTo.first);
-        if (IsDust(txOut, ::dustRelayFee)) {
+        if (IsDust(txOut, optionsModel->node().getDustRelayFee())) {
             Q_EMIT message(tr("Payment request error"), tr("Requested payment amount of %1 is too small (considered dust).")
                 .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second)),
                 CClientUIInterface::MSG_ERROR);
@@ -603,7 +604,7 @@ void PaymentServer::fetchRequest(const QUrl& url)
     netManager->get(netRequest);
 }
 
-void PaymentServer::fetchPaymentACK(CWallet* wallet, const SendCoinsRecipient& recipient, QByteArray transaction)
+void PaymentServer::fetchPaymentACK(WalletModel* walletModel, const SendCoinsRecipient& recipient, QByteArray transaction)
 {
     const payments::PaymentDetails& details = recipient.paymentRequest.getDetails();
     if (!details.has_payment_url())
@@ -743,14 +744,14 @@ void PaymentServer::handlePaymentACK(const QString& paymentACKMsg)
     Q_EMIT message(tr("Payment acknowledged"), paymentACKMsg, CClientUIInterface::ICON_INFORMATION | CClientUIInterface::MODAL);
 }
 
-bool PaymentServer::verifyNetwork(const payments::PaymentDetails& requestDetails)
+bool PaymentServer::verifyNetwork(interface::Node& node, const payments::PaymentDetails& requestDetails)
 {
-    bool fVerified = requestDetails.network() == Params().NetworkIDString();
+    bool fVerified = requestDetails.network() == node.getNetwork();
     if (!fVerified) {
         qWarning() << QString("PaymentServer::%1: Payment request network \"%2\" doesn't match client network \"%3\".")
             .arg(__func__)
             .arg(QString::fromStdString(requestDetails.network()))
-            .arg(QString::fromStdString(Params().NetworkIDString()));
+            .arg(QString::fromStdString(node.getNetwork()));
     }
     return fVerified;
 }

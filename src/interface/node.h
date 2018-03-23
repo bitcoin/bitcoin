@@ -55,6 +55,9 @@ public:
     //! Choose network parameters.
     virtual void selectParams(const std::string& network) = 0;
 
+    //! Get network name.
+    virtual std::string getNetwork() = 0;
+
     //! Init logging.
     virtual void initLogging() = 0;
 
