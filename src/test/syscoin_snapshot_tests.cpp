@@ -66,8 +66,8 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 			strSendSendNewAddress += ",";
 		strSendSendNewAddress += "\\\"" + newaddress + "\\\":10";
 	}
-	strSendMany = "sendmany \"\" {" + strSendSendNewAddress + "}";
-	BOOST_CHECK_THROW(CallRPC("mainnet1", strSendMany, false), runtime_error);
+	sendManyString = "sendmany \"\" {" + strSendSendNewAddress + "}";
+	BOOST_CHECK_THROW(CallRPC("mainnet1", sendManyString, false), runtime_error);
 	printf("done!\n");
 }
 void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
