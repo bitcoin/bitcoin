@@ -73,6 +73,7 @@ RPC changes
 - Wallet `listreceivedbylabel`, `listreceivedbyaccount` and `listunspent` RPCs
   add `label` fields to returned JSON objects that previously only had
   `account` fields.
+- `sendmany` now shuffles outputs to improve privacy, so any previously expected behavior with regards to output ordering can no longer be relied upon.
 
 External wallet files
 ---------------------
