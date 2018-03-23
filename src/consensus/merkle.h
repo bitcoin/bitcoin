@@ -303,9 +303,9 @@ public:
     inline MerkleNodeReference& SetLeft(MerkleLink left)
       { return SetCode(MerkleNode::_get_code(left, GetRight())); }
 
-    MerkleLink GetRight() const
+    inline MerkleLink GetRight() const
       { return MerkleNode::m_right_from_code[GetCode()]; }
-    MerkleNodeReference& SetRight(MerkleLink right)
+    inline MerkleNodeReference& SetRight(MerkleLink right)
       { return SetCode(MerkleNode::_get_code(GetLeft(), right)); }
 
     /* Equality */
