@@ -23,7 +23,7 @@ void SendSnapShotPayment(const std::string &strSend)
 	UniValue r;
 	BOOST_CHECK_THROW(CallRPC("mainnet1", strSendMany, false), runtime_error);
 	string strSendSendNewAddress = "";
-	for (int i = 0; i < 250; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getnewaddress", false, false));
 		string newaddress = r.get_str();
