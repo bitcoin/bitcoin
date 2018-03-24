@@ -591,6 +591,9 @@ if test x$use_hardening != xno; then
   use_hardening=yes
   AX_CHECK_COMPILE_FLAG([-Wstack-protector],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
   AX_CHECK_COMPILE_FLAG([-fstack-protector-all],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
+  AX_CHECK_COMPILE_FLAG([-mfunction-return=thunk],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -mfunction-return=thunk"])
+  AX_CHECK_COMPILE_FLAG([-mindirect-branch=thunk],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -mindirect-branch=thunk"])
+  AX_CHECK_COMPILE_FLAG([-mretpoline],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -mretpoline"])
 
   AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],[
     AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE],[
@@ -604,6 +607,11 @@ if test x$use_hardening != xno; then
   AX_CHECK_LINK_FLAG([[-Wl,--high-entropy-va]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--high-entropy-va"])
   AX_CHECK_LINK_FLAG([[-Wl,-z,relro]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,relro"])
   AX_CHECK_LINK_FLAG([[-Wl,-z,now]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"])
+  case $HARDENED_CXXFLAGS in
+    *-mretpoline*)
+      AX_CHECK_LINK_FLAG([[-Wl,-z,retpolineplt]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,retpolineplt"])
+    ;;
+  esac
 
   if test x$TARGET_OS != xwindows; then
     AX_CHECK_COMPILE_FLAG([-fPIE],[PIE_FLAGS="-fPIE"])
