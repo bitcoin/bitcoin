@@ -22,7 +22,7 @@ BEGIN
             VALUE "FileDescription",    "42-Qt (OSS GUI client for 42)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "42-qt"
-            VALUE "LegalCopyright",     "2009-2012 The Bitcoin developers, 2012-2016 The NovaCoin & PPCoin developers, 2016-2017 The 42 developers"
+            VALUE "LegalCopyright",     "2009-2012 The Bitcoin developers, 2012-2016 The NovaCoin & PPCoin developers, 2016-2018 The 42 developers"
             VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "42-qt.exe"
             VALUE "ProductName",        "42-Qt"

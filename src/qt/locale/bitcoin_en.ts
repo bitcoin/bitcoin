@@ -21,13 +21,13 @@ Copyright © 2011-2012 The PPCoin Developers
 Copyright © 2014 The Peerunity Developers
 Copyright © 2014 The EmerCoin Developers
 Copyright © 2012-2016 The NovaCoin developers
-Copyright © 2016-2017 The 42 developers</source>
+Copyright © 2016-2018 The 42 developers</source>
         <translation>Copyright © 2009-2016 The Bitcoin developers
 Copyright © 2011-2012 The PPCoin Developers
 Copyright © 2014 The Peerunity Developers
 Copyright © 2014 The EmerCoin Developers
 Copyright © 2012-2016 The NovaCoin developers
-Copyright © 2016-2017 The 42 developers</translation>
+Copyright © 2016-2018 The 42 developers</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="114"/>
