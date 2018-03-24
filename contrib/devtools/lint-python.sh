@@ -4,60 +4,60 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
-# Check for specified flake8 warnings in python files.
+# Check for flake8 warnings in python files.
 
-# E112 expected an indented block
-# E113 unexpected indentation
-# E115 expected an indented block (comment)
-# E116 unexpected indentation (comment)
-# E125 continuation line with same indent as next logical line
-# E131 continuation line unaligned for hanging indent
-# E133 closing bracket is missing indentation
-# E223 tab before operator
-# E224 tab after operator
-# E271 multiple spaces after keyword
-# E272 multiple spaces before keyword
-# E273 tab after keyword
-# E274 tab before keyword
-# E275 missing whitespace after keyword
-# E304 blank lines found after function decorator
-# E306 expected 1 blank line before a nested definition
-# E502 the backslash is redundant between brackets
-# E702 multiple statements on one line (semicolon)
-# E703 statement ends with a semicolon
-# E714 test for object identity should be "is not"
-# E721 do not compare types, use "isinstance()"
-# E741 do not use variables named "l", "O", or "I"
-# E742 do not define classes named "l", "O", or "I"
-# E743 do not define functions named "l", "O", or "I"
-# F401 module imported but unused
-# F402 import module from line N shadowed by loop variable
-# F404 future import(s) name after other statements
-# F406 "from module import *" only allowed at module level
-# F407 an undefined __future__ feature name was imported
-# F601 dictionary key name repeated with different values
-# F602 dictionary key variable name repeated with different values
-# F621 too many expressions in an assignment with star-unpacking
-# F622 two or more starred expressions in an assignment (a, *b, *c = d)
-# F631 assertion test is a tuple, which are always True
-# F701 a break statement outside of a while or for loop
-# F702 a continue statement outside of a while or for loop
-# F703 a continue statement in a finally block in a loop
-# F704 a yield or yield from statement outside of a function
-# F705 a return statement with arguments inside a generator
-# F706 a return statement outside of a function/method
-# F707 an except: block as not the last exception handler
-# F811 redefinition of unused name from line N
-# F812 list comprehension redefines 'foo' from line N
-# F822 undefined name name in __all__
-# F823 local variable name … referenced before assignment
-# F831 duplicate argument name in function definition
-# W292 no newline at end of file
-# W504 line break after binary operator
-# W601 .has_key() is deprecated, use "in"
-# W602 deprecated form of raising exception
-# W603 "<>" is deprecated, use "!="
-# W604 backticks are deprecated, use "repr()"
-# W605 invalid escape sequence "x"
+# Ignored warnings:
+# E101 indentation contains mixed spaces and tabs
+# E111 indentation is not a multiple of four
+# E114 indentation is not a multiple of four (comment)
+# E121 continuation line under-indented for hanging indent
+# E122 continuation line missing indentation or outdented
+# E123 closing bracket does not match indentation of opening bracket's line
+# E124 closing bracket does not match visual indentation
+# E126 continuation line over-indented for hanging indent
+# E127 continuation line over-indented for visual indent
+# E128 continuation line under-indented for visual indent
+# E129 visually indented line with same indent as next logical line
+# E201 whitespace after '[' or '{'
+# E202 whitespace before ')', ']' or '}'
+# E203 whitespace before ':'
+# E211 whitespace before '('
+# E221 multiple spaces before operator
+# E222 multiple spaces after operator
+# E225 missing whitespace around operator
+# E226 missing whitespace around arithmetic operator
+# E227 missing whitespace around bitwise or shift operator
+# E228 missing whitespace around modulo operator
+# E231 missing whitespace after ',' or ':'
+# E241 multiple spaces after ','
+# E251 unexpected spaces around keyword / parameter equals
+# E261 at least two spaces before inline comment
+# E262 inline comment should start with '# '
+# E265 block comment should start with '# '
+# E266 too many leading '#' for block comment
+# E301 expected 1 blank line, found N
+# E302 expected 2 blank lines, found N
+# E303 too many blank lines (N)
+# E305 expected 2 blank lines after class or function definition, found N
+# E401 multiple imports on one line
+# E402 module level import not at top of file
+# E501 line too long (N > 79 characters)
+# E701 multiple statements on one line (colon)
+# E704 multiple statements on one line (def)
+# E711 comparison to None should be 'if cond is None:'
+# E712 comparison to False should be 'if cond is False:' or 'if not cond:'
+# E713 test for membership should be 'not in'
+# E722 do not use bare except
+# E731 do not assign a lambda expression, use a def
+# E999 SyntaxError: invalid syntax
+# F403 'from ... import *' used; unable to detect undefined names
+# F405 '...' may be undefined, or defined from star imports: ...
+# F821 undefined name '...'
+# F841 local variable '...' is assigned to but never used
+# W191 indentation contains tabs
+# W291 trailing whitespace
+# W293 blank line contains whitespace
+# W391 blank line at end of file
+# W503 line break before binary operator
 
-flake8 --ignore=B,C,E,F,I,N,W --select=E112,E113,E115,E116,E125,E131,E133,E223,E224,E271,E272,E273,E274,E275,E304,E306,E502,E702,E703,E714,E721,E741,E742,E743,F401,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F822,F823,F831,W292,W504,W601,W602,W603,W604,W605 .
+flake8 --ignore=E101,E111,E114,E121,E122,E123,E124,E126,E127,E128,E129,E201,E202,E203,E211,E221,E222,E225,E226,E227,E228,E231,E241,E251,E261,E262,E265,E266,E301,E302,E303,E305,E401,E402,E501,E701,E704,E711,E712,E713,E722,E731,E999,F403,F405,F821,F841,W191,W291,W293,W391,W503 .
