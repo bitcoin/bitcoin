@@ -316,6 +316,21 @@ public:
 };
 } // namespace
 
+bool PubkeyConsistencyVisitor::operator() (const CKeyID & keyid) const {
+	return m_pkey.GetID() == keyid;
+}
+
+bool PubkeyConsistencyVisitor::operator() (const CScriptID & id) const {
+	CScript redeemscript;
+	redeemscript.clear();
+	redeemscript << OP_0 << ToByteVector(WitnessV0KeyHash(m_pkey.GetID()));
+	return id == CScriptID(redeemscript);
+}
+
+bool PubkeyConsistencyVisitor::operator() (const WitnessV0KeyHash & keyid) const {
+	return WitnessV0KeyHash(m_pkey.GetID()) == keyid;
+}
+
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
     CScript script;

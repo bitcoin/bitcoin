@@ -174,14 +174,19 @@ UniValue verifymessage(const JSONRPCRequest& request)
     std::string strSign     = request.params[1].get_str();
     std::string strMessage  = request.params[2].get_str();
 
+    /* CTxDestination options: CNoDestination, CKeyID, CScriptID, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown
+     * we are interested in CKeyID, CScriptID, WitnessV0KeyHash
+     */
     CTxDestination destination = DecodeDestination(strAddress);
     if (!IsValidDestination(destination)) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
     }
 
-    const CKeyID *keyID = boost::get<CKeyID>(&destination);
-    if (!keyID) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+    /* 
+     * We are not interested in exact type of public key destination for now
+     */
+    if (boost::get<WitnessV0ScriptHash>(&destination) || boost::get<WitnessUnknown>(&destination)) {  //exclude unneeded destinations
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key"); // we can exclude only WitnessV0ScriptHash
     }
 
     bool fInvalid = false;
@@ -198,7 +203,8 @@ UniValue verifymessage(const JSONRPCRequest& request)
     if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
         return false;
 
-    return (pubkey.GetID() == *keyID);
+    return boost::apply_visitor(PubkeyConsistencyVisitor(pubkey),destination);
+
 }
 
 UniValue signmessagewithprivkey(const JSONRPCRequest& request)

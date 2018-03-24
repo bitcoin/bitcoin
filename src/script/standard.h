@@ -121,6 +121,21 @@ struct WitnessUnknown
  */
 typedef boost::variant<CNoDestination, CKeyID, CScriptID, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown> CTxDestination;
 
+/** Check CTxDestination for being based on given public key. Usefull in checking P2SH-segwit verifymessage */
+
+class PubkeyConsistencyVisitor: public boost::static_visitor<bool> {
+	const CPubKey& m_pkey;
+public:
+	bool operator() (const CKeyID& keyid) const;
+	bool operator() (const CScriptID& id) const;
+	bool operator() (const WitnessV0KeyHash& wid) const;
+	bool operator() (const CNoDestination& noid) const { return false; }
+	bool operator() (const WitnessV0ScriptHash& wid) const { return false; }
+	bool operator() (const WitnessUnknown& wid) const { return false; }
+	explicit PubkeyConsistencyVisitor(const CPubKey& pkey) : m_pkey(pkey) {}
+};
+
+
 /** Check whether a CTxDestination is a CNoDestination. */
 bool IsValidDestination(const CTxDestination& dest);
 
