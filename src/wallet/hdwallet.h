@@ -443,6 +443,9 @@ public:
     int64_t GetOldestActiveAccountTime();
     int64_t CountActiveAccountKeys();
 
+    std::set< std::set<CTxDestination> > GetAddressGroupings() override;
+    std::map<CTxDestination, CAmount> GetAddressBalances() override;
+
     isminetype IsMine(const CTxIn& txin) const override;
     isminetype IsMine(const CScript &scriptPubKey, CKeyID &keyID,
         const CEKAKey *&pak, const CEKASCKey *&pasc, CExtKeyAccount *&pa, bool &isInvalid, SigVersion = SIGVERSION_BASE);
@@ -493,7 +496,6 @@ public:
     void AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTempRecipient> &vecSend);
     int ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStoredExtKey *pc, std::string &sError);
 
-    int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError);
     int AddCTData(CTxOutBase *txout, CTempRecipient &r, std::string &sError);
 
     bool SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r, std::string &sError);
@@ -779,6 +781,10 @@ public:
 
 int LoopExtKeysInDB(CHDWallet *pwallet, bool fInactive, bool fInAccount, LoopExtKeyCallback &callback);
 int LoopExtAccountsInDB(CHDWallet *pwallet, bool fInactive, LoopExtKeyCallback &callback);
+
+bool CheckOutputValue(const CTempRecipient &r, const CTxOutBase *txbout, CAmount nFeeRet, std::string sError);
+void SetCTOutVData(std::vector<uint8_t> &vData, CPubKey &pkEphem, uint32_t nStealthPrefix);
+int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError);
 
 bool IsHDWallet(const CKeyStore *win);
 CHDWallet *GetHDWallet(CKeyStore *win);

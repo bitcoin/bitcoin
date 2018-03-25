@@ -1531,6 +1531,204 @@ int64_t CHDWallet::CountActiveAccountKeys()
     return nKeys;
 };
 
+std::map<CTxDestination, CAmount> CHDWallet::GetAddressBalances()
+{
+    std::map<CTxDestination, CAmount> balances;
+
+    {
+        LOCK(cs_wallet);
+        for (const auto& walletEntry : mapWallet)
+        {
+            const CWalletTx *pcoin = &walletEntry.second;
+
+            if (!pcoin->IsTrusted())
+                continue;
+
+            if (pcoin->GetBlocksToMaturity() > 0)
+                continue;
+
+            int nDepth = pcoin->GetDepthInMainChain();
+            if (nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? 0 : 1))
+                continue;
+
+            for (unsigned int i = 0; i < pcoin->tx->GetNumVOuts(); i++)
+            {
+                const auto &txout = pcoin->tx->vpout[i];
+                if (!txout->IsType(OUTPUT_STANDARD))
+                    continue;
+                if (!IsMine(txout.get()))
+                    continue;
+
+                CTxDestination addr;
+                if (!ExtractDestination(*txout->GetPScriptPubKey(), addr))
+                    continue;
+
+                CAmount n = IsSpent(walletEntry.first, i) ? 0 : txout->GetValue();
+
+                if (!balances.count(addr))
+                    balances[addr] = 0;
+                balances[addr] += n;
+            }
+        }
+
+        for (const auto &ri : mapRecords)
+        {
+            const uint256 &txhash = ri.first;
+            const CTransactionRecord &rtx = ri.second;
+
+            if (!IsTrusted(txhash, rtx.blockHash, rtx.nIndex))
+                continue;
+
+            for (const auto &r : rtx.vout)
+            {
+                if (r.nType != OUTPUT_STANDARD
+                    && r.nType != OUTPUT_CT
+                    && r.nType != OUTPUT_RINGCT)
+                    continue;
+
+                if (!(r.nFlags & ORF_OWNED))
+                    continue;
+
+                CTxDestination addr;
+                if (!ExtractDestination(r.scriptPubKey, addr))
+                    continue;
+
+                CAmount n =  IsSpent(txhash, r.n) ? 0 : r.nValue;
+
+                std::pair<std::map<CTxDestination, CAmount>::iterator, bool> ret;
+                ret = balances.insert(std::pair<CTxDestination, CAmount>(addr, n));
+                if (!ret.second) // update existing record
+                    ret.first->second += n;
+            };
+        };
+    }
+
+    return balances;
+}
+
+std::set< std::set<CTxDestination> > CHDWallet::GetAddressGroupings()
+{
+    AssertLockHeld(cs_wallet); // mapWallet
+    std::set< std::set<CTxDestination> > groupings;
+    std::set<CTxDestination> grouping;
+
+    for (const auto& walletEntry : mapWallet)
+    {
+        const CWalletTx *pcoin = &walletEntry.second;
+
+        if (pcoin->tx->vin.size() > 0)
+        {
+            bool any_mine = false;
+            // group all input addresses with each other
+            for (CTxIn txin : pcoin->tx->vin)
+            {
+                const CScript *pScript = nullptr;
+                CTxDestination address;
+
+                MapRecords_t::const_iterator mri;
+                MapWallet_t::const_iterator mi = mapWallet.find(txin.prevout.hash);
+                if (mi != mapWallet.end())
+                {
+                    const CWalletTx &prev = mi->second;
+                    if (txin.prevout.n < prev.tx->vpout.size())
+                        pScript = prev.tx->vpout[txin.prevout.n]->GetPScriptPubKey();
+                } else
+                if ((mri = mapRecords.find(txin.prevout.hash)) != mapRecords.end())
+                {
+                    const COutputRecord *oR = mri->second.GetOutput(txin.prevout.n);
+                    if (oR && (oR->nFlags & ORF_OWNED))
+                        pScript = &oR->scriptPubKey;
+                } else
+                {
+                    // If this input isn't mine, ignore it
+                    continue;
+                };
+                if (!pScript)
+                    continue;
+                if(!ExtractDestination(*pScript, address))
+                    continue;
+                grouping.insert(address);
+                any_mine = true;
+            }
+
+            // group change with input addresses
+            if (any_mine)
+            {
+                for (const auto txout : pcoin->tx->vpout)
+                {
+                    if (IsChange(txout.get()))
+                    {
+                        CTxDestination txoutAddr;
+                        const CScript *pScript = txout->GetPScriptPubKey();
+                        if (!pScript)
+                            continue;
+                        if(!ExtractDestination(*pScript, txoutAddr))
+                            continue;
+                        grouping.insert(txoutAddr);
+                    };
+                };
+            }
+            if (grouping.size() > 0)
+            {
+                groupings.insert(grouping);
+                grouping.clear();
+            }
+        }
+
+        // group lone addrs by themselves
+        for (const auto txout : pcoin->tx->vpout)
+        {
+            if (IsMine(txout.get()))
+            {
+                CTxDestination address;
+                const CScript *pScript = txout->GetPScriptPubKey();
+                if (!pScript)
+                    continue;
+                if(!ExtractDestination(*pScript, address))
+                    continue;
+                grouping.insert(address);
+                groupings.insert(grouping);
+                grouping.clear();
+            };
+        };
+    }
+
+    std::set< std::set<CTxDestination>* > uniqueGroupings; // a set of pointers to groups of addresses
+    std::map< CTxDestination, std::set<CTxDestination>* > setmap;  // map addresses to the unique group containing it
+    for (std::set<CTxDestination> _grouping : groupings)
+    {
+        // make a set of all the groups hit by this new group
+        std::set< std::set<CTxDestination>* > hits;
+        std::map< CTxDestination, std::set<CTxDestination>* >::iterator it;
+        for (CTxDestination address : _grouping)
+            if ((it = setmap.find(address)) != setmap.end())
+                hits.insert((*it).second);
+
+        // merge all hit groups into a new single group and delete old groups
+        std::set<CTxDestination>* merged = new std::set<CTxDestination>(_grouping);
+        for (std::set<CTxDestination>* hit : hits)
+        {
+            merged->insert(hit->begin(), hit->end());
+            uniqueGroupings.erase(hit);
+            delete hit;
+        }
+        uniqueGroupings.insert(merged);
+
+        // update setmap
+        for (CTxDestination element : *merged)
+            setmap[element] = merged;
+    }
+
+    std::set< std::set<CTxDestination> > ret;
+    for (std::set<CTxDestination>* uniqueGrouping : uniqueGroupings)
+    {
+        ret.insert(*uniqueGrouping);
+        delete uniqueGrouping;
+    }
+
+    return ret;
+}
+
 isminetype CHDWallet::IsMine(const CTxIn& txin) const
 {
     LOCK(cs_wallet);
@@ -2731,7 +2929,7 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
     return 0;
 };
 
-static void SetCTOutVData(std::vector<uint8_t> &vData, CPubKey &pkEphem, uint32_t nStealthPrefix)
+void SetCTOutVData(std::vector<uint8_t> &vData, CPubKey &pkEphem, uint32_t nStealthPrefix)
 {
     vData.resize(nStealthPrefix > 0 ? 38 : 33);
 
@@ -2744,7 +2942,7 @@ static void SetCTOutVData(std::vector<uint8_t> &vData, CPubKey &pkEphem, uint32_
     return;
 };
 
-int CHDWallet::CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError)
+int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError)
 {
     switch (r.nType)
     {
@@ -2861,7 +3059,7 @@ static bool HaveAnonOutputs(std::vector<CTempRecipient> &vecSend)
     return false;
 }
 
-static bool CheckOutputValue(const CTempRecipient &r, const CTxOutBase *txbout, CAmount nFeeRet, std::string sError)
+bool CheckOutputValue(const CTempRecipient &r, const CTxOutBase *txbout, CAmount nFeeRet, std::string sError)
 {
     if ((r.nType == OUTPUT_STANDARD
             && IsDust(txbout, dustRelayFee))

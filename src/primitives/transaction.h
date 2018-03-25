@@ -277,7 +277,7 @@ public:
 
     void SetValue(CAmount value);
 
-    CAmount GetValue() const;
+    virtual CAmount GetValue() const;
 
     virtual bool PutValue(std::vector<uint8_t> &vchAmount) const
     {
@@ -350,6 +350,11 @@ public:
         vchAmount.resize(8);
         memcpy(&vchAmount[0], &nValue, 8);
         return true;
+    };
+
+    CAmount GetValue() const
+    {
+        return nValue;
     };
 
     bool GetScriptPubKey(CScript &scriptPubKey_) const

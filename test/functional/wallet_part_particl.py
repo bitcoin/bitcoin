@@ -603,5 +603,11 @@ class WalletParticlTest(ParticlTestFramework):
         ro = nodes[1].walletpassphrasechange('changedPass', 'changedPass2')
 
 
+        ro = nodes[2].listaddressgroupings()
+        assert(len(ro) == 5)
+
+
+
+
 if __name__ == '__main__':
     WalletParticlTest().main()
