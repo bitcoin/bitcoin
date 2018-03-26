@@ -109,9 +109,11 @@ void AskPassphraseDialog::accept()
             break;
         }
         QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm wallet encryption"),
-                 tr("Warning: If you encrypt your wallet and lose your passphrase, you will <b>LOSE ALL OF YOUR CRW</b>!") + "<br><br>" + tr("Are you sure you wish to encrypt your wallet?"),
-                 QMessageBox::Yes|QMessageBox::Cancel,
-                 QMessageBox::Cancel);
+                 tr("Warning: If you encrypt your wallet and lose your passphrase, you will <b>LOSE ALL OF YOUR CRW</b>!") +
+                    "<br>" + tr("Don't close the wallet until encryption process finishes.") +
+                    "<br><br>" + tr("Are you sure you wish to encrypt your wallet?"),
+                    QMessageBox::Yes|QMessageBox::Cancel,
+                    QMessageBox::Cancel);
         if(retval == QMessageBox::Yes)
         {
             if(newpass1 == newpass2)
