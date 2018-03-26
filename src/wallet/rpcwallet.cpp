@@ -1772,7 +1772,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				entry.push_back(Pair("sysalias", aliasName));
 				if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_SEND) {
 					CAssetAllocation assetallocation(wtx);
-					if (!assetAllocation.IsNull()) {
+					if (!assetallocation.IsNull()) {
 						if (!assetallocation.listSendingAllocationAmounts.empty()) {
 							for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 								UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
