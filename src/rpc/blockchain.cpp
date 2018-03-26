@@ -858,7 +858,9 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     stats.hashBlock = pcursor->GetBestBlock();
     {
         LOCK(cs_main);
-        stats.nHeight = LookupBlockIndex(stats.hashBlock)->nHeight;
+        CBlockIndex* blockIndex = LookupBlockIndex(stats.hashBlock);
+        assert(blockIndex);
+        stats.nHeight = blockIndex->nHeight;
     }
     ss << stats.hashBlock;
     uint256 prevkey;
@@ -1042,6 +1044,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     }
 
     const CBlockIndex* pindex = LookupBlockIndex(pcoinsTip->GetBestBlock());
+    assert(pindex);
     ret.pushKV("bestblock", pindex->GetBlockHash().GetHex());
     if (coin.nHeight == MEMPOOL_HEIGHT) {
         ret.pushKV("confirmations", 0);
