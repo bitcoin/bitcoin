@@ -1151,6 +1151,32 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	if (asset.nBalance != dbAsset.nBalance)
 		entry.push_back(Pair("balance", ValueFromAmount(asset.nBalance)));
 
+	CAssetAllocation assetallocation;
+	if (assetallocation.UnserializeFromData(vchData, vchHash)) {
+		UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+		if (!assetallocation.listSendingAllocationAmounts.empty()) {
+			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
+				UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+				oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
+				oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
+				oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+			}
+
+		}
+		else if (!assetallocation.listSendingAllocationInputs.empty()) {
+			for (auto& inputTuple : assetallocation..listSendingAllocationInputs) {
+				UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+				oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(inputTuple.first)));
+				for (auto& inputRange : inputTuple.second) {
+					oAssetAllocationReceiversObj.push_back(Pair("start", (int)inputRange.start));
+					oAssetAllocationReceiversObj.push_back(Pair("end", (int)inputRange.end));
+				}
+				oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+			}
+		}
+		entry.push_back(Pair("allocations", oAssetAllocationReceiversArray));
+	}
+
 }
 CAmount AssetAmountFromValue(const UniValue& value)
 {

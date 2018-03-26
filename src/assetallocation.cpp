@@ -1111,7 +1111,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 	else if (!assetallocation.listSendingAllocationInputs.empty()) {
 		for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
 			UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-			oAssetAllocationReceiversObj.push_back(Pair("alias", stringFromVch(inputTuple.first)));
+			oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(inputTuple.first)));
 			for (auto& inputRange : inputTuple.second) {
 				oAssetAllocationReceiversObj.push_back(Pair("start", (int)inputRange.start));
 				oAssetAllocationReceiversObj.push_back(Pair("end", (int)inputRange.end));
