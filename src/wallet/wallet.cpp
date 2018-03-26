@@ -435,6 +435,13 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
 
 void CWallet::SetBestChain(const CBlockLocator& loc)
 {
+    // if wallet updates are disabled ensure that we
+    // do not update the best block seen so that we
+    // always eventually scan the chain for transactions
+    // that should be indexed by this wallet
+    if(gArgs.GetBoolArg("-disablewalletupdates", false))
+        return;
+
     CWalletDB walletdb(*dbw);
     walletdb.WriteBestBlock(loc);
 }
@@ -4034,17 +4041,26 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
     LOCK(cs_main);
 
+    bool subscribe_to_chain_updates = !gArgs.GetBoolArg("-disablewalletupdates", false);
     CBlockIndex *pindexRescan = chainActive.Genesis();
     if (!gArgs.GetBoolArg("-rescan", false))
     {
-        CWalletDB walletdb(*walletInstance->dbw);
-        CBlockLocator locator;
-        if (walletdb.ReadBestBlock(locator))
-            pindexRescan = FindForkInGlobalIndex(chainActive, locator);
+        if(subscribe_to_chain_updates) {
+            CWalletDB walletdb(*walletInstance->dbw);
+            CBlockLocator locator;
+            if (walletdb.ReadBestBlock(locator))
+                pindexRescan = FindForkInGlobalIndex(chainActive, locator);
+        } else {
+            pindexRescan = chainActive.Tip();
+        }
     }
 
     walletInstance->m_last_block_processed = chainActive.Tip();
-    RegisterValidationInterface(walletInstance);
+    if(subscribe_to_chain_updates) {
+        RegisterValidationInterface(walletInstance);
+    } else {
+        LogPrintf("Not registering ValidationInterface for wallet as -disablewalletupdates is set\n");
+    }
 
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
