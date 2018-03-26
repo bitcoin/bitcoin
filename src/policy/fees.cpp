@@ -432,7 +432,7 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
     maxPeriods = confAvg.size();
     maxConfirms = scale * maxPeriods;
 
-    if (maxConfirms <= 0 || maxConfirms > 6 * 24 * 7) { // one week
+    if (maxConfirms == 0 || maxConfirms > 6 * 24 * 7) { // one week
         throw std::runtime_error("Corrupt estimates file.  Must maintain estimates for between 1 and 1008 (one week) confirms");
     }
     for (unsigned int i = 0; i < maxPeriods; i++) {
