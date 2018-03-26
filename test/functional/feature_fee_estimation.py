@@ -133,12 +133,12 @@ class EstimateFeeTest(BitcoinTestFramework):
         which we will use to generate our transactions.
         """
         self.add_nodes(3, extra_args=[["-maxorphantx=1000", "-whitelist=127.0.0.1"],
-                                      ["-maxorphantx=1000"],
-                                      ["-maxorphantx=1000"]])
+                                      ["-blockmaxweight=68000", "-maxorphantx=1000"],
+                                      ["-blockmaxweight=32000", "-maxorphantx=1000"]])
         # Use node0 to mine blocks for input splitting
         # Node1 mines small blocks but that are bigger than the expected transaction rate.
-        # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
-        # (17k is room enough for 110 or so transactions)
+        # NOTE: the CreateNewBlock code starts counting block weight at 4,000 weight,
+        # (68k weight is room enough for 120 or so transactions)
         # Node2 is a stingy miner, that
         # produces too small blocks (room for only 55 or so transactions)
 
