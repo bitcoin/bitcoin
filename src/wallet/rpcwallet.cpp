@@ -1840,6 +1840,11 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				// SYSCOIN
 				if (wtx.nVersion == SYSCOIN_TX_VERSION && (IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs, type))))
 				{
+					int aliasOp;
+					int aliasNOut;
+					vector<vector<unsigned char> > aliasVvch;
+					UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+					string aliasName = "";
 					if (mapSysTx[wtx.GetHash()])
 						continue;
 					mapSysTx[wtx.GetHash()] = true;
@@ -1849,6 +1854,36 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
 					entry.push_back(Pair("sysguid", strResponseGUID));
+					if (DecodeAliasTx(wtx, aliasOp, aliasNOut, aliasVvch))
+						aliasName = stringFromVch(aliasVvch[0]);
+
+					entry.push_back(Pair("sysalias", aliasName));
+					if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_SEND) {
+						CAssetAllocation assetallocation(wtx);
+						if (!assetallocation.IsNull()) {
+							if (!assetallocation.listSendingAllocationAmounts.empty()) {
+								for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
+									UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+									oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
+									oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
+									oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+								}
+
+							}
+							else if (!assetallocation.listSendingAllocationInputs.empty()) {
+								for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
+									UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+									oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(inputTuple.first)));
+									for (auto& inputRange : inputTuple.second) {
+										oAssetAllocationReceiversObj.push_back(Pair("start", (int)inputRange.start));
+										oAssetAllocationReceiversObj.push_back(Pair("end", (int)inputRange.end));
+									}
+									oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+								}
+							}
+						}
+					}
+					entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
 				}
                 ret.push_back(entry);
             }
