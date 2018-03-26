@@ -47,7 +47,7 @@ class NotificationsTest(BitcoinTestFramework):
         txids_rpc = list(map(lambda t: t['txid'], self.nodes[1].listtransactions("*", block_count)))
         with open(self.tx_filename, 'r') as f:
             assert_equal(sorted(txids_rpc), sorted(f.read().splitlines()))
-        os.remove(self.tx_filename)
+        self.cleanup_notification_files()
 
         self.log.info("test -walletnotify after rescan")
         # restart node to rescan to force wallet notifications
@@ -81,6 +81,51 @@ class NotificationsTest(BitcoinTestFramework):
 
         self.log.info("-alertnotify should not continue notifying for more unknown version blocks")
         assert_equal(alert_text, alert_text2)
+
+        # restart node but with wallet updates disabled
+        # mine some blocks (should not receive tx notifications)
+        # restart node with updates re-enabled
+        # assert that notifications are received for the blocks mined while notifications were disabled
+        self.log.info("test -[no]walletupdates")
+        txids_already_seen = list(map(lambda t: t['txid'], self.nodes[1].listtransactions("*", 1000)))
+
+        # the tip is always effectively rescanned on restart (in ActivateBestChain)
+        # have a different node generate 1 block so the coinbase does not belong to the node we'd like to test
+        self.nodes[0].generate(1)
+        self.cleanup_notification_files()
+        self.restart_node(1, ["-nowalletupdates",
+                              "-walletnotify=echo %%s >> %s" % self.tx_filename,
+                              "-blocknotify=echo %%s >> %s" % self.block_filename])
+
+        # generate more blocks (with updates disabled we should get notified by blocknotify but NOT by walletnotify)
+        self.nodes[1].generate(block_count)
+
+        # wait at most 10 seconds for expected file size before reading the content
+        wait_until(lambda: os.path.isfile(self.block_filename) and os.stat(self.block_filename).st_size >= (block_count * 65), timeout=10)
+
+        # we should be notified on new blocks
+        assert os.path.isfile(self.block_filename)
+
+        # but not on any wallet transactions because we have wallet updates disabled
+        assert not os.path.isfile(self.tx_filename)
+
+        # restart the node again but with updates enabled - we should now get notified for only the transactions
+        # generated while updates were disabled but none of the previous ones
+        self.restart_node(1, ["-walletnotify=echo %%s >> %s" % self.tx_filename])
+
+        # wait at most 10 seconds for notifications
+        wait_until(lambda: os.path.isfile(self.tx_filename) and os.stat(self.tx_filename).st_size >= (block_count * 65), timeout=10)
+
+        # file should contain only the transactions generated while updates were disabled but none of the previous ones
+        all_txids = list(map(lambda t: t['txid'], self.nodes[1].listtransactions("*", 1000)))
+        new_txids = [t for t in all_txids if t not in txids_already_seen]
+        with open(self.tx_filename, 'r') as f:
+            assert_equal(sorted(new_txids), sorted(f.read().splitlines()))
+
+    def cleanup_notification_files(self):
+        for name in [self.alert_filename, self.block_filename, self.tx_filename]:
+            if os.path.isfile(name):
+                os.remove(name)
 
 if __name__ == '__main__':
     NotificationsTest().main()
