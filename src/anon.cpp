@@ -15,6 +15,7 @@
 #include <txmempool.h>
 #include <util.h>
 #include <validation.h>
+#include <chainparams.h>
 
 
 bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
@@ -123,6 +124,7 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
             CAnonOutput ao;
             if (!pblocktree->ReadRCTOutput(nIndex, ao))
             {
+                LogPrint(BCLog::RINGCT, "bad-anonin-unknown-i %ld\n", nIndex);
                 return state.DoS(100, false, REJECT_MALFORMED, "bad-anonin-unknown-i");
             };
             memcpy(&vM[(i+k*nCols)*33], ao.pubkey.begin(), 33);
@@ -322,3 +324,53 @@ bool RollBackRCTIndex(int64_t nLastValidRCTOutput, std::set<CCmpPubKey> &setKi)
     return true;
 };
 
+bool RewindToCheckpoint(int nCheckPointHeight, int &nBlocks, std::string &sError)
+{
+    LogPrintf("%s: At height %d\n", nCheckPointHeight);
+    nBlocks = 0;
+    int64_t nLastRCTOutput = 0;
+    if (!pblocktree->ReadRCTOutputCheckpoint(nCheckPointHeight, nLastRCTOutput))
+        return errorN(false, sError, __func__, "ReadRCTOutputCheckpoint failed, suggest reindex.");
+
+    const CChainParams& chainparams = Params();
+    CCoinsViewCache view(pcoinsTip.get());
+    view.fForceDisconnect = true;
+    CValidationState state;
+
+    for (CBlockIndex *pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev)
+    {
+        if (pindex->nHeight <= nCheckPointHeight)
+            break;
+
+        nBlocks++;
+
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
+            return errorN(false, sError, __func__, "ReadBlockFromDisk failed.");
+        if (DISCONNECT_OK != DisconnectBlock(block, pindex, view))
+            return errorN(false, sError, __func__, "DisconnectBlock failed.");
+        if (!FlushView(&view, state, true))
+            return errorN(false, sError, __func__, "FlushView failed.");
+
+        if (!FlushStateToDisk(Params(), state, FLUSH_STATE_IF_NEEDED))
+            return errorN(false, sError, __func__, "FlushStateToDisk failed.");
+
+        chainActive.SetTip(pindex->pprev);
+        UpdateTip(pindex->pprev, chainparams);
+    };
+
+    int nRemoveOutput = nLastRCTOutput+1;
+    CAnonOutput ao;
+    while (pblocktree->ReadRCTOutput(nRemoveOutput, ao))
+    {
+        pblocktree->EraseRCTOutput(nRemoveOutput);
+        pblocktree->EraseRCTOutputLink(ao.pubkey);
+        nRemoveOutput++;
+    };
+
+    std::set<CCmpPubKey> setKi; // unused
+    if (!RollBackRCTIndex(nLastRCTOutput, setKi))
+        return errorN(false, sError, __func__, "RollBackRCTIndex failed.");
+
+    return true;
+};

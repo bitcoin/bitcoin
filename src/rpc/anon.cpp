@@ -61,7 +61,7 @@ UniValue anonoutput(const JSONRPCRequest &request)
 
     result.pushKV("index", (int)nIndex);
     result.pushKV("publickey", HexStr(ao.pubkey.begin(), ao.pubkey.end()));
-    result.pushKV("txnhash", HexStr(ao.outpoint.hash.begin(), ao.outpoint.hash.end()));
+    result.pushKV("txnhash", ao.outpoint.hash.ToString());
     result.pushKV("n", (int)ao.outpoint.n);
     result.pushKV("blockheight", ao.nBlockHeight);
 

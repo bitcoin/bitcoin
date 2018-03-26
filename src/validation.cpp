@@ -228,6 +228,8 @@ std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fSkipRangeproof = false;
 bool fBusyImporting = false;        // covers ActivateBestChain too
+bool fTriedRewind = false;
+int nHeightAtStartup = 0;
 bool fTxIndex = true;
 bool fAddressIndex = false;
 bool fTimestampIndex = false;
@@ -2637,6 +2639,19 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                     && (pblocktree->ReadRCTOutputLink(txout->pk, nTestExists)
                         || view.ReadRCTOutputLink(txout->pk, nTestExists))) {
                     control.Wait();
+
+                    if (!fTriedRewind &&
+                        (GetNumPeers() < 1 || chainActive.Tip()->nHeight < GetNumBlocksOfPeers()-1)) // IsInitialBlockDownload()
+                    {
+                        LogPrintf("%s: Duplicate anon-output %s, index %d.\n", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists);
+                        LogPrintf("Rewinding to last checkpoint.\n");
+                        fTriedRewind = true;
+                        int nBlocks = 0;
+                        std::string sError;
+                        int nLastRCTCheckpointHeight = ((nHeightAtStartup-1) / 250) * 250;
+                        RewindToCheckpoint(nLastRCTCheckpointHeight, nBlocks, sError);
+                        return false;
+                    };
                     return error("%s: Duplicate anon-output %s, index %d.", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists);
                 };
 

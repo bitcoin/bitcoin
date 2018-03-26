@@ -5584,8 +5584,6 @@ UniValue rewindchain(const JSONRPCRequest &request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    const CChainParams& chainparams = Params();
-
     UniValue result(UniValue::VOBJ);
 
     CCoinsViewCache view(pcoinsTip.get());
@@ -5594,55 +5592,24 @@ UniValue rewindchain(const JSONRPCRequest &request)
     CValidationState state;
 
     int nBlocks = 0;
-    result.pushKV("start_height", pindexState->nHeight);
 
-    int nLastRCTCheckpointHeight = ((pindexState->nHeight-1) / 250) * 250;
+    int nStartHeight = request.params[0].isNum() ? request.params[0].get_int() : pindexState->nHeight;
+    result.pushKV("start_height", nStartHeight);
+
+    int nLastRCTCheckpointHeight = ((nStartHeight-1) / 250) * 250;
 
     int64_t nLastRCTOutput = 0;
     if (!pblocktree->ReadRCTOutputCheckpoint(nLastRCTCheckpointHeight, nLastRCTOutput))
         throw JSONRPCError(RPC_MISC_ERROR, "ReadRCTOutputCheckpoint failed, suggest reindex.");
 
-    for (CBlockIndex *pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev)
-    {
-        if (pindex->nHeight <= nLastRCTCheckpointHeight)
-            break;
-
-        nBlocks++;
-
-        CBlock block;
-        if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
-        {
-            result.pushKV("ReadBlockFromDisk failed", pindex->GetBlockHash().ToString());
-            break;
-        };
-        if (DISCONNECT_OK != DisconnectBlock(block, pindex, view))
-        {
-            result.pushKV("DisconnectBlock failed", pindex->GetBlockHash().ToString());
-            break;
-        };
-        if (!FlushView(&view, state, true))
-        {
-            result.pushKV("FlushView failed", pindex->GetBlockHash().ToString());
-            break;
-        };
-
-        if (!FlushStateToDisk(Params(), state, FLUSH_STATE_IF_NEEDED))
-            return false;
-
-        chainActive.SetTip(pindex->pprev);
-        UpdateTip(pindex->pprev, chainparams);
-    };
-
-    result.pushKV("nBlocks", nBlocks);
-
-
     result.pushKV("rct_checkpoint_height", nLastRCTCheckpointHeight);
     result.pushKV("last_rct_output", (int)nLastRCTOutput);
 
-    std::set<CCmpPubKey> setKi; // unused
-    if (!RollBackRCTIndex(nLastRCTOutput, setKi))
-        throw JSONRPCError(RPC_MISC_ERROR, "RollBackRCTIndex failed.");
+    std::string sError;
+    if (!RewindToCheckpoint(nLastRCTCheckpointHeight, nBlocks, sError))
+        result.pushKV("error", sError);
 
+    result.pushKV("nBlocks", nBlocks);
 
     return result;
 };
@@ -6324,6 +6291,7 @@ static const CRPCCommand commands[] =
     { "governance",         "setvote",                          &setvote,                       {"proposal","option","height_start","height_end"} },
     { "governance",         "votehistory",                      &votehistory,                   {"current_only"} },
     { "governance",         "tallyvotes",                       &tallyvotes,                    {"proposal","height_start","height_end"} },
+
 };
 
 void RegisterHDWalletRPCCommands(CRPCTable &t)

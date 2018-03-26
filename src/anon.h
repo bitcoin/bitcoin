@@ -29,4 +29,6 @@ bool AllAnonOutputsUnknown(const CTransaction &tx, CValidationState &state);
 
 bool RollBackRCTIndex(int64_t nLastValidRCTOutput, std::set<CCmpPubKey> &setKi);
 
+bool RewindToCheckpoint(int nCheckPointHeight, int &nBlocks, std::string &sError);
+
 #endif  // PARTICL_ANON_H

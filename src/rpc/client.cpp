@@ -213,6 +213,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspentblind", 3, "include_unsafe" },
     { "listunspentblind", 4, "query_options" },
 
+    { "rewindchain", 0, "height" },
+
     { "smsgsend", 3, "paid_msg" },
     { "smsgsend", 4, "days_retention" },
     { "smsgsend", 5, "testfee" },
