@@ -141,29 +141,18 @@ void CActiveMasternode::ManageStateInitial(CConnman* connman)
         return;
     }
 
-    // First try to find whatever local address is specified by externalip option
-    bool fFoundLocal = GetLocal(service) && CMasternode::IsValidNetAddr(service);
-    if(!fFoundLocal) {
-        bool empty = true;
-        // If we have some peers, let's try to find our local address from one of them
-        connman->ForEachNodeContinueIf([&fFoundLocal, &empty, this](CNode* pnode) {
-            empty = false;
-            if (pnode->addr.IsIPv4())
-                fFoundLocal = GetLocal(service, &pnode->addr) && CMasternode::IsValidNetAddr(service);
-            return !fFoundLocal;
-        });
-        // nothing and no live connections, can't do anything for now
-        if (empty) {
-            nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
-            strNotCapableReason = "Can't detect valid external address. Will retry when there are some connections available.";
-            LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
-            return;
-        }
+    // Find our own IP
+    if(!GetLocal(service)) {
+        nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
+        strNotCapableReason = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists.";
+        LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
+        return;
     }
 
-    if(!fFoundLocal) {
+    // Check our own IP to be useful
+    if(!(fDiscover && service.IsRoutable() && !IsLimited(service.GetNetwork()))) {
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
-        strNotCapableReason = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
+        strNotCapableReason = "Detected IP appears to be on a local network. Please consider using the externalip configuration option.";
         LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
         return;
     }
@@ -185,17 +174,35 @@ void CActiveMasternode::ManageStateInitial(CConnman* connman)
 
     // Check socket connectivity
     LogPrintf("CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
-    SOCKET hSocket = CreateSocket(service);
-    if (hSocket == INVALID_SOCKET) {
-        nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
-        strNotCapableReason = "Could open connection to " + service.ToString();
-        LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
-        return;
+    bool connected = false;
+    SOCKET hSocket = INVALID_SOCKET;
+    proxyType proxy;
+    if (service.IsValid()) {
+        bool proxyConnectionFailed = false;
+
+        if (GetProxy(service.GetNetwork(), proxy)) {
+            hSocket = CreateSocket(proxy.proxy);
+            if (hSocket == INVALID_SOCKET) {
+                nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
+                strNotCapableReason = "Could open connection to " + service.ToString();
+                LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
+                return;
+            }
+            connected = ConnectThroughProxy(proxy, service.ToStringIP(), service.GetPort(), hSocket, nConnectTimeout, &proxyConnectionFailed);
+        } else {
+            // no proxy needed (none set for target network)
+            hSocket = CreateSocket(service);
+            if (hSocket == INVALID_SOCKET) {
+                nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
+                strNotCapableReason = "Could open connection to " + service.ToString();
+                LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
+                return;
+            }
+            connected = ConnectSocketDirectly(service, hSocket, nConnectTimeout);
+        }
     }
 
-    bool fConnected = ConnectSocketDirectly(service, hSocket, nConnectTimeout);
-
-    if (!fConnected) {
+    if (!connected) {
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
         strNotCapableReason = "Could not connect to " + service.ToString();
         LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
