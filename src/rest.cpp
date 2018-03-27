@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,7 +48,7 @@ struct CCoin {
     ADD_SERIALIZE_METHODS;
 
     CCoin() : nHeight(0) {}
-    CCoin(Coin&& in) : nHeight(in.nHeight), out(std::move(in.out)) {}
+    explicit CCoin(Coin&& in) : nHeight(in.nHeight), out(std::move(in.out)) {}
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
@@ -405,7 +405,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     // throw exception in case of an empty request
     std::string strRequestMutable = req->ReadBody();
     if (strRequestMutable.length() == 0 && uriParts.size() == 0)
-        return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
+        return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
 
     bool fInputParsed = false;
     bool fCheckMemPool = false;
@@ -427,7 +427,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             std::string strOutput = uriParts[i].substr(uriParts[i].find('-')+1);
 
             if (!ParseInt32(strOutput, &nOutput) || !IsHex(strTxid))
-                return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Parse error");
+                return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
 
             txid.SetHex(strTxid);
             vOutPoints.push_back(COutPoint(txid, (uint32_t)nOutput));
@@ -436,7 +436,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         if (vOutPoints.size() > 0)
             fInputParsed = true;
         else
-            return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
+            return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
     }
 
     switch (rf) {
@@ -452,7 +452,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             if (strRequestMutable.size() > 0)
             {
                 if (fInputParsed) //don't allow sending input over URI and HTTP RAW DATA
-                    return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Combination of URI scheme inputs and raw post data is not allowed");
+                    return RESTERR(req, HTTP_BAD_REQUEST, "Combination of URI scheme inputs and raw post data is not allowed");
 
                 CDataStream oss(SER_NETWORK, PROTOCOL_VERSION);
                 oss << strRequestMutable;
@@ -461,14 +461,14 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             }
         } catch (const std::ios_base::failure& e) {
             // abort in case of unreadable binary data
-            return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Parse error");
+            return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
         }
         break;
     }
 
     case RF_JSON: {
         if (!fInputParsed)
-            return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
+            return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
         break;
     }
     default: {
@@ -478,7 +478,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
 
     // limit max outpoints
     if (vOutPoints.size() > MAX_GETUTXOS_OUTPOINTS)
-        return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, strprintf("Error: max outpoints exceeded (max: %d, tried: %d)", MAX_GETUTXOS_OUTPOINTS, vOutPoints.size()));
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Error: max outpoints exceeded (max: %d, tried: %d)", MAX_GETUTXOS_OUTPOINTS, vOutPoints.size()));
 
     // check spentness and form a bitmap (as well as a JSON capable human-readable string representation)
     std::vector<unsigned char> bitmap;
