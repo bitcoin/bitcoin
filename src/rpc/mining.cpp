@@ -525,6 +525,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         pindexPrev = pindexPrevNew;
     }
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
+    assert(pblock);
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
     // Update nTime
