@@ -709,9 +709,9 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
-	BOOST_CHECK_EQUAL(inputsArray.size(), 4);
-	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
-	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 999);
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 1000);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 1999);
 
 }
 BOOST_AUTO_TEST_CASE(generate_assettransfer)
