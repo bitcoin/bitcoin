@@ -382,7 +382,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				for (auto&input : theAsset.listAllocationInputs) {
 					if(input.start < (dbAsset.nTotalSupply/COIN))
 					{
-						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this asset. New asset inputs must be added to the end of the supply");
+						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this asset. New asset inputs must be added to the end of the supply: ") + boost::lexical_cast<std::string>(input.start) + " vs " + boost::lexical_cast<std::string>(dbAsset.nTotalSupply / COIN);
 						return true;
 					}
 				}
@@ -775,11 +775,9 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 	if (copyAsset.bUseInputRanges && nBalance > 0)
 	{
 		unsigned int balance = (nBalance/COIN);
-		CRange range(0, balance-1);
-		if (!copyAsset.listAllocationInputs.empty()) {
-			range.start = (copyAsset.nTotalSupply/COIN);
-			range.end = range.start+(balance-1);
-		}
+		CRange range;
+		range.start = (copyAsset.nTotalSupply/COIN);
+		range.end = range.start+(balance-1);
 		theAsset.listAllocationInputs.push_back(range);
 	}
 

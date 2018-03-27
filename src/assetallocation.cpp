@@ -481,7 +481,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				if (fJustCheck && !bSanityCheck) {
 					// add conflicting sender
 					assetAllocationConflicts.insert(assetAllocationTuple);
-					LogPrintf("CheckAssetAllocationInputs: balance overrun dbAssetAllocation.nBalance %llu vs nTotal %llu\n", dbAssetAllocation.nBalance, nTotal);
 				}
 			}
 			else if (fJustCheck && !bSanityCheck) {
@@ -501,7 +500,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
 				if (fJustCheck) {
 					if (bAddAllReceiversToConflictList || bBalanceOverrun) {
-						LogPrintf("CheckAssetAllocationInputs: adding recver %s to conflict list\n", receiverAllocationTuple.ToString().c_str());
 						assetAllocationConflicts.insert(receiverAllocationTuple);
 					}
 
