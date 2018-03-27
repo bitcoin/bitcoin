@@ -233,6 +233,7 @@ void Shutdown()
 
     if (fFeeEstimatesInitialized)
     {
+        UnregisterMempoolInterface(&::feeEstimator);
         ::feeEstimator.FlushUnconfirmed();
         fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
         CAutoFile est_fileout(fsbridge::fopen(est_path, "wb"), SER_DISK, CLIENT_VERSION);
@@ -1607,6 +1608,7 @@ bool AppInitMain()
     // Allowed to fail as this file IS missing on first startup.
     if (!est_filein.IsNull())
         ::feeEstimator.Read(est_filein);
+    RegisterMempoolInterface(&::feeEstimator);
     fFeeEstimatesInitialized = true;
 
     // ********************************************************* Step 8: start indexers

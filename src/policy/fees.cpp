@@ -511,21 +511,11 @@ void CBlockPolicyEstimator::removeTx(std::map<uint256, TxStatsInfo>::iterator po
     longStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.m_fee_per_k, in_block);
 }
 
-// This function is called from CTxMemPool::removeUnchecked to ensure
-// txs removed from the mempool for any reason are no longer
-// tracked. Txs that were part of a block have already been removed in
-// processBlockTx to ensure they are never double tracked, but it is
-// of no harm to try to remove them again.
-bool CBlockPolicyEstimator::removeTx(uint256 hash)
-{
-    LOCK(cs_feeEstimator);
+void CBlockPolicyEstimator::removeTxNotInBlock(const uint256& hash) {
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos != mapMemPoolTxs.end()) {
         removeTx(pos, false);
         mapMemPoolTxs.erase(pos);
-        return true;
-    } else {
-        return false;
     }
 }
 
@@ -551,35 +541,30 @@ CBlockPolicyEstimator::~CBlockPolicyEstimator()
 {
 }
 
-void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate)
-{
+void CBlockPolicyEstimator::TransactionAddedToMempool(const NewMempoolTransactionInfo& info, const std::vector<CTransactionRef>& txn_replaced) {
     LOCK(cs_feeEstimator);
-    unsigned int txHeight = entry.GetHeight();
-    uint256 hash = entry.GetTx().GetHash();
+    for (const CTransactionRef& tx : txn_replaced) {
+        removeTxNotInBlock(tx->GetHash());
+    }
+
+    unsigned int txHeight = nBestSeenHeight;
+    uint256 hash = info.m_tx->GetHash();
     if (mapMemPoolTxs.count(hash)) {
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error mempool tx %s already being tracked\n",
                  hash.ToString().c_str());
         return;
     }
 
-    if (txHeight != nBestSeenHeight) {
-        // Ignore side chains and re-orgs; assuming they are random they don't
-        // affect the estimate.  We'll potentially double count transactions in 1-block reorgs.
-        // Ignore txs if BlockPolicyEstimator is not in sync with chainActive.Tip().
-        // It will be synced next time a block is processed.
-        return;
-    }
-
     // Only want to be updating estimates when our blockchain is synced,
     // otherwise we'll miscalculate how many blocks its taking to get included.
-    if (!validFeeEstimate) {
+    if (!info.m_valid_for_estimation) {
         untrackedTxs++;
         return;
     }
     trackedTxs++;
 
     // Feerates are stored and reported as BTC-per-kb:
-    CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
+    CFeeRate feeRate(info.m_fee, info.m_virtual_transaction_size);
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
     mapMemPoolTxs[hash].m_fee_per_k = feeRate.GetFeePerK();
@@ -588,6 +573,11 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     assert(bucketIndex == bucketIndex2);
     unsigned int bucketIndex3 = longStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
     assert(bucketIndex == bucketIndex3);
+}
+
+void CBlockPolicyEstimator::TransactionRemovedFromMempool(const CTransactionRef &tx, MemPoolRemovalReason reason) {
+    LOCK(cs_feeEstimator);
+    removeTxNotInBlock(tx->GetHash());
 }
 
 bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const uint256& hash)
@@ -619,11 +609,13 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const uint
     return true;
 }
 
-void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
-                                         const std::vector<CTransactionRef>& txn_removed_in_block)
-{
+void CBlockPolicyEstimator::MempoolUpdatedForBlockConnect(const std::vector<CTransactionRef>& txn_removed_in_block, const std::vector<CTransactionRef>& tx_removed_conflicted, int nBlockHeight) {
     LOCK(cs_feeEstimator);
-    if (nBlockHeight <= nBestSeenHeight) {
+    for (const CTransactionRef& tx : tx_removed_conflicted) {
+        removeTxNotInBlock(tx->GetHash());
+    }
+
+    if ((unsigned int)nBlockHeight <= nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random
         // they don't affect the estimate.
         // And if an attacker can re-org the chain at will, then
