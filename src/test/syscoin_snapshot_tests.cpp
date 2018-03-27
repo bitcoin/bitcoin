@@ -67,7 +67,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 		strSendSendNewAddress += "\\\"" + newaddress + "\\\":10";
 	}
 	sendManyString = "sendmany \"\" {" + strSendSendNewAddress + "}";
-	BOOST_CHECK_THROW(CallRPC("mainnet2", sendManyString, false), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("mainnet1", sendManyString, false), runtime_error);
 	GenerateMainNetBlocks(1, "mainnet1");
 	printf("done!\n");
 }
