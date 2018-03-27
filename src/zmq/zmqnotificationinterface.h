@@ -13,7 +13,7 @@
 class CBlockIndex;
 class CZMQAbstractNotifier;
 
-class CZMQNotificationInterface final : public CValidationInterface
+class CZMQNotificationInterface final : public CValidationInterface, public MempoolInterface
 {
 public:
     virtual ~CZMQNotificationInterface();
