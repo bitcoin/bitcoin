@@ -59,8 +59,9 @@ void StartNodes()
 void StartMainNetNodes()
 {
 	StopMainNetNodes();
-	printf("Starting 1 node in mainnet setup...\n");
+	printf("Starting 2 nodes in mainnet setup...\n");
 	StartNode("mainnet1", false);
+	StartNode("mainnet2", false);
 }
 void StopMainNetNodes()
 {
@@ -71,6 +72,13 @@ void StopMainNetNodes()
 	catch(const runtime_error& error)
 	{
 	}	
+	printf("Stopping mainnet2..\n");
+	try {
+		CallRPC("mainnet2", "stop");
+	}
+	catch (const runtime_error& error)
+	{
+	}
 	printf("Done!\n");
 }
 void StopNodes()
