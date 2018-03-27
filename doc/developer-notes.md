@@ -219,7 +219,7 @@ inconsistencies reported in the debug.log file.
 
 Re-architecting the core code so there are better-defined interfaces
 between the various components is a goal, with any necessary locking
-done by the components (e.g. see the self-contained CKeyStore class
+done by the components (e.g. see the self-contained CBasicKeyStore class
 and its cs_KeyStore lock for example).
 
 Threads
