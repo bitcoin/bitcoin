@@ -290,15 +290,6 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fAllow
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
 }
 
-void setupAmountWidget(QLineEdit *widget, QWidget *parent)
-{
-    QDoubleValidator *amountValidator = new QDoubleValidator(parent);
-    amountValidator->setDecimals(8);
-    amountValidator->setBottom(0.0);
-    widget->setValidator(amountValidator);
-    widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
-}
-
 void setupAppearance(QWidget* parent, OptionsModel* model)
 {
     if (!QSettings().value("fAppearanceSetupDone", false).toBool()) {
