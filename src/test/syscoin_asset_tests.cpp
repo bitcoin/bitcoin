@@ -640,9 +640,9 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	AssetAllocationSend("node1", "ASSET", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesa\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":199}]},{\\\"aliasto\\\":\\\"jagassetsendrangesb\\\",\\\"ranges\\\":[{\\\"start\\\":200,\\\"end\\\":399}]},{\\\"aliasto\\\":\\\"jagassetsendrangesc\\\",\\\"ranges\\\":[{\\\"start\\\":400,\\\"end\\\":599}]},{\\\"aliasto\\\":\\\"jagassetsendrangesd\\\",\\\"ranges\\\":[{\\\"start\\\":600,\\\"end\\\":799}]},{\\\"aliasto\\\":\\\"jagassetsendrangese\\\",\\\"ranges\\\":[{\\\"start\\\":800,\\\"end\\\":999}]}]\"", "memo");
 	// ensure receiver get's it
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo ASSET jagassetsendrangesa true"));
-	UniValue inputs = find_value(r.get_obj(), "inputs");
+	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
-	UniValue inputsArray = inputs.get_array();
+	inputsArray = inputs.get_array();
 	BOOST_CHECK_EQUAL(inputsArray.size(), 3);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 199);
