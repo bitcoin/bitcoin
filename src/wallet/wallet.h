@@ -31,6 +31,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/algorithm/string/replace.hpp>
+
 typedef CWallet* CWalletRef;
 extern std::vector<CWalletRef> vpwallets;
 
@@ -65,6 +67,7 @@ static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
 static const bool DEFAULT_WALLET_RBF = false;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
+static const unsigned int DEFAULT_WALLETNOTIFY_NCONFIRMATIONS = 0;
 
 static const int64_t TIMESTAMP_MIN = 0;
 
@@ -267,7 +270,7 @@ public:
 //Get the marginal bytes of spending the specified output
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet);
 
-/** 
+/**
  * A transaction with a bunch of additional info that only the owner cares about.
  * It includes any unrecorded transactions needed to link it back to the block chain.
  */
@@ -630,6 +633,138 @@ private:
     std::vector<char> _ssExtra;
 };
 
+class WalletTransactionNotifier
+{
+public:
+    WalletTransactionNotifier() : m_active(0), m_confirmations_required(0) {}
+
+    WalletTransactionNotifier(std::string notify_command_template, unsigned int n_confirmations, int start_height)
+        : m_confirmations_required(n_confirmations), m_notify_command_template(notify_command_template)
+    {
+        if (m_confirmations_required > 1) {
+            m_unconfirmed_wallet_transactions.resize(m_confirmations_required - 1);
+
+            m_buffer_height_min = std::max(0, start_height - static_cast<int>(m_confirmations_required) + 2);
+            m_buffer_height_max = std::max(0, start_height);
+        }
+
+        m_active = (notify_command_template != "");
+        if (m_active) {
+            LogPrintf("WalletTransactionnotifier: notifying on wallet transactions with %d confirmations (cmd: %s)\n",
+                m_confirmations_required, m_notify_command_template);
+        }
+    }
+
+    /*
+     * Called every time a transaction requiring notification
+     * is identified by the wallet.
+     *
+     * If m_confirmations_required is 1, notifies immediately
+     * Otherwise:
+     * Updates a circular buffer which contains transactions
+     * from the last (m_confirmations_required - 1)
+     * blocks.
+     *
+     */
+    void AddTransaction(const CTransaction& tx, unsigned int height)
+    {
+        if (!m_active) return;
+
+        // shortcut for default and most common behavior - notify as soon as transaction is mined
+        if (m_confirmations_required <= 1) {
+            Notify(tx);
+            return;
+        }
+
+        // store this transaction for later notification
+        m_unconfirmed_wallet_transactions[buffer_pos(height)].push_back(tx);
+    }
+
+    void AddTransaction(const CTransaction& tx)
+    {
+        assert(m_confirmations_required <= 1);
+
+        // height does not matter when confirmations required <= 1
+        AddTransaction(tx, 0);
+    }
+
+    /*
+     * Should be called every time a block is connected
+     *
+     * When m_confirmations_required > 1, notifies
+     * of transactions that have not reached the
+     * required confirmation count
+     *
+     * Internally builds a buffer of transactions from
+     * up to the last m_confirmations_required - 1 blocks
+     * And thus in order to function correctly, this
+     * must be called consistently on every newly connected block
+     */
+    void BlockConnected(unsigned int height)
+    {
+        if (!m_active || m_confirmations_required <= 1 || height < m_confirmations_required) return;
+
+        // get the block height that now has sufficient confirmations
+        unsigned int mature_height = height - (m_confirmations_required - 1);
+
+        // on reorgs we might have already notified for this height
+        if (mature_height >= m_buffer_height_min) {
+            assert(mature_height == m_buffer_height_min && mature_height <= m_buffer_height_max);
+
+            // we have this height in our circular buffer - notify
+            // std::move() takes care of simultaneously emptying this bucket
+            std::vector<CTransaction> to_notify(std::move(m_unconfirmed_wallet_transactions[buffer_pos(mature_height)]));
+            for (auto it = to_notify.begin(); it != to_notify.end(); it++) {
+                Notify(*it);
+            }
+            m_buffer_height_min++;
+        } else if (height < m_buffer_height_min) {
+            // this was a deep reorg
+            // i.e. the height we are now connecting at is below the minimum height we've been tracking
+            // we reset the tracked range of the buffer as we no longer have a contiguous
+            m_buffer_height_min = height;
+        }
+
+        // reset the bucket for the block just connected
+        m_unconfirmed_wallet_transactions[buffer_pos(height)].empty();
+        m_buffer_height_max = height;
+    }
+
+    unsigned int GetConfirmationsRequired() { return m_confirmations_required; }
+
+private:
+    // calls the command specified in -walletnotify for one transaction
+    void Notify(const CTransaction& tx)
+    {
+        assert(m_active);
+
+        std::string this_command = m_notify_command_template;
+        boost::replace_all(this_command, "%s", tx.GetHash().GetHex());
+        std::thread t(runCommand, this_command);
+        t.detach(); // thread runs free
+    }
+
+    // is this notifier making notifications
+    bool m_active;
+
+    // number of confirmations required for a transaction before notification occurs
+    unsigned int m_confirmations_required;
+
+    // templated command for notification (all instances of %s replaced with txid)
+    std::string m_notify_command_template;
+
+    // circular buffer of size (m_confirmations_required - 1) which holds transactions
+    // for which the notify command has not yet been invoked
+    std::vector<std::vector<CTransaction>> m_unconfirmed_wallet_transactions;
+
+    // stores the min and max block heights that m_unconfirmed_wallet_transactions currently holds
+    unsigned int m_buffer_height_min;
+    unsigned int m_buffer_height_max;
+
+    // maps a given chain height to a position in the circular buffer
+    inline unsigned int buffer_pos(unsigned int height) { return height % (m_confirmations_required - 1); };
+};
+
 struct CoinSelectionParams
 {
     bool use_bnb = true;
@@ -652,7 +787,7 @@ struct CoinEligibilityFilter
 };
 
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
-/** 
+/**
  * A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
@@ -741,6 +876,14 @@ private:
      * Protected by cs_main (see BlockUntilSyncedToCurrentChain)
      */
     const CBlockIndex* m_last_block_processed;
+
+    /**
+     * Handles notification when transactions become sufficiently confirmed
+     * Currently parameterized by bitcoind options:
+     * -walletnotify=<cmd>
+     * -walletnotifyconfirmations=<n confirmations>
+     */
+    WalletTransactionNotifier m_notifier;
 
 public:
     /*
@@ -921,7 +1064,7 @@ public:
     void GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) const;
     unsigned int ComputeTimeSmart(const CWalletTx& wtx) const;
 
-    /** 
+    /**
      * Increment the next transaction order id
      * @return next transaction order id
      */
@@ -1049,7 +1192,7 @@ public:
     }
 
     void GetScriptForMining(std::shared_ptr<CReserveScript> &script);
-    
+
     unsigned int GetKeyPoolSize()
     {
         AssertLockHeld(cs_wallet); // set{Ex,In}ternalKeyPool
@@ -1074,7 +1217,7 @@ public:
     //! Flush wallet (bitdb flush)
     void Flush(bool shutdown=false);
 
-    /** 
+    /**
      * Address book entry changed.
      * @note called with lock cs_wallet held.
      */
@@ -1083,7 +1226,7 @@ public:
             const std::string &purpose,
             ChangeType status)> NotifyAddressBookChanged;
 
-    /** 
+    /**
      * Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.
      */
@@ -1130,7 +1273,7 @@ public:
 
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();
-    
+
     /* Set the current HD master key (will reset the chain child index counters)
        Sets the master key's version based on the current wallet version (so the
        caller must ensure the current wallet version is correct before calling
@@ -1201,7 +1344,7 @@ public:
 };
 
 
-/** 
+/**
  * Account information.
  * Stored in wallet with key "acc"+string account name.
  */
