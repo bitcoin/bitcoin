@@ -70,6 +70,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 	BOOST_CHECK_THROW(CallRPC("mainnet1", sendManyString, false), runtime_error);
 	GenerateMainNetBlocks(1, "mainnet1");
 	GenerateMainNetBlocks(1, "mainnet2");
+	GenerateMainNetBlocks(1, "mainnet2");
 	printf("done!\n");
 }
 void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
