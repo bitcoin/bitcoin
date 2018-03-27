@@ -71,7 +71,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	if (strSendSendNewAddress != "")
 		strSendSendNewAddress += ",";
-	strSendSendNewAddress += "\\\"" + newaddress + "\\\":565000";
+	strSendSendNewAddress += "\\\"" + newaddress + "\\\":550000";
 
 	sendManyString = "sendmany \"\" {" + strSendSendNewAddress + "}";
 	BOOST_CHECK_THROW(CallRPC("mainnet1", sendManyString, false), runtime_error);
