@@ -748,11 +748,7 @@ int WalletModel::getDefaultConfirmTarget() const
 QString WalletModel::getWalletName() const
 {
     LOCK(wallet->cs_wallet);
-    QString walletName = QString::fromStdString(wallet->GetName());
-    if (walletName.endsWith(".dat")) {
-        walletName.truncate(walletName.size() - 4);
-    }
-    return walletName;
+    return QString::fromStdString(wallet->GetName());
 }
 
 bool WalletModel::isMultiwallet()
