@@ -40,9 +40,8 @@ namespace GUIUtil
     // Return a monospace font
     QFont fixedPitchFont();
 
-    // Set up widgets for address and amounts
+    // Set up widget for address
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
-    void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
     // Parse "bitcoin:" URI into recipient object, return true on successful parsing
     bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
