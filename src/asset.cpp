@@ -289,7 +289,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Initial balance out of money range");
 				return true;
 			}
-			if (theAsset.nMaxSupply > 0 && !AssetRange(theAsset.nMaxSupply))
+			if (!AssetRange(theAsset.nMaxSupply))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Max supply out of money range");
 				return true;
@@ -405,8 +405,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Total supply out of money range");
 				return true;
 			}
-			const CAmount &nMaxSupply = dbAsset.nMaxSupply > 0 ? dbAsset.nMaxSupply : MAX_ASSET;
-			if (theAsset.nTotalSupply > nMaxSupply)
+			if (theAsset.nTotalSupply > dbAsset.nMaxSupply)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Total supply cannot exceed maximum supply");
 				return true;
@@ -642,7 +641,7 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	strCategory = params[3].get_str();
 	vector<unsigned char> vchWitness;
 	CAmount nBalance = AssetAmountFromValue(params[4]);
-	CAmount nMaxSupply = -1*COIN;
+	CAmount nMaxSupply = MAX_ASSET;
 	if(params[5].get_str() != "-1")
 		nMaxSupply = AssetAmountFromValue(params[5]);
 	bool bUseInputRanges = params[6].get_bool();
@@ -1080,10 +1079,10 @@ bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oAsset
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
 	oAsset.push_back(Pair("balance", ValueFromAmount(asset.nBalance)));
 	oAsset.push_back(Pair("total_supply", ValueFromAmount(asset.nTotalSupply)));
-	oAsset.push_back(Pair("max_supply", asset.nMaxSupply));
+	oAsset.push_back(Pair("max_supply", ValueFromAmount(asset.nMaxSupply)));
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
 	oAsset.push_back(Pair("can_adjust_interest_rate", asset.bCanAdjustInterestRate));
-
+	oAsset.push_back(Pair("use_input_ranges", asset.bUseInputRanges));
 	if (bGetInputs) {
 		UniValue oAssetAllocationInputsArray(UniValue::VARR);
 		for (auto& input : asset.listAllocationInputs) {
@@ -1112,6 +1111,9 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+	oAsset.push_back(Pair("balance", ValueFromAmount(asset.nBalance)));
+	oAsset.push_back(Pair("total_supply", ValueFromAmount(asset.nTotalSupply)));
+	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
 	return true;
 }
 bool BuildAssetIndexerJson(const CAsset& asset, UniValue& oAsset)
@@ -1120,6 +1122,11 @@ bool BuildAssetIndexerJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("height", (int)asset.nHeight));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+	oAsset.push_back(Pair("use_input_ranges", asset.bUseInputRanges));
+	oAsset.push_back(Pair("balance", ValueFromAmount(asset.nBalance)));
+	oAsset.push_back(Pair("total_supply", ValueFromAmount(asset.nTotalSupply)));
+	oAsset.push_back(Pair("max_supply", ValueFromAmount(asset.nMaxSupply)));
+	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
 	return true;
 }
 void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
