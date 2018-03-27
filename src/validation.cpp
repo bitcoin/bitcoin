@@ -88,6 +88,7 @@ enum DisconnectResult
 };
 
 class ConnectTrace;
+typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 
 /**
  * CChainState stores and provides an API to update our local knowledge of the
@@ -177,6 +178,13 @@ public:
 
     void UnloadBlockIndex();
 
+    ~CChainState() {
+        BlockMap::iterator it1 = mapBlockIndex.begin();
+        for (; it1 != mapBlockIndex.end(); it1++)
+            delete (*it1).second;
+        mapBlockIndex.clear();
+    }
+
 private:
     bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace);
     bool ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool);
@@ -199,7 +207,8 @@ private:
 
 CCriticalSection cs_main;
 
-BlockMap& mapBlockIndex = g_chainstate.mapBlockIndex;
+// Also used in wallet_tests.cpp
+const BlockMap& mapBlockIndex = g_chainstate.mapBlockIndex;
 CChain& chainActive = g_chainstate.chainActive;
 const CBlockIndex *pindexBestHeader = nullptr;
 CWaitableCriticalSection csBestBlock;
@@ -274,6 +283,28 @@ const CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocato
         }
     }
     return chain.Genesis();
+}
+
+const CBlockIndex* LookupBlockIndex(const uint256& hash) {
+    AssertLockHeld(cs_main);
+    BlockMap::const_iterator it = mapBlockIndex.find(hash);
+    return it == mapBlockIndex.end() ? nullptr : it->second;
+}
+
+size_t GetHeaderCount() {
+    AssertLockHeld(cs_main);
+    return mapBlockIndex.size();
+}
+
+void GetAllStaleHeaders(std::set<const CBlockIndex*>& header_set) {
+    AssertLockHeld(cs_main);
+    header_set.clear();
+    for (const std::pair<const uint256, const CBlockIndex* >& item : mapBlockIndex)
+    {
+        if (!chainActive.Contains(item.second)) {
+            header_set.insert(item.second);
+        }
+    }
 }
 
 std::unique_ptr<CCoinsViewDB> pcoinsdbview;
@@ -4180,6 +4211,11 @@ void CChainState::UnloadBlockIndex() {
     nBlockSequenceId = 1;
     g_failed_blocks.clear();
     setBlockIndexCandidates.clear();
+
+    for (BlockMap::value_type& entry : mapBlockIndex) {
+        delete entry.second;
+    }
+    mapBlockIndex.clear();
 }
 
 // May NOT be used after any connections are up as much
@@ -4201,11 +4237,6 @@ void UnloadBlockIndex()
     for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {
         warningcache[b].clear();
     }
-
-    for (BlockMap::value_type& entry : mapBlockIndex) {
-        delete entry.second;
-    }
-    mapBlockIndex.clear();
     fHavePruned = false;
 
     g_chainstate.UnloadBlockIndex();
@@ -4749,16 +4780,3 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
 
     return pindex->nChainTx / fTxTotal;
 }
-
-class CMainCleanup
-{
-public:
-    CMainCleanup() {}
-    ~CMainCleanup() {
-        // block headers
-        BlockMap::iterator it1 = mapBlockIndex.begin();
-        for (; it1 != mapBlockIndex.end(); it1++)
-            delete (*it1).second;
-        mapBlockIndex.clear();
-    }
-} instance_of_cmaincleanup;

@@ -158,8 +158,6 @@ extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CBlockPolicyEstimator feeEstimator;
 extern CTxMemPool mempool;
-typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
-extern BlockMap& mapBlockIndex;
 extern uint64_t nLastBlockTx;
 extern uint64_t nLastBlockWeight;
 extern const std::string strMessageMagic;
@@ -428,12 +426,14 @@ public:
 /** Replay blocks that aren't fully applied to the database. */
 bool ReplayBlocks(const CChainParams& params, CCoinsView* view);
 
-inline const CBlockIndex* LookupBlockIndex(const uint256& hash)
-{
-    AssertLockHeld(cs_main);
-    BlockMap::const_iterator it = mapBlockIndex.find(hash);
-    return it == mapBlockIndex.end() ? nullptr : it->second;
-}
+/** Gets the CBlocKIndex* for the header with the given hash, or nullptr if we have no such header in our header tree */
+const CBlockIndex* LookupBlockIndex(const uint256& hash);
+
+/** Gets the number of headers loaded into our header tree */
+size_t GetHeaderCount();
+
+/** Gets all headers in our header tree which are not on our best chain */
+void GetAllStaleHeaders(std::set<const CBlockIndex*>& header_set);
 
 /** Find the last common block between the parameter chain and a locator. */
 const CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator);

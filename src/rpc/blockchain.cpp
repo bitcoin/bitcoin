@@ -1319,12 +1319,9 @@ UniValue getchaintips(const JSONRPCRequest& request)
     std::set<const CBlockIndex* > setOrphans;
     std::set<const CBlockIndex* > setPrevs;
 
-    for (const std::pair<const uint256, const CBlockIndex* >& item : mapBlockIndex)
-    {
-        if (!chainActive.Contains(item.second)) {
-            setOrphans.insert(item.second);
-            setPrevs.insert(item.second->pprev);
-        }
+    GetAllStaleHeaders(setOrphans);
+    for (const CBlockIndex* orphan : setOrphans) {
+        setPrevs.insert(orphan->pprev);
     }
 
     for (std::set<const CBlockIndex* >::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it)

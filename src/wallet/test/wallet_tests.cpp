@@ -23,6 +23,9 @@ extern UniValue importmulti(const JSONRPCRequest& request);
 extern UniValue dumpwallet(const JSONRPCRequest& request);
 extern UniValue importwallet(const JSONRPCRequest& request);
 
+typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
+extern BlockMap& mapBlockIndex;
+
 BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
 static void AddKey(CWallet& wallet, const CKey& key)
