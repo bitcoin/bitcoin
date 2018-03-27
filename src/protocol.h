@@ -403,7 +403,7 @@ enum GetDataMsg
     MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
     // Dash message types
     // NOTE: declare non-implmented here in future, we must keep this enum consistent and backwards compatible
-    // PM-Tech We aren't backwards compatible, so clean up here. TODO: Check for pre-fork issues with old nodes
+    MSG_DEPRECATED = 8,
     MSG_TXLOCK_REQUEST = 10,
     MSG_TXLOCK_VOTE = 11,
     MSG_MASTERNODE_PAYMENT_VOTE = 12,
