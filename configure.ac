@@ -101,6 +101,13 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
 AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
 
+# Use mainnet chain by default
+AC_ARG_ENABLE([mainnet],
+  [AS_HELP_STRING([--enable-mainnet],
+  [if mainnet is enabled, binary will use mainnet chain by default (default is no, chain must be explicitly specified)])],
+  [use_mainnet=$enableval],
+  [use_mainnet=no])
+
 # Enable wallet
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--disable-wallet],
@@ -1078,6 +1085,15 @@ AC_MSG_CHECKING([whether to build bitcoind])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
 AC_MSG_RESULT($build_bitcoind)
 
+dnl enable mainnet
+AC_MSG_CHECKING([if mainnet should be used by default])
+if test x$use_mainnet = xyes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_MAINNET],[1],[Define to 1 to use mainnet chain by default])
+else
+  AC_MSG_RESULT(no)
+fi
+
 AC_MSG_CHECKING([whether to build utils (bitcoin-cli bitcoin-tx)])
 AM_CONDITIONAL([BUILD_BITCOIN_UTILS], [test x$build_bitcoin_utils = xyes])
 AC_MSG_RESULT($build_bitcoin_utils)
@@ -1213,6 +1229,7 @@ fi
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
+AM_CONDITIONAL([ENABLE_MAINNET],[test x$use_mainnet = xyes])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
@@ -1334,6 +1351,7 @@ esac
 
 echo
 echo "Options used to compile and link:"
+echo "  use mainnet   = $use_mainnet"
 echo "  with wallet   = $enable_wallet"
 echo "  with gui / qt = $bitcoin_enable_qt"
 if test x$bitcoin_enable_qt != xno; then

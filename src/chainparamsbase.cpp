@@ -22,6 +22,7 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
                                    "This is intended for regression testing tools and app development.");
     }
     strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
+    strUsage += HelpMessageOpt("-mainnet", _("Use the main chain"));
 }
 
 static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
@@ -53,12 +54,16 @@ std::string ChainNameFromCommandLine()
 {
     bool fRegTest = gArgs.GetBoolArg("-regtest", false);
     bool fTestNet = gArgs.GetBoolArg("-testnet", false);
+    bool fMainNet = gArgs.GetBoolArg("-mainnet", false);
 
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
-    if (fRegTest)
+    if (fTestNet + fRegTest + fMainNet >= 2) {
+        throw std::runtime_error("Invalid combination of -regtest, -testnet and/or -mainnet. You must select only one.");
+    }
+    if (fRegTest) {
         return CBaseChainParams::REGTEST;
-    if (fTestNet)
+    }
+    if (fTestNet) {
         return CBaseChainParams::TESTNET;
+    }
     return CBaseChainParams::MAIN;
 }

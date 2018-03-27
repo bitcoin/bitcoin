@@ -897,6 +897,13 @@ bool AppInitParameterInteraction()
 
     // also see: InitParameterInteraction()
 
+    // Only if configured with --enable-mainnet will allow blind run on mainnet. Otherwise, will have to specify the chain you want.
+#ifndef ENABLE_MAINNET
+    std::string chain = ChainNameFromCommandLine();
+    if (chain == CBaseChainParams::MAIN && !gArgs.GetBoolArg("-mainnet", false))
+        return InitError("You did not configure with --enable-mainnet, therefore must set -regtest, -testnet or -mainnet option.");
+#endif
+
     // if using block pruning, then disallow txindex
     if (gArgs.GetArg("-prune", 0)) {
         if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
