@@ -58,11 +58,7 @@ public:
 };
 
 /** A signature creator that just produces 72-byte empty signatures. */
-class DummySignatureCreator : public BaseSignatureCreator {
-public:
-    const BaseSignatureChecker& Checker() const override;
-    bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
-};
+extern const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR;
 
 struct SignatureData {
     CScript scriptSig;
