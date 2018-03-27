@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
-	BOOST_CHECK_EQUAL(inputsArray.size(), 3);
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 199);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
@@ -653,7 +653,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
-	BOOST_CHECK_EQUAL(inputsArray.size(), 3);
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 199);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
@@ -663,7 +663,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
-	BOOST_CHECK_EQUAL(inputsArray.size(), 3);
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 200);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 399);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
-	BOOST_CHECK_EQUAL(inputsArray.size(), 3);
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 400);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 599);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
@@ -683,7 +683,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
-	BOOST_CHECK_EQUAL(inputsArray.size(), 3);
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 600);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 799);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
@@ -693,7 +693,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
-	BOOST_CHECK_EQUAL(inputsArray.size(), 3);
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 800);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 999);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
