@@ -23,6 +23,7 @@ class uint256;
 class CScheduler;
 class CTxMemPool;
 enum class MemPoolRemovalReason;
+class MempoolInterface;
 
 // These functions dispatch to one or all registered wallets
 
@@ -30,8 +31,12 @@ enum class MemPoolRemovalReason;
 void RegisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister a wallet from core */
 void UnregisterValidationInterface(CValidationInterface* pwalletIn);
-/** Unregister all wallets from core */
-void UnregisterAllValidationInterfaces();
+/** Register a listener to receive updates from mempool */
+void RegisterMempoolInterface(MempoolInterface* listener);
+/** Unregister a listener from mempool */
+void UnregisterMempoolInterface(MempoolInterface* listener);
+/** Unregister all listeners from core and mempool */
+void UnregisterAllValidationAndMempoolInterfaces();
 /**
  * Pushes a function to callback onto the notification queue, guaranteeing any
  * callbacks generated prior to now are finished when the function is called.
@@ -53,26 +58,24 @@ void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
  */
 void SyncWithValidationInterfaceQueue();
 
-class CValidationInterface {
+/**
+ * An interface to get callbacks about transactions entering and leaving
+ * mempool.
+ *
+ * Any class which extends both MempoolInterface and CValidationInterface will
+ * see all callbacks across both well-ordered (see individual callback text for
+ * details on the order guarantees).
+ *
+ * Callbacks called on a background thread have a separate order from those
+ * called on the thread generating the callbacks.
+ */
+class MempoolInterface {
 protected:
     /**
      * Protected destructor so that instances can only be deleted by derived classes.
      * If that restriction is no longer desired, this should be made public and virtual.
      */
-    ~CValidationInterface() = default;
-    /**
-     * Notifies listeners of updated block chain tip.
-     *
-     * Is called after a series of BlockConnected/BlockDisconnected events once
-     * the chain has made forward progress and is now at the best-known-tip.
-     *
-     * If a block is found to be invalid, this event may trigger without
-     * forward-progress, only to trigger again soon thereafter.
-     * (TODO: remove this edge case)
-     *
-     * Called on a background thread.
-     */
-    virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+    ~MempoolInterface() = default;
     /**
      * Notifies listeners of a transaction having been added to mempool.
      *
@@ -97,6 +100,40 @@ protected:
      * Called on a background thread.
      */
     virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx) {}
+    friend void ::RegisterMempoolInterface(MempoolInterface*);
+    friend void ::UnregisterMempoolInterface(MempoolInterface*);
+};
+
+/**
+ * An interface to get callbacks about block connection/disconnection.
+ *
+ * Any class which extends both MempoolInterface and CValidationInterface will
+ * see all callbacks across both well-ordered (see individual callback text for
+ * details on the order guarantees).
+ *
+ * Callbacks called on a background thread have a separate order from those
+ * called on the thread generating the callbacks.
+ */
+class CValidationInterface {
+protected:
+    /**
+     * Protected destructor so that instances can only be deleted by derived classes.
+     * If that restriction is no longer desired, this should be made public and virtual.
+     */
+    ~CValidationInterface() = default;
+    /**
+     * Notifies listeners of updated block chain tip
+     *
+     * Is called after a series of BlockConnected/BlockDisconnected events once
+     * the chain has made forward progress and is now at the best-known-tip.
+     *
+     * If a block is found to be invalid, this event may trigger without
+     * forward-progress, only to trigger again soon thereafter.
+     * (TODO: remove this edge case) *
+     *
+     * Called on a background thread.
+     */
+    virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     /**
      * Notifies listeners of a block being connected.
      * Provides a vector of transactions evicted from the mempool as a result.
@@ -147,7 +184,6 @@ protected:
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
-    friend void ::UnregisterAllValidationInterfaces();
 };
 
 struct MainSignalsInstance;
@@ -157,7 +193,9 @@ private:
 
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
-    friend void ::UnregisterAllValidationInterfaces();
+    friend void ::RegisterMempoolInterface(MempoolInterface*);
+    friend void ::UnregisterMempoolInterface(MempoolInterface*);
+    friend void ::UnregisterAllValidationAndMempoolInterfaces();
     friend void ::CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
 
     void MempoolEntryRemoved(CTransactionRef tx, MemPoolRemovalReason reason);

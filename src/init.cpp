@@ -267,6 +267,7 @@ void Shutdown()
 #if ENABLE_ZMQ
     if (pzmqNotificationInterface) {
         UnregisterValidationInterface(pzmqNotificationInterface);
+        UnregisterMempoolInterface(pzmqNotificationInterface);
         delete pzmqNotificationInterface;
         pzmqNotificationInterface = nullptr;
     }
@@ -279,7 +280,7 @@ void Shutdown()
         LogPrintf("%s: Unable to remove pidfile: %s\n", __func__, e.what());
     }
 #endif
-    UnregisterAllValidationInterfaces();
+    UnregisterAllValidationAndMempoolInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     GetMainSignals().UnregisterWithMempoolSignals(mempool);
     g_wallet_init_interface->Close();
@@ -1382,6 +1383,7 @@ bool AppInitMain()
 
     if (pzmqNotificationInterface) {
         RegisterValidationInterface(pzmqNotificationInterface);
+        RegisterMempoolInterface(pzmqNotificationInterface);
     }
 #endif
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set

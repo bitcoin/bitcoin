@@ -4060,6 +4060,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
     walletInstance->m_last_block_processed = chainActive.Tip();
     RegisterValidationInterface(walletInstance);
+    RegisterMempoolInterface(walletInstance);
 
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
