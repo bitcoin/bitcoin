@@ -467,6 +467,11 @@ RPC changes
 - The `fundrawtransaction` RPC will reject the previously deprecated `reserveChangeKey` option.
 - `sendmany` now shuffles outputs to improve privacy, so any previously expected behavior with regards to output ordering can no longer be relied upon.
 - The new RPC `testmempoolaccept` can be used to test acceptance of a transaction to the mempool without adding it.
+- JSON transaction decomposition now includes a `weight` field which provides
+  the transaction's exact weight. This is included in REST /rest/tx/ and
+  /rest/block/ endpoints when in json mode. This is also included in `getblock`
+  (with verbosity=2), `listsinceblock`, `listtransactions`, and
+  `getrawtransaction` RPC commands.
 
 External wallet files
 ---------------------
