@@ -275,13 +275,13 @@ std::string CallExternal(std::string &cmd)
 }
 void GenerateMainNetBlocks(int nBlocks, const string& node)
 {
-	int targetHeight, newHeight;
+	int height, targetHeight, newHeight, timeoutCounter;
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getinfo"));
 	targetHeight = find_value(r.get_obj(), "blocks").get_int() + nBlocks;
 	newHeight = 0;
 	const string &sBlocks = strprintf("%d",nBlocks);
-
+	string otherNode1 = "mainnet2";
 	while(newHeight < targetHeight)
 	{
 	  BOOST_CHECK_NO_THROW(r = CallRPC(node, "generate " + sBlocks));
@@ -292,6 +292,34 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 	  printf("Current block height %d, Target block height %d, balance %f\n", newHeight, targetHeight, ValueFromAmount(balance).get_real()); 
 	}
 	BOOST_CHECK(newHeight >= targetHeight);
+	height = 0;
+	timeoutCounter = 0;
+	MilliSleep(10);
+	while (!otherNode1.empty() && height < newHeight)
+	{
+		try
+		{
+			r = CallRPC(otherNode1, "getinfo");
+		}
+		catch (const runtime_error &e)
+		{
+			r = NullUniValue;
+		}
+		if (!r.isObject())
+		{
+			height = newHeight;
+			break;
+		}
+		height = find_value(r.get_obj(), "blocks").get_int();
+		timeoutCounter++;
+		if (timeoutCounter > 100) {
+			printf("Error: Timeout on getinfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
+			break;
+		}
+		MilliSleep(10);
+	}
+	if (!otherNode1.empty())
+		BOOST_CHECK(height >= targetHeight);
 }
 // generate n Blocks, with up to 10 seconds relay time buffer for other nodes to get the blocks.
 // may fail if your network is slow or you try to generate too many blocks such that can't relay within 10 seconds
