@@ -78,7 +78,17 @@ class TestNode():
         # For those callers that need more flexibility, they can just set the args property directly.
         # Note that common args are set in the config file (see initialize_datadir)
         self.extra_args = extra_args
-        self.args = [self.binary, "-datadir=" + self.datadir, "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
+        self.args = [
+            self.binary,
+            "-datadir=" + self.datadir,
+            "-logtimemicros",
+            "-debug",
+            "-debugexclude=libevent",
+            "-debugexclude=leveldb",
+            "-mocktime=" + str(mocktime),
+            "-uacomment=testnode%d" % i,
+            "-noprinttoconsole"
+        ]
 
         self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "bitcoin-cli"), self.datadir)
         self.use_cli = use_cli
