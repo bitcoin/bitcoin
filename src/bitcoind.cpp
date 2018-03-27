@@ -20,8 +20,8 @@
 #include <utilstrencodings.h>
 #if ENABLE_WALLET
 #include <wallet/init.h>
-#include <walletinitinterface.h>
 #endif
+#include <walletinitinterface.h>
 
 #include <boost/thread.hpp>
 
@@ -65,6 +65,8 @@ bool AppInit(int argc, char* argv[])
 
 #if ENABLE_WALLET
     g_wallet_init_interface.reset(new WalletInit);
+#else
+    g_wallet_init_interface.reset(new DummyWalletInit);
 #endif
 
     //
