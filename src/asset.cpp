@@ -289,7 +289,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Initial balance out of money range");
 				return true;
 			}
-			if (theAsset.nMaxSupply > 0 && !AssetRange(theAsset.nMaxSupply))
+			if (!AssetRange(theAsset.nMaxSupply))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Max supply out of money range");
 				return true;
@@ -405,8 +405,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Total supply out of money range");
 				return true;
 			}
-			const CAmount &nMaxSupply = dbAsset.nMaxSupply > 0 ? dbAsset.nMaxSupply : MAX_ASSET;
-			if (theAsset.nTotalSupply > nMaxSupply)
+			if (theAsset.nTotalSupply > dbAsset.nMaxSupply)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Total supply cannot exceed maximum supply");
 				return true;
@@ -642,7 +641,7 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	strCategory = params[3].get_str();
 	vector<unsigned char> vchWitness;
 	CAmount nBalance = AssetAmountFromValue(params[4]);
-	CAmount nMaxSupply = -1*COIN;
+	CAmount nMaxSupply = MAX_ASSET;
 	if(params[5].get_str() != "-1")
 		nMaxSupply = AssetAmountFromValue(params[5]);
 	bool bUseInputRanges = params[6].get_bool();
