@@ -137,7 +137,7 @@ size_t ClientModel::getMempoolDynamicUsage() const
 
 double ClientModel::getVerificationProgress(const CBlockIndex* tipIn) const
 {
-    const CBlockIndex* tip = const_cast<const CBlockIndex* >(tipIn);
+    const CBlockIndex* tip = tipIn;
     LOCK(cs_main);
     if (!tip)
     {
