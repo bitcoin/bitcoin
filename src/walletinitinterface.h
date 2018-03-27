@@ -34,4 +34,18 @@ public:
     virtual ~WalletInitInterface() {}
 };
 
+class DummyWalletInit : public WalletInitInterface {
+public:
+
+    std::string GetHelpString(bool showDebug) override {return std::string{};}
+    bool ParameterInteraction() override {return true;}
+    void RegisterRPC(CRPCTable &) override {}
+    bool Verify() override {return true;}
+    bool Open() override {return true;}
+    void Start(CScheduler& scheduler) override {}
+    void Flush() override {}
+    void Stop() override {}
+    void Close() override {}
+};
+
 #endif // WALLETINITINTERFACE_H
