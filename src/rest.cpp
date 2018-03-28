@@ -143,7 +143,7 @@ static bool rest_headers(HTTPRequest* req,
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
-    std::vector<const CBlockIndex *> headers;
+    std::vector<const CBlockIndex* > headers;
     headers.reserve(count);
     {
         LOCK(cs_main);
@@ -157,7 +157,7 @@ static bool rest_headers(HTTPRequest* req,
     }
 
     CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
-    for (const CBlockIndex *pindex : headers) {
+    for (const CBlockIndex* pindex : headers) {
         ssHeader << pindex->GetBlockHeader();
     }
 
@@ -179,7 +179,7 @@ static bool rest_headers(HTTPRequest* req,
         UniValue jsonHeaders(UniValue::VARR);
         {
             LOCK(cs_main);
-            for (const CBlockIndex *pindex : headers) {
+            for (const CBlockIndex* pindex : headers) {
                 jsonHeaders.push_back(blockheaderToJSON(pindex));
             }
         }
@@ -208,7 +208,7 @@ static bool rest_block(HTTPRequest* req,
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
     CBlock block;
-    CBlockIndex* pblockindex = nullptr;
+    const CBlockIndex* pblockindex = nullptr;
     {
         LOCK(cs_main);
         pblockindex = LookupBlockIndex(hash);
