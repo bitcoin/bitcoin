@@ -731,7 +731,6 @@ if config.dmg is not None:
                 hdiutil_args.append(str(value))
 
         return run(hdiutil_args, universal_newlines=True)
-
     if verbose >= 2:
         if fancy is None:
             print("+ Creating .dmg disk image +")

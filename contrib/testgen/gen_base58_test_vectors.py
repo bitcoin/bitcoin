@@ -74,7 +74,6 @@ def gen_invalid_vector(template, corrupt_prefix, randomize_payload_size, corrupt
         prefix = os.urandom(1)
     else:
         prefix = bytearray(template[0])
-
     if randomize_payload_size:
         payload = os.urandom(max(int(random.expovariate(0.5)), 50))
     else:
