@@ -4,5 +4,5 @@ noinst_HEADERS += src/modules/recovery/tests_impl.h
 if USE_BENCHMARK
 noinst_PROGRAMS += bench_recover
 bench_recover_SOURCES = src/bench_recover.c
-bench_recover_LDADD = libsecp256k1.la $(SECP_LIBS)
+bench_recover_LDADD = libsecp256k1.la $(SECP_LIBS) $(COMMON_LIB)
 endif

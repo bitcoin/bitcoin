@@ -4,14 +4,14 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_HASH_
-#define _SECP256K1_HASH_
+#ifndef SECP256K1_HASH_H
+#define SECP256K1_HASH_H
 
 #include <stdlib.h>
 #include <stdint.h>
 
 typedef struct {
-    uint32_t s[32];
+    uint32_t s[8];
     uint32_t buf[16]; /* In big endian */
     size_t bytes;
 } secp256k1_sha256_t;
@@ -38,4 +38,4 @@ static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha2
 static void secp256k1_rfc6979_hmac_sha256_generate(secp256k1_rfc6979_hmac_sha256_t *rng, unsigned char *out, size_t outlen);
 static void secp256k1_rfc6979_hmac_sha256_finalize(secp256k1_rfc6979_hmac_sha256_t *rng);
 
-#endif
+#endif /* SECP256K1_HASH_H */

@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_FIELD_REPR_
-#define _SECP256K1_FIELD_REPR_
+#ifndef SECP256K1_FIELD_REPR_H
+#define SECP256K1_FIELD_REPR_H
 
 #include <stdint.h>
 
@@ -44,4 +44,5 @@ typedef struct {
 
 #define SECP256K1_FE_STORAGE_CONST(d7, d6, d5, d4, d3, d2, d1, d0) {{ (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }}
 #define SECP256K1_FE_STORAGE_CONST_GET(d) d.n[7], d.n[6], d.n[5], d.n[4],d.n[3], d.n[2], d.n[1], d.n[0]
-#endif
+
+#endif /* SECP256K1_FIELD_REPR_H */
