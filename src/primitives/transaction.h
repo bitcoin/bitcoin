@@ -65,6 +65,8 @@ public:
     uint256 hash;
     uint32_t n;
 
+    static const uint32_t ANON_MARKER = 0xffffffa0;
+
     COutPoint(): n((uint32_t) -1) { }
     COutPoint(const uint256& hashIn, uint32_t nIn): hash(hashIn), n(nIn) { }
 
@@ -94,6 +96,11 @@ public:
     {
         return !(a == b);
     }
+
+    bool IsAnonInput() const
+    {
+        return n == ANON_MARKER;
+    };
 
     std::string ToString() const;
 };
@@ -138,9 +145,6 @@ public:
      * 9 bits. */
     static const int SEQUENCE_LOCKTIME_GRANULARITY = 9;
 
-
-    static const uint32_t ANON_MARKER = 0xffffffa0;
-
     CTxIn()
     {
         nSequence = SEQUENCE_FINAL;
@@ -177,7 +181,7 @@ public:
 
     bool IsAnonInput() const
     {
-        return prevout.n == ANON_MARKER;
+        return prevout.IsAnonInput();
     };
 
     bool SetAnonInfo(uint32_t nInputs, uint32_t nRingSize)

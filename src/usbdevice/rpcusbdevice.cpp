@@ -411,8 +411,8 @@ UniValue devicesignrawtransaction(const JSONRPCRequest &request)
             {
             const Coin& coin = view.AccessCoin(out);
 
-            if (coin.nType != OUTPUT_STANDARD)
-                throw JSONRPCError(RPC_MISC_ERROR, "TODO: make work for !StandardOutput");
+            if (coin.nType != OUTPUT_STANDARD && coin.nType != OUTPUT_CT)
+                throw JSONRPCError(RPC_MISC_ERROR, strprintf("Bad input type: %d", coin.nType));
 
             if (!coin.IsSpent() && coin.out.scriptPubKey != scriptPubKey) {
                 std::string err("Previous output scriptPubKey mismatch:\n");
@@ -509,10 +509,10 @@ UniValue devicesignrawtransaction(const JSONRPCRequest &request)
             TxInErrorToJSON(txin, vErrors, "Input not found or already spent");
             continue;
         }
-        if (coin.nType != OUTPUT_STANDARD)
+        if (coin.nType != OUTPUT_STANDARD && coin.nType != OUTPUT_CT)
         {
             pDevice->Close();
-            throw JSONRPCError(RPC_MISC_ERROR, "TODO: make work for !StandardOutput");
+            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Bad input type: %d", coin.nType));
         };
 
         std::vector<uint8_t> vchAmount(8);

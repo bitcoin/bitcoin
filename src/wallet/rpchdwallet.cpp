@@ -21,6 +21,7 @@
 #include <timedata.h>
 #include <util.h>
 #include <txdb.h>
+#include <blind.h>
 #include <anon.h>
 #include <utilmoneystr.h>
 #include <wallet/hdwallet.h>
@@ -2987,7 +2988,6 @@ static void ParseRecords(
 
     size_t nLockedOutputs = 0;
     for (auto &record : rtx.vout) {
-
         UniValue output(UniValue::VOBJ);
 
         if (record.nFlags & ORF_CHANGE) {
@@ -3080,7 +3080,7 @@ static void ParseRecords(
 
     if (nOwned && nFrom) {
         push(entry, "category", "internal_transfer");
-    } else if (nOwned) {
+    } else if (nOwned && !nFrom) {
         push(entry, "category", "receive");
     } else if (nFrom) {
         push(entry, "category", "send");
@@ -3097,7 +3097,30 @@ static void ParseRecords(
 
     push(entry, "outputs", outputs);
 
-    push(entry, "amount", ValueFromAmount(totalAmount));
+    if (nOwned && nFrom && nOwned != outputs.size())
+    {
+        // Must check against the owned input value
+        CAmount nInput = 0;
+        for (const auto &vin : rtx.vin)
+        {
+            if (vin.IsAnonInput())
+                continue;
+            nInput += pwallet->GetOwnedOutputValue(vin, watchonly_filter);
+        };
+
+        CAmount nOutput = 0;
+        for (auto &record : rtx.vout)
+        {
+            if ((record.nFlags & ORF_OWNED && watchonly_filter & ISMINE_SPENDABLE)
+                || (record.nFlags & ORF_OWN_WATCH && watchonly_filter & ISMINE_WATCH_ONLY))
+                nOutput += record.nValue;
+        };
+
+        push(entry, "amount", ValueFromAmount(nOutput-nInput));
+    } else
+    {
+        push(entry, "amount", ValueFromAmount(totalAmount));
+    };
     amounts.push_back(std::to_string(ValueFromAmount(totalAmount).get_real()));
 
     if (search != "") {
@@ -3150,61 +3173,61 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "List transactions.\n"
             "1. options (json, optional) : A configuration object for the query\n"
             "\n"
-            "        All keys are optional. Default values are:\n"
-            "        {\n"
-            "                \"count\":             10,\n"
-            "                \"skip\":              0,\n"
-            "                \"include_watchonly\": false,\n"
-            "                \"search\":            ''\n"
-            "                \"category\":          'all',\n"
-            "                \"type\":              'all',\n"
-            "                \"sort\":              'time'\n"
-            "                \"from\":              '0'\n"
-            "                \"to\":                '9999'\n"
-            "                \"collate\":           false\n"
-            "                \"with_reward\":       false\n"
-            "                \"use_bech32\":        false\n"
-            "        }\n"
+            "  All keys are optional. Default values are:\n"
+            "  {\n"
+            "    \"count\":             10,\n"
+            "    \"skip\":              0,\n"
+            "    \"include_watchonly\": false,\n"
+            "    \"search\":            ''\n"
+            "    \"category\":          'all',\n"
+            "    \"type\":              'all',\n"
+            "    \"sort\":              'time'\n"
+            "    \"from\":              '0'\n"
+            "    \"to\":                '9999'\n"
+            "    \"collate\":           false\n"
+            "    \"with_reward\":       false\n"
+            "    \"use_bech32\":        false\n"
+            "  }\n"
             "\n"
-            "        Expected values are as follows:\n"
-            "                count:             number of transactions to be displayed\n"
-            "                                   (integer >= 0, use 0 for unlimited)\n"
-            "                skip:              number of transactions to skip\n"
-            "                                   (integer >= 0)\n"
-            "                include_watchonly: whether to include watchOnly transactions\n"
-            "                                   (bool string)\n"
-            "                search:            a query to search addresses and amounts\n"
-            "                                   character DOT '.' is not searched for:\n"
-            "                                   search \"123\" will find 1.23 and 12.3\n"
-            "                                   (query string)\n"
-            "                category:          select only one category of transactions to return\n"
-            "                                   (string from list)\n"
-            "                                   all, send, orphan, immature, coinbase, receive,\n"
-            "                                   orphaned_stake, stake, internal_transfer\n"
-            "                type:              select only one type of transactions to return\n"
-            "                                   (string from list)\n"
-            "                                   all, standard, anon, blind\n"
-            "                sort:              sort transactions by criteria\n"
-            "                                   (string from list)\n"
-            "                                   time          most recent first\n"
-            "                                   address       alphabetical\n"
-            "                                   category      alphabetical\n"
-            "                                   amount        biggest first\n"
-            "                                   confirmations most confirmations first\n"
-            "                                   txid          alphabetical\n"
-            "                from:              unix timestamp or string \"yyyy-mm-ddThh:mm:ss\"\n"
-            "                to:                unix timestamp or string \"yyyy-mm-ddThh:mm:ss\"\n"
-            "                collate:           display number of records and sum of amount fields\n"
-            "                with_reward        calculate reward explicitly from txindex if necessary\n"
-            "                use_bech32         display addresses in bech32 encoding\n"
+            "  Expected values are:\n"
+            "    count:             number of transactions to be displayed\n"
+            "                       (integer >= 0, use 0 for unlimited)\n"
+            "    skip:              number of transactions to skip\n"
+            "                       (integer >= 0)\n"
+            "    include_watchonly: whether to include watchOnly transactions\n"
+            "                       (bool string)\n"
+            "    search:            a query to search addresses and amounts\n"
+            "                       character DOT '.' is not searched for:\n"
+            "                       search \"123\" will find 1.23 and 12.3\n"
+            "                       (query string)\n"
+            "    category:          select only one category of transactions to return\n"
+            "                       (string from list)\n"
+            "                       all, send, orphan, immature, coinbase, receive,\n"
+            "                       orphaned_stake, stake, internal_transfer\n"
+            "    type:              select only one type of transactions to return\n"
+            "                       (string from list)\n"
+            "                       all, standard, anon, blind\n"
+            "    sort:              sort transactions by criteria\n"
+            "                       (string from list)\n"
+            "                       time          most recent first\n"
+            "                       address       alphabetical\n"
+            "                       category      alphabetical\n"
+            "                       amount        biggest first\n"
+            "                       confirmations most confirmations first\n"
+            "                       txid          alphabetical\n"
+            "    from:              unix timestamp or string \"yyyy-mm-ddThh:mm:ss\"\n"
+            "    to:                unix timestamp or string \"yyyy-mm-ddThh:mm:ss\"\n"
+            "    collate:           display number of records and sum of amount fields\n"
+            "    with_reward        calculate reward explicitly from txindex if necessary\n"
+            "    use_bech32         display addresses in bech32 encoding\n"
             "\n"
-            "        Examples:\n"
-            "            List only when category is 'stake'\n"
-            "                " + HelpExampleCli("filtertransactions", "\"{\\\"category\\\":\\\"stake\\\"}\"") + "\n"
-            "            Multiple arguments\n"
-            "                " + HelpExampleCli("filtertransactions", "\"{\\\"sort\\\":\\\"amount\\\", \\\"category\\\":\\\"receive\\\"}\"") + "\n"
-            "            As a JSON-RPC call\n"
-            "                " + HelpExampleRpc("filtertransactions", "{\\\"category\\\":\\\"stake\\\"}") + "\n"
+            "\nExamples:\n"
+            "\nList only when category is 'stake'\n"
+            + HelpExampleCli("filtertransactions", "\"{\\\"category\\\":\\\"stake\\\"}\"") +
+            "\nMultiple arguments\n"
+            + HelpExampleCli("filtertransactions", "\"{\\\"sort\\\":\\\"amount\\\", \\\"category\\\":\\\"receive\\\"}\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("filtertransactions", "{\\\"category\\\":\\\"stake\\\"}")
         );
 
     ObserveSafeMode();
@@ -5919,7 +5942,7 @@ UniValue transactionblinds(const JSONRPCRequest &request)
     {
         uint256 tmp;
         if (stx.GetBlind(i, tmp.begin()))
-            result.pushKV(strprintf("%i", i), tmp.GetHex());
+            result.pushKV(strprintf("%d", i), tmp.ToString());
     };
 
     return result;
@@ -5931,17 +5954,20 @@ UniValue derivefromstealthaddress(const JSONRPCRequest &request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "derivefromstealthaddress \"stealthaddress\"\n"
+            "derivefromstealthaddress \"stealthaddress\" (\"ephempubkey\")\n"
             "\nDerive a pubkey from a stealth address and random value.\n"
             "\nArguments:\n"
             "1. \"stealthaddress\"                 (string, required) The stealth address\n"
+            "2. \"ephempubkey\"                    (string, optional) The ephemeral publickey\n"
+            "   If ephempubkey is provided the spending private key will be derived, wallet must be unlocked\n"
             "\nResult:\n"
             "   {\n"
             "     \"address\":\"base58\",            (string) The derived address\n"
             "     \"pubkey\":\"hex\",                (string) The derived public key\n"
             "     \"ephemeral\":\"hex\",             (string) The ephemeral value\n"
+            "     \"privatekey\":\"wif\",            (string) The derived privatekey, if \"ephempubkey\" is provided\n"
             "   }\n"
             "\nExamples:\n"
             + HelpExampleCli("derivefromstealthaddress", "\"stealthaddress\"")
@@ -5959,20 +5985,54 @@ UniValue derivefromstealthaddress(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
 
-    CKey sShared, sEphem;
-    ec_point pkSendTo;
-    sEphem.MakeNewKey(true);
-    if (0 != StealthSecret(sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo))
-        throw JSONRPCError(RPC_INTERNAL_ERROR, _("StealthSecret failed, try again."));
+    CKey sSpendR;
+    CPubKey pkEphem, pkDest;
+    CTxDestination dest;
 
-    CPubKey pkEphem = sEphem.GetPubKey();
-    CPubKey pkDest(pkSendTo);
-    CTxDestination dest = GetDestinationForKey(pkDest, OUTPUT_TYPE_LEGACY);
+    if (request.params[1].isStr())
+    {
+        EnsureWalletIsUnlocked(pwallet);
+
+        std::string s = request.params[1].get_str();
+        if (!IsHex(s) || !(s.size() == 66))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "ephempubkey must be 33 bytes and hex encoded.");
+        std::vector<uint8_t> v = ParseHex(s);
+        pkEphem = CPubKey(v.begin(), v.end());
+
+        CKey sSpend;
+        if (!pwallet->GetStealthAddressScanKey(sx))
+            throw JSONRPCError(RPC_WALLET_ERROR, "Scan key not found for stealth address.");
+        if (!pwallet->GetStealthAddressSpendKey(sx, sSpend))
+            throw JSONRPCError(RPC_WALLET_ERROR, "Spend key not found for stealth address.");
+
+        ec_point pEphem;;
+        pEphem.resize(EC_COMPRESSED_SIZE);
+        memcpy(&pEphem[0], pkEphem.begin(), pkEphem.size());
+
+        if (StealthSecretSpend(sx.scan_secret, pEphem, sSpend, sSpendR) != 0)
+            throw JSONRPCError(RPC_WALLET_ERROR, "StealthSecretSpend failed.");
+
+        pkDest = sSpendR.GetPubKey();
+    } else
+    {
+        CKey sShared, sEphem;
+        ec_point pkSendTo;
+        sEphem.MakeNewKey(true);
+        if (0 != StealthSecret(sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, _("StealthSecret failed, try again."));
+
+        pkEphem = sEphem.GetPubKey();
+        pkDest = CPubKey(pkSendTo);
+    };
+
+    dest = GetDestinationForKey(pkDest, OUTPUT_TYPE_LEGACY);
 
     result.pushKV("address", EncodeDestination(dest));
     result.pushKV("pubkey", HexStr(pkDest));
     result.pushKV("ephemeral", HexStr(pkEphem));
 
+    if (sSpendR.IsValid())
+        result.pushKV("privatekey", CBitcoinSecret(sSpendR).ToString());
 
     return result;
 };
@@ -6233,6 +6293,676 @@ UniValue tallyvotes(const JSONRPCRequest &request)
     return result;
 };
 
+UniValue createrawparttransaction(const JSONRPCRequest& request)
+{
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
+        throw std::runtime_error(
+            "createrawparttransaction [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount,\"data\":\"hex\",...}] ( locktime replaceable \"fundfrombalance\" )\n"
+            "\nCreate a transaction spending the given inputs and creating new confidential outputs.\n"
+            "Outputs can be addresses or data.\n"
+            "Returns hex-encoded raw transaction.\n"
+            "Note that the transaction's inputs are not signed, and\n"
+            "it is not stored in the wallet or transmitted to the network.\n"
+
+            "\nArguments:\n"
+            "1. \"inputs\"                (array, required) A json array of json objects\n"
+            "     [\n"
+            "       {\n"
+            "         \"txid\":\"id\",              (string, required) The transaction id\n"
+            "         \"vout\":n,                   (numeric, required) The output number\n"
+            "         \"sequence\":n                (numeric, optional) The sequence number\n"
+            "         \"blindingfactor\":\"hex\",   (string, optional) The blinding factor, required if blinded input is unknown to wallet\n"
+            "       } \n"
+            "       ,...\n"
+            "     ]\n"
+            "2. \"outputs\"               (array, required) A json array of json objects\n"
+            "     [\n"
+            "       {\n"
+            "         \"address\": \"str\"   (string, required) The particl address\n"
+            "         \"amount\": x.xxx    (numeric or string, required) The numeric value (can be string) in " + CURRENCY_UNIT + " of the output\n"
+            "         \"data\": \"hex\",     (string, required) The key is \"data\", the value is hex encoded data\n"
+            "         \"type\": \"str\",     (string, optional, default=\"plain\") The type of output to create, plain, blind or anon.\n"
+            "         \"pubkey\": \"hex\",   (string, optional) The key is \"pubkey\", the value is hex encoded public key for encrypting the metadata\n"
+//            "         \"subfee\":bool      (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "         \"narration\" \"str\", (string, optional) Up to 24 character narration sent with the transaction.\n"
+            "       }\n"
+            "       ,...\n"
+            "     ]\n"
+            "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
+            "4. replaceable               (boolean, optional, default=false) Marks this transaction as BIP125 replaceable.\n"
+            "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
+            //"5. \"fundfrombalance\"       (string, optional, default=none) Fund transaction from standard, blinded or anon balance.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"transaction\"      (string) hex string of the transaction\n"
+            "  \"amounts\"          (json) Coin values of outputs with blinding factors of blinded outputs.\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("createrawparttransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"{\\\"address\\\":0.01}\"")
+            + HelpExampleCli("createrawparttransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"{\\\"data\\\":\\\"00010203\\\"}\"")
+            + HelpExampleRpc("createrawparttransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"{\\\"address\\\":0.01}\"")
+            + HelpExampleRpc("createrawparttransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"{\\\"data\\\":\\\"00010203\\\"}\"")
+        );
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VARR, UniValue::VNUM, UniValue::VBOOL, UniValue::VSTR}, true);
+    if (request.params[0].isNull() || request.params[1].isNull())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1 and 2 must be non-null");
+
+    UniValue inputs = request.params[0].get_array();
+    UniValue outputs = request.params[1].get_array();
+
+    ObserveSafeMode();
+
+    CMutableTransaction rawTx;
+    rawTx.nVersion = PARTICL_TXN_VERSION;
+
+
+    if (!request.params[2].isNull()) {
+        int64_t nLockTime = request.params[2].get_int64();
+        if (nLockTime < 0 || nLockTime > std::numeric_limits<uint32_t>::max())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
+        rawTx.nLockTime = nLockTime;
+    }
+
+    bool rbfOptIn = request.params[3].isTrue();
+
+    std::map<int, uint256> mInputBlinds;
+    for (unsigned int idx = 0; idx < inputs.size(); idx++) {
+        const UniValue& input = inputs[idx];
+        const UniValue& o = input.get_obj();
+
+        uint256 txid = ParseHashO(o, "txid");
+
+        const UniValue& vout_v = find_value(o, "vout");
+        if (!vout_v.isNum())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing vout key");
+        int nOutput = vout_v.get_int();
+        if (nOutput < 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
+
+        uint32_t nSequence;
+        if (rbfOptIn) {
+            nSequence = MAX_BIP125_RBF_SEQUENCE;
+        } else if (rawTx.nLockTime) {
+            nSequence = std::numeric_limits<uint32_t>::max() - 1;
+        } else {
+            nSequence = std::numeric_limits<uint32_t>::max();
+        }
+
+        // set the sequence number if passed in the parameters object
+        const UniValue& sequenceObj = find_value(o, "sequence");
+        if (sequenceObj.isNum()) {
+            int64_t seqNr64 = sequenceObj.get_int64();
+            if (seqNr64 < 0 || seqNr64 > std::numeric_limits<uint32_t>::max()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, sequence number is out of range");
+            } else {
+                nSequence = (uint32_t)seqNr64;
+            }
+        }
+
+        const UniValue& blindObj = find_value(o, "blindingfactor");
+        if (blindObj.isStr()) {
+            std::string s = blindObj.get_str();
+            if (!IsHex(s) || !(s.size() == 64))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Blinding factor must be 32 bytes and hex encoded.");
+
+            uint256 blind;
+            blind.SetHex(s);
+            mInputBlinds[rawTx.vin.size()] = blind;
+        }
+
+        CTxIn in(COutPoint(txid, nOutput), CScript(), nSequence);
+
+        rawTx.vin.push_back(in);
+    }
+
+    std::vector<CTempRecipient> vecSend;
+    for (size_t idx = 0; idx < outputs.size(); idx++) {
+        const UniValue &o = outputs[idx].get_obj();
+        CTempRecipient r;
+
+        uint8_t nType = OUTPUT_STANDARD;
+        const UniValue& typeObj = find_value(o, "type");
+        if (typeObj.isStr()) {
+            std::string s = typeObj.get_str();
+            if (s == "standard")
+            {
+                nType = OUTPUT_STANDARD;
+            } else
+            if (s == "blind")
+            {
+                nType = OUTPUT_CT;
+            } else
+            if (s == "anon")
+            {
+                nType = OUTPUT_RINGCT;
+            } else
+            if (s == "data")
+            {
+                nType = OUTPUT_DATA;
+            } else
+            {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown output type.");
+            };
+        };
+
+        CAmount nAmount = AmountFromValue(o["amount"]);
+
+        bool fSubtractFeeFromAmount = false;
+        //if (o.exists("subfee"))
+        //    fSubtractFeeFromAmount = obj["subfee"].get_bool();
+
+        if (o["pubkey"].isStr())
+        {
+            std::string s = o["pubkey"].get_str();
+            if (!IsHex(s) || !(s.size() == 66))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Public key must be 33 bytes and hex encoded.");
+            std::vector<uint8_t> v = ParseHex(s);
+            r.pkTo = CPubKey(v.begin(), v.end());
+        };
+
+        if (o["address"].isStr())
+        {
+            CTxDestination dest = DecodeDestination(o["address"].get_str());
+            if (!IsValidDestination(dest))
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+            r.address = dest;
+        };
+
+        std::string sNarr;
+        if (o["narration"].isStr())
+            sNarr = o["narration"].get_str();
+
+        r.nType = nType;
+        r.SetAmount(nAmount);
+        r.fSubtractFeeFromAmount = fSubtractFeeFromAmount;
+        //r.address = address;
+        r.sNarration = sNarr;
+
+        vecSend.push_back(r);
+    };
+
+    std::string sError;
+    // Note: wallet is only necessary when sending to  an extkey address
+    if (0 != pwallet->ExpandTempRecipients(vecSend, nullptr, sError))
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("ExpandTempRecipients failed: %s.", sError));
+
+    UniValue amounts(UniValue::VOBJ);
+
+    CAmount nFeeRet = 0;
+    //bool fFirst = true;
+    for (size_t i = 0; i < vecSend.size(); ++i)
+    {
+        auto &r = vecSend[i];
+
+        //r.ApplySubFee(nFeeRet, nSubtractFeeFromAmount, fFirst);
+
+        OUTPUT_PTR<CTxOutBase> txbout;
+        if (0 != CreateOutput(txbout, r, sError))
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("CreateOutput failed: %s.", sError));
+
+        if (!CheckOutputValue(r, &*txbout, nFeeRet, sError))
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("CheckOutputValue failed: %s.", sError));
+        /*
+        if (r.nType == OUTPUT_STANDARD)
+            nValueOutPlain += r.nAmount;
+
+        if (r.fChange && r.nType == OUTPUT_CT)
+            nChangePosInOut = i;
+        */
+        r.n = rawTx.vpout.size();
+        rawTx.vpout.push_back(txbout);
+
+        UniValue amount(UniValue::VOBJ);
+        amount.pushKV("value", ValueFromAmount(r.nAmount));
+
+        if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT)
+        {
+            r.vBlind.resize(32);
+            // Need to know the fee before calulating the blind sum
+            GetStrongRandBytes(&r.vBlind[0], 32);
+
+            uint256 blind(r.vBlind.data(), 32);
+            amount.pushKV("blind", blind.ToString());
+
+            if (0 != pwallet->AddCTData(txbout.get(), r, sError))
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddCTData failed: %s.", sError));
+            amount.pushKV("nonce", r.nonce.ToString());
+        };
+
+        if (r.nType != OUTPUT_DATA)
+            amounts.pushKV(strprintf("%d", r.n), amount);
+    };
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("hex", EncodeHexTx(rawTx));
+    result.pushKV("amounts", amounts);
+
+    return result;
+};
+
+
+UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
+{
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 4 || request.params.size() > 5)
+        throw std::runtime_error(
+            "fundrawtransactionfrom \"input_type\" \"hexstring\" input_amounts output_amounts ( options iswitness )\n"
+            "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
+            "This will not modify existing inputs, and will add at most one change output to the outputs.\n"
+            "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
+            "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
+            "The inputs added will not be signed, use signrawtransaction for that.\n"
+            "Note that all existing inputs must have their previous output transaction be in the wallet.\n"
+            "Note that all inputs selected must be of standard form and P2SH scripts must be\n"
+            "in the wallet using importaddress or addmultisigaddress (to calculate fees).\n"
+            "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
+            "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only\n"
+            "\nArguments:\n"
+            "1. \"input_type\"          (string, required) The type of inputs to use standard/anon/blind.\n"
+            "2. \"hexstring\"           (string, required) The hex string of the raw transaction\n"
+            "3. input_amounts         (object, required)\n"
+            "   {\n"
+            "       \"n\":\n"
+            "         {\n"
+            "           \"value\":amount\n"
+            "           \"blind\":\"hex\"\n"
+            "         }\n"
+            "   }\n"
+            "4. output_amounts        (object, required)\n"
+            "   {\n"
+            "       \"n\":\n"
+            "         {\n"
+            "           \"value\":amount\n"
+            "           \"blind\":\"hex\"\n"
+            "           \"nonce\":\"hex\"\n"
+            "         }\n"
+            "   }\n"
+            "5. \"options\"             (object, optional)\n"
+            "   {\n"
+            "     \"changeAddress\"          (string, optional, default pool address) The particl address to receive the change\n"
+            "     \"changePosition\"         (numeric, optional, default random) The index of the change output\n"
+            "     \"change_type\"            (string, optional) The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Default is set by -changetype.\n"
+            "     \"includeWatching\"        (boolean, optional, default false) Also select inputs which are watch only\n"
+            "     \"lockUnspents\"           (boolean, optional, default false) Lock selected unspent outputs\n"
+            "     \"feeRate\"                (numeric, optional, default not set: makes wallet determine the fee) Set a specific fee rate in " + CURRENCY_UNIT + "/kB\n"
+            "     \"subtractFeeFromOutputs\" (array, optional) A json array of integers.\n"
+            "                              The fee will be equally deducted from the amount of each specified output.\n"
+            "                              The outputs are specified by their zero-based index, before any change output is added.\n"
+            "                              Those recipients will receive less coins than you enter in their corresponding amount field.\n"
+            "                              If no outputs are specified here, the sender pays the fee.\n"
+            "                                  [vout_index,...]\n"
+            "     \"replaceable\"            (boolean, optional) Marks this transaction as BIP125 replaceable.\n"
+            "                              Allows this transaction to be replaced by a transaction with higher fees\n"
+            "     \"conf_target\"            (numeric, optional) Confirmation target (in blocks)\n"
+            "     \"estimate_mode\"          (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
+            "         \"UNSET\"\n"
+            "         \"ECONOMICAL\"\n"
+            "         \"CONSERVATIVE\"\n"
+            "   }\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
+            "  \"fee\":       n,         (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
+            "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
+            "}\n"
+            "\nExamples:\n"
+            "\nCreate a transaction with no inputs\n"
+            + HelpExampleCli("createrawctransaction", "\"[]\" \"{\\\"myaddress\\\":0.01}\"") +
+            "\nAdd sufficient unsigned inputs to meet the output value\n"
+            + HelpExampleCli("fundrawtransactionfrom", "\"blind\" \"rawtransactionhex\"") +
+            "\nSign the transaction\n"
+            + HelpExampleCli("signrawtransactionwithwallet", "\"fundedtransactionhex\"") +
+            "\nSend the transaction\n"
+            + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
+            );
+
+    ObserveSafeMode();
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR, UniValue::VOBJ, UniValue::VOBJ, UniValue::VOBJ}, true);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    std::string sInputType = request.params[0].get_str();
+
+    if (sInputType != "standard" && sInputType != "anon" && sInputType != "blind")
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown input type.");
+
+    CCoinControl coinControl;
+    int changePosition = -1;
+    bool lockUnspents = false;
+    UniValue subtractFeeFromOutputs;
+    std::set<int> setSubtractFeeFromOutputs;
+
+    if (request.params[4].isObject()) {
+        UniValue options = request.params[4];
+
+        RPCTypeCheckObj(options,
+            {
+                {"changeAddress", UniValueType(UniValue::VSTR)},
+                {"changePosition", UniValueType(UniValue::VNUM)},
+                {"change_type", UniValueType(UniValue::VSTR)},
+                {"includeWatching", UniValueType(UniValue::VBOOL)},
+                {"lockUnspents", UniValueType(UniValue::VBOOL)},
+                {"feeRate", UniValueType()}, // will be checked below
+                {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
+                {"replaceable", UniValueType(UniValue::VBOOL)},
+                {"conf_target", UniValueType(UniValue::VNUM)},
+                {"estimate_mode", UniValueType(UniValue::VSTR)},
+            },
+            true, true);
+
+        if (options.exists("changeAddress")) {
+            CTxDestination dest = DecodeDestination(options["changeAddress"].get_str());
+
+            if (!IsValidDestination(dest)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "changeAddress must be a valid particl address");
+            }
+
+            coinControl.destChange = dest;
+        }
+
+        if (options.exists("changePosition"))
+            changePosition = options["changePosition"].get_int();
+
+        if (options.exists("change_type")) {
+            if (options.exists("changeAddress")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both changeAddress and address_type options");
+            }
+            coinControl.change_type = ParseOutputType(options["change_type"].get_str(), coinControl.change_type);
+            if (coinControl.change_type == OUTPUT_TYPE_NONE) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown change type '%s'", options["change_type"].get_str()));
+            }
+        }
+
+        if (options.exists("includeWatching"))
+            coinControl.fAllowWatchOnly = options["includeWatching"].get_bool();
+
+        if (options.exists("lockUnspents"))
+            lockUnspents = options["lockUnspents"].get_bool();
+
+        if (options.exists("feeRate"))
+        {
+            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
+            coinControl.fOverrideFeeRate = true;
+        }
+
+        if (options.exists("subtractFeeFromOutputs"))
+            subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
+
+        if (options.exists("replaceable")) {
+            coinControl.signalRbf = options["replaceable"].get_bool();
+        }
+        if (options.exists("conf_target")) {
+            if (options.exists("feeRate")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate");
+            }
+            coinControl.m_confirm_target = ParseConfirmTarget(options["conf_target"]);
+        }
+        if (options.exists("estimate_mode")) {
+            if (options.exists("feeRate")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
+            }
+            if (!FeeModeFromString(options["estimate_mode"].get_str(), coinControl.m_fee_mode)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
+            }
+        }
+    }
+
+    if (changePosition > -1)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "TODO: changePosition");
+
+    // parse hex string from parameter
+    CMutableTransaction tx;
+    tx.nVersion = PARTICL_TXN_VERSION;
+    if (!DecodeHexTx(tx, request.params[1].get_str(), true)) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    size_t nOutputs = tx.GetNumVOuts();
+    if (nOutputs == 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
+
+    for (unsigned int idx = 0; idx < subtractFeeFromOutputs.size(); idx++) {
+        int pos = subtractFeeFromOutputs[idx].get_int();
+        if (setSubtractFeeFromOutputs.count(pos))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, duplicated position: %d", pos));
+        if (pos < 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, negative position: %d", pos));
+        if (pos >= int(nOutputs))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, position too large: %d", pos));
+        setSubtractFeeFromOutputs.insert(pos);
+    }
+
+    UniValue inputAmounts = request.params[2];
+    UniValue outputAmounts = request.params[3];
+    std::map<int, uint256> mInputBlinds, mOutputBlinds;
+    std::map<int, CAmount> mInputAmounts, mOutputAmounts;
+
+    std::vector<CTempRecipient> vecSend(nOutputs);
+
+    const std::vector<std::string> &vInputKeys = inputAmounts.getKeys();
+    for (const std::string &sKey : vInputKeys)
+    {
+        int64_t n;
+        if (!ParseInt64(sKey, &n) || n >= (int64_t)tx.vin.size() || n < 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Bad index for input blinding factor.");
+
+        if (inputAmounts[sKey]["blind"].isStr())
+        {
+            std::string s = inputAmounts[sKey]["blind"].get_str();
+            if (!IsHex(s) || !(s.size() == 64))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Blinding factor must be 32 bytes and hex encoded.");
+
+            uint256 blind;
+            blind.SetHex(s);
+            mInputBlinds[n] = blind;
+        };
+        mInputAmounts[n] = AmountFromValue(inputAmounts[sKey]["value"]);
+    };
+
+    const std::vector<std::string> &vOutputKeys = outputAmounts.getKeys();
+    for (const std::string &sKey : vOutputKeys)
+    {
+        int64_t n;
+        if (!ParseInt64(sKey, &n) || n >= (int64_t)tx.GetNumVOuts() || n < 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Bad index for output blinding factor.");
+
+        const auto &txout = tx.vpout[n];
+
+
+        if (!outputAmounts[sKey]["value"].isNull())
+            mOutputAmounts[n] = AmountFromValue(outputAmounts[sKey]["value"]);
+
+        if (outputAmounts[sKey]["nonce"].isStr()
+            && txout->GetPRangeproof())
+        {
+            CTempRecipient &r = vecSend[n];
+            std::string s = outputAmounts[sKey]["nonce"].get_str();
+            if (!IsHex(s) || !(s.size() == 64))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Blinding factor must be 32 bytes and hex encoded.");
+
+            r.fNonceSet = true;
+            r.nonce.SetHex(s);
+
+            uint64_t min_value, max_value;
+            uint8_t blindOut[32];
+            unsigned char msg[256]; // Currently narration is capped at 32 bytes
+            size_t mlen = sizeof(msg);
+            memset(msg, 0, mlen);
+            uint64_t amountOut;
+            if (1 != secp256k1_rangeproof_rewind(secp256k1_ctx_blind,
+                blindOut, &amountOut, msg, &mlen, r.nonce.begin(),
+                &min_value, &max_value,
+                txout->GetPCommitment(), txout->GetPRangeproof()->data(), txout->GetPRangeproof()->size(),
+                nullptr, 0,
+                secp256k1_generator_h))
+                throw JSONRPCError(RPC_MISC_ERROR, strprintf("secp256k1_rangeproof_rewind failed, output %d.", n));
+            uint256 blind;
+            memcpy(blind.begin(), blindOut, 32);
+            mOutputBlinds[n] = blind;
+            mOutputAmounts[n] = amountOut;
+
+            msg[mlen-1] = '\0';
+            size_t nNarr = strlen((const char*)msg);
+            if (nNarr > 0)
+                r.sNarration.assign((const char*)msg, nNarr);
+        } else
+        {
+            if (txout->GetPRangeproof())
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Missing nonce for output %d.", n));
+        };
+        /*
+        if (outputAmounts[sKey]["blind"].isStr())
+        {
+            std::string s = outputAmounts[sKey]["blind"].get_str();
+            if (!IsHex(s) || !(s.size() == 64))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Blinding factor must be 32 bytes and hex encoded.");
+
+            uint256 blind;
+            blind.SetHex(s);
+            mOutputBlinds[n] = blind;
+        };
+        */
+        vecSend[n].SetAmount(mOutputAmounts[n]);
+    };
+
+    CAmount nTotalOutput = 0;
+
+    for (size_t i = 0; i < tx.vpout.size(); ++i)
+    {
+        const auto &txout = tx.vpout[i];
+        CTempRecipient &r = vecSend[i];
+
+        if (txout->IsType(OUTPUT_CT) || txout->IsType(OUTPUT_RINGCT))
+        {
+            // Check commitment matches
+            std::map<int, CAmount>::iterator ita = mOutputAmounts.find(i);
+            std::map<int, uint256>::iterator itb = mOutputBlinds.find(i);
+
+            if (ita == mOutputAmounts.end())
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Missing amount for blinded output %d.", i));
+            if (itb == mOutputBlinds.end())
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Missing blinding factor for blinded output %d.", i));
+
+            secp256k1_pedersen_commitment commitment;
+            if (!secp256k1_pedersen_commit(secp256k1_ctx_blind,
+                &commitment, (const uint8_t*)(itb->second.begin()),
+                ita->second, secp256k1_generator_h))
+                throw JSONRPCError(RPC_MISC_ERROR, strprintf("secp256k1_pedersen_commit failed, output %d.", i));
+
+            if (memcmp(txout->GetPCommitment()->data, commitment.data, 33) != 0)
+                throw JSONRPCError(RPC_MISC_ERROR, strprintf("Bad blinding factor, output %d.", i));
+            nTotalOutput += mOutputAmounts[i];
+        } else
+        if (txout->IsType(OUTPUT_STANDARD))
+        {
+            mOutputAmounts[i] = txout->GetValue();
+            nTotalOutput += mOutputAmounts[i];
+        };
+
+
+        r.nType = txout->GetType();
+        if (txout->IsType(OUTPUT_DATA))
+        {
+            r.vData = ((CTxOutData*)txout.get())->vData;
+        } else
+        {
+            r.SetAmount(mOutputAmounts[i]);
+            r.fSubtractFeeFromAmount = setSubtractFeeFromOutputs.count(i);
+
+            if (txout->IsType(OUTPUT_CT))
+                r.vData = ((CTxOutCT*)txout.get())->vData;
+            else
+            if (txout->IsType(OUTPUT_RINGCT))
+                r.vData = ((CTxOutRingCT*)txout.get())->vData;
+
+            if (txout->GetPScriptPubKey())
+            {
+                r.fScriptSet = true;
+                r.scriptPubKey = *txout->GetPScriptPubKey();
+            };
+        };
+    };
+
+    for (const CTxIn& txin : tx.vin) {
+        coinControl.Select(txin.prevout);
+    }
+
+    CWalletTx wtx;
+    CTransactionRecord rtx;
+    CAmount nFee;
+    std::string sError;
+    {
+        LOCK2(cs_main, pwallet->cs_wallet);
+        if (sInputType == "standard")
+        {
+            if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, false, nFee, &coinControl, sError))
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
+
+        } else
+        if (sInputType == "anon")
+        {
+            sError = "TODO";
+            //if (0 != pwallet->AddAnonInputs(wtx, rtx, vecSend, false, nFee, &coinControl, sError))
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddAnonInputs failed: %s.", sError));
+        } else
+        if (sInputType == "blind")
+        {
+            if (0 != pwallet->AddBlindedInputs(wtx, rtx, vecSend, false, nFee, &coinControl, sError))
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddBlindedInputs failed: %s.", sError));
+        } else
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown input type.");
+        };
+    }
+
+    tx.vpout = wtx.tx->vpout;
+    tx.vin = wtx.tx->vin;
+
+    for (const CTxIn& txin : tx.vin) {
+        if (lockUnspents) {
+            pwallet->LockCoin(txin.prevout);
+        }
+    }
+
+
+    UniValue outputValues(UniValue::VOBJ);
+    for (size_t i = 0; i < vecSend.size(); ++i)
+    {
+        auto &r = vecSend[i];
+
+        UniValue outputValue(UniValue::VOBJ);
+        if (r.vBlind.size() == 32)
+        {
+            uint256 blind(r.vBlind.data(), 32);
+            outputValue.pushKV("blind", blind.ToString());
+        };
+        if (r.nType != OUTPUT_DATA)
+        {
+            outputValue.pushKV("value", ValueFromAmount(r.nAmount));
+            outputValues.pushKV(strprintf("%d", r.n), outputValue);
+        }
+    };
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("hex", EncodeHexTx(tx));
+    result.pushKV("output_amounts", outputValues);
+
+    return result;
+};
+
 
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
@@ -6286,12 +7016,14 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletsettings",                   &walletsettings,                {"setting","json"} },
 
     { "wallet",             "transactionblinds",                &transactionblinds,             {"txnid"} },
-    { "wallet",             "derivefromstealthaddress",         &derivefromstealthaddress,      {"stealthaddress"} },
+    { "wallet",             "derivefromstealthaddress",         &derivefromstealthaddress,      {"stealthaddress","ephempubkey"} },
 
     { "governance",         "setvote",                          &setvote,                       {"proposal","option","height_start","height_end"} },
     { "governance",         "votehistory",                      &votehistory,                   {"current_only"} },
     { "governance",         "tallyvotes",                       &tallyvotes,                    {"proposal","height_start","height_end"} },
 
+    { "rawtransactions",    "createrawparttransaction",         &createrawparttransaction,      {"inputs","outputs","locktime","replaceable"} },
+    { "rawtransactions",    "fundrawtransactionfrom",           &fundrawtransactionfrom,        {"input_type","hexstring","input_amounts","output_amounts","options"} },
 };
 
 void RegisterHDWalletRPCCommands(CRPCTable &t)

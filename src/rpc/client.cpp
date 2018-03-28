@@ -215,6 +215,15 @@ static const CRPCConvertParam vRPCConvertParams[] =
 
     { "rewindchain", 0, "height" },
 
+    { "createrawparttransaction", 0, "inputs" },
+    { "createrawparttransaction", 1, "outputs" },
+    { "createrawparttransaction", 2, "locktime" },
+    { "createrawparttransaction", 3, "replaceable" },
+    { "fundrawtransactionfrom", 2, "input_amounts" },
+    { "fundrawtransactionfrom", 3, "output_amounts" },
+    { "fundrawtransactionfrom", 4, "options" },
+
+
     { "smsgsend", 3, "paid_msg" },
     { "smsgsend", 4, "days_retention" },
     { "smsgsend", 5, "testfee" },

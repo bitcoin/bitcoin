@@ -381,8 +381,74 @@ class AtomicSwapTest(ParticlTestFramework):
         addrA_sx = nodes[0].getnewstealthaddress() # party A
         addrB_sx = nodes[1].getnewstealthaddress() # party B
 
+        outputs = [ {
+            'address':addrA_sx,
+            'type':'blind',
+            'amount':100,
+        }, {
+            'address':addrB_sx,
+            'type':'blind',
+            'amount':100,
+        }, ]
+        ro = nodes[0].createrawparttransaction([], outputs)
+
+        ro = nodes[0].fundrawtransactionfrom('standard', ro['hex'], {}, ro['amounts'])
+        rawtx = ro['hex']
+
+        ro = nodes[0].signrawtransactionwithwallet(rawtx)
+        assert(ro['complete'] == True)
+
+        ro = nodes[0].sendrawtransaction(ro['hex'])
+        txnid = ro
+
+        self.stakeBlocks(1)
+
+        ro = nodes[0].getwalletinfo()
+        assert(isclose(ro['blind_balance'], 100.0))
+
+        ro = nodes[0].filtertransactions()
+        n = getIndexAtProperty(ro, 'txid', txnid)
+        assert(n > -1)
+        assert(isclose(ro[n]['amount'], -100.00581000))
+
+        ro = nodes[1].getwalletinfo()
+        assert(isclose(ro['blind_balance'], 100.0))
+
+        ro = nodes[1].filtertransactions()
+        n = getIndexAtProperty(ro, 'txid', txnid)
+        assert(n > -1)
+        assert(isclose(ro[n]['amount'], 100.0))
 
 
+        # Initiate A -> B
+        # A has address (addrB_sx) of B
+
+        amountA = 7.0
+        amountB = 7.0
+
+        secretA = os.urandom(32)
+        secretAHash = sha256(secretA)
+
+        lockTime = int(time.time()) + 10000 # future locktime
+
+        destB = nodes[0].derivefromstealthaddress(addrB_sx)
+        pkh1_0 = b58decode(destB['address'])[1:-4]
+
+        scriptInitiate = CreateAtomicSwapScript(payTo=pkh1_0, refundTo=pkh0_0, lockTime=lockTime, secretHash=secretAHash)
+        p2sh_initiate = script_to_p2sh(scriptInitiate)
+
+        outputs = [ {
+            'address':p2sh_initiate,
+            'pubkey':destB['pubkey'],
+            'type':'blind',
+            'amount':amountA,
+        }, ]
+        ro = nodes[0].createrawparttransaction([], outputs)
+        ro = nodes[0].fundrawtransactionfrom('blind', ro['hex'], {}, ro['amounts'])
+        rawtxInitiate = ro['hex']
+
+        ro = nodes[0].signrawtransactionwithwallet(rawtxInitiate)
+        assert(ro['complete'] == True)
 
 
 

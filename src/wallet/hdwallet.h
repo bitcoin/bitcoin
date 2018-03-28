@@ -206,6 +206,7 @@ public:
 
     void SetNull()
     {
+        fNonceSet = false; // if true use nonce and vData from CTempRecipient
         fScriptSet = false;
         fChange = false;
         nChildKey = 0;
@@ -236,6 +237,7 @@ public:
     std::vector<uint8_t> vBlind;
     std::vector<uint8_t> vRangeproof;
     secp256k1_pedersen_commitment commitment;
+    uint256 nonce;
 
     // TODO: range proof parameters, try to keep similar for fee
 
@@ -245,6 +247,7 @@ public:
     std::string sNarration;
     bool fScriptSet;
     bool fChange;
+    bool fNonceSet;
     uint32_t nChildKey; // update later
     uint32_t nChildKeyColdStaking; // update later
     uint32_t nStealthPrefix;
@@ -430,6 +433,7 @@ public:
 
     isminetype HaveStealthAddress(const CStealthAddress &sxAddr) const;
     bool GetStealthAddressScanKey(CStealthAddress &sxAddr) const;
+    bool GetStealthAddressSpendKey(CStealthAddress &sxAddr, CKey &key) const;
 
     bool ImportStealthAddress(const CStealthAddress &sxAddr, const CKey &skSpend);
 
@@ -470,6 +474,7 @@ public:
     void GetCredit(const CTransaction &tx, CAmount &nSpendable, CAmount &nWatchOnly) const;
 
     CAmount GetOutputValue(const COutPoint &op, bool fAllowTXIndex);
+    CAmount GetOwnedOutputValue(const COutPoint &op, isminefilter filter);
 
     int GetDepthInMainChain(const uint256 &blockhash, int nIndex = 0) const;
     bool InMempool(const uint256 &hash) const;

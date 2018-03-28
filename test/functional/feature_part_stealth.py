@@ -210,6 +210,11 @@ class StealthTest(ParticlTestFramework):
         assert(len(ro['pubkey']) == 66)
         assert(len(ro['ephemeral']) == 66)
 
+        recover = nodes[0].derivefromstealthaddress(sx2_b32, ro['ephemeral'])
+        assert(recover['pubkey'] == ro['pubkey'])
+        assert(recover['ephemeral'] == ro['ephemeral'])
+        assert(len(recover['privatekey']) > 0)
+
 
 
 if __name__ == '__main__':
