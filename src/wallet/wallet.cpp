@@ -727,11 +727,11 @@ DBErrors CWallet::ReorderTransactions()
             if (pwtx)
             {
                 if (!walletdb.WriteTx(*pwtx))
-                    return DB_LOAD_FAIL;
+                    return DBErrors::LOAD_FAIL;
             }
             else
                 if (!walletdb.WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
-                    return DB_LOAD_FAIL;
+                    return DBErrors::LOAD_FAIL;
         }
         else
         {
@@ -751,16 +751,16 @@ DBErrors CWallet::ReorderTransactions()
             if (pwtx)
             {
                 if (!walletdb.WriteTx(*pwtx))
-                    return DB_LOAD_FAIL;
+                    return DBErrors::LOAD_FAIL;
             }
             else
                 if (!walletdb.WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
-                    return DB_LOAD_FAIL;
+                    return DBErrors::LOAD_FAIL;
         }
     }
     walletdb.WriteOrderPosNext(nOrderPosNext);
 
-    return DB_LOAD_OK;
+    return DBErrors::LOAD_OK;
 }
 
 int64_t CWallet::IncOrderPosNext(CWalletDB *pwalletdb)
@@ -2890,20 +2890,11 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     nChangePosInOut = -1;
                 }
 
-                // Fill vin
+                // Dummy fill vin for maximum size estimation
                 //
-                // Note how the sequence number is set to non-maxint so that
-                // the nLockTime set above actually works.
-                //
-                // BIP125 defines opt-in RBF as any nSequence < maxint-1, so
-                // we use the highest possible value in that range (maxint-2)
-                // to avoid conflicting with other possible uses of nSequence,
-                // and in the spirit of "smallest possible change from prior
-                // behavior."
-                const uint32_t nSequence = coin_control.signalRbf ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
-                for (const auto& coin : setCoins)
-                    txNew.vin.push_back(CTxIn(coin.outpoint,CScript(),
-                                              nSequence));
+                for (const auto& coin : setCoins) {
+                    txNew.vin.push_back(CTxIn(coin.outpoint,CScript()));
+                }
 
                 nBytes = CalculateMaximumSignedTxSize(txNew, this);
                 if (nBytes < 0) {
@@ -2993,11 +2984,29 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
 
         if (nChangePosInOut == -1) reservekey.ReturnKey(); // Return any reserved key if we don't have change
 
+        // Shuffle selected coins and fill in final vin
+        txNew.vin.clear();
+        std::vector<CInputCoin> selected_coins(setCoins.begin(), setCoins.end());
+        std::shuffle(selected_coins.begin(), selected_coins.end(), FastRandomContext());
+
+        // Note how the sequence number is set to non-maxint so that
+        // the nLockTime set above actually works.
+        //
+        // BIP125 defines opt-in RBF as any nSequence < maxint-1, so
+        // we use the highest possible value in that range (maxint-2)
+        // to avoid conflicting with other possible uses of nSequence,
+        // and in the spirit of "smallest possible change from prior
+        // behavior."
+        const uint32_t nSequence = coin_control.signalRbf ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
+        for (const auto& coin : selected_coins) {
+            txNew.vin.push_back(CTxIn(coin.outpoint, CScript(), nSequence));
+        }
+
         if (sign)
         {
             CTransaction txNewConst(txNew);
             int nIn = 0;
-            for (const auto& coin : setCoins)
+            for (const auto& coin : selected_coins)
             {
                 const CScript& scriptPubKey = coin.txout.scriptPubKey;
                 SignatureData sigdata;
@@ -3137,7 +3146,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 
     fFirstRunRet = false;
     DBErrors nLoadWalletRet = CWalletDB(*dbw,"cr+").LoadWallet(this);
-    if (nLoadWalletRet == DB_NEED_REWRITE)
+    if (nLoadWalletRet == DBErrors::NEED_REWRITE)
     {
         if (dbw->Rewrite("\x04pool"))
         {
@@ -3153,12 +3162,12 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     // This wallet is in its first run if all of these are empty
     fFirstRunRet = mapKeys.empty() && mapCryptedKeys.empty() && mapWatchKeys.empty() && setWatchOnly.empty() && mapScripts.empty();
 
-    if (nLoadWalletRet != DB_LOAD_OK)
+    if (nLoadWalletRet != DBErrors::LOAD_OK)
         return nLoadWalletRet;
 
     uiInterface.LoadWallet(this);
 
-    return DB_LOAD_OK;
+    return DBErrors::LOAD_OK;
 }
 
 DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut)
@@ -3168,7 +3177,7 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
     for (uint256 hash : vHashOut)
         mapWallet.erase(hash);
 
-    if (nZapSelectTxRet == DB_NEED_REWRITE)
+    if (nZapSelectTxRet == DBErrors::NEED_REWRITE)
     {
         if (dbw->Rewrite("\x04pool"))
         {
@@ -3181,19 +3190,19 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
         }
     }
 
-    if (nZapSelectTxRet != DB_LOAD_OK)
+    if (nZapSelectTxRet != DBErrors::LOAD_OK)
         return nZapSelectTxRet;
 
     MarkDirty();
 
-    return DB_LOAD_OK;
+    return DBErrors::LOAD_OK;
 
 }
 
 DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
 {
     DBErrors nZapWalletTxRet = CWalletDB(*dbw,"cr+").ZapWalletTx(vWtx);
-    if (nZapWalletTxRet == DB_NEED_REWRITE)
+    if (nZapWalletTxRet == DBErrors::NEED_REWRITE)
     {
         if (dbw->Rewrite("\x04pool"))
         {
@@ -3207,10 +3216,10 @@ DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
         }
     }
 
-    if (nZapWalletTxRet != DB_LOAD_OK)
+    if (nZapWalletTxRet != DBErrors::LOAD_OK)
         return nZapWalletTxRet;
 
-    return DB_LOAD_OK;
+    return DBErrors::LOAD_OK;
 }
 
 
@@ -3922,7 +3931,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
         std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(name, CWalletDBWrapper::Create(path));
         DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
-        if (nZapWalletRet != DB_LOAD_OK) {
+        if (nZapWalletRet != DBErrors::LOAD_OK) {
             InitError(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
             return nullptr;
         }
@@ -3934,23 +3943,23 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
     bool fFirstRun = true;
     CWallet *walletInstance = new CWallet(name, CWalletDBWrapper::Create(path));
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
-    if (nLoadWalletRet != DB_LOAD_OK)
+    if (nLoadWalletRet != DBErrors::LOAD_OK)
     {
-        if (nLoadWalletRet == DB_CORRUPT) {
+        if (nLoadWalletRet == DBErrors::CORRUPT) {
             InitError(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
             return nullptr;
         }
-        else if (nLoadWalletRet == DB_NONCRITICAL_ERROR)
+        else if (nLoadWalletRet == DBErrors::NONCRITICAL_ERROR)
         {
             InitWarning(strprintf(_("Error reading %s! All keys read correctly, but transaction data"
                                          " or address book entries might be missing or incorrect."),
                 walletFile));
         }
-        else if (nLoadWalletRet == DB_TOO_NEW) {
+        else if (nLoadWalletRet == DBErrors::TOO_NEW) {
             InitError(strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, _(PACKAGE_NAME)));
             return nullptr;
         }
-        else if (nLoadWalletRet == DB_NEED_REWRITE)
+        else if (nLoadWalletRet == DBErrors::NEED_REWRITE)
         {
             InitError(strprintf(_("Wallet needed to be rewritten: restart %s to complete"), _(PACKAGE_NAME)));
             return nullptr;

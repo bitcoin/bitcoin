@@ -251,7 +251,7 @@ private:
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer;
-    WalletModel *walletModel;
+    std::vector<WalletModel*> m_wallet_models;
 #endif
     int returnValue;
     const PlatformStyle *platformStyle;
@@ -333,7 +333,7 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     pollShutdownTimer(0),
 #ifdef ENABLE_WALLET
     paymentServer(0),
-    walletModel(0),
+    m_wallet_models(),
 #endif
     returnValue(0)
 {
@@ -451,8 +451,10 @@ void BitcoinApplication::requestShutdown()
 
 #ifdef ENABLE_WALLET
     window->removeAllWallets();
-    delete walletModel;
-    walletModel = 0;
+    for (WalletModel *walletModel : m_wallet_models) {
+        delete walletModel;
+    }
+    m_wallet_models.clear();
 #endif
     delete clientModel;
     clientModel = 0;
@@ -481,16 +483,20 @@ void BitcoinApplication::initializeResult(bool success)
         window->setClientModel(clientModel);
 
 #ifdef ENABLE_WALLET
-        // TODO: Expose secondary wallets
-        if (!vpwallets.empty())
-        {
-            walletModel = new WalletModel(platformStyle, vpwallets[0], optionsModel);
+        bool fFirstWallet = true;
+        for (CWalletRef pwallet : vpwallets) {
+            WalletModel * const walletModel = new WalletModel(platformStyle, pwallet, optionsModel);
 
-            window->addWallet(BitcoinGUI::DEFAULT_WALLET, walletModel);
-            window->setCurrentWallet(BitcoinGUI::DEFAULT_WALLET);
+            window->addWallet(walletModel);
+            if (fFirstWallet) {
+                window->setCurrentWallet(walletModel->getWalletName());
+                fFirstWallet = false;
+            }
 
             connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
                              paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
+
+            m_wallet_models.push_back(walletModel);
         }
 #endif
 
@@ -617,7 +623,7 @@ int main(int argc, char *argv[])
     if (!Intro::pickDataDirectory())
         return EXIT_SUCCESS;
 
-    /// 6. Determine availability of data directory and parse bitcoin.conf
+    /// 6. Determine availability of data and blocks directory and parse bitcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!fs::is_directory(GetDataDir(false)))
     {
@@ -690,7 +696,7 @@ int main(int argc, char *argv[])
     // Allow parameter interaction before we create the options model
     app.parameterSetup();
     // Load GUI settings from QSettings
-    app.createOptionsModel(gArgs.IsArgSet("-resetguisettings"));
+    app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
 
     // Subscribe to global signals from core
     uiInterface.InitMessage.connect(InitMessage);

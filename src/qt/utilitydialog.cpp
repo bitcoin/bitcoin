@@ -77,7 +77,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         cursor.insertText(header);
         cursor.insertBlock();
 
-        std::string strUsage = HelpMessage(HMM_BITCOIN_QT);
+        std::string strUsage = HelpMessage(HelpMessageMode::BITCOIN_QT);
         const bool showDebug = gArgs.GetBoolArg("-help-debug", false);
         strUsage += HelpMessageGroup(tr("UI Options:").toStdString());
         if (showDebug) {

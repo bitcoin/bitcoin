@@ -340,6 +340,8 @@ std::string HelpMessage(HelpMessageMode mode)
         "potentially skip their script verification (0 to verify all, default: %s, testnet: %s)"),
             defaultChainParams->GetConsensus().defaultAssumeValid.GetHex(),
             testnetChainParams->GetConsensus().defaultAssumeValid.GetHex()));
+    strUsage += HelpMessageOpt("-blocksdir=<dir>", _(
+        "Specify blocks directory (default: <datadir>/blocks)"));
     strUsage += HelpMessageOpt("-blocknotify=<cmd>", _(
         "Execute command when the best block changes (%s in cmd is replaced by block hash)"));
     strUsage += HelpMessageOpt("-blockreconstructionextratxn=<n>", strprintf(_(
@@ -351,7 +353,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-conf=<file>", strprintf(_(
         "Specify configuration file. Relative paths will be prefixed by datadir location. "
         "(default: %s)"), BITCOIN_CONF_FILENAME));
-    if (mode == HMM_BITCOIND)
+    if (mode == HelpMessageMode::BITCOIND)
     {
 #if HAVE_DECL_DAEMON
         strUsage += HelpMessageOpt("-daemon", _(
@@ -651,9 +653,6 @@ std::string HelpMessage(HelpMessageMode mode)
         "transactions (default: %d)"), DEFAULT_WHITELISTRELAY));
 
     strUsage += HelpMessageGroup(_("Block creation options:"));
-    if (showDebug)
-        strUsage += HelpMessageOpt("-blockmaxsize=<n>",
-            "Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight");
     strUsage += HelpMessageOpt("-blockmaxweight=<n>", strprintf(_(
         "Set maximum BIP141 block weight (default: %d)"), DEFAULT_BLOCK_MAX_WEIGHT));
     strUsage += HelpMessageOpt("-blockmintxfee=<amt>", strprintf(_(
@@ -783,7 +782,7 @@ void CleanupBlockRevFiles()
     // Remove the rev files immediately and insert the blk file paths into an
     // ordered map keyed by block file index.
     LogPrintf("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
-    fs::path blocksdir = GetDataDir() / "blocks";
+    fs::path blocksdir = GetBlocksDir();
     for (fs::directory_iterator it(blocksdir); it != fs::directory_iterator(); it++) {
         if (fs::is_regular_file(*it) &&
             it->path().filename().string().length() == 12 &&
@@ -985,15 +984,6 @@ void InitParameterInteraction()
         if (gArgs.SoftSetBoolArg("-whitelistrelay", true))
             LogPrintf("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
-
-    if (gArgs.IsArgSet("-blockmaxsize")) {
-        unsigned int max_size = gArgs.GetArg("-blockmaxsize", 0);
-        if (gArgs.SoftSetArg("blockmaxweight", strprintf("%d", max_size * WITNESS_SCALE_FACTOR))) {
-            LogPrintf("%s: parameter interaction: -blockmaxsize=%d -> setting -blockmaxweight=%d (-blockmaxsize is deprecated!)\n", __func__, max_size, max_size * WITNESS_SCALE_FACTOR);
-        } else {
-            LogPrintf("%s: Ignoring blockmaxsize setting which is overridden by blockmaxweight", __func__);
-        }
-    }
 }
 
 static std::string ResolveErrMsg(const char * const optname, const std::string& strBind)
@@ -1094,6 +1084,10 @@ bool AppInitParameterInteraction()
     // ********************************************************* Step 2: parameter interactions
 
     // also see: InitParameterInteraction()
+
+    if (!fs::is_directory(GetBlocksDir(false))) {
+        return InitError(strprintf(_("Specified blocks directory \"%s\" does not exist.\n"), gArgs.GetArg("-blocksdir", "").c_str()));
+    }
 
     // if using block pruning, then disallow txindex
     if (gArgs.GetArg("-prune", 0)) {
@@ -1821,7 +1815,7 @@ bool AppInitMain()
 
     // ********************************************************* Step 10: import blocks
 
-    if (!CheckDiskSpace())
+    if (!CheckDiskSpace() && !CheckDiskSpace(0, true))
         return false;
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.

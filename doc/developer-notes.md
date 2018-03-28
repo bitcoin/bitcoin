@@ -39,6 +39,7 @@ code.
   - `++i` is preferred over `i++`.
   - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
+  - `enum class` is preferred over `enum` where possible. Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to int, and name clashes due to enumerators being exported to the surrounding scope.
 
 Block style example:
 ```c++
@@ -218,7 +219,7 @@ inconsistencies reported in the debug.log file.
 
 Re-architecting the core code so there are better-defined interfaces
 between the various components is a goal, with any necessary locking
-done by the components (e.g. see the self-contained CKeyStore class
+done by the components (e.g. see the self-contained CBasicKeyStore class
 and its cs_KeyStore lock for example).
 
 Threads
