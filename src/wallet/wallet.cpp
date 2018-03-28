@@ -2379,7 +2379,6 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 		{
 			const uint256& wtxid = it->first;
 			const CWalletTx* pcoin = &(*it).second;
-
 			if (!CheckFinalTx(*pcoin))
 				continue;
 
@@ -2400,19 +2399,24 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 				continue;
 
 			for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-				// SYSCOIN txs are unspendable by wallet unless using coincontrol(and the tx is selected)
-				if (!coinControl || !coinControl->IsSelected(COutPoint((*it).first, i)))
-				{
-					CTxDestination sysdestination;
-					if (pcoin->vout.size() >= i && ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
+				// SYSCOIN
+				if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint((*it).first, i)))
+					continue;
+				if (pcoin->nVersion == SYSCOIN_TX_VERSION) {
+					// SYSCOIN txs are unspendable by wallet unless using coincontrol(and the tx is selected)
+					if (!coinControl || !coinControl->IsSelected(COutPoint((*it).first, i)))
 					{
-						int op;
-						vector<vector<unsigned char> > vvchArgs;
-						if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
-							continue;
-						CSyscoinAddress address = CSyscoinAddress(sysdestination);
-						if (DoesAliasExist(address.ToString()))
-							continue;
+						CTxDestination sysdestination;
+						if (pcoin->vout.size() >= i && ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
+						{
+							int op;
+							vector<vector<unsigned char> > vvchArgs;
+							if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
+								continue;
+							CSyscoinAddress address = CSyscoinAddress(sysdestination);
+							if (DoesAliasExist(address.ToString()))
+								continue;
+						}
 					}
 				}
 
