@@ -29,8 +29,6 @@ EXCLUDE = [
     'test/functional/test_framework/bignum.py',
     # python init:
     '*__init__.py',
-    'src/crypto/aes_helper.c',
-    'src/crypto/sph_types.h',
     'contrib/devtools/fix-copyright-headers.py',
 ]
 EXCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in EXCLUDE]))
