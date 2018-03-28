@@ -425,7 +425,7 @@ class SegWitTest(BitcoinTestFramework):
 
         assert(self.nodes[0].getbestblockhash() == block.hash)
 
-        # Now make sure that malleating the witness nonce doesn't
+        # Now make sure that malleating the witness reserved value doesn't
         # result in a block permanently marked bad.
         block = self.build_next_block()
         add_witness_commitment(block)
@@ -436,7 +436,7 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ ser_uint256(1) ]
         test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=False)
 
-        # Changing the witness nonce doesn't change the block hash
+        # Changing the witness reserved value doesn't change the block hash
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ ser_uint256(0) ]
         test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True)
 
