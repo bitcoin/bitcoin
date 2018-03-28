@@ -30,6 +30,50 @@ static void ResetArgs(const std::string& strArg)
     gArgs.ParseParameters(vecChar.size(), vecChar.data());
 }
 
+BOOST_AUTO_TEST_CASE(configfile)
+{
+  fs::path expectedConfigPath(fs::system_complete("test/data/bitcoin.conf"));
+  ClearDatadirCache();
+  ResetArgs(strprintf("-datadir=%s", (fs::path("test") / "data").string()));
+  BOOST_CHECK(fs::exists(GetConfigFile("bitcoin.conf")));
+  BOOST_CHECK_EQUAL(GetConfigFile("bitcoin.conf"), expectedConfigPath);
+  gArgs.ReadConfigFile("bitcoin.conf");
+
+  // boolarg
+  BOOST_CHECK(gArgs.GetBoolArg("-foo", false));
+  BOOST_CHECK(gArgs.GetBoolArg("-foo", true));
+
+  BOOST_CHECK(!gArgs.GetBoolArg("-bar", false));
+  BOOST_CHECK(!gArgs.GetBoolArg("-bar", true));
+
+  // stringarg
+  BOOST_CHECK_EQUAL(gArgs.GetArg("-baz", ""), "11");
+  BOOST_CHECK_EQUAL(gArgs.GetArg("-baz", "eleven"), "11");
+
+  BOOST_CHECK_EQUAL(gArgs.GetArg("-qux", ""), "eleven");
+  BOOST_CHECK_EQUAL(gArgs.GetArg("-qux", "eleven"), "eleven");
+
+  // intarg
+  BOOST_CHECK_EQUAL(gArgs.GetArg("-baz", 0), 11);
+  BOOST_CHECK_EQUAL(gArgs.GetArg("-qux", 11), 0);
+
+  // boolargno
+  // also, prefers the first over later settings
+  BOOST_CHECK(!gArgs.GetBoolArg("-quux", true));
+  BOOST_CHECK(!gArgs.GetBoolArg("-quux", false));
+
+  // command line settings override bitcoin.conf
+  ResetArgs(strprintf("-nofoo -datadir=%s", (fs::path("test") / "data").string()));
+  gArgs.ReadConfigFile("bitcoin.conf");
+
+  BOOST_CHECK(!gArgs.GetBoolArg("-foo", false));
+  BOOST_CHECK(!gArgs.GetBoolArg("-foo", true));
+
+  // throws for missing datadir
+  ResetArgs(strprintf("-datadir=%s", (fs::path("test") / "nonexistent").string()));
+  BOOST_CHECK_THROW(gArgs.ReadConfigFile("bitcoin.conf"), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(boolarg)
 {
     ResetArgs("-foo");
