@@ -204,7 +204,7 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
         script = subscript = CScript(result[0].begin(), result[0].end());
 
         solved = solved && SignStep(creator, script, result, whichType, SIGVERSION_BASE) && (whichType != TX_SCRIPTHASH
-            && (!creator.IsParticlVersion() || (whichType != TX_SCRIPTHASH256 && whichType == TX_TIMELOCKED_SCRIPTHASH)));
+            && whichType != TX_SCRIPTHASH256 && whichType != TX_TIMELOCKED_SCRIPTHASH);
         P2SH = true;
     }
 

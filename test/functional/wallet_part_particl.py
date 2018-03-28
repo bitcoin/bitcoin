@@ -606,6 +606,11 @@ class WalletParticlTest(ParticlTestFramework):
         ro = nodes[2].listaddressgroupings()
         assert(len(ro) == 5)
 
+        addr = nodes[2].getaccountaddress('')
+        ro = nodes[2].getaddressinfo(addr)
+        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(ro['ismine'] == True)
+        assert(ro['isscript'] == False)
 
 
 

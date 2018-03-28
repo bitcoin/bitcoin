@@ -4485,6 +4485,9 @@ void CWallet::LearnAllRelatedScripts(const CPubKey& key)
 
 CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
 {
+    if (fParticlMode)
+        return key.GetID();
+
     switch (type) {
     case OUTPUT_TYPE_LEGACY: return key.GetID();
     case OUTPUT_TYPE_P2SH_SEGWIT:
