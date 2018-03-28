@@ -340,13 +340,13 @@ std::string HelpMessage(HelpMessageMode mode)
         "potentially skip their script verification (0 to verify all, default: %s, testnet: %s)"),
             defaultChainParams->GetConsensus().defaultAssumeValid.GetHex(),
             testnetChainParams->GetConsensus().defaultAssumeValid.GetHex()));
-    strUsage += HelpMessageOpt("-blocksdir=<dir>", _(
-        "Specify blocks directory (default: <datadir>/blocks)"));
     strUsage += HelpMessageOpt("-blocknotify=<cmd>", _(
         "Execute command when the best block changes (%s in cmd is replaced by block hash)"));
     strUsage += HelpMessageOpt("-blockreconstructionextratxn=<n>", strprintf(_(
         "Extra transactions to keep in memory for compact block reconstructions (default: %u)"),
             DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN));
+    strUsage += HelpMessageOpt("-blocksdir=<dir>", _(
+        "Specify blocks directory (default: <datadir>/blocks)"));
     if (showDebug)
         strUsage += HelpMessageOpt("-blocksonly", strprintf(_(
             "Whether to operate in a blocks only mode (default: %u)"), DEFAULT_BLOCKSONLY));
