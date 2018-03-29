@@ -1203,7 +1203,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 			"<address> Array of addresses used to fund this aliasnew transaction. Leave empty to use wallet.\n"
 			+ HelpRequiringPassphrase());
 	const string &hexstring = params[0].get_str();
-	CTransaction tx;
+	CMutableTransaction tx;
 	if (!DecodeHexTx(tx, hexstring))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
 
@@ -1268,7 +1268,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Insufficient funds for alias creation transaction"));
 
 	// add new outputs to transaction if we are funded
-	for (auto txOut: txOuts) {
+	for (auto &txOut: txOuts) {
 		tx.vout.push_back(txOut);
 	}
 	// pass back new raw transaction
