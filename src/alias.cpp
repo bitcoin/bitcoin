@@ -1238,7 +1238,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	size_t nSize = 500u;
 	CAmount nDesiredAmount = 3 * minRelayTxFee.GetFee(nSize);
 	// add total output amount of transaction to desired amount
-	nDesiredAmount += tx.GetValueOut();
+	CTransaction txValueOut(tx);
+	nDesiredAmount += txValueOut.GetValueOut();
 	CAmount nCurrentAmount = 0;
 	int op;
 	bool bFunded = false;
