@@ -1119,6 +1119,82 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
 }
+UniValue SyscoinListReceived()
+{
+	if (!pwalletMain)
+		return NullUniValue;
+	map<string, int> mapAddress;
+	UniValue ret(UniValue::VARR);
+	BOOST_FOREACH(const PAIRTYPE(CSyscoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
+	{
+		const CSyscoinAddress& address = item.first;
+		const string& strAccount = item.second.name;
+
+		isminefilter filter = ISMINE_SPENDABLE;
+		isminefilter mine = IsMine(*pwalletMain, address.Get());
+		if (!(mine & filter))
+			continue;
+		const string& strAddress = address.ToString();
+
+		vector<unsigned char> vchMyAlias;
+		vector<unsigned char> vchAddress;
+		DecodeBase58(strAddress, vchAddress);
+		paliasdb->ReadAddress(vchAddress, vchMyAlias);
+
+		UniValue paramsBalance(UniValue::VARR);
+		UniValue param(UniValue::VOBJ);
+		UniValue balanceParams(UniValue::VARR);
+		balanceParams.push_back(strAddress);
+		param.push_back(Pair("addresses", balanceParams));
+		paramsBalance.push_back(param);
+		const UniValue &resBalance = getaddressbalance(paramsBalance, false);
+		UniValue obj(UniValue::VOBJ);
+		obj.push_back(Pair("address", strAddress));
+		obj.push_back(Pair("balance", AmountFromValue(find_value(resBalance.get_obj(), "balance"))));
+		obj.push_back(Pair("label", strAccount));
+		obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+		ret.push_back(obj);
+		mapAddress[strAddress] = 1;
+	}
+
+	vector<COutput> vecOutputs;
+	LOCK2(cs_main, pwalletMain->cs_wallet);
+	pwalletMain->AvailableCoins(vecOutputs, false, NULL, true);
+	BOOST_FOREACH(const COutput& out, vecOutputs) {
+		CTxDestination address;
+		if (!ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
+			continue;
+
+		CSyscoinAddress sysAddress(address);
+		const string& strAddress = sysAddress.ToString();
+
+		if (mapAddress.find(strAddress) != mapAddress.end())
+			continue;
+
+
+		vector<unsigned char> vchMyAlias;
+		vector<unsigned char> vchAddress;
+		DecodeBase58(strAddress, vchAddress);
+		paliasdb->ReadAddress(vchAddress, vchMyAlias);
+
+		UniValue paramsBalance(UniValue::VARR);
+		UniValue param(UniValue::VOBJ);
+		UniValue balanceParams(UniValue::VARR);
+		balanceParams.push_back(strAddress);
+		param.push_back(Pair("addresses", balanceParams));
+		paramsBalance.push_back(param);
+		const UniValue &resBalance = getaddressbalance(paramsBalance, false);
+		UniValue obj(UniValue::VOBJ);
+		obj.push_back(Pair("address", strAddress));
+		obj.push_back(Pair("balance", AmountFromValue(find_value(resBalance.get_obj(), "balance"))));
+		obj.push_back(Pair("label", ""));
+		obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+		ret.push_back(obj);
+		mapAddress[strAddress] = 1;
+
+	}
+	return ret;
+}
 UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || 2 < params.size())
 		throw runtime_error(
@@ -1137,7 +1213,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		addresses = params[1].get_array();
 	else {
 		UniValue receivedList = SyscoinListReceived();
-		UniValue recevedListArray = recievedList.get_array();
+		UniValue recevedListArray = receivedList.get_array();
 		for (unsigned int idx = 0; idx < addresses.size(); idx++) {
 			addresses.push_back(find_value(addresses[idx], "address").get_str());
 		}
@@ -1163,7 +1239,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	CAmount nDesiredAmount = 3 * minRelayTxFee.GetFee(nSize);
 	// add total output amount of transaction to desired amount
 	nDesiredAmount += tx.GetValueOut();
-
+	CAmount nCurrentAmount = 0;
 	int op;
 	bool bFunded = false;
 	vector<vector<unsigned char> > vvch;
@@ -1181,7 +1257,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 			continue;
 		if (nValue <= minRelayTxFee.GetFee(3000))
 			continue;
-		txOuts.push_back(CTxOut(nValue, scriptPubKey);
+		txOuts.push_back(CTxOut(nValue, scriptPubKey));
 		nCurrentAmount += nValue;
 		if (nCurrentAmount >= nDesiredAmount) {
 			bFunded = true;
@@ -2242,82 +2318,6 @@ bool DoesAliasExist(const string &strAddress) {
 	vector<unsigned char> vchAddress;
 	DecodeBase58(strAddress, vchAddress);
 	return paliasdb->ReadAddress(vchAddress, vchMyAlias);
-}
-UniValue SyscoinListReceived()
-{
-	if (!pwalletMain)
-		return NullUniValue;
-	map<string, int> mapAddress;
-	UniValue ret(UniValue::VARR);
-	BOOST_FOREACH(const PAIRTYPE(CSyscoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
-	{
-		const CSyscoinAddress& address = item.first;
-		const string& strAccount = item.second.name;
-
-		isminefilter filter = ISMINE_SPENDABLE;
-		isminefilter mine = IsMine(*pwalletMain, address.Get());
-		if (!(mine & filter))
-			continue;
-		const string& strAddress = address.ToString();
-
-		vector<unsigned char> vchMyAlias;
-		vector<unsigned char> vchAddress;
-		DecodeBase58(strAddress, vchAddress);
-		paliasdb->ReadAddress(vchAddress, vchMyAlias);
-
-		UniValue paramsBalance(UniValue::VARR);
-		UniValue param(UniValue::VOBJ);
-		UniValue balanceParams(UniValue::VARR);
-		balanceParams.push_back(strAddress);
-		param.push_back(Pair("addresses", balanceParams));
-		paramsBalance.push_back(param);
-		const UniValue &resBalance = getaddressbalance(paramsBalance, false);
-		UniValue obj(UniValue::VOBJ);
-		obj.push_back(Pair("address", strAddress));
-		obj.push_back(Pair("balance", AmountFromValue(find_value(resBalance.get_obj(), "balance"))));
-		obj.push_back(Pair("label", strAccount));
-		obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
-		ret.push_back(obj);
-		mapAddress[strAddress] = 1;
-	}
-
-	vector<COutput> vecOutputs;
-	LOCK2(cs_main, pwalletMain->cs_wallet);
-	pwalletMain->AvailableCoins(vecOutputs, false, NULL, true);
-	BOOST_FOREACH(const COutput& out, vecOutputs) {
-		CTxDestination address;
-		if (!ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
-			continue;
-
-		CSyscoinAddress sysAddress(address);
-		const string& strAddress = sysAddress.ToString();
-
-		if (mapAddress.find(strAddress) != mapAddress.end())
-			continue;
-		
-		
-		vector<unsigned char> vchMyAlias;
-		vector<unsigned char> vchAddress;
-		DecodeBase58(strAddress, vchAddress);
-		paliasdb->ReadAddress(vchAddress, vchMyAlias);
-
-		UniValue paramsBalance(UniValue::VARR);
-		UniValue param(UniValue::VOBJ);
-		UniValue balanceParams(UniValue::VARR);
-		balanceParams.push_back(strAddress);
-		param.push_back(Pair("addresses", balanceParams));
-		paramsBalance.push_back(param);
-		const UniValue &resBalance = getaddressbalance(paramsBalance, false);
-		UniValue obj(UniValue::VOBJ);
-		obj.push_back(Pair("address", strAddress));
-		obj.push_back(Pair("balance", AmountFromValue(find_value(resBalance.get_obj(), "balance"))));
-		obj.push_back(Pair("label", ""));
-		obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
-		ret.push_back(obj);
-		mapAddress[strAddress] = 1;
-
-	}
-	return ret;
 }
 UniValue syscoinlistreceivedbyaddress(const UniValue& params, bool fHelp)
 {
