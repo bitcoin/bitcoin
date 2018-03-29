@@ -566,13 +566,15 @@ public:
                 { 112250,   uint256S("0x89e4b23471aea7a875df835d6f89613fd87ba649e7a1d8cb892917d0080ef337")},
                 { 128650,   uint256S("0x43597f7dd16719ab2ea63e9c34266120c85cf592a4ec61f82822003da6874408")},
                 { 159010,   uint256S("0xb724d359a10aaa51755a65da830f4aaf4e44aad0246ebf5f73171122bc4b3997")},
+                { 170880,   uint256S("0x03d23bd24386ebeb41c81f84145c46cc3f64e4d114b2b8d2bb14e5855f254f2a")},
+
             }
         };
 
         chainTxData = ChainTxData {
-            // Data as of block 0xb724d359a10aaa51755a65da830f4aaf4e44aad0246ebf5f73171122bc4b3997 (height 159010).
-            1520791264, // * UNIX timestamp of last known number of transactions
-            186661,     // * total number of transactions between genesis and that timestamp
+            // Data as of block 0x03d23bd24386ebeb41c81f84145c46cc3f64e4d114b2b8d2bb14e5855f254f2a (height 170880).
+            1522323984, // * UNIX timestamp of last known number of transactions
+            200035,     // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             0.038       // * estimated number of transactions per second after that timestamp
         };
@@ -707,17 +709,17 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
 
-        /*
         checkpointData = {
             {
-                {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
+                {127620, uint256S("0xe5ab909fc029b253bad300ccf859eb509e03897e7853e8bfdde2710dbf248dd1")},
             }
         };
-        */
-        chainTxData = ChainTxData {
-            0,
-            0,
-            0
+
+        chainTxData = ChainTxData{
+            // Data as of block 0xe5ab909fc029b253bad300ccf859eb509e03897e7853e8bfdde2710dbf248dd1 (height 127620)
+            1522324288,
+            135043,
+            0.009
         };
 
         /* enable fallback fee on testnet */
