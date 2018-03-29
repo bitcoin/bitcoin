@@ -1,6 +1,43 @@
 Developer Notes
 ===============
 
+<!-- markdown-toc start -->
+**Table of Contents**
+
+- [Developer Notes](#developer-notes)
+    - [Coding Style](#coding-style)
+    - [Doxygen comments](#doxygen-comments)
+    - [Development tips and tricks](#development-tips-and-tricks)
+        - [Compiling for debugging](#compiling-for-debugging)
+        - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
+        - [debug.log](#debuglog)
+        - [Testnet and Regtest modes](#testnet-and-regtest-modes)
+        - [DEBUG_LOCKORDER](#debug_lockorder)
+        - [Valgrind suppressions file](#valgrind-suppressions-file)
+        - [Compiling for test coverage](#compiling-for-test-coverage)
+    - [Locking/mutex usage notes](#lockingmutex-usage-notes)
+    - [Threads](#threads)
+    - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
+- [Development guidelines](#development-guidelines)
+    - [General Bitcoin Core](#general-bitcoin-core)
+    - [Wallet](#wallet)
+    - [General C++](#general-c)
+    - [C++ data structures](#c-data-structures)
+    - [Strings and formatting](#strings-and-formatting)
+    - [Variable names](#variable-names)
+    - [Threads and synchronization](#threads-and-synchronization)
+    - [Source code organization](#source-code-organization)
+    - [GUI](#gui)
+    - [Subtrees](#subtrees)
+    - [Git and GitHub tips](#git-and-github-tips)
+    - [Scripted diffs](#scripted-diffs)
+    - [RPC interface guidelines](#rpc-interface-guidelines)
+
+<!-- markdown-toc end -->
+
+Coding Style
+---------------
+
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
 a single style, which is specified below. When writing patches, favor the new
@@ -138,43 +175,44 @@ Documentation can be generated with `make docs` and cleaned up with `make clean-
 Development tips and tricks
 ---------------------------
 
-**compiling for debugging**
+### Compiling for debugging
 
-Run configure with the --enable-debug option, then make. Or run configure with
-CXXFLAGS="-g -ggdb -O0" or whatever debug flags you need.
+Run configure with `--enable-debug` to add additional compiler flags that
+produce better debugging builds.
 
-**compiling for gprof profiling**
+### Compiling for gprof profiling
 
-Run configure with the --enable-gprof option, then make.
+Run configure with the `--enable-gprof` option, then make.
 
-**debug.log**
+### debug.log
 
 If the code is behaving strangely, take a look in the debug.log file in the data directory;
 error and debugging messages are written there.
 
-The -debug=... command-line option controls debugging; running with just -debug or -debug=1 will turn
+The `-debug=...` command-line option controls debugging; running with just `-debug` or `-debug=1` will turn
 on all categories (and give you a very large debug.log file).
 
-The Qt code routes qDebug() output to debug.log under category "qt": run with -debug=qt
+The Qt code routes `qDebug()` output to debug.log under category "qt": run with `-debug=qt`
 to see it.
 
-**testnet and regtest modes**
+### Testnet and Regtest modes
 
-Run with the -testnet option to run with "play bitcoins" on the test network, if you
+Run with the `-testnet` option to run with "play bitcoins" on the test network, if you
 are testing multi-machine code that needs to operate across the internet.
 
-If you are testing something that can run on one machine, run with the -regtest option.
-In regression test mode, blocks can be created on-demand; see test/functional/ for tests
-that run in -regtest mode.
+If you are testing something that can run on one machine, run with the `-regtest` option.
+In regression test mode, blocks can be created on-demand; see [test/functional/](/test/functional) for tests
+that run in `-regtest` mode.
 
-**DEBUG_LOCKORDER**
+### DEBUG_LOCKORDER
 
-Bitcoin Core is a multithreaded application, and deadlocks or other multithreading bugs
-can be very difficult to track down. Compiling with -DDEBUG_LOCKORDER (configure
-CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of which locks
-are held, and adds warnings to the debug.log file if inconsistencies are detected.
+Bitcoin Core is a multi-threaded application, and deadlocks or other
+multi-threading bugs can be very difficult to track down. The `--enable-debug`
+configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
+run-time checks to keep track of which locks are held, and adds warnings to the
+debug.log file if inconsistencies are detected.
 
-**Valgrind suppressions file**
+### Valgrind suppressions file
 
 Valgrind is a programming tool for memory debugging, memory leak detection, and
 profiling. The repo contains a Valgrind suppressions file
@@ -189,7 +227,7 @@ $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
 $ valgrind -v --leak-check=full src/bitcoind -printtoconsole
 ```
 
-**compiling for test coverage**
+### Compiling for test coverage
 
 LCOV can be used to generate a test coverage report based upon `make check`
 execution. LCOV must be installed on your system (e.g. the `lcov` package
@@ -209,18 +247,18 @@ Locking/mutex usage notes
 -------------------------
 
 The code is multi-threaded, and uses mutexes and the
-LOCK/TRY_LOCK macros to protect data structures.
+`LOCK` and `TRY_LOCK` macros to protect data structures.
 
-Deadlocks due to inconsistent lock ordering (thread 1 locks cs_main
-and then cs_wallet, while thread 2 locks them in the opposite order:
-result, deadlock as each waits for the other to release its lock) are
-a problem. Compile with -DDEBUG_LOCKORDER to get lock order
-inconsistencies reported in the debug.log file.
+Deadlocks due to inconsistent lock ordering (thread 1 locks `cs_main` and then
+`cs_wallet`, while thread 2 locks them in the opposite order: result, deadlock
+as each waits for the other to release its lock) are a problem. Compile with
+`-DDEBUG_LOCKORDER` (or use `--enable-debug`) to get lock order inconsistencies
+reported in the debug.log file.
 
 Re-architecting the core code so there are better-defined interfaces
 between the various components is a goal, with any necessary locking
-done by the components (e.g. see the self-contained CBasicKeyStore class
-and its cs_KeyStore lock for example).
+done by the components (e.g. see the self-contained `CBasicKeyStore` class
+and its `cs_KeyStore` lock for example).
 
 Threads
 -------
