@@ -1203,10 +1203,10 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 			"<address> Array of addresses used to fund this aliasnew transaction. Leave empty to use wallet.\n"
 			+ HelpRequiringPassphrase());
 	const string &hexstring = params[0].get_str();
-	CMutableTransaction tx;
-	if (!DecodeHexTx(tx, hexstring))
+	CTransaction txIn;
+	if (!DecodeHexTx(txIn, hexstring))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
-
+	CMutableTransaction tx(txIn);
 	// if addresses are passed in use those, otherwise use whatever is in the wallet
 	UniValue addresses(UniValue::VARR);
 	if(params.size() > 1)
@@ -1238,11 +1238,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	size_t nSize = 500u;
 	CAmount nDesiredAmount = 3 * minRelayTxFee.GetFee(nSize);
 	// add total output amount of transaction to desired amount
-	CAmount nValueOut = 0;
-	for (std::vector<CTxOut>::const_iterator it(tx.vout.begin()); it != tx.vout.end(); ++it)
-	{
-		nDesiredAmount += it->nValue;
-	}
+	nDesiredAmount += txIn.GetValueOut();
 
 	CAmount nCurrentAmount = 0;
 	int op;
