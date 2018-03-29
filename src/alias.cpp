@@ -1215,17 +1215,13 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		UniValue receivedList = SyscoinListReceived();
 		UniValue recevedListArray = receivedList.get_array();
 		for (unsigned int idx = 0; idx < recevedListArray.size(); idx++) {
-			addresses.push_back(find_value(address, "address").get_str());
+			addresses.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
 		}
 	}
 
 	UniValue paramsUTXO(UniValue::VARR);
 	UniValue param(UniValue::VOBJ);
-	UniValue utxoParams(UniValue::VARR);
-	for (unsigned int idx = 0; idx < addresses.size(); idx++) {
-		utxoParams.push_back(addresses[idx].get_str());
-	}
-	param.push_back(Pair("addresses", utxoParams));
+	param.push_back(Pair("addresses", addresses));
 	paramsUTXO.push_back(param);
 	const UniValue &resUTXOs = getaddressutxos(paramsUTXO, false);
 	UniValue utxoArray(UniValue::VARR);
