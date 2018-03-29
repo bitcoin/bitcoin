@@ -290,6 +290,31 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest4", false), true);
 }
 
+BOOST_AUTO_TEST_CASE(util_GetChainName)
+{
+    TestArgsManager test_args;
+
+    const char* argv_testnet[] = {"cmd", "-testnet"};
+    const char* argv_regtest[] = {"cmd", "-regtest"};
+    const char* argv_test_no_reg[] = {"cmd", "-testnet", "-noregtest"};
+    const char* argv_both[] = {"cmd", "-testnet", "-regtest"};
+
+    test_args.ParseParameters(0, (char**)argv_testnet);
+    BOOST_CHECK_EQUAL(test_args.GetChainName(), "main");
+
+    test_args.ParseParameters(2, (char**)argv_testnet);
+    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+
+    test_args.ParseParameters(2, (char**)argv_regtest);
+    BOOST_CHECK_EQUAL(test_args.GetChainName(), "regtest");
+
+    test_args.ParseParameters(3, (char**)argv_test_no_reg);
+    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+
+    test_args.ParseParameters(3, (char**)argv_both);
+    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
 {
     BOOST_CHECK_EQUAL(FormatMoney(0), "0.00");
