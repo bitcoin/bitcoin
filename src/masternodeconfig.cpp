@@ -19,7 +19,7 @@ void CMasternodeConfig::add(const std::string& alias, const std::string& ip, con
 bool CMasternodeConfig::read(std::string& strErrRet) {
     int linenumber = 1;
     const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
-    fs::path pathMasternodeConfigFile = GetMasternodeConfigFile(MASTERNODE_CONF_FILENAME);
+    fs::path pathMasternodeConfigFile = GetConfigFile(gArgs.GetArg("-mnconf", MASTERNODE_CONF_FILENAME));
     fs::ifstream streamConfig(pathMasternodeConfigFile);
 
     if (!streamConfig.good()) {

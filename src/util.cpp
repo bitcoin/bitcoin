@@ -770,14 +770,6 @@ fs::path GetConfigFile(const std::string& confPath)
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
 
-fs::path GetMasternodeConfigFile(const std::string& confPath)
-{
-    fs::path pathConfigFile(gArgs.GetArg("-mnconf", "masternode.conf"));
-    if (!pathConfigFile.is_complete())
-        pathConfigFile = GetDataDir(false) / pathConfigFile;
-    return pathConfigFile;
-}
-
 void ArgsManager::ReadConfigFile(const std::string& confPath)
 {
     fs::ifstream streamConfig(GetConfigFile(confPath));
@@ -788,13 +780,19 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
             fclose(configFile);
         return; // Nothing to read, so just return
     }
+}
+
+void ArgsManager::ReadConfigStream(std::istream& stream)
+{
+    if (!stream.good())
+        return; // No bitcoin.conf file is OK
 
     {
         LOCK(cs_args);
         std::set<std::string> setOptions;
         setOptions.insert("*");
 
-        for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
+        for (boost::program_options::detail::config_file_iterator it(stream, setOptions), end; it != end; ++it)
         {
             // Don't overwrite existing settings so command line settings override chaincoin.conf
             std::string strKey = std::string("-") + it->string_key;
@@ -805,6 +803,13 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
             mapMultiArgs[strKey].push_back(strValue);
         }
     }
+}
+
+void ArgsManager::ReadConfigFile(const std::string& confPath)
+{
+    fs::ifstream stream(GetConfigFile(confPath));
+    ReadConfigStream(stream);
+
     // If datadir is changed in .conf file:
     ClearDatadirCache();
     if (!fs::is_directory(GetDataDir(false))) {

@@ -1769,7 +1769,7 @@ bool AppInitMain()
         }
     }
 
-    LogPrintf("Using masternode config file %s\n", GetMasternodeConfigFile(gArgs.GetArg("-mnconf", MASTERNODE_CONF_FILENAME)).string());
+    LogPrintf("Using masternode config file %s\n", GetConfigFile(gArgs.GetArg("-mnconf", MASTERNODE_CONF_FILENAME)).string());
 
     LogPrintf("fLiteMode %d\n", fLiteMode);
 

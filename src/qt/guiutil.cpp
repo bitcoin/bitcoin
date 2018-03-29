@@ -421,7 +421,7 @@ bool openConfigfile()
 
 bool openMNConfigfile()
 {
-    fs::path pathMNConfig = GetMasternodeConfigFile(gArgs.GetArg("-mnconf", MASTERNODE_CONF_FILENAME));
+    fs::path pathMNConfig = GetConfigFile(gArgs.GetArg("-mnconf", MASTERNODE_CONF_FILENAME));
 
     /* Create the file */
     fs::ofstream configMNFile(pathMNConfig, std::ios_base::app);
