@@ -25,19 +25,4 @@ void RegisterWalletRPC(CRPCTable &tableRPC);
 //  being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
 bool VerifyWallets();
 
-//! Load wallet databases.
-bool OpenWallets();
-
-//! Complete startup of wallets.
-void StartWallets(CScheduler& scheduler);
-
-//! Flush all wallets in preparation for shutdown.
-void FlushWallets();
-
-//! Stop all wallets. Wallets will be flushed first.
-void StopWallets();
-
-//! Close all wallets.
-void CloseWallets();
-
 #endif // BITCOIN_WALLET_INIT_H

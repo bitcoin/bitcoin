@@ -15,6 +15,7 @@
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/test/wallet_test_fixture.h>
+#include <wallet/walletmanager.h>
 
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
@@ -73,7 +74,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     // after.
     {
         CWallet wallet("dummy", CWalletDBWrapper::CreateDummy());
-        vpwallets.insert(vpwallets.begin(), &wallet);
+        g_wallet_manager->AddWallet(&wallet);
         UniValue keys;
         keys.setArray();
         UniValue key;
@@ -104,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
                       "downloading and rescanning the relevant blocks (see -reindex and -rescan "
                       "options).\"}},{\"success\":true}]",
                               0, oldTip->GetBlockTimeMax(), TIMESTAMP_WINDOW));
-        vpwallets.erase(vpwallets.begin());
+        g_wallet_manager->DeallocWallet(0);
     }
 }
 
@@ -139,7 +140,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         JSONRPCRequest request;
         request.params.setArray();
         request.params.push_back((pathTemp / "wallet.backup").string());
-        vpwallets.insert(vpwallets.begin(), &wallet);
+        g_wallet_manager->AddWallet(&wallet);
         ::dumpwallet(request);
     }
 
@@ -151,7 +152,8 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         JSONRPCRequest request;
         request.params.setArray();
         request.params.push_back((pathTemp / "wallet.backup").string());
-        vpwallets[0] = &wallet;
+        g_wallet_manager->DeallocWallet(0);
+        g_wallet_manager->AddWallet(&wallet);
         ::importwallet(request);
 
         LOCK(wallet.cs_wallet);
@@ -165,7 +167,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     }
 
     SetMockTime(0);
-    vpwallets.erase(vpwallets.begin());
+    g_wallet_manager->DeallocWallet(0);
 }
 
 // Check that GetImmatureCredit() returns a newly calculated value instead of

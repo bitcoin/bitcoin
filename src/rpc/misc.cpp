@@ -21,8 +21,8 @@
 #include <utilstrencodings.h>
 #ifdef ENABLE_WALLET
 #include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
 #include <wallet/walletdb.h>
+#include <wallet/walletmanager.h>
 #endif
 #include <warnings.h>
 
@@ -69,7 +69,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
     {
 
 #ifdef ENABLE_WALLET
-        if (!::vpwallets.empty() && IsDeprecatedRPCEnabled("validateaddress")) {
+        if (g_wallet_manager->HasWallets() && IsDeprecatedRPCEnabled("validateaddress")) {
             ret.pushKVs(getaddressinfo(request));
         }
 #endif

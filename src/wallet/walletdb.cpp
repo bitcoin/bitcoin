@@ -14,7 +14,7 @@
 #include <sync.h>
 #include <util.h>
 #include <utiltime.h>
-#include <wallet/wallet.h>
+#include <wallet/walletmanager.h>
 
 #include <atomic>
 
@@ -748,7 +748,7 @@ void MaybeCompactWalletDB()
         return;
     }
 
-    for (CWalletRef pwallet : vpwallets) {
+    g_wallet_manager->ForEachWallet([](CWallet* pwallet) {
         CWalletDBWrapper& dbh = pwallet->GetDBHandle();
 
         unsigned int nUpdateCounter = dbh.nUpdateCounter;
@@ -763,7 +763,7 @@ void MaybeCompactWalletDB()
                 dbh.nLastFlushed = nUpdateCounter;
             }
         }
-    }
+    });
 
     fOneThread = false;
 }

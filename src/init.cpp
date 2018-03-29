@@ -45,6 +45,7 @@
 #include <validationinterface.h>
 #ifdef ENABLE_WALLET
 #include <wallet/init.h>
+#include <wallet/walletmanager.h>
 #endif
 #include <warnings.h>
 #include <stdint.h>
@@ -190,7 +191,7 @@ void Shutdown()
     StopRPC();
     StopHTTPServer();
 #ifdef ENABLE_WALLET
-    FlushWallets();
+    g_wallet_manager->FlushWallets();
 #endif
     StopMapPort();
 
@@ -250,7 +251,7 @@ void Shutdown()
         pblocktree.reset();
     }
 #ifdef ENABLE_WALLET
-    StopWallets();
+    g_wallet_manager->StopWallets();
 #endif
 
 #if ENABLE_ZMQ
@@ -272,7 +273,7 @@ void Shutdown()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     GetMainSignals().UnregisterWithMempoolSignals(mempool);
 #ifdef ENABLE_WALLET
-    CloseWallets();
+    g_wallet_manager->CloseWallets();
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
@@ -1597,7 +1598,7 @@ bool AppInitMain()
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
-    if (!OpenWallets())
+    if (!g_wallet_manager->OpenWallets())
         return false;
 #else
     LogPrintf("No wallet support compiled in!\n");
@@ -1748,7 +1749,7 @@ bool AppInitMain()
     uiInterface.InitMessage(_("Done loading"));
 
 #ifdef ENABLE_WALLET
-    StartWallets(scheduler);
+    g_wallet_manager->StartWallets(scheduler);
 #endif
 
     return true;

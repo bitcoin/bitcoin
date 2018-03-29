@@ -27,8 +27,8 @@
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
 #include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
 #include <wallet/walletdb.h>
+#include <wallet/walletmanager.h>
 #include <wallet/walletutil.h>
 
 #include <init.h>  // For StartShutdown
@@ -43,15 +43,13 @@ CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
 {
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
         // wallet endpoint was used
-        std::string requestedWallet = urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size()));
-        for (CWalletRef pwallet : ::vpwallets) {
-            if (pwallet->GetName() == requestedWallet) {
-                return pwallet;
-            }
+        CWallet *wallet = g_wallet_manager->FindWalletByName(urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size())));
+        if (wallet) {
+            return wallet;
         }
         throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
     }
-    return ::vpwallets.size() == 1 || (request.fHelp && ::vpwallets.size() > 0) ? ::vpwallets[0] : nullptr;
+    return g_wallet_manager->CountWallets() == 1 || (request.fHelp && g_wallet_manager->CountWallets() > 0) ? g_wallet_manager->GetWalletAtPos(0) : nullptr;
 }
 
 std::string HelpRequiringPassphrase(CWallet * const pwallet)
@@ -65,7 +63,7 @@ bool EnsureWalletIsAvailable(CWallet * const pwallet, bool avoidException)
 {
     if (pwallet) return true;
     if (avoidException) return false;
-    if (::vpwallets.empty()) {
+    if (!g_wallet_manager->HasWallets()) {
         // Note: It isn't currently possible to trigger this error because
         // wallet RPC methods aren't registered unless a wallet is loaded. But
         // this error is being kept as a precaution, because it's possible in
@@ -2845,18 +2843,19 @@ UniValue listwallets(const JSONRPCRequest& request)
 
     UniValue obj(UniValue::VARR);
 
-    for (CWalletRef pwallet : vpwallets) {
-
+    bool not_available_found = false;
+    g_wallet_manager->ForEachWallet([&not_available_found, &request,&obj](CWallet *pwallet) {
         if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-            return NullUniValue;
+            not_available_found = true;
+            return;
         }
 
         LOCK(pwallet->cs_wallet);
 
         obj.push_back(pwallet->GetName());
-    }
+    });
 
-    return obj;
+    return not_available_found ? NullUniValue : obj;
 }
 
 UniValue resendwallettransactions(const JSONRPCRequest& request)
