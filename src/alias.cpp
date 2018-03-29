@@ -1243,7 +1243,6 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	int op;
 	bool bFunded = false;
 	vector<vector<unsigned char> > vvch;
-	vector<CTxOut> txOuts;
 	for (unsigned int i = 0; i<utxoArray.size(); i++)
 	{
 		const UniValue& utxoObj = utxoArray[i].get_obj();
@@ -1257,7 +1256,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 			continue;
 		if (nValue <= minRelayTxFee.GetFee(3000))
 			continue;
-		txOuts.push_back(CTxOut(nValue, scriptPubKey));
+		tx.vin.push_back(CTxIn(txid, nOut, scriptPubKey));
 		nCurrentAmount += nValue;
 		if (nCurrentAmount >= nDesiredAmount) {
 			bFunded = true;
@@ -1267,10 +1266,6 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	if(!bFunded)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Insufficient funds for alias creation transaction"));
 
-	// add new outputs to transaction if we are funded
-	for (auto &txOut: txOuts) {
-		tx.vin.push_back(txOut);
-	}
 	// pass back new raw transaction
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(tx));
