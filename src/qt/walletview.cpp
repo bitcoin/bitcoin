@@ -82,7 +82,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     addWidget(sendCoinsPage);
 
     QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
+    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
         masternodeListPage = new MasternodeList(platformStyle);
         addWidget(masternodeListPage);
     }
@@ -139,7 +139,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
     overviewPage->setClientModel(_clientModel);
     sendCoinsPage->setClientModel(_clientModel);
     QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
+    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
         masternodeListPage->setClientModel(_clientModel);
     }
 }
@@ -152,7 +152,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     transactionView->setModel(_walletModel);
     overviewPage->setWalletModel(_walletModel);
     QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
+    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
         masternodeListPage->setWalletModel(_walletModel);
     }
     receiveCoinsPage->setModel(_walletModel);
@@ -217,7 +217,7 @@ void WalletView::gotoHistoryPage()
 void WalletView::gotoMasternodePage()
 {
     QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
+    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
         setCurrentWidget(masternodeListPage);
     }
 }

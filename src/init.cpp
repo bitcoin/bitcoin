@@ -225,14 +225,16 @@ void Shutdown()
     g_connman.reset();
 
     // STORE DATA CACHES INTO SERIALIZED DAT FILES
-    CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
-    flatdb1.Dump(mnodeman);
-    CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
-    flatdb2.Dump(mnpayments);
-    CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-    flatdb3.Dump(governance);
-    CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
-    flatdb4.Dump(netfulfilledman);
+    if (!fLiteMode) {
+        CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
+        flatdb1.Dump(mnodeman);
+        CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
+        flatdb2.Dump(mnpayments);
+        CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
+        flatdb3.Dump(governance);
+        CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
+        flatdb4.Dump(netfulfilledman);
+    }
 
     StopTorControl();
 
@@ -1761,11 +1763,22 @@ bool AppInitMain()
     }
 
     // ********************************************************* Step 11a: setup PrivateSend
+
+    //lite mode disables all Dash-specific functionality
+    fLiteMode = GetBoolArg("-litemode", false);
     fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
 
-    if((fMasternodeMode) && fTxIndex == false) {
+    if(fMasternodeMode && fTxIndex == false) {
         return InitError("Enabling Masternode support requires turning on transaction indexing."
                   "Please add txindex=1 to your configuration and start with -reindex");
+    }
+
+    if(fLiteMode) {
+        InitWarning(_("Starting in lite mode, all Chaincoin-specific functionality is disabled."));
+    }
+
+    if(fLiteMode && fMasternodeMode) {
+        return InitError(_("Masternodes are not supported in lite mode."));
     }
 
     if(fMasternodeMode) {
@@ -1828,12 +1841,6 @@ bool AppInitMain()
     nInstantSendDepth = gArgs.GetArg("-instantsenddepth", DEFAULT_INSTANTSEND_DEPTH);
     nInstantSendDepth = std::min(std::max(nInstantSendDepth, 0), 60);
 
-    //lite mode disables all Masternode and Darksend related functionality
-    fLiteMode = gArgs.GetBoolArg("-litemode", false);
-    if(fMasternodeMode && fLiteMode){
-        return InitError("You can not start a masternode in litemode");
-    }
-
     LogPrintf("fLiteMode %d\n", fLiteMode);
     LogPrintf("nInstantSendDepth %d\n", nInstantSendDepth);
     LogPrintf("PrivateSend rounds %d\n", privateSendClient.nPrivateSendRounds);
@@ -1845,41 +1852,44 @@ bool AppInitMain()
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
 
-    fs::path pathDB = GetDataDir();
-    std::string strDBName;
+    if (!fLiteMode) {
+        fs::path pathDB = GetDataDir();
+        std::string strDBName;
 
-    strDBName = "mncache.dat";
-    uiInterface.InitMessage(_("Loading masternode cache..."));
-    CFlatDB<CMasternodeMan> flatdb1(strDBName, "magicMasternodeCache");
-    if(!flatdb1.Load(mnodeman)) {
-        return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
-    }
-
-    if(mnodeman.size()) {
-        strDBName = "mnpayments.dat";
-        uiInterface.InitMessage(_("Loading masternode payment cache..."));
-        CFlatDB<CMasternodePayments> flatdb2(strDBName, "magicMasternodePaymentsCache");
-        if(!flatdb2.Load(mnpayments)) {
-            return InitError(_("Failed to load masternode payments cache from") + "\n" + (pathDB / strDBName).string());
+        strDBName = "mncache.dat";
+        uiInterface.InitMessage(_("Loading masternode cache..."));
+        CFlatDB<CMasternodeMan> flatdb1(strDBName, "magicMasternodeCache");
+        if(!flatdb1.Load(mnodeman)) {
+            return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
         }
 
-        strDBName = "governance.dat";
-        uiInterface.InitMessage(_("Loading governance cache..."));
-        CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
-        if(!flatdb3.Load(governance)) {
-            return InitError(_("Failed to load governance cache from") + "\n" + (pathDB / strDBName).string());
+        if(mnodeman.size()) {
+            strDBName = "mnpayments.dat";
+            uiInterface.InitMessage(_("Loading masternode payment cache..."));
+            CFlatDB<CMasternodePayments> flatdb2(strDBName, "magicMasternodePaymentsCache");
+            if(!flatdb2.Load(mnpayments)) {
+                return InitError(_("Failed to load masternode payments cache from") + "\n" + (pathDB / strDBName).string());
+            }
+
+            strDBName = "governance.dat";
+            uiInterface.InitMessage(_("Loading governance cache..."));
+            CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
+            if(!flatdb3.Load(governance)) {
+                return InitError(_("Failed to load governance cache from") + "\n" + (pathDB / strDBName).string());
+            }
+            governance.InitOnLoad();
+        } else {
+            uiInterface.InitMessage(_("Masternode cache is empty, skipping payments and governance cache..."));
         }
-        governance.InitOnLoad();
-    } else {
-        uiInterface.InitMessage(_("Masternode cache is empty, skipping payments and governance cache..."));
+
+        strDBName = "netfulfilled.dat";
+        uiInterface.InitMessage(_("Loading fulfilled requests cache..."));
+        CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
+        if(!flatdb4.Load(netfulfilledman)) {
+            return InitError(_("Failed to load fulfilled requests cache from") + "\n" + (pathDB / strDBName).string());
+        }
     }
 
-    strDBName = "netfulfilled.dat";
-    uiInterface.InitMessage(_("Loading fulfilled requests cache..."));
-    CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
-    if(!flatdb4.Load(netfulfilledman)) {
-        return InitError(_("Failed to load fulfilled requests cache from") + "\n" + (pathDB / strDBName).string());
-    }
 
     // ********************************************************* Step 11c: update block tip in Dash modules
 

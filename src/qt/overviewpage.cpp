@@ -285,18 +285,22 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        updateWatchOnlyLabels(model->haveWatchOnly());
+        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
+
+        // explicitly update PS frame and transaction list to reflect actual settings
+        updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
+
+        // that's it for litemode
+        if(fLiteMode) return;
         connect(model->getOptionsModel(), SIGNAL(privateSendRoundsChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(privateSentAmountChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(advancedPSUIChanged(bool)), this, SLOT(updateAdvancedPSUI(bool)));
-        // explicitly update PS frame and transaction list to reflect actual settings
-        updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
 
         connect(ui->privateSendAuto, SIGNAL(clicked()), this, SLOT(privateSendAuto()));
         connect(ui->privateSendReset, SIGNAL(clicked()), this, SLOT(privateSendReset()));
         connect(ui->privateSendInfo, SIGNAL(clicked()), this, SLOT(privateSendInfo()));
         connect(ui->togglePrivateSend, SIGNAL(clicked()), this, SLOT(togglePrivateSend()));
-        updateWatchOnlyLabels(model->haveWatchOnly());
-        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
     }
 }
 
