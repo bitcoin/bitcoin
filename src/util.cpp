@@ -737,31 +737,31 @@ fs::path GetConfigFile(const std::string& confPath)
 
 void ArgsManager::ReadConfigStream(std::istream& stream)
 {
-    if (!stream.good())
-        return; // No bitcoin.conf file is OK
+    LOCK(cs_args);
 
+    std::set<std::string> setOptions;
+    setOptions.insert("*");
+
+    for (boost::program_options::detail::config_file_iterator it(stream, setOptions), end; it != end; ++it)
     {
-        LOCK(cs_args);
-        std::set<std::string> setOptions;
-        setOptions.insert("*");
-
-        for (boost::program_options::detail::config_file_iterator it(stream, setOptions), end; it != end; ++it)
-        {
-            // Don't overwrite existing settings so command line settings override bitcoin.conf
-            std::string strKey = std::string("-") + it->string_key;
-            std::string strValue = it->value[0];
-            InterpretNegatedOption(strKey, strValue);
-            if (mapArgs.count(strKey) == 0)
-                mapArgs[strKey] = strValue;
-            mapMultiArgs[strKey].push_back(strValue);
-        }
+        // Don't overwrite existing settings so command line settings override bitcoin.conf
+        std::string strKey = std::string("-") + it->string_key;
+        std::string strValue = it->value[0];
+        InterpretNegatedOption(strKey, strValue);
+        if (mapArgs.count(strKey) == 0)
+            mapArgs[strKey] = strValue;
+        mapMultiArgs[strKey].push_back(strValue);
     }
 }
 
 void ArgsManager::ReadConfigFile(const std::string& confPath)
 {
     fs::ifstream stream(GetConfigFile(confPath));
-    ReadConfigStream(stream);
+
+    // ok to not have a config file
+    if (stream.good()) {
+        ReadConfigStream(stream);
+    }
 
     // If datadir is changed in .conf file:
     ClearDatadirCache();
