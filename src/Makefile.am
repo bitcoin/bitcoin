@@ -140,6 +140,7 @@ BITCOIN_CORE_H = \
   policy/policy.h \
   policy/rbf.h \
   pow.h \
+  core/producerconsumerqueue.h \
   protocol.h \
   random.h \
   reverse_iterator.h \
