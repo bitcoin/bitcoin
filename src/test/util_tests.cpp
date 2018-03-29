@@ -406,6 +406,9 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     const char* argv_test_no_reg[] = {"cmd", "-testnet", "-noregtest"};
     const char* argv_both[] = {"cmd", "-testnet", "-regtest"};
 
+    // equivalent to "-testnet"
+    const char* testnetconf = "testnet=1\nregtest=0\n";
+
     test_args.ParseParameters(0, (char**)argv_testnet);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "main");
 
@@ -419,6 +422,26 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
     test_args.ParseParameters(3, (char**)argv_both);
+    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+
+    test_args.ParseParameters(0, (char**)argv_testnet);
+    test_args.ReadConfigString(testnetconf);
+    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+
+    test_args.ParseParameters(2, (char**)argv_testnet);
+    test_args.ReadConfigString(testnetconf);
+    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+
+    test_args.ParseParameters(2, (char**)argv_regtest);
+    test_args.ReadConfigString(testnetconf);
+    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+
+    test_args.ParseParameters(3, (char**)argv_test_no_reg);
+    test_args.ReadConfigString(testnetconf);
+    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+
+    test_args.ParseParameters(3, (char**)argv_both);
+    test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 }
 
