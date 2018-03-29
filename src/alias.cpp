@@ -1273,8 +1273,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		CReserveKey reservekey(pwalletMain);
 		CPubKey vchPubKey;
 		reservekey.GetReservedKey(vchPubKey, true);
-		scriptChange = GetScriptForDestination(vchPubKey.GetID());
-		tx.vout.push_back(CTxOut(nChange, scriptChange));
+		tx.vout.push_back(CTxOut(nChange, GetScriptForDestination(vchPubKey.GetID())));
 	}
 	// pass back new raw transaction
 	UniValue res(UniValue::VARR);
