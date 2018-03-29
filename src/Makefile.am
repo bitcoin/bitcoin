@@ -189,7 +189,6 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/feebumper.h \
   wallet/fees.h \
-  wallet/init.h \
   wallet/keepass.h \
   wallet/privatesend-client.h \
   wallet/rpcwallet.h \
