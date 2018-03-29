@@ -1262,7 +1262,20 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	}
 	if(!bFunded)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Insufficient funds for alias creation transaction"));
-
+	CAmount nChange = nCurrentAmount - nDesiredAmount;
+	// if addresses were passed in, send change back to the last address as policy
+	if (params.size() > 1) {
+		tx.vout.push_back(CTxOut(nChange, tx.vin.back().scriptSig));
+	}
+	// else create new change address in this wallet
+	else {
+		EnsureWalletIsUnlocked();
+		CReserveKey reservekey(pwalletMain);
+		CPubKey vchPubKey;
+		reservekey.GetReservedKey(vchPubKey, true);
+		scriptChange = GetScriptForDestination(vchPubKey.GetID());
+		tx.vout.push_back(CTxOut(nChange, scriptChange));
+	}
 	// pass back new raw transaction
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(tx));
