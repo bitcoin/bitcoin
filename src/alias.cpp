@@ -1214,7 +1214,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	else {
 		UniValue receivedList = SyscoinListReceived();
 		UniValue recevedListArray = receivedList.get_array();
-		for (auto& address: recevedListArray) {
+		for (unsigned int idx = 0; idx < recevedListArray.size(); idx++) {
 			addresses.push_back(find_value(address, "address").get_str());
 		}
 	}
@@ -1222,8 +1222,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	UniValue paramsUTXO(UniValue::VARR);
 	UniValue param(UniValue::VOBJ);
 	UniValue utxoParams(UniValue::VARR);
-	for (auto& address : addresses) {
-		utxoParams.push_back(address.get_str());
+	for (unsigned int idx = 0; idx < addresses.size(); idx++) {
+		utxoParams.push_back(addresses[idx].get_str());
 	}
 	param.push_back(Pair("addresses", utxoParams));
 	paramsUTXO.push_back(param);
