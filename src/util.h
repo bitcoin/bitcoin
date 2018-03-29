@@ -228,6 +228,8 @@ protected:
     std::map<std::string, std::vector<std::string>> mapMultiArgs;
     std::unordered_set<std::string> m_negated_args;
 
+    void ReadConfigStream(std::istream& stream);
+
 public:
     void ParseParameters(int argc, const char*const argv[]);
     void ReadConfigFile(const std::string& confPath);
