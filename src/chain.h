@@ -438,17 +438,34 @@ private:
 
 public:
     /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
-    CBlockIndex *Genesis() const {
+    CBlockIndex *Genesis() {
+        return vChain.size() > 0 ? vChain[0] : nullptr;
+    }
+
+    /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
+    const CBlockIndex *Genesis() const {
         return vChain.size() > 0 ? vChain[0] : nullptr;
     }
 
     /** Returns the index entry for the tip of this chain, or nullptr if none. */
-    CBlockIndex *Tip() const {
+    const CBlockIndex *Tip() const {
+        return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
+    }
+
+    /** Returns the index entry for the tip of this chain, or nullptr if none. */
+    CBlockIndex *Tip() {
         return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
     }
 
     /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
-    CBlockIndex *operator[](int nHeight) const {
+    const CBlockIndex *operator[](int nHeight) const {
+        if (nHeight < 0 || nHeight >= (int)vChain.size())
+            return nullptr;
+        return vChain[nHeight];
+    }
+
+    /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
+    CBlockIndex *operator[](int nHeight) {
         if (nHeight < 0 || nHeight >= (int)vChain.size())
             return nullptr;
         return vChain[nHeight];
@@ -466,7 +483,15 @@ public:
     }
 
     /** Find the successor of a block in this chain, or nullptr if the given index is not found or is the tip. */
-    CBlockIndex *Next(const CBlockIndex *pindex) const {
+    const CBlockIndex *Next(const CBlockIndex *pindex) const {
+        if (Contains(pindex))
+            return (*this)[pindex->nHeight + 1];
+        else
+            return nullptr;
+    }
+
+    /** Find the successor of a block in this chain, or nullptr if the given index is not found or is the tip. */
+    CBlockIndex *Next(const CBlockIndex *pindex) {
         if (Contains(pindex))
             return (*this)[pindex->nHeight + 1];
         else
@@ -488,7 +513,7 @@ public:
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
 
     /** Find the earliest block with timestamp equal or greater than the given. */
-    CBlockIndex* FindEarliestAtLeast(int64_t nTime) const;
+    const CBlockIndex* FindEarliestAtLeast(int64_t nTime) const;
 };
 
 #endif // BITCOIN_CHAIN_H

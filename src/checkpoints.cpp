@@ -14,14 +14,14 @@
 
 namespace Checkpoints {
 
-    CBlockIndex* GetLastCheckpoint(const CCheckpointData& data)
+    const CBlockIndex* GetLastCheckpoint(const CCheckpointData& data)
     {
         const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
         for (const MapCheckpoints::value_type& i : reverse_iterate(checkpoints))
         {
             const uint256& hash = i.second;
-            CBlockIndex* pindex = LookupBlockIndex(hash);
+            const CBlockIndex* pindex = LookupBlockIndex(hash);
             if (pindex) {
                 return pindex;
             }
