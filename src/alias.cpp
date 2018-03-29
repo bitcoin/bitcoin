@@ -1238,8 +1238,12 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	size_t nSize = 500u;
 	CAmount nDesiredAmount = 3 * minRelayTxFee.GetFee(nSize);
 	// add total output amount of transaction to desired amount
-	CTransaction txValueOut(tx);
-	nDesiredAmount += txValueOut.GetValueOut();
+	CAmount nValueOut = 0;
+	for (std::vector<CTxOut>::const_iterator it(tx.vout.begin()); it != tx.vout.end(); ++it)
+	{
+		nDesiredAmount += it->nValue;
+	}
+
 	CAmount nCurrentAmount = 0;
 	int op;
 	bool bFunded = false;
