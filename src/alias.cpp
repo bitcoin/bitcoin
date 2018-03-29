@@ -1269,7 +1269,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 
 	// add new outputs to transaction if we are funded
 	for (auto &txOut: txOuts) {
-		tx.vout.push_back(txOut);
+		tx.vin.push_back(txOut);
 	}
 	// pass back new raw transaction
 	UniValue res(UniValue::VARR);
