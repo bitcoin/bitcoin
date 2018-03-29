@@ -1023,18 +1023,18 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         new_request.params.push_back(request.params[1]);
         new_request.params.push_back(request.params[3]);
         return signrawtransactionwithkey(new_request);
-    }
-    // Otherwise sign with the wallet which does not take a privkeys parameter
+    } else {
 #ifdef ENABLE_WALLET
-    else {
+        // Otherwise sign with the wallet which does not take a privkeys parameter
         new_request.params.push_back(request.params[0]);
         new_request.params.push_back(request.params[1]);
         new_request.params.push_back(request.params[3]);
         return signrawtransactionwithwallet(new_request);
-    }
+#else
+        // If we have made it this far, then wallet is disabled and no private keys were given, so fail here.
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "No private keys available.");
 #endif
-    // If we have made it this far, then wallet is disabled and no private keys were given, so fail here.
-    throw JSONRPCError(RPC_INVALID_PARAMETER, "No private keys available.");
+    }
 }
 
 UniValue sendrawtransaction(const JSONRPCRequest& request)
