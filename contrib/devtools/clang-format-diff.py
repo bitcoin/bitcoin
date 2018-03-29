@@ -71,7 +71,6 @@ import argparse
 import difflib
 import io
 import re
-import string
 import subprocess
 import sys
 
