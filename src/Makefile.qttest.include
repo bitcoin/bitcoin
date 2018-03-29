@@ -20,6 +20,7 @@ TEST_QT_H = \
   qt/test/compattests.h \
   qt/test/rpcnestedtests.h \
   qt/test/uritests.h \
+  qt/test/util.h \
   qt/test/paymentrequestdata.h \
   qt/test/paymentservertests.h \
   qt/test/wallettests.h
@@ -38,6 +39,7 @@ qt_test_test_chaincoin_qt_SOURCES = \
   qt/test/rpcnestedtests.cpp \
   qt/test/test_main.cpp \
   qt/test/uritests.cpp \
+  qt/test/util.cpp \
   $(TEST_QT_H) \
   $(TEST_BITCOIN_CPP) \
   $(TEST_BITCOIN_H)
