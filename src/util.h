@@ -145,7 +145,7 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
 #define LogPrintf(...) do { \
     std::string _log_msg_; /* Unlikely name to avoid shadowing variables */ \
     try { \
-        _log_msg_ = tfm::format(__VA_ARGS__); \
+        _log_msg_ = tinyformat::format(__VA_ARGS__); \
     } catch (tinyformat::format_error &fmterr) { \
         /* Original format string will have newline so don't add one here */ \
         _log_msg_ = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + FormatStringFromLogArgs(__VA_ARGS__); \
@@ -163,7 +163,7 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)
 {
-    LogPrintStr("ERROR: " + tfm::format(fmt, args...) + "\n");
+    LogPrintStr("ERROR: " + tinyformat::format(fmt, args...) + "\n");
     return false;
 }
 
