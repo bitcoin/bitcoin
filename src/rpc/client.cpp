@@ -147,6 +147,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "aliasclearwhitelist", 2 },
 	{ "aliasnew", 2 },
 	{ "aliasnew", 3 },
+	{ "aliasnewfund", 1 },
 	{ "aliasupdate", 3 },
 	{ "aliasupdate", 4 },
 	{ "certtransfer", 3 },

@@ -1119,6 +1119,87 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
 }
+UniValue aliasnewfund(const UniValue& params, bool fHelp) {
+	if (fHelp || 1 > params.size() || 2 < params.size())
+		throw runtime_error(
+			"aliasnewfund [hexstring] [{address},...]\n"
+			"<hexstring> raw aliasnew transaction output.\n"
+			"<address> Array of addresses used to fund this aliasnew transaction. Leave empty to use wallet.\n"
+			+ HelpRequiringPassphrase());
+	const string &hexstring = params[0].get_str();
+	CTransaction tx;
+	if (!DecodeHexTx(tx, hexstring))
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
+
+	// if addresses are passed in use those, otherwise use whatever is in the wallet
+	UniValue addresses(UniValue::VARR);
+	if(params.size() > 1)
+		addresses = params[1].get_array();
+	else {
+		UniValue receivedList = SyscoinListReceived();
+		UniValue recevedListArray = recievedList.get_array();
+		for (unsigned int idx = 0; idx < addresses.size(); idx++) {
+			addresses.push_back(find_value(addresses[idx], "address").get_str());
+		}
+	}
+
+	UniValue paramsUTXO(UniValue::VARR);
+	UniValue param(UniValue::VOBJ);
+	UniValue utxoParams(UniValue::VARR);
+	for (unsigned int idx = 0; idx < addresses.size(); idx++) {
+		utxoParams.push_back(addresses[idx].get_str());
+	}
+	param.push_back(Pair("addresses", utxoParams));
+	paramsUTXO.push_back(param);
+	const UniValue &resUTXOs = getaddressutxos(paramsUTXO, false);
+	UniValue utxoArray(UniValue::VARR);
+	if (resUTXOs.isArray())
+		utxoArray = resUTXOs.get_array();
+	else
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("No funds found in addresses provided"));
+
+	// add 500 bytes of fees to account for extra inputs added to this transaction as a buffer to the required amount
+	size_t nSize = 500u;
+	CAmount nDesiredAmount = 3 * minRelayTxFee.GetFee(nSize);
+	// add total output amount of transaction to desired amount
+	nDesiredAmount += tx.GetValueOut();
+
+	int op;
+	bool bFunded = false;
+	vector<vector<unsigned char> > vvch;
+	vector<CTxOut> txOuts;
+	for (unsigned int i = 0; i<utxoArray.size(); i++)
+	{
+		const UniValue& utxoObj = utxoArray[i].get_obj();
+		const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
+		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
+		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
+		const CScript& scriptPubKey = CScript(data.begin(), data.end());
+		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
+		// look for non alias inputs coins that can be used to fund this transaction
+		if (DecodeAliasScript(scriptPubKey, op, vvch))
+			continue;
+		if (nValue <= minRelayTxFee.GetFee(3000))
+			continue;
+		txOuts.push_back(CTxOut(nValue, scriptPubKey);
+		nCurrentAmount += nValue;
+		if (nCurrentAmount >= nDesiredAmount) {
+			bFunded = true;
+			break;
+		}
+	}
+	if(!bFunded)
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Insufficient funds for alias creation transaction"));
+
+	// add new outputs to transaction if we are funded
+	for (auto &txOut: txOuts) {
+		tx.vout.push_back(txOut);
+	}
+	// pass back new raw transaction
+	UniValue res(UniValue::VARR);
+	res.push_back(EncodeHexTx(tx));
+	return res;
+}
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 8 != params.size())
 		throw runtime_error(
@@ -1283,14 +1364,90 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		// add the registration input to the alias activation transaction
 		coinControl.Select(mapAliasRegistrations[vchHashAlias]);
 	}
-	coinControl.fAllowOtherInputs = true;
-	coinControl.fAllowWatchOnly = true;
+	coinControl.fAllowOtherInputs = false;
+	coinControl.fAllowWatchOnly = false;
 
 	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	res.push_back(strAddress);
 	return res;
+}
+int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll, bool bNoAliasRecipient)
+{
+	int numCoinsLeft = 0;
+	int numResults = 0;
+	CAmount nCurrentAmount = 0;
+	CAmount nDesiredAmount = nAmount;
+	outPoints.clear();
+	CAliasIndex theAlias;
+	if (!GetAlias(vchAlias, theAlias))
+		return -1;
+
+	const string &strAddressFrom = EncodeBase58(theAlias.vchAddress);
+	UniValue paramsUTXO(UniValue::VARR);
+	UniValue param(UniValue::VOBJ);
+	UniValue utxoParams(UniValue::VARR);
+	utxoParams.push_back(strAddressFrom);
+	param.push_back(Pair("addresses", utxoParams));
+	paramsUTXO.push_back(param);
+	const UniValue &resUTXOs = getaddressutxos(paramsUTXO, false);
+	UniValue utxoArray(UniValue::VARR);
+	if (resUTXOs.isArray())
+		utxoArray = resUTXOs.get_array();
+	else
+		return -1;
+
+	int op;
+	vector<vector<unsigned char> > vvch;
+	bIsFunded = false;
+	for (unsigned int i = 0; i<utxoArray.size(); i++)
+	{
+		const UniValue& utxoObj = utxoArray[i].get_obj();
+		const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
+		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
+		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
+		const CScript& scriptPubKey = CScript(data.begin(), data.end());
+		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
+		// look for non alias inputs, coins that can be used to fund this transaction, aliasunspent is used to get the alias utxo for proof of ownership
+		if (DecodeAliasScript(scriptPubKey, op, vvch))
+			continue;
+		if (!bSelectAll) {
+			// fee placement were ones that were smaller outputs used for subsequent updates
+			if (nValue <= minRelayTxFee.GetFee(3000))
+			{
+				// alias pay doesn't include recipient, no utxo inputs used for aliaspay, for aliaspay we don't care about these small dust amounts
+				if (bNoAliasRecipient)
+					continue;
+				// if this output is a fee placement because its of low value and we aren't selecting fee outputs then continue
+				else if (!bSelectFeePlacement)
+					continue;
+			}
+			else if (bSelectFeePlacement)
+				continue;
+		}
+		const COutPoint &outPointToCheck = COutPoint(txid, nOut);
+		{
+			LOCK(mempool.cs);
+			auto it = mempool.mapNextTx.find(outPointToCheck);
+			if (it != mempool.mapNextTx.end())
+				continue;
+		}
+		if (!bIsFunded || bSelectAll)
+		{
+			outPoints.push_back(outPointToCheck);
+			nCurrentAmount += nValue;
+			if (nCurrentAmount >= nDesiredAmount) {
+				bIsFunded = true;
+			}
+		}
+		numResults++;
+	}
+	nRequiredAmount = nDesiredAmount - nCurrentAmount;
+	if (nRequiredAmount < 0)
+		nRequiredAmount = 0;
+	numCoinsLeft = numResults - (int)outPoints.size();
+	return numCoinsLeft;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (fHelp || 8 != params.size())
