@@ -161,7 +161,7 @@ std::string EncodeSecret(const CKey& key)
 
 CExtPubKey DecodeExtPubKey(const std::string& str)
 {
-    CExtPubKey key;
+    CExtPubKey key = {};
     std::vector<unsigned char> data;
     if (DecodeBase58Check(str, data)) {
         const std::vector<unsigned char>& prefix = Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY);
@@ -184,7 +184,7 @@ std::string EncodeExtPubKey(const CExtPubKey& key)
 
 CExtKey DecodeExtKey(const std::string& str)
 {
-    CExtKey key;
+    CExtKey key = {};
     std::vector<unsigned char> data;
     if (DecodeBase58Check(str, data)) {
         const std::vector<unsigned char>& prefix = Params().Base58Prefix(CChainParams::EXT_SECRET_KEY);
