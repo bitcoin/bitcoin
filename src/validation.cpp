@@ -256,6 +256,7 @@ CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 
 CBlockPolicyEstimator feeEstimator;
 CTxMemPool mempool(&feeEstimator);
+std::atomic_bool g_is_mempool_loaded{false};
 
 static void CheckBlockIndex(const Consensus::Params& consensusParams);
 
