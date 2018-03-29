@@ -1268,7 +1268,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Insufficient funds for alias creation transaction"));
 
 	// add new outputs to transaction if we are funded
-	for (auto &txOut: txOuts) {
+	for (auto txOut: txOuts) {
 		tx.vout.push_back(txOut);
 	}
 	// pass back new raw transaction
