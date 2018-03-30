@@ -50,7 +50,8 @@ public:
     void Close() override;
 };
 
-std::unique_ptr<WalletInitInterface> g_wallet_init_interface(new WalletInit);
+static WalletInit g_wallet_init;
+WalletInitInterface* const g_wallet_init_interface = &g_wallet_init;
 
 std::string WalletInit::GetHelpString(bool showDebug)
 {
