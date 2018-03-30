@@ -1537,7 +1537,7 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             "    \"confirmations\" : n,               (numeric) The number of confirmations of the most recent transaction included\n"
             "    \"label\" : \"label\",               (string) A comment for the address/transaction, if any\n"
             "    \"txids\": [\n"
-            "       n,                                (numeric) The ids of transactions received with the address \n"
+            "       \"txid\",                         (string) The ids of transactions received with the address \n"
             "       ...\n"
             "    ]\n"
             "  }\n"
