@@ -149,3 +149,11 @@ Osx-snapshot:
   <<: *osx_definition
   <<: *job_definition 
   <<: *snapshot_definition 
+
+# Trigger the docker build and delivery
+trigger_docker_build:
+  stage: deploy
+  script:
+  - curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=master  --form "variables[VERSION_TAG]=$CI_COMMIT_TAG" https://gitlab.crown.tech/api/v4/projects/17/trigger/pipeline
+  only:
+  - tags
