@@ -254,9 +254,30 @@ bool TxIndex::BlockUntilSyncedToCurrentChain()
     return true;
 }
 
-bool TxIndex::FindTx(const uint256& txid, CDiskTxPos& pos) const
+bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const
 {
-    return m_db->ReadTxPos(txid, pos);
+    CDiskTxPos postx;
+    if (!m_db->ReadTxPos(tx_hash, postx)) {
+        return false;
+    }
+
+    CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+    if (file.IsNull()) {
+        return error("%s: OpenBlockFile failed", __func__);
+    }
+    CBlockHeader header;
+    try {
+        file >> header;
+        fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
+        file >> tx;
+    } catch (const std::exception& e) {
+        return error("%s: Deserialize or I/O error - %s", __func__, e.what());
+    }
+    if (tx->GetHash() != tx_hash) {
+        return error("%s: txid mismatch", __func__);
+    }
+    block_hash = header.GetHash();
+    return true;
 }
 
 void TxIndex::Interrupt()
