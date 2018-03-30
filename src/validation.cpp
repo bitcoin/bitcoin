@@ -1078,27 +1078,7 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
         }
 
         if (g_txindex) {
-            CDiskTxPos postx;
-            if (g_txindex->FindTx(hash, postx)) {
-                CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
-                if (file.IsNull())
-                    return error("%s: OpenBlockFile failed", __func__);
-                CBlockHeader header;
-                try {
-                    file >> header;
-                    fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
-                    file >> txOut;
-                } catch (const std::exception& e) {
-                    return error("%s: Deserialize or I/O error - %s", __func__, e.what());
-                }
-                hashBlock = header.GetHash();
-                if (txOut->GetHash() != hash)
-                    return error("%s: txid mismatch", __func__);
-                return true;
-            }
-
-            // transaction not found in index, nothing more can be done
-            return false;
+            return g_txindex->FindTx(hash, hashBlock, txOut);
         }
 
         if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
