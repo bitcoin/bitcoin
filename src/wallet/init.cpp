@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <init.h>
 #include <net.h>
 #include <util.h>
 #include <utilmoneystr.h>
@@ -46,7 +47,8 @@ public:
     void Close() override;
 };
 
-std::unique_ptr<WalletInitInterface> g_wallet_init_interface(new WalletInit);
+static WalletInit g_wallet_init;
+WalletInitInterface* const g_wallet_init_interface = &g_wallet_init;
 
 std::string WalletInit::GetHelpString(bool showDebug)
 {
