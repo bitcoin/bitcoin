@@ -33,6 +33,11 @@ JSONDecodeError = getattr(json, "JSONDecodeError", ValueError)
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
 
+
+class FailedToStartError(Exception):
+    """Raised when a node fails to start correctly."""
+
+
 class TestNode():
     """A class for representing a dashd node under test.
 
@@ -124,7 +129,8 @@ class TestNode():
         # Poll at a rate of four times per second
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
-            assert self.process.poll() is None, "dashd exited with status %i during initialization" % self.process.returncode
+            if self.process.poll() is not None:
+                raise FailedToStartError('dashd exited with status {} during initialization'.format(self.process.returncode))
             try:
                 self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
                 self.rpc.getblockcount()
@@ -220,9 +226,9 @@ class TestNode():
                 self.start(extra_args, stderr=log_stderr, *args, **kwargs)
                 self.wait_for_rpc_connection()
                 self.stop_node()
-                self.wait_util_stopped()
-            except Exception as e:
-                assert 'dashd exited' in str(e)  # node must have shutdown
+                self.wait_until_stopped()
+            except FailedToStartError as e:
+                self.log.debug('dashd failed to start: %s', e)
                 self.running = False
                 self.process = None
                 # Check stderr for expected message
