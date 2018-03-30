@@ -22,6 +22,7 @@ class thread_group;
 
 void StartShutdown();
 bool ShutdownRequested();
+void BlockUntilShutdown();
 /** Interrupt threads */
 void Interrupt();
 void Shutdown();
