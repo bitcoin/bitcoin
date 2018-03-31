@@ -22,6 +22,7 @@
 #include <rpc/server.h>
 #include <script/script.h>
 #include <script/script_error.h>
+#include <script/script_flags.h>
 #include <script/sign.h>
 #include <script/standard.h>
 #include <txmempool.h>

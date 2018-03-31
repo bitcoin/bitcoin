@@ -9,6 +9,7 @@
 #include <consensus/consensus.h>
 #include <policy/feerate.h>
 #include <script/interpreter.h>
+#include <script/script_flags.h>
 #include <script/standard.h>
 
 #include <string>

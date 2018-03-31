@@ -10,6 +10,7 @@
 #include <policy/policy.h>
 #include <script/script.h>
 #include <script/script_error.h>
+#include <script/script_flags.h>
 #include <script/sign.h>
 #include <script/ismine.h>
 #include <test/test_bitcoin.h>

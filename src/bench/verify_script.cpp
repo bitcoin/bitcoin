@@ -8,6 +8,7 @@
 #include <script/bitcoinconsensus.h>
 #endif
 #include <script/script.h>
+#include <script/script_flags.h>
 #include <script/sign.h>
 #include <streams.h>
 
