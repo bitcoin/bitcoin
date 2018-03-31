@@ -219,13 +219,13 @@ public:
     //! Return Private Send Rounds.
     virtual int getCappedOutpointPrivateSendRounds(const COutPoint& outpoint) = 0;
 
-    // Return whether HD enabled.
+    //! Return whether HD enabled.
     virtual bool hdEnabled() = 0;
 
-    // Get default address type.
+    //! Get default address type.
     virtual OutputType getDefaultAddressType() = 0;
 
-    // Get default change type.
+    //! Get default change type.
     virtual OutputType getDefaultChangeType() = 0;
 
     //! Register handler for show progress messages.
@@ -293,18 +293,21 @@ struct WalletBalances
     CAmount balance = 0;
     CAmount unconfirmed_balance = 0;
     CAmount immature_balance = 0;
+    CAmount anonymized_balance = 0;
+    CAmount anonymizeable_balance = 0;
     bool have_watch_only = false;
     CAmount watch_only_balance = 0;
     CAmount unconfirmed_watch_only_balance = 0;
     CAmount immature_watch_only_balance = 0;
-    CAmount anonymized_balance = 0;
+    float mixing_progress = 0;
 
     bool balanceChanged(const WalletBalances& prev) const
     {
         return balance != prev.balance || unconfirmed_balance != prev.unconfirmed_balance ||
-               immature_balance != prev.immature_balance || watch_only_balance != prev.watch_only_balance ||
+               immature_balance != prev.immature_balance || anonymized_balance != prev.anonymized_balance ||
+               anonymizeable_balance != prev.anonymizeable_balance || watch_only_balance != prev.watch_only_balance ||
                unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
-               immature_watch_only_balance != prev.immature_watch_only_balance || anonymized_balance != prev.anonymized_balance;
+               immature_watch_only_balance != prev.immature_watch_only_balance || mixing_progress != prev.mixing_progress;
     }
 };
 

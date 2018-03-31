@@ -332,12 +332,14 @@ public:
         result.unconfirmed_balance = m_wallet.GetUnconfirmedBalance();
         result.immature_balance = m_wallet.GetImmatureBalance();
         result.anonymized_balance = m_wallet.GetAnonymizedBalance();
+        result.anonymizeable_balance = m_wallet.GetAnonymizableBalance(false, false);
         result.have_watch_only = m_wallet.HaveWatchOnly();
         if (result.have_watch_only) {
             result.watch_only_balance = m_wallet.GetWatchOnlyBalance();
             result.unconfirmed_watch_only_balance = m_wallet.GetUnconfirmedWatchOnlyBalance();
             result.immature_watch_only_balance = m_wallet.GetImmatureWatchOnlyBalance();
         }
+        result.mixing_progress = m_wallet.UpdateProgress();
         return result;
     }
     bool tryGetBalances(WalletBalances& balances, int& num_blocks) override
