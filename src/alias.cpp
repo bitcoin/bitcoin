@@ -1235,7 +1235,11 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	CAmount nDesiredAmount = 3 * minRelayTxFee.GetFee(nSize);
 	// add total output amount of transaction to desired amount
 	nDesiredAmount += txIn.GetValueOut();
-
+	map<pair<string, int> > mapOutputs;
+	for (std::vector<CTxIn>::const_iterator it(txIn.vin.begin()); it != txIn.vin.end(); ++it)
+	{
+		mapOutputs[strprintf("%s%s", (*it).prevout.hash, (*it).prevout.n] = 1;
+	}
 	CAmount nCurrentAmount = 0;
 	int op;
 	bool bFunded = false;
@@ -1252,6 +1256,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		if (DecodeAliasScript(scriptPubKey, op, vvch))
 			continue;
 		if (nValue <= minRelayTxFee.GetFee(3000))
+			continue;
+		if (mapOutputs.find(strprintf("%s%s", txid, nOut)) == mapOutputs.end())
 			continue;
 		tx.vin.push_back(CTxIn(txid, nOut, scriptPubKey));
 		nCurrentAmount += nValue;
