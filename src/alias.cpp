@@ -1238,7 +1238,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	std::map<string, int> mapOutputs;
 	for (std::vector<CTxIn>::const_iterator it(txIn.vin.begin()); it != txIn.vin.end(); ++it)
 	{
-		const string& strOut = strprintf("%s%s", (*it).prevout.hash, (*it).prevout.n);
+		const string& strOut = strprintf("%s%s", HexStr((*it).prevout.hash), (*it).prevout.n);
 		mapOutputs[strOut] = 1;
 	}
 	CAmount nCurrentAmount = 0;
@@ -1248,12 +1248,13 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	for (unsigned int i = 0; i<utxoArray.size(); i++)
 	{
 		const UniValue& utxoObj = utxoArray[i].get_obj();
-		const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
+		const string &strTxid = find_value(utxoObj, "txid").get_str();
+		const uint256& txid = uint256S(strTxid);
 		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
 		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
 		const CScript& scriptPubKey = CScript(data.begin(), data.end());
 		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
-		if (mapOutputs.find(strprintf("%s%s", txid, nOut)) == mapOutputs.end())
+		if (mapOutputs.find(strprintf("%s%s", strTxid, nOut)) == mapOutputs.end())
 			continue;
 		// look for non alias inputs coins that can be used to fund this transaction
 		if (DecodeAliasScript(scriptPubKey, op, vvch))
