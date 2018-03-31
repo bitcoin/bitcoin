@@ -150,9 +150,8 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         }
 
         interface::WalletBalances balances = _model->wallet().getBalances();
-        setBalance(balances.balance, balances.unconfirmed_balance, balances.immature_balance,
-                   balances.watch_only_balance, balances.unconfirmed_watch_only_balance, balances.immature_watch_only_balance);
-        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        setBalance(balances);
+        connect(_model, SIGNAL(balanceChanged(interface::WalletBalances)), this, SLOT(setBalance(interface::WalletBalances)));
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
@@ -516,24 +515,17 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-                                 const CAmount& watchBalance, const CAmount& watchUnconfirmedBalance, const CAmount& watchImmatureBalance)
+void SendCoinsDialog::setBalance(const interface::WalletBalances& balances)
 {
-    Q_UNUSED(unconfirmedBalance);
-    Q_UNUSED(immatureBalance);
-    Q_UNUSED(watchBalance);
-    Q_UNUSED(watchUnconfirmedBalance);
-    Q_UNUSED(watchImmatureBalance);
-
     if(model && model->getOptionsModel())
     {
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
+        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.balance));
     }
 }
 
 void SendCoinsDialog::updateDisplayUnit()
 {
-    setBalance(model->wallet().getBalance(), 0, 0, 0, 0, 0);
+    setBalance(model->wallet().getBalances());
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
     updateSmartFeeLabel();

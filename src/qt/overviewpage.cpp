@@ -21,6 +21,8 @@
 #define DECORATION_SIZE 54
 #define NUM_ITEMS 5
 
+Q_DECLARE_METATYPE(interface::WalletBalances)
+
 class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
@@ -113,15 +115,11 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     ui(new Ui::OverviewPage),
     clientModel(0),
     walletModel(0),
-    currentBalance(-1),
-    currentUnconfirmedBalance(-1),
-    currentImmatureBalance(-1),
-    currentWatchOnlyBalance(-1),
-    currentWatchUnconfBalance(-1),
-    currentWatchImmatureBalance(-1),
     txdelegate(new TxViewDelegate(platformStyle, this))
 {
     ui->setupUi(this);
+
+    m_balances.balance = -1;
 
     // use a SingleColorIcon for the "out of sync warning" icon
     QIcon icon = platformStyle->SingleColorIcon(":/icons/warning");
@@ -159,28 +157,23 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
+void OverviewPage::setBalance(const interface::WalletBalances& balances)
 {
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
-    currentBalance = balance;
-    currentUnconfirmedBalance = unconfirmedBalance;
-    currentImmatureBalance = immatureBalance;
-    currentWatchOnlyBalance = watchOnlyBalance;
-    currentWatchUnconfBalance = watchUnconfBalance;
-    currentWatchImmatureBalance = watchImmatureBalance;
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways));
-    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balance + unconfirmedBalance + immatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchAvailable->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchPending->setText(BitcoinUnits::formatWithUnit(unit, watchUnconfBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchImmature->setText(BitcoinUnits::formatWithUnit(unit, watchImmatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, BitcoinUnits::separatorAlways));
+    m_balances = balances;
+    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balances.balance, false, BitcoinUnits::separatorAlways));
+    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, balances.immature_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchAvailable->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchPending->setText(BitcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchImmature->setText(BitcoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
 
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
-    bool showImmature = immatureBalance != 0;
-    bool showWatchOnlyImmature = watchImmatureBalance != 0;
+    bool showImmature = balances.immature_balance != 0;
+    bool showWatchOnlyImmature = balances.immature_watch_only_balance != 0;
 
     // for symmetry reasons also show immature label when the watch-only one is shown
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
@@ -233,9 +226,8 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // Keep up to date with wallet
         interface::Wallet& wallet = model->wallet();
         interface::WalletBalances balances = wallet.getBalances();
-        setBalance(balances.balance, balances.unconfirmed_balance, balances.immature_balance,
-                   balances.watch_only_balance, balances.unconfirmed_watch_only_balance, balances.immature_watch_only_balance);
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        setBalance(balances);
+        connect(model, SIGNAL(balanceChanged(interface::WalletBalances)), this, SLOT(setBalance(interface::WalletBalances)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
@@ -251,9 +243,9 @@ void OverviewPage::updateDisplayUnit()
 {
     if(walletModel && walletModel->getOptionsModel())
     {
-        if(currentBalance != -1)
-            setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance,
-                       currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance);
+        if (m_balances.balance != -1) {
+            setBalance(m_balances);
+        }
 
         // Update txdelegate->unit with the current unit
         txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
