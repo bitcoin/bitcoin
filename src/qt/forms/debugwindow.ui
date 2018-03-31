@@ -413,19 +413,19 @@
           <number>4</number>
          </property>
          <item>
-          <widget class="QComboBox" name="cbxActiveWallet">
-           <property name="minimumSize">
-            <size>
-             <width>200</width>
-             <height>0</height>
-            </size>
+          <widget class="QLabel" name="WalletSelectorLabel">
+           <property name="text">
+            <string>Wallet: </string>
            </property>
-           <property name="toolTip">
-            <string>Active Wallet</string>
-           </property>
-           <property name="locale">
-            <locale language="English" country="UnitedKingdom"/>
-           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="WalletSelector">
+           <item>
+            <property name="text">
+             <string>(none)</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item>

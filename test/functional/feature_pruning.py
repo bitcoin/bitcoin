@@ -11,7 +11,6 @@ This test takes 30 mins or more (up to 2 hours)
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import time
 import os
 
 MIN_BLOCKS_TO_KEEP = 288
@@ -23,7 +22,7 @@ TIMESTAMP_WINDOW = 2 * 60 * 60
 
 
 def calc_usage(blockdir):
-    return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(blockdir+f)) / (1024. * 1024.)
+    return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(os.path.join(blockdir, f))) / (1024. * 1024.)
 
 class PruneTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -32,20 +31,20 @@ class PruneTest(BitcoinTestFramework):
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
-        self.full_node_default_args = ["-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5", "-limitdescendantcount=100", "-limitdescendantsize=5000", "-limitancestorcount=100", "-limitancestorsize=5000" ]
+        self.full_node_default_args = ["-maxreceivebuffer=20000", "-checkblocks=5", "-limitdescendantcount=100", "-limitdescendantsize=5000", "-limitancestorcount=100", "-limitancestorsize=5000" ]
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
         # Create nodes 5 to test wallet in prune mode, but do not connect
         self.extra_args = [self.full_node_default_args,
                            self.full_node_default_args,
                            ["-maxreceivebuffer=20000", "-prune=550"],
-                           ["-maxreceivebuffer=20000", "-blockmaxsize=999000"],
-                           ["-maxreceivebuffer=20000", "-blockmaxsize=999000"],
+                           ["-maxreceivebuffer=20000"],
+                           ["-maxreceivebuffer=20000"],
                            ["-prune=550"]]
 
     def setup_network(self):
         self.setup_nodes()
 
-        self.prunedir = self.options.tmpdir + "/node2/regtest/blocks/"
+        self.prunedir = os.path.join(self.nodes[2].datadir, 'regtest', 'blocks', '')
 
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 2)
@@ -70,7 +69,7 @@ class PruneTest(BitcoinTestFramework):
         sync_blocks(self.nodes[0:5])
 
     def test_height_min(self):
-        if not os.path.isfile(self.prunedir+"blk00000.dat"):
+        if not os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")):
             raise AssertionError("blk00000.dat is missing, pruning too early")
         self.log.info("Success")
         self.log.info("Though we're already using more than 550MiB, current usage: %d" % calc_usage(self.prunedir))
@@ -79,11 +78,8 @@ class PruneTest(BitcoinTestFramework):
         for i in range(25):
             mine_large_block(self.nodes[0], self.utxo_cache_0)
 
-        waitstart = time.time()
-        while os.path.isfile(self.prunedir+"blk00000.dat"):
-            time.sleep(0.1)
-            if time.time() - waitstart > 30:
-                raise AssertionError("blk00000.dat not pruned when it should be")
+        # Wait for blk00000.dat to be pruned
+        wait_until(lambda: not os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), timeout=30)
 
         self.log.info("Success")
         usage = calc_usage(self.prunedir)
@@ -128,7 +124,7 @@ class PruneTest(BitcoinTestFramework):
         # Reboot node 1 to clear its mempool (hopefully make the invalidate faster)
         # Lower the block max size so we don't keep mining all our big mempool transactions (from disconnected blocks)
         self.stop_node(1)
-        self.start_node(1, extra_args=["-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5", "-disablesafemode"])
+        self.start_node(1, extra_args=["-maxreceivebuffer=20000","-blockmaxweight=20000", "-checkblocks=5", "-disablesafemode"])
 
         height = self.nodes[1].getblockcount()
         self.log.info("Current block height: %d" % height)
@@ -151,7 +147,7 @@ class PruneTest(BitcoinTestFramework):
 
         # Reboot node1 to clear those giant tx's from mempool
         self.stop_node(1)
-        self.start_node(1, extra_args=["-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5", "-disablesafemode"])
+        self.start_node(1, extra_args=["-maxreceivebuffer=20000","-blockmaxweight=20000", "-checkblocks=5", "-disablesafemode"])
 
         self.log.info("Generating new longer chain of 300 more blocks")
         self.nodes[1].generate(300)
@@ -190,8 +186,8 @@ class PruneTest(BitcoinTestFramework):
 
         # Verify that we have enough history to reorg back to the fork point
         # Although this is more than 288 blocks, because this chain was written more recently
-        # and only its other 299 small and 220 large block are in the block files after it,
-        # its expected to still be retained
+        # and only its other 299 small and 220 large blocks are in the block files after it,
+        # it is expected to still be retained
         self.nodes[2].getblock(self.nodes[2].getblockhash(self.forkheight))
 
         first_reorg_height = self.nodes[2].getblockcount()
@@ -218,11 +214,8 @@ class PruneTest(BitcoinTestFramework):
             goalbestheight = first_reorg_height + 1
 
         self.log.info("Verify node 2 reorged back to the main chain, some blocks of which it had to redownload")
-        waitstart = time.time()
-        while self.nodes[2].getblockcount() < goalbestheight:
-            time.sleep(0.1)
-            if time.time() - waitstart > 900:
-                raise AssertionError("Node 2 didn't reorg to proper height")
+        # Wait for Node 2 to reorg to proper height
+        wait_until(lambda: self.nodes[2].getblockcount() >= goalbestheight, timeout=900)
         assert(self.nodes[2].getbestblockhash() == goalbesthash)
         # Verify we can now have the data for a block previously pruned
         assert(self.nodes[2].getblock(self.forkhash)["height"] == self.forkheight)
@@ -262,7 +255,7 @@ class PruneTest(BitcoinTestFramework):
                 assert_equal(ret, expected_ret)
 
         def has_block(index):
-            return os.path.isfile(self.options.tmpdir + "/node{}/regtest/blocks/blk{:05}.dat".format(node_number, index))
+            return os.path.isfile(os.path.join(self.nodes[node_number].datadir, "regtest", "blocks", "blk{:05}.dat".format(index)))
 
         # should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
         assert_raises_rpc_error(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))

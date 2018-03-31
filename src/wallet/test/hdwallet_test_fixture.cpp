@@ -13,11 +13,8 @@
 HDWalletTestingSetup::HDWalletTestingSetup(const std::string &chainName):
     TestingSetup(chainName, true) // fParticlMode = true
 {
-    bitdb.MakeMock();
-
     bool fFirstRun;
-    std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test_part.dat"));
-    pwalletMain = MakeUnique<CHDWallet>(std::move(dbw));
+    pwalletMain = MakeUnique<CHDWallet>("mock_part", CWalletDBWrapper::CreateMock());
     vpwallets.push_back(pwalletMain.get());
     fParticlWallet = true;
     pwalletMain->LoadWallet(fFirstRun);
@@ -31,9 +28,6 @@ HDWalletTestingSetup::~HDWalletTestingSetup()
 {
     UnregisterValidationInterface(pwalletMain.get());
     pwalletMain.reset();
-
-    bitdb.Flush(true);
-    bitdb.Reset();
 
     mapStakeSeen.clear();
     listStakeSeen.clear();

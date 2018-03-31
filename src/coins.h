@@ -100,7 +100,7 @@ public:
         ::Unserialize(s, VARINT(code));
         nHeight = code >> 1;
         fCoinBase = code & 1;
-        ::Unserialize(s, REF(CTxOutCompressor(out)));
+        ::Unserialize(s, CTxOutCompressor(out));
         if (!fParticlMode) return;
         ::Unserialize(s, nType);
         if (nType == OUTPUT_CT)

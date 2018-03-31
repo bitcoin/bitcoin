@@ -4670,7 +4670,8 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     };
 
     // Wallet comments
-    CWalletTx wtx;
+    CTransactionRef tx_new;
+    CWalletTx wtx(pwallet, tx_new);
     CTransactionRecord rtx;
 
     size_t nv = nCommentOfs;
@@ -4872,7 +4873,8 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     CReserveKey reservekey(pwallet);
     if (typeIn == OUTPUT_STANDARD && typeOut == OUTPUT_STANDARD)
     {
-        if (!pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state))
+        std::string sFromAccount = "";
+        if (!pwallet->CommitTransaction(wtx.tx, wtx.mapValue, wtx.vOrderForm, sFromAccount, reservekey, g_connman.get(), state))
             throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", FormatStateMessage(state)));
     } else
     {
@@ -5353,7 +5355,7 @@ UniValue createsignaturewithwallet(const JSONRPCRequest &request)
             MutableTransactionSignatureCreator creator(pwallet, &mtx, i, vchAmount, nHashType);
             CScript &scriptSig = scriptPubKey.IsPayToScriptHashAny() ? scriptRedeem : scriptPubKey;
 
-            if (!creator.CreateSig(vchSig, idSign, scriptSig, SIGVERSION_BASE))
+            if (!creator.CreateSig(vchSig, idSign, scriptSig, SigVersion::BASE))
                 throw JSONRPCError(RPC_MISC_ERROR, "CreateSig failed.");
 
             break;
@@ -6025,7 +6027,7 @@ UniValue derivefromstealthaddress(const JSONRPCRequest &request)
         pkDest = CPubKey(pkSendTo);
     };
 
-    dest = GetDestinationForKey(pkDest, OUTPUT_TYPE_LEGACY);
+    dest = GetDestinationForKey(pkDest, OutputType::LEGACY);
 
     result.pushKV("address", EncodeDestination(dest));
     result.pushKV("pubkey", HexStr(pkDest));
@@ -6680,8 +6682,8 @@ UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             if (options.exists("changeAddress")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both changeAddress and address_type options");
             }
-            coinControl.change_type = ParseOutputType(options["change_type"].get_str(), coinControl.change_type);
-            if (coinControl.change_type == OUTPUT_TYPE_NONE) {
+            coinControl.m_change_type = ParseOutputType(options["change_type"].get_str(), pwallet->m_default_change_type);
+            if (coinControl.m_change_type == OutputType::NONE) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown change type '%s'", options["change_type"].get_str()));
             }
         }
@@ -6900,7 +6902,9 @@ UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
         coinControl.Select(txin.prevout);
     }
 
-    CWalletTx wtx;
+
+    CTransactionRef tx_new;
+    CWalletTx wtx(pwallet, tx_new);
     CTransactionRecord rtx;
     CAmount nFee;
     std::string sError;

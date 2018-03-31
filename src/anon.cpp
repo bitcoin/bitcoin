@@ -352,7 +352,7 @@ bool RewindToCheckpoint(int nCheckPointHeight, int &nBlocks, std::string &sError
         if (!FlushView(&view, state, true))
             return errorN(false, sError, __func__, "FlushView failed.");
 
-        if (!FlushStateToDisk(Params(), state, FLUSH_STATE_IF_NEEDED))
+        if (!FlushStateToDisk(Params(), state, FlushStateMode::IF_NEEDED))
             return errorN(false, sError, __func__, "FlushStateToDisk failed.");
 
         chainActive.SetTip(pindex->pprev);

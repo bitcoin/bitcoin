@@ -81,7 +81,7 @@ while :; do
             shift
         else
             echo 'Error: "--signer" requires a non-empty argument.'
-        exit 1
+            exit 1
         fi
            ;;
         # Operating Systems
@@ -192,7 +192,7 @@ fi
 # Get signer
 if [[ -n "$1" ]]
 then
-    SIGNER=$1
+    SIGNER="$1"
     shift
 fi
 
@@ -205,7 +205,7 @@ then
 fi
 
 # Check that a signer is specified
-if [[ $SIGNER == "" ]]
+if [[ "$SIGNER" == "" ]]
 then
     echo "$scriptName: Missing signer."
     echo "Try $scriptName --help for more information"
@@ -270,11 +270,11 @@ then
     # Linux
     if [[ $linux = true ]]
     then
-            echo ""
+        echo ""
         echo "Compiling ${VERSION} Linux"
         echo ""
         ./bin/gbuild --allow-sudo -j ${proc} -m ${mem} --commit particl-core=${COMMIT} --url particl-core=${url} ../particl-core/contrib/gitian-descriptors/gitian-linux.yml
-        ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../particl-core/contrib/gitian-descriptors/gitian-linux.yml
+        ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-linux --destination ../gitian.sigs/ ../particl-core/contrib/gitian-descriptors/gitian-linux.yml
         mv build/out/particl-*.tar.gz build/out/src/particl-*.tar.gz ../particl-binaries/${VERSION}
     fi
     # Windows
@@ -284,7 +284,7 @@ then
         echo "Compiling ${VERSION} Windows"
         echo ""
         ./bin/gbuild -j ${proc} -m ${mem} --commit particl-core=${COMMIT} --url particl-core=${url} ../particl-core/contrib/gitian-descriptors/gitian-win.yml
-        ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../particl-core/contrib/gitian-descriptors/gitian-win.yml
+        ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../particl-core/contrib/gitian-descriptors/gitian-win.yml
         mv build/out/particl-*-win-unsigned.tar.gz inputs/particl-win-unsigned.tar.gz
         mv build/out/particl-*.zip build/out/particl-*.exe ../particl-binaries/${VERSION}
     fi
@@ -295,25 +295,25 @@ then
         echo "Compiling ${VERSION} Mac OSX"
         echo ""
         ./bin/gbuild -j ${proc} -m ${mem} --commit particl-core=${COMMIT} --url particl-core=${url} ../particl-core/contrib/gitian-descriptors/gitian-osx.yml
-        ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../particl-core/contrib/gitian-descriptors/gitian-osx.yml
+        ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../particl-core/contrib/gitian-descriptors/gitian-osx.yml
         mv build/out/particl-*-osx-unsigned.tar.gz inputs/particl-osx-unsigned.tar.gz
         mv build/out/particl-*.tar.gz build/out/particl-*.dmg ../particl-binaries/${VERSION}
     fi
     popd
 
-        if [[ $commitFiles = true ]]
-        then
+    if [[ $commitFiles = true ]]
+    then
         # Commit to gitian.sigs repo
-            echo ""
-            echo "Committing ${VERSION} Unsigned Sigs"
-            echo ""
-            pushd gitian.sigs
-            git add ${VERSION}-linux/${SIGNER}
-            git add ${VERSION}-win-unsigned/${SIGNER}
-            git add ${VERSION}-osx-unsigned/${SIGNER}
-            git commit -a -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
-            popd
-        fi
+        echo ""
+        echo "Committing ${VERSION} Unsigned Sigs"
+        echo ""
+        pushd gitian.sigs
+        git add ${VERSION}-linux/"${SIGNER}"
+        git add ${VERSION}-win-unsigned/"${SIGNER}"
+        git add ${VERSION}-osx-unsigned/"${SIGNER}"
+        git commit -a -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
+        popd
+    fi
 fi
 
 # Verify the build
@@ -351,7 +351,6 @@ fi
 # Sign binaries
 if [[ $sign = true ]]
 then
-
     pushd ./gitian-builder
     # Sign Windows
     if [[ $windows = true ]]

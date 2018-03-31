@@ -15,6 +15,13 @@ class CKeyID;
 class CPubKey;
 class CScriptID;
 
+bool CompressScript(const CScript& script, std::vector<unsigned char> &out);
+unsigned int GetSpecialScriptSize(unsigned int nSize);
+bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<unsigned char> &out);
+
+uint64_t CompressAmount(uint64_t nAmount);
+uint64_t DecompressAmount(uint64_t nAmount);
+
 /** Compact serializer for scripts.
  *
  *  It detects common cases and encodes them much more efficiently.
@@ -38,28 +45,13 @@ private:
     static const unsigned int nSpecialScripts = 6;
 
     CScript &script;
-protected:
-    /**
-     * These check for scripts for which a special case with a shorter encoding is defined.
-     * They are implemented separately from the CScript test, as these test for exact byte
-     * sequence correspondences, and are more strict. For example, IsToPubKey also verifies
-     * whether the public key is valid (as invalid ones cannot be represented in compressed
-     * form).
-     */
-    bool IsToKeyID(CKeyID &hash) const;
-    bool IsToScriptID(CScriptID &hash) const;
-    bool IsToPubKey(CPubKey &pubkey) const;
-
-    bool Compress(std::vector<unsigned char> &out) const;
-    unsigned int GetSpecialSize(unsigned int nSize) const;
-    bool Decompress(unsigned int nSize, const std::vector<unsigned char> &out);
 public:
     explicit CScriptCompressor(CScript &scriptIn) : script(scriptIn) { }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
         std::vector<unsigned char> compr;
-        if (Compress(compr)) {
+        if (CompressScript(script, compr)) {
             s << CFlatData(compr);
             return;
         }
@@ -73,9 +65,9 @@ public:
         unsigned int nSize = 0;
         s >> VARINT(nSize);
         if (nSize < nSpecialScripts) {
-            std::vector<unsigned char> vch(GetSpecialSize(nSize), 0x00);
-            s >> REF(CFlatData(vch));
-            Decompress(nSize, vch);
+            std::vector<unsigned char> vch(GetSpecialScriptSize(nSize), 0x00);
+            s >> CFlatData(vch);
+            DecompressScript(script, nSize, vch);
             return;
         }
         nSize -= nSpecialScripts;
@@ -85,28 +77,19 @@ public:
             s.ignore(nSize);
         } else {
             script.resize(nSize);
-            s >> REF(CFlatData(script));
+            s >> CFlatData(script);
         }
     }
 };
 
-class CTxCompressorMethods
-{
-public:
-    static uint64_t CompressAmount(uint64_t nAmount);
-    static uint64_t DecompressAmount(uint64_t nAmount);
-};
 
 /** wrapper for CTxOut that provides a more compact serialization */
-class CTxOutCompressor : public CTxCompressorMethods
+class CTxOutCompressor
 {
 private:
     CTxOut &txout;
 
 public:
-    //static uint64_t CompressAmount(uint64_t nAmount);
-    //static uint64_t DecompressAmount(uint64_t nAmount);
-
     explicit CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
 
     ADD_SERIALIZE_METHODS;
@@ -127,7 +110,7 @@ public:
 };
 
 /** wrapper for CTxOutBase that provides a more compact serialization */
-class CTxOutBaseCompressor: public CTxCompressorMethods
+class CTxOutBaseCompressor
 {
 private:
     CTxOutBaseRef &txout;
@@ -135,8 +118,8 @@ private:
 public:
 
     CTxOutBaseCompressor(CTxOutBaseRef &txoutIn) : txout(txoutIn) { }
-    
-    
+
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -149,19 +132,19 @@ public:
                 READWRITE(bv);
                 return;
             };
-            
+
             uint8_t bv = txout->nVersion & 0xFF;
             READWRITE(bv);
-            
+
             switch (bv)
             {
                 case OUTPUT_STANDARD:
                     {
                     std::shared_ptr<CTxOutStandard> p = std::dynamic_pointer_cast<CTxOutStandard>(txout);
-                    
+
                     uint64_t nVal = CompressAmount(p->nValue);
                     READWRITE(VARINT(nVal));
-                    
+
                     CScriptCompressor cscript(REF(p->scriptPubKey));
                     READWRITE(cscript);
                     }
@@ -169,11 +152,11 @@ public:
                 case OUTPUT_CT:
                     {
                     std::shared_ptr<CTxOutCT> p = std::dynamic_pointer_cast<CTxOutCT>(txout);
-                    
+
                     // TODO: need all fields?
                     CScriptCompressor cscript(REF(p->scriptPubKey));
                     READWRITE(cscript);
-                    
+
                     s.write((char*)&p->commitment.data[0], 33);
                     }
                     break;
@@ -184,7 +167,7 @@ public:
         {
             uint8_t bv;
             READWRITE(bv);
-            
+
             switch (bv)
             {
                 case OUTPUT_NULL:
@@ -194,11 +177,11 @@ public:
                     {
                     std::shared_ptr<CTxOutStandard> p;
                     txout = p = MAKE_OUTPUT<CTxOutStandard>();
-                    
+
                     uint64_t nVal = 0;
                     READWRITE(VARINT(nVal));
                     p->nValue = DecompressAmount(nVal);
-                    
+
                     CScriptCompressor cscript(REF(p->scriptPubKey));
                     READWRITE(cscript);
                     }
@@ -207,11 +190,11 @@ public:
                     {
                     std::shared_ptr<CTxOutCT> p;
                     txout = p = MAKE_OUTPUT<CTxOutCT>();
-                    
+
                     // TODO: need all fields?
                     CScriptCompressor cscript(REF(p->scriptPubKey));
                     READWRITE(cscript);
-                    
+
                     s.read((char*)&p->commitment.data[0], 33);
                     }
                     break;
@@ -221,7 +204,7 @@ public:
             txout->nVersion = bv;
         };
     }
-    
+
 };
 
 #endif // BITCOIN_COMPRESSOR_H

@@ -5,7 +5,7 @@
 #include <rpc/server.h>
 #include <rpc/client.h>
 
-#include <base58.h>
+#include <key_io.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 
@@ -76,20 +76,20 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
 
     CBitcoinAddress setaccountDemoAddress;
     {
-        LOCK(pwalletMain->cs_wallet);
+        LOCK(m_wallet.cs_wallet);
 
-        CWalletDB walletdb(pwalletMain->GetDBHandle());
-        demoPubkey = pwalletMain->GenerateNewKey(walletdb, false);
+        CWalletDB walletdb(m_wallet.GetDBHandle());
+        demoPubkey = m_wallet.GenerateNewKey(walletdb, false);
         demoAddress = CBitcoinAddress(CTxDestination(demoPubkey.GetID()));
         string strPurpose = "receive";
         BOOST_CHECK_NO_THROW({ /*Initialize Wallet with an account */
             CAccount account;
             account.vchPubKey = demoPubkey;
-            pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, strPurpose);
+            m_wallet.SetAddressBook(account.vchPubKey.GetID(), strAccount, strPurpose);
             walletdb.WriteAccount(strAccount, account);
         });
 
-        CPubKey setaccountDemoPubkey = pwalletMain->GenerateNewKey(walletdb, false);
+        CPubKey setaccountDemoPubkey = m_wallet.GenerateNewKey(walletdb, false);
         setaccountDemoAddress = CBitcoinAddress(CTxDestination(setaccountDemoPubkey.GetID()));
     }
     /*********************************

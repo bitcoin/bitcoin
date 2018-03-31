@@ -11,7 +11,6 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 
-extern OutputType g_address_type;
 
 EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
     QDialog(parent),
@@ -39,7 +38,6 @@ EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
     {
     case NewReceivingAddress:
         setWindowTitle(tr("New receiving address"));
-        ui->addressEdit->setEnabled(false);
         break;
     case NewSendingAddress:
         setWindowTitle(tr("New sending address"));
@@ -90,7 +88,7 @@ bool EditAddressDialog::saveCurrentRow()
                 AddressTableModel::Receive,
                 ui->labelEdit->text(),
                 ui->addressEdit->text(),
-                g_address_type,
+                model->GetDefaultAddressType(),
                 ui->cbxType->currentText() == "Stealth" ? AddressTableModel::ADDR_STEALTH
                     : ui->cbxType->currentText() == "Extended" ? AddressTableModel::ADDR_EXT
                     : ui->cbxType->currentText() == "Standard 256bit" ? AddressTableModel::ADDR_STANDARD256
@@ -101,7 +99,7 @@ bool EditAddressDialog::saveCurrentRow()
                 AddressTableModel::Send,
                 ui->labelEdit->text(),
                 ui->addressEdit->text(),
-                g_address_type);
+                model->GetDefaultAddressType());
         break;
     case EditReceivingAddress:
     case EditSendingAddress:

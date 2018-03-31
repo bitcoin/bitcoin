@@ -10,7 +10,7 @@
 #include <test/test_bitcoin.h>
 
 #include <key/extkey.h>
-#include <base58.h>
+#include <key_io.h>
 #include <util.h>
 
 #include <string>

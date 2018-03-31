@@ -3,6 +3,7 @@ dist: trusty
 os: linux
 language: minimal
 cache:
+  ccache: true
   directories:
   - depends/built
   - depends/sdk-sources
@@ -52,6 +53,7 @@ install:
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then travis_retry pip3 install flake8 --user; fi
     - if [ "$TEST_ZMQ" = 1 ]; then sudo python3 -m easy_install pyzmq; fi
 before_script:
+    - if [ "$CHECK_DOC" = 1 ]; then git fetch --unshallow; fi
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then contrib/devtools/commit-script-check.sh $TRAVIS_COMMIT_RANGE; fi
     #- if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/crypto/ctaes; fi
     #- if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/secp256k1; fi
@@ -74,7 +76,7 @@ script:
     - if [ -n "$USE_SHELL" ]; then export CONFIG_SHELL="$USE_SHELL"; fi
     - OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
     - BITCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
-    - if [ -z "$NO_DEPENDS" ]; then depends/$HOST/native/bin/ccache --max-size=$CCACHE_SIZE; fi
+    - if [ -z "$NO_DEPENDS" ]; then ccache --max-size=$CCACHE_SIZE; fi
     - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
     - mkdir build && cd build
     - ../configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
@@ -83,18 +85,16 @@ script:
     - ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
-    - sudo cat /proc/sys/kernel/random/entropy_avail
-    - if [ "$RUN_UNIT_TESTS" = "true" ]; then travis_wait 40 make $MAKEJOBS check VERBOSE=1; fi
-    - sudo cat /proc/sys/kernel/random/entropy_avail
-    - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude pruning,dbcrash"; fi
-#   - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --coverage --quiet ${extended}; fi
+    - if [ "$RUN_UNIT_TESTS" = "true" ]; then travis_wait 50 make $MAKEJOBS check VERBOSE=1; fi
+    - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude feature_pruning,feature_dbcrash"; fi
+#   - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --combinedlogslen=4000 --coverage --quiet ${extended}; fi
     - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --combinedlogslen=4000 --coverage --quiet --particl --insight; fi
     - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --coverage --quiet; fi
-
+after_script:
+    - echo $TRAVIS_COMMIT_RANGE
+    - echo $TRAVIS_COMMIT_LOG
 after_success:
     - COMMIT=$(echo $TRAVIS_COMMIT | head -c 7)
     - tar -cjf particl_$COMMIT.tar.bz2 -C $OUTDIR/bin/ .
     - if [ -f particl_$COMMIT.tar.bz2 ]; then travis_retry curl --max-time 60 --upload particl_$COMMIT.tar.bz2 http://t.particl.io/particl_$COMMIT.tar.bz2; fi
-after_script:
-    - echo $TRAVIS_COMMIT_RANGE
-    - echo $TRAVIS_COMMIT_LOG
+

@@ -6,7 +6,7 @@
 #include <key.h>
 #include <pubkey.h>
 #include <keystore.h>
-#include <base58.h>
+#include <key_io.h>
 #include <serialize.h>
 #include <streams.h>
 

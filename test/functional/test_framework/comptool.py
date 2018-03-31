@@ -8,7 +8,7 @@ To use, create a class that implements get_tests(), and pass it in
 as the test generator to TestManager.  get_tests() should be a python
 generator that returns TestInstance objects.  See below for definition.
 
-TestNode behaves as follows:
+TestP2PConn behaves as follows:
     Configure with a BlockStore and TxStore
     on_inv: log the message but don't request
     on_headers: log the chain tip
@@ -39,7 +39,7 @@ class RejectResult():
     def __repr__(self):
         return '%i:%s' % (self.code,self.reason or '*')
 
-class TestNode(P2PInterface):
+class TestP2PConn(P2PInterface):
 
     def __init__(self, block_store, tx_store):
         super().__init__()
@@ -170,7 +170,7 @@ class TestManager():
     def add_all_connections(self, nodes):
         for i in range(len(nodes)):
             # Create a p2p connection to each node
-            node = TestNode(self.block_store, self.tx_store)
+            node = TestP2PConn(self.block_store, self.tx_store)
             node.peer_connect('127.0.0.1', p2p_port(i))
             self.p2p_connections.append(node)
 

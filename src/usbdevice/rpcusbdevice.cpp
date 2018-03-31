@@ -8,7 +8,7 @@
 #include <rpc/util.h>
 #include <rpc/safemode.h>
 #include <utilstrencodings.h>
-#include <base58.h>
+#include <key_io.h>
 #include <key/extkey.h>
 #include <chainparams.h>
 

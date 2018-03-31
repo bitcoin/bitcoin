@@ -283,7 +283,7 @@ class WalletTest(BitcoinTestFramework):
         sync_blocks(self.nodes[0:3])
         node_2_bal += 2
 
-        #tx should be added to balance because after restarting the nodes tx should be broadcastet
+        #tx should be added to balance because after restarting the nodes tx should be broadcast
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
 
         #send a tx with value in a string (PR#6380 +)
@@ -379,9 +379,9 @@ class WalletTest(BitcoinTestFramework):
             self.start_node(0, [m, "-limitancestorcount="+str(chainlimit)])
             self.start_node(1, [m, "-limitancestorcount="+str(chainlimit)])
             self.start_node(2, [m, "-limitancestorcount="+str(chainlimit)])
-            while m == '-reindex' and [block_count] * 3 != [self.nodes[i].getblockcount() for i in range(3)]:
+            if m == '-reindex':
                 # reindex will leave rpc warm up "early"; Wait for it to finish
-                time.sleep(0.1)
+                wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
             assert_equal(balance_nodes, [self.nodes[i].getbalance() for i in range(3)])
 
         # Exercise listsinceblock with the last two blocks

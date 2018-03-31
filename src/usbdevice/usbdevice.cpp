@@ -105,7 +105,7 @@ bool DeviceSignatureCreator::CreateSig(std::vector<unsigned char> &vchSig, const
 
     //uint256 hash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion);
 
-    const CHDWallet *pw = dynamic_cast<const CHDWallet*>(keystore);
+    const CHDWallet *pw = dynamic_cast<const CHDWallet*>(m_provider);
     if (pw)
     {
         const CEKAKey *pak = nullptr;
@@ -143,7 +143,7 @@ bool DeviceSignatureCreator::CreateSig(std::vector<unsigned char> &vchSig, const
         return true;
     };
 
-    const CPathKeyStore *pks = dynamic_cast<const CPathKeyStore*>(keystore);
+    const CPathKeyStore *pks = dynamic_cast<const CPathKeyStore*>(m_provider);
     if (pks)
     {
         CPathKey pathkey;

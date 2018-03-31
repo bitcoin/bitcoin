@@ -80,8 +80,7 @@ static void VerifyScriptBench(benchmark::State& state)
 
     std::vector<uint8_t> vchAmount(8);
     memcpy(&vchAmount[0], &txCredit.vout[0].nValue, 8);
-
-    key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, vchAmount, SIGVERSION_WITNESS_V0), witness.stack.back(), 0);
+    key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, vchAmount, SigVersion::WITNESS_V0), witness.stack.back(), 0);
     witness.stack.back().push_back(static_cast<unsigned char>(SIGHASH_ALL));
     witness.stack.push_back(ToByteVector(pubkey));
 

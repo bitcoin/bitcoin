@@ -7,7 +7,7 @@
 
 #include <key/keyutil.h>
 #include <util.h>
-#include <base58.h>
+#include <key_io.h>
 #include <crypto/hmac_sha512.h>
 
 #include <stdint.h>

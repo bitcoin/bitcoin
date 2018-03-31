@@ -26,7 +26,7 @@ sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transac
     CAmount amount = 0;
     std::vector<uint8_t> vchAmount(8);
     memcpy(&vchAmount[0], &amount, 8);
-    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL, vchAmount, SIGVERSION_BASE);
+    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL, vchAmount, SigVersion::BASE);
 
     CScript result;
     result << OP_0; // CHECKMULTISIG bug workaround

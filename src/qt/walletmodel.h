@@ -5,6 +5,11 @@
 #ifndef BITCOIN_QT_WALLETMODEL_H
 #define BITCOIN_QT_WALLETMODEL_H
 
+#include <amount.h>
+#include <key.h>
+#include <serialize.h>
+#include <script/standard.h>
+
 #include <qt/paymentrequestplus.h>
 #include <qt/walletmodeltransaction.h>
 #include <amount.h>
@@ -18,7 +23,7 @@
 #include <QObject>
 #include <QMessageBox>
 
-enum OutputType : int;
+enum class OutputType;
 
 class AddressTableModel;
 class OptionsModel;
@@ -142,6 +147,8 @@ public:
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
+    CWallet *getWallet() const { return wallet; };
+
     CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
     CAmount getAnonBalance(const CCoinControl *coinControl = nullptr) const;
     CAmount getBlindBalance(const CCoinControl *coinControl = nullptr) const;
@@ -244,6 +251,9 @@ public:
 
     int getDefaultConfirmTarget() const;
 
+    QString getWalletName() const;
+
+    static bool isMultiwallet();
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;
@@ -284,7 +294,7 @@ Q_SIGNALS:
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance, const CAmount& watchStakedBalance);
 
     // Encryption status of wallet changed
-    void encryptionStatusChanged(int status);
+    void encryptionStatusChanged();
 
     // Signal emitted when wallet needs to be unlocked
     // It is valid behaviour for listeners to keep the wallet locked after this signal;

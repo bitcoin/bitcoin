@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <base58.h>
 #include <chain.h>
 #include <coins.h>
 #include <consensus/validation.h>
@@ -12,6 +11,7 @@
 #include <keystore.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <key_io.h>
 #include <merkleblock.h>
 #include <net.h>
 #include <policy/policy.h>
@@ -151,9 +151,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 
     if (!hashBlock.IsNull()) {
         entry.pushKV("blockhash", hashBlock.GetHex());
-        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-        if (mi != mapBlockIndex.end() && (*mi).second) {
-            CBlockIndex* pindex = (*mi).second;
+        CBlockIndex* pindex = LookupBlockIndex(hashBlock);
+        if (pindex) {
             if (chainActive.Contains(pindex)) {
                 entry.pushKV("height", pindex->nHeight);
                 entry.pushKV("confirmations", 1 + chainActive.Height() - pindex->nHeight);
@@ -266,11 +265,10 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
 
     if (!request.params[2].isNull()) {
         uint256 blockhash = ParseHashV(request.params[2], "parameter 3");
-        BlockMap::iterator it = mapBlockIndex.find(blockhash);
-        if (it == mapBlockIndex.end()) {
+        blockindex = LookupBlockIndex(blockhash);
+        if (!blockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
         }
-        blockindex = it->second;
         in_active_chain = chainActive.Contains(blockindex);
     }
 
@@ -366,9 +364,10 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
     if (!request.params[1].isNull())
     {
         hashBlock = uint256S(request.params[1].get_str());
-        if (!mapBlockIndex.count(hashBlock))
+        pblockindex = LookupBlockIndex(hashBlock);
+        if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-        pblockindex = mapBlockIndex[hashBlock];
+        }
     } else {
         // Loop through txids and try to find which block they're in. Exit loop once a block is found.
         for (const auto& tx : setTxids) {
@@ -385,9 +384,10 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
         CTransactionRef tx;
         if (!GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock, false) || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
-        if (!mapBlockIndex.count(hashBlock))
+        pblockindex = LookupBlockIndex(hashBlock);
+        if (!pblockindex) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
-        pblockindex = mapBlockIndex[hashBlock];
+        }
     }
 
     CBlock block;
@@ -434,8 +434,10 @@ UniValue verifytxoutproof(const JSONRPCRequest& request)
 
     LOCK(cs_main);
 
-    if (!mapBlockIndex.count(merkleBlock.header.GetHash()) || !chainActive.Contains(mapBlockIndex[merkleBlock.header.GetHash()]))
+    const CBlockIndex* pindex = LookupBlockIndex(merkleBlock.header.GetHash());
+    if (!pindex || !chainActive.Contains(pindex)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
+    }
 
     for (const uint256& hash : vMatch)
         res.push_back(hash.GetHex());
@@ -444,9 +446,10 @@ UniValue verifytxoutproof(const JSONRPCRequest& request)
 
 UniValue createrawtransaction(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4) {
         throw std::runtime_error(
-            "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] {\"address\":amount,\"data\":\"hex\",...} ( locktime ) ( replaceable )\n"
+            // clang-format off
+            "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable )\n"
             "\nCreate a transaction spending the given inputs and creating new outputs.\n"
             "Outputs can be addresses or data.\n"
             "Returns hex-encoded raw transaction.\n"
@@ -457,18 +460,23 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "1. \"inputs\"                (array, required) A json array of json objects\n"
             "     [\n"
             "       {\n"
-            "         \"txid\":\"id\",    (string, required) The transaction id\n"
+            "         \"txid\":\"id\",      (string, required) The transaction id\n"
             "         \"vout\":n,         (numeric, required) The output number\n"
             "         \"sequence\":n      (numeric, optional) The sequence number\n"
             "       } \n"
             "       ,...\n"
             "     ]\n"
-            "2. \"outputs\"               (object, required) a json object with outputs\n"
+            "2. \"outputs\"               (array, required) a json array with outputs (key-value pairs)\n"
+            "   [\n"
             "    {\n"
-            "      \"address\": x.xxx     (numeric or string, required) The key is the particl address, the numeric value (can be string) is the " + CURRENCY_UNIT + " amount\n"
-            "      \"data\": \"hex\",     (string, required) The key is \"data\", the value is hex encoded data\n"
-            "      ...\n"
+            "      \"address\": x.xxx,    (obj, optional) A key-value pair. The key (string) is the particl address, the value (float or string) is the amount in " + CURRENCY_UNIT + "\n"
+            "    },\n"
+            "    {\n"
+            "      \"data\": \"hex\"        (obj, optional) A key-value pair. The key must be \"data\", the value is hex encoded data\n"
             "    }\n"
+            "    ,...                     More key-value pairs of the above form. For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
+            "                             accepted as second parameter.\n"
+            "   ]\n"
             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
             "4. replaceable               (boolean, optional, default=false) Marks this transaction as BIP125 replaceable.\n"
             "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
@@ -476,18 +484,29 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "\"transaction\"              (string) hex string of the transaction\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"{\\\"address\\\":0.01}\"")
-            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"{\\\"data\\\":\\\"00010203\\\"}\"")
-            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"{\\\"address\\\":0.01}\"")
-            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"{\\\"data\\\":\\\"00010203\\\"}\"")
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"address\\\":0.01}]\"")
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"address\\\":0.01}]\"")
+            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+            // clang-format on
         );
+    }
 
-    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VOBJ, UniValue::VNUM, UniValue::VBOOL}, true);
+    RPCTypeCheck(request.params, {
+        UniValue::VARR,
+        UniValueType(), // ARR or OBJ, checked later
+        UniValue::VNUM,
+        UniValue::VBOOL
+        }, true
+    );
     if (request.params[0].isNull() || request.params[1].isNull())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1 and 2 must be non-null");
 
     UniValue inputs = request.params[0].get_array();
-    UniValue sendTo = request.params[1].get_obj();
+    const bool outputs_is_obj = request.params[1].isObject();
+    UniValue outputs = outputs_is_obj ?
+                           request.params[1].get_obj() :
+                           request.params[1].get_array();
 
     CMutableTransaction rawTx;
     rawTx.nVersion = fParticlMode ? PARTICL_TXN_VERSION : BTC_TXN_VERSION;
@@ -541,11 +560,24 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
     }
 
     std::set<CTxDestination> destinations;
-    std::vector<std::string> addrList = sendTo.getKeys();
-    for (const std::string& name_ : addrList) {
-
+    if (!outputs_is_obj) {
+        // Translate array of key-value pairs into dict
+        UniValue outputs_dict = UniValue(UniValue::VOBJ);
+        for (size_t i = 0; i < outputs.size(); ++i) {
+            const UniValue& output = outputs[i];
+            if (!output.isObject()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair not an object as expected");
+            }
+            if (output.size() != 1) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair must contain exactly one key");
+            }
+            outputs_dict.pushKVs(output);
+        }
+        outputs = std::move(outputs_dict);
+    }
+    for (const std::string& name_ : outputs.getKeys()) {
         if (name_ == "data") {
-            std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"Data");
+            std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
 
             if (fParticlMode)
             {
@@ -568,7 +600,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             }
 
             CScript scriptPubKey = GetScriptForDestination(destination);
-            CAmount nAmount = AmountFromValue(sendTo[name_]);
+            CAmount nAmount = AmountFromValue(outputs[name_]);
 
             if (fParticlMode)
             {
@@ -1067,13 +1099,9 @@ UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     const UniValue& keys = request.params[1].get_array();
     for (unsigned int idx = 0; idx < keys.size(); ++idx) {
         UniValue k = keys[idx];
-        CBitcoinSecret vchSecret;
-        if (!vchSecret.SetString(k.get_str())) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
-        }
-        CKey key = vchSecret.GetKey();
+        CKey key = DecodeSecret(k.get_str());
         if (!key.IsValid()) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
         }
         keystore.AddKey(key);
     }
@@ -1166,18 +1194,18 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         new_request.params.push_back(request.params[1]);
         new_request.params.push_back(request.params[3]);
         return signrawtransactionwithkey(new_request);
-    }
-    // Otherwise sign with the wallet which does not take a privkeys parameter
+    } else {
 #ifdef ENABLE_WALLET
-    else {
+        // Otherwise sign with the wallet which does not take a privkeys parameter
         new_request.params.push_back(request.params[0]);
         new_request.params.push_back(request.params[1]);
         new_request.params.push_back(request.params[3]);
         return signrawtransactionwithwallet(new_request);
-    }
+#else
+        // If we have made it this far, then wallet is disabled and no private keys were given, so fail here.
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "No private keys available.");
 #endif
-    // If we have made it this far, then wallet is disabled and no private keys were given, so fail here.
-    throw JSONRPCError(RPC_INVALID_PARAMETER, "No private keys available.");
+    }
 }
 
 UniValue sendrawtransaction(const JSONRPCRequest& request)

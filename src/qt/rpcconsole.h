@@ -17,7 +17,7 @@
 class ClientModel;
 class PlatformStyle;
 class RPCTimerInterface;
-class WalletFrame;
+class WalletModel;
 
 namespace Ui {
     class RPCConsole;
@@ -37,12 +37,13 @@ public:
     explicit RPCConsole(const PlatformStyle *platformStyle, QWidget *parent);
     ~RPCConsole();
 
-    static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, std::string *pwalletName = nullptr);
-    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, std::string *pwalletName = nullptr) {
-        return RPCParseCommandLine(strResult, strCommand, true, pstrFilteredOut, pwalletName);
+    static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr);
+    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr) {
+        return RPCParseCommandLine(strResult, strCommand, true, pstrFilteredOut, walletID);
     }
 
     void setClientModel(ClientModel *model);
+    void addWallet(WalletModel * const walletModel);
 
     enum MessageClass {
         MC_ERROR,
@@ -121,7 +122,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     // For RPC command executor
     void stopExecutor();
-    void cmdRequest(const QString &command, const QString &wallet);
+    void cmdRequest(const QString &command, const QString &walletID);
 
 private:
     void startExecutor();
@@ -139,7 +140,6 @@ private:
 
     };
 
-    WalletFrame *walletFrame;
     Ui::RPCConsole *ui;
     ClientModel *clientModel;
     QStringList history;
@@ -153,6 +153,7 @@ private:
     int consoleFontSize;
     QCompleter *autoCompleter;
     QThread thread;
+    QString m_last_wallet_id;
 
     /** Update UI with latest network info from model. */
     void updateNetworkState();

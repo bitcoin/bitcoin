@@ -6,11 +6,11 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <base58.h>
 #include <clientversion.h>
 #include <coins.h>
 #include <consensus/consensus.h>
 #include <core_io.h>
+#include <key_io.h>
 #include <keystore.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -205,7 +205,7 @@ static void MutateTxVersion(CMutableTransaction& tx, const std::string& cmdVal)
         {
             ScriptError serror;
             std::vector<std::vector<unsigned char> > stack;
-            if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SIGVERSION_BASE, &serror))
+            if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, &serror))
                 throw std::runtime_error("EvalScript failed for input.");
 
             txin.scriptWitness.stack = stack;
@@ -665,7 +665,6 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the raw tx:
     CMutableTransaction mergedTx(txVariants[0]);
-    bool fComplete = true;
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
 
@@ -677,12 +676,10 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) {
         if (!keysObj[kidx].isStr())
             throw std::runtime_error("privatekey not a std::string");
-        CBitcoinSecret vchSecret;
-        bool fGood = vchSecret.SetString(keysObj[kidx].getValStr());
-        if (!fGood)
+        CKey key = DecodeSecret(keysObj[kidx].getValStr());
+        if (!key.IsValid()) {
             throw std::runtime_error("privatekey not valid");
-
-        CKey key = vchSecret.GetKey();
+        }
         tempKeystore.AddKey(key);
     }
 
@@ -753,7 +750,6 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         CTxIn& txin = mergedTx.vin[i];
         const Coin& coin = view.AccessCoin(txin.prevout);
         if (coin.IsSpent()) {
-            fComplete = false;
             continue;
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
@@ -773,14 +769,6 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         for (const CTransaction& txv : txVariants)
             sigdata = CombineSignatures(prevPubKey, MutableTransactionSignatureChecker(&mergedTx, i, vchAmount), sigdata, DataFromTransaction(txv, i));
         UpdateTransaction(mergedTx, i, sigdata);
-
-        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i, vchAmount)))
-            fComplete = false;
-    }
-
-    if (fComplete) {
-        // do nothing... for now
-        // perhaps store this for later optional JSON output
     }
 
     tx = mergedTx;

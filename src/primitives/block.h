@@ -42,11 +42,8 @@ public:
         READWRITE(nVersion);
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
-
         if (IsParticlVersion())
-        {
             READWRITE(hashWitnessMerkleRoot);
-        }
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
@@ -72,8 +69,7 @@ public:
 
     bool IsParticlVersion()
     {
-        // NOTE: Be very careful matching the version here: qa tests can fail silently
-        return this->nVersion == PARTICL_BLOCK_VERSION;
+        return nVersion == PARTICL_BLOCK_VERSION;
     }
 
     int64_t GetBlockTime() const

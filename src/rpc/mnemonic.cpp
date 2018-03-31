@@ -8,8 +8,8 @@
 #include <util.h>
 #include <utilstrencodings.h>
 #include <key.h>
+#include <key_io.h>
 #include <key/extkey.h>
-#include <base58.h>
 #include <random.h>
 #include <chainparams.h>
 #include <support/cleanse.h>

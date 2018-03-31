@@ -4,9 +4,9 @@
 
 #include <httprpc.h>
 
-#include <base58.h>
 #include <chainparams.h>
 #include <httpserver.h>
+#include <key_io.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <random.h>
@@ -167,8 +167,9 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         req->WriteHeader("Access-Control-Allow-Origin", gArgs.GetArg("-rpccorsdomain", ""));
     }
     JSONRPCRequest jreq;
+    jreq.peerAddr = req->GetPeer().ToString();
     if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
-        LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", req->GetPeer().ToString());
+        LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
 
         /* Deter brute-forcing
            If this results in a DoS the user really
@@ -261,6 +262,9 @@ void StopHTTPRPC()
 {
     LogPrint(BCLog::RPC, "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
+#ifdef ENABLE_WALLET
+    UnregisterHTTPHandler("/wallet/", false);
+#endif
     if (httpRPCTimerInterface) {
         RPCUnsetTimerInterface(httpRPCTimerInterface.get());
         httpRPCTimerInterface.reset();

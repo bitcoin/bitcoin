@@ -35,11 +35,8 @@ struct StakeTestingSetup: public TestingSetup {
     StakeTestingSetup(const std::string& chainName = CBaseChainParams::REGTEST):
         TestingSetup(chainName, true) // fParticlMode = true
     {
-        bitdb.MakeMock();
-
         bool fFirstRun;
-        std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test_part.dat"));
-        pwalletMain = MakeUnique<CHDWallet>(std::move(dbw));
+        pwalletMain = MakeUnique<CHDWallet>("mock_part", CWalletDBWrapper::CreateMock());
         vpwallets.push_back(pwalletMain.get());
         fParticlWallet = true;
         pwalletMain->LoadWallet(fFirstRun);
@@ -56,9 +53,6 @@ struct StakeTestingSetup: public TestingSetup {
     {
         UnregisterValidationInterface(pwalletMain.get());
         pwalletMain.reset();
-
-        bitdb.Flush(true);
-        bitdb.Reset();
 
         mapStakeSeen.clear();
         listStakeSeen.clear();
@@ -126,7 +120,8 @@ static void AddAnonTxn(CHDWallet *pwallet, CBitcoinAddress &address, CAmount amo
     r.address = address.Get();
     vecSend.push_back(r);
 
-    CWalletTx wtx;
+    CTransactionRef tx_new;
+    CWalletTx wtx(pwallet, std::move(tx_new));
     CTransactionRecord rtx;
     CAmount nFee;
     CCoinControl coinControl;
@@ -143,7 +138,7 @@ static void DisconnectTip(CBlock &block, CBlockIndex *pindexDelete, CCoinsViewCa
     CValidationState state;
     BOOST_REQUIRE(DISCONNECT_OK == DisconnectBlock(block, pindexDelete, view));
     BOOST_REQUIRE(FlushView(&view, state, true));
-    BOOST_REQUIRE(FlushStateToDisk(chainparams, state, FLUSH_STATE_IF_NEEDED));
+    BOOST_REQUIRE(FlushStateToDisk(chainparams, state, FlushStateMode::IF_NEEDED));
     chainActive.SetTip(pindexDelete->pprev);
     UpdateTip(pindexDelete->pprev, chainparams);
 };
@@ -158,6 +153,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
     const CChainParams &chainparams = *regtestChainParams;
 
     BOOST_REQUIRE(chainparams.GenesisBlock().GetHash() == chainActive.Tip()->GetBlockHash());
+
     BOOST_CHECK_NO_THROW(rv = CallRPC("extkeyimportmaster tprv8ZgxMBicQKsPeK5mCpvMsd1cwyT1JZsrBN82XkoYuZY1EVK7EwDaiL9sDfqUU5SntTfbRfnRedFWjg5xkDG5i3iwd3yP7neX5F2dtdCojk4"));
 
     // Import the key to the last 5 outputs in the regtest genesis coinbase
@@ -239,7 +235,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
 
     bool fSubtractFeeFromAmount = false;
     CAmount nAmount = 10000;
-    CWalletTx wtx;
+    CTransactionRef tx_new;
 
     // Parse Bitcoin address
     CScript scriptPubKey = GetScriptForDestination(idRecv);
@@ -254,13 +250,15 @@ BOOST_AUTO_TEST_CASE(stake_test)
     vecSend.push_back(recipient);
 
     CCoinControl coinControl;
-    BOOST_CHECK(pwallet->CreateTransaction(vecSend, wtx, reservekey, nFeeRequired, nChangePosRet, strError, coinControl));
+    BOOST_CHECK(pwallet->CreateTransaction(vecSend, tx_new, reservekey, nFeeRequired, nChangePosRet, strError, coinControl));
 
     {
         g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
         CValidationState state;
         pwallet->SetBroadcastTransactions(true);
-        BOOST_CHECK(pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state));
+        mapValue_t mapValue;
+        std::string strAccount;
+        BOOST_CHECK(pwallet->CommitTransaction(tx_new, std::move(mapValue), {} /* orderForm */, strAccount, reservekey, g_connman.get(), state));
     }
 
     StakeNBlocks(pwallet, 1);
@@ -269,7 +267,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
     BOOST_REQUIRE(ReadBlockFromDisk(blockLast, chainActive.Tip(), chainparams.GetConsensus()));
 
     BOOST_REQUIRE(blockLast.vtx.size() == 2);
-    BOOST_REQUIRE(blockLast.vtx[1]->GetHash() == wtx.GetHash());
+    BOOST_REQUIRE(blockLast.vtx[1]->GetHash() == tx_new->GetHash());
 
     {
         uint256 tipHash = chainActive.Tip()->GetBlockHash();
@@ -315,7 +313,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
 
             BOOST_CHECK(!clearstate.IsInvalid());
             BOOST_REQUIRE(FlushView(&clearview, state, false));
-            BOOST_REQUIRE(FlushStateToDisk(chainparams, clearstate, FLUSH_STATE_IF_NEEDED));
+            BOOST_REQUIRE(FlushStateToDisk(chainparams, clearstate, FlushStateMode::IF_NEEDED));
             chainActive.SetTip(pindexDelete);
             UpdateTip(pindexDelete, chainparams);
 

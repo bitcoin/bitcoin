@@ -351,6 +351,12 @@ QLabel { color: rgb(40,40,40);  }</string>
              <property name="text">
               <string>Hide</string>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::StrongFocus</enum>
+             </property>
+             <property name="default">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
           </layout>

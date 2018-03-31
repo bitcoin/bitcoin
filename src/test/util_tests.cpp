@@ -165,21 +165,32 @@ BOOST_AUTO_TEST_CASE(util_DateTimeStrFormat)
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", 0), "1970-01-01 00:00:00");
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", 0x7FFFFFFF), "2038-01-19 03:14:07");
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", 1317425777), "2011-09-30 23:36:17");
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", 1317425777), "2011-09-30T23:36:17Z");
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%H:%M:%SZ", 1317425777), "23:36:17Z");
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%Y-%m-%d %H:%M", 1317425777), "2011-09-30 23:36");
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%a, %d %b %Y %H:%M:%S +0000", 1317425777), "Fri, 30 Sep 2011 23:36:17 +0000");
 }
 
-class TestArgsManager : public ArgsManager
+BOOST_AUTO_TEST_CASE(util_FormatISO8601DateTime)
 {
-public:
-    std::map<std::string, std::string>& GetMapArgs()
-    {
-        return mapArgs;
-    };
-    const std::map<std::string, std::vector<std::string> >& GetMapMultiArgs()
-    {
-        return mapMultiArgs;
-    };
+    BOOST_CHECK_EQUAL(FormatISO8601DateTime(1317425777), "2011-09-30T23:36:17Z");
+}
+
+BOOST_AUTO_TEST_CASE(util_FormatISO8601Date)
+{
+    BOOST_CHECK_EQUAL(FormatISO8601Date(1317425777), "2011-09-30");
+}
+
+BOOST_AUTO_TEST_CASE(util_FormatISO8601Time)
+{
+    BOOST_CHECK_EQUAL(FormatISO8601Time(1317425777), "23:36:17Z");
+}
+
+struct TestArgsManager : public ArgsManager
+{
+    std::map<std::string, std::string>& GetMapArgs() { return mapArgs; }
+    const std::map<std::string, std::vector<std::string> >& GetMapMultiArgs() { return mapMultiArgs; }
+    const std::unordered_set<std::string>& GetNegatedArgs() { return m_negated_args; }
 };
 
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
@@ -205,6 +216,54 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
 
     BOOST_CHECK(testArgs.GetMapArgs()["-a"] == "" && testArgs.GetMapArgs()["-ccc"] == "multiple");
     BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
+}
+
+BOOST_AUTO_TEST_CASE(util_GetBoolArg)
+{
+    TestArgsManager testArgs;
+    const char *argv_test[] = {
+        "ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"};
+    testArgs.ParseParameters(7, (char**)argv_test);
+
+    // Each letter should be set.
+    for (char opt : "abcdef")
+        BOOST_CHECK(testArgs.IsArgSet({'-', opt}) || !opt);
+
+    // Nothing else should be in the map
+    BOOST_CHECK(testArgs.GetMapArgs().size() == 6 &&
+                testArgs.GetMapMultiArgs().size() == 6);
+
+    // The -no prefix should get stripped on the way in.
+    BOOST_CHECK(!testArgs.IsArgSet("-nob"));
+
+    // The -b option is flagged as negated, and nothing else is
+    BOOST_CHECK(testArgs.IsArgNegated("-b"));
+    BOOST_CHECK(testArgs.GetNegatedArgs().size() == 1);
+    BOOST_CHECK(!testArgs.IsArgNegated("-a"));
+
+    // Check expected values.
+    BOOST_CHECK(testArgs.GetBoolArg("-a", false) == true);
+    BOOST_CHECK(testArgs.GetBoolArg("-b", true) == false);
+    BOOST_CHECK(testArgs.GetBoolArg("-c", true) == false);
+    BOOST_CHECK(testArgs.GetBoolArg("-d", false) == true);
+    BOOST_CHECK(testArgs.GetBoolArg("-e", true) == false);
+    BOOST_CHECK(testArgs.GetBoolArg("-f", true) == false);
+}
+
+BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
+{
+    // Test some awful edge cases that hopefully no user will ever exercise.
+    TestArgsManager testArgs;
+    const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
+    testArgs.ParseParameters(4, (char**)argv_test);
+
+    // This was passed twice, second one overrides the negative setting.
+    BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
+    BOOST_CHECK(testArgs.GetBoolArg("-foo", false) == true);
+
+    // A double negative is a positive.
+    BOOST_CHECK(testArgs.IsArgNegated("-bar"));
+    BOOST_CHECK(testArgs.GetBoolArg("-bar", false) == true);
 }
 
 BOOST_AUTO_TEST_CASE(util_GetArg)
@@ -688,9 +747,8 @@ static constexpr char ExitCommand = 'X';
 static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
 {
     char ch;
-    int rv;
     while (true) {
-        rv = read(fd, &ch, 1); // Wait for command
+        int rv = read(fd, &ch, 1); // Wait for command
         assert(rv == 1);
         switch(ch) {
         case LockCommand:
@@ -755,7 +813,7 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     thr.join();
     BOOST_CHECK_EQUAL(threadresult, true);
 #ifndef WIN32
-    // Try to aquire lock in child process while we're holding it, this should fail.
+    // Try to acquire lock in child process while we're holding it, this should fail.
     char ch;
     BOOST_CHECK_EQUAL(write(fd[1], &LockCommand, 1), 1);
     BOOST_CHECK_EQUAL(read(fd[1], &ch, 1), 1);
@@ -766,7 +824,7 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     // Probing lock from our side now should succeed, but not hold on to the lock.
     BOOST_CHECK_EQUAL(LockDirectory(dirname, lockname, true), true);
 
-    // Try to acquire the lock in the child process, this should be succesful.
+    // Try to acquire the lock in the child process, this should be successful.
     BOOST_CHECK_EQUAL(write(fd[1], &LockCommand, 1), 1);
     BOOST_CHECK_EQUAL(read(fd[1], &ch, 1), 1);
     BOOST_CHECK_EQUAL((bool)ch, true);
@@ -799,6 +857,22 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     // Clean up
     ReleaseDirectoryLocks();
     fs::remove_all(dirname);
+}
+
+BOOST_AUTO_TEST_CASE(test_DirIsWritable)
+{
+    // Should be able to write to the system tmp dir.
+    fs::path tmpdirname = fs::temp_directory_path();
+    BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
+
+    // Should not be able to write to a non-existent dir.
+    tmpdirname = fs::temp_directory_path() / fs::unique_path();
+    BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), false);
+
+    fs::create_directory(tmpdirname);
+    // Should be able to write to it now.
+    BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
+    fs::remove(tmpdirname);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

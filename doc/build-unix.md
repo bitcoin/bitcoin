@@ -326,6 +326,7 @@ For the wallet (optional):
 Then build using:
 
     ./autogen.sh
+    ./configure --disable-wallet # OR
     ./configure BDB_CFLAGS="-I${BDB_PREFIX}/include" BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx"
     gmake
 

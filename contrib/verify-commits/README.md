@@ -24,3 +24,24 @@ keys:
 Note that the above isn't a good UI/UX yet, and needs significant improvements
 to make it more convenient and reduce the chance of errors; pull-reqs
 improving this process would be much appreciated.
+
+Configuration files
+-------------------
+
+* `trusted-git-root`: This file should contain a single git commit hash which is the first unsigned git commit (hence it is the "root of trust").
+* `trusted-sha512-root-commit`: This file should contain a single git commit hash which is the first commit without a SHA512 root commitment.
+* `trusted-keys`: This file should contain a \n-delimited list of all PGP fingerprints of authorized commit signers (primary, not subkeys).
+* `allow-revsig-commits`: This file should contain a \n-delimited list of git commit hashes. See next section for more info.
+
+Key expiry/revocation
+---------------------
+
+When a key (or subkey) which has signed old commits expires or is revoked,
+verify-commits will start failing to verify all commits which were signed by
+said key. In order to avoid bumping the root-of-trust `trusted-git-root`
+file, individual commits which were signed by such a key can be added to the
+`allow-revsig-commits` file. That way, the PGP signatures are still verified
+but no new commits can be signed by any expired/revoked key. To easily build a
+list of commits which need to be added, verify-commits.sh can be edited to test
+each commit with BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG set to both 1 and 0, and
+those which need it set to 1 printed.

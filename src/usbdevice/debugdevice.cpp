@@ -4,7 +4,7 @@
 
 #include <usbdevice/debugdevice.h>
 
-#include <base58.h>
+#include <key_io.h>
 #include <univalue.h>
 #include <validation.h>
 #include <hash.h>

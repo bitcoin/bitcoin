@@ -4,9 +4,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <base58.h>
 #include <key.h>
-#include <key/extkey.h>
+#include <key_io.h>
 #include <uint256.h>
 #include <util.h>
 #include <utilstrencodings.h>
@@ -14,6 +13,8 @@
 
 #include <string>
 #include <vector>
+
+#include <key/extkey.h>
 
 struct TestDerivation {
     std::string pub;
@@ -109,13 +110,12 @@ void RunTest(const TestVector &test) {
 
         assert(checkKey == key); //ensure a base58 decoded key also matches
 
-        // Test public key
-        CBitcoinExtPubKey b58pubkey; b58pubkey.SetKey(pubkey);
-        BOOST_CHECK(b58pubkey.ToString() == derive.pub);
+        BOOST_CHECK(EncodeExtKey(key) == derive.prv);
+        BOOST_CHECK(DecodeExtKey(derive.prv) == key); //ensure a base58 decoded key also matches
 
-        CBitcoinExtPubKey b58PubkeyDecodeCheck(derive.pub);
-        CExtPubKey checkPubKey = b58PubkeyDecodeCheck.GetKey();
-        assert(checkPubKey == pubkey); //ensure a base58 decoded pubkey also matches
+        // Test public key
+        BOOST_CHECK(EncodeExtPubKey(pubkey) == derive.pub);
+        BOOST_CHECK(DecodeExtPubKey(derive.pub) == pubkey); //ensure a base58 decoded pubkey also matches
 
         // Derive new keys
         CExtKey keyNew;

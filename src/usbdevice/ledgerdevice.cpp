@@ -441,7 +441,7 @@ int CLedgerDevice::PrepareTransaction(const CTransaction *tx, const CCoinsViewCa
     in[apduSize++] = BTCHIP_INS_HASH_INPUT_START;
     in[apduSize++] = 0x00;
     in[apduSize++] = 0x02; // segwit
-    in[apduSize++] = 4 + GetSizeOfVarInt(tx->vin.size());
+    in[apduSize++] = 4 + GetSizeOfVarInt<VarIntMode::DEFAULT>(tx->vin.size());
 
     in[apduSize++] = tx->nVersion;
     in[apduSize++] = 0x00;

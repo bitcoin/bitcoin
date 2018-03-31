@@ -3,11 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key/extkey.h>
+#include <key_io.h>
 #include <uint256.h>
-#include <test/test_bitcoin.h>
-
-#include <base58.h>
 #include <chainparams.h>
+#include <test/test_bitcoin.h>
 
 
 #include <string>

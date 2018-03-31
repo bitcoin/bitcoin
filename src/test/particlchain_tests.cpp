@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(varints)
 
     size_t size = 0;
     for (int i = 0; i < 100000; i++) {
-        size_t sz = GetSizeOfVarInt(i);
+        size_t sz = GetSizeOfVarInt<VarIntMode::NONNEGATIVE_SIGNED>(i);
         BOOST_CHECK(sz = PutVarInt(c, i));
         BOOST_CHECK(0 == PutVarInt(v, i));
         BOOST_CHECK(0 == memcmp(c, &v[size], sz));
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(varints)
 
     for (uint64_t i = 0;  i < 100000000000ULL; i += 999999937) {
         BOOST_CHECK(0 == PutVarInt(v, i));
-        size += GetSizeOfVarInt(i);
+        size += GetSizeOfVarInt<VarIntMode::DEFAULT>(i);
         BOOST_CHECK(size == v.size());
     }
 

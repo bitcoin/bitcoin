@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(smsg_test)
     smsg::fSecMsgEnabled = true;
     int rv = 0;
     const int nKeys = 12;
-    CWallet keystore;
+    CWallet keystore("dummy", CWalletDBWrapper::CreateDummy());
     std::vector<CKey> keyOwn(nKeys);
     for (int i = 0; i < nKeys; i++)
     {

@@ -9,8 +9,8 @@
 #include <qt/paymentserver.h>
 #include <qt/transactionrecord.h>
 
-#include <base58.h>
 #include <consensus/consensus.h>
+#include <key_io.h>
 #include <validation.h>
 #include <script/script.h>
 #include <timedata.h>
@@ -22,6 +22,7 @@
 #include <univalue.h>
 #include <rpc/server.h>
 #include <rpc/client.h>
+#include <policy/policy.h>
 
 #include <stdint.h>
 #include <string>
@@ -249,8 +250,9 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     if (wtx.mapValue.count("comment") && !wtx.mapValue["comment"].empty())
         strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["comment"], true) + "<br>";
 
-    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxID() + "<br>";
+    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxHash() + "<br>";
     strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(wtx.tx->GetTotalSize()) + " bytes<br>";
+    strHTML += "<b>" + tr("Transaction virtual size") + ":</b> " + QString::number(GetVirtualTransactionSize(*wtx.tx)) + " bytes<br>";
     strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
 
     // Message from normal bitcoin:URI (bitcoin:123...?message=example)
@@ -368,7 +370,7 @@ QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, Tran
     strHTML += "<br>";
 
     strHTML += "<b>" + tr("Date") + ":</b> " + (nTime ? GUIUtil::dateTimeStr(nTime) : "") + "<br>";
-    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxID() + "<br>";
+    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxHash() + "<br>";
 
 
     JSONRPCRequest request;
@@ -377,7 +379,7 @@ QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, Tran
     request.fHelp = false;
     request.fSkipBlock = true;
     UniValue params(UniValue::VARR);
-    params.push_back(rec->getTxID().toStdString());
+    params.push_back(rec->getTxHash().toStdString());
     request.params = params;
     UniValue rv = gettransaction(request);
 

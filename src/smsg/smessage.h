@@ -6,12 +6,13 @@
 #ifndef SEC_MESSAGE_H
 #define SEC_MESSAGE_H
 
+#include <key_io.h>
 #include <net.h>
-#include <base58.h>
 #include <serialize.h>
 #include <ui_interface.h>
 #include <lz4/lz4.h>
 #include <smsg/keystore.h>
+
 
 class CWallet;
 
@@ -233,18 +234,6 @@ public:
     uint32_t              nActive;        // Number of untimedout messages in bucket
     NodeId                nLockPeerId;    // id of peer that bucket is locked for
     std::set<SecMsgToken> setTokens;
-};
-
-class CBitcoinAddress_B : public CBitcoinAddress
-{
-public:
-    uint8_t getVersion()
-    {
-        // TODO: fix
-        if (vchVersion.size() > 0)
-            return vchVersion[0];
-        return 0;
-    };
 };
 
 class SecMsgAddress

@@ -49,7 +49,7 @@ Notes:
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <base58.h>
+#include <key_io.h>
 #include <sync.h>
 #include <random.h>
 #include <chain.h>
@@ -3333,7 +3333,7 @@ int CSMSG::Encrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyID 
         keyFrom.SignCompact(Hash(message.begin(), message.end()), vchSignature);
 
         // Save some bytes by sending address raw
-        vchPayload[0] = (static_cast<CBitcoinAddress_B*>(&coinAddrFrom))->getVersion(); // vchPayload[0] = coinAddrDest.nVersion;
+        vchPayload[0] = (static_cast<CBitcoinAddress*>(&coinAddrFrom))->getVersion(); // vchPayload[0] = coinAddrDest.nVersion;
         memcpy(&vchPayload[1], ckidFrom.begin(), 20); // memcpy(&vchPayload[1], ckidDest.pn, 20);
 
         memcpy(&vchPayload[1+20], &vchSignature[0], vchSignature.size());

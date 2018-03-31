@@ -7,7 +7,7 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
-#include <base58.h>
+#include <key_io.h>
 #include <wallet/wallet.h>
 #include <wallet/hdwallet.h>
 #include <wallet/rpchdwallet.h>
@@ -15,10 +15,10 @@
 #include <util.h>
 #include <univalue.h>
 
-
-#include <QMessageBox>
 #include <QFont>
 #include <QDebug>
+
+#include <QMessageBox>
 
 const QString AddressTableModel::Send = "S";
 const QString AddressTableModel::Receive = "R";
@@ -386,18 +386,18 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 sCommand += "\""+label+ "\" ";
                 sCommand += " 0 ";
                 sCommand += " 0 ";
-                sCommand += (address_type == OUTPUT_TYPE_BECH32) ? " true " : " false ";
+                sCommand += (address_type == OutputType::BECH32) ? " true " : " false ";
                 break;
             case ADDR_EXT:
                 sCommand = "getnewextaddress ";
                 sCommand += "\""+label+ "\" ";
                 sCommand += " \"\" ";
-                sCommand += (address_type == OUTPUT_TYPE_BECH32) ? " true " : " false ";
+                sCommand += (address_type == OutputType::BECH32) ? " true " : " false ";
                 break;
             default:
                 sCommand = "getnewaddress ";
                 sCommand += "\""+label+ "\" ";
-                sCommand += (address_type == OUTPUT_TYPE_BECH32) ? " true " : " false ";
+                sCommand += (address_type == OutputType::BECH32) ? " true " : " false ";
                 sCommand += " false ";
                 sCommand += (addrType == ADDR_STANDARD256) ? " true " : " false ";
                 break;
@@ -466,6 +466,8 @@ int AddressTableModel::lookupAddress(const QString &address) const
         return lst.at(0).row();
     }
 }
+
+OutputType AddressTableModel::GetDefaultAddressType() const { return wallet->m_default_address_type; };
 
 void AddressTableModel::emitDataChanged(int idx)
 {

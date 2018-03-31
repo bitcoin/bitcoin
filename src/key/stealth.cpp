@@ -4,11 +4,12 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key/stealth.h>
-#include <base58.h>
-#include <crypto/sha256.h>
-#include <key/keyutil.h>
+
 #include <key.h>
+#include <key_io.h>
+#include <key/keyutil.h>
 #include <pubkey.h>
+#include <crypto/sha256.h>
 #include <random.h>
 #include <script/script.h>
 #include <smsg/crypter.h>
