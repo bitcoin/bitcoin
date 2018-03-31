@@ -315,9 +315,9 @@ void WalletView::showProgress(const QString &title, int nProgress)
         progressDialog = new QProgressDialog(title, "", 0, 100);
         progressDialog->setWindowModality(Qt::ApplicationModal);
         progressDialog->setMinimumDuration(0);
-        progressDialog->setCancelButton(0);
         progressDialog->setAutoClose(false);
         progressDialog->setValue(0);
+        progressDialog->setCancelButtonText(tr("Cancel"));
     }
     else if (nProgress == 100)
     {
@@ -327,8 +327,13 @@ void WalletView::showProgress(const QString &title, int nProgress)
             progressDialog->deleteLater();
         }
     }
-    else if (progressDialog)
-        progressDialog->setValue(nProgress);
+    else if (progressDialog) {
+        if (progressDialog->wasCanceled()) {
+            getWalletModel()->wallet().abortRescan();
+        } else {
+            progressDialog->setValue(nProgress);
+        }
+    }
 }
 
 void WalletView::requestedSyncWarningInfo()
