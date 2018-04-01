@@ -1238,7 +1238,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	std::map<string, int> mapOutputs;
 	for (std::vector<CTxIn>::const_iterator it(txIn.vin.begin()); it != txIn.vin.end(); ++it)
 	{
-		const string& strOut = strprintf("%s%s", HexStr((*it).prevout.hash), (*it).prevout.n);
+		const string& strOut = strprintf("%s%s", (*it).prevout.hash.GetHex(), (*it).prevout.n);
 		mapOutputs[strOut] = 1;
 	}
 	CAmount nCurrentAmount = 0;
