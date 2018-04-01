@@ -87,7 +87,7 @@ class BlockStore():
         block.calc_sha256()
         try:
             self.blockDB[repr(block.sha256)] = bytes(block.serialize())
-        except TypeError as e:
+        except TypeError:
             logger.exception("Unexpected error")
         self.currentBlock = block.sha256
         self.headers_map[block.sha256] = CBlockHeader(block)
@@ -147,7 +147,7 @@ class TxStore():
         tx.calc_sha256()
         try:
             self.txDB[repr(tx.sha256)] = bytes(tx.serialize())
-        except TypeError as e:
+        except TypeError:
             logger.exception("Unexpected error")
 
     def get_transactions(self, inv):
