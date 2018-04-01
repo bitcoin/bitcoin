@@ -1251,8 +1251,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	bool bFunded = false;
 	vector<vector<unsigned char> > vvch;
 	if (nCurrentAmount < nDesiredAmount) {
-		
-		CAmount nFees = 0;
+		const unsigned int nBytes = ::GetSerializeSize(txIn, SER_NETWORK, PROTOCOL_VERSION);
+		CAmount nFees = ::minRelayTxFee.GetFee(nBytes*1.5);
 		const CAmount &minFee = minRelayTxFee.GetFee(3000);
 		for (unsigned int i = 0; i < utxoArray.size(); i++)
 		{
