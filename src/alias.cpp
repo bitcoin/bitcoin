@@ -1377,7 +1377,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	vchWitness = vchFromValue(params[7]);
 
 	CMutableTransaction tx;
-
+	tx.nVersion = SYSCOIN_TX_VERSION;
 	CAliasIndex oldAlias;
 	if (GetAlias(vchAlias, oldAlias))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("This alias already exists"));
