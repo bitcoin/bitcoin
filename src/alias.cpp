@@ -1238,13 +1238,11 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		const string& strOut = strprintf("%s%s", (*it).prevout.hash.GetHex(), (*it).prevout.n);
 		mapOutputs[strOut] = 1;
 	}
-	CCoinsView dummy;
-	CCoinsViewCache view(&dummy);
 	CAmount nCurrentAmount = 0;
 	{
-		LOCK2(cs_main, mempool.cs);
-		CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
-		view.SetBackend(viewMemPool);
+		LOCK(cs_main);
+		CCoinsView dummy;
+		CCoinsViewCache view(&dummy);
 		// get value of inputs
 		nCurrentAmount = view.GetValueIn(txIn);
 	}
@@ -1273,8 +1271,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 				continue;
 			{
 				LOCK(mempool.cs);
-				auto it = mempool.mapNextTx.find(COutPoint(txid, nOut));
-				if (it != mempool.mapNextTx.end())
+				if (mempool.mapNextTx.find(COutPoint(txid, nOut)) != mempool.mapNextTx.end())
 					continue;
 			}
 			// look for non alias inputs coins that can be used to fund this transaction
