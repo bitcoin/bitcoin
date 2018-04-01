@@ -1252,11 +1252,13 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	vector<vector<unsigned char> > vvch;
 	if (nCurrentAmount < nDesiredAmount) {
 		
+		const CAmount nFees = 0;
 		const CAmount &minFee = minRelayTxFee.GetFee(3000);
 		for (unsigned int i = 0; i < utxoArray.size(); i++)
 		{
 			// add 200 bytes of fees to account for every input added to this transaction
-			nDesiredAmount += 3 * minRelayTxFee.GetFee(200u);
+			nFees += 3 * minRelayTxFee.GetFee(200u);
+			nDesiredAmount += nFees;
 			const UniValue& utxoObj = utxoArray[i].get_obj();
 			const string &strTxid = find_value(utxoObj, "txid").get_str();
 			const uint256& txid = uint256S(strTxid);
@@ -1285,7 +1287,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		}
 		if (!bFunded)
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Insufficient funds for alias creation transaction"));
-		const CAmount &nChange = nCurrentAmount - nDesiredAmount;
+		const CAmount &nChange = nCurrentAmount - nDesiredAmount - nFees;
 		// if addresses were passed in, send change back to the last address as policy
 		if (params.size() > 1) {
 			tx.vout.push_back(CTxOut(nChange, tx.vin.back().scriptSig));
