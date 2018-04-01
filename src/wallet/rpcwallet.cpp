@@ -452,7 +452,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	{
 		COutPoint aliasOutPointWitness;
 		aliasunspent(vchWitness, aliasOutPointWitness);
-		if (aliasOutPointWitness.empty())
+		if (aliasOutPointWitness.IsNull())
 		{
 			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but not enough outputs found for witness alias: ") + stringFromVch(vchWitness));
 		}
