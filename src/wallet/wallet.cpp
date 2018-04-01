@@ -2681,7 +2681,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 	set<pair<const CWalletTx*, uint32_t> > setPresetCoins;
 	if (coinControl && coinControl->HasSelected())
 	{
-		LOCK(cs_main);
+		LOCK2(cs_main,mempool.cs);
 		// add all coin control inputs to setCoinsRet based on UTXO db lookup, txindex must be enabled for nodes that are supporting wallet-less spending based on alias UTXOs.
 		CCoinsViewCache view(pcoinsTip);
 		const CCoins *coins;
@@ -2700,8 +2700,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 				return false;
 			if (!coins->IsAvailable(outpoint.n))
 				continue;
-			auto it = mempool.mapNextTx.find(outpoint);
-			if (it != mempool.mapNextTx.end())
+			if (mempool.mapNextTx.find(outpoint) != mempool.mapNextTx.end())
 				continue;
 			if (!GetSyscoinTransaction(coins->nHeight, outpoint.hash, tx, hashBlock, Params().GetConsensus()))
 				continue;

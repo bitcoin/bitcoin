@@ -1793,8 +1793,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 			continue;
 		{
 			LOCK(mempool.cs);
-			auto it = mempool.mapNextTx.find(COutPoint(txid, nOut));
-			if (it != mempool.mapNextTx.end())
+			if (mempool.mapNextTx.find(COutPoint(txid, nOut)) != mempool.mapNextTx.end())
 				continue;
 		}
 		nAmount += nValue;
@@ -1860,8 +1859,7 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 		const COutPoint &outPointToCheck = COutPoint(txid, nOut);
 		{
 			LOCK(mempool.cs);
-			auto it = mempool.mapNextTx.find(outPointToCheck);
-			if (it != mempool.mapNextTx.end())
+			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
 				continue;
 		}
 		if(!bIsFunded || bSelectAll)
@@ -1916,8 +1914,7 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 		const COutPoint &outPointToCheck = COutPoint(txid, nOut);
 		{
 			LOCK(mempool.cs);
-			auto it = mempool.mapNextTx.find(outPointToCheck);
-			if (it != mempool.mapNextTx.end())
+			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
 				continue;
 		}
 		if (!funded)
