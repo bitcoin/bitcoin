@@ -1493,7 +1493,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 			if (!pcoinW) {
 				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot find witness transaction"));
 			}
-			tx.vin.push_back(CTxIn(aliasOutPointWitness[0], pcoinW->vout[aliasOutPointWitness[0].n].scriptPubKey))
+			tx.vin.push_back(CTxIn(aliasOutPointWitness[0], pcoinW->vout[aliasOutPointWitness[0].n].scriptPubKey));
 		}
 	}
 	UniValue res(UniValue::VARR);
