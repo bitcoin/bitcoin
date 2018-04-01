@@ -1252,7 +1252,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	vector<vector<unsigned char> > vvch;
 	if (nCurrentAmount < nDesiredAmount) {
 		
-		const CAmount nFees = 0;
+		CAmount nFees = 0;
 		const CAmount &minFee = minRelayTxFee.GetFee(3000);
 		for (unsigned int i = 0; i < utxoArray.size(); i++)
 		{
