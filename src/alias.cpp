@@ -1872,21 +1872,22 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
 				continue;
 		}
-		if(!bIsFunded || bSelectAll)
-		{
-			outPoints.push_back(outPointToCheck);
-			nCurrentAmount += nValue;
-			if (nCurrentAmount >= nDesiredAmount) {
-				bIsFunded = true;
-			}
-		}	
-		numResults++;
+		outPoints.push_back(outPointToCheck);
+		nCurrentAmount += nValue;
+		if (nCurrentAmount >= nDesiredAmount) {
+			bIsFunded = true;
+			if (!bSelectAll)
+				break;
+		}
+			
     }
 	if (!bIsFunded && !bSelectAll)
 		outPoints.clear();
-	nRequiredAmount = nDesiredAmount - nCurrentAmount;
-	if(nRequiredAmount < 0)
-		nRequiredAmount = 0;
+	if (!bIsFunded) {
+		nRequiredAmount = nDesiredAmount - nCurrentAmount;
+		if (nRequiredAmount < 0)
+			nRequiredAmount = 0;
+	}
 }
 /**
  * [aliasinfo description]

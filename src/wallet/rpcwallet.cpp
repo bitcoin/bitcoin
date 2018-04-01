@@ -463,15 +463,13 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	// if alias inputs used, need to ensure new alias utxo's are created as prev ones need to be used for proof of ownership
 	if (!aliasRecipient.scriptPubKey.empty()) {
 		aliasunspent(vchAlias, aliasOutPoint);
-		if (transferAlias)
-			aliasOutPoint.SetNull();
 		// for the alias utxo (1 per transaction is used)
-		if (!aliasRecipient.scriptPubKey.empty() && aliasOutPoint.IsNull())
+		if (aliasOutPoint.IsNull() || transferAlias)
 		{
 			for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 				vecSend.push_back(aliasRecipient);
 		}
-		else if (!aliasOutPoint.IsNull())
+		if (!aliasOutPoint.IsNull())
 			coinControl->Select(aliasOutPoint);
 	}
 	// if alias inputs used, need to ensure new alias utxo's are created as prev ones need to be used for proof of ownership
@@ -484,38 +482,14 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		throw runtime_error(strError);
 	}
 
-	CAmount nTotal = nFeeRequired;
-	BOOST_FOREACH(const CRecipient& recp, vecSend)
-	{
-		nTotal += recp.nAmount;
-	}
-
-	// step 2
-	vector<COutPoint> outPoints;
-	// if alias input is used, we need to use fees to pay the data portion of the service tx
-	if (!aliasRecipient.scriptPubKey.empty()) {
-		// select coins from alias to pay for this tx
-		aliasselectpaymentcoins(vchAlias, nTotal, outPoints, nFeeRequired, transferAlias);
-		
-		BOOST_FOREACH(const COutPoint& outpoint, outPoints)
-		{
-			if (!coinControl->IsSelected(outpoint))
-				coinControl->Select(outpoint);
-		}
-		
-	}
 
 	// step 3
 	UniValue param(UniValue::VARR);
 	param.push_back(stringFromVch(vchAlias));
 	const UniValue &result = aliasbalance(param, false);
 	CAmount nBalance = AmountFromValue(find_value(result.get_obj(), "balance"));
-	if (nBalance > 0)
+	if (nBalance > 0 && (transferAlias || nFeeRequired > 0))
 	{
-		// get total output required
-		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty(), ALL_COINS, fUseInstantSend)) {
-			throw runtime_error(strError);
-		}
 		CAmount nOutputTotal = 0;
 		BOOST_FOREACH(const CRecipient& recp, vecSend)
 		{
@@ -538,7 +512,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		{
 			vector<COutPoint> outPoints;
 			// select all if alias transferred otherwise just get enough outputs to fund nTotal
-			aliasselectpaymentcoins(vchAlias, nTotal, outPoints, nFeeRequired, transferAlias);
+			aliasselectpaymentcoins(vchAlias, 0, outPoints, nFeeRequired, transferAlias);
 			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
 			{
 				if (!coinControl->IsSelected(outpoint))
