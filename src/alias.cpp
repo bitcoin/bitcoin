@@ -1239,7 +1239,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	CAmount nCurrentAmount = 0;
 	{
 		LOCK2(cs_main, mempool.cs);
-		CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
+		CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
 		view.SetBackend(viewMemPool);
 		// get value of inputs
 		nCurrentAmount = view.GetValueIn(txIn);
