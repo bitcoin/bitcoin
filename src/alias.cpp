@@ -1254,7 +1254,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
 		const CScript& scriptPubKey = CScript(data.begin(), data.end());
 		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
-		if (mapOutputs.find(strprintf("%s%s", strTxid, nOut)) == mapOutputs.end())
+		if (mapOutputs.find(strprintf("%s%s", strTxid, nOut)) != mapOutputs.end())
 			continue;
 		// look for non alias inputs coins that can be used to fund this transaction
 		if (DecodeAliasScript(scriptPubKey, op, vvch))
