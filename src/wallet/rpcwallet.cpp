@@ -53,7 +53,7 @@ extern std::string stringFromVch(const std::vector<unsigned char> &vch);
 extern std::vector<unsigned char> vchFromString(const std::string &str);
 extern unsigned int MAX_ALIAS_UPDATES_PER_BLOCK;
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
-extern void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, CAmount& nFeeRequired, bool bSelectAll, bool bNoAliasRecipient);
+extern void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, CAmount& nFeeRequired, bool bSelectAll);
 extern string GetSyscoinTransactionDescription(const int op, string& responseEnglish, const char &type);
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
@@ -450,13 +450,29 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	// if witness is specified attach witness input, don't worry about creating another output for the witness alias they can do a manual update later to create new outputs
 	if (!vchWitness.empty())
 	{
-		vector<COutPoint> aliasOutPointWitness;
-		aliasselectpaymentcoins(vchWitness, 1, aliasOutPointWitness, nFeeRequired);
+		COutPoint aliasOutPointWitness;
+		aliasunspent(vchWitness, aliasOutPointWitness);
 		if (aliasOutPointWitness.empty())
 		{
 			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but not enough outputs found for witness alias: ") + stringFromVch(vchWitness));
 		}
-		coinControl->Select(aliasOutPointWitness[0]);
+		coinControl->Select(aliasOutPointWitness);
+	}
+	COutPoint aliasOutPoint;
+	int numResults = 0;
+	// if alias inputs used, need to ensure new alias utxo's are created as prev ones need to be used for proof of ownership
+	if (!aliasRecipient.scriptPubKey.empty()) {
+		aliasunspent(vchAlias, aliasOutPoint);
+		if (transferAlias)
+			aliasOutPoint.SetNull();
+		// for the alias utxo (1 per transaction is used)
+		if (!aliasRecipient.scriptPubKey.empty() && aliasOutPoint.IsNull())
+		{
+			for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+				vecSend.push_back(aliasRecipient);
+		}
+		else if (!aliasOutPoint.IsNull())
+			coinControl->Select(aliasOutPoint);
 	}
 	// if alias inputs used, need to ensure new alias utxo's are created as prev ones need to be used for proof of ownership
 
@@ -494,14 +510,6 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	param.push_back(stringFromVch(vchAlias));
 	const UniValue &result = aliasbalance(param, false);
 	CAmount nBalance = AmountFromValue(find_value(result.get_obj(), "balance"));
-	// if fee placement utxo's have been used up (or we are creating a new alias) use balance(alias or wallet) for funding as well as create more fee placeholders
-	if (outPoints.empty() && !aliasRecipient.scriptPubKey.empty())
-	{
-		for (unsigned int i = 0; i<MAX_ALIAS_UPDATES_PER_BLOCK; i++)
-		{
-			vecSend.push_back(aliasRecipient);
-		}
-	}
 	if (nBalance > 0)
 	{
 		// get total output required
@@ -530,18 +538,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		{
 			vector<COutPoint> outPoints;
 			// select all if alias transferred otherwise just get enough outputs to fund nTotal
-			aliasselectpaymentcoins(vchAlias, nTotal, outPoints, nFeeRequired, transferAlias, aliasRecipient.scriptPubKey.empty());
-			if (nFeeRequired > 0 && !transferAlias)
-			{
-				vector<COutPoint> feeOutPoints;
-				CAmount nRequiredPaymentFunds = nFeeRequired;
-				aliasselectpaymentcoins(vchAlias, nRequiredPaymentFunds, feeOutPoints, nFeeRequired, true, aliasRecipient.scriptPubKey.empty());
-				BOOST_FOREACH(const COutPoint& outpoint, feeOutPoints)
-				{
-					if(!coinControl->IsSelected(outpoint))
-						coinControl->Select(outpoint);
-				}
-			}
+			aliasselectpaymentcoins(vchAlias, nTotal, outPoints, nFeeRequired, transferAlias);
 			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
 			{
 				if (!coinControl->IsSelected(outpoint))

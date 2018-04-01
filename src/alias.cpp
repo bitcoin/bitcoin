@@ -1483,18 +1483,18 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		}
 		if (!vchWitness.empty())
 		{
-			vector<COutPoint> aliasOutPointWitness;
+			COutPoint aliasOutPointWitness;
 			CAmount nFeeRequired;
-			aliasselectpaymentcoins(vchWitness, 1, aliasOutPointWitness, nFeeRequired);
-			if (aliasOutPointWitness.empty())
+			aliasunspent(vchWitness, aliasOutPointWitness);
+			if (aliasOutPointWitness.IsNull())
 			{
 				throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but not enough outputs found for witness alias: ") + stringFromVch(vchWitness));
 			}
-			const CCoins* pcoinW = view.AccessCoins(aliasOutPointWitness[0].hash);
+			const CCoins* pcoinW = view.AccessCoins(aliasOutPointWitness.hash);
 			if (!pcoinW) {
 				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot find witness transaction"));
 			}
-			tx.vin.push_back(CTxIn(aliasOutPointWitness[0], pcoinW->vout[aliasOutPointWitness[0].n].scriptPubKey));
+			tx.vin.push_back(CTxIn(aliasOutPointWitness[0], pcoinW->vout[aliasOutPointWitness.n].scriptPubKey));
 		}
 	}
 	else
@@ -1816,9 +1816,6 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 		const int& nHeight = find_value(utxoObj, "height").get_int();
 		if (DecodeAliasScript(scriptPubKey, op, vvch))
 			continue;
-		// some smaller sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
-		if (nValue <= minRelayTxFee.GetFee(3000))
-			continue;
 		{
 			LOCK(mempool.cs);
 			if (mempool.mapNextTx.find(COutPoint(txid, nOut)) != mempool.mapNextTx.end())
@@ -1831,7 +1828,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 	res.push_back(Pair("balance", ValueFromAmount(nAmount)));
     return  res;
 }
-void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, CAmount &nRequiredAmount, bool bSelectAll, bool bNoAliasRecipient)
+void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, CAmount &nRequiredAmount, bool bSelectAll)
 {
 	int numResults = 0;
 	CAmount nCurrentAmount = 0;
@@ -1866,18 +1863,9 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
 		const CScript& scriptPubKey = CScript(data.begin(), data.end());
 		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
-		// look non alias inputs
-		if (!bSelectAll && (!DecodeAliasScript(scriptPubKey, op, vvch) || vvch.size() <= 1 || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID))
+		// look for non alias inputs
+		if (DecodeAliasScript(scriptPubKey, op, vvch))
 			continue;
-		if (!bSelectAll) {
-			// fee placement were ones that were smaller outputs used for subsequent updates
-			if (nValue <= minRelayTxFee.GetFee(3000))
-			{
-				// alias pay doesn't include recipient, no utxo inputs used for aliaspay, for aliaspay we don't care about these small dust amounts
-				if (bNoAliasRecipient)
-					continue;
-			}
-		}
 		const COutPoint &outPointToCheck = COutPoint(txid, nOut);
 		{
 			LOCK(mempool.cs);
@@ -1954,7 +1942,7 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 	oName.push_back(Pair("_id", alias.txHash.GetHex()));
 	oName.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));
 	oName.push_back(Pair("alias", stringFromVch(alias.vchAlias)));
-	int64_t nTime = 0;
+	int64_t nTime = 0; 
 	if (chainActive.Height() >= alias.nHeight) {
 		CBlockIndex *pindex = chainActive[alias.nHeight];
 		if (pindex) {
@@ -1965,6 +1953,48 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
 	oName.push_back(Pair("accepttransferflags", (int)alias.nAcceptTransferFlags));
 	return true;
+}
+void aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
+{
+	outpoint.SetNull();
+	CAliasIndex theAlias;
+	if (!GetAlias(vchAlias, theAlias))
+		return;
+	UniValue paramsUTXO(UniValue::VARR);
+	UniValue param(UniValue::VOBJ);
+	UniValue utxoParams(UniValue::VARR);
+	const string &strAddressFrom = EncodeBase58(theAlias.vchAddress);
+	utxoParams.push_back(strAddressFrom);
+	param.push_back(Pair("addresses", utxoParams));
+	paramsUTXO.push_back(param);
+	const UniValue &resUTXOs = getaddressutxos(paramsUTXO, false);
+	UniValue utxoArray(UniValue::VARR);
+	if (resUTXOs.isArray())
+		utxoArray = resUTXOs.get_array();
+	else
+		return;
+
+	CAmount nCurrentAmount = 0;
+	for (unsigned int i = 0; i<utxoArray.size(); i++)
+	{
+		const UniValue& utxoObj = utxoArray[i].get_obj();
+		const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
+		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
+		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
+		const CScript& scriptPubKey = CScript(data.begin(), data.end());
+		int op;
+		vector<vector<unsigned char> > vvch;
+		if (!DecodeAliasScript(scriptPubKey, op, vvch) || vvch.size() <= 1 || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID)
+			continue;
+		const COutPoint &outPointToCheck = COutPoint(txid, nOut);
+		{
+			LOCK(mempool.cs);
+			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
+				continue;
+		}
+		outpoint = outPointToCheck;
+		return;	
+	}
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {
 
