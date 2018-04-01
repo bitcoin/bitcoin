@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef POS_MINER_H
-#define POS_MINER_H
+#ifndef PARTICL_POS_MINER_H
+#define PARTICL_POS_MINER_H
 
 #include <primitives/block.h>
 #include <thread>
@@ -44,5 +44,5 @@ bool ThreadStakeMinerStopped(); // replace interruption_point
 
 void ThreadStakeMiner(size_t nThreadID, std::vector<CWallet*> &vpwallets, size_t nStart, size_t nEnd);
 
-#endif // POS_MINER_H
+#endif // PARTICL_POS_MINER_H
 

@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef KEY_UTIL_H
-#define KEY_UTIL_H
+#ifndef PARTICL_KEY_KEYUTIL_H
+#define PARTICL_KEY_KEYUTIL_H
 
 #include <vector>
 #include <inttypes.h>
@@ -13,4 +13,4 @@ void AppendChecksum(std::vector<uint8_t> &data);
 bool VerifyChecksum(const std::vector<uint8_t> &data);
 
 
-#endif  // KEY_UTIL_H
+#endif  // PARTICL_KEY_KEYUTIL_H

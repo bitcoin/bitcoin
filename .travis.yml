@@ -53,7 +53,7 @@ install:
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then travis_retry pip3 install flake8 --user; fi
     - if [ "$TEST_ZMQ" = 1 ]; then sudo python3 -m easy_install pyzmq; fi
 before_script:
-    - if [ "$CHECK_DOC" = 1 ]; then git fetch --unshallow; fi
+    #- if [ "$CHECK_DOC" = 1 ]; then git fetch --unshallow; fi
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then contrib/devtools/commit-script-check.sh $TRAVIS_COMMIT_RANGE; fi
     #- if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/crypto/ctaes; fi
     #- if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/secp256k1; fi

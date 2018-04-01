@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EXT_KEY_H
-#define EXT_KEY_H
+#ifndef PARTICL_KEY_EXTKEY_H
+#define PARTICL_KEY_EXTKEY_H
 
 
 #include <key.h>
@@ -899,5 +899,5 @@ int AppendPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath);
 std::string HDAccIDToString(const CKeyID &id);
 std::string HDKeyIDToString(const CKeyID &id);
 
-#endif // EXT_KEY_H
+#endif // PARTICL_KEY_EXTKEY_H
 

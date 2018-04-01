@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PARTICL_LEDGERDEVICE_H
-#define PARTICL_LEDGERDEVICE_H
+#ifndef PARTICL_USBDEVICE_LEDGERDEVICE_H
+#define PARTICL_USBDEVICE_LEDGERDEVICE_H
 
 #include <usbdevice/usbdevice.h>
 
@@ -31,4 +31,4 @@ public:
         std::vector<uint8_t> &vchSig, std::string &sError) override;
 };
 
-#endif // PARTICL_LEDGERDEVICE_H
+#endif // PARTICL_USBDEVICE_LEDGERDEVICE_H

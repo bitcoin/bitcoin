@@ -833,7 +833,7 @@ class SegWitTest(BitcoinTestFramework):
             self.test_node.announce_tx_and_wait_for_getdata(tx, timeout=2)
             self.log.error("Error: duplicate tx getdata!")
             assert(False)
-        except AssertionError as e:
+        except AssertionError:
             pass
 
         # Delivering this transaction with witness should fail (no matter who

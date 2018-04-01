@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef MNEMONIC_H
-#define MNEMONIC_H
+#ifndef PARTICL_KEY_MNEMONIC_H
+#define PARTICL_KEY_MNEMONIC_H
 
 #include <string>
 #include <vector>
@@ -37,5 +37,5 @@ int MnemonicAddChecksum(int nLanguageIn, const std::string &sWordListIn, std::st
 int MnemonicGetWord(int nLanguage, int nWord, std::string &sWord, std::string &sError);
 
 
-#endif // MNEMONIC_H
+#endif // PARTICL_KEY_MNEMONIC_H
 

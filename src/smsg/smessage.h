@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SEC_MESSAGE_H
-#define SEC_MESSAGE_H
+#ifndef PARTICL_SMSG_SMESSAGE_H
+#define PARTICL_SMSG_SMESSAGE_H
 
 #include <key_io.h>
 #include <net.h>
@@ -415,5 +415,5 @@ public:
 
 extern smsg::CSMSG smsgModule;
 
-#endif // SEC_MESSAGE_H
+#endif // PARTICL_SMSG_SMESSAGE_H
 

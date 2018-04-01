@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef KEY_STEALTH_H
-#define KEY_STEALTH_H
+#ifndef PARTICL_KEY_STEALTH_H
+#define PARTICL_KEY_STEALTH_H
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -153,5 +153,5 @@ void ECC_Start_Stealth();
 void ECC_Stop_Stealth();
 
 
-#endif  // KEY_STEALTH_H
+#endif  // PARTICL_KEY_STEALTH_H
 

@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PARTICL_RPC_SEC_MESSAGE_H
-#define PARTICL_RPC_SEC_MESSAGE_H
+#ifndef PARTICL_SMSG_RPCSMESSAGE_H
+#define PARTICL_SMSG_RPCSMESSAGE_H
 
 class CRPCTable;
 
 void RegisterSmsgRPCCommands(CRPCTable &t);
 
-#endif //PARTICL_RPC_SEC_MESSAGE_H
+#endif // PARTICL_SMSG_RPCSMESSAGE_H
