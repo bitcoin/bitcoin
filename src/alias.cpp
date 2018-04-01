@@ -1832,7 +1832,7 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 	outPoints.clear();
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
-		return -1;
+		return;
 
 	const string &strAddressFrom = EncodeBase58(theAlias.vchAddress);
 	UniValue paramsUTXO(UniValue::VARR);
@@ -1846,7 +1846,7 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 	if (resUTXOs.isArray())
 		utxoArray = resUTXOs.get_array();
 	else
-		return -1;
+		return;
 	
   	int op;
 	vector<vector<unsigned char> > vvch;
