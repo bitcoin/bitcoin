@@ -1258,7 +1258,6 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		{
 			// add 200 bytes of fees to account for every input added to this transaction
 			nFees += 3 * minRelayTxFee.GetFee(200u);
-			nDesiredAmount += nFees;
 			const UniValue& utxoObj = utxoArray[i].get_obj();
 			const string &strTxid = find_value(utxoObj, "txid").get_str();
 			const uint256& txid = uint256S(strTxid);
@@ -1280,7 +1279,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 				continue;
 			tx.vin.push_back(CTxIn(txid, nOut, scriptPubKey));
 			nCurrentAmount += nValue;
-			if (nCurrentAmount >= nDesiredAmount) {
+			if (nCurrentAmount >= (nDesiredAmount + nFees)) {
 				bFunded = true;
 				break;
 			}
