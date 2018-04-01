@@ -298,7 +298,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vecto
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
-void aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, CAmount &nRequiredAmount, bool bSelectAll=false, bool bNoAliasRecipient=false);
+void aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, CAmount &nRequiredAmount, bool bSelectAll=false);
 CAmount GetDataFee(const CScript& scriptPubKey);
 bool IsAliasOp(int op);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
