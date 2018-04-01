@@ -1236,52 +1236,60 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	// add total output amount of transaction to desired amount
 	nDesiredAmount += txIn.GetValueOut();
 	std::map<string, int> mapOutputs;
+	
+	CCoinsView dummy;
+	CCoinsViewCache view(&dummy);
+	// get value of inputs
+	CAmount nCurrentAmount = view.GetValueIn(tx);
 	for (std::vector<CTxIn>::const_iterator it(txIn.vin.begin()); it != txIn.vin.end(); ++it)
 	{
 		const string& strOut = strprintf("%s%s", (*it).prevout.hash.GetHex(), (*it).prevout.n);
 		mapOutputs[strOut] = 1;
 	}
-	CAmount nCurrentAmount = 0;
+	
 	int op;
 	bool bFunded = false;
 	vector<vector<unsigned char> > vvch;
-	for (unsigned int i = 0; i<utxoArray.size(); i++)
-	{
-		const UniValue& utxoObj = utxoArray[i].get_obj();
-		const string &strTxid = find_value(utxoObj, "txid").get_str();
-		const uint256& txid = uint256S(strTxid);
-		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
-		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
-		const CScript& scriptPubKey = CScript(data.begin(), data.end());
-		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
-		if (mapOutputs.find(strprintf("%s%s", strTxid, nOut)) != mapOutputs.end())
-			continue;
-		// look for non alias inputs coins that can be used to fund this transaction
-		if (DecodeAliasScript(scriptPubKey, op, vvch))
-			continue;
-		if (nValue <= minRelayTxFee.GetFee(3000))
-			continue;
-		tx.vin.push_back(CTxIn(txid, nOut, scriptPubKey));
-		nCurrentAmount += nValue;
-		if (nCurrentAmount >= nDesiredAmount) {
-			bFunded = true;
-			break;
+	if (nCurrentAmount < nDesiredAmount) {
+
+		for (unsigned int i = 0; i < utxoArray.size(); i++)
+		{
+			const UniValue& utxoObj = utxoArray[i].get_obj();
+			const string &strTxid = find_value(utxoObj, "txid").get_str();
+			const uint256& txid = uint256S(strTxid);
+			const int& nOut = find_value(utxoObj, "outputIndex").get_int();
+			const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
+			const CScript& scriptPubKey = CScript(data.begin(), data.end());
+			const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
+			if (mapOutputs.find(strprintf("%s%s", strTxid, nOut)) != mapOutputs.end())
+				continue;
+			// look for non alias inputs coins that can be used to fund this transaction
+			if (DecodeAliasScript(scriptPubKey, op, vvch))
+				continue;
+			if (nValue <= minRelayTxFee.GetFee(3000))
+				continue;
+			tx.vin.push_back(CTxIn(txid, nOut, scriptPubKey));
+			nCurrentAmount += nValue;
+			if (nCurrentAmount >= nDesiredAmount) {
+				bFunded = true;
+				break;
+			}
 		}
-	}
-	if(!bFunded)
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Insufficient funds for alias creation transaction"));
-	const CAmount &nChange = nCurrentAmount - nDesiredAmount;
-	// if addresses were passed in, send change back to the last address as policy
-	if (params.size() > 1) {
-		tx.vout.push_back(CTxOut(nChange, tx.vin.back().scriptSig));
-	}
-	// else create new change address in this wallet
-	else {
-		EnsureWalletIsUnlocked();
-		CReserveKey reservekey(pwalletMain);
-		CPubKey vchPubKey;
-		reservekey.GetReservedKey(vchPubKey, true);
-		tx.vout.push_back(CTxOut(nChange, GetScriptForDestination(vchPubKey.GetID())));
+		if (!bFunded)
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Insufficient funds for alias creation transaction"));
+		const CAmount &nChange = nCurrentAmount - nDesiredAmount;
+		// if addresses were passed in, send change back to the last address as policy
+		if (params.size() > 1) {
+			tx.vout.push_back(CTxOut(nChange, tx.vin.back().scriptSig));
+		}
+		// else create new change address in this wallet
+		else {
+			EnsureWalletIsUnlocked();
+			CReserveKey reservekey(pwalletMain);
+			CPubKey vchPubKey;
+			reservekey.GetReservedKey(vchPubKey, true);
+			tx.vout.push_back(CTxOut(nChange, GetScriptForDestination(vchPubKey.GetID())));
+		}
 	}
 	// pass back new raw transaction
 	UniValue res(UniValue::VARR);
