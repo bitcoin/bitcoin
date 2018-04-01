@@ -720,9 +720,8 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnewfund " + varray1[0].get_str()));
 	varray1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray1[0].get_str()));
-	string hex_str = find_value(r.get_obj(), "hex").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+
 	GenerateBlocks(5, node);
 	GenerateBlocks(5, node);
 	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + aliasname + " 10"), runtime_error);

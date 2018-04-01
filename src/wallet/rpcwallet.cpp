@@ -400,6 +400,7 @@ CAmount GetCoinControlInputTotal(const CCoinControl* coinControl)
 {
 	if (coinControl == NULL)
 		return 0;
+	LOCK(cs_main);
 	CCoinsViewCache view(pcoinsTip);
 	const CCoins *coins;
 	CAmount nValueRet = 0;

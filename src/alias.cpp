@@ -1241,8 +1241,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	CAmount nCurrentAmount = 0;
 	{
 		LOCK(cs_main);
-		CCoinsView dummy;
-		CCoinsViewCache view(&dummy);
+		CCoinsViewCache view(pcoinsTip);
 		// get value of inputs
 		nCurrentAmount = view.GetValueIn(txIn);
 	}
@@ -1252,12 +1251,12 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	bool bFunded = false;
 	vector<vector<unsigned char> > vvch;
 	if (nCurrentAmount < nDesiredAmount) {
-		// add 500 bytes of fees to account for extra inputs added to this transaction as a buffer to the required amount
-		size_t nSize = 500u;
-		nDesiredAmount += 3 * minRelayTxFee.GetFee(nSize);
+		
 		const CAmount &minFee = minRelayTxFee.GetFee(3000);
 		for (unsigned int i = 0; i < utxoArray.size(); i++)
 		{
+			// add 200 bytes of fees to account for every input added to this transaction
+			nDesiredAmount += 3 * minRelayTxFee.GetFee(200u);
 			const UniValue& utxoObj = utxoArray[i].get_obj();
 			const string &strTxid = find_value(utxoObj, "txid").get_str();
 			const uint256& txid = uint256S(strTxid);
