@@ -567,6 +567,8 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	sorted_vector<CAssetAllocationTuple> revertedAssetAllocations;
 	sorted_vector<vector<unsigned char> > revertedOffers;
 	sorted_vector<vector<unsigned char> > revertedCerts;
+	vector<vector<unsigned char> > vvch;
+	vector<vector<unsigned char> > vvchAlias;
 	if (wtxNew.nVersion == SYSCOIN_TX_VERSION) {
 		if (DecodeAliasTx(wtxNew, op, nOut, vvchAlias))
 		{
