@@ -1448,6 +1448,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
+	
 	CScript scriptData;
 
 	scriptData << OP_RETURN << data;
@@ -1495,6 +1496,11 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 			}
 			tx.vin.push_back(CTxIn(aliasOutPointWitness[0], pcoinW->vout[aliasOutPointWitness[0].n].scriptPubKey));
 		}
+	}
+	else
+		vecSend.push_back(recipient);
+	for (auto& recp : vecSend) {
+		tx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
 	}
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(tx));
