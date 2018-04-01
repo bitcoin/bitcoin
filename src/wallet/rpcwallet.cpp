@@ -495,7 +495,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		{
 			nOutputTotal += recp.nAmount;
 		}
-		nTotal = (nOutputTotal - GetCoinControlInputTotal(coinControl)) + nFeeRequired;
+		const CAmount &nTotal = (nOutputTotal - GetCoinControlInputTotal(coinControl)) + nFeeRequired;
 		// if transferring alias, move entire balance of alias to new address
 		if (transferAlias && !aliasRecipient.scriptPubKey.empty())
 		{
