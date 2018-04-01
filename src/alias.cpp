@@ -1483,6 +1483,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		if (!vchWitness.empty())
 		{
 			vector<COutPoint> aliasOutPointWitness;
+			CAmount nFeeRequired;
 			aliasselectpaymentcoins(vchWitness, 1, aliasOutPointWitness, nFeeRequired);
 			if (aliasOutPointWitness.empty())
 			{
