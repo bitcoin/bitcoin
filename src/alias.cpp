@@ -1230,28 +1230,23 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	else
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("No funds found in addresses provided"));
 
-	// add 500 bytes of fees to account for extra inputs added to this transaction as a buffer to the required amount
-	size_t nSize = 500u;
-	CAmount nDesiredAmount = 3 * minRelayTxFee.GetFee(nSize);
 	// add total output amount of transaction to desired amount
-	nDesiredAmount += txIn.GetValueOut();
+	CAmount nDesiredAmount = txIn.GetValueOut();
 	std::map<string, int> mapOutputs;
 	
 	CCoinsView dummy;
 	CCoinsViewCache view(&dummy);
 	// get value of inputs
-	CAmount nCurrentAmount = view.GetValueIn(tx);
-	for (std::vector<CTxIn>::const_iterator it(txIn.vin.begin()); it != txIn.vin.end(); ++it)
-	{
-		const string& strOut = strprintf("%s%s", (*it).prevout.hash.GetHex(), (*it).prevout.n);
-		mapOutputs[strOut] = 1;
-	}
+	CAmount nCurrentAmount = view.GetValueIn(txIn);
+
 	
 	int op;
 	bool bFunded = false;
 	vector<vector<unsigned char> > vvch;
 	if (nCurrentAmount < nDesiredAmount) {
-
+		// add 500 bytes of fees to account for extra inputs added to this transaction as a buffer to the required amount
+		size_t nSize = 500u;
+		nDesiredAmount += 3 * minRelayTxFee.GetFee(nSize);
 		for (unsigned int i = 0; i < utxoArray.size(); i++)
 		{
 			const UniValue& utxoObj = utxoArray[i].get_obj();
