@@ -298,7 +298,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vecto
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
-int aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll=false, bool bNoAliasRecipient=false);
+void aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, CAmount &nRequiredAmount, bool bSelectAll=false, bool bNoAliasRecipient=false);
 CAmount GetDataFee(const CScript& scriptPubKey);
 bool IsAliasOp(int op);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
@@ -330,7 +330,6 @@ void SysTxToJSON(const int op, const std::vector<unsigned char> &vchData, const 
 void AliasTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName);
 void CleanupSyscoinServiceDatabases(int &servicesCleaned);
-int aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outPoint);
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& script, const uint32_t nPaymentOption=1);
 std::string GetSyscoinTransactionDescription(const int op, std::string& responseEnglish, const char &type);
 bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName);
