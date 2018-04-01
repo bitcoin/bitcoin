@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_QUORUMS_UTILS_H
-#define DASH_QUORUMS_UTILS_H
+#ifndef BITCOIN_LLMQ_QUORUMS_UTILS_H
+#define BITCOIN_LLMQ_QUORUMS_UTILS_H
 
 #include <consensus/params.h>
 #include <net.h>
@@ -83,4 +83,4 @@ public:
 
 } // namespace llmq
 
-#endif//DASH_QUORUMS_UTILS_H
+#endif // BITCOIN_LLMQ_QUORUMS_UTILS_H

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_SIMPLIFIEDMNS_H
-#define DASH_SIMPLIFIEDMNS_H
+#ifndef BITCOIN_EVO_SIMPLIFIEDMNS_H
+#define BITCOIN_EVO_SIMPLIFIEDMNS_H
 
 #include <bls/bls.h>
 #include <merkleblock.h>
@@ -147,4 +147,4 @@ public:
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
 
-#endif //DASH_SIMPLIFIEDMNS_H
+#endif // BITCOIN_EVO_SIMPLIFIEDMNS_H

@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PRIVATESEND_H
-#define PRIVATESEND_H
+#ifndef BITCOIN_PRIVATESEND_PRIVATESEND_H
+#define BITCOIN_PRIVATESEND_PRIVATESEND_H
 
 #include <bls/bls.h>
 #include <chain.h>
@@ -475,4 +475,4 @@ public:
 
 };
 
-#endif
+#endif // BITCOIN_PRIVATESEND_PRIVATESEND_H

@@ -1,7 +1,7 @@
 // Copyright (c) 2014-2019 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
-#ifndef DASH_HDCHAIN_H
-#define DASH_HDCHAIN_H
+#ifndef BITCOIN_HDCHAIN_H
+#define BITCOIN_HDCHAIN_H
 
 #include <key.h>
 #include <sync.h>
@@ -147,4 +147,4 @@ public:
     std::string GetKeyPath() const;
 };
 
-#endif // DASH_HDCHAIN_H
+#endif // BITCOIN_HDCHAIN_H

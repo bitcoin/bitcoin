@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_QUORUMS_CHAINLOCKS_H
-#define DASH_QUORUMS_CHAINLOCKS_H
+#ifndef BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
+#define BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 
 #include <llmq/quorums.h>
 #include <llmq/quorums_signing.h>
@@ -125,4 +125,4 @@ extern CChainLocksHandler* chainLocksHandler;
 
 } // namespace llmq
 
-#endif //DASH_QUORUMS_CHAINLOCKS_H
+#endif // BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H

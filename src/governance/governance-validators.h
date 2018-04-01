@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef GOVERNANCE_VALIDATORS_H
-#define GOVERNANCE_VALIDATORS_H
+#ifndef BITCOIN_GOVERNANCE_GOVERNANCE-VALIDATORS_H
+#define BITCOIN_GOVERNANCE_GOVERNANCE-VALIDATORS_H
 
 #include <string>
 
@@ -44,4 +44,4 @@ private:
     bool CheckURL(const std::string& strURLIn);
 };
 
-#endif
+#endif // BITCOIN_GOVERNANCE_GOVERNANCE-VALIDATORS_H

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_RPCREGISTER_H
-#define BITCOIN_RPCREGISTER_H
+#ifndef BITCOIN_RPC_REGISTER_H
+#define BITCOIN_RPC_REGISTER_H
 
 /** These are in one header file to avoid creating tons of single-function
  * headers for everything under src/rpc/ */
@@ -44,4 +44,4 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterQuorumsRPCCommands(t);
 }
 
-#endif
+#endif // BITCOIN_RPC_REGISTER_H

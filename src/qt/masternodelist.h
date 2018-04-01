@@ -1,5 +1,5 @@
-#ifndef MASTERNODELIST_H
-#define MASTERNODELIST_H
+#ifndef BITCOIN_QT_MASTERNODELIST_H
+#define BITCOIN_QT_MASTERNODELIST_H
 
 #include <qt/platformstyle.h>
 #include <primitives/transaction.h>
@@ -76,4 +76,4 @@ private Q_SLOTS:
     void handleMasternodeListChanged();
     void updateDIP3ListScheduled();
 };
-#endif // MASTERNODELIST_H
+#endif // BITCOIN_QT_MASTERNODELIST_H
