@@ -458,8 +458,6 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		}
 		coinControl->Select(aliasOutPointWitness[0]);
 	}
-	COutPoint aliasOutPoint;
-	int numResults = 0;
 	// if alias inputs used, need to ensure new alias utxo's are created as prev ones need to be used for proof of ownership
 
 	CWalletTx wtxNew1, wtxNew2;
@@ -477,7 +475,6 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	}
 
 	// step 2
-	int numFeeCoinsLeft = -1;
 	vector<COutPoint> outPoints;
 	// if alias input is used, we need to use fees to pay the data portion of the service tx
 	if (!aliasRecipient.scriptPubKey.empty()) {
