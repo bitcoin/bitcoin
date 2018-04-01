@@ -146,6 +146,7 @@ BASE_SCRIPTS= [
     'feature_logging.py',
     'node_network_limited.py',
     'conf_args.py',
+    'feature_help.py',
 ]
 
 EXTENDED_SCRIPTS = [
