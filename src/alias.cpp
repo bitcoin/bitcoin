@@ -1233,13 +1233,17 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	// add total output amount of transaction to desired amount
 	CAmount nDesiredAmount = txIn.GetValueOut();
 	std::map<string, int> mapOutputs;
-	
+	for (std::vector<CTxIn>::const_iterator it(txIn.vin.begin()); it != txIn.vin.end(); ++it)
+	{
+		const string& strOut = strprintf("%s%s", (*it).prevout.hash.GetHex(), (*it).prevout.n);
+		mapOutputs[strOut] = 1;
+	}
 	CCoinsView dummy;
 	CCoinsViewCache view(&dummy);
 	CAmount nCurrentAmount = 0;
 	{
 		LOCK2(cs_main, mempool.cs);
-		CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
+		CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
 		view.SetBackend(viewMemPool);
 		// get value of inputs
 		nCurrentAmount = view.GetValueIn(txIn);
@@ -1253,6 +1257,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		// add 500 bytes of fees to account for extra inputs added to this transaction as a buffer to the required amount
 		size_t nSize = 500u;
 		nDesiredAmount += 3 * minRelayTxFee.GetFee(nSize);
+		const CAmount &minFee = minRelayTxFee.GetFee(3000);
 		for (unsigned int i = 0; i < utxoArray.size(); i++)
 		{
 			const UniValue& utxoObj = utxoArray[i].get_obj();
@@ -1262,12 +1267,18 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 			const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
 			const CScript& scriptPubKey = CScript(data.begin(), data.end());
 			const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
+			if (nValue <= minFee)
+				continue;
 			if (mapOutputs.find(strprintf("%s%s", strTxid, nOut)) != mapOutputs.end())
 				continue;
+			{
+				LOCK(mempool.cs);
+				auto it = mempool.mapNextTx.find(COutPoint(txid, nOut));
+				if (it != mempool.mapNextTx.end())
+					continue;
+			}
 			// look for non alias inputs coins that can be used to fund this transaction
 			if (DecodeAliasScript(scriptPubKey, op, vvch))
-				continue;
-			if (nValue <= minRelayTxFee.GetFee(3000))
 				continue;
 			tx.vin.push_back(CTxIn(txid, nOut, scriptPubKey));
 			nCurrentAmount += nValue;
