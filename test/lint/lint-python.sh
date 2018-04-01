@@ -64,6 +64,7 @@ export LC_ALL=C
 # F822 undefined name name in __all__
 # F823 local variable name … referenced before assignment
 # F831 duplicate argument name in function definition
+# F841 local variable 'foo' is assigned to but never used
 # W191 indentation contains tabs
 # W291 trailing whitespace
 # W292 no newline at end of file
@@ -84,4 +85,4 @@ elif PYTHONWARNINGS="ignore" flake8 --version | grep -q "Python 2"; then
     exit 0
 fi
 
-PYTHONWARNINGS="ignore" git ls-files "*.py" | xargs flake8 --ignore=B,C,E,F,I,N,W --select=E101,E112,E113,E115,E116,E125,E129,E131,E133,E223,E224,E242,E266,E271,E272,E273,E274,E275,E304,E306,E401,E402,E502,E701,E702,E703,E714,E721,E742,E743,F401,E901,E902,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F821,F822,F823,F831,W191,W291,W292,W601,W602,W603,W604,W606 #,E741,W504,W605
+PYTHONWARNINGS="ignore" git ls-files "*.py" | xargs flake8 --ignore=B,C,E,F,I,N,W --select=E101,E112,E113,E115,E116,E125,E129,E131,E133,E223,E224,E242,E266,E271,E272,E273,E274,E275,E304,E306,E401,E402,E502,E701,E702,E703,E714,E721,E742,E743,F401,E901,E902,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F821,F822,F823,F831,F841,W191,W291,W292,W601,W602,W603,W604,W606 #,E741,W504,W605
