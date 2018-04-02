@@ -37,6 +37,8 @@
 #include <masternodeman.h>
 #include <privatesend-server.h>
 
+#include <memory>
+
 #if defined(NDEBUG)
 # error "Chaincoin Core cannot be compiled without assertions."
 #endif
