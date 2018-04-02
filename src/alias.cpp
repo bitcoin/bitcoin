@@ -1839,6 +1839,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 }
 void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, CAmount &nRequiredAmount, bool bSelectAll)
 {
+	nRequiredAmount = 0;
 	int numResults = 0;
 	CAmount nCurrentAmount = 0;
 	CAmount nDesiredAmount = nAmount;

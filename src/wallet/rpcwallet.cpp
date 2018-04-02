@@ -512,7 +512,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		{
 			vector<COutPoint> outPoints;
 			// select all if alias transferred otherwise just get enough outputs to fund nTotal
-			aliasselectpaymentcoins(vchAlias, 0, outPoints, nFeeRequired, transferAlias);
+			aliasselectpaymentcoins(vchAlias, nTotal, outPoints, nFeeRequired, transferAlias);
 			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
 			{
 				if (!coinControl->IsSelected(outpoint))
