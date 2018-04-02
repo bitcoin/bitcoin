@@ -1109,7 +1109,7 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
 }
-UniValue SyscoinListReceived()
+UniValue SyscoinListReceived(bool includeempty=true)
 {
 	if (!pwalletMain)
 		return NullUniValue;
@@ -1130,7 +1130,7 @@ UniValue SyscoinListReceived()
 		vector<unsigned char> vchAddress;
 		DecodeBase58(strAddress, vchAddress);
 		paliasdb->ReadAddress(vchAddress, vchMyAlias);
-
+		
 		UniValue paramsBalance(UniValue::VARR);
 		UniValue param(UniValue::VOBJ);
 		UniValue balanceParams(UniValue::VARR);
@@ -1140,10 +1140,13 @@ UniValue SyscoinListReceived()
 		const UniValue &resBalance = getaddressbalance(paramsBalance, false);
 		UniValue obj(UniValue::VOBJ);
 		obj.push_back(Pair("address", strAddress));
-		obj.push_back(Pair("balance", AmountFromValue(find_value(resBalance.get_obj(), "balance"))));
-		obj.push_back(Pair("label", strAccount));
-		obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
-		ret.push_back(obj);
+		const CAmount& nBalance = AmountFromValue(find_value(resBalance.get_obj(), "balance"));
+		if (includeempty || (!includeempty && nBalance > 0)) {
+			obj.push_back(Pair("balance", ValueFromAmount(nBalance)));
+			obj.push_back(Pair("label", strAccount));
+			obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+			ret.push_back(obj);
+		}
 		mapAddress[strAddress] = 1;
 	}
 
@@ -1166,7 +1169,7 @@ UniValue SyscoinListReceived()
 		vector<unsigned char> vchAddress;
 		DecodeBase58(strAddress, vchAddress);
 		paliasdb->ReadAddress(vchAddress, vchMyAlias);
-
+	
 		UniValue paramsBalance(UniValue::VARR);
 		UniValue param(UniValue::VOBJ);
 		UniValue balanceParams(UniValue::VARR);
@@ -1176,10 +1179,13 @@ UniValue SyscoinListReceived()
 		const UniValue &resBalance = getaddressbalance(paramsBalance, false);
 		UniValue obj(UniValue::VOBJ);
 		obj.push_back(Pair("address", strAddress));
-		obj.push_back(Pair("balance", AmountFromValue(find_value(resBalance.get_obj(), "balance"))));
-		obj.push_back(Pair("label", ""));
-		obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
-		ret.push_back(obj);
+		const CAmount& nBalance = AmountFromValue(find_value(resBalance.get_obj(), "balance"));
+		if (includeempty || (!includeempty && nBalance > 0)) {
+			obj.push_back(Pair("balance", ValueFromAmount(nBalance)));
+			obj.push_back(Pair("label", ""));
+			obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+			ret.push_back(obj);
+		}
 		mapAddress[strAddress] = 1;
 
 	}
@@ -1203,7 +1209,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	if(params.size() > 1)
 		addresses = params[1].get_array();
 	else {
-		UniValue receivedList = SyscoinListReceived();
+		UniValue receivedList = SyscoinListReceived(false);
 		UniValue recevedListArray = receivedList.get_array();
 		for (unsigned int idx = 0; idx < recevedListArray.size(); idx++) {
 			addresses.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
