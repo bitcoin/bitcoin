@@ -548,6 +548,8 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 			if (!errorMessage.empty())
 				throw runtime_error(errorMessage.c_str());
 		}
+		if(vvchAlias.empty())
+			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Cannot find alias input to this transaction"));
 		if (DecodeCertTx(wtxNew, op, nOut, vvch))
 		{
 			CheckCertInputs(wtxNew, op, nOut, vvch, vvchAlias[0], fJustCheck, chainActive.Tip()->nHeight, revertedCerts, errorMessage, true);
