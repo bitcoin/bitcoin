@@ -602,6 +602,22 @@ public:
      *  already in it.  */
     void CalculateDescendants(txiter it, setEntries &setDescendants);
 
+    template<typename Stream>
+    void DumpMinFeeInternal(Stream& s) const {
+        LOCK(cs);
+        s << rollingMinimumFeeRate;
+        s << blockSinceLastRollingFeeBump;
+        s << lastRollingFeeUpdate;
+    }
+
+    template<typename Stream>
+    void LoadMinFeeInternal(Stream& s) {
+        LOCK(cs);
+        s >> rollingMinimumFeeRate;
+        s >> blockSinceLastRollingFeeBump;
+        s >> lastRollingFeeUpdate;
+    }
+
     /** The minimum fee to get into the mempool, which may itself not be enough
       *  for larger-sized transactions.
       *  The incrementalRelayFee policy variable is used to bound the time it
