@@ -497,8 +497,12 @@ void SendCoinsDialog::on_sendButton_clicked()
         model->waitingForDevice(false);
     qApp->processEvents();
 
+    uint256 hashSent;
     if (!model->tryCallRpc(sCommand, rv))
         sendStatus = WalletModel::TransactionCreationFailed;
+    else
+        hashSent.SetHex(rv.get_str());
+
 
     // Update Addressbook
     for (const auto &rcp : currentTransaction.getRecipients())
@@ -519,7 +523,8 @@ void SendCoinsDialog::on_sendButton_clicked()
         accept();
         CoinControlDialog::coinControl()->UnSelectAll();
         coinControlUpdateLabels();
-        Q_EMIT coinsSent(currentTransaction.getTransaction()->GetHash());
+        //Q_EMIT coinsSent(currentTransaction.getTransaction()->GetHash());
+        Q_EMIT coinsSent(hashSent);
     }
     fNewRecipientAllowed = true;
 }
