@@ -579,6 +579,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 				LogPrintf("CheckSyscoinInputs: Cannot find alias input to this transaction");
 				return false;
 			}
+			// it is assumed if no alias output is found, then it is for another service so this would be an alias update
+			op = OP_ALIAS_UPDATE;
 		}
 		errorMessage.clear();
 		good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
