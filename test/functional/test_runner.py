@@ -224,8 +224,9 @@ def main():
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
-    parser.add_argument('--particl', action='store_true', help='run only Particl specific tests')
-    parser.add_argument('--insight', action='store_true', help='run only Insight specific tests')
+    parser.add_argument('--bitcoin', action='store_true', help='run Bitcoin specific tests')
+    parser.add_argument('--particl', action='store_true', help='run Particl specific tests')
+    parser.add_argument('--insight', action='store_true', help='run Insight specific tests')
     parser.add_argument('--withstdout', action='store_true', help='print stdout when test passed also')
     parser.add_argument('--force', '-f', action='store_true', help='run tests even on platforms where they are disabled by default (e.g. windows).')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
@@ -294,6 +295,8 @@ def main():
             test_list += PARTICL_SCRIPTS
         if args.insight:
             test_list += INSIGHT_SCRIPTS
+        if args.bitcoin:
+            test_list += BASE_SCRIPTS
 
         if len(test_list) == 0:
             test_list = BASE_SCRIPTS
@@ -328,7 +331,7 @@ def main():
     if not args.keepcache:
         shutil.rmtree("%s/test/cache" % config["environment"]["BUILDDIR"], ignore_errors=True)
 
-    run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], tmpdir, args.jobs, args.coverage, passon_args, args.combinedlogslen, create_cache=(True if not args.particl and not args.insight else False))
+    run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], tmpdir, args.jobs, args.coverage, passon_args, args.combinedlogslen, create_cache=(True if args.bitcoin or (not args.particl and not args.insight) else False))
 
 def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=[], combined_logs_len=0, create_cache=True):
     # Warn if bitcoind is already running (unix only)
