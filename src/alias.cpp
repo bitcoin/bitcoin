@@ -253,7 +253,7 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
 }
 
 
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bSanityCheck) {
+bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bSanityCheck) {
 	if (!paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
@@ -262,7 +262,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		return true;
 	}
 	if (fDebug && !bSanityCheck)
-		LogPrintf("*** ALIAS %d %d op=%s %s nOut=%d %s\n", nHeight, chainActive.Tip()->nHeight, aliasFromOp(op).c_str(), tx.GetHash().ToString().c_str(), nOut, fJustCheck ? "JUSTCHECK" : "BLOCK");
+		LogPrintf("*** ALIAS %d %d op=%s %s %s\n", nHeight, chainActive.Tip()->nHeight, aliasFromOp(op).c_str(), tx.GetHash().ToString().c_str(), fJustCheck ? "JUSTCHECK" : "BLOCK");
 	// alias registration has args size of 1 we don't care to validate it until the activation comes in with args size of 4
 	if (vvchArgs.size() < 4)
 		return true;
@@ -904,9 +904,8 @@ bool GetAliasOfTx(const CTransaction& tx, vector<unsigned char>& name) {
 		return false;
 	vector<vector<unsigned char> > vvchArgs;
 	int op;
-	int nOut;
 
-	bool good = DecodeAliasTx(tx, op, nOut, vvchArgs);
+	bool good = DecodeAliasTx(tx, op, vvchArgs);
 	if (!good)
 		return error("GetAliasOfTx() : could not decode a syscoin tx");
 
@@ -918,22 +917,22 @@ bool GetAliasOfTx(const CTransaction& tx, vector<unsigned char>& name) {
 	}
 	return false;
 }
-bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch, char& type)
 {
 	return  
-		DecodeAndParseCertTx(tx, op, nOut, vvch, type)
-		|| DecodeAndParseOfferTx(tx, op, nOut, vvch, type)
-		|| DecodeAndParseEscrowTx(tx, op, nOut, vvch, type)
-		|| DecodeAndParseAssetTx(tx, op, nOut, vvch, type)
-		|| DecodeAndParseAssetAllocationTx(tx, op, nOut, vvch, type)
-		|| DecodeAndParseAliasTx(tx, op, nOut, vvch, type);
+		DecodeAndParseCertTx(tx, op, vvch, type)
+		|| DecodeAndParseOfferTx(tx, op, vvch, type)
+		|| DecodeAndParseEscrowTx(tx, op, vvch, type)
+		|| DecodeAndParseAssetTx(tx, op, vvch, type)
+		|| DecodeAndParseAssetAllocationTx(tx, op, vvch, type)
+		|| DecodeAndParseAliasTx(tx, op, vvch, type);
 }
-bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeAndParseAliasTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch, char &type)
 {
 	CAliasIndex alias;
-	bool decode = DecodeAliasTx(tx, op, nOut, vvch);
+	bool decode = DecodeAliasTx(tx, op, vvch);
 	if(decode)
 	{
 		bool parse = alias.UnserializeFromTx(tx);
@@ -944,7 +943,7 @@ bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut,
 	}
 	return false;
 }
-bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeAliasTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch) {
 	bool found = false;
 
@@ -954,7 +953,6 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut,
 		const CTxOut& out = tx.vout[i];
 		vector<vector<unsigned char> > vvchRead;
 		if (DecodeAliasScript(out.scriptPubKey, op, vvchRead)) {
-			nOut = i;
 			found = true;
 			vvch = vvchRead;
 			break;
@@ -965,12 +963,11 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut,
 
 	return found;
 }
-bool FindAliasInTx(const CTransaction& tx, int &op, int &nOut, vector<vector<unsigned char> >& vvch) {
+bool FindAliasInTx(const CTransaction& tx, int &op, vector<vector<unsigned char> >& vvch) {
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
 		const CCoins *prevCoins = GetUTXOCoins(tx.vin[i].prevout);
 		// ensure inputs are unspent when doing consensus check to add to block
 		if (prevCoins && DecodeAliasScript(prevCoins->vout[tx.vin[i].prevout.n].scriptPubKey, op, vvch)) {
-			nOut = tx.vin[i].prevout.n;
 			return true;
 		}
 	}
@@ -1307,16 +1304,15 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 			tx.vout.push_back(CTxOut(nChange, GetScriptForDestination(vchPubKey.GetID())));
 		}
 	}
-	int nOut;
 	bool fJustCheck = true;
 	string errorMessage = "";
 	bool bCheckDestError = false;
-	if (DecodeAliasTx(tx, op, nOut, vvch))
+	if (DecodeAliasTx(tx, op, vvch))
 	{
-		CheckAliasInputs(tx, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
+		CheckAliasInputs(tx, op, vvch, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckAliasInputs(tx, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, true);
+		CheckAliasInputs(tx, op, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
@@ -1652,7 +1648,7 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	GetSyscoinData(rawTx, vchData, vchHash, nOut);	
 	UniValue output(UniValue::VOBJ);
 	char type;
-	if(DecodeAndParseSyscoinTx(rawTx, op, nOut, vvch, type))
+	if(DecodeAndParseSyscoinTx(rawTx, op,  vvch, type))
 		SysTxToJSON(op, vchData, vchHash, output, type);
 	
 	return output;

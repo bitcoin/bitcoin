@@ -22,11 +22,11 @@ class CBlock;
 class CAliasIndex;
 class COfferLinkWhitelistEntry;
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, std::string &errorMessage, bool bSanityCheck=false);
+bool CheckOfferInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, std::string &errorMessage, bool bSanityCheck=false);
 
 
-bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
-bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char &type);
+bool DecodeOfferTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch);
+bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char &type);
 bool DecodeOfferScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsOfferOp(int op);
 std::string offerFromOp(int op);

@@ -110,11 +110,11 @@ bool GetAsset(const vector<unsigned char> &vchAsset,
         return false;
     return true;
 }
-bool DecodeAndParseAssetTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeAndParseAssetTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch, char &type)
 {
 	CAsset asset;
-	bool decode = DecodeAssetTx(tx, op, nOut, vvch);
+	bool decode = DecodeAssetTx(tx, op, vvch);
 	bool parse = asset.UnserializeFromTx(tx);
 	if (decode&&parse) {
 		type = ASSET;
@@ -122,7 +122,7 @@ bool DecodeAndParseAssetTx(const CTransaction& tx, int& op, int& nOut,
 	}
 	return false;
 }
-bool DecodeAssetTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeAssetTx(const CTransaction& tx, int& op,
         vector<vector<unsigned char> >& vvch) {
     bool found = false;
 
@@ -132,7 +132,7 @@ bool DecodeAssetTx(const CTransaction& tx, int& op, int& nOut,
         const CTxOut& out = tx.vout[i];
         vector<vector<unsigned char> > vvchRead;
         if (DecodeAssetScript(out.scriptPubKey, op, vvchRead)) {
-            nOut = i; found = true; vvch = vvchRead;
+            found = true; vvch = vvchRead;
             break;
         }
     }
@@ -197,7 +197,7 @@ bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	scriptOut = CScript(pc, scriptIn.end());
 	return true;
 }
-bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias,
+bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias,
         bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb || !passetdb)
 		return false;

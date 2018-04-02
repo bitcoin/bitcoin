@@ -100,11 +100,11 @@ bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple,
         return false;
     return true;
 }
-bool DecodeAndParseAssetAllocationTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeAndParseAssetAllocationTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch, char &type)
 {
 	CAssetAllocation assetallocation;
-	bool decode = DecodeAssetAllocationTx(tx, op, nOut, vvch);
+	bool decode = DecodeAssetAllocationTx(tx, op, vvch);
 	bool parse = assetallocation.UnserializeFromTx(tx);
 	if (decode&&parse) {
 		type = ASSETALLOCATION;
@@ -112,7 +112,7 @@ bool DecodeAndParseAssetAllocationTx(const CTransaction& tx, int& op, int& nOut,
 	}
 	return false;
 }
-bool DecodeAssetAllocationTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeAssetAllocationTx(const CTransaction& tx, int& op,
         vector<vector<unsigned char> >& vvch) {
 	if (tx.nVersion != SYSCOIN_TX_VERSION)
 		return false;
@@ -124,7 +124,7 @@ bool DecodeAssetAllocationTx(const CTransaction& tx, int& op, int& nOut,
         const CTxOut& out = tx.vout[i];
         vector<vector<unsigned char> > vvchRead;
         if (DecodeAssetAllocationScript(out.scriptPubKey, op, vvchRead)) {
-            nOut = i; found = true; vvch = vvchRead;
+            found = true; vvch = vvchRead;
             break;
         }
     }
@@ -277,7 +277,7 @@ bool AccumulateInterestSinceLastClaim(CAssetAllocation & assetAllocation, const 
 	assetAllocation.fAccumulatedInterestSinceLastInterestClaim += assetAllocation.fInterestRate*nBlocksSinceLastUpdate;
 	return true;
 }
-bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias,
+bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias,
         bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
@@ -488,7 +488,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
 				{
 					bAddAllReceiversToConflictList = true;
-					LogPrintf("CheckAssetAllocationInputs: found conflict on %s\n", assetAllocationTuple.ToString().c_str());
 				}
 			}
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
@@ -576,7 +575,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				if (fJustCheck && !bSanityCheck) {
 					// add conflicting sender
 					assetAllocationConflicts.insert(assetAllocationTuple);
-					LogPrintf("CheckAssetAllocationInputs: input balance overrun dbAssetAllocation.nBalance %llu vs nTotal %llu\n", dbAssetAllocation.nBalance, nTotal);
 				}
 			}
 			else if (fJustCheck && !bSanityCheck) {
@@ -584,7 +582,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
 				{
 					bAddAllReceiversToConflictList = true;
-					LogPrintf("CheckAssetAllocationInputs: found input conflict on %s\n", assetAllocationTuple.ToString().c_str());
 				}
 			}
 			for (unsigned int i = 0; i < theAssetAllocation.listSendingAllocationInputs.size();i++) {
@@ -597,7 +594,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, input.first);
 				if (fJustCheck) {
 					if (bAddAllReceiversToConflictList || bBalanceOverrun) {
-						LogPrintf("CheckAssetAllocationInputs: adding recver %s to conflict list\n", receiverAllocationTuple.ToString().c_str());
 						assetAllocationConflicts.insert(receiverAllocationTuple);
 					}
 

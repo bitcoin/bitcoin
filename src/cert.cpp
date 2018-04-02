@@ -159,11 +159,11 @@ bool GetFirstCert(const vector<unsigned char> &vchCert,
 
 	return true;
 }
-bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeAndParseCertTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch, char &type)
 {
 	CCert cert;
-	bool decode = DecodeCertTx(tx, op, nOut, vvch);
+	bool decode = DecodeCertTx(tx, op, vvch);
 	bool parse = cert.UnserializeFromTx(tx);
 	if (decode&&parse) {
 		type = CERT;
@@ -171,7 +171,7 @@ bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut,
 	}
 	return false;
 }
-bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeCertTx(const CTransaction& tx, int& op,
         vector<vector<unsigned char> >& vvch) {
     bool found = false;
 
@@ -181,7 +181,7 @@ bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut,
         const CTxOut& out = tx.vout[i];
         vector<vector<unsigned char> > vvchRead;
         if (DecodeCertScript(out.scriptPubKey, op, vvchRead)) {
-            nOut = i; found = true; vvch = vvchRead;
+            found = true; vvch = vvchRead;
             break;
         }
     }
@@ -273,7 +273,7 @@ bool RevertCert(const std::vector<unsigned char>& vchCert, const int op, const u
 	return true;
 
 }
-bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias,
+bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias,
         bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedCerts, string &errorMessage, bool bSanityCheck) {
 	if (!pcertdb || !paliasdb)
 		return false;

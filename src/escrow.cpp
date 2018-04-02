@@ -254,11 +254,11 @@ bool GetEscrow(const vector<unsigned char> &vchEscrow,
     }
     return true;
 }
-bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op,
 	vector<vector<unsigned char> >& vvch, char& type)
 {
 	CEscrow escrow;
-	bool decode = DecodeEscrowTx(tx, op, nOut, vvch);
+	bool decode = DecodeEscrowTx(tx, op, vvch);
 	bool parse = escrow.UnserializeFromTx(tx);
 	if (decode && parse) {
 		type = ESCROW;
@@ -266,7 +266,7 @@ bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut,
 	}
 	return false;
 }
-bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeEscrowTx(const CTransaction& tx, int& op,
         vector<vector<unsigned char> >& vvch) {
     bool found = false;
 
@@ -276,7 +276,7 @@ bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut,
         const CTxOut& out = tx.vout[i];
         vector<vector<unsigned char> > vvchRead;
         if (DecodeEscrowScript(out.scriptPubKey, op, vvchRead)) {
-            nOut = i; found = true; vvch = vvchRead;
+            found = true; vvch = vvchRead;
             break;
         }
     }
@@ -359,7 +359,7 @@ bool ValidateExternalPayment(const CEscrow& theEscrow, const bool &bSanityCheck,
 	}
 	return true;
 }
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
+bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
 	if (!pescrowdb || !paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)

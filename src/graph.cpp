@@ -12,17 +12,16 @@ bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	std::vector<CTransaction> orderedVtx;
 	int op;
-	int nOut;
 	// order the arrival times in ascending order using a map
 	std::multimap<int64_t, int> orderedIndexes;
 	for (unsigned int n = 0; n < blockVtx.size(); n++) {
 		const CTransaction& tx = blockVtx[n];
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
 		{
-			if (!DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
+			if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				continue;
 
-			if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
+			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
 				ArrivalTimesMap arrivalTimes;
 				CAssetAllocation assetallocation(tx);
@@ -36,7 +35,7 @@ bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 					orderedIndexes.insert(make_pair(INT64_MAX, n));
 				continue;
 			}
-			else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
+			else if (DecodeOfferTx(tx, op, vvchArgs))
 			{
 				ArrivalTimesMap arrivalTimes;
 				COffer offer(tx);
@@ -49,7 +48,7 @@ bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 					orderedIndexes.insert(make_pair(INT64_MAX, n));
 				continue;
 			}
-			else if (DecodeCertTx(tx, op, nOut, vvchArgs))
+			else if (DecodeCertTx(tx, op, vvchArgs))
 			{
 				ArrivalTimesMap arrivalTimes;
 				CCert cert(tx);
@@ -68,7 +67,6 @@ bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 	}
 	for (auto& orderedIndex : orderedIndexes) {
 		orderedVtx.push_back(blockVtx[orderedIndex.second]);
-		LogPrintf("OrderBasedOnArrivalTime: mapping %d to %d with time %llu txhash %s\n", orderedVtx.size() - 1, orderedIndex.second, orderedIndex.first, blockVtx[orderedIndex.second].GetHash().GetHex().c_str());
 	}
 	if (blockVtx.size() != orderedVtx.size())
 	{
@@ -83,7 +81,6 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
-	int nOut;
 	for (unsigned int n = 0; n< blockVtx.size(); n++) {
 		const CTransaction& tx = blockVtx[n];
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
@@ -91,7 +88,7 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 			if (!DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 				continue;
 
-			if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
+			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
 				const string& sender = stringFromVch(vvchAliasArgs[0]);
 				AliasMap::const_iterator it = mapAliasIndex.find(sender);
@@ -100,8 +97,6 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 					mapAliasIndex[sender] = vertices.size() - 1;
 				}
 				mapTxIndex[mapAliasIndex[sender]].push_back(n);
-				
-				LogPrintf("CreateGraphFromVTX: found asset allocation from sender %s, nOut %d\n", sender, n);
 				CAssetAllocation allocation(tx);
 				if (!allocation.listSendingAllocationAmounts.empty()) {
 					for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
@@ -113,7 +108,6 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 						}
 						// the graph needs to be from index to index 
 						add_edge(vertices[mapAliasIndex[sender]], vertices[mapAliasIndex[receiver]], graph);
-						LogPrintf("CreateGraphFromVTX: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
 					}
 				}
 				else if (!allocation.listSendingAllocationInputs.empty()) {
@@ -126,7 +120,6 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 						}
 						// the graph needs to be from index to index 
 						add_edge(vertices[mapAliasIndex[sender]], vertices[mapAliasIndex[receiver]], graph);
-						LogPrintf("CreateGraphFromVTX: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
 					}
 				}
 			}
@@ -136,16 +129,12 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 }
 // remove cycles in a graph and create a DAG, modify the blockVtx passed in to remove conflicts, the conflicts should be added back to the end of this vtx after toposort
 void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<int> &conflictedIndexes, Graph& graph, const std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
-	LogPrintf("GraphRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<CTransaction> orderedVtx;
 	sorted_vector<int> clearedVertices;
 	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
 	hawick_circuits(graph, visitor);
-	LogPrintf("Found %d circuits\n", clearedVertices.size());
 	for (auto& nVertex : clearedVertices) {
-		
-		LogPrintf("trying to clear vertex %d\n", nVertex);
 		IndexMap::const_iterator it = mapTxIndex.find(nVertex);
 		if (it == mapTxIndex.end())
 			continue;
@@ -159,7 +148,6 @@ void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<in
 		for (auto& nIndex : vecTx) {
 			if (nIndex >= blockVtx.size())
 				continue;
-			LogPrintf("outputsToRemove nIndex %d\n", nIndex);
 			conflictedIndexes.push_back(nIndex);
 		}
 		mapTxIndex.erase(it);
@@ -168,7 +156,6 @@ void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<in
 	std::sort(conflictedIndexes.begin(), conflictedIndexes.end());
 }
 bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<int> &conflictedIndexes, const Graph& graph, const IndexMap &mapTxIndex) {
-	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
 	container c;
 	try
@@ -184,9 +171,7 @@ bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<i
 
 	// add sys tx's to newVtx in reverse sorted order
 	reverse(c.begin(), c.end());
-	string ordered = "";
 	for (auto& nVertex : c) {
-		LogPrintf("add sys tx in sorted order\n");
 		// this may not find the vertex if its a receiver (we only want to process sender as tx is tied to sender)
 		IndexMap::const_iterator it = mapTxIndex.find(nVertex);
 		if (it == mapTxIndex.end())
@@ -197,32 +182,26 @@ bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<i
 			if (nIndex >= blockVtx.size())
 				continue;
 			newVtx.push_back(blockVtx[nIndex]);
-			ordered += strprintf("%d (txhash %s)\n", nIndex, blockVtx[nIndex].GetHash().GetHex());
 		}
 	}
-	LogPrintf("topological ordering: %s\n", ordered);
 
 	// add conflicting indexes next (should already be in order)
 	for (auto& nIndex : conflictedIndexes) {
-		LogPrintf("trying to add conflicted tx index %d\n", nIndex);
 		if (nIndex >= blockVtx.size())
 			continue;
-		LogPrintf("added conflicted tx index %d\n", nIndex);
 		newVtx.push_back(blockVtx[nIndex]);
 	}
 	
 	// add non-sys and other sys tx's to end of newVtx
 	std::vector<vector<unsigned char> > vvchArgs;
 	int op;
-	int nOut;
 	for (unsigned int vOut = 1; vOut< blockVtx.size(); vOut++) {
 		const CTransaction& tx = blockVtx[vOut];
-		if (!DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
+		if (!DecodeAssetAllocationTx(tx, op, vvchArgs))
 		{
 			newVtx.push_back(blockVtx[vOut]);
 		}
 	}
-	LogPrintf("newVtx size %d vs blockVtx size %d\n", newVtx.size(), blockVtx.size());
 	if (blockVtx.size() != newVtx.size())
 	{
 		LogPrintf("DAGTopologicalSort: sorted block transaction count does not match unsorted block transaction count!\n");

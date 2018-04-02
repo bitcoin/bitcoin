@@ -223,11 +223,11 @@ bool GetOffer(const vector<unsigned char> &vchOffer,
 	}
 	return true;
 }
-bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeAndParseOfferTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch, char &type)
 {
 	COffer offer;
-	bool decode = DecodeOfferTx(tx, op, nOut, vvch);
+	bool decode = DecodeOfferTx(tx, op, vvch);
 	bool parse = offer.UnserializeFromTx(tx);
 	if (decode && parse) {
 		type = OFFER;
@@ -235,7 +235,7 @@ bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut,
 	}
 	return false;
 }
-bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
+bool DecodeOfferTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch) {
 	bool found = false;
 
@@ -243,7 +243,7 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
 		if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			nOut = i; found = true;
+			found = true;
 			break;
 		}
 	}
@@ -334,7 +334,7 @@ bool RevertOffer(const std::vector<unsigned char>& vchOffer, const int op, const
 	return true;
 
 }
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, string &errorMessage, bool bSanityCheck) {
+bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, string &errorMessage, bool bSanityCheck) {
 	if (!pofferdb || !paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
