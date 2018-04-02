@@ -539,20 +539,23 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	vector<vector<unsigned char> > vvchAlias;
 	int op;
 	if (wtxNew.nVersion == SYSCOIN_TX_VERSION) {
-		if (DecodeAliasTx(wtxNew, op, nOut, vvchAlias))
+		if (!DecodeAliasTx(wtxNew, op, nOut, vvchAlias))
 		{
-			CheckAliasInputs(wtxNew, op, nOut, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
-			if (!errorMessage.empty())
-				throw runtime_error(errorMessage.c_str());
-			CheckAliasInputs(wtxNew, op, nOut, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight+1, errorMessage, bCheckDestError, true);
-			if (!errorMessage.empty())
-				throw runtime_error(errorMessage.c_str());
+			if (!FindAliasInTx(wtxNew, op, nOut, vvchAlias)) {
+				LogPrintf(("SYSCOIN_RPC_ERROR ERRCODE: 9001 - " + _("Cannot find alias input to this transaction"));
+				return false;
+			}
 		}
-		if(vvchAlias.empty())
-			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Cannot find alias input to this transaction"));
+		CheckAliasInputs(wtxNew, op, nOut, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
+		if (!errorMessage.empty())
+			throw runtime_error(errorMessage.c_str());
+		CheckAliasInputs(wtxNew, op, nOut, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight+1, errorMessage, bCheckDestError, true);
+		if (!errorMessage.empty())
+			throw runtime_error(errorMessage.c_str());
+		
 		if (DecodeCertTx(wtxNew, op, nOut, vvch))
 		{
-			CheckCertInputs(wtxNew, op, nOut, vvch, vvchAlias[0], fJustCheck, chainActive.Tip()->nHeight, revertedCerts, errorMessage, true);
+			CheckCertInputs(wtxNew, op, nOut, vvch, vchAlias[0], fJustCheck, chainActive.Tip()->nHeight, revertedCerts, errorMessage, true);
 			if (!errorMessage.empty())
 				throw runtime_error(errorMessage.c_str());
 			CheckCertInputs(wtxNew, op, nOut, vvch, vvchAlias[0], !fJustCheck, chainActive.Tip()->nHeight+1, revertedCerts, errorMessage, true);
