@@ -20,6 +20,7 @@ void StartMainNetNodes();
 void StopMainNetNodes();
 void StopNodes();
 void GenerateBlocks(int nBlocks, const string& node="node1");
+void GenerateSpendableCoins(const string& node);
 void GenerateMainNetBlocks(int nBlocks, const string& node);
 string CallExternal(string &cmd);
 void SetSysMocktime(const int64_t& expiryTime);

@@ -402,6 +402,16 @@ void GenerateBlocks(int nBlocks, const string& node)
   height = 0;
   timeoutCounter = 0;
 }
+void GenerateSpendableCoins(const string& node) {
+	GenerateBlocks(101, node);
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getnewaddress", false, false));
+	string newaddress = r.get_str();
+	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getinfo"));
+	GenerateBlocks(10, node);
+	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + newaddress + " " + find_value(r.get_obj(), "balance").write()), runtime_error);
+	GenerateBlocks(91, node);
+}
 void SetSysMocktime(const int64_t& expiryTime) {
 	BOOST_CHECK(expiryTime > 0);
 	string cmd = strprintf("setmocktime %lld", expiryTime);
