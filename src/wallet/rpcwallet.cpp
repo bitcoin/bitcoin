@@ -541,8 +541,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		if (!DecodeAliasTx(wtxNew, op, vvchAlias))
 		{
 			if (!FindAliasInTx(wtxNew, op, vvchAlias)) {
-				LogPrintf(("SYSCOIN_RPC_ERROR ERRCODE: 9001 - " + _("Cannot find alias input to this transaction"));
-				return false;
+				throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9001 - " + _("Cannot find alias input to this transaction"));
 			}
 		}
 		CheckAliasInputs(wtxNew, op, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
