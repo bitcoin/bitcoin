@@ -669,15 +669,13 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     std::string strAddress = request.params[0].get_str();
-    CBitcoinAddress address;
-    if (!address.SetString(strAddress))
+    CTxDestination dest = DecodeDestination(strAddress);
+    if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl address");
+    }
 
-
-    if (address.IsValid()
-        && IsHDWallet(pwallet))
+    if (IsHDWallet(pwallet))
     {
-        CTxDestination dest = address.Get();
         if (dest.type() == typeid(CExtKeyPair))
         {
             CHDWallet *phdw = GetHDWallet(pwallet);
@@ -699,13 +697,12 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
         };
     };
 
-
-    CKeyID keyID;
-    if (!address.GetKeyID(keyID)) {
+    auto keyid = GetKeyForDestination(*pwallet, dest);
+    if (keyid.IsNull()) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
     }
     CKey vchSecret;
-    if (!pwallet->GetKey(keyID, vchSecret)) {
+    if (!pwallet->GetKey(keyid, vchSecret)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     }
     return EncodeSecret(vchSecret);

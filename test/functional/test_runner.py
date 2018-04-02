@@ -55,7 +55,7 @@ TEST_EXIT_SKIPPED = 77
 # 20 minutes represented in seconds
 TRAVIS_TIMEOUT_DURATION = 20 * 60
 
-BASE_SCRIPTS= [
+BASE_SCRIPTS = [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
     #'wallet_hd.py',
@@ -107,7 +107,7 @@ BASE_SCRIPTS= [
     #'rpc_blockchain.py',
     'rpc_deprecated.py',
     #'wallet_disable.py',
-    #'rpc_net.py',
+    'rpc_net.py',
     #'wallet_keypool.py',
     'p2p_mempool.py',
     'mining_prioritisetransaction.py',
@@ -115,16 +115,17 @@ BASE_SCRIPTS= [
     'p2p_invalid_tx.py',
     #'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
-    #'wallet_importprunedfunds.py',
+    'wallet_importprunedfunds.py',
     'rpc_signmessage.py',
     #'feature_nulldummy.py',
+    'mempool_accept.py',
     'wallet_import_rescan.py',
     'mining_basic.py',
     #'wallet_bumpfee.py',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
     #'p2p_leak.py',
-    #'wallet_encryption.py',
+    'wallet_encryption.py',
     'feature_dersig.py',
     'feature_cltv.py',
     'rpc_uptime.py',
@@ -133,7 +134,7 @@ BASE_SCRIPTS= [
     'feature_minchainwork.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
-    #'p2p_unrequested_blocks.py',
+    'p2p_unrequested_blocks.py',
     'feature_logging.py',
     'p2p_node_network_limited.py',
     'feature_blocksdir.py',
