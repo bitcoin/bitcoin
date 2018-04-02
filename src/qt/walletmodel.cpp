@@ -582,7 +582,8 @@ void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vect
         if (it == wallet->mapWallet.end()) continue;
         int nDepth = it->second.GetDepthInMainChain();
         if (nDepth < 0) continue;
-        COutput out(&it->second, outpoint.n, nDepth, true /* spendable */, true /* solvable */, true /* safe */);
+        bool fFromMe = it->second.fFromMe == 1;        
+        COutput out(&it->second, outpoint.n, nDepth, true /* spendable */, true /* solvable */, fFromMe, true /* safe */);
         vOutputs.push_back(out);
     }
 }

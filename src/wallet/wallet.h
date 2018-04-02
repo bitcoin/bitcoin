@@ -104,6 +104,12 @@ enum class OutputType {
     BECH32,
 };
 
+enum class TransactionSource {
+    ALL,
+    FROM_ME,
+    EXTERNAL
+};
+
 //! Default for -addresstype
 constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::P2SH_SEGWIT};
 
@@ -504,9 +510,19 @@ public:
      */
     bool fSafe;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn)
+    /** Whether this output belongs to a transaction that was sent from wallet in this node */
+    bool fFromMe;
+
+    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fFromMeIn, bool fSafeIn)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1;
+        tx = txIn;
+        i = iIn;
+        nDepth = nDepthIn;
+        fSpendable = fSpendableIn;
+        fSolvable = fSolvableIn;
+        fFromMe = fFromMeIn;
+        fSafe = fSafeIn;
+        nInputBytes = -1;
         // If known and signable by the given wallet, compute nInputBytes
         // Failure will keep this value -1
         if (fSpendable && tx) {
@@ -834,7 +850,7 @@ public:
     /**
      * populate vCoins with vector of available COutputs.
      */
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const;
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999, const TransactionSource source = TransactionSource::ALL) const;
 
     /**
      * Return list of available coins and locked coins grouped by non-change output address.

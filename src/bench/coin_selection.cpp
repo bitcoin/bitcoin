@@ -18,9 +18,9 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<CO
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
-
+    bool fromMe = wtx->fFromMe == 1;
     int nAge = 6 * 24;
-    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, fromMe, true /* safe */);
     vCoins.push_back(output);
 }
 
