@@ -85,7 +85,7 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 		const CTransaction& tx = blockVtx[n];
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
 		{
-			if (!DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
+			if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				continue;
 
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
