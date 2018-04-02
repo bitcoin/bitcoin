@@ -309,7 +309,7 @@ bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, std::vector<std::vec
 bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char &type);
 bool DecodeAliasScript(const CScript& script, int& op,
 		std::vector<std::vector<unsigned char> > &vvch);
-bool FindAliasInTx(const CTransaction& tx, int &op, std::vector<std::vector<unsigned char> >& vvch);
+bool FindAliasInTx(const CTransaction& tx, std::vector<std::vector<unsigned char> >& vvch);
 void aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outPoint);
 bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey);
 bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, std::vector<unsigned char> &vchPubKey);

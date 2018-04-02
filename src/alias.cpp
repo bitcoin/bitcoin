@@ -963,7 +963,8 @@ bool DecodeAliasTx(const CTransaction& tx, int& op,
 
 	return found;
 }
-bool FindAliasInTx(const CTransaction& tx, int &op, vector<vector<unsigned char> >& vvch) {
+bool FindAliasInTx(const CTransaction& tx, vector<vector<unsigned char> >& vvch) {
+	int op;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
 		const CCoins *prevCoins = GetUTXOCoins(tx.vin[i].prevout);
 		// ensure inputs are unspent when doing consensus check to add to block

@@ -575,7 +575,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		bool bDestCheckFailed = false;
 		if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 		{
-			if (!FindAliasInTx(tx, op, vvchAliasArgs)) {
+			if (!FindAliasInTx(tx, vvchAliasArgs)) {
 				LogPrintf("CheckSyscoinInputs: Cannot find alias input to this transaction");
 				return false;
 			}
