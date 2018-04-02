@@ -498,7 +498,7 @@ class P2PDataStore(P2PInterface):
             # as we go.
             prev_block_hash = headers_list[-1].hashPrevBlock
             if prev_block_hash in self.block_store:
-                prev_block_header = self.block_store[prev_block_hash]
+                prev_block_header = CBlockHeader(self.block_store[prev_block_hash])
                 headers_list.append(prev_block_header)
                 if prev_block_header.sha256 == hash_stop:
                     # if this is the hashstop header, stop here
@@ -539,7 +539,7 @@ class P2PDataStore(P2PInterface):
                 self.block_store[block.sha256] = block
                 self.last_block_hash = block.sha256
 
-        self.send_message(msg_headers([blocks[-1]]))
+        self.send_message(msg_headers([CBlockHeader(blocks[-1])]))
 
         if request_block:
             wait_until(lambda: blocks[-1].sha256 in self.getdata_requests, timeout=timeout, lock=mininode_lock)
