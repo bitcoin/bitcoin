@@ -1378,6 +1378,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	CMutableTransaction tx;
 	tx.nVersion = SYSCOIN_TX_VERSION;
+	tx.vin.clear();
+	tx.vout.clear();
 	CAliasIndex oldAlias;
 	if (GetAlias(vchAlias, oldAlias))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("This alias already exists"));
