@@ -150,7 +150,6 @@ test_test_particl_fuzzy_LDADD = \
   $(LIBSECP256K1)
 
 test_test_particl_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
-#
 
 nodist_test_test_particl_SOURCES = $(GENERATED_TEST_FILES)
 
