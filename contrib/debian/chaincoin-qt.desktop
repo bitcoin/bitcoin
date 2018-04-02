@@ -10,5 +10,5 @@ Terminal=false
 Type=Application
 Icon=chaincoin128
 MimeType=x-scheme-handler/chaincoin;
-Categories=Office;Finance;
+Categories=Office;Finance;P2P;Network;Qt;
 StartupWMClass=Bitcoin-qt
