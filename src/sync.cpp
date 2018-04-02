@@ -4,6 +4,7 @@
 
 #include <sync.h>
 
+#include <memory>
 #include <set>
 #include <util.h>
 #include <utilstrencodings.h>
