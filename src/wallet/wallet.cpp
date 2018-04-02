@@ -1201,7 +1201,7 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pin
     }
 
     // if we are notifying in confirmed mode and this was due to a connected block
-    if (pindex && m_notifier.GetConfirmationsRequired() > 1)
+    if (pindex && m_notifier.GetConfirmationsRequired() >= 1)
         m_notifier.AddTransaction(*ptx, pindex->nHeight);
 }
 

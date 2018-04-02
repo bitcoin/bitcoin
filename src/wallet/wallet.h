@@ -649,10 +649,6 @@ public:
         }
 
         m_active = (notify_command_template != "");
-        if (m_active) {
-            LogPrintf("WalletTransactionnotifier: notifying on wallet transactions with %d confirmations (cmd: %s)\n",
-                m_confirmations_required, m_notify_command_template);
-        }
     }
 
     /*
@@ -662,9 +658,7 @@ public:
      * If m_confirmations_required is 1, notifies immediately
      * Otherwise:
      * Updates a circular buffer which contains transactions
-     * from the last (m_confirmations_required - 1)
-     * blocks.
-     *
+     * from the last (m_confirmations_required - 1) blocks.
      */
     void AddTransaction(const CTransaction& tx, unsigned int height)
     {
@@ -696,7 +690,7 @@ public:
      * required confirmation count
      *
      * Internally builds a buffer of transactions from
-     * up to the last m_confirmations_required - 1 blocks
+     * up to the last (m_confirmations_required - 1) blocks
      * And thus in order to function correctly, this
      * must be called consistently on every newly connected block
      */
