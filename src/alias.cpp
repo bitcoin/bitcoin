@@ -1192,6 +1192,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 			"<hexstring> raw aliasnew transaction output.\n"
 			"<address> Array of addresses used to fund this aliasnew transaction. Leave empty to use wallet.\n"
 			+ HelpRequiringPassphrase());
+	EnsureWalletIsUnlocked();
 	const string &hexstring = params[0].get_str();
 	CTransaction txIn;
 	if (!DecodeHexTx(txIn, hexstring))
@@ -1264,6 +1265,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 				if (mempool.mapNextTx.find(COutPoint(txid, nOut)) != mempool.mapNextTx.end())
 					continue;
 			}
+			if (pwalletMain->IsLockedCoin(txid, nOut))
+				continue;
 			// look for non alias inputs coins that can be used to fund this transaction
 			if (DecodeAliasScript(scriptPubKey, op, vvch))
 				continue;
@@ -1283,7 +1286,6 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		}
 		// else create new change address in this wallet
 		else {
-			EnsureWalletIsUnlocked();
 			CReserveKey reservekey(pwalletMain);
 			CPubKey vchPubKey;
 			reservekey.GetReservedKey(vchPubKey, true);
