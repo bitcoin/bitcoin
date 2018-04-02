@@ -31,6 +31,8 @@
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
 
+#include <memory>
+
 #include <spork.h>
 #include <governance/governance.h>
 #include <masternode/masternode-payments.h>

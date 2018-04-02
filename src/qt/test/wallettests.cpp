@@ -18,6 +18,8 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/receiverequestdialog.h>
 
+#include <memory>
+
 #include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
