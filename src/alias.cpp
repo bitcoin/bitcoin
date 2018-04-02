@@ -1151,7 +1151,6 @@ UniValue SyscoinListReceived(bool includeempty=true)
 	}
 
 	vector<COutput> vecOutputs;
-	LOCK2(cs_main, pwalletMain->cs_wallet);
 	pwalletMain->AvailableCoins(vecOutputs, false, NULL, includeempty);
 	BOOST_FOREACH(const COutput& out, vecOutputs) {
 		CTxDestination address;
