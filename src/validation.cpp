@@ -657,13 +657,20 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 			{
 				bool bDestCheckFailed = false;
 				good = false;
-				if (DecodeAliasTx(tx, op, vvchAliasArgs))
+				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				{
-					errorMessage.clear();
-					good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
-					if (fDebug && !errorMessage.empty())
-						LogPrintf("%s\n", errorMessage.c_str());
+					if (!FindAliasInTx(tx, vvchAliasArgs)) {
+						LogPrintf("CheckSyscoinInputs: Cannot find alias input to this transaction");
+						return false;
+					}
+					// it is assumed if no alias output is found, then it is for another service so this would be an alias update
+					op = OP_ALIAS_UPDATE;
 				}
+				errorMessage.clear();
+				good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+				if (fDebug && !errorMessage.empty())
+					LogPrintf("%s\n", errorMessage.c_str());
+
 				if (!bDestCheckFailed && !vvchAliasArgs.empty() && good)
 				{
 					if (DecodeCertTx(tx, op, vvchArgs))

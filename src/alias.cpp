@@ -1317,6 +1317,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
+	else
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not decode alias transaction"));
 	// pass back new raw transaction
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(tx));
