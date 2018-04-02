@@ -403,6 +403,7 @@ void GenerateBlocks(int nBlocks, const string& node)
   timeoutCounter = 0;
 }
 void GenerateSpendableCoins(const string& node) {
+	UniValue r;
 	GenerateBlocks(101, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getnewaddress", false, false));
 	string newaddress = r.get_str();
