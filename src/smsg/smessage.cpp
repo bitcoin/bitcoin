@@ -2480,15 +2480,21 @@ int CSMSG::AddAddress(std::string &address, std::string &publicKey)
         return errorN(SMSG_INVALID_ADDRESS, "%s - coinAddress.GetKeyID failed: %s.", __func__, address);
 
     std::vector<uint8_t> vchTest;
-    DecodeBase58(publicKey, vchTest);
-    CPubKey pubKey(vchTest);
 
-    // Check that public key matches address hash
-    CPubKey pubKeyT(pubKey);
-    if (!pubKeyT.IsValid())
+    if (IsHex(publicKey))
+    {
+       vchTest = ParseHex(publicKey);
+    } else
+    {
+        DecodeBase58(publicKey, vchTest);
+    };
+
+    CPubKey pubKey(vchTest);
+    if (!pubKey.IsValid())
         return errorN(SMSG_INVALID_PUBKEY, "%s - Invalid PubKey.", __func__);
 
-    CKeyID keyIDT = pubKeyT.GetID();
+    // Check that public key matches address hash
+    CKeyID keyIDT = pubKey.GetID();
     if (idk != keyIDT)
         return errorN(SMSG_PUBKEY_MISMATCH, "%s - Public key does not hash to address %s.", __func__, address);
 
@@ -3444,10 +3450,7 @@ int CSMSG::Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
     };
 
     int rv;
-    smsg = SecureMessage(fPaid);
-    if (fPaid)
-        smsg.nonce[0] = nDaysRetention;
-
+    smsg = SecureMessage(fPaid, nDaysRetention);
     if ((rv = Encrypt(smsg, addressFrom, addressTo, sData)) != 0)
     {
         sError = GetString(rv);
@@ -3528,7 +3531,7 @@ int CSMSG::Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
         if (LogAcceptCategory(BCLog::SMSG))
             LogPrintf("Encrypting a copy for outbox, using address %s\n", CBitcoinAddress(addressOutbox).ToString());
 
-        SecureMessage smsgForOutbox(fPaid);
+        SecureMessage smsgForOutbox(fPaid, nDaysRetention);
         smsgForOutbox.timestamp = smsg.timestamp;
         if ((rv = Encrypt(smsgForOutbox, addressFrom, addressOutbox, sData)) != 0)
         {

@@ -86,26 +86,34 @@ UniValue smsgoptions(const JSONRPCRequest &request)
 
     if (mode == "list")
     {
+        UniValue options(UniValue::VARR);
+
         bool fDescriptions = false;
-        if (request.params.size() > 1)
-        {
-            std::string value = request.params[1].get_str();
-            fDescriptions     = part::IsStringBoolPositive(value);
-        };
+        if (!request.params[1].isNull())
+            fDescriptions = GetBool(request.params[1]);
 
-        result.pushKV("option", std::string("newAddressRecv = ") + (smsgModule.options.fNewAddressRecv ? "true" : "false"));
-
+        UniValue option(UniValue::VOBJ);
+        option.pushKV("name", "newAddressRecv");
+        option.pushKV("value", smsgModule.options.fNewAddressRecv);
         if (fDescriptions)
-            result.pushKV("newAddressRecv", "Enable receiving messages for newly created addresses.");
-        result.pushKV("option", std::string("newAddressAnon = ") + (smsgModule.options.fNewAddressAnon ? "true" : "false"));
+            option.pushKV("description", "Enable receiving messages for newly created addresses.");
+        options.push_back(option);
 
+        option = UniValue(UniValue::VOBJ);
+        option.pushKV("name", "newAddressAnon");
+        option.pushKV("value", smsgModule.options.fNewAddressAnon);
         if (fDescriptions)
-            result.pushKV("newAddressAnon", "Enable receiving anonymous messages for newly created addresses.");
-        result.pushKV("option", std::string("scanIncoming = ") + (smsgModule.options.fScanIncoming ? "true" : "false"));
+            option.pushKV("description", "Enable receiving anonymous messages for newly created addresses.");
+        options.push_back(option);
 
+        option = UniValue(UniValue::VOBJ);
+        option.pushKV("name", "scanIncoming");
+        option.pushKV("value", smsgModule.options.fScanIncoming);
         if (fDescriptions)
-            result.pushKV("scanIncoming", "Scan incoming blocks for public keys.");
+            option.pushKV("description", "Scan incoming blocks for public keys, -smsgscanincoming must also be set");
+        options.push_back(option);
 
+        result.pushKV("options", options);
         result.pushKV("result", "Success.");
     } else
     if (mode == "set")
@@ -166,7 +174,7 @@ UniValue smsgoptions(const JSONRPCRequest &request)
     } else
     {
         result.pushKV("result", "Unknown Mode.");
-        result.pushKV("expected", "smsgoption [list|set <optname> <value>]");
+        result.pushKV("expected", "smsgoptions [list|set <optname> <value>]");
     };
 
     return result;
@@ -1365,7 +1373,17 @@ UniValue smsgone(const JSONRPCRequest &request)
             "}\n"
             "\nResult:\n"
             "{\n"
-            "  \"msgid\": \"...\"                    (string) the message identifier\n"
+            "  \"msgid\": \"...\"                    (string) The message identifier\n"
+            "  \"location\": \"str\"                 (string) inbox|outbox|sending\n"
+            "  \"timereceived\": int               (int) Time the message was received\n"
+            "  \"addressto\": \"str\"                (string) Address the message was sent to\n"
+            "  \"read\": bool                      (bool) Read status\n"
+            "  \"timesent\": int                   (int) Time the message was created\n"
+            "  \"paid\": bool                      (bool) Paid or free message\n"
+            "  \"daysretention\": int              (int) Number of days message will stay in the network for\n"
+            "  \"timeexpired\": int                (int) Time the message will be dropped from the network\n"
+            "  \"payloadsize\": int                (int) Size of user message\n"
+            "  \"addressfrom\": \"str\"              (string) Address the message was sent from\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("smsg", "\"msgid\"")
@@ -1448,6 +1466,12 @@ UniValue smsgone(const JSONRPCRequest &request)
     const smsg::SecureMessage *psmsg = (smsg::SecureMessage*) &smsgStored.vchMessage[0];
     PushTime(result, "timesent", psmsg->timestamp);
     result.pushKV("paid", UniValue(psmsg->IsPaidVersion()));
+
+    uint32_t nDaysRetention = psmsg->IsPaidVersion() ? psmsg->nonce[0] : 2;
+    int64_t ttl = smsg::SMSGGetSecondsInDay() * nDaysRetention;
+    result.pushKV("daysretention", (int)nDaysRetention);
+    PushTime(result, "timeexpired", psmsg->timestamp + ttl);
+
 
     smsg::MessageData msg;
     bool fInbox = sType == "inbox" ? true : false;

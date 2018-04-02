@@ -101,6 +101,8 @@ class SecMsgBucket;
 class SecMsgAddress;
 class SecMsgOptions;
 
+uint32_t SMSGGetSecondsInDay();
+
 inline bool GetFundingTxid(const uint8_t *pPayload, size_t nPayload, uint256 &txid)
 {
     if (!pPayload || nPayload < 32)
@@ -114,13 +116,16 @@ class SecureMessage
 {
 public:
     SecureMessage() {};
-    SecureMessage(bool fPaid)
+    SecureMessage(bool fPaid, size_t nDaysRetention)
     {
         if (fPaid)
         {
             version[0] = 3;
             version[1] = 0;
+
+            nonce[0] = nDaysRetention;
         };
+
     };
     ~SecureMessage()
     {
@@ -279,7 +284,7 @@ public:
         // Default options
         fNewAddressRecv = true;
         fNewAddressAnon = true;
-        fScanIncoming   = true;
+        fScanIncoming   = false;
     };
 
     bool fNewAddressRecv;

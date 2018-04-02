@@ -200,6 +200,24 @@ class SmsgPaidTest(ParticlTestFramework):
             except:
                 time.sleep(1)
         assert(msg == bytes.fromhex(ro['hex'][:-2]))
+        assert(ro['daysretention'] == 4)
+
+
+        ro = nodes[0].smsgoptions('list', True)
+        assert(len(ro['options']) == 3)
+        assert(len(ro['options'][0]['description']) > 0)
+
+        ro = nodes[0].smsgoptions('set', 'newAddressAnon', 'false')
+        assert('newAddressAnon = false' in json.dumps(ro))
+
+
+        addr = nodes[0].getnewaddress('smsg test')
+        pubkey = nodes[0].getaddressinfo(addr)['pubkey']
+        ro = nodes[1].smsgaddaddress(addr, pubkey)
+        assert('Public key added to db' in json.dumps(ro))
+
+
+
 
 
 
