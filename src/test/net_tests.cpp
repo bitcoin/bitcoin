@@ -13,6 +13,8 @@
 #include <chainparams.h>
 #include <util.h>
 
+#include <memory>
+
 class CAddrManSerializationMock : public CAddrMan
 {
 public:
