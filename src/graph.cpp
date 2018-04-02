@@ -18,11 +18,11 @@ bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 		const CTransaction& tx = blockVtx[n];
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
 		{
-			if (!DecodeAliasTx(tx, op, vvchAliasArgs))
-				continue;
-
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
+				if (!FindAliasInTx(tx, vvchAliasArgs)) {
+					continue;
+				}
 				ArrivalTimesMap arrivalTimes;
 				CAssetAllocation assetallocation(tx);
 				CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, vvchAliasArgs[0]);
