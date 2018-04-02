@@ -970,7 +970,7 @@ bool FindAliasInTx(const CTransaction& tx, int &op, int &nOut, vector<vector<uns
 		const CCoins *prevCoins = GetUTXOCoins(tx.vin[i].prevout);
 		// ensure inputs are unspent when doing consensus check to add to block
 		if (prevCoins && DecodeAliasScript(prevCoins->vout[tx.vin[i].prevout.n].scriptPubKey, op, vvch)) {
-			nOut = itx.vin[i].prevout.n;
+			nOut = tx.vin[i].prevout.n;
 			return true;
 		}
 	}
