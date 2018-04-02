@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /** Functions for measurement of CPU cycles */
-#ifndef H_PERF
-#define H_PERF
+#ifndef BITCOIN_BENCH_PERF_H
+#define BITCOIN_BENCH_PERF_H
 
 #include <stdint.h>
 
@@ -34,4 +34,4 @@ uint64_t perf_cpucycles(void);
 void perf_init(void);
 void perf_fini(void);
 
-#endif // H_PERF
+#endif // BITCOIN_BENCH_PERF_H
