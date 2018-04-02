@@ -1619,6 +1619,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	}
 	
 	vecSend.push_back(fee);
+	vecSend.push_back(recipient);
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
@@ -2210,7 +2211,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
-
+	vecSend.push_back(recipient);
 
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
@@ -2267,7 +2268,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
-
+	vecSend.push_back(recipient);
 
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
