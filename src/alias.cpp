@@ -300,7 +300,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}					
 		
 	}
-	if (tx.vout.size() > ((MAX_ALIAS_UPDATES_PER_BLOCK * 2) + 3))
+	if (tx.vout.size() > (MAX_ALIAS_UPDATES_PER_BLOCK + 3))
 	{
 		errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5003 - " + _("Too many outputs for this Syscoin transaction");
 		return error(errorMessage.c_str());

@@ -769,7 +769,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 
 	string oldvalue = find_value(r.get_obj(), "publicvalue").get_str();
 	int nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
-	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
+	string expires = "0";
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
@@ -847,7 +847,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string oldAddressStr = find_value(r.get_obj(), "address").get_str();
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
-	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
+	string expires = "0";
 	int nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
 
 	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
