@@ -2,9 +2,9 @@
 
 
 <p align="center">
-Bruce Fenton  
-Tron Black  
-http://www.ravencoin.org  
+Bruce Fenton<br>
+Tron Black<br>
+http://www.ravencoin.org<br>
 3rd April 2018
 </p>
 <p align="center"><i>
