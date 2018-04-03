@@ -18,7 +18,7 @@ using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
-const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
+const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 10;
 BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 {
 	/*ECC_Start();
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 
-	// can do 5 free updates
+	// can do MAX_ALIAS_UPDATES_PER_BLOCK free updates
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
