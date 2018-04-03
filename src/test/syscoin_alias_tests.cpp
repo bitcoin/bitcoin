@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	}
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 '' 3 0 '' '' ''"), runtime_error);
 
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 '' 3 0 '' '' ''"));
 		UniValue varray = r.get_array();
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	}
 	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 '' 3 0 '' '' ''"), runtime_error);
 
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 '' 3 0 '' '' ''"));
 		UniValue varray = r.get_array();
