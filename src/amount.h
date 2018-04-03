@@ -14,6 +14,13 @@ typedef int64_t CAmount;
 static const CAmount COIN = 100000000;
 static const CAmount CENT = 1000000;
 
+static const CAmount  XYC = 100;
+static const CAmount KXYC = XYC * 1000;
+static const CAmount MXYC = XYC * 1000 * 1000;
+static const CAmount GXYC = XYC * 1000 * 1000 * 1000;
+static const CAmount TXYC = XYC * 1000 * 1000 * 1000 * 1000;
+static const CAmount PXYC = XYC * 1000 * 1000 * 1000 * 1000 * 1000;
+
 /** No amount larger than this (in satoshi) is valid.
  *
  * Note that this constant is *not* the total money supply, which in Bitcoin
