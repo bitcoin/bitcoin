@@ -1,15 +1,16 @@
 ## **Ravencoin: A Peer to Peer Electronic System for the Creation and Transfer of Assets**
 
 
-<p style="text-align: center;">
+<p align="center">
 Bruce Fenton  
 Tron Black  
 http://www.ravencoin.org  
 3rd April 2018
 </p>
-<p style="text-align: center;">
-_In the fictional world of Westeros, ravens are used as messengers who carry statements of truth. Ravencoin is a use-case focused blockchain designed to carry statements of truth about who owns what assets._
-</p>
+<p align="center"><i>
+In the fictional world of Westeros, ravens are used as messengers who carry statements of truth. Ravencoin is a use-case focused blockchain designed to carry statements of truth about who owns what assets.
+</i></p> 
+
 Thank you to the Bitcoin founder and developers. The Ravencoin project was launched based on the hard work and continuous effort of over 430 Bitcoin developers who made over 14,000 commits by the date of the Ravencoin code fork. We are eternally grateful to you for your diligence in making a secure network and for your support of free and open source software development. The Ravencoin project is built on the foundation you built.
 
 > **Abstract**. Ravencoin is a blockchain and platform optimized for transferring assets, such as tokens, from one holder to another. Based on the extensive development and testing of the UTXO model of the Bitcoin protocol, Ravencoin is built on a fork of the Bitcoin code. Key changes include a block reward time of one minute, a change in the number of coins issued, but not the weighted distribution schedule and the addition of asset creation and messaging capabilities. Ravencoin is free and open source. All Ravencoin (RVN) are fairly issued and mined publicly and transparently using Proof of Work (POW) using the x16r algorithm which was created for Ravencoin. There is no private, public, founder, or developer allocation set aside. Ravencoin is intended to prioritize security, user control, privacy, and censorship resistance. It is open to use and development in any jurisdiction, while allowing simple additional features for users based on need.
@@ -42,13 +43,13 @@ names is the contract hash.
 
 ## 3. Full Asset Aware Protocol Level System
 
-<p style="text-align: center;">
-_Who will not change a raven for a dove? The will of man is by his reason swayed.  
-– William Shakespeare_
-</p>
+<p align="center"><i>
+Who will not change a raven for a dove? The will of man is by his reason swayed.  
+– William Shakespeare
+</i></p>
 The solution is to create a bitcoin-like system that is fully asset aware. A system being asset aware provides two major advantages. First, it allows the client and RPC commands to protect the asset from being destroyed accidentally. Second, it allows a single native client to issue, track, and transfer the assets.
-Lastly, to provide security for the underlying assets, the bitcoin-like system functions only with a market value, a strong mining community, and wide distribution.
-
+Lastly, to provide security for the underlying assets, the bitcoin-like system functions only with a market value, a strong mining community, and wide distribution.  
+  
 **Assets**  
 Assets are tokens that can be issued by users of the Raven protocol without the need to be mined. Users of the Raven protocol create these assets and decide their purpose and rules independent of the protocol. These assets or tokens exist on the Ravencoin blockchain and could be whatever name, denomination or purpose selected by the creators of each asset, coin, or token. The tokens are transferable and move with the same ease as bitcoin, or other similarly functioning cryptocurrencies. In Ravencoin, an asset is just a limited quantity of a unique symbol, and transferable to any Ravencoin address. Assets have been available for some time on other platforms such as Open Assets, Mastercoin, Counterparty, and as an ERC20[7] or ERC223 [8] token on Ethereum [9]. Assets created on the Raven protocol have several advantages: they are easier to use, tightly integrated with a native coin, and secured with fair POW mining and open source code not run by a centralized organization.
 
@@ -100,10 +101,10 @@ Utilize proof of work mining, not because it burns a scarce resource of electric
 
 ## 5. Asset Issuance & Transfer
 
-<p style="text-align: center;">
-_Deep into that darkness peering, long I stood there wondering, fearing, Doubting, dreaming dreams no mortal ever dared to dream before; But the silence was unbroken, and the stillness gave no token.  
-\- Edgar Allen Poe, The Raven_
-</p>
+<p align="center"><i>
+Deep into that darkness peering, long I stood there wondering, fearing, Doubting, dreaming dreams no mortal ever dared to dream before; But the silence was unbroken, and the stillness gave no token.  
+\- Edgar Allen Poe, The Raven
+</i></p>
 Token names are guaranteed unique. The first to issue a token with a given name is the owner of that token project.
 
 The issuer of a token burns RVN and must provide a unique token name. The issuer determines the quantity issued, the number of decimal places, and whether they will be allowed to issue more of the same token in the future.
@@ -169,10 +170,10 @@ Some use cases for unique assets include:
 
 ## 8. Messaging Stakeholders
 
-<p style="text-align: center;">
-_"If the Tower of London ravens are lost or fly away, the Crown will fall and Britain with it." -
-Unknown_
-</p>
+<p align="center"><i>
+"If the Tower of London ravens are lost or fly away, the Crown will fall and Britain with it." -
+Unknown
+</i></p>
 A common problem with tokens/assets is that the token issuer cannot communicate with the token holders. This must be handled very carefully because the token holders do not always wish to be identified. The communication should allow the token holder to opt-out at any time. The message system should only allow select parties to use the message channel so that it is not a spam conduit.
 
 
@@ -192,9 +193,9 @@ Tokens are created to represent votes. Ravencoin will create an exact number of 
 
 ## 10. Privacy
 
-<p style="text-align: center;">
-_It's a community where the threat of violence is impotent because violence is impossible, and violence is impossible because its participants cannot be linked to their true names or physical locations. (Wei Dai)_
-</p>
+<p align="center"><i>
+It's a community where the threat of violence is impotent because violence is impossible, and violence is impossible because its participants cannot be linked to their true names or physical locations. (Wei Dai)
+</i></p>  
 Privacy is key in investments and tokens because financial systems function better when assets are fungible and can trade in a frictionless manner. The project should seek to strengthen privacy in any way possible as future technological improvements are made.
 
 As capabilities like messaging, assets, and rewards are added, privacy will be preserved in the same way that UTXO based cryptocurrencies separate identity from public addresses.
