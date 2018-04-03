@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 
 	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 '' 3 0 '' '' ''"), runtime_error);
 
-	// after generation MAX_ALIAS_UPDATES_PER_BLOCK utxo's should be available
+	// after generation MAX_ALIAS_UPDATES_PER_BLOCK+2 utxo's should be available because no update before
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
@@ -157,7 +157,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 '' 3 0 '' '' ''"), runtime_error);
 
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
