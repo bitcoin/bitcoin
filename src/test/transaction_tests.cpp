@@ -296,7 +296,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
     CKey key[4];
     for (int i = 0; i < 4; i++)
     {
-        key[i].MakeNewKey(i % 2);
+        key[i].MakeNewKeyWithType(KEY_P2PKH_COMPRESSED_FLAG(i % 2));
         keystoreRet.AddKey(key[i]);
     }
 
@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     mtx.nVersion = 1;
 
     CKey key;
-    key.MakeNewKey(true); // Need to use compressed keys in segwit or the signing will fail
+    key.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED); // Need to use compressed keys in segwit or the signing will fail
     CBasicKeyStore keystore;
     keystore.AddKeyPubKey(key, key.GetPubKey());
     CKeyID hash = key.GetPubKey().GetID();
@@ -499,11 +499,11 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CBasicKeyStore keystore, keystore2;
     CKey key1, key2, key3, key1L, key2L;
     CPubKey pubkey1, pubkey2, pubkey3, pubkey1L, pubkey2L;
-    key1.MakeNewKey(true);
-    key2.MakeNewKey(true);
-    key3.MakeNewKey(true);
-    key1L.MakeNewKey(false);
-    key2L.MakeNewKey(false);
+    key1.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
+    key2.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
+    key3.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
+    key1L.MakeNewKeyWithType(KEY_P2PKH_UNCOMPRESSED);
+    key2L.MakeNewKeyWithType(KEY_P2PKH_UNCOMPRESSED);
     pubkey1 = key1.GetPubKey();
     pubkey2 = key2.GetPubKey();
     pubkey3 = key3.GetPubKey();
@@ -685,7 +685,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout.resize(1);
     t.vout[0].nValue = 90*CENT;
     CKey key;
-    key.MakeNewKey(true);
+    key.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
     t.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
     std::string reason;

@@ -137,7 +137,7 @@ static bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsi
     if (vchSecret.size() != 32)
         return false;
 
-    key.Set(vchSecret.begin(), vchSecret.end(), vchPubKey.IsCompressed());
+    key.SetWithType(vchSecret.begin(), vchSecret.end(), KEY_P2PKH_COMPRESSED_FLAG(vchPubKey.IsCompressed()));
     return key.VerifyPubKey(vchPubKey);
 }
 

@@ -86,7 +86,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         key.clear();
         key.setObject();
         CKey futureKey;
-        futureKey.MakeNewKey(true);
+        futureKey.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
         key.pushKV("scriptPubKey", HexStr(GetScriptForRawPubKey(futureKey.GetPubKey())));
         key.pushKV("timestamp", newTip->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1);
         key.pushKV("internal", UniValue(true));

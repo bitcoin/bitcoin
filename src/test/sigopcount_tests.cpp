@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     for (int i = 0; i < 3; i++)
     {
         CKey k;
-        k.MakeNewKey(true);
+        k.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
         keys.push_back(k.GetPubKey());
     }
     CScript s2 = GetScriptForMultisig(1, keys);
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     CCoinsViewCache coins(&coinsDummy);
     // Create key
     CKey key;
-    key.MakeNewKey(true);
+    key.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
     CPubKey pubkey = key.GetPubKey();
     // Default flags
     int flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;

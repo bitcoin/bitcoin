@@ -250,20 +250,20 @@ struct KeyData
     KeyData()
     {
 
-        key0.Set(vchKey0, vchKey0 + 32, false);
-        key0C.Set(vchKey0, vchKey0 + 32, true);
+        key0.SetWithType(vchKey0, vchKey0 + 32, KEY_P2PKH_UNCOMPRESSED);
+        key0C.SetWithType(vchKey0, vchKey0 + 32, KEY_P2PKH_COMPRESSED);
         pubkey0 = key0.GetPubKey();
         pubkey0H = key0.GetPubKey();
         pubkey0C = key0C.GetPubKey();
         *const_cast<unsigned char*>(&pubkey0H[0]) = 0x06 | (pubkey0H[64] & 1);
 
-        key1.Set(vchKey1, vchKey1 + 32, false);
-        key1C.Set(vchKey1, vchKey1 + 32, true);
+        key1.SetWithType(vchKey1, vchKey1 + 32, KEY_P2PKH_UNCOMPRESSED);
+        key1C.SetWithType(vchKey1, vchKey1 + 32, KEY_P2PKH_COMPRESSED);
         pubkey1 = key1.GetPubKey();
         pubkey1C = key1C.GetPubKey();
 
-        key2.Set(vchKey2, vchKey2 + 32, false);
-        key2C.Set(vchKey2, vchKey2 + 32, true);
+        key2.SetWithType(vchKey2, vchKey2 + 32, KEY_P2PKH_UNCOMPRESSED);
+        key2C.SetWithType(vchKey2, vchKey2 + 32, KEY_P2PKH_COMPRESSED);
         pubkey2 = key2.GetPubKey();
         pubkey2C = key2C.GetPubKey();
     }
@@ -1066,9 +1066,9 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
 {
     ScriptError err;
     CKey key1, key2, key3;
-    key1.MakeNewKey(true);
-    key2.MakeNewKey(false);
-    key3.MakeNewKey(true);
+    key1.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
+    key2.MakeNewKeyWithType(KEY_P2PKH_UNCOMPRESSED);
+    key3.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
 
     CScript scriptPubKey12;
     scriptPubKey12 << OP_1 << ToByteVector(key1.GetPubKey()) << ToByteVector(key2.GetPubKey()) << OP_2 << OP_CHECKMULTISIG;
@@ -1096,10 +1096,10 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
 {
     ScriptError err;
     CKey key1, key2, key3, key4;
-    key1.MakeNewKey(true);
-    key2.MakeNewKey(false);
-    key3.MakeNewKey(true);
-    key4.MakeNewKey(false);
+    key1.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
+    key2.MakeNewKeyWithType(KEY_P2PKH_UNCOMPRESSED);
+    key3.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
+    key4.MakeNewKeyWithType(KEY_P2PKH_UNCOMPRESSED);
 
     CScript scriptPubKey23;
     scriptPubKey23 << OP_2 << ToByteVector(key1.GetPubKey()) << ToByteVector(key2.GetPubKey()) << ToByteVector(key3.GetPubKey()) << OP_3 << OP_CHECKMULTISIG;
@@ -1171,7 +1171,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     for (int i = 0; i < 3; i++)
     {
         CKey key;
-        key.MakeNewKey(i%2 == 1);
+        key.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED_FLAG(i%2));
         keys.push_back(key);
         pubkeys.push_back(key.GetPubKey());
         keystore.AddKey(key);

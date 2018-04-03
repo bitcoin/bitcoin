@@ -168,7 +168,7 @@ CPubKey CWallet::GenerateNewKey(WalletBatch &batch, bool internal)
     if (IsHDEnabled()) {
         DeriveNewChildKey(batch, metadata, secret, (CanSupportFeature(FEATURE_HD_SPLIT) ? internal : false));
     } else {
-        secret.MakeNewKey(fCompressed);
+        secret.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED_FLAG(fCompressed));
     }
 
     // Compressed public keys were introduced in version 0.6.0
@@ -1453,7 +1453,7 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
 CPubKey CWallet::GenerateNewSeed()
 {
     CKey key;
-    key.MakeNewKey(true);
+    key.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
     return DeriveNewSeed(key);
 }
 

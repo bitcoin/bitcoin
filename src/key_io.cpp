@@ -136,10 +136,11 @@ CKey DecodeSecret(const std::string& str)
     std::vector<unsigned char> data;
     if (DecodeBase58Check(str, data)) {
         const std::vector<unsigned char>& privkey_prefix = Params().Base58Prefix(CChainParams::SECRET_KEY);
-        if ((data.size() == 32 + privkey_prefix.size() || (data.size() == 33 + privkey_prefix.size() && data.back() == 1)) &&
+        bool typed = data.size() == 33 + privkey_prefix.size();
+        if ((data.size() == 32 + privkey_prefix.size() || (typed && data.back() != 0)) &&
             std::equal(privkey_prefix.begin(), privkey_prefix.end(), data.begin())) {
-            bool compressed = data.size() == 33 + privkey_prefix.size();
-            key.Set(data.begin() + privkey_prefix.size(), data.begin() + privkey_prefix.size() + 32, compressed);
+            KeyType type = typed ? (KeyType)data.back() : KEY_P2PKH_UNCOMPRESSED;
+            key.SetWithType(data.begin() + privkey_prefix.size(), data.begin() + privkey_prefix.size() + 32, type);
         }
     }
     memory_cleanse(data.data(), data.size());
@@ -151,7 +152,7 @@ std::string EncodeSecret(const CKey& key)
     assert(key.IsValid());
     std::vector<unsigned char> data = Params().Base58Prefix(CChainParams::SECRET_KEY);
     data.insert(data.end(), key.begin(), key.end());
-    if (key.IsCompressed()) {
+    if (KEY_IS_COMPRESSED(key.GetType())) {
         data.push_back(1);
     }
     std::string ret = EncodeBase58Check(data);
