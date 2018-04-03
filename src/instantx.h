@@ -141,7 +141,7 @@ public:
     CTxLockRequest() : tx(MakeTransactionRef()) {}
     CTxLockRequest(const CTransaction& _tx) : tx(MakeTransactionRef(_tx)) {}
 
-    ADD_SERIALIZE_METHODS
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
