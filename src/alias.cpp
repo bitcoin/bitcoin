@@ -1036,8 +1036,6 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 {
 	CRecipient recp = {scriptPubKey, recipient.nAmount, false};
 	recipient = recp;
-	CTxOut txout(recipient.nAmount,	recipient.scriptPubKey);
-    size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
 	CAmount nFee = minRelayTxFee.GetFee(3000);
 	recipient.nAmount = nFee;
 }
@@ -1258,7 +1256,6 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	if (nCurrentAmount < nDesiredAmount) {
 		const unsigned int nBytes = ::GetSerializeSize(txIn, SER_NETWORK, PROTOCOL_VERSION);
 		CAmount nFees = ::minRelayTxFee.GetFee(nBytes*1.5);
-		const CAmount &minFee = minRelayTxFee.GetFee(3000);
 		for (unsigned int i = 0; i < utxoArray.size(); i++)
 		{
 			// add 200 bytes of fees to account for every input added to this transaction
@@ -1270,7 +1267,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 			const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
 			const CScript& scriptPubKey = CScript(data.begin(), data.end());
 			const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
-			if (nValue <= minFee)
+			// look for non alias inputs
+			if (DecodeAliasScript(scriptPubKey, op, vvch))
 				continue;
 			if (mapOutputs.find(strprintf("%s%s", strTxid, nOut)) != mapOutputs.end())
 				continue;
@@ -1280,9 +1278,6 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 					continue;
 			}
 			if (pwalletMain->IsLockedCoin(txid, nOut))
-				continue;
-			// look for non alias inputs coins that can be used to fund this transaction
-			if (DecodeAliasScript(scriptPubKey, op, vvch))
 				continue;
 			tx.vin.push_back(CTxIn(txid, nOut, scriptPubKey));
 			nCurrentAmount += nValue;
