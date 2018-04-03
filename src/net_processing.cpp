@@ -3157,6 +3157,10 @@ void PeerLogicValidation::CheckForStaleTipAndEvictPeers(const Consensus::Params 
 
     EvictExtraOutboundPeers(time_in_seconds);
 
+    // We skip the stale tip stuff if fPowNoRetargeting is set, as that
+    // indicates we are running on regtest
+    if (consensusParams.fPowNoRetargeting) return;
+
     if (time_in_seconds > m_stale_tip_check_time) {
         LOCK(cs_main);
         // Check whether our tip is stale, and if so, allow using an extra
