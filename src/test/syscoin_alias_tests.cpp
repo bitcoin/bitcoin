@@ -118,8 +118,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 
-	// can do MAX_ALIAS_UPDATES_PER_BLOCK free updates
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	// can do MAX_ALIAS_UPDATES_PER_BLOCK-1 free updates, updated above as well
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
 	{
 		// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changeddata " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " ''"));
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	BOOST_CHECK(!hex_str.empty());
 
 	// new owner can update
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " ''"));
 		UniValue varray = r.get_array();
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	// after generation MAX_ALIAS_UPDATES_PER_BLOCK utxo's should be available
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " ''"));
 		UniValue varray = r.get_array();
@@ -295,8 +295,8 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	string encryptionkey3 = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey3 = find_value(r.get_obj(), "encryption_privatekey").get_str();
 
-	// update aliases afterwards, there should be MAX_ALIAS_UPDATES_PER_BLOCK UTXOs again after update
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	// update aliases afterwards, there should be MAX_ALIAS_UPDATES_PER_BLOCK-1 UTXOs again after update
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 " + oldAddressStr1 + " 3 " + " 0 " + encryptionprivkey1 + " " + encryptionkey1 + " ''"));
 		UniValue varray = r.get_array();
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	}
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 " + oldAddressStr1 + " 3 " + " 0 " + encryptionprivkey1+ " " + encryptionkey1 + " ''"), runtime_error);
 
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 " + oldAddressStr2 + " 3 " + " 0 " + encryptionprivkey2 + " " + encryptionkey2 + " ''"));
 		UniValue varray = r.get_array();
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	}
 	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 " + oldAddressStr2 + " 3 " + " 0 " + encryptionprivkey2 + " " + encryptionkey2 + " ''"), runtime_error);
 
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 " + oldAddressStr3 + " 3 " + " 0 " + encryptionprivkey3 + " " + encryptionkey3 + " ''"));
 		UniValue varray = r.get_array();
