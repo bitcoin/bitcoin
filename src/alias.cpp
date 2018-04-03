@@ -1870,7 +1870,7 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 		return;
 	
 	// get aliasinput count, ensure atleast 1 exists
-	OutPoint aliasOutPoint;
+	COutPoint aliasOutPoint;
 	unsigned int aliasInputCount = aliasunspent(vchAlias, aliasOutPoint);
 
 	int op;
