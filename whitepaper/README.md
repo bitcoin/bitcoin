@@ -87,7 +87,7 @@ Satoshi Nakamoto described bitcoin as an implementation of Wei Dai’s bmoney [1
 
 ## 4. Ravencoin Launch and Algorithm
 
-Ravencoin was announced on October 31, 2018[11] and released binaries for mining on Jan 3, 2018,[12] the respective ninth anniversary of the announcement and launch of Bitcoin. Ravencoin is the bitcoin-like system that will allow users to issue and integrate assets into its blockchain. This will be accomplished in phases which build upon each other.
+Ravencoin was announced on October 31, 2017[11] and released binaries for mining on Jan 3, 2018,[12] the respective ninth anniversary of the announcement and launch of Bitcoin. Ravencoin is the bitcoin-like system that will allow users to issue and integrate assets into its blockchain. This will be accomplished in phases which build upon each other.
 
 \- In progress
 
