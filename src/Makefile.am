@@ -107,6 +107,8 @@ BITCOIN_CORE_H = \
   compressor.h \
   consensus/consensus.h \
   consensus/tx_verify.h \
+  core/consumerthread.h \
+  core/producerconsumerqueue.h \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
@@ -140,7 +142,6 @@ BITCOIN_CORE_H = \
   policy/policy.h \
   policy/rbf.h \
   pow.h \
-  core/producerconsumerqueue.h \
   protocol.h \
   random.h \
   reverse_iterator.h \
