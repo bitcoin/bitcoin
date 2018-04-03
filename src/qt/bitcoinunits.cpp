@@ -17,9 +17,12 @@ BitcoinUnits::BitcoinUnits(QObject *parent):
 QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
 {
     QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(BTC);
-    unitlist.append(mBTC);
-    unitlist.append(uBTC);
+    unitlist.append( XYC);
+    unitlist.append(KXYC);
+    unitlist.append(MXYC);
+    unitlist.append(GXYC);
+    unitlist.append(TXYC);
+    unitlist.append(PXYC);
     return unitlist;
 }
 
@@ -76,9 +79,6 @@ QString BitcoinUnits::description(int unit)
     case GXYC: return QString("Giga-yama_coins");
     case TXYC: return QString("Tera-yama_coins");
     case PXYC: return QString("Peta-yama_coins");
-    case BTC: return QString("Bitcoins");
-    case mBTC: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uBTC: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
