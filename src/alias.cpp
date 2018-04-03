@@ -2026,7 +2026,7 @@ unsigned int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outp
 			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
 				continue;
 		}
-		if(outpoint.IsNull()
+		if(outpoint.IsNull())
 			outpoint = outPointToCheck;
 		count++;
 	}
