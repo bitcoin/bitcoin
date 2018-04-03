@@ -472,7 +472,6 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		if (!aliasOutPoint.IsNull())
 			coinControl->Select(aliasOutPoint);
 	}
-	// if alias inputs used, need to ensure new alias utxo's are created as prev ones need to be used for proof of ownership
 
 	CWalletTx wtxNew1, wtxNew2;
 	// get total output required
@@ -483,45 +482,49 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	}
 
 
-	// step 3
-	UniValue param(UniValue::VARR);
-	param.push_back(stringFromVch(vchAlias));
-	const UniValue &result = aliasbalance(param, false);
-	CAmount nBalance = AmountFromValue(find_value(result.get_obj(), "balance"));
-	if (nBalance > 0 && (transferAlias || nFeeRequired > 0))
+	CAmount nOutputTotal = 0;
+	BOOST_FOREACH(const CRecipient& recp, vecSend)
 	{
-		CAmount nOutputTotal = 0;
-		BOOST_FOREACH(const CRecipient& recp, vecSend)
+		nOutputTotal += recp.nAmount;
+	}
+	// account for 1 change output
+	nFeeRequired += 3 * minRelayTxFee.GetFee(200u);
+	CAmount nTotal = (nOutputTotal - GetCoinControlInputTotal(coinControl)) + nFeeRequired;
+	// if transferring alias, move entire balance of alias to new address
+	if (transferAlias && !aliasRecipient.scriptPubKey.empty())
+	{
+		CTxDestination aliasDest;
+		if (ExtractDestination(aliasRecipient.scriptPubKey, aliasDest))
 		{
-			nOutputTotal += recp.nAmount;
-		}
-		const CAmount &nTotal = (nOutputTotal - GetCoinControlInputTotal(coinControl)) + nFeeRequired;
-		// if transferring alias, move entire balance of alias to new address
-		if (transferAlias && !aliasRecipient.scriptPubKey.empty())
-		{
-			CTxDestination aliasDest;
-			if (ExtractDestination(aliasRecipient.scriptPubKey, aliasDest))
-			{
-				CScript scriptChangeOrig = GetScriptForDestination(aliasDest);
-				CRecipient recipient = { scriptChangeOrig, nBalance - nOutputTotal - nFeeRequired, false };
-				if (recipient.nAmount > 0)
-					vecSend.push_back(recipient);
+			UniValue param(UniValue::VARR);
+			param.push_back(stringFromVch(vchAlias));
+			const UniValue &result = aliasbalance(param, false);
+			CAmount nBalance = AmountFromValue(find_value(result.get_obj(), "balance"));
+
+			// account for transfer balance output
+			nFeeRequired += 3 * minRelayTxFee.GetFee(200u);
+			CScript scriptChangeOrig = GetScriptForDestination(aliasDest);
+			CRecipient recipient = { scriptChangeOrig, nBalance - nOutputTotal - nFeeRequired, false };
+			if (recipient.nAmount > 0) {
+				vecSend.push_back(recipient);
+				nTotal += recipient.nAmount;
 			}
-		}
-		if (nTotal > 0 || transferAlias)
-		{
-			vector<COutPoint> outPoints;
-			// select all if alias transferred otherwise just get enough outputs to fund nTotal
-			aliasselectpaymentcoins(vchAlias, nTotal, outPoints, nFeeRequired, transferAlias);
-			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
-			{
-				if (!coinControl->IsSelected(outpoint))
-					coinControl->Select(outpoint);
-			}
-			if (nFeeRequired > 0)
-				throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin Alias does not have enough funds to complete this transaction. You need to deposit the following amount of coins in order for the transaction to succeed: ") + ValueFromAmount(nFeeRequired).write());
 		}
 	}
+	if (nTotal > 0 || transferAlias)
+	{
+		vector<COutPoint> outPoints;
+		// select all if alias transferred otherwise just get enough outputs to fund nTotal
+		aliasselectpaymentcoins(vchAlias, nTotal, outPoints, nFeeRequired, transferAlias);
+		if (nFeeRequired > 0)
+			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin Alias does not have enough funds to complete this transaction. You need to deposit the following amount of coins in order for the transaction to succeed: ") + ValueFromAmount(nFeeRequired).write());
+		BOOST_FOREACH(const COutPoint& outpoint, outPoints)
+		{
+			if (!coinControl->IsSelected(outpoint))
+				coinControl->Select(outpoint);
+		}
+	}
+	
 	// now create the transaction and fake sign with enough funding from alias utxo's (if coinControl specified fAllowOtherInputs(true) then and only then are wallet inputs are allowed)
 	// actual signing happens in signrawtransaction outside of this function call after the wtxNew raw transaction is returned back to it
 	if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty(), ALL_COINS, fUseInstantSend)) {

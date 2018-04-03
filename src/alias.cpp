@@ -1255,7 +1255,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	vector<vector<unsigned char> > vvch;
 	if (nCurrentAmount < nDesiredAmount) {
 		const unsigned int nBytes = ::GetSerializeSize(txIn, SER_NETWORK, PROTOCOL_VERSION);
-		CAmount nFees = ::minRelayTxFee.GetFee(nBytes*1.5);
+		// min fee based on bytes + 1 change output
+		CAmount nFees = ::minRelayTxFee.GetFee(nBytes*1.5) + (3 * minRelayTxFee.GetFee(200u));
 		for (unsigned int i = 0; i < utxoArray.size(); i++)
 		{
 			// add 200 bytes of fees to account for every input added to this transaction
@@ -1871,6 +1872,7 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
   	int op;
 	vector<vector<unsigned char> > vvch;
 	bool bIsFunded = false;
+	CAmount nFeeRequired = 0;
 	for (unsigned int i = 0; i<utxoArray.size(); i++)
 	{
 		const UniValue& utxoObj = utxoArray[i].get_obj();
@@ -1888,19 +1890,21 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
 				continue;
 		}
+		// add min fee for every input
+		nFeeRequired += 3 * minRelayTxFee.GetFee(200u);
 		outPoints.push_back(outPointToCheck);
 		nCurrentAmount += nValue;
-		if (nCurrentAmount >= nDesiredAmount) {
+		if (nCurrentAmount >= (nDesiredAmount + nFeeRequired)) {
 			bIsFunded = true;
 			if (!bSelectAll)
 				break;
 		}
+		else
+			bIsFunded = false;
 			
     }
-	if (!bIsFunded && !bSelectAll)
-		outPoints.clear();
 	if (!bIsFunded) {
-		nRequiredAmount = nDesiredAmount - nCurrentAmount;
+		nRequiredAmount = (nDesiredAmount + nFeeRequired) - nCurrentAmount;
 		if (nRequiredAmount < 0)
 			nRequiredAmount = 0;
 	}
