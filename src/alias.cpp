@@ -1036,8 +1036,6 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 {
 	CRecipient recp = {scriptPubKey, recipient.nAmount, false};
 	recipient = recp;
-	CTxOut txout(recipient.nAmount,	recipient.scriptPubKey);
-    size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
 	CAmount nFee = minRelayTxFee.GetFee(3000);
 	recipient.nAmount = nFee;
 }
@@ -1219,7 +1217,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		UniValue receivedList = SyscoinListReceived(false);
 		UniValue recevedListArray = receivedList.get_array();
 		for (unsigned int idx = 0; idx < recevedListArray.size(); idx++) {
-			addresses.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
+			if(find_value(recevedListArray[idx].get_obj(), "alias").get_str().empty())
+				addresses.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
 		}
 	}
 
@@ -1256,8 +1255,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	vector<vector<unsigned char> > vvch;
 	if (nCurrentAmount < nDesiredAmount) {
 		const unsigned int nBytes = ::GetSerializeSize(txIn, SER_NETWORK, PROTOCOL_VERSION);
-		CAmount nFees = ::minRelayTxFee.GetFee(nBytes*1.5);
-		const CAmount &minFee = minRelayTxFee.GetFee(3000);
+		// min fee based on bytes + 1 change output
+		CAmount nFees = ::minRelayTxFee.GetFee(nBytes*1.5) + (3 * minRelayTxFee.GetFee(200u));
 		for (unsigned int i = 0; i < utxoArray.size(); i++)
 		{
 			// add 200 bytes of fees to account for every input added to this transaction
@@ -1269,7 +1268,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 			const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
 			const CScript& scriptPubKey = CScript(data.begin(), data.end());
 			const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
-			if (nValue <= minFee)
+			// look for non alias inputs
+			if (DecodeAliasScript(scriptPubKey, op, vvch))
 				continue;
 			if (mapOutputs.find(strprintf("%s%s", strTxid, nOut)) != mapOutputs.end())
 				continue;
@@ -1279,9 +1279,6 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 					continue;
 			}
 			if (pwalletMain->IsLockedCoin(txid, nOut))
-				continue;
-			// look for non alias inputs coins that can be used to fund this transaction
-			if (DecodeAliasScript(scriptPubKey, op, vvch))
 				continue;
 			tx.vin.push_back(CTxIn(txid, nOut, scriptPubKey));
 			nCurrentAmount += nValue;
@@ -1875,6 +1872,7 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
   	int op;
 	vector<vector<unsigned char> > vvch;
 	bool bIsFunded = false;
+	CAmount nFeeRequired = 0;
 	for (unsigned int i = 0; i<utxoArray.size(); i++)
 	{
 		const UniValue& utxoObj = utxoArray[i].get_obj();
@@ -1892,19 +1890,21 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
 				continue;
 		}
+		// add min fee for every input
+		nFeeRequired += 3 * minRelayTxFee.GetFee(200u);
 		outPoints.push_back(outPointToCheck);
 		nCurrentAmount += nValue;
-		if (nCurrentAmount >= nDesiredAmount) {
+		if (nCurrentAmount >= (nDesiredAmount + nFeeRequired)) {
 			bIsFunded = true;
 			if (!bSelectAll)
 				break;
 		}
+		else
+			bIsFunded = false;
 			
     }
-	if (!bIsFunded && !bSelectAll)
-		outPoints.clear();
 	if (!bIsFunded) {
-		nRequiredAmount = nDesiredAmount - nCurrentAmount;
+		nRequiredAmount = (nDesiredAmount + nFeeRequired) - nCurrentAmount;
 		if (nRequiredAmount < 0)
 			nRequiredAmount = 0;
 	}
