@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	BOOST_CHECK(hex_str.empty());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagmultiupdate"));
 
-	// can do MAX_ALIAS_UPDATES_PER_BLOCK-1 free updates, updated above as well
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
+	// can do MAX_ALIAS_UPDATES_PER_BLOCK free updates, updated above as well
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changeddata '' 3 0 '' '' ''"));
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	BOOST_CHECK(!hex_str.empty());
 
 	// new owner can update
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 '' 3 0 '' '' ''"));
 		UniValue varray = r.get_array();
@@ -274,8 +274,8 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	AliasUpdate("node3", "alias3.aliaspay.tld", "changeddata13a");
 
 
-	// update aliases afterwards, there should be MAX_ALIAS_UPDATES_PER_BLOCK-1 UTXOs again after update
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
+	// update aliases afterwards, there should be MAX_ALIAS_UPDATES_PER_BLOCK UTXOs again after update
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 '' 3 0 '' '' ''"));
 		UniValue varray = r.get_array();
