@@ -1,4 +1,4 @@
-## **Ravencoin: A Peer to Peer Electronic System for the Creation and Transfer of Assets**
+<h1 align="center">Ravencoin: A Peer to Peer Electronic System for the Creation and Transfer of Assets</h1>
 
 
 <p align="center">
