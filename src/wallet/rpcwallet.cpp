@@ -53,7 +53,7 @@ extern std::string stringFromVch(const std::vector<unsigned char> &vch);
 extern std::vector<unsigned char> vchFromString(const std::string &str);
 extern unsigned int MAX_ALIAS_UPDATES_PER_BLOCK;
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
-extern void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, CAmount& nFeeRequired, bool bSelectAll);
+extern void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, const COutPoint& aliasOutPoint, CAmount& nFeeRequired, bool bSelectAll);
 extern string GetSyscoinTransactionDescription(const int op, string& responseEnglish, const char &type);
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
@@ -462,9 +462,9 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	int numResults = 0;
 	// if alias inputs used, need to ensure new alias utxo's are created as prev ones need to be used for proof of ownership
 	if (!aliasRecipient.scriptPubKey.empty()) {
-		aliasunspent(vchAlias, aliasOutPoint);
+		unsigned int unspentcount = aliasunspent(vchAlias, aliasOutPoint);
 		// for the alias utxo (1 per transaction is used)
-		if (aliasOutPoint.IsNull() || transferAlias)
+		if (unspentcount <= 1 || transferAlias)
 		{
 			for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 				vecSend.push_back(aliasRecipient);
@@ -515,7 +515,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	{
 		vector<COutPoint> outPoints;
 		// select all if alias transferred otherwise just get enough outputs to fund nTotal
-		aliasselectpaymentcoins(vchAlias, nTotal, outPoints, nFeeRequired, transferAlias);
+		aliasselectpaymentcoins(vchAlias, nTotal, outPoints, aliasOutPoint, nFeeRequired, transferAlias);
 		if (nFeeRequired > 0)
 			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin Alias does not have enough funds to complete this transaction. You need to deposit the following amount of coins in order for the transaction to succeed: ") + ValueFromAmount(nFeeRequired).write());
 		BOOST_FOREACH(const COutPoint& outpoint, outPoints)

@@ -298,7 +298,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const std::vector<std::vec
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
-void aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, CAmount &nRequiredAmount, bool bSelectAll=false);
+void aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, const COutPoint& aliasOutPoint, CAmount &nRequiredAmount, bool bSelectAll=false);
 CAmount GetDataFee(const CScript& scriptPubKey);
 bool IsAliasOp(int op);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
@@ -310,7 +310,7 @@ bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, std::vector<std::v
 bool DecodeAliasScript(const CScript& script, int& op,
 		std::vector<std::vector<unsigned char> > &vvch);
 bool FindAliasInTx(const CTransaction& tx, std::vector<std::vector<unsigned char> >& vvch);
-void aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outPoint);
+unsigned int aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outPoint);
 bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey);
 bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, std::vector<unsigned char> &vchPubKey);
 int getFeePerByte(const uint64_t &paymentOptionMask);

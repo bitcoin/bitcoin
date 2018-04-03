@@ -1844,7 +1844,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 	res.push_back(Pair("balance", ValueFromAmount(nAmount)));
     return  res;
 }
-void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, CAmount &nRequiredAmount, bool bSelectAll)
+void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, const COutPoint& aliasOutPoint, CAmount &nRequiredAmount, bool bSelectAll)
 {
 	nRequiredAmount = 0;
 	int numResults = 0;
@@ -1869,7 +1869,11 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 	else
 		return;
 	
-  	int op;
+	// get aliasinput count, ensure atleast 1 exists
+	OutPoint aliasOutPoint;
+	const unsigned int aliasInputCount = aliasunspent(vchAlias, aliasOutPoint);
+
+	int op;
 	vector<vector<unsigned char> > vvch;
 	bool bIsFunded = false;
 	CAmount nFeeRequired = 0;
@@ -1881,10 +1885,19 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
 		const CScript& scriptPubKey = CScript(data.begin(), data.end());
 		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
-		// look for non alias inputs
-		if (DecodeAliasScript(scriptPubKey, op, vvch))
-			continue;
 		const COutPoint &outPointToCheck = COutPoint(txid, nOut);
+		
+		if (DecodeAliasScript(scriptPubKey, op, vvch) && vvch.size() > 1 && vvch[0] == theAlias.vchAlias && vvch[1] == theAlias.vchGUID) {
+			aliasInputCount--;
+			// if this outpoint is same as the alias input that was added we cannot add it again so skip
+			if (outPointToCheck == aliasOutPoint)
+				continue;
+			// ensure that we keep atleast 1 alias input
+			if (aliasInputCount <= 1)
+				continue;
+		}
+
+		
 		{
 			LOCK(mempool.cs);
 			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
@@ -1975,7 +1988,7 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 	oName.push_back(Pair("accepttransferflags", (int)alias.nAcceptTransferFlags));
 	return true;
 }
-void aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
+unsigned int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 {
 	outpoint.SetNull();
 	CAliasIndex theAlias;
@@ -1994,7 +2007,7 @@ void aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 		utxoArray = resUTXOs.get_array();
 	else
 		return;
-
+	unsigned int count = 0;
 	CAmount nCurrentAmount = 0;
 	for (unsigned int i = 0; i<utxoArray.size(); i++)
 	{
@@ -2013,9 +2026,11 @@ void aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
 				continue;
 		}
-		outpoint = outPointToCheck;
-		return;	
+		if(outpoint.IsNull()
+			outpoint = outPointToCheck;
+		count++;
 	}
+	return count;
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {
 
