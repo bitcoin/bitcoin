@@ -467,7 +467,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		// for the alias utxo (1 per transaction is used)
 		if (unspentcount <= 1 || transferAlias)
 		{
-			for (unsigned int i = 0; i <= MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+			for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 				vecSend.push_back(aliasRecipient);
 		}
 		if (!aliasOutPoint.IsNull())

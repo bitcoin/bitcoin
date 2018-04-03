@@ -300,8 +300,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}					
 		
 	}
-	// MAX_ALIAS_UPDATES_PER_BLOCK + 1 (11 alias outputs) + 1(change address) + 2(data output and alias coloured output)
-	if (tx.vout.size() > (MAX_ALIAS_UPDATES_PER_BLOCK + 4))
+	// MAX_ALIAS_UPDATES_PER_BLOCK + 1(change address) + 2(data output and alias coloured output)
+	if (tx.vout.size() > (MAX_ALIAS_UPDATES_PER_BLOCK + 3))
 	{
 		errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5003 - " + _("Too many outputs for this Syscoin transaction");
 		return error(errorMessage.c_str());
@@ -1501,7 +1501,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot find alias registration transaction, please ensure it has confirmed or re-submit the registration transaction again"));
 		}
 		tx.vin.push_back(CTxIn(regOut, pcoin->vout[regOut.n].scriptPubKey));
-		for (unsigned int i = 0; i<=MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+		for (unsigned int i = 0; i<MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 		{
 			vecSend.push_back(recipient);
 		}
