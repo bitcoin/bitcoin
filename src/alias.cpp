@@ -1219,7 +1219,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		UniValue receivedList = SyscoinListReceived(false);
 		UniValue recevedListArray = receivedList.get_array();
 		for (unsigned int idx = 0; idx < recevedListArray.size(); idx++) {
-			addresses.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
+			if(find_value(recevedListArray[idx].get_obj(), "alias").get_str().empty())
+				addresses.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
 		}
 	}
 
