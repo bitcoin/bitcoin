@@ -1,5 +1,7 @@
-## **Ravencoin: A Peer to Peer Electronic System for the Creation and Transfer of Assets**
-
+<p align="center"><b><h1>
+Ravencoin: A Peer to Peer Electronic System for the Creation and Transfer of Assets
+</b></h1>
+</p>
 
 <p align="center">
 Bruce Fenton<br>
