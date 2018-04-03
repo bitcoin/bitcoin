@@ -1844,7 +1844,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 	res.push_back(Pair("balance", ValueFromAmount(nAmount)));
     return  res;
 }
-void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, const COutPoint& aliasOutPoint, CAmount &nRequiredAmount, bool bSelectAll)
+void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, const unsigned int aliasInputCount, const COutPoint& aliasOutPoint, CAmount &nRequiredAmount, bool bSelectAll)
 {
 	nRequiredAmount = 0;
 	int numResults = 0;
@@ -1869,10 +1869,7 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 	else
 		return;
 	
-	// get aliasinput count, ensure atleast 1 exists
-	COutPoint aliasOutPoint;
-	unsigned int aliasInputCount = aliasunspent(vchAlias, aliasOutPoint);
-
+	unsigned int currentAliasInputCount = aliasInputCount;
 	int op;
 	vector<vector<unsigned char> > vvch;
 	bool bIsFunded = false;
@@ -1888,12 +1885,12 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 		const COutPoint &outPointToCheck = COutPoint(txid, nOut);
 		
 		if (DecodeAliasScript(scriptPubKey, op, vvch) && vvch.size() > 1 && vvch[0] == theAlias.vchAlias && vvch[1] == theAlias.vchGUID) {
-			aliasInputCount--;
+			currentAliasInputCount--;
 			// if this outpoint is same as the alias input that was added we cannot add it again so skip
 			if (outPointToCheck == aliasOutPoint)
 				continue;
 			// ensure that we keep atleast 1 alias input
-			if (aliasInputCount <= 1)
+			if (currentAliasInputCount <= 1)
 				continue;
 		}
 
@@ -2026,7 +2023,7 @@ unsigned int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outp
 			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
 				continue;
 		}
-		if(outpoint.IsNull())
+		if(outpoint.IsNull()))
 			outpoint = outPointToCheck;
 		count++;
 	}
