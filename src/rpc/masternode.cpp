@@ -567,12 +567,12 @@ UniValue masternodelist(const JSONRPCRequest& request)
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strAddress));
             } else if (strMode == "daemon") {
-                std::string strDaemon = FormatVersion(mn.lastPing.nDaemonVersion);
+                std::string strDaemon = mn.lastPing.nDaemonVersion > 0 ? FormatVersion(mn.lastPing.nDaemonVersion) : "Unknown";
                 if (strFilter !="" && strDaemon.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strDaemon));
             } else if (strMode == "sentinel") {
-                std::string strSentinel = SafeIntVersionToString(mn.lastPing.nSentinelVersion);
+                std::string strSentinel = mn.lastPing.nSentinelVersion > 0 ? SafeIntVersionToString(mn.lastPing.nSentinelVersion) : "Unknown";
                 if (strFilter !="" && strSentinel.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strSentinel));
@@ -627,8 +627,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 objMN.push_back(Pair("payee", EncodeDestination(mn.pubKeyCollateralAddress.GetID())));
                 objMN.push_back(Pair("status", mn.GetStatus()));
                 objMN.push_back(Pair("protocol", mn.nProtocolVersion));
-                objMN.push_back(Pair("daemonversion", FormatVersion(mn.lastPing.nDaemonVersion)));
-                objMN.push_back(Pair("sentinelversion", SafeIntVersionToString(mn.lastPing.nSentinelVersion)));
+                objMN.push_back(Pair("daemonversion", mn.lastPing.nDaemonVersion > 0 ? FormatVersion(mn.lastPing.nDaemonVersion) : "Unknown"));
+                objMN.push_back(Pair("sentinelversion", mn.lastPing.nSentinelVersion > 0 ? SafeIntVersionToString(mn.lastPing.nSentinelVersion) : "Unknown"));
                 objMN.push_back(Pair("sentinelstate", (mn.lastPing.fSentinelIsCurrent ? "current" : "expired")));
                 objMN.push_back(Pair("lastseen", (int64_t)mn.lastPing.sigTime));
                 objMN.push_back(Pair("activeseconds", (int64_t)(mn.lastPing.sigTime - mn.sigTime)));

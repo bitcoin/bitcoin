@@ -36,8 +36,8 @@ public:
     std::vector<unsigned char> vchSig{};
     bool fSentinelIsCurrent = false; // true if last sentinel ping was current
     // MSB is always 0, other 3 bits corresponds to x.x.x version scheme
-    uint32_t nSentinelVersion;
-    uint32_t nDaemonVersion;
+    uint32_t nSentinelVersion = 0;
+    uint32_t nDaemonVersion = 0;
 
     CMasternodePing() = default;
 
