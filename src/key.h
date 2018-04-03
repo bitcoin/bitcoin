@@ -23,6 +23,29 @@
  */
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
 
+/**
+ * Key type, based on Electrum 3.0 extension:
+ * https://github.com/spesmilo/electrum/blob/82e88cb89df35288b80dfdbe071da74247351251/RELEASE-NOTES#L95-L108
+ */
+enum KeyType
+{
+    // Legacy style
+    KEY_P2PKH_UNCOMPRESSED = 0x00,
+    KEY_P2PKH_COMPRESSED   = 0x01,
+    // New style
+    KEY_P2PKH              = 0x10,   // compressed P2PKH, same as 0x01
+    KEY_P2WPKH             = 0x11,
+    KEY_P2WPKH_P2SH        = 0x12,
+    KEY_P2SH               = 0x13,
+    KEY_P2WSH              = 0x14,
+    KEY_P2WSH_P2SH         = 0x15,
+    // Ranges for validity
+    KEY_RANGE_LEGACY_START = KEY_P2PKH_UNCOMPRESSED,
+    KEY_RANGE_LEGACY_END   = KEY_P2PKH_COMPRESSED,
+    KEY_RANGE_START        = KEY_P2PKH,
+    KEY_RANGE_END          = KEY_P2WSH_P2SH,
+};
+
 /** An encapsulated private key. */
 class CKey
 {
