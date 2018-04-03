@@ -2144,7 +2144,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "  \"txid\" : \"transactionid\",   (string) The transaction id.\n"
             "  \"time\" : ttt,            (numeric) The transaction time in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
-            "  \"from_me\" : \"yes|no\",  (string) Whether this transaction was sent from wallet on this node\n"
+            "  \"from_me\" : \"xxx\",  (bool) Whether this transaction was sent from wallet on this node\n"
             "  \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
             "                                                   may be unknown for unconfirmed transactions not in the mempool\n"
             "  \"details\" : [\n"
@@ -2205,7 +2205,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
         entry.pushKV("fee", ValueFromAmount(nFee));
 
     WalletTxToJSON(wtx, entry);
-    entry.pushKV("from_me", fFromMe? "yes" : "no");
+    entry.pushKV("from_me", fFromMe);
 
     UniValue details(UniValue::VARR);
     ListTransactions(pwallet, wtx, "*", 0, false, details, filter);
