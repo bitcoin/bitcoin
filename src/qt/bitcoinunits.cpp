@@ -27,9 +27,12 @@ bool BitcoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case BTC:
-    case mBTC:
-    case uBTC:
+    case  XYC:
+    case KXYC:
+    case MXYC:
+    case GXYC:
+    case TXYC:
+    case PXYC:
         return true;
     default:
         return false;
@@ -40,9 +43,12 @@ QString BitcoinUnits::longName(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("BTC");
-    case mBTC: return QString("mBTC");
-    case uBTC: return QString::fromUtf8("µBTC (bits)");
+    case  XYC: return QString("XYC");
+    case KXYC: return QString("Kilo XYC");
+    case MXYC: return QString("Mega XYC");
+    case GXYC: return QString("Giga XYC");
+    case TXYC: return QString("Tera XYC");
+    case PXYC: return QString("Peta XYC");
     default: return QString("???");
     }
 }
@@ -51,7 +57,11 @@ QString BitcoinUnits::shortName(int unit)
 {
     switch(unit)
     {
-    case uBTC: return QString::fromUtf8("bits");
+    case KXYC: return QString("K XYC");
+    case MXYC: return QString("M XYC");
+    case GXYC: return QString("G XYC");
+    case TXYC: return QString("T XYC");
+    case PXYC: return QString("P XYC");
     default:   return longName(unit);
     }
 }
@@ -60,6 +70,12 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
+    case  XYC: return QString("yama_coins");
+    case KXYC: return QString("Kilo-yama_coins");
+    case MXYC: return QString("Mega-yama_coins");
+    case GXYC: return QString("Giga-yama_coins");
+    case TXYC: return QString("Tera-yama_coins");
+    case PXYC: return QString("Peta-yama_coins");
     case BTC: return QString("Bitcoins");
     case mBTC: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
     case uBTC: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
@@ -71,10 +87,13 @@ qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case BTC:  return 100000000;
-    case mBTC: return 100000;
-    case uBTC: return 100;
-    default:   return 100000000;
+    case  XYC:  return 100;
+    case KXYC:  return 100000;
+    case MXYC:  return 100000000;
+    case GXYC:  return 100000000000;
+    case TXYC:  return 100000000000000;
+    case PXYC:  return 100000000000000000;
+    default:   return 100;
     }
 }
 
@@ -82,9 +101,12 @@ int BitcoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8;
-    case mBTC: return 5;
-    case uBTC: return 2;
+    case  XYC: return  2;
+    case KXYC: return  5;
+    case MXYC: return  8;
+    case GXYC: return 11;
+    case TXYC: return 14;
+    case PXYC: return 17;
     default: return 0;
     }
 }
