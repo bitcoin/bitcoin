@@ -11,17 +11,11 @@
 #include "sync.h"
 #include "script/script.h"
 #include "serialize.h"
-class CWalletTx;
+
 class CTransaction;
 class CTxOut;
 class COutPoint;
-class CReserveKey;
-class CCoinsViewCache;
-class CCoins;
-class CBlock;
 class CSyscoinAddress;
-class COutPoint;
-class CCoinControl;
 struct CRecipient;
 
 static const unsigned int MAX_GUID_LENGTH = 71;
