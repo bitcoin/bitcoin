@@ -1139,13 +1139,8 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipientBuyer);
 
 
-	CRecipient recipientBidder;
-	CreateRecipient(scriptPubKeyAliasOrig, recipientBidder);
-	vecSend.push_back(recipientBidder);
-
-
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1221,14 +1216,8 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKeyOrigBuyer, recipientBuyer);
 	vecSend.push_back(recipientBuyer);
 
-
-	CRecipient recipientBidder;
-	CreateRecipient(scriptPubKeyAliasOrig, recipientBidder);
-	vecSend.push_back(recipientBidder);
-
-
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1499,7 +1488,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 
 	CScript scriptData;
@@ -1584,7 +1573,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 
 
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1849,7 +1838,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipientSeller);
 
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1928,7 +1917,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 
 
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2047,7 +2036,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipientSeller);
 
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2129,7 +2118,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 
 
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2322,7 +2311,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		vecSend.push_back(recipientArbiter);
 	}
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

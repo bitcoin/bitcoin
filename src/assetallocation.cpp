@@ -808,7 +808,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyFromOrig;
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 	
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -880,7 +880,7 @@ UniValue assetallocationcollectinterest(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyFromOrig;
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 	
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

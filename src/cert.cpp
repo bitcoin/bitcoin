@@ -558,7 +558,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -656,7 +656,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 		
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -761,7 +761,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyFromOrig;
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

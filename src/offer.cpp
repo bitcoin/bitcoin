@@ -858,7 +858,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -952,7 +952,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1152,7 +1152,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << offerAlias.vchAlias << offerAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

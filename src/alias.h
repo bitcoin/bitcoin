@@ -296,6 +296,7 @@ const int SYSCOIN_TX_VERSION = 0x7400;
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
 bool CheckAliasInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool & bDestCheckFailed,bool bSanityCheck=false);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
+void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, const unsigned int aliasInputCount, const COutPoint& aliasOutPoint, CAmount &nRequiredAmount, bool bSelectAll=false);

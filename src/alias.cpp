@@ -1033,11 +1033,19 @@ bool RemoveAliasScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	scriptOut = CScript(pc, scriptIn.end());
 	return true;
 }
+void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient)
+{
+	CRecipient recp = { scriptPubKey, recipient.nAmount, false };
+	recipient = recp;
+	CAmount nFee = minRelayTxFee.GetFee(3000);
+	recipient.nAmount = nFee;
+}
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 {
 	CRecipient recp = {scriptPubKey, recipient.nAmount, false};
 	recipient = recp;
-	CAmount nFee = minRelayTxFee.GetFee(3000);
+	size_t nSize = txout.GetSerializeSize(SER_DISK, 0) + 148u;
+	nFee = 3 * minRelayTxFee.GetFee(nSize);
 	recipient.nAmount = nFee;
 }
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)
@@ -1463,7 +1471,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
+	CreateAliasRecipient(scriptPubKey, recipient);
 	
 	CScript scriptData;
 
@@ -1600,7 +1608,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
     vector<CRecipient> vecSend;
 	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
+	CreateAliasRecipient(scriptPubKey, recipient);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2218,7 +2226,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
+	CreateAliasRecipient(scriptPubKey, recipient);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2275,7 +2283,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
+	CreateAliasRecipient(scriptPubKey, recipient);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
