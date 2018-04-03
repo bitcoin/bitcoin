@@ -1538,7 +1538,9 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
 
 void CMasternodeMan::UpdateLastPaid(const CBlockIndex* pindex)
 {
-    LOCK(cs);
+    // Need LOCK2 here to ensure consistent locking order because code below locks cs_main
+    // in ReadBlockFromDisk
+    LOCK2(cs_main, cs);
 
     if(fLiteMode || !masternodeSync.IsWinnersListSynced() || mapMasternodes.empty()) return;
 
