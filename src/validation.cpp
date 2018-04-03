@@ -1131,7 +1131,7 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int n = std::max(nHeight / consensusParams.nSubsidyHalvingInterval, 1080);
+    int n = std::min(nHeight / consensusParams.nSubsidyHalvingInterval, 1080);
     double r = 1.02338;
     CAmount nSubsidy = std::floor(1 * XYC * std::pow(r, n));
 
