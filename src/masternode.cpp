@@ -611,7 +611,8 @@ uint256 CMasternodeBroadcast::GetSignatureHash() const
     ss << pubKeyMasternode;
     ss << sigTime;
     ss << nProtocolVersion;
-    return ss.GetHash();
+    return SerializeHash(*this);
+    // return ss.GetHash();
 }
 
 bool CMasternodeBroadcast::Sign(const CKey& keyCollateralAddress)
