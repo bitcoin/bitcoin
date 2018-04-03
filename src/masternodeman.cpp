@@ -16,6 +16,10 @@
 #endif // ENABLE_WALLET
 #include <script/standard.h>
 #include <util.h>
+#include <warnings.h>
+
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/thread.hpp>
 
 /** Masternode manager */
 CMasternodeMan mnodeman;
@@ -1634,6 +1638,68 @@ void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
         // normal wallet does not need to update this every block, doing update on rpc call should be enough
         UpdateLastPaid(pindex);
     }
+}
+
+static void AlertNotify(const std::string& strMessage)
+{
+    uiInterface.NotifyAlertChanged();
+    std::string strCmd = gArgs.GetArg("-alertnotify", "");
+    if (strCmd.empty()) return;
+
+    // Alert text should be plain ascii coming from a trusted source, but to
+    // be safe we first strip anything not in safeChars, then add single quotes around
+    // the whole string before passing it to the shell:
+    std::string singleQuote("'");
+    std::string safeStatus = SanitizeString(strMessage);
+    safeStatus = singleQuote+safeStatus+singleQuote;
+    boost::replace_all(strCmd, "%s", safeStatus);
+
+    boost::thread mt(runCommand, strCmd); // thread runs free
+}
+
+static void DoWarning(const std::string& strWarning)
+{
+    static bool fWarned = false;
+    SetMiscWarning(strWarning);
+    if (!fWarned) {
+        AlertNotify(strWarning);
+        fWarned = true;
+    }
+}
+
+void CMasternodeMan::WarnMasternodeDaemonUpdates()
+{
+    LOCK(cs);
+
+    static bool fWarned = false;
+
+    if (fWarned || !size() || !masternodeSync.IsMasternodeListSynced())
+        return;
+
+    int nUpdatedMasternodes{0};
+
+    for (const auto& mnpair : mapMasternodes) {
+        if (mnpair.second.lastPing.nDaemonVersion > CLIENT_VERSION) {
+            ++nUpdatedMasternodes;
+        }
+    }
+
+    // Warn only when at least half of known masternodes already updated
+    if (nUpdatedMasternodes < size() / 2)
+        return;
+
+    std::string strWarning;
+    if (nUpdatedMasternodes != size()) {
+        strWarning = strprintf(_("Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too."),
+                    nUpdatedMasternodes, size());
+    } else {
+        // someone was postponing this update for way too long probably
+        strWarning = strprintf(_("Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update."),
+                    size());
+    }
+
+    // notify GetWarnings(), called by Qt and the JSON-RPC code to warn the user
+    DoWarning(strWarning);
 }
 
 void CMasternodeMan::NotifyMasternodeUpdates(CConnman* connman)

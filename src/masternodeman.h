@@ -237,6 +237,8 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
 
+    void WarnMasternodeDaemonUpdates();
+
     /**
      * Called to notify CGovernanceManager that the masternode index has been updated.
      * Must be called while not holding the CMasternodeMan::cs mutex
