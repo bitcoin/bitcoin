@@ -1990,7 +1990,7 @@ unsigned int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outp
 	outpoint.SetNull();
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
-		return;
+		return 0;
 	UniValue paramsUTXO(UniValue::VARR);
 	UniValue param(UniValue::VOBJ);
 	UniValue utxoParams(UniValue::VARR);
