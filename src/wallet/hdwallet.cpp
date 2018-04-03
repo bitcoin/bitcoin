@@ -10029,7 +10029,8 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
     if (!strCmd.empty())
     {
         boost::replace_all(strCmd, "%s", txhash.GetHex());
-        boost::thread t(runCommand, strCmd); // thread runs free
+        std::thread t(runCommand, strCmd);
+        t.detach(); // thread runs free
     }
 
     std::string sName = GetName();

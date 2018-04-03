@@ -751,6 +751,11 @@ int64_t strToEpoch(const char *input, bool fFillMax)
     return (int64_t) mktime(&tm);
 };
 
+    bool endsWith(const std::string &str, const std::string &suffix)
+    {
+        return str.size() >= suffix.size() &&
+               str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+    };
 } // namespace part
 
 bool ArgsManager::IsArgNegated(const std::string& strArg) const

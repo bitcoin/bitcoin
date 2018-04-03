@@ -216,8 +216,26 @@ class SmsgPaidTest(ParticlTestFramework):
         ro = nodes[1].smsgaddaddress(addr, pubkey)
         assert('Public key added to db' in json.dumps(ro))
 
+        # wait for sync
+        i = 0
+        for i in range(10):
+            ro = nodes[0].smsginbox('all')
+            if len(ro['messages']) >= 5:
+                break
+            time.sleep(1)
+        assert(i < 10)
+
+        ro = nodes[0].smsginbox('clear')
+        assert('Deleted 5 messages' in ro['result'])
+
+        ro = nodes[0].walletpassphrase("qwerty234", 300)
+        ro = nodes[0].smsgscanbuckets()
+        assert('Scan Buckets Completed' in ro['result'])
 
 
+        ro = nodes[0].smsginbox('all')
+        # Recover 5 + 1 dropped msg
+        assert(len(ro['messages']) == 6)
 
 
 

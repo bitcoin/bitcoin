@@ -265,6 +265,7 @@ namespace part
     std::string &RTrimWhitespace(std::string &s);
     std::string &TrimWhitespace(std::string &s);
     int64_t strToEpoch(const char *input, bool fFillMax=false);
+    bool endsWith(const std::string &str, const std::string &suffix);
 }
 
 

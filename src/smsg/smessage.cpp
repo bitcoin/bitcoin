@@ -31,9 +31,8 @@ Notes:
 #include <errno.h>
 #include <limits>
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/thread.hpp>
+#include <boost/thread/thread.hpp>
 
 #include <secp256k1.h>
 #include <secp256k1_ecdh.h>
@@ -499,13 +498,13 @@ int CSMSG::BuildBucketSet()
         if (!fs::is_regular_file(itd->status()))
             continue;
 
-        std::string fileType = (*itd).path().extension().string();
+        std::string fileType = itd->path().extension().string();
 
         if (fileType.compare(".dat") != 0)
             continue;
 
         nFiles++;
-        std::string fileName = (*itd).path().filename().string();
+        std::string fileName = itd->path().filename().string();
 
         LogPrint(BCLog::SMSG, "Processing file: %s.\n", fileName);
 
@@ -527,14 +526,14 @@ int CSMSG::BuildBucketSet()
         {
             LogPrintf("Dropping file %s, expired.\n", fileName);
             try {
-                fs::remove((*itd).path());
+                fs::remove(itd->path());
             } catch (const fs::filesystem_error &ex) {
                 LogPrintf("Error removing bucket file %s, %s.\n", fileName, ex.what());
             };
             continue;
         };
 
-        if (boost::algorithm::ends_with(fileName, "_wl.dat"))
+        if (part::endsWith(fileName, "_wl.dat"))
         {
             LogPrint(BCLog::SMSG, "Skipping wallet locked file: %s.\n", fileName);
             continue;
@@ -549,7 +548,7 @@ int CSMSG::BuildBucketSet()
             std::set<SecMsgToken> &tokenSet = bucket.setTokens;
 
             FILE *fp;
-            if (!(fp = fopen((*itd).path().string().c_str(), "rb")))
+            if (!(fp = fopen(itd->path().string().c_str(), "rb")))
             {
                 LogPrintf("Error opening file: %s\n", strerror(errno));
                 continue;
@@ -1862,11 +1861,14 @@ bool CSMSG::ScanBuckets()
 {
     LogPrint(BCLog::SMSG, "%s\n", __func__);
 
+    if (!fSecMsgEnabled)
+        return error("%s: SMSG is disabled.\n", __func__);
+
 #ifdef ENABLE_WALLET
-    if (!fSecMsgEnabled
-        || !pwallet
-        || pwallet->IsLocked())
-        return false;
+    if (pwallet && pwallet->IsLocked()
+        && addresses.size() > 0)
+        return error("%s: Wallet is locked.\n", __func__);
+#endif
 
     int64_t  mStart         = GetTimeMillis();
     int64_t  now            = GetTime();
@@ -1892,16 +1894,14 @@ bool CSMSG::ScanBuckets()
         if (!fs::is_regular_file(itd->status()))
             continue;
 
-        std::string fileType = (*itd).path().extension().string();
+        std::string fileType = itd->path().extension().string();
 
         if (fileType.compare(".dat") != 0)
             continue;
 
-        std::string fileName = (*itd).path().filename().string();
-
+        std::string fileName = itd->path().filename().string();
 
         LogPrint(BCLog::SMSG, "Processing file: %s.\n", fileName);
-
         nFiles++;
 
         // TODO files must be split if > 2GB
@@ -1922,7 +1922,7 @@ bool CSMSG::ScanBuckets()
         {
             LogPrintf("Dropping file %s, expired.\n", fileName);
             try {
-                fs::remove((*itd).path());
+                fs::remove(itd->path());
             } catch (const fs::filesystem_error &ex)
             {
                 LogPrintf("Error removing bucket file %s, %s.\n", fileName, ex.what());
@@ -1930,9 +1930,15 @@ bool CSMSG::ScanBuckets()
             continue;
         };
 
-        if (boost::algorithm::ends_with(fileName, "_wl.dat"))
+        if (part::endsWith(fileName, "_wl.dat"))
         {
-            LogPrint(BCLog::SMSG, "Skipping wallet locked file: %s.\n", fileName);
+            // ScanBuckets must be run with unlocked wallet (if any receiving keys are wallet keys), remove any redundant _wl files
+            LogPrint(BCLog::SMSG, "Removing wallet locked file: %s.\n", fileName);
+            try { fs::remove(itd->path());
+            } catch (const fs::filesystem_error &ex)
+            {
+                LogPrintf("Error removing wallet locked file %s.\n", ex.what());
+            };
             continue;
         };
 
@@ -1940,7 +1946,7 @@ bool CSMSG::ScanBuckets()
             LOCK(cs_smsg);
             FILE *fp;
             errno = 0;
-            if (!(fp = fopen((*itd).path().string().c_str(), "rb")))
+            if (!(fp = fopen(itd->path().string().c_str(), "rb")))
             {
                 LogPrintf("Error opening file: %s\n", strerror(errno));
                 continue;
@@ -1989,21 +1995,12 @@ bool CSMSG::ScanBuckets()
             };
 
             fclose(fp);
-
-            // Remove wl file when scanned
-            try {
-                fs::remove((*itd).path());
-            } catch (const boost::filesystem::filesystem_error &ex)
-            {
-                LogPrintf("Error removing wl file %s - %s\n", fileName, ex.what());
-                return false;
-            };
         } // cs_smsg
     };
 
     LogPrintf("Processed %u files, scanned %u messages, received %u messages.\n", nFiles, nMessages, nFoundMessages);
     LogPrintf("Took %d ms\n", GetTimeMillis() - mStart);
-#endif
+
     return true;
 }
 
@@ -2089,9 +2086,9 @@ int CSMSG::WalletUnlocked()
         if (!fs::is_regular_file(itd->status()))
             continue;
 
-        std::string fileName = (*itd).path().filename().string();
+        std::string fileName = itd->path().filename().string();
 
-        if (!boost::algorithm::ends_with(fileName, "_wl.dat"))
+        if (!part::endsWith(fileName, "_wl.dat"))
             continue;
 
         LogPrint(BCLog::SMSG, "Processing file: %s.\n", fileName);
@@ -2116,10 +2113,10 @@ int CSMSG::WalletUnlocked()
         {
             LogPrintf("Dropping wallet locked file %s, expired.\n", fileName);
             try {
-                fs::remove((*itd).path());
+                fs::remove(itd->path());
             } catch (const fs::filesystem_error &ex)
             {
-                return errorN(SMSG_GENERAL_ERROR, "%s: Could not remove wl file %s - %s.", __func__, fileName, ex.what());
+                return errorN(SMSG_GENERAL_ERROR, "%s: Could not remove file %s - %s.", __func__, fileName, ex.what());
             };
             continue;
         };
@@ -2128,7 +2125,7 @@ int CSMSG::WalletUnlocked()
             LOCK(cs_smsg);
             FILE *fp;
             errno = 0;
-            if (!(fp = fopen((*itd).path().string().c_str(), "rb")))
+            if (!(fp = fopen(itd->path().string().c_str(), "rb")))
             {
                 LogPrintf("Error opening file: %s\n", strerror(errno));
                 continue;
@@ -2181,10 +2178,10 @@ int CSMSG::WalletUnlocked()
 
             // Remove wl file when scanned
             try {
-                fs::remove((*itd).path());
+                fs::remove(itd->path());
             } catch (const fs::filesystem_error &ex)
             {
-                return errorN(SMSG_GENERAL_ERROR, "%s: Could not remove wl file %s - %s.", __func__, fileName, ex.what());
+                return errorN(SMSG_GENERAL_ERROR, "%s: Could not remove file %s - %s.", __func__, fileName, ex.what());
             };
         } // cs_smsg
     };
@@ -2386,7 +2383,8 @@ int CSMSG::ScanMessage(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t
             if (!strCmd.empty())
             {
                 boost::replace_all(strCmd, "%s", CBitcoinAddress(addressTo).ToString());
-                boost::thread t(runCommand, strCmd); // thread runs free
+                std::thread t(runCommand, strCmd);
+                t.detach(); // thread runs free
             };
 
             GetMainSignals().NewSecureMessage(psmsg, hash);
@@ -3607,6 +3605,8 @@ int CSMSG::FundMsg(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmo
 {
     // smsg.pPayload must have smsg.nPayload + 32 bytes allocated
 #ifdef ENABLE_WALLET
+    if (!pwallet)
+        return SMSG_WALLET_UNSET;
 
     if (smsg.version[0] != 3)
         return errorN(SMSG_UNKNOWN_VERSION, sError, __func__, "Bad message version.");
@@ -3676,6 +3676,8 @@ int CSMSG::FundMsg(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmo
         wtx.RelayWalletTransaction(g_connman.get());
     }
     memcpy(smsg.pPayload+(smsg.nPayload-32), txfundId.begin(), 32);
+#else
+    return SMSG_WALLET_UNSET;
 #endif
     return SMSG_NO_ERROR;
 };

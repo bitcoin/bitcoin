@@ -433,9 +433,16 @@ UniValue smsgscanbuckets(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "smsgscanbuckets\n"
-            "Force rescan of all messages in the bucket store.");
+            "Force rescan of all messages in the bucket store.\n"
+            "Wallet must be unlocked if any receiving keys are stored in the wallet.\n");
 
     EnsureSMSGIsEnabled();
+
+#ifdef ENABLE_WALLET
+    if (smsgModule.pwallet && smsgModule.pwallet->IsLocked()
+        && smsgModule.addresses.size() > 0)
+        throw std::runtime_error("Wallet is locked.");
+#endif
 
     UniValue result(UniValue::VOBJ);
     if (!smsgModule.ScanBuckets())
