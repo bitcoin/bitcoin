@@ -78,12 +78,12 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 700800; // PM-Tech: ChainCoin // 2 years
-        consensus.nMasternodePaymentsStartBlock = 1500000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
-        consensus.nMasternodePaymentsIncreaseBlock = 500000; // PM-Tech: to be defined
-        consensus.nMasternodePaymentsIncreasePeriod = 576*30; // PM-Tech: to be defined
+        consensus.nMasternodePaymentsStartBlock = 1800000; // PM-Tech: to be set after activation, for now we are looking at SegWit activation
+        consensus.nMasternodePaymentsIncreaseBlock = 2250000; // PM-Tech: estimation
+        consensus.nMasternodePaymentsIncreasePeriod = 175000; // PM-Tech: approx. 6 months
         consensus.nInstantSendConfirmationsRequired = 6;
         consensus.nInstantSendKeepLock = 24;
-        consensus.nSuperblockStartBlock = 1600000; // PM-Tech: to be defined
+        consensus.nSuperblockStartBlock = 1900000; // PM-Tech: to be defined
         consensus.nSuperblockCycle = 28800; // PM-Tech: to be defined
         consensus.nGovernanceMinQuorum = 10;
         consensus.nGovernanceFilterElements = 20000;
@@ -94,7 +94,7 @@ public:
         consensus.BIP16Height = 1;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("0x00000012f1c40ff12a9e6b0e9076fe4fa7ad27012e256a5ad7bcb80dc02c0409"); // PM-Tech: ChainCoin
-        consensus.BIP65Height = 1600000;
+        consensus.BIP65Height = 1800000;
         consensus.BIP66Height = 1000000;
         consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000"); // PM-Tech: ChainCoin
         consensus.nPowTargetTimespan = 90; // PM-Tech: ChainCoin re-target at every block
@@ -103,8 +103,8 @@ public:
         consensus.nAveragingInterval = 8; // PM-Tech: ChainCoin
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
-        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.nRuleChangeActivationThreshold = 12768; // 95% of 13440
+        consensus.nMinerConfirmationWindow = 13440; // average of 2 weeks
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
