@@ -16,17 +16,25 @@ struct PaymentAmount
 	std::string address;
 	std::string amount;
 };
-void SendSnapShotPayment(const std::string &strSend)
+void SendSnapShotPayment(const std::string &strSend, const std::string &strSendAddress)
 {
 	currentTx++;
 	std::string strSendMany = "sendmany \"\" {" + strSend + "}";
 	BOOST_CHECK_THROW(CallRPC("mainnet1", strSendMany, false), runtime_error);
+
+	string strSendSendNewAddress = "\\\"" + strSendAddress + "\\\";
+	string sendString = "sendtoaddress " + strSendSendNewAddress + " " + "10";
+	BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
 	// generate snapshot payments and let it mature
 	printf("Generating 101 blocks to start the mainnet\n");
 	GenerateMainNetBlocks(101, "mainnet1");
+	UniValue r;
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet2", "getnewaddress", false, false));
+	string newaddress = r.get_str();
+	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 
 	int numberOfTxPerBlock = 250;
 	int totalTx = 0;
@@ -42,7 +50,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
 		{
 			printf("strSendMany #%d, total %f, num txs %d\n", currentTx, nTotal, totalTx);
-			SendSnapShotPayment(sendManyString);
+			SendSnapShotPayment(sendManyString, newaddress);
 			GenerateMainNetBlocks(1, "mainnet1");
 			sendManyString = "";
 			nTotal = 0;
@@ -54,27 +62,10 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 		SendSnapShotPayment(sendManyString);
 		GenerateMainNetBlocks(1, "mainnet1");
 	}
-	UniValue r;
-	printf("Creating 200 inputs...");
-	string strSendSendNewAddress = "";
-	for (int i = 0; i < 200; i++)
-	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("mainnet2", "getnewaddress", false, false));
-		string newaddress = r.get_str();
-		newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-		if (strSendSendNewAddress != "")
-			strSendSendNewAddress += ",";
-		strSendSendNewAddress += "\\\"" + newaddress + "\\\":10";
-	}
-	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet2", "getnewaddress", false, false));
-	string newaddress = r.get_str();
-	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	if (strSendSendNewAddress != "")
-		strSendSendNewAddress += ",";
-	strSendSendNewAddress += "\\\"" + newaddress + "\\\":550000";
 
-	sendManyString = "sendmany \"\" {" + strSendSendNewAddress + "}";
-	BOOST_CHECK_THROW(CallRPC("mainnet1", sendManyString, false), runtime_error);
+	string strSendSendNewAddress = "\\\"" + newaddress + "\\\";
+	string sendString = "sendtoaddress " + strSendSendNewAddress + " " + "550000";
+	BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
 	GenerateMainNetBlocks(1, "mainnet1");
 	GenerateMainNetBlocks(1, "mainnet2");
 	GenerateMainNetBlocks(1, "mainnet2");
