@@ -335,6 +335,8 @@ libraven_consensus_a_SOURCES = \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \
+  ravenscroll/ravenscroll.c \
+  ravenscroll/ravenscroll.h \
   script/ravenconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
