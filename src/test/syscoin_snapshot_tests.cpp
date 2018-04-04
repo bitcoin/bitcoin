@@ -26,7 +26,7 @@ void SendSnapShotPayment(const std::string &strSend, const std::string &strSendA
 	string sendString = "sendtoaddress " + strSendAddress + " " + "10";
 	BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
 
-	string sendString = "sendtoaddress " + strSendAddress + " " + "10";
+	sendString = "sendtoaddress " + strSendAddress + " " + "10";
 	BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
