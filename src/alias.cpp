@@ -1236,7 +1236,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		UniValue recevedListArray = receivedList.get_array();
 		for (unsigned int idx = 0; idx < recevedListArray.size(); idx++) {
 			if(find_value(recevedListArray[idx].get_obj(), "alias").get_str().empty())
-				addresObj.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
+				addressArray.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
 		}
 		addresses.push_back(Pair("addresses", addressArray));
 	}
