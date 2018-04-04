@@ -2949,7 +2949,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
             "  \"keypoolsize_hd_internal\": xxxx, (numeric) how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)\n"
             "  \"unlocked_until\": ttt,           (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
             "  \"paytxfee\": x.xxxx,              (numeric) the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB\n"
-            "  \"hdmasterkeyid\": \"<hash160>\"     (string, optional) the Hash160 of the HD master pubkey (only present when HD is enabled)\n"
+            "  \"hdseedid\": \"<hash160>\"     (string, optional) the Hash160 of the HD master pubkey (only present when HD is enabled)\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getwalletinfo", "")
@@ -2973,16 +2973,16 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     obj.pushKV("txcount",       (int)pwallet->mapWallet.size());
     obj.pushKV("keypoololdest", pwallet->GetOldestKeyPoolTime());
     obj.pushKV("keypoolsize", (int64_t)kpExternalSize);
-    CKeyID masterKeyID = pwallet->GetHDChain().masterKeyID;
-    if (!masterKeyID.IsNull() && pwallet->CanSupportFeature(FEATURE_HD_SPLIT)) {
+    CKeyID seed_id = pwallet->GetHDChain().seed_id;
+    if (!seed_id.IsNull() && pwallet->CanSupportFeature(FEATURE_HD_SPLIT)) {
         obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize));
     }
     if (pwallet->IsCrypted()) {
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
     }
     obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
-    if (!masterKeyID.IsNull())
-        obj.pushKV("hdmasterkeyid", masterKeyID.GetHex());
+    if (!seed_id.IsNull())
+        obj.pushKV("hdseedid", seed_id.GetHex());
     return obj;
 }
 
@@ -3971,13 +3971,13 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "    ]\n"
             "  \"sigsrequired\" : xxxxx        (numeric, optional) Number of signatures required to spend multisig output (only if \"script\" is \"multisig\")\n"
             "  \"pubkey\" : \"publickeyhex\",    (string, optional) The hex value of the raw public key, for single-key addresses (possibly embedded in P2SH or P2WSH)\n"
-            "  \"embedded\" : {...},           (object, optional) Information about the address embedded in P2SH or P2WSH, if relevant and known. It includes all getaddressinfo output fields for the embedded address, excluding metadata (\"timestamp\", \"hdkeypath\", \"hdmasterkeyid\") and relation to the wallet (\"ismine\", \"iswatchonly\", \"account\").\n"
+            "  \"embedded\" : {...},           (object, optional) Information about the address embedded in P2SH or P2WSH, if relevant and known. It includes all getaddressinfo output fields for the embedded address, excluding metadata (\"timestamp\", \"hdkeypath\", \"hdseedid\") and relation to the wallet (\"ismine\", \"iswatchonly\", \"account\").\n"
             "  \"iscompressed\" : true|false,  (boolean) If the address is compressed\n"
             "  \"label\" :  \"label\"         (string) The label associated with the address, \"\" is the default account\n"
             "  \"account\" : \"account\"         (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start chaincoind with -deprecatedrpc=accounts. The account associated with the address, \"\" is the default account\n"
             "  \"timestamp\" : timestamp,      (number, optional) The creation time of the key if available in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
-            "  \"hdmasterkeyid\" : \"<hash160>\" (string, optional) The Hash160 of the HD master pubkey\n"
+            "  \"hdseedid\" : \"<hash160>\" (string, optional) The Hash160 of the HD master pubkey\n"
             "  \"labels\"                      (object) Array of labels associated with the address.\n"
             "    [\n"
             "      { (json object of label data)\n"
@@ -4037,7 +4037,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         ret.pushKV("timestamp", meta->nCreateTime);
         if (!meta->hdKeypath.empty()) {
             ret.pushKV("hdkeypath", meta->hdKeypath);
-            ret.pushKV("hdmasterkeyid", meta->hdMasterKeyID.GetHex());
+            ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
         }
     }
 
@@ -4170,7 +4170,7 @@ UniValue sethdseed(const JSONRPCRequest& request)
             "                             If false, addresses (including change addresses if the wallet already had HD Chain Split enabled) from the existing\n"
             "                             keypool will be used until it has been depleted.\n"
             "2. \"seed\"               (string, optional) The WIF private key to use as the new HD seed; if not provided a random seed will be used.\n"
-            "                             The seed value can be retrieved using the dumpwallet command. It is the private key marked hdmaster=1\n"
+            "                             The seed value can be retrieved using the dumpwallet command. It is the private key marked hdseed=1\n"
             "\nExamples:\n"
             + HelpExampleCli("sethdseed", "")
             + HelpExampleCli("sethdseed", "false")
@@ -4199,7 +4199,7 @@ UniValue sethdseed(const JSONRPCRequest& request)
 
     CPubKey master_pub_key;
     if (request.params[1].isNull()) {
-        master_pub_key = pwallet->GenerateNewHDMasterKey();
+        master_pub_key = pwallet->GenerateNewSeed();
     } else {
         CKey key = DecodeSecret(request.params[1].get_str());
         if (!key.IsValid()) {
@@ -4210,10 +4210,10 @@ UniValue sethdseed(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Already have this key (either as an HD seed or as a loose private key)");
         }
 
-        master_pub_key = pwallet->DeriveNewMasterHDKey(key);
+        master_pub_key = pwallet->DeriveNewSeed(key);
     }
 
-    pwallet->SetHDMasterKey(master_pub_key);
+    pwallet->SetHDSeed(master_pub_key);
     if (flush_key_pool) pwallet->NewKeyPool();
 
     return NullUniValue;
