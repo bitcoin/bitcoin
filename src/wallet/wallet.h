@@ -1247,14 +1247,14 @@ public:
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
 
-    /* Generates a new HD master key (will not be activated) */
+    /* Generates a new HD seed (will not be activated) */
     CPubKey GenerateNewSeed();
 
     /* Derives a new HD master key (will not be activated) */
     CPubKey DeriveNewSeed(const CKey& key);
 
-    /* Set the current HD master key (will reset the chain child index counters)
-       Sets the master key's version based on the current wallet version (so the
+    /* Set the current HD seed (will reset the chain child index counters)
+       Sets the seed's version based on the current wallet version (so the
        caller must ensure the current wallet version is correct before calling
        this function). */
     bool SetHDSeed(const CPubKey& key);

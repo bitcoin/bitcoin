@@ -207,17 +207,17 @@ CPubKey CWallet::GenerateNewKey(WalletBatch &batch, bool internal)
 void CWallet::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& metadata, CKey& secret, bool internal)
 {
     // for now we use a fixed keypath scheme of m/0'/0'/k
-    CKey key;                      //master key seed (256bit)
+    CKey seed;                     //seed (256bit)
     CExtKey masterKey;             //hd master key
     CExtKey accountKey;            //key at m/0'
     CExtKey chainChildKey;         //key at m/0'/0' (external) or m/0'/1' (internal)
     CExtKey childKey;              //key at m/0'/0'/<n>'
 
-    // try to get the master key
-    if (!GetKey(hdChain.seed_id, key))
-        throw std::runtime_error(std::string(__func__) + ": Master key not found");
+    // try to get the seed
+    if (!GetKey(hdChain.seed_id, seed))
+        throw std::runtime_error(std::string(__func__) + ": seed not found");
 
-    masterKey.SetSeed(key.begin(), key.size());
+    masterKey.SetSeed(seed.begin(), seed.size());
 
     // derive m/0'
     // use hardened derivation (child keys >= 0x80000000 are hardened after bip32)
@@ -712,7 +712,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         Lock();
         Unlock(strWalletPassphrase);
 
-        // if we are using HD, replace the HD master key (seed) with a new one
+        // if we are using HD, replace the HD seed with a new one
         if (IsHDEnabled()) {
             if (!SetHDSeed(GenerateNewSeed())) {
                 return false;
@@ -1612,29 +1612,29 @@ CPubKey CWallet::DeriveNewSeed(const CKey& key)
     int64_t nCreationTime = GetTime();
     CKeyMetadata metadata(nCreationTime);
 
-    // calculate the pubkey
-    CPubKey pubkey = key.GetPubKey();
-    assert(key.VerifyPubKey(pubkey));
+    // calculate the seed
+    CPubKey seed = key.GetPubKey();
+    assert(key.VerifyPubKey(seed));
 
-    // set the hd keypath to "m" -> Master, refers the masterkeyid to itself
-    metadata.hdKeypath     = "m";
-    metadata.hd_seed_id = pubkey.GetID();
+    // set the hd keypath to "s" -> Seed, refers the seed to itself
+    metadata.hdKeypath     = "s";
+    metadata.hd_seed_id = seed.GetID();
 
     {
         LOCK(cs_wallet);
 
         // mem store the metadata
-        mapKeyMetadata[pubkey.GetID()] = metadata;
+        mapKeyMetadata[seed.GetID()] = metadata;
 
         // write the key&metadata to the database
-        if (!AddKeyPubKey(key, pubkey))
+        if (!AddKeyPubKey(key, seed))
             throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
     }
 
-    return pubkey;
+    return seed;
 }
 
-bool CWallet::SetHDSeed(const CPubKey& pubkey)
+bool CWallet::SetHDSeed(const CPubKey& seed)
 {
     LOCK(cs_wallet);
     // store the keyid (hash160) together with
@@ -1642,7 +1642,7 @@ bool CWallet::SetHDSeed(const CPubKey& pubkey)
     // as a hdchain object
     CHDChain newHdChain;
     newHdChain.nVersion = CanSupportFeature(FEATURE_HD_SPLIT) ? CHDChain::VERSION_HD_CHAIN_SPLIT : CHDChain::VERSION_HD_BASE;
-    newHdChain.seed_id = pubkey.GetID();
+    newHdChain.seed_id = seed.GetID();
     SetHDChain(newHdChain, false);
 
     return true;
@@ -5087,10 +5087,10 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         }
         walletInstance->SetMinVersion(FEATURE_LATEST);
 
-        // generate a new master key
-        CPubKey masterPubKey = walletInstance->GenerateNewSeed();
-        if (!walletInstance->SetHDSeed(masterPubKey))
-            throw std::runtime_error(std::string(__func__) + ": Storing master key failed");
+        // generate a new seed
+        CPubKey seed = walletInstance->GenerateNewSeed();
+        if (!walletInstance->SetHDSeed(seed))
+            throw std::runtime_error(std::string(__func__) + ": Storing HD seed failed");
 
         // Top up the keypool
         if (!walletInstance->TopUpKeyPool()) {

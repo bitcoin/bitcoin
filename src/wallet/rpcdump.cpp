@@ -758,10 +758,10 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     CKeyID seed_id = pwallet->GetHDChain().seed_id;
     if (!seed_id.IsNull())
     {
-        CKey key;
-        if (pwallet->GetKey(seed_id, key)) {
+        CKey seed;
+        if (pwallet->GetKey(seed_id, seed)) {
             CExtKey masterKey;
-            masterKey.SetSeed(key.begin(), key.size());
+            masterKey.SetSeed(seed.begin(), seed.size());
 
             file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n\n";
         }
@@ -780,8 +780,8 @@ UniValue dumpwallet(const JSONRPCRequest& request)
                 file << "hdseed=1";
             } else if (mapKeyPool.count(keyid)) {
                 file << "reserve=1";
-            } else if (pwallet->mapKeyMetadata[keyid].hdKeypath == "m") {
-                file << "inactivehdmaster=1";
+            } else if (pwallet->mapKeyMetadata[keyid].hdKeypath == "s") {
+                file << "inactivehdseed=1";
             } else {
                 file << "change=1";
             }

@@ -36,7 +36,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                     addr_keypath = comment.split(" addr=")[1]
                     addr = addr_keypath.split(" ")[0]
                     keypath = None
-                    if keytype == "inactivehdmaster=1":
+                    if keytype == "inactivehdseed=1":
                         # ensure the old master is still available
                         assert(hd_master_addr_old == addr)
                     elif keytype == "hdseed=1":
