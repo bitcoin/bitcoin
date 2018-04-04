@@ -1883,6 +1883,7 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 	vector<vector<unsigned char> > vvch;
 	bool bIsFunded = false;
 	CAmount nFeeRequired = 0;
+	// try to fund via normal balances first
 	for (unsigned int i = 0; i<utxoArray.size(); i++)
 	{
 		const UniValue& utxoObj = utxoArray[i].get_obj();
@@ -1892,18 +1893,10 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 		const CScript& scriptPubKey = CScript(data.begin(), data.end());
 		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
 		const COutPoint &outPointToCheck = COutPoint(txid, nOut);
-		
 		if (DecodeAliasScript(scriptPubKey, op, vvch) && vvch.size() > 1 && vvch[0] == theAlias.vchAlias && vvch[1] == theAlias.vchGUID) {
-			currentAliasInputCount--;
-			// if this outpoint is same as the alias input that was added we cannot add it again so skip
-			if (outPointToCheck == aliasOutPoint)
-				continue;
-			// ensure that we keep atleast 1 alias input
-			if (currentAliasInputCount <= 1)
-				continue;
+			continue;
 		}
 
-		
 		{
 			LOCK(mempool.cs);
 			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
@@ -1920,8 +1913,48 @@ void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmoun
 		}
 		else
 			bIsFunded = false;
-			
-    }
+
+	}
+	// then try to fund with alias inputs
+	if (!bIsFunded || bSelectAll) {
+		for (unsigned int i = 0; i < utxoArray.size(); i++)
+		{
+			const UniValue& utxoObj = utxoArray[i].get_obj();
+			const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
+			const int& nOut = find_value(utxoObj, "outputIndex").get_int();
+			const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
+			const CScript& scriptPubKey = CScript(data.begin(), data.end());
+			const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
+			const COutPoint &outPointToCheck = COutPoint(txid, nOut);
+
+			if (DecodeAliasScript(scriptPubKey, op, vvch) && vvch.size() > 1 && vvch[0] == theAlias.vchAlias && vvch[1] == theAlias.vchGUID) {
+				currentAliasInputCount--;
+				// if this outpoint is same as the alias input that was added we cannot add it again so skip
+				if (outPointToCheck == aliasOutPoint)
+					continue;
+				// ensure that we keep atleast 1 alias input unless we are selecting all (for transfer)
+				if (currentAliasInputCount <= 1 && !bSelectAll)
+					continue;
+				{
+					LOCK(mempool.cs);
+					if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
+						continue;
+				}
+				// add min fee for every input
+				nFeeRequired += 3 * minRelayTxFee.GetFee(200u);
+				outPoints.push_back(outPointToCheck);
+				nCurrentAmount += nValue;
+				if (nCurrentAmount >= (nDesiredAmount + nFeeRequired)) {
+					bIsFunded = true;
+					if (!bSelectAll)
+						break;
+				}
+				else
+					bIsFunded = false;
+			}
+
+		}
+	}
 	if (!bIsFunded) {
 		nRequiredAmount = (nDesiredAmount + nFeeRequired) - nCurrentAmount;
 		if (nRequiredAmount < 0)
