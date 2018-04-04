@@ -486,6 +486,13 @@ class ArgsManagerHelper {
 public:
     typedef std::map<std::string, std::vector<std::string>> MapArgs;
 
+    /** Determine whether to use config settings in the default section,
+     *  See also comments around ArgsManager::ArgsManager() below. */
+    static inline bool UseDefaultSection(const ArgsManager& am, const std::string& arg)
+    {
+        return (am.m_network == CBaseChainParams::MAIN || am.m_network_only_args.count(arg) == 0);
+    }
+
     /** Convert regular argument into the network-specific setting */
     static inline std::string NetworkArg(const ArgsManager& am, const std::string& arg)
     {
@@ -547,9 +554,11 @@ public:
             }
         }
 
-        found_result = GetArgHelper(am.m_config_args, arg);
-        if (found_result.first) {
-            return found_result;
+        if (UseDefaultSection(am, arg)) {
+            found_result = GetArgHelper(am.m_config_args, arg);
+            if (found_result.first) {
+                return found_result;
+            }
         }
 
         return found_result;
@@ -601,6 +610,22 @@ static bool InterpretNegatedOption(std::string& key, std::string& val)
     return false;
 }
 
+ArgsManager::ArgsManager() :
+    /* These options would cause cross-contamination if values for
+     * mainnet were used while running on regtest/testnet (or vice-versa).
+     * Setting them as section_only_args ensures that sharing a config file
+     * between mainnet and regtest/testnet won't cause problems due to these
+     * parameters by accident. */
+    m_network_only_args{
+      "-addnode", "-connect",
+      "-port", "-bind",
+      "-rpcport", "-rpcbind",
+      "-wallet",
+    }
+{
+    // nothing to do
+}
+
 void ArgsManager::SelectConfigNetwork(const std::string& network)
 {
     m_network = network;
@@ -647,11 +672,16 @@ std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
     if (IsArgNegated(strArg)) return result; // special case
 
     LOCK(cs_args);
+
     ArgsManagerHelper::AddArgs(result, m_override_args, strArg);
     if (!m_network.empty()) {
         ArgsManagerHelper::AddArgs(result, m_config_args, ArgsManagerHelper::NetworkArg(*this, strArg));
     }
-    ArgsManagerHelper::AddArgs(result, m_config_args, strArg);
+
+    if (ArgsManagerHelper::UseDefaultSection(*this, strArg)) {
+        ArgsManagerHelper::AddArgs(result, m_config_args, strArg);
+    }
+
     return result;
 }
 
