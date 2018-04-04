@@ -43,7 +43,7 @@ sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction,
     return result;
 }
 
-BOOST_AUTO_TEST_CASE(multisig_verify)
+BOOST_AUTO_TEST_CASE(multisig_verify, * boost::unit_test::disabled())
 {
     unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
     }
 }
 
-BOOST_AUTO_TEST_CASE(multisig_Sign)
+BOOST_AUTO_TEST_CASE(multisig_Sign, * boost::unit_test::disabled())
 {
     // Test SignSignature() (and therefore the version of Solver() that signs transactions)
     CBasicKeyStore keystore;

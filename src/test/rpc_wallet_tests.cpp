@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(rpc_addmultisig)
     BOOST_CHECK_THROW(addmultisig(createArgs(2, short2.c_str()), false), runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_wallet)
+BOOST_AUTO_TEST_CASE(rpc_wallet, * boost::unit_test::disabled())
 {
     // Test RPC calls for various wallet statistics
     Value r;
