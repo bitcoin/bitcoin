@@ -258,16 +258,52 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
 {
     // Test some awful edge cases that hopefully no user will ever exercise.
     TestArgsManager testArgs;
+
+    // Params test
     const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
     testArgs.ParseParameters(4, (char**)argv_test);
 
     // This was passed twice, second one overrides the negative setting.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetBoolArg("-foo", false) == true);
+    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "");
 
     // A double negative is a positive.
     BOOST_CHECK(testArgs.IsArgNegated("-bar"));
-    BOOST_CHECK(testArgs.GetBoolArg("-bar", false) == true);
+    BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "1");
+
+    // Config test
+    const char *conf_test = "nofoo=1\nfoo=1\nnobar=0\n";
+    testArgs.ParseParameters(1, (char**)argv_test);
+    testArgs.ReadConfigString(conf_test);
+
+    // This was passed twice, second one overrides the negative setting,
+    // but not the value.
+    BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
+    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "0");
+
+    // A double negative is a positive.
+    BOOST_CHECK(testArgs.IsArgNegated("-bar"));
+    BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "1");
+
+    // Combined test
+    const char *combo_test_args[] = {"ignored", "-nofoo", "-bar"};
+    const char *combo_test_conf = "foo=1\nnobar=1\n";
+    testArgs.ParseParameters(3, (char**)combo_test_args);
+    testArgs.ReadConfigString(combo_test_conf);
+
+    // Command line overrides, but doesn't erase old setting
+    BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
+    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "0");
+    BOOST_CHECK(testArgs.GetArgs("-foo").size() == 2
+                && testArgs.GetArgs("-foo").front() == "0"
+                && testArgs.GetArgs("-foo").back() == "1");
+
+    // Command line overrides, but doesn't erase old setting
+    BOOST_CHECK(testArgs.IsArgNegated("-bar"));
+    BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "");
+    BOOST_CHECK(testArgs.GetArgs("-bar").size() == 2
+                && testArgs.GetArgs("-bar").front() == ""
+                && testArgs.GetArgs("-bar").back() == "0");
 }
 
 BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
