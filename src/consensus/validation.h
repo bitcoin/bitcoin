@@ -49,9 +49,9 @@ public:
         mode = MODE_INVALID;
         return false;
     }
-    bool Invalid(unsigned int _chRejectCode, const std::string& _strRejectReason, const std::string& _strDebugMessage = "")
+    bool Invalid(int _level, unsigned int _chRejectCode, const std::string& _strRejectReason, const std::string& _strDebugMessage = "")
     {
-        return DoS(0, _chRejectCode, _strRejectReason, false, _strDebugMessage);
+        return DoS(_level, _chRejectCode, _strRejectReason, false, _strDebugMessage);
     }
     bool Error(const std::string& strRejectReasonIn) {
         if (mode == MODE_VALID)
