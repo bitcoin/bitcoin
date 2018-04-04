@@ -37,21 +37,16 @@ private:
     std::string strDebugMessage;
 public:
     CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
-    bool DoS(int level, unsigned int chRejectCodeIn, const std::string& strRejectReasonIn, bool corruptionIn = false, const std::string& strDebugMessageIn = "")
+    bool DoS(int level, unsigned int chRejectCodeIn, const std::string& strRejectReasonIn, const std::string& strDebugMessageIn = "")
     {
         chRejectCode = chRejectCodeIn;
         strRejectReason = strRejectReasonIn;
-        corruptionPossible = corruptionIn;
         strDebugMessage = strDebugMessageIn;
-        if (mode == MODE_ERROR)
-            return false;
-        nDoS += level;
-        mode = MODE_INVALID;
+        if (mode != MODE_ERROR) {
+            nDoS += level;
+            mode = MODE_INVALID;
+        }
         return false;
-    }
-    bool Invalid(int _level, unsigned int _chRejectCode, const std::string& _strRejectReason, const std::string& _strDebugMessage = "")
-    {
-        return DoS(_level, _chRejectCode, _strRejectReason, false, _strDebugMessage);
     }
     bool Error(const std::string& strRejectReasonIn) {
         if (mode == MODE_VALID)
@@ -78,8 +73,10 @@ public:
     bool CorruptionPossible() const {
         return corruptionPossible;
     }
-    void SetCorruptionPossible() {
+    CValidationState& SetCorruptionPossible()
+    {
         corruptionPossible = true;
+        return *this;
     }
     unsigned int GetRejectCode() const { return chRejectCode; }
     std::string GetRejectReason() const { return strRejectReason; }
