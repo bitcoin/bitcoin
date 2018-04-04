@@ -891,7 +891,7 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
 
     bool success = true;
     if (!walletdb.WriteTx(wtx)) {
-        LogPrintf("%s: Updating walletdb tx %s failed", __func__, wtx.GetHash().ToString());
+        LogPrintf("%s: Updating walletdb tx %s failed\n", __func__, wtx.GetHash().ToString());
         success = false;
     }
 
