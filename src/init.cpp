@@ -13,6 +13,7 @@
 
 #include <addrman.h>
 #include <amount.h>
+#include <base58.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <checkpoints.h>
@@ -810,6 +811,9 @@ void InitParameterInteraction()
         // masternodes MUST accept connections from outside
         gArgs.ForceSetArg("-listen", "1");
         LogPrintf("%s: parameter interaction: -masternode=1 -> setting -listen=1\n", __func__);
+        if (gArgs.SoftSetBoolArg("-txindex", true))
+            // masternodes need txindex enabled - we will double check for the setting later
+            LogPrintf("%s: parameter interaction: -masternode=1 -> setting -txindex=1\n", __func__);
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
             // masternodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
             gArgs.ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
@@ -1759,7 +1763,7 @@ bool AppInitMain()
     // ********************************************************* Step 11a: setup PrivateSend
     fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
 
-    if((fMasternodeMode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
+    if((fMasternodeMode) && fTxIndex == false) {
         return InitError("Enabling Masternode support requires turning on transaction indexing."
                   "Please add txindex=1 to your configuration and start with -reindex");
     }
@@ -1778,7 +1782,7 @@ bool AppInitMain()
             if(!CMessageSigner::GetKeysFromSecret(strMasterNodePrivKey, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
                 return InitError(_("Invalid masternodeprivkey. Please see documenation."));
 
-//            LogPrintf("  pubKeyMasternode: %s\n", CBitcoinAddress(activeMasternode.pubKeyMasternode.GetID()).ToString());
+            LogPrintf("  pubKeyMasternode: %s\n", EncodeDestination(activeMasternode.pubKeyMasternode.GetID()));
         } else {
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }
