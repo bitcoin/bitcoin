@@ -1208,9 +1208,17 @@ UniValue SyscoinListReceived(bool includeempty=true)
 UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || 2 < params.size())
 		throw runtime_error(
-			"aliasnewfund [hexstring] [{address},...]\n"
-			"<hexstring> raw aliasnew transaction output.\n"
-			"<address> Array of addresses used to fund this aliasnew transaction. Leave empty to use wallet.\n"
+			"aliasnewfund
+			"  \"hexstring\" (string, required) The raw aliasnew transaction output\n"
+			"  \"addresses (array, optional) \"\n"
+			"    [\n"
+			"      \"address\"  (string) Address used to fund this aliasnew transaction. Leave empty to use wallet. Last address gets sent the change.\n"
+			"      ,...\n"
+			"    ]\n"
+			"}\n"
+			"\nExamples:\n"
+			+ HelpExampleCli("getaddressutxos", "'{\"addresses\": [\"175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W\"]}'")
+			+ HelpExampleRpc("getaddressutxos", "{\"addresses\": [\"175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W\"]}")
 			+ HelpRequiringPassphrase());
 	EnsureWalletIsUnlocked();
 	const string &hexstring = params[0].get_str();
@@ -1219,21 +1227,23 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
 	CMutableTransaction tx(txIn);
 	// if addresses are passed in use those, otherwise use whatever is in the wallet
-	UniValue addresses(UniValue::VARR);
+	UniValue addresses(UniValue::VOBJ);
 	if(params.size() > 1)
-		addresses = params[1].get_array();
+		addresses = params[1];
 	else {
+		UniValue addressArray(UniValue::VARR);
 		UniValue receivedList = SyscoinListReceived(false);
 		UniValue recevedListArray = receivedList.get_array();
 		for (unsigned int idx = 0; idx < recevedListArray.size(); idx++) {
 			if(find_value(recevedListArray[idx].get_obj(), "alias").get_str().empty())
-				addresses.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
+				addresObj.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
 		}
+		addresses.push_back(Pair("addresses", addressArray));
 	}
 
 	UniValue paramsUTXO(UniValue::VARR);
 	UniValue param(UniValue::VOBJ);
-	param.push_back(Pair("addresses", addresses));
+	param.push_back(addresses);
 	paramsUTXO.push_back(param);
 	const UniValue &resUTXOs = getaddressutxos(paramsUTXO, false);
 	UniValue utxoArray(UniValue::VARR);
