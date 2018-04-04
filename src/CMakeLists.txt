@@ -159,7 +159,7 @@ add_library(crown_server
 
 target_include_directories(crown_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/helpers/memenv)
 
-target_link_libraries(crown_server PRIVATE leveldb PRIVATE crown_core PUBLIC json PRIVATE crown_util PRIVATE crown_common PRIVATE crown_wallet PRIVATE OpenSSL::SSL PRIVATE leveldb PRIVATE memenv)
+target_link_libraries(crown_server PUBLIC leveldb PRIVATE crown_core PUBLIC json PRIVATE crown_util PRIVATE crown_common PRIVATE crown_wallet PRIVATE OpenSSL::SSL PRIVATE leveldb PRIVATE memenv)
 
 
 #LIBCROWN-COMMON
@@ -289,6 +289,11 @@ add_library(crown_common
 
 target_include_directories(crown_common PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/helpers/memenv PRIVATE secp256k1/include)
 target_link_libraries(crown_common PUBLIC crown_core PUBLIC crown_crypto PRIVATE secp256k1 PRIVATE crown_util PRIVATE crown_univalue)
+
+# LIBCROWN-CLI
+
+add_library(crown_cli
+  rpcclient.cpp)
 
 # LIBCROWN-UTIL
 
