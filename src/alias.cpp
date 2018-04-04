@@ -1208,7 +1208,9 @@ UniValue SyscoinListReceived(bool includeempty=true)
 UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || 2 < params.size())
 		throw runtime_error(
-			"aliasnewfund
+			"aliasnewfund\n"
+			"\nFunds a new alias transaction with inputs used from wallet or an array of addresses specified.\n"
+			"\nArguments:\n"
 			"  \"hexstring\" (string, required) The raw aliasnew transaction output\n"
 			"  \"addresses (array, optional) \"\n"
 			"    [\n"
