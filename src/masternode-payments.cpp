@@ -254,18 +254,63 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
                             nBlockHeight, blockReward, voutMasternodeStr, txNew.ToString());
 }
 
-std::string GetRequiredPaymentsString(int nBlockHeight)
+std::string GetLegacyRequiredPaymentsString(int nBlockHeight)
 {
     // IF WE HAVE A ACTIVATED TRIGGER FOR THIS HEIGHT - IT IS A SUPERBLOCK, GET THE REQUIRED PAYEES
     if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
-        if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
-           return mnpayments.GetRequiredPaymentsString(nBlockHeight) + ", " + CSuperblockManager::GetRequiredPaymentsString(nBlockHeight);
-        }
         return CSuperblockManager::GetRequiredPaymentsString(nBlockHeight);
     }
 
     // OTHERWISE, PAY MASTERNODE
     return mnpayments.GetRequiredPaymentsString(nBlockHeight);
+}
+
+std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCPtr &payee)
+{
+    std::string strPayee = "Unknown";
+    if (payee) {
+        CTxDestination dest;
+        if (!ExtractDestination(payee->pdmnState->scriptPayout, dest))
+            assert(false);
+        strPayee = CBitcoinAddress(dest).ToString();
+    }
+    if (CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
+        strPayee += ", " + CSuperblockManager::GetRequiredPaymentsString(nBlockHeight);
+    }
+    return strPayee;
+}
+
+std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEndHeight)
+{
+    std::map<int, std::string> mapPayments;
+
+    LOCK(cs_main);
+    int nChainTipHeight = chainActive.Height();
+
+    bool doProjection = false;
+    for(int h = nStartHeight; h < nEndHeight; h++) {
+        if (deterministicMNManager->IsDeterministicMNsSporkActive(h)) {
+            if (h <= nChainTipHeight) {
+                auto payee = deterministicMNManager->GetListForBlock(chainActive[h - 1]->GetBlockHash()).GetMNPayee();
+                mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
+            } else {
+                doProjection = true;
+                break;
+            }
+        } else {
+            mapPayments.emplace(h, GetLegacyRequiredPaymentsString(h));
+        }
+    }
+    if (doProjection) {
+        auto projection = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(nEndHeight - nChainTipHeight);
+        for (size_t i = 0; i < projection.size(); i++) {
+            auto payee = projection[i];
+            int h = nChainTipHeight + 1 + i;
+            mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
+        }
+    }
+
+    return mapPayments;
 }
 
 void CMasternodePayments::Clear()
@@ -731,22 +776,9 @@ std::string CMasternodeBlockPayees::GetRequiredPaymentsString() const
 
 std::string CMasternodePayments::GetRequiredPaymentsString(int nBlockHeight) const
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
-        LOCK(cs_main);
-        auto pindex = chainActive[nBlockHeight - 1];
-        auto payee = deterministicMNManager->GetListForBlock(pindex->GetBlockHash()).GetMNPayee();
-        if (!payee) {
-            return "Unknown";
-        }
-        CTxDestination dest;
-        if (!ExtractDestination(payee->pdmnState->scriptPayout, dest))
-            assert(false);
-        return CBitcoinAddress(dest).ToString();
-    } else {
-        LOCK(cs_mapMasternodeBlocks);
-        const auto it = mapMasternodeBlocks.find(nBlockHeight);
-        return it == mapMasternodeBlocks.end() ? "Unknown" : it->second.GetRequiredPaymentsString();
-    }
+    LOCK(cs_mapMasternodeBlocks);
+    const auto it = mapMasternodeBlocks.find(nBlockHeight);
+    return it == mapMasternodeBlocks.end() ? "Unknown" : it->second.GetRequiredPaymentsString();
 }
 
 bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const

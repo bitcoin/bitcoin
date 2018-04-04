@@ -801,11 +801,9 @@ UniValue masternode_winners(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'masternode winners ( \"count\" \"filter\" )'");
 
     UniValue obj(UniValue::VOBJ);
-
-    for (int i = nHeight - nLast; i < nHeight + 20; i++) {
-        std::string strPayment = GetRequiredPaymentsString(i);
-        if (strFilter !="" && strPayment.find(strFilter) == std::string::npos) continue;
-        obj.push_back(Pair(strprintf("%d", i), strPayment));
+    auto mapPayments = GetRequiredPaymentsStrings(nHeight - nLast, nHeight + 20);
+    for (const auto &p : mapPayments) {
+        obj.push_back(Pair(strprintf("%d", p.first), p.second));
     }
 
     return obj;
