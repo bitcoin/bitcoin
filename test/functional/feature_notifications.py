@@ -103,9 +103,6 @@ class NotificationsTest(BitcoinTestFramework):
         generated_after_restart = self.nodes[1].generate(block_count + n_confirmations - 1)[:-n_confirmations + 1]
         wait_until(lambda: os.path.isfile(self.tx_filename) and os.stat(self.tx_filename).st_size >= (block_count * 65), timeout=10)
 
-        # get the list of block hashes that should now be confirmed
-        buried_blocks = generated_before_restart + generated_after_restart
-
         # file content should equal the generated transaction hashes that are confirmed
         confirmed_txids += [t['txid'] for t in self.nodes[1].listtransactions("*", 1000) if t['blockhash'] in generated_after_restart]
 
