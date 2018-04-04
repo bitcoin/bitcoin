@@ -62,7 +62,7 @@ class CHDChain
 public:
     uint32_t nExternalChainCounter;
     uint32_t nInternalChainCounter;
-    CKeyID seed_id; //!< master key hash160
+    CKeyID seed_id; //!< seed hash160
 
     static const int VERSION_HD_BASE        = 1;
     static const int VERSION_HD_CHAIN_SPLIT = 2;
@@ -99,7 +99,7 @@ public:
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
     std::string hdKeypath; //optional HD/bip32 keypath
-    CKeyID hd_seed_id; //id of the HD masterkey used to derive this key
+    CKeyID hd_seed_id; //id of the HD seed used to derive this key
 
     CKeyMetadata()
     {
