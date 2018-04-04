@@ -718,7 +718,7 @@ UniValue smsgsendanon(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
             "smsgsendanon \"address_to\" \"message\"\n"
-            "Send an anonymous encrypted message to addrTo.");
+            "DEPRECATED. Send an anonymous encrypted message to addrTo.");
 
     EnsureSMSGIsEnabled();
 
@@ -741,6 +741,7 @@ UniValue smsgsendanon(const JSONRPCRequest &request)
         result.pushKV("error", sError);
     } else
     {
+        result.pushKV("msgid", HexStr(smsgModule.GetMsgID(smsgOut)));
         result.pushKV("result", "Sent.");
     };
 

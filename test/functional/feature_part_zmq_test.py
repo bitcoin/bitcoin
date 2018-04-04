@@ -23,7 +23,8 @@ class ZMQTest(ParticlTestFramework):
         try:
             import zmq
         except ImportError:
-            raise SkipTest("python3-zmq module not available.")
+            assert(False)
+            #raise SkipTest("python3-zmq module not available.")
 
         # Check that bitcoin has been built with ZMQ enabled
         config = configparser.ConfigParser()
@@ -32,7 +33,8 @@ class ZMQTest(ParticlTestFramework):
         config.read_file(open(self.options.configfile))
 
         if not config["components"].getboolean("ENABLE_ZMQ"):
-            raise SkipTest("bitcoind has not been built with zmq enabled.")
+            assert(False)
+            #raise SkipTest("bitcoind has not been built with zmq enabled.")
 
         self.zmq = zmq
         self.zmqContext = zmq.Context()
@@ -161,6 +163,7 @@ class ZMQTest(ParticlTestFramework):
 
 
         ro = nodes[1].smsgsend(address1, address0, "['data':'test','value':1]", True, 4)
+        msgid = ro['msgid']
         assert(ro['result'] == 'Sent.')
 
         self.stakeBlocks(1, nStakeNode=1)
@@ -178,9 +181,17 @@ class ZMQTest(ParticlTestFramework):
             if topic == 'smsg':
                 fFound = True
                 zmqhash = bytes_to_hex_str(msg[1])
-                print('zmqhash', zmqhash)
+                assert(zmqhash[:4] == '0300') # version 3.0
+                assert(zmqhash[4:] == msgid)
                 break
         assert(fFound)
+
+        ro = nodes[0].getnewzmqserverkeypair()
+        assert(len(ro['server_secret_key']) == 40)
+        assert(len(ro['server_public_key']) == 40)
+        assert(len(ro['server_secret_key_b64']) > 40)
+
+
 
 
 

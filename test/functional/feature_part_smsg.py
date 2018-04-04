@@ -94,5 +94,24 @@ class SmsgTest(ParticlTestFramework):
         assert(ro['messages'][0]['from'] == address1)
         assert(ro['messages'][0]['text'] == 'Test 1->0. 2')
 
+        msg = 'Test anon 1->0. 2'
+        ro = nodes[1].smsgsendanon(address0, msg)
+        assert(ro['result'] == 'Sent.')
+        assert(len(ro['msgid']) == 56)
+
+        i = 0
+        for i in range(20):
+            ro = nodes[0].smsginbox()
+            if len(ro['messages']) >= 1:
+                break
+            time.sleep(1)
+        assert(i < 20)
+        assert(len(ro['messages']) == 1)
+        assert(ro['messages'][0]['from'] == 'anon')
+        assert(ro['messages'][0]['text'] == msg)
+
+
+
+
 if __name__ == '__main__':
     SmsgTest().main()
