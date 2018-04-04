@@ -56,9 +56,12 @@ public:
      */
     enum Unit
     {
-        BTC,
-        mBTC,
-        uBTC
+         XYC,
+        KXYC,
+        MXYC,
+        GXYC,
+        TXYC,
+        PXYC
     };
 
     enum SeparatorStyle
