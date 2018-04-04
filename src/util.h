@@ -277,6 +277,14 @@ public:
     void ReadConfigFile(const std::string& confPath);
 
     /**
+     * Log warnings for options in m_section_only_args when
+     * they are specified in the default section but not overridden
+     * on the command line or in a network-specific section in the
+     * config file.
+     */
+    void WarnForSectionOnlyArgs();
+
+    /**
      * Return a vector of strings of the given argument
      *
      * @param strArg Argument to get (e.g. "-foo")
