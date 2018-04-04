@@ -176,13 +176,17 @@ BOOST_AUTO_TEST_CASE(util_FormatISO8601Time)
 
 struct TestArgsManager : public ArgsManager
 {
-    std::map<std::string, std::string>& GetMapArgs() { return mapArgs; }
-    const std::map<std::string, std::vector<std::string> >& GetMapMultiArgs() { return mapMultiArgs; }
+    std::map<std::string, std::vector<std::string> >& GetOverrideArgs() { return m_override_args; }
+    std::map<std::string, std::vector<std::string> >& GetConfigArgs() { return m_config_args; }
     const std::unordered_set<std::string>& GetNegatedArgs() { return m_negated_args; }
     void ReadConfigString(const std::string str_config)
     {
-        std::istringstream stream(str_config);
-        ReadConfigStream(stream);
+        std::istringstream streamConfig(str_config);
+        {
+            LOCK(cs_args);
+            m_config_args.clear();
+        }
+        ReadConfigStream(streamConfig);
     }
 };
 
@@ -192,22 +196,26 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
 
     testArgs.ParseParameters(0, (char**)argv_test);
-    BOOST_CHECK(testArgs.GetMapArgs().empty() && testArgs.GetMapMultiArgs().empty());
+    BOOST_CHECK(testArgs.GetOverrideArgs().empty() && testArgs.GetConfigArgs().empty());
 
     testArgs.ParseParameters(1, (char**)argv_test);
-    BOOST_CHECK(testArgs.GetMapArgs().empty() && testArgs.GetMapMultiArgs().empty());
+    BOOST_CHECK(testArgs.GetOverrideArgs().empty() && testArgs.GetConfigArgs().empty());
 
     testArgs.ParseParameters(7, (char**)argv_test);
     // expectation: -ignored is ignored (program name argument),
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
-    BOOST_CHECK(testArgs.GetMapArgs().size() == 3 && testArgs.GetMapMultiArgs().size() == 3);
+    BOOST_CHECK(testArgs.GetOverrideArgs().size() == 3 && testArgs.GetConfigArgs().empty());
     BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
                 && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
-    BOOST_CHECK(testArgs.GetMapMultiArgs().count("-a") && testArgs.GetMapMultiArgs().count("-b") && testArgs.GetMapMultiArgs().count("-ccc")
-                && !testArgs.GetMapMultiArgs().count("f") && !testArgs.GetMapMultiArgs().count("-d"));
+    BOOST_CHECK(testArgs.GetOverrideArgs().count("-a") && testArgs.GetOverrideArgs().count("-b") && testArgs.GetOverrideArgs().count("-ccc")
+                && !testArgs.GetOverrideArgs().count("f") && !testArgs.GetOverrideArgs().count("-d"));
 
-    BOOST_CHECK(testArgs.GetMapArgs()["-a"] == "" && testArgs.GetMapArgs()["-ccc"] == "multiple");
+    BOOST_CHECK(testArgs.GetOverrideArgs()["-a"].size() == 1);
+    BOOST_CHECK(testArgs.GetOverrideArgs()["-a"].front() == "");
+    BOOST_CHECK(testArgs.GetOverrideArgs()["-ccc"].size() == 2);
+    BOOST_CHECK(testArgs.GetOverrideArgs()["-ccc"].front() == "argument");
+    BOOST_CHECK(testArgs.GetOverrideArgs()["-ccc"].back() == "multiple");
     BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
 }
 
@@ -223,8 +231,8 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
         BOOST_CHECK(testArgs.IsArgSet({'-', opt}) || !opt);
 
     // Nothing else should be in the map
-    BOOST_CHECK(testArgs.GetMapArgs().size() == 6 &&
-                testArgs.GetMapMultiArgs().size() == 6);
+    BOOST_CHECK(testArgs.GetOverrideArgs().size() == 6 &&
+                testArgs.GetConfigArgs().empty());
 
     // The -no prefix should get stripped on the way in.
     BOOST_CHECK(!testArgs.IsArgSet("-nob"));
@@ -315,17 +323,17 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     test_args.ReadConfigString(str_config);
     // expectation: a, b, ccc, d, fff, ggg, h, i end up in map
 
-    BOOST_CHECK(test_args.GetMapArgs().size() == 8);
-    BOOST_CHECK(test_args.GetMapMultiArgs().size() == 8);
+    BOOST_CHECK(test_args.GetOverrideArgs().empty());
+    BOOST_CHECK(test_args.GetConfigArgs().size() == 8);
 
-    BOOST_CHECK(test_args.GetMapArgs().count("-a")
-                && test_args.GetMapArgs().count("-b")
-                && test_args.GetMapArgs().count("-ccc")
-                && test_args.GetMapArgs().count("-d")
-                && test_args.GetMapArgs().count("-fff")
-                && test_args.GetMapArgs().count("-ggg")
-                && test_args.GetMapArgs().count("-h")
-                && test_args.GetMapArgs().count("-i")
+    BOOST_CHECK(test_args.GetConfigArgs().count("-a")
+                && test_args.GetConfigArgs().count("-b")
+                && test_args.GetConfigArgs().count("-ccc")
+                && test_args.GetConfigArgs().count("-d")
+                && test_args.GetConfigArgs().count("-fff")
+                && test_args.GetConfigArgs().count("-ggg")
+                && test_args.GetConfigArgs().count("-h")
+                && test_args.GetConfigArgs().count("-i")
                );
 
     BOOST_CHECK(test_args.IsArgSet("-a")
@@ -400,16 +408,24 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
 BOOST_AUTO_TEST_CASE(util_GetArg)
 {
     TestArgsManager testArgs;
-    testArgs.GetMapArgs().clear();
-    testArgs.GetMapArgs()["strtest1"] = "string...";
+    testArgs.GetOverrideArgs().clear();
+    testArgs.GetOverrideArgs()["strtest1"] = {"string..."};
     // strtest2 undefined on purpose
-    testArgs.GetMapArgs()["inttest1"] = "12345";
-    testArgs.GetMapArgs()["inttest2"] = "81985529216486895";
+    testArgs.GetOverrideArgs()["inttest1"] = {"12345"};
+    testArgs.GetOverrideArgs()["inttest2"] = {"81985529216486895"};
     // inttest3 undefined on purpose
-    testArgs.GetMapArgs()["booltest1"] = "";
+    testArgs.GetOverrideArgs()["booltest1"] = {""};
     // booltest2 undefined on purpose
-    testArgs.GetMapArgs()["booltest3"] = "0";
-    testArgs.GetMapArgs()["booltest4"] = "1";
+    testArgs.GetOverrideArgs()["booltest3"] = {"0"};
+    testArgs.GetOverrideArgs()["booltest4"] = {"1"};
+
+    // priorities
+    testArgs.GetOverrideArgs()["pritest1"] = {"a", "b"};
+    testArgs.GetConfigArgs()["pritest2"] = {"a", "b"};
+    testArgs.GetOverrideArgs()["pritest3"] = {"a"};
+    testArgs.GetConfigArgs()["pritest3"] = {"b"};
+    testArgs.GetOverrideArgs()["pritest4"] = {"a","b"};
+    testArgs.GetConfigArgs()["pritest4"] = {"c","d"};
 
     BOOST_CHECK_EQUAL(testArgs.GetArg("strtest1", "default"), "string...");
     BOOST_CHECK_EQUAL(testArgs.GetArg("strtest2", "default"), "default");
@@ -420,6 +436,11 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest2", false), false);
     BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest3", false), false);
     BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest4", false), true);
+
+    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest1", "default"), "b");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest2", "default"), "a");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest3", "default"), "a");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest4", "default"), "b");
 }
 
 BOOST_AUTO_TEST_CASE(util_GetChainName)
