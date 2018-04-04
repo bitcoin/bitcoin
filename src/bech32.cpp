@@ -160,9 +160,9 @@ std::pair<std::string, data> Decode(const std::string& str) {
     bool lower = false, upper = false;
     for (size_t i = 0; i < str.size(); ++i) {
         unsigned char c = str[i];
-        if (c < 33 || c > 126) return {};
         if (c >= 'a' && c <= 'z') lower = true;
-        if (c >= 'A' && c <= 'Z') upper = true;
+        else if (c >= 'A' && c <= 'Z') upper = true;
+        else if (c < 33 || c > 126) return {};
     }
     if (lower && upper) return {};
     size_t pos = str.rfind('1');
@@ -172,7 +172,8 @@ std::pair<std::string, data> Decode(const std::string& str) {
     data values(str.size() - 1 - pos);
     for (size_t i = 0; i < str.size() - 1 - pos; ++i) {
         unsigned char c = str[i + pos + 1];
-        int8_t rev = (c < 33 || c > 126) ? -1 : CHARSET_REV[c];
+        int8_t rev = CHARSET_REV[c];
+
         if (rev == -1) {
             return {};
         }
