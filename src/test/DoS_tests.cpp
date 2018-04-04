@@ -21,9 +21,9 @@
 #include <boost/test/unit_test.hpp>
 
 // Tests these internal-to-net_processing.cpp methods:
-extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
-extern void EraseOrphansFor(NodeId peer);
-extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
+bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
+void EraseOrphansFor(NodeId peer);
+unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
 struct COrphanTx {
     CTransactionRef tx;
     NodeId fromPeer;

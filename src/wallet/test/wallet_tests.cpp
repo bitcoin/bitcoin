@@ -20,9 +20,9 @@
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
 
-extern UniValue importmulti(const JSONRPCRequest& request);
-extern UniValue dumpwallet(const JSONRPCRequest& request);
-extern UniValue importwallet(const JSONRPCRequest& request);
+UniValue importmulti(const JSONRPCRequest& request);
+UniValue dumpwallet(const JSONRPCRequest& request);
+UniValue importwallet(const JSONRPCRequest& request);
 
 BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
