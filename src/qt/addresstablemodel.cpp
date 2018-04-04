@@ -337,7 +337,7 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &par
 void AddressTableModel::updateEntry(const QString &address,
         const QString &label, bool isMine, const QString &purpose, int status)
 {
-    // Update address book model from Bitcoin core
+    // Update address book model from yama_coin core
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 
