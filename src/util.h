@@ -259,7 +259,6 @@ protected:
     mutable CCriticalSection cs_args;
     std::map<std::string, std::vector<std::string>> m_override_args;
     std::map<std::string, std::vector<std::string>> m_config_args;
-    std::unordered_set<std::string> m_negated_args;
     void ReadConfigStream(std::istream& stream);
 
 public:
@@ -345,11 +344,6 @@ public:
      * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
      */
     std::string GetChainName() const;
-
-private:
-
-    // Munge -nofoo into -foo=0 and track the value as negated.
-    void InterpretNegatedOption(std::string &key, std::string &val);
 };
 
 extern ArgsManager gArgs;

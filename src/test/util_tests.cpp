@@ -178,7 +178,6 @@ struct TestArgsManager : public ArgsManager
 {
     std::map<std::string, std::vector<std::string> >& GetOverrideArgs() { return m_override_args; }
     std::map<std::string, std::vector<std::string> >& GetConfigArgs() { return m_config_args; }
-    const std::unordered_set<std::string>& GetNegatedArgs() { return m_negated_args; }
     void ReadConfigString(const std::string str_config)
     {
         std::istringstream streamConfig(str_config);
@@ -239,7 +238,6 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
 
     // The -b option is flagged as negated, and nothing else is
     BOOST_CHECK(testArgs.IsArgNegated("-b"));
-    BOOST_CHECK(testArgs.GetNegatedArgs().size() == 1);
     BOOST_CHECK(!testArgs.IsArgNegated("-a"));
 
     // Check expected values.
@@ -264,8 +262,8 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
     BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "");
 
-    // A double negative is a positive.
-    BOOST_CHECK(testArgs.IsArgNegated("-bar"));
+    // A double negative is a positive, and not marked as negated.
+    BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
     BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "1");
 
     // Config test
@@ -274,12 +272,12 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     testArgs.ReadConfigString(conf_test);
 
     // This was passed twice, second one overrides the negative setting,
-    // but not the value.
+    // and the value.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "0");
+    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "1");
 
-    // A double negative is a positive.
-    BOOST_CHECK(testArgs.IsArgNegated("-bar"));
+    // A double negative is a positive, and does not count as negated.
+    BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
     BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "1");
 
     // Combined test
@@ -289,18 +287,15 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     testArgs.ReadConfigString(combo_test_conf);
 
     // Command line overrides, but doesn't erase old setting
-    BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
+    BOOST_CHECK(testArgs.IsArgNegated("-foo"));
     BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "0");
-    BOOST_CHECK(testArgs.GetArgs("-foo").size() == 2
-                && testArgs.GetArgs("-foo").front() == "0"
-                && testArgs.GetArgs("-foo").back() == "1");
+    BOOST_CHECK(testArgs.GetArgs("-foo").size() == 0);
 
     // Command line overrides, but doesn't erase old setting
-    BOOST_CHECK(testArgs.IsArgNegated("-bar"));
+    BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
     BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "");
-    BOOST_CHECK(testArgs.GetArgs("-bar").size() == 2
-                && testArgs.GetArgs("-bar").front() == ""
-                && testArgs.GetArgs("-bar").back() == "0");
+    BOOST_CHECK(testArgs.GetArgs("-bar").size() == 1
+                && testArgs.GetArgs("-bar").front() == "");
 }
 
 BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
@@ -353,8 +348,8 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                 && test_args.GetArg("-d", "xxx") == "e"
                 && test_args.GetArg("-fff", "xxx") == "0"
                 && test_args.GetArg("-ggg", "xxx") == "1"
-                && test_args.GetArg("-h", "xxx") == "1" // 1st value takes precedence
-                && test_args.GetArg("-i", "xxx") == "0" // 1st value takes precedence
+                && test_args.GetArg("-h", "xxx") == "0"
+                && test_args.GetArg("-i", "xxx") == "1"
                 && test_args.GetArg("-zzz", "xxx") == "xxx"
                );
 
@@ -365,8 +360,8 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                      && !test_args.GetBoolArg("-d", def)
                      && !test_args.GetBoolArg("-fff", def)
                      && test_args.GetBoolArg("-ggg", def)
-                     && test_args.GetBoolArg("-h", def)
-                     && !test_args.GetBoolArg("-i", def)
+                     && !test_args.GetBoolArg("-h", def)
+                     && test_args.GetBoolArg("-i", def)
                      && test_args.GetBoolArg("-zzz", def) == def
                    );
     }
@@ -378,19 +373,15 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2
                 && test_args.GetArgs("-ccc").front() == "argument"
                 && test_args.GetArgs("-ccc").back() == "multiple");
-    BOOST_CHECK(test_args.GetArgs("-fff").size() == 1
-                && test_args.GetArgs("-fff").front() == "0");
+    BOOST_CHECK(test_args.GetArgs("-fff").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-nofff").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-ggg").size() == 1
                 && test_args.GetArgs("-ggg").front() == "1");
     BOOST_CHECK(test_args.GetArgs("-noggg").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-h").size() == 2
-                && test_args.GetArgs("-h").front() == "1"
-                && test_args.GetArgs("-h").back() == "0");
+    BOOST_CHECK(test_args.GetArgs("-h").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-noh").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-i").size() == 2
-                && test_args.GetArgs("-i").front() == "0"
-                && test_args.GetArgs("-i").back() == "1");
+    BOOST_CHECK(test_args.GetArgs("-i").size() == 1
+                && test_args.GetArgs("-i").front() == "1");
     BOOST_CHECK(test_args.GetArgs("-noi").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-zzz").size() == 0);
 
@@ -399,7 +390,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     BOOST_CHECK(!test_args.IsArgNegated("-ccc"));
     BOOST_CHECK(!test_args.IsArgNegated("-d"));
     BOOST_CHECK(test_args.IsArgNegated("-fff"));
-    BOOST_CHECK(test_args.IsArgNegated("-ggg")); // IsArgNegated==true when noggg=0
+    BOOST_CHECK(!test_args.IsArgNegated("-ggg"));
     BOOST_CHECK(test_args.IsArgNegated("-h")); // last setting takes precedence
     BOOST_CHECK(!test_args.IsArgNegated("-i")); // last setting takes precedence
     BOOST_CHECK(!test_args.IsArgNegated("-zzz"));
