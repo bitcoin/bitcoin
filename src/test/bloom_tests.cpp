@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
     BOOST_CHECK_EQUAL_COLLECTIONS(stream.begin(), stream.end(), expected.begin(), expected.end());
 }
 
-BOOST_AUTO_TEST_CASE(bloom_create_insert_key)
+BOOST_AUTO_TEST_CASE(bloom_create_insert_key, * boost::unit_test::disabled())
 {
     string strSecret = string("7sQb6QHALg4XyHsJHsSNXnEHGhZfzTTUPJXJqaqK7CavQkiL9Ms");
     CBitcoinSecret vchSecret;
