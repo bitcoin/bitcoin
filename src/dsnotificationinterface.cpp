@@ -20,6 +20,7 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
     UpdatedBlockTip(chainActive.Tip(), nullptr, IsInitialBlockDownload());
 }
 
+/*
 void CDSNotificationInterface::BlockChecked(const CBlock& block, const CValidationState& state)
 {
     masternodeSync.BlockChecked(block);
@@ -29,6 +30,7 @@ void CDSNotificationInterface::NewPoWValidBlock(const CBlockIndex *pindex, const
 {
     masternodeSync.NewPoWValidBlock(pindex);
 }
+*/
 
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {

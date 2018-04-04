@@ -75,8 +75,8 @@ public:
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessTick(CConnman* connman);
 
-    void BlockChecked(const CBlock& block);
-    void NewPoWValidBlock(const CBlockIndex *pindex);
+//    void BlockChecked(const CBlock& block);
+//    void NewPoWValidBlock(const CBlockIndex *pindex);
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman);
 };
 

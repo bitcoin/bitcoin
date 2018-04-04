@@ -394,6 +394,7 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman* connman)
     }
 }
 
+/* not needed as we are either in IBD or otherwise covered by UpdatedBlockTip
 void CMasternodeSync::BlockChecked(const CBlock& block)
 {
     LogPrint(BCLog::MNODESYNC, "CMasternodeSync::BlockChecked -- block hash: %s\n", block.GetHash().ToString());
@@ -416,6 +417,7 @@ void CMasternodeSync::NewPoWValidBlock(const CBlockIndex *pindex)
         BumpAssetLastTime("CMasternodeSync::NewPoWValidBlock");
     }
 }
+*/
 
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman)
 {
