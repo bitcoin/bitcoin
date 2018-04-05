@@ -1221,8 +1221,8 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 			"    ]\n"
 			"}\n"
 			"\nExamples:\n"
-			+ HelpExampleCli("getaddressutxos", "'{\"addresses\": [\"175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W\"]}'")
-			+ HelpExampleRpc("getaddressutxos", "{\"addresses\": [\"175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W\"]}")
+			+ HelpExampleCli("aliasnewfund", " <hexstring> '{\"addresses\": [\"175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W\"]}'")
+			+ HelpExampleRpc("aliasnewfund", " <hexstring> {\"addresses\": [\"175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W\"]}")
 			+ HelpRequiringPassphrase());
 	EnsureWalletIsUnlocked();
 	const string &hexstring = params[0].get_str();
