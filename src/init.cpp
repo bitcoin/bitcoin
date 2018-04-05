@@ -212,6 +212,7 @@ void Shutdown()
     // Because these depend on each-other, we make sure that neither can be
     // using the other before destroying them.
     if (peerLogic) UnregisterValidationInterface(peerLogic.get());
+    if (peerLogic) UnregisterMempoolInterface(peerLogic.get());
     if (g_connman) g_connman->Stop();
     peerLogic.reset();
     g_connman.reset();
@@ -1305,6 +1306,7 @@ bool AppInitMain()
 
     peerLogic.reset(new PeerLogicValidation(&connman, scheduler));
     RegisterValidationInterface(peerLogic.get());
+    RegisterMempoolInterface(peerLogic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;

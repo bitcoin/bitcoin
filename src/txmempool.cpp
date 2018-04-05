@@ -418,8 +418,10 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
 
 void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
-    if (reason != MemPoolRemovalReason::BLOCK && reason != MemPoolRemovalReason::CONFLICT) {
-        // BLOCK and CONFLICT callbacks are generated in removeForBlock
+    if (reason != MemPoolRemovalReason::BLOCK && reason != MemPoolRemovalReason::CONFLICT &&
+        reason != MemPoolRemovalReason::REPLACED) {
+        // BLOCK and CONFLICT callbacks are generated in removeForBlock; REPLACED
+        // txn are included in TransactionAddedToMempool from AcceptToMemoryPool
         GetMainSignals().MempoolEntryRemoved(it->GetSharedTx(), reason);
     }
     const uint256 hash = it->GetTx().GetHash();

@@ -81,14 +81,14 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void TransactionAddedToMempool(const CTransactionRef &ptxn) {}
+    virtual void TransactionAddedToMempool(const CTransactionRef &ptxn, const std::vector<CTransactionRef>& txn_replaced) {}
     /**
      * Notifies listeners of a transaction leaving mempool.
      *
      * This only fires for transactions which leave mempool because of expiry,
-     * size limiting, reorg (changes in lock times/coinbase maturity), or
-     * replacement. This does not include any transactions which are included
-     * in MempoolUpdatedForBlockConnect.
+     * size limiting, or reorg (changes in lock times/coinbase maturity). This
+     * does not include any transactions which are included in
+     * MempoolUpdatedForBlockConnect or TransactionAddedToMempool(txn_replaced)
      *
      * reason == REORG is not ordered with BlockConnected/BlockDisconnected!
      *
@@ -230,7 +230,7 @@ public:
     size_t CallbacksPending();
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
-    void TransactionAddedToMempool(const CTransactionRef &);
+    void TransactionAddedToMempool(const CTransactionRef &, const std::shared_ptr<std::vector<CTransactionRef>>& txn_replaced);
     void MempoolUpdatedForBlockConnect(std::vector<CTransactionRef>&& tx_removed_in_block, std::vector<CTransactionRef>&& tx_removed_conflicted);
     void MempoolEntryRemoved(CTransactionRef tx, MemPoolRemovalReason reason);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);

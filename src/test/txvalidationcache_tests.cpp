@@ -30,7 +30,7 @@ ToMemPool(CMutableTransaction& tx)
 
     CValidationState state;
     return AcceptToMemoryPool(mempool, state, MakeTransactionRef(tx), nullptr /* pfMissingInputs */,
-                              nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */);
+                              true /* bypass_limits */, 0 /* nAbsurdFee */);
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
