@@ -432,35 +432,6 @@ class BitcoinTestFramework():
         for i in range(self.num_nodes):
             initialize_datadir(self.options.tmpdir, i)
 
-class ComparisonTestFramework(BitcoinTestFramework):
-    """Test framework for doing p2p comparison testing
-
-    Sets up some bitcoind binaries:
-    - 1 binary: test binary
-    - 2 binaries: 1 test binary, 1 ref binary
-    - n>2 binaries: 1 test binary, n-1 ref binaries"""
-
-    def set_test_params(self):
-        self.num_nodes = 2
-        self.setup_clean_chain = True
-
-    def add_options(self, parser):
-        parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
-                          help="bitcoind binary to test")
-        parser.add_option("--refbinary", dest="refbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
-                          help="bitcoind binary to use for reference nodes (if any)")
-
-    def setup_network(self):
-        extra_args = [['-whitelist=127.0.0.1']] * self.num_nodes
-        if hasattr(self, "extra_args"):
-            extra_args = self.extra_args
-        self.add_nodes(self.num_nodes, extra_args,
-                       binary=[self.options.testbinary] +
-                       [self.options.refbinary] * (self.num_nodes - 1))
-        self.start_nodes()
-
 class SkipTest(Exception):
     """This exception is raised to skip a test"""
     def __init__(self, message):
