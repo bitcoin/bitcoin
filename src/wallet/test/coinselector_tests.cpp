@@ -71,7 +71,7 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
         wtx->fDebitCached = true;
         wtx->nDebitCached = 1;
     }
-    COutput output(wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, fIsFromMe, true /* safe */);
     vCoins.push_back(output);
     testWallet.AddToWallet(*wtx.get());
     wtxn.emplace_back(std::move(wtx));

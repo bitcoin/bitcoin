@@ -85,6 +85,20 @@ void EnsureWalletIsUnlocked(CWallet * const pwallet)
     }
 }
 
+std::string GetRBFStatusString(const int confirms, const CTransaction &tx, CTxMemPool &pool)
+{
+    std::string rbfStatus = "no";
+    if (confirms <= 0) {
+        LOCK(mempool.cs);
+        RBFTransactionState rbfState = IsRBFOptIn(tx, pool);
+        if (rbfState == RBFTransactionState::UNKNOWN)
+            rbfStatus = "unknown";
+        else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125)
+            rbfStatus = "yes";
+    }
+    return rbfStatus;
+}
+
 void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
@@ -109,16 +123,7 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     entry.pushKV("timereceived", (int64_t)wtx.nTimeReceived);
 
     // Add opt-in RBF status
-    std::string rbfStatus = "no";
-    if (confirms <= 0) {
-        LOCK(mempool.cs);
-        RBFTransactionState rbfState = IsRBFOptIn(*wtx.tx, mempool);
-        if (rbfState == RBFTransactionState::UNKNOWN)
-            rbfStatus = "unknown";
-        else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125)
-            rbfStatus = "yes";
-    }
-    entry.pushKV("bip125-replaceable", rbfStatus);
+    entry.pushKV("bip125-replaceable", GetRBFStatusString(confirms, *wtx.tx, mempool));
 
     for (const std::pair<std::string, std::string>& item : wtx.mapValue)
         entry.pushKV(item.first, item.second);
@@ -2139,6 +2144,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "  \"txid\" : \"transactionid\",   (string) The transaction id.\n"
             "  \"time\" : ttt,            (numeric) The transaction time in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
+            "  \"from_me\" : \"xxx\",  (bool) Whether this transaction was sent from wallet on this node\n"
             "  \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
             "                                                   may be unknown for unconfirmed transactions not in the mempool\n"
             "  \"details\" : [\n"
@@ -2192,12 +2198,14 @@ UniValue gettransaction(const JSONRPCRequest& request)
     CAmount nDebit = wtx.GetDebit(filter);
     CAmount nNet = nCredit - nDebit;
     CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+    bool fFromMe = wtx.IsFromMe(ISMINE_SPENDABLE); // Ignoring include_watchonly for transaction source
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
     if (wtx.IsFromMe(filter))
         entry.pushKV("fee", ValueFromAmount(nFee));
 
     WalletTxToJSON(wtx, entry);
+    entry.pushKV("from_me", fFromMe);
 
     UniValue details(UniValue::VARR);
     ListTransactions(pwallet, wtx, "*", 0, false, details, filter);
@@ -2894,6 +2902,20 @@ UniValue resendwallettransactions(const JSONRPCRequest& request)
     return result;
 }
 
+bool TransactionSourceFromString(const std::string& source_string, TransactionSource& transaction_source) {
+    static const std::map<std::string, TransactionSource> sources = {
+        {"all", TransactionSource::ALL},
+        {"from_me", TransactionSource::FROM_ME},
+        {"external", TransactionSource::EXTERNAL},
+    };
+    auto source = sources.find(source_string);
+
+    if (source == sources.end()) return false;
+
+    transaction_source = source->second;
+    return true;
+}
+
 UniValue listunspent(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -2923,6 +2945,10 @@ UniValue listunspent(const JSONRPCRequest& request)
             "      \"maximumAmount\"    (numeric or string, default=unlimited) Maximum value of each UTXO in " + CURRENCY_UNIT + "\n"
             "      \"maximumCount\"     (numeric or string, default=unlimited) Maximum number of UTXOs\n"
             "      \"minimumSumAmount\" (numeric or string, default=unlimited) Minimum sum value of all UTXOs in " + CURRENCY_UNIT + "\n"
+            "      \"source\"           (string, default=\"all\") Output source, must be one of:\n"
+            "           \"all\""
+            "           \"from_me\""
+            "           \"external\""
             "    }\n"
             "\nResult\n"
             "[                   (array of json object)\n"
@@ -2938,6 +2964,8 @@ UniValue listunspent(const JSONRPCRequest& request)
             "    \"redeemScript\" : n        (string) The redeemScript if scriptPubKey is P2SH\n"
             "    \"spendable\" : xxx,        (bool) Whether we have the private keys to spend this output\n"
             "    \"solvable\" : xxx,         (bool) Whether we know how to spend this output, ignoring the lack of keys\n"
+            "    \"from_me\" : xxx,          (bool) Whether output was created by wallet on this node\n"
+            "    \"bip125-replaceable\": xxx,   (string) Whether transaction of this output is marked as BIP125 replaceable (yes|no|unknown)\n"
             "    \"safe\" : xxx              (bool) Whether this output is considered safe to spend. Unconfirmed transactions\n"
             "                              from outside keys and unconfirmed replacement transactions are considered unsafe\n"
             "                              and are not eligible for spending by fundrawtransaction and sendtoaddress.\n"
@@ -2993,6 +3021,7 @@ UniValue listunspent(const JSONRPCRequest& request)
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
     uint64_t nMaximumCount = 0;
+    TransactionSource source = TransactionSource::ALL;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -3008,6 +3037,12 @@ UniValue listunspent(const JSONRPCRequest& request)
 
         if (options.exists("maximumCount"))
             nMaximumCount = options["maximumCount"].get_int64();
+
+        if (options.exists("source")) {
+            if (!TransactionSourceFromString(options["source"].get_str(), source)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid source parameter");
+            }
+        }
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -3018,7 +3053,8 @@ UniValue listunspent(const JSONRPCRequest& request)
     std::vector<COutput> vecOutputs;
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount,
+        nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, source);
     for (const COutput& out : vecOutputs) {
         CTxDestination address;
         const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
@@ -3053,6 +3089,8 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
+        entry.pushKV("from_me", out.fFromMe);
+        entry.pushKV("bip125-replaceable", GetRBFStatusString(out.nDepth, *out.tx->tx, mempool));
         entry.pushKV("safe", out.fSafe);
         results.push_back(entry);
     }
