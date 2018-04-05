@@ -13,6 +13,8 @@ from test_framework.messages import sha256
 from test_framework.address import chars as __b58chars, script_to_p2sh
 import binascii
 
+from test_framework.test_particl import jsonDecimal
+
 def script_to_p2sh_part(b):
     return script_to_p2sh(b, False, False)
 
@@ -89,8 +91,20 @@ def CreateAtomicSwapScript(payTo, refundTo, lockTime, secretHash):
 
 def getOutputByAddr(tx, addr):
     for i, vout in enumerate(tx['vout']):
-        if addr in vout['scriptPubKey']['addresses']:
-            return i
+        try:
+            if addr in vout['scriptPubKey']['addresses']:
+                return i
+        except:
+            continue
+    return -1
+
+def getIndexAtProperty(arr, name, value):
+    for i, o in enumerate(arr):
+        try:
+            if o[name] == value:
+                return i
+        except:
+            continue
     return -1
 
 WITNESS_SCALE_FACTOR = 2
@@ -120,7 +134,6 @@ def createRefundTx(node, rawtx, script, lockTime, addrRefundFrom, addrRefundTo):
     scriptPubKey = ro['vout'][n]['scriptPubKey']['hex']
 
     amountIn = ro['vout'][n]['value']
-
 
     rawtxrefund = node.tx(['-create','in='+txnid+':'+str(n)+':1','outaddr='+str(amountIn)+':'+addrRefundTo,'locktime='+str(lockTime)])
 
@@ -158,7 +171,6 @@ def createRefundTx(node, rawtx, script, lockTime, addrRefundFrom, addrRefundTo):
     ro = node.decoderawtransaction(rawtxrefund)
 
     return rawtxrefund
-
 
 def createClaimTx(node, rawtx, script, lockTime, secret, addrClaimFrom, addrClaimTo):
     p2sh = script_to_p2sh_part(script)
@@ -202,18 +214,72 @@ def createClaimTx(node, rawtx, script, lockTime, secret, addrClaimFrom, addrClai
         scripthex
     ]
     rawtxClaim = node.tx([rawtxClaim,'witness=0:'+ ':'.join(witnessStack)])
-
-    ro = node.decoderawtransaction(rawtxClaim)
     return rawtxClaim
 
-def getIndexAtProperty(arr, name, value):
-    for i, o in enumerate(arr):
-        try:
-            if o[name] == value:
-                return i
-        except:
-            continue
-    return -1
+
+def createRefundTxCT(node, rawtx, output_amounts, script, lockTime, privkeyFrom, addrRefundTo):
+    p2sh = script_to_p2sh_part(script)
+    ro = node.decoderawtransaction(rawtx)
+    txnid = ro['txid']
+    n = getOutputByAddr(ro, p2sh)
+
+    scriptPubKey = ro['vout'][n]['scriptPubKey']['hex']
+
+    amountIn = output_amounts[str(n)]['value']
+    blindIn = output_amounts[str(n)]['blind']
+
+    inputs = [{'txid':txnid, 'vout':n}]
+
+    outputs = [ {
+        'address':addrRefundTo,
+        'type':'blind',
+        'amount':amountIn,
+    }, ]
+    ro = node.createrawparttransaction(inputs, outputs, lockTime)
+    rawtxrefund = ro['hex']
+
+    witnessSize = 5 + 73 + 33 + 1 + len(script)
+    tempBytes = bytearray(witnessSize) # Needed for fee estimation
+
+    # Set fee and commitment sum
+    options = {'subtractFeeFromOutputs':[0,]}
+    input_amounts = {'0': {
+            'value':amountIn,
+            'blind':blindIn,
+            'witness':binascii.hexlify(tempBytes).decode("utf-8")
+        }
+    }
+    ro = node.fundrawtransactionfrom('blind', ro['hex'], input_amounts, ro['amounts'], options)
+    rawtxrefund = ro['hex']
+
+    ro = node.decoderawtransaction(rawtxrefund)
+    print(json.dumps(ro, indent=4, default=jsonDecimal))
+
+    """
+    scripthex = binascii.hexlify(script).decode("utf-8")
+    prevtx = {
+        'txid':txnid,
+        'vout':n,
+        'scriptPubKey':scriptPubKey,
+        'redeemScript':scripthex,
+        'amount':amountIn
+    }
+    refundSig = node.createsignaturewithwallet(rawtxrefund, prevtx, addrRefundFrom)
+
+    addrRefundFromInfo = node.getaddressinfo(addrRefundFrom)
+
+    witnessStack = [
+        refundSig,
+        addrRefundFromInfo['pubkey'],
+        '00',
+        scripthex
+    ]
+    rawtxrefund = node.tx([rawtxrefund,'witness=0:'+ ':'.join(witnessStack)])
+
+    ro = node.decoderawtransaction(rawtxrefund)
+    """
+
+    return rawtxrefund
 
 class AtomicSwapTest(ParticlTestFramework):
     def set_test_params(self):
@@ -381,6 +447,9 @@ class AtomicSwapTest(ParticlTestFramework):
         assert(ftxA[n]['outputs'][0]['amount'] > 5.9 and ftxA[n]['outputs'][0]['amount'] < 6.0)
 
 
+
+
+        # Test confidential transactions
         addrA_sx = nodes[0].getnewstealthaddress() # party A
         addrB_sx = nodes[1].getnewstealthaddress() # party B
 
@@ -448,10 +517,16 @@ class AtomicSwapTest(ParticlTestFramework):
         }, ]
         ro = nodes[0].createrawparttransaction([], outputs)
         ro = nodes[0].fundrawtransactionfrom('blind', ro['hex'], {}, ro['amounts'])
-        rawtxInitiate = ro['hex']
+        rawtx_i = ro['hex']
+        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        output_amounts = ro['output_amounts']
 
-        ro = nodes[0].signrawtransactionwithwallet(rawtxInitiate)
+        ro = nodes[0].signrawtransactionwithwallet(rawtx_i)
         assert(ro['complete'] == True)
+        rawtx_i = ro['hex']
+        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+
+        rawtx_i_refund = createRefundTxCT(nodes[0], rawtx_i, output_amounts, scriptInitiate, lockTime, addrA_sx, addrA_sx)
 
 
 

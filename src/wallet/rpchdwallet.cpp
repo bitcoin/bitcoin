@@ -6565,11 +6565,11 @@ UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
             "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
             "The inputs added will not be signed, use signrawtransaction for that.\n"
-            "Note that all existing inputs must have their previous output transaction be in the wallet.\n"
-            "Note that all inputs selected must be of standard form and P2SH scripts must be\n"
+            "Note that all existing inputs must have their previous output transaction be in the wallet or have their amount and blinding factor specified in input_amounts.\n"
+            /*"Note that all inputs selected must be of standard form and P2SH scripts must be\n"
             "in the wallet using importaddress or addmultisigaddress (to calculate fees).\n"
             "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
-            "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only\n"
+            "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only\n"*/
             "\nArguments:\n"
             "1. \"input_type\"          (string, required) The type of inputs to use standard/anon/blind.\n"
             "2. \"hexstring\"           (string, required) The hex string of the raw transaction\n"
@@ -6579,6 +6579,9 @@ UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             "         {\n"
             "           \"value\":amount\n"
             "           \"blind\":\"hex\"\n"
+            "           \"witnessstack\":[\"hex\",]\n" // needed to estimate fee
+            //"           \"script\":\"hex\"\n"
+            //"           \"redeemscript\":\"hex\"\n"
             "         }\n"
             "   }\n"
             "4. output_amounts        (object, required)\n"
@@ -6750,28 +6753,63 @@ UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
     UniValue inputAmounts = request.params[2];
     UniValue outputAmounts = request.params[3];
     std::map<int, uint256> mInputBlinds, mOutputBlinds;
-    std::map<int, CAmount> mInputAmounts, mOutputAmounts;
+    std::map<int, CAmount> mOutputAmounts;
 
     std::vector<CTempRecipient> vecSend(nOutputs);
 
     const std::vector<std::string> &vInputKeys = inputAmounts.getKeys();
+    pwallet->mapTempRecords.clear();
     for (const std::string &sKey : vInputKeys)
     {
         int64_t n;
         if (!ParseInt64(sKey, &n) || n >= (int64_t)tx.vin.size() || n < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Bad index for input blinding factor.");
 
+        if (n < 0 || (int64_t)tx.vin.size() <= n)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Input offset out of range.");
+
+        CInputData im;
+        CTransactionRecord rtx;
+        COutputRecord r;
+        r.nType = OUTPUT_CT; // TODO
+        r.n = tx.vin[n].prevout.n;
+
+        uint256 blind;
         if (inputAmounts[sKey]["blind"].isStr())
         {
             std::string s = inputAmounts[sKey]["blind"].get_str();
             if (!IsHex(s) || !(s.size() == 64))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Blinding factor must be 32 bytes and hex encoded.");
 
-            uint256 blind;
             blind.SetHex(s);
             mInputBlinds[n] = blind;
         };
-        mInputAmounts[n] = AmountFromValue(inputAmounts[sKey]["value"]);
+        r.nValue = AmountFromValue(inputAmounts[sKey]["value"]);
+
+        if (inputAmounts[sKey]["witnessstack"].isArray())
+        {
+            const UniValue &stack = inputAmounts[sKey]["witnessstack"].get_array();
+
+            for (size_t k = 0; k < stack.size(); ++k)
+            {
+                if (!stack[k].isStr())
+                    continue;
+                std::string s = stack.get_str();
+                if (!IsHex(s))
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Input witness must be hex encoded.");
+                std::vector<uint8_t> v = ParseHex(s);
+                im.scriptWitness.stack.push_back(v);
+            };
+        };
+
+        //r.scriptPubKey = ; // TODO
+        rtx.InsertOutput(r);
+        pwallet->mapTempRecords[tx.vin[n].prevout.hash] = rtx;
+
+        im.nValue = r.nValue;
+        im.blind = blind;
+
+        coinControl.m_inputData[tx.vin[n].prevout] = im;
     };
 
     const std::vector<std::string> &vOutputKeys = outputAmounts.getKeys();

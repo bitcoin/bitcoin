@@ -751,6 +751,7 @@ public:
 
     MapRecords_t mapRecords;
     RtxOrdered_t rtxOrdered;
+    mutable MapRecords_t mapTempRecords; // hack for sending unmined inputs through fundrawtransactionfrom
 
     std::vector<CVoteToken> vVoteTokens;
 

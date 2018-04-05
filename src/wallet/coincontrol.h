@@ -23,6 +23,15 @@ public:
     int64_t nTxTime;
 };
 
+
+class CInputData
+{
+public:
+    CAmount nValue;
+    uint256 blind;
+    CScriptWitness scriptWitness;
+};
+
 /** Coin Control Features. */
 class CCoinControl
 {
@@ -48,9 +57,14 @@ public:
     bool signalRbf;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
+
+
     mutable bool fHaveAnonOutputs = false;
     mutable bool fNeedHardwareKey = false;
     CAmount m_extrafee;
+    std::map<COutPoint, CInputData> m_inputData;
+    //MapRecords_t mapRecords; // hack for COutputR
+
 
     CCoinControl()
     {

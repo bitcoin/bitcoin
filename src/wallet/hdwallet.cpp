@@ -4104,6 +4104,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<COutputR> vAvailableCoins;
         AvailableBlindedCoins(vAvailableCoins, true, coinControl);
 
+
         CAmount nValueOutPlain = 0;
         int nChangePosInOut = -1;
 
@@ -4233,10 +4234,18 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             int nIn = 0;
             for (const auto &coin : setCoins)
             {
+                const uint256 &txhash = coin.first->first;
                 const COutputRecord *oR = coin.first->second.GetOutput(coin.second);
                 const CScript &scriptPubKey = oR->scriptPubKey;
                 SignatureData sigdata;
 
+                // Use witness size estimate if set
+                COutPoint prevout(txhash, coin.second);
+                std::map<COutPoint, CInputData>::const_iterator it = coinControl->m_inputData.find(prevout);
+                if (it != coinControl->m_inputData.end())
+                {
+                    sigdata.scriptWitness = it->second.scriptWitness;
+                } else
                 if (!ProduceSignature(DummySignatureCreatorParticl(this), scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, "Dummy signature failed.");
                 UpdateTransaction(txNew, nIn, sigdata);
@@ -4355,13 +4364,20 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             auto &txin = txNew.vin[nIn];
             const uint256 &txhash = coin.first->first;
 
-            CStoredTransaction stx;
-            if (!CHDWalletDB(*dbw).ReadStoredTx(txhash, stx))
-                return errorN(1, "%s: ReadStoredTx failed for %s.\n", __func__, txhash.ToString().c_str());
+            COutPoint prevout(txhash, coin.second);
+            std::map<COutPoint, CInputData>::const_iterator it = coinControl->m_inputData.find(prevout);
+            if (it != coinControl->m_inputData.end())
+            {
+                memcpy(&vInputBlinds[nIn * 32], it->second.blind.begin(), 32);
+            } else
+            {
+                CStoredTransaction stx;
+                if (!CHDWalletDB(*dbw).ReadStoredTx(txhash, stx))
+                    return errorN(1, "%s: ReadStoredTx failed for %s.\n", __func__, txhash.ToString().c_str());
 
-            if (!stx.GetBlind(coin.second, &vInputBlinds[nIn * 32]))
-                return errorN(1, "%s: GetBlind failed for %s, %d.\n", __func__, txhash.ToString().c_str(), coin.second);
-
+                if (!stx.GetBlind(coin.second, &vInputBlinds[nIn * 32]))
+                    return errorN(1, "%s: GetBlind failed for %s, %d.\n", __func__, txhash.ToString().c_str(), coin.second);
+            };
             vpBlinds.push_back(&vInputBlinds[nIn * 32]);
 
             // Remove scriptSigs to eliminate the fee calculation dummy signatures
@@ -10436,6 +10452,31 @@ void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyS
 {
     vCoins.clear();
 
+    if (coinControl && coinControl->HasSelected())
+    {
+        // Add specified coins which may not be in the chain
+        for (MapRecords_t::const_iterator it = mapTempRecords.begin(); it !=  mapTempRecords.end(); ++it)
+        {
+            const uint256 &txid = it->first;
+            const CTransactionRecord &rtx = it->second;
+            for (auto &r : rtx.vout)
+            {
+                if (IsLockedCoin(txid, r.n))
+                    continue;
+                if (coinControl->IsSelected(COutPoint(txid, r.n)))
+                {
+                    int nDepth = 0;
+                    bool fSpendable = true;
+                    bool fSolvable = true;
+                    bool safeTx = true;
+                    bool fMature = false;
+                    bool fNeedHardwareKey = false;
+                    vCoins.emplace_back(txid, it, r.n, nDepth, fSpendable, fSolvable, safeTx, fMature, fNeedHardwareKey);
+                };
+            };
+        };
+    };
+
     CAmount nTotal = 0;
 
     LOCK2(cs_main, cs_wallet);
@@ -10514,6 +10555,7 @@ void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyS
             }
         };
     };
+
     return;
 };
 
