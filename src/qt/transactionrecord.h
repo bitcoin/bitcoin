@@ -11,8 +11,12 @@
 #include <QList>
 #include <QString>
 
-class CWallet;
-class CWalletTx;
+namespace interface {
+class Node;
+class Wallet;
+struct WalletTx;
+struct WalletTxStatus;
+}
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -106,8 +110,8 @@ public:
 
     /** Decompose CWallet transaction to model transaction records.
      */
-    static bool showTransaction(const CWalletTx &wtx);
-    static QList<TransactionRecord> decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx);
+    static bool showTransaction();
+    static QList<TransactionRecord> decomposeTransaction(const interface::WalletTx& wtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -136,11 +140,11 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const CWalletTx &wtx);
+    void updateStatus(const interface::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime);
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded() const;
+    bool statusUpdateNeeded(int numBlocks) const;
 };
 
 #endif // BITCOIN_QT_TRANSACTIONRECORD_H
