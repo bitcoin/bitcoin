@@ -282,7 +282,6 @@ void Shutdown()
 #endif
     UnregisterAllValidationAndMempoolInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    GetMainSignals().UnregisterWithMempoolSignals(mempool);
     g_wallet_init_interface->Close();
     globalVerifyHandle.reset();
     ECC_Stop();
@@ -1254,7 +1253,6 @@ bool AppInitMain()
     threadGroup.create_thread(boost::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
 
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
-    GetMainSignals().RegisterWithMempoolSignals(mempool);
 
     /* Register RPC commands regardless of -server setting so they will be
      * available in the GUI RPC console even if external calls are disabled.
