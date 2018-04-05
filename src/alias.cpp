@@ -1085,15 +1085,16 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 }
 
 void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
-	assert(pwalletMain != NULL);
-	UniValue oName(UniValue::VOBJ);
-	oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
-	CSyscoinAddress address(EncodeBase58(alias.vchAddress));
-	oName.push_back(Pair("address", address.ToString()));
-	oName.push_back(Pair("is_mine", IsMine(*pwalletMain, address.Get())));
-	oName.push_back(Pair("expires_on", alias.nExpireTime));
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "alias");
-	WriteAliasIndexHistory(alias, op);
+	if (pwalletMain) {
+		UniValue oName(UniValue::VOBJ);
+		oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
+		CSyscoinAddress address(EncodeBase58(alias.vchAddress));
+		oName.push_back(Pair("address", address.ToString()));
+		oName.push_back(Pair("is_mine", IsMine(*pwalletMain, address.Get())));
+		oName.push_back(Pair("expires_on", alias.nExpireTime));
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "alias");
+		WriteAliasIndexHistory(alias, op);
+	}
 }
 void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
 	UniValue oName(UniValue::VOBJ);
