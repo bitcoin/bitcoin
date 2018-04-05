@@ -24,6 +24,7 @@
 #include <atomic>
 #include <exception>
 #include <map>
+#include <memory>
 #include <stdint.h>
 #include <string>
 #include <unordered_set>
@@ -364,6 +365,11 @@ private:
 
 extern ArgsManager gArgs;
 
+
+/**
+ * @return true if help has been requested via a command-line arg
+ */
+bool HelpRequested(const ArgsManager& args);
 
 /**
  * Format a string to be used as group of options in help messages

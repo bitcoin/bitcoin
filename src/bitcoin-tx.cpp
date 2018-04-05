@@ -23,6 +23,7 @@
 #include <utilstrencodings.h>
 #include <key/stealth.h>
 
+#include <memory>
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp>
@@ -53,8 +54,7 @@ static int AppInitRawTx(int argc, char* argv[])
     fParticlMode = !gArgs.GetBoolArg("-legacymode", false); // qa tests
     fCreateBlank = gArgs.GetBoolArg("-create", false);
 
-    if (argc<2 || gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") || gArgs.IsArgSet("-help"))
-    {
+    if (argc < 2 || HelpRequested(gArgs)) {
         // First part of help message is specific to this utility
         std::string strUsage = strprintf(_("%s particl-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n\n" +
             _("Usage:") + "\n" +

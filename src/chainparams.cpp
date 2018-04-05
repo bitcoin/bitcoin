@@ -12,6 +12,7 @@
 #include <utilmoneystr.h>
 
 #include <assert.h>
+#include <memory>
 
 #include <chainparamsseeds.h>
 #include <chainparamsimport.h>
