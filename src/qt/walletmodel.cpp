@@ -672,14 +672,30 @@ bool WalletModel::bumpFee(uint256 hash)
     CAmount old_fee;
     CAmount new_fee;
     CMutableTransaction mtx;
-    if (feebumper::CreateTransaction(wallet, hash, coin_control, 0 /* totalFee */, errors, old_fee, new_fee, mtx) != feebumper::Result::OK) {
+
+    // If the transaction has a single output, ask user if it's OK to reduce:
+    int32_t reduce_output = -1;
+    auto it = wallet->mapWallet.find(hash);
+    if (it != wallet->mapWallet.end()) {
+        const CWalletTx wtx = it->second;
+        if (wtx.tx->vout.size() == 1) {
+            reduce_output = 0;
+        }
+    }
+
+    if (feebumper::CreateTransaction(wallet, hash, coin_control, 0 /* totalFee */, reduce_output, errors, old_fee, new_fee, mtx) != feebumper::Result::OK) {
         QMessageBox::critical(0, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +
             (errors.size() ? QString::fromStdString(errors[0]) : "") +")");
          return false;
     }
 
     // allow a user based fee verification
-    QString questionString = tr("Do you want to increase the fee?");
+    QString questionString;
+    if (reduce_output == -1) {
+        questionString = tr("Do you want to increase the fee?");
+    } else {
+        questionString = tr("Increasing the fee for this transaction reduces the amount sent. Only do this when sending to a destination you control.");
+    }
     questionString.append("<br />");
     questionString.append("<table style=\"text-align: left;\">");
     questionString.append("<tr><td>");

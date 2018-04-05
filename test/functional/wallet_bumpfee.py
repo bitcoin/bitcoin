@@ -71,6 +71,8 @@ class BumpFeeTest(BitcoinTestFramework):
         test_rebumping_not_replaceable(rbf_node, dest_address)
         test_unconfirmed_not_spendable(rbf_node, rbf_node_address)
         test_bumpfee_metadata(rbf_node, dest_address)
+        test_single_output_bump(rbf_node, dest_address)
+        test_explicit_reduce_output(rbf_node, dest_address)
         test_locked_wallet_fails(rbf_node, dest_address)
         self.log.info("Success")
 
@@ -268,6 +270,43 @@ def test_locked_wallet_fails(rbf_node, dest_address):
     assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first.",
                           rbf_node.bumpfee, rbfid)
 
+def test_single_output_bump(node, dest_address):
+    tx_input = dict(
+        sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
+    rawtx = node.createrawtransaction([tx_input], {dest_address: Decimal("0.00099000")})
+    signedtx = node.signrawtransactionwithwallet(rawtx)
+    txid = node.sendrawtransaction(signedtx["hex"])
+    assert_raises_rpc_error(-4, "Transaction does not have a change output", node.bumpfee, txid)
+    bumped_tx = node.bumpfee(txid, {"reduce_output": 0})
+    bumped_txob = node.getrawtransaction(bumped_tx["txid"], True)
+    # Only one vout
+    assert_equal(1, len(bumped_txob["vout"]))
+    # The vout should have decreased in value, which means 0.00099 > value
+    assert_greater_than(Decimal("0.00099000"), bumped_txob["vout"][0]["value"])
+
+def test_explicit_reduce_output(node, dest_address):
+    txid = spend_one_input(node, dest_address)
+    txidob = node.getrawtransaction(txid, True)
+    # OOB checks
+    assert_raises_rpc_error(-8, "Change output out of bounds", node.bumpfee, txid, {"reduce_output": -2})
+    assert_raises_rpc_error(-8, "Change output out of bounds", node.bumpfee, txid, {"reduce_output": len(txidob["vout"])})
+    # Type checks
+    assert_raises_rpc_error(-3, "Expected type number", node.bumpfee, txid, {"reduce_output": False})
+    assert_raises_rpc_error(-3, "Expected type number", node.bumpfee, txid, {"reduce_output": True})
+    assert_raises_rpc_error(-3, "Expected type number", node.bumpfee, txid, {"reduce_output": "HELLO"})
+    # Figure out which is which
+    spendidx = 0 if txidob["vout"][0]["value"] == Decimal("0.00050000") else 1
+    bumped_tx = node.bumpfee(txid, {"reduce_output": spendidx})
+    bumped_txob = node.getrawtransaction(bumped_tx["txid"], True)
+    assert_greater_than(Decimal("0.00050000"), bumped_txob["vout"][spendidx]["value"])
+    assert_equal(Decimal("0.00049000"), bumped_txob["vout"][1 - spendidx]["value"])
+    txid = spend_one_input(node, dest_address)
+    txidob = node.getrawtransaction(txid, True)
+    spendidx = 0 if txidob["vout"][0]["value"] == Decimal("0.00050000") else 1
+    bumped_tx = node.bumpfee(txid, {"reduce_output": 1 - spendidx})
+    bumped_txob = node.getrawtransaction(bumped_tx["txid"], True)
+    assert_equal(Decimal("0.00050000"), bumped_txob["vout"][spendidx]["value"])
+    assert_greater_than(Decimal("0.00049000"), bumped_txob["vout"][1 - spendidx]["value"])
 
 def spend_one_input(node, dest_address):
     tx_input = dict(
@@ -278,7 +317,6 @@ def spend_one_input(node, dest_address):
     signedtx = node.signrawtransactionwithwallet(rawtx)
     txid = node.sendrawtransaction(signedtx["hex"])
     return txid
-
 
 def submit_block_with_tx(node, tx):
     ctx = CTransaction()

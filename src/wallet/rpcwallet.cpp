@@ -3343,7 +3343,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
             "An opt-in RBF transaction with the given txid must be in the wallet.\n"
             "The command will pay the additional fee by decreasing (or perhaps removing) its change output.\n"
-            "If the change output is not big enough to cover the increased fee, the command will currently fail\n"
+            "If an explicit \"reduce_output\" has been picked, that will be decreased instead.\n"
+            "If the selected output is not big enough to cover the increased fee, the command will currently fail\n"
             "instead of adding new inputs to compensate. (A future implementation could improve this.)\n"
             "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
             "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
@@ -3371,6 +3372,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "         \"UNSET\"\n"
             "         \"ECONOMICAL\"\n"
             "         \"CONSERVATIVE\"\n"
+            "     \"reduce_output\"     (numeric, optional) Increase the fee by reducing the output value of the output at\n"
+            "                         the given index. NOTE: The recipient of the given output will receive a smaller amount!\n"
             "   }\n"
             "\nResult:\n"
             "{\n"
@@ -3390,6 +3393,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
 
     // optional parameters
     CAmount totalFee = 0;
+    int32_t reduce_output = -1;
     CCoinControl coin_control;
     coin_control.signalRbf = true;
     if (!request.params[1].isNull()) {
@@ -3400,6 +3404,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
                 {"totalFee", UniValueType(UniValue::VNUM)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
+                {"reduce_output", UniValueType(UniValue::VNUM)},
             },
             true, true);
 
@@ -3422,6 +3427,12 @@ UniValue bumpfee(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
             }
         }
+        if (options.exists("reduce_output")) {
+            reduce_output = options["reduce_output"].get_int64();
+            if (reduce_output < 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid reduce_output parameter (cannot be negative)");
+            }
+        }
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -3436,7 +3447,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     CAmount old_fee;
     CAmount new_fee;
     CMutableTransaction mtx;
-    feebumper::Result res = feebumper::CreateTransaction(pwallet, hash, coin_control, totalFee, errors, old_fee, new_fee, mtx);
+    feebumper::Result res = feebumper::CreateTransaction(pwallet, hash, coin_control, totalFee, reduce_output, errors, old_fee, new_fee, mtx);
     if (res != feebumper::Result::OK) {
         switch(res) {
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:
