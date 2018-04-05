@@ -81,20 +81,20 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
     LogPrintf("Previous lock order was:\n");
     for (const std::pair<void*, CLockLocation> & i : s2) {
         if (i.first == mismatch.first) {
-            LogPrintf(" (1)");
+            LogPrintf(" (1)"); /* Continued */
         }
         if (i.first == mismatch.second) {
-            LogPrintf(" (2)");
+            LogPrintf(" (2)"); /* Continued */
         }
         LogPrintf(" %s\n", i.second.ToString());
     }
     LogPrintf("Current lock order is:\n");
     for (const std::pair<void*, CLockLocation> & i : s1) {
         if (i.first == mismatch.first) {
-            LogPrintf(" (1)");
+            LogPrintf(" (1)"); /* Continued */
         }
         if (i.first == mismatch.second) {
-            LogPrintf(" (2)");
+            LogPrintf(" (2)"); /* Continued */
         }
         LogPrintf(" %s\n", i.second.ToString());
     }
