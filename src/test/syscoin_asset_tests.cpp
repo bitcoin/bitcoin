@@ -670,18 +670,18 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	AliasNew("node2", "jagassetsendrangesd", "data");
 	AliasNew("node2", "jagassetsendrangese", "data");
 	// if use input ranges update supply and ensure adds to end of allocation, ensure balance gets updated properly
-	AssetNew("node1", "ASSET", "jagassetsendrangesowner", "ASSET", "1000", "1000000", "true");
+	AssetNew("node1", "ASSET", "jagassetsendrangesowner", "asset", "1000", "1000000", "true");
 	AssetSend("node1", "ASSET", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesownerallocation\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":999}]}]\"", "memo1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo ASSET true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo asset true"));
 	UniValue inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	UniValue inputsArray = inputs.get_array();
 	BOOST_CHECK_EQUAL(inputsArray.size(), 0);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 0);
 
-	AssetAllocationTransfer(true, "node1", "ASSET", "jagassetsendrangesownerallocation", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesa\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":199}]},{\\\"aliasto\\\":\\\"jagassetsendrangesb\\\",\\\"ranges\\\":[{\\\"start\\\":200,\\\"end\\\":399}]},{\\\"aliasto\\\":\\\"jagassetsendrangesc\\\",\\\"ranges\\\":[{\\\"start\\\":400,\\\"end\\\":599}]},{\\\"aliasto\\\":\\\"jagassetsendrangesd\\\",\\\"ranges\\\":[{\\\"start\\\":600,\\\"end\\\":799}]},{\\\"aliasto\\\":\\\"jagassetsendrangese\\\",\\\"ranges\\\":[{\\\"start\\\":800,\\\"end\\\":999}]}]\"", "memo");
+	AssetAllocationTransfer(true, "node1", "asset", "jagassetsendrangesownerallocation", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesa\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":199}]},{\\\"aliasto\\\":\\\"jagassetsendrangesb\\\",\\\"ranges\\\":[{\\\"start\\\":200,\\\"end\\\":399}]},{\\\"aliasto\\\":\\\"jagassetsendrangesc\\\",\\\"ranges\\\":[{\\\"start\\\":400,\\\"end\\\":599}]},{\\\"aliasto\\\":\\\"jagassetsendrangesd\\\",\\\"ranges\\\":[{\\\"start\\\":600,\\\"end\\\":799}]},{\\\"aliasto\\\":\\\"jagassetsendrangese\\\",\\\"ranges\\\":[{\\\"start\\\":800,\\\"end\\\":999}]}]\"", "memo");
 	// ensure receiver get's it
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo ASSET jagassetsendrangesa true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangesa true"));
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo ASSET jagassetsendrangesa true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangesa true"));
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
@@ -701,7 +701,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo ASSET jagassetsendrangesb true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangesb true"));
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
@@ -711,7 +711,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo ASSET jagassetsendrangesc true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangesc true"));
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
@@ -721,7 +721,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo ASSET jagassetsendrangesd true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangesd true"));
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
@@ -731,7 +731,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 200 * COIN);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo ASSET jagassetsendrangese true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangese true"));
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
@@ -742,9 +742,9 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
 
-	AssetUpdate("node1", "ASSET", "ASSET", "1000");
+	AssetUpdate("node1", "asset", "ASSET", "1000");
 	// check balance is added to end
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo ASSET true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo asset true"));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 1000 * COIN);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "total_supply")), 2000 * COIN);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "max_supply")), 1000000 * COIN);
