@@ -1233,7 +1233,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	// if addresses are passed in use those, otherwise use whatever is in the wallet
 	UniValue addresses(UniValue::VOBJ);
 	if(params.size() > 1)
-		addresses = params[1];
+		addresses = params[1].get_obj();
 	else {
 		UniValue addressArray(UniValue::VARR);
 		UniValue receivedList = SyscoinListReceived(false);

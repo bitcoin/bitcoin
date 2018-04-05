@@ -607,7 +607,7 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
             addresses.push_back(std::make_pair(hashBytes, type));
         }
     } else {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid object type");
     }
 
     return true;
