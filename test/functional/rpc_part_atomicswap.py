@@ -13,6 +13,9 @@ from test_framework.messages import sha256
 from test_framework.address import chars as __b58chars, script_to_p2sh
 import binascii
 
+def script_to_p2sh_part(b):
+    return script_to_p2sh(b, False, False)
+
 def b58decode(v, length=None):
     long_value = 0
     for (i, c) in enumerate(v[::-1]):
@@ -109,7 +112,7 @@ def estimateRefundSerializeSize(contract, txhex):
     return getVirtualSizeInner(baseSize, baseSize+witnessSize)
 
 def createRefundTx(node, rawtx, script, lockTime, addrRefundFrom, addrRefundTo):
-    p2sh = script_to_p2sh(script)
+    p2sh = script_to_p2sh_part(script)
     ro = node.decoderawtransaction(rawtx)
     txnid = ro['txid']
     n = getOutputByAddr(ro, p2sh)
@@ -158,7 +161,7 @@ def createRefundTx(node, rawtx, script, lockTime, addrRefundFrom, addrRefundTo):
 
 
 def createClaimTx(node, rawtx, script, lockTime, secret, addrClaimFrom, addrClaimTo):
-    p2sh = script_to_p2sh(script)
+    p2sh = script_to_p2sh_part(script)
 
     ro = node.decoderawtransaction(rawtx)
     txnid = ro['txid']
@@ -260,7 +263,7 @@ class AtomicSwapTest(ParticlTestFramework):
         lockTime = int(time.time()) + 10000 # future locktime
 
         scriptInitiate = CreateAtomicSwapScript(payTo=pkh1_0, refundTo=pkh0_0, lockTime=lockTime, secretHash=secretAHash)
-        p2sh_initiate = script_to_p2sh(scriptInitiate)
+        p2sh_initiate = script_to_p2sh_part(scriptInitiate)
         rawtxInitiate = nodes[0].createrawtransaction([], {p2sh_initiate:5.0})
         rawtxInitiate = nodes[0].fundrawtransaction(rawtxInitiate)['hex']
         ro = nodes[0].signrawtransactionwithwallet(rawtxInitiate)
@@ -299,7 +302,7 @@ class AtomicSwapTest(ParticlTestFramework):
         lockTimeP = int(time.time()) + 10000 # future locktime
         scriptParticipate = CreateAtomicSwapScript(payTo=pkh0_0, refundTo=pkh1_0, lockTime=lockTimeP, secretHash=secretAHash)
 
-        p2sh_participate = script_to_p2sh(scriptParticipate)
+        p2sh_participate = script_to_p2sh_part(scriptParticipate)
 
         rawtx_p = nodes[1].createrawtransaction([], {p2sh_participate:5.0})
         rawtx_p = nodes[1].fundrawtransaction(rawtx_p)['hex']
@@ -354,7 +357,7 @@ class AtomicSwapTest(ParticlTestFramework):
 
         scriptInitiate2 = CreateAtomicSwapScript(payTo=pkh1_0, refundTo=pkh0_0, lockTime=lockTime, secretHash=secretAHash)
 
-        p2sh_initiate = script_to_p2sh(scriptInitiate2)
+        p2sh_initiate = script_to_p2sh_part(scriptInitiate2)
         rawtxInitiate = nodes[0].createrawtransaction([], {p2sh_initiate:6.0})
         rawtxInitiate = nodes[0].fundrawtransaction(rawtxInitiate)['hex']
         ro = nodes[0].signrawtransactionwithwallet(rawtxInitiate)
@@ -435,7 +438,7 @@ class AtomicSwapTest(ParticlTestFramework):
         pkh1_0 = b58decode(destB['address'])[1:-4]
 
         scriptInitiate = CreateAtomicSwapScript(payTo=pkh1_0, refundTo=pkh0_0, lockTime=lockTime, secretHash=secretAHash)
-        p2sh_initiate = script_to_p2sh(scriptInitiate)
+        p2sh_initiate = script_to_p2sh_part(scriptInitiate)
 
         outputs = [ {
             'address':p2sh_initiate,

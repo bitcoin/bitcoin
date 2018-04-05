@@ -273,7 +273,6 @@ class AddressIndexTest(ParticlTestFramework):
 
         txid = self.nodes[3].sendtoaddress(addr256, 2.56)
         mempool = self.nodes[3].getaddressmempool({"addresses": [addr256]})
-        print(json.dumps(mempool, indent=4, default=self.jsonDecimal))
         assert_equal(len(mempool), 1)
 
         self.sync_all()

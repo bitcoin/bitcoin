@@ -7,6 +7,8 @@ from test_framework.test_particl import ParticlTestFramework
 from test_framework.util import *
 from test_framework.address import *
 
+def keyhash_to_p2pkh_part(b):
+    return keyhash_to_p2pkh(b, False, False)
 
 class ColdStakingTest(ParticlTestFramework):
     def set_test_params(self):
@@ -103,10 +105,9 @@ class ColdStakingTest(ParticlTestFramework):
             hashOther = asm[10]
 
         assert(hashCoinstake == '65674e752b3a336337510bf5b57794c71c45cd4f')
-        #print('keyhash_to_p2pkh', keyhash_to_p2pkh(hex_str_to_bytes(hashCoinstake)))
 
         ro = nodes[0].deriverangekeys(0, 0, coldstakingaddr)
-        assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashCoinstake)))
+        assert(ro[0] == keyhash_to_p2pkh_part(hex_str_to_bytes(hashCoinstake)))
 
 
 
@@ -167,10 +168,10 @@ class ColdStakingTest(ParticlTestFramework):
 
 
         ro = nodes[0].deriverangekeys(1, 1, coldstakingaddr)
-        assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashCoinstake)))
+        assert(ro[0] == keyhash_to_p2pkh_part(hex_str_to_bytes(hashCoinstake)))
 
         ro = nodes[0].deriverangekeys(0, 0, ekChange, 'false', 'false', 'false', 'true')
-        assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashSpend)))
+        assert(ro[0] == keyhash_to_p2pkh_part(hex_str_to_bytes(hashSpend)))
 
 
 
@@ -222,10 +223,10 @@ class ColdStakingTest(ParticlTestFramework):
             hashSpend = asm[10]
 
         ro = nodes[0].deriverangekeys(2, 2, coldstakingaddr)
-        assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashCoinstake)))
+        assert(ro[0] == keyhash_to_p2pkh_part(hex_str_to_bytes(hashCoinstake)))
 
         ro = nodes[0].deriverangekeys(1, 1, ekChange, 'false', 'false', 'false', 'true')
-        assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashSpend)))
+        assert(ro[0] == keyhash_to_p2pkh_part(hex_str_to_bytes(hashSpend)))
 
         ro = nodes[0].extkey('list', 'true')
         fFound = False

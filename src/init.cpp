@@ -1802,9 +1802,8 @@ bool AppInitMain()
 
     // ********************************************************* Step 10.1: start secure messaging
 #ifdef ENABLE_WALLET
-    assert(vpwallets.size() > 0);
     if (fParticlMode) // SMSG breaks functional tests with services flag, see version msg
-    smsgModule.Start(vpwallets[0], !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
+        smsgModule.Start(vpwallets.size() > 0 ? vpwallets[0] : nullptr, !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
 #else
     if (fParticlMode)
     smsgModule.Start(nullptr, !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));

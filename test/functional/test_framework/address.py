@@ -28,26 +28,32 @@ def byte_to_base58(b, version):
 
 # TODO: def base58_decode
 
-def keyhash_to_p2pkh(hash, main = False):
+def keyhash_to_p2pkh(hash, main = False, btc = True):
     assert (len(hash) == 20 or len(hash) == 32)
     if len(hash) == 20:
-        version = 56 if main else 118
+        if btc:
+            version = 0 if main else 111
+        else:
+            version = 56 if main else 118
         return byte_to_base58(hash, version)
     version = 57 if main else 119
     return byte_to_base58(hash, version)
 
-def scripthash_to_p2sh(hash, main = False):
+def scripthash_to_p2sh(hash, main = False, btc = True):
     assert (len(hash) == 20)
-    version = 60 if main else 122
+    if btc:
+        version = 5 if main else 196
+    else:
+        version = 60 if main else 122
     return byte_to_base58(hash, version)
 
 def key_to_p2pkh(key, main = False):
     key = check_key(key)
     return keyhash_to_p2pkh(hash160(key), main)
 
-def script_to_p2sh(script, main = False):
+def script_to_p2sh(script, main = False, btc = True):
     script = check_script(script)
-    return scripthash_to_p2sh(hash160(script), main)
+    return scripthash_to_p2sh(hash160(script), main, btc)
 
 def key_to_p2sh_p2wpkh(key, main = False):
     key = check_key(key)

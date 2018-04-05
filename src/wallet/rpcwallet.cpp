@@ -1531,8 +1531,8 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     CTxDestination dest = pwallet->AddAndGetDestinationForScript(inner, output_type);
     pwallet->SetAddressBook(dest, label, "send");
 
-    bool fbech32 = request.params.size() > 3 ? request.params[3].get_bool() : false;
-    bool f256Hash = request.params.size() > 4 ? request.params[4].get_bool() : false;
+    bool fbech32 = fParticlMode && request.params.size() > 3 ? request.params[3].get_bool() : false;
+    bool f256Hash = fParticlMode && request.params.size() > 4 ? request.params[4].get_bool() : false;
 
     if (f256Hash)
     {
@@ -1608,7 +1608,7 @@ public:
     template<typename T>
     bool operator()(const T& dest) { return false; }
 };
-/*
+
 UniValue addwitnessaddress(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -1633,6 +1633,9 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
         ;
         throw std::runtime_error(msg);
     }
+
+    if (fParticlMode)
+        throw JSONRPCError(RPC_MISC_ERROR, "addwitnessaddress is disabled for Particl");
 
     if (!IsDeprecatedRPCEnabled("addwitnessaddress")) {
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "addwitnessaddress is deprecated and will be fully removed in v0.17. "
@@ -1680,7 +1683,7 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
 
     return EncodeDestination(w.result);
 }
-*/
+
 struct tallyitem
 {
     CAmount nAmount;
@@ -2867,7 +2870,7 @@ UniValue abandontransaction(const JSONRPCRequest& request)
     if (!pwallet->mapWallet.count(hash))
     {
         if (!IsHDWallet(pwallet) || !GetHDWallet(pwallet)->HaveTransaction(hash))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not eligible for abandonment");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     };
     if (!pwallet->AbandonTransaction(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not eligible for abandonment");
@@ -4723,7 +4726,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
     { "wallet",             "abortrescan",                      &abortrescan,                   {} },
     { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","label|account","bech32","256bit"} },
-    //{ "hidden",             "addwitnessaddress",                &addwitnessaddress,             {"address","p2sh"} },
+    { "hidden",             "addwitnessaddress",                &addwitnessaddress,             {"address","p2sh"} },
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
     { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
     { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },

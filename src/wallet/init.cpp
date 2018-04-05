@@ -181,6 +181,9 @@ bool WalletInit::ParameterInteraction()
     bSpendZeroConfChange = gArgs.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
     fWalletRbf = gArgs.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
 
+    if (!fParticlMode)
+        CWallet::minTxFee = CFeeRate(DEFAULT_TRANSACTION_MINFEE_BTC);
+
     return true;
 }
 

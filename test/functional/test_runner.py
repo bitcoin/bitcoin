@@ -58,24 +58,24 @@ TRAVIS_TIMEOUT_DURATION = 20 * 60
 BASE_SCRIPTS = [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    #'wallet_hd.py',
+    'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
     'feature_block.py',
-    #'rpc_fundrawtransaction.py',
-    #'p2p_compactblocks.py',
+    'rpc_fundrawtransaction.py',
+    'p2p_compactblocks.py',
     #'feature_segwit.py',
     # vv Tests less than 2m vv
-    #'wallet_basic.py',
+    'wallet_basic.py',
     #'wallet_labels.py',
     'p2p_segwit.py',
-    #'wallet_dump.py',
+    'wallet_dump.py',
     #'rpc_listtransactions.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py',
     'wallet_zapwallettxes.py',
     'wallet_importmulti.py',
-    #'mempool_limit.py',
+    'mempool_limit.py',
     'rpc_txoutproof.py',
     'wallet_listreceivedby.py',
     #'wallet_abandonconflict.py',
@@ -106,7 +106,7 @@ BASE_SCRIPTS = [
     'rpc_decodescript.py',
     #'rpc_blockchain.py',
     'rpc_deprecated.py',
-    #'wallet_disable.py',
+    'wallet_disable.py',
     'rpc_net.py',
     #'wallet_keypool.py',
     'p2p_mempool.py',
@@ -159,6 +159,7 @@ EXTENDED_SCRIPTS = [
     'mining_getblocktemplate_longpoll.py',
     'p2p_timeouts.py',
     # vv Tests less than 60s vv
+    'feature_bip9_softforks.py',
     'p2p_feefilter.py',
     'rpc_bind.py',
     # vv Tests less than 30s vv

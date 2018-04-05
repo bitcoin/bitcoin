@@ -57,7 +57,6 @@ class TxIndexTest(ParticlTestFramework):
 
         # Check verbose raw transaction results
         verbose = self.nodes[0].getrawtransaction(txid, 1)
-        print(json.dumps(verbose, indent=4, default=self.jsonDecimal))
         assert(len(verbose['vout']) == 2)
 
         str0 = json.dumps(verbose['vout'][0], indent=4, default=self.jsonDecimal)
