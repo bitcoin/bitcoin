@@ -1085,6 +1085,7 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 }
 
 void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
+	// TODO: Remove this check upon bm web, and remove is_mine
 	if (pwalletMain) {
 		UniValue oName(UniValue::VOBJ);
 		oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
