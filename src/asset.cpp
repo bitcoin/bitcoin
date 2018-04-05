@@ -590,7 +590,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		{
 			string assetLower = stringFromVch(theAsset.vchAsset);
 			boost::algorithm::to_lower(assetLower);
-			theAsset.vchAsset = stringFromVch(assetLower);
+			theAsset.vchAsset = vchFromString(assetLower);
 			if (GetAsset(theAsset.vchAsset, theAsset))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Asset already exists");
