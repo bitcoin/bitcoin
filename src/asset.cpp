@@ -907,7 +907,7 @@ UniValue assetsend(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() != 5)
 		throw runtime_error(
 			"assetsend [asset] [aliasfrom] ( [{\"aliasto\":\"aliasname\",\"amount\":amount},...] or [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
-			"Send an asset you own to another alias as an asset allocation.\n"
+			"Send an asset you own to another alias as an asset allocation. Maximimum recipients is 250.\n"
 			"<asset> Asset name.\n"
 			"<aliasfrom> Alias to transfer from.\n"
 			"<aliasto> Alias to transfer to.\n"

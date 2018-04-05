@@ -296,6 +296,47 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	//"assetnew [name] [alias] [public] [category=assets] [supply] [max_supply] [use_inputranges] [interest_rate] [can_adjust_interest_rate] [witness]\n"
 	BOOST_CHECK_THROW(CallRPC("node1", "assetnew newasset jagassetbig1 " + baddata + " assets 1 1 false 0 false ''"), runtime_error);
 }
+BOOST_AUTO_TEST_CASE(generate_small_assetname)
+{
+	GenerateBlocks(5);
+	printf("Running generate_small_assetname...\n");
+	GenerateBlocks(5);
+	AliasNew("node1", "jagassetnamesmall", "data");
+	// 256 bytes long
+	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
+	// cannot create this asset because its less than 3 chars
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew ab jagassetnamesmall " + gooddata + " assets 1 1 false 0 false ''"), runtime_error);
+	// its 3 chars now so its ok
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetnamesmall " + gooddata + " assets 1 1 false 0 false ''"));
+}
+BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply)
+{
+	GenerateBlocks(5);
+	printf("Running generate_bad_assetmaxsupply...\n");
+	GenerateBlocks(5);
+	AliasNew("node1", "jagassetmaxsupply", "data");
+	// 256 bytes long
+	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
+	// 0 max supply bad
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew abc jagassetmaxsupply " + gooddata + " assets 1 0 false 0 false ''"), runtime_error);
+	// 1 max supply good
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetmaxsupply " + gooddata + " assets 1 1 false 0 false ''"));
+}
+BOOST_AUTO_TEST_CASE(generate_assetuppercase)
+{
+	GenerateBlocks(5);
+	printf("Running generate_assetuppercase...\n");
+	UniValue r;
+	AliasNew("node1", "jagassetuppercase", "data");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew UPPERCASE jagassetuppercase data assets 1 1 false 0 false ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+	string hex_str = find_value(r.get_obj(), "hex").get_str();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+
+	GenerateBlocks(5);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "assetinfo UPPERCASE false"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo uppercase false"));
+}
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 {
 	UniValue r;

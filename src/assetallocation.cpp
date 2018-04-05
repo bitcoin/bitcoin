@@ -689,7 +689,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() != 5)
 		throw runtime_error(
 			"assetallocationsend [asset] [aliasfrom] ( [{\"aliasto\":\"aliasname\",\"amount\":amount},...] or [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
-			"Send an asset allocation you own to another alias.\n"
+			"Send an asset allocation you own to another alias. Maximimum recipients is 250.\n"
 			"<asset> Asset name.\n"
 			"<aliasfrom> Alias to transfer from.\n"
 			"<aliasto> Alias to transfer to.\n"
