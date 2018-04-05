@@ -10,6 +10,7 @@
 #include <crypto/sha256.h>
 #include <pubkey.h>
 #include <script/script.h>
+#include <script/script_flags.h>
 #include <uint256.h>
 
 typedef std::vector<unsigned char> valtype;

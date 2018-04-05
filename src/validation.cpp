@@ -26,6 +26,7 @@
 #include <random.h>
 #include <reverse_iterator.h>
 #include <script/script.h>
+#include <script/script_flags.h>
 #include <script/sigcache.h>
 #include <script/standard.h>
 #include <timedata.h>

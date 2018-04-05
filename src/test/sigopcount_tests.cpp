@@ -7,6 +7,7 @@
 #include <pubkey.h>
 #include <key.h>
 #include <script/script.h>
+#include <script/script_flags.h>
 #include <script/standard.h>
 #include <uint256.h>
 #include <test/test_bitcoin.h>

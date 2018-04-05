@@ -9,6 +9,7 @@
 #include <pubkey.h>
 #include <txmempool.h>
 #include <random.h>
+#include <script/script_flags.h>
 #include <script/standard.h>
 #include <script/sign.h>
 #include <test/test_bitcoin.h>

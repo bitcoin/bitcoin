@@ -8,6 +8,7 @@
 #include <key.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <script/script_flags.h>
 #include <script/standard.h>
 #include <uint256.h>
 

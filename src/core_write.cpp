@@ -8,6 +8,7 @@
 #include <consensus/validation.h>
 #include <key_io.h>
 #include <script/script.h>
+#include <script/script_flags.h>
 #include <script/standard.h>
 #include <serialize.h>
 #include <streams.h>

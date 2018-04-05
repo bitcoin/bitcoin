@@ -7,6 +7,7 @@
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
+#include <script/script_flags.h>
 #include <consensus/validation.h>
 
 // TODO remove the following dependencies

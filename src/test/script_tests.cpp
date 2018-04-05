@@ -9,6 +9,7 @@
 #include <keystore.h>
 #include <script/script.h>
 #include <script/script_error.h>
+#include <script/script_flags.h>
 #include <script/sign.h>
 #include <util.h>
 #include <utilstrencodings.h>
