@@ -430,11 +430,36 @@ public:
 /** Replay blocks that aren't fully applied to the database. */
 bool ReplayBlocks(const CChainParams& params, CCoinsView* view);
 
+/** Find and retrieve the block index for the given block hash.
+ *  The caller must check if the block index is valid. If the block index
+ *  always exists then use GetBlockIndex instead.
+ *  Call with cs_main held.
+ *
+ *  @param[in] hash The block hash
+ *  @return The block index pointer if found, nullptr otherwise
+ *  @see GetBlockIndex
+ */
 inline CBlockIndex* LookupBlockIndex(const uint256& hash)
 {
     AssertLockHeld(cs_main);
     BlockMap::const_iterator it = mapBlockIndex.find(hash);
     return it == mapBlockIndex.end() ? nullptr : it->second;
+}
+
+/** Retrieve the block index for the given block hash.
+ *  The block index must exists otherwise an assertion fails. If the block index
+ *  can not exist then use LookupBlockIndex instead.
+ *  Call with cs_main held.
+ *
+ *  @param[in] hash The block hash
+ *  @return The block index pointer
+ *  @see LookupBlockIndex
+ */
+inline CBlockIndex* GetBlockIndex(const uint256& hash)
+{
+    CBlockIndex* index = LookupBlockIndex(hash);
+    assert(index);
+    return index;
 }
 
 /** Find the last common block between the parameter chain and a locator. */
