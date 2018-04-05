@@ -1205,8 +1205,11 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pin
     }
 }
 
-void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
+void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx, const std::vector<CTransactionRef>& txn_replaced) {
     LOCK2(cs_main, cs_wallet);
+
+    for (const CTransactionRef& txit : txn_replaced) TransactionRemovedFromMempool(txit, MemPoolRemovalReason::REPLACED);
+
     SyncTransaction(ptx);
 
     auto it = mapWallet.find(ptx->GetHash());
@@ -4221,7 +4224,7 @@ bool CWalletTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& 
     // because we think that this newly generated transaction's change is
     // unavailable as we're not yet aware that it is in the mempool.
     bool ret = ::AcceptToMemoryPool(mempool, state, tx, nullptr /* pfMissingInputs */,
-                                nullptr /* plTxnReplaced */, false /* bypass_limits */, nAbsurdFee);
+                                false /* bypass_limits */, nAbsurdFee);
     fInMempool |= ret;
     return ret;
 }

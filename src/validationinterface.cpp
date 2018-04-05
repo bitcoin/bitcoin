@@ -21,7 +21,7 @@
 
 struct MainSignalsInstance {
     boost::signals2::signal<void (const CBlockIndex *, const CBlockIndex *, bool fInitialDownload)> UpdatedBlockTip;
-    boost::signals2::signal<void (const CTransactionRef &)> TransactionAddedToMempool;
+    boost::signals2::signal<void (const CTransactionRef &, const std::vector<CTransactionRef> &)> TransactionAddedToMempool;
     boost::signals2::signal<void (const std::vector<CTransactionRef> &, const std::vector<CTransactionRef> &)> MempoolUpdatedForBlockConnect;
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex)> BlockConnected;
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &)> BlockDisconnected;
@@ -79,7 +79,7 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
 }
 
 void RegisterMempoolInterface(MempoolInterface* listener) {
-    g_signals.m_internals->TransactionAddedToMempool.connect(boost::bind(&MempoolInterface::TransactionAddedToMempool, listener, _1));
+    g_signals.m_internals->TransactionAddedToMempool.connect(boost::bind(&MempoolInterface::TransactionAddedToMempool, listener, _1, _2));
     g_signals.m_internals->TransactionRemovedFromMempool.connect(boost::bind(&MempoolInterface::TransactionRemovedFromMempool, listener, _1, _2));
     g_signals.m_internals->MempoolUpdatedForBlockConnect.connect(boost::bind(&MempoolInterface::MempoolUpdatedForBlockConnect, listener, _1, _2));
 }
@@ -96,7 +96,7 @@ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
 }
 
 void UnregisterMempoolInterface(MempoolInterface* listener) {
-    g_signals.m_internals->TransactionAddedToMempool.disconnect(boost::bind(&MempoolInterface::TransactionAddedToMempool, listener, _1));
+    g_signals.m_internals->TransactionAddedToMempool.disconnect(boost::bind(&MempoolInterface::TransactionAddedToMempool, listener, _1, _2));
     g_signals.m_internals->TransactionRemovedFromMempool.disconnect(boost::bind(&MempoolInterface::TransactionRemovedFromMempool, listener, _1, _2));
     g_signals.m_internals->MempoolUpdatedForBlockConnect.disconnect(boost::bind(&MempoolInterface::MempoolUpdatedForBlockConnect, listener, _1, _2));
 }
@@ -152,9 +152,9 @@ void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInd
     });
 }
 
-void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx) {
-    m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
-        m_internals->TransactionAddedToMempool(ptx);
+void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx, const std::shared_ptr<std::vector<CTransactionRef>>& txn_replaced) {
+    m_internals->m_schedulerClient.AddToProcessQueue([ptx, txn_replaced, this] {
+        m_internals->TransactionAddedToMempool(ptx, *txn_replaced);
     });
 }
 
