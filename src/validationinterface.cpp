@@ -62,14 +62,6 @@ size_t CMainSignals::CallbacksPending() {
     return m_internals->m_schedulerClient.CallbacksPending();
 }
 
-void CMainSignals::RegisterWithMempoolSignals(CTxMemPool& pool) {
-    pool.NotifyEntryRemoved.connect(boost::bind(&CMainSignals::MempoolEntryRemoved, this, _1, _2));
-}
-
-void CMainSignals::UnregisterWithMempoolSignals(CTxMemPool& pool) {
-    pool.NotifyEntryRemoved.disconnect(boost::bind(&CMainSignals::MempoolEntryRemoved, this, _1, _2));
-}
-
 CMainSignals& GetMainSignals()
 {
     return g_signals;
@@ -141,11 +133,9 @@ void SyncWithValidationInterfaceQueue() {
 }
 
 void CMainSignals::MempoolEntryRemoved(CTransactionRef ptx, MemPoolRemovalReason reason) {
-    if (reason != MemPoolRemovalReason::BLOCK && reason != MemPoolRemovalReason::CONFLICT) {
-        m_internals->m_schedulerClient.AddToProcessQueue([ptx, reason, this] {
-            m_internals->TransactionRemovedFromMempool(ptx, reason);
-        });
-    }
+    m_internals->m_schedulerClient.AddToProcessQueue([ptx, reason, this] {
+        m_internals->TransactionRemovedFromMempool(ptx, reason);
+    });
 }
 
 void CMainSignals::MempoolUpdatedForBlockConnect(std::vector<CTransactionRef>&& tx_removed_in_block, std::vector<CTransactionRef>&& tx_removed_conflicted) {
