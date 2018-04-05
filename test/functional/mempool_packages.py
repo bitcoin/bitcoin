@@ -70,7 +70,10 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(mempool[x]['descendantcount'], descendant_count)
             descendant_fees += mempool[x]['fee']
             assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee'])
+            assert_equal(mempool[x]['fees']['base'], mempool[x]['fee'])
+            assert_equal(mempool[x]['fees']['modified'], mempool[x]['modifiedfee'])
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN)
+            assert_equal(mempool[x]['fees']['descendant'], descendant_fees)
             descendant_size += mempool[x]['size']
             assert_equal(mempool[x]['descendantsize'], descendant_size)
             descendant_count += 1
@@ -132,6 +135,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         ancestor_fees = 0
         for x in chain:
             ancestor_fees += mempool[x]['fee']
+            assert_equal(mempool[x]['fees']['ancestor'], ancestor_fees + Decimal('0.00001'))
             assert_equal(mempool[x]['ancestorfees'], ancestor_fees * COIN + 1000)
 
         # Undo the prioritisetransaction for later tests
@@ -145,6 +149,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         descendant_fees = 0
         for x in reversed(chain):
             descendant_fees += mempool[x]['fee']
+            assert_equal(mempool[x]['fees']['descendant'], descendant_fees + Decimal('0.00001'))
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 1000)
 
         # Adding one more transaction on to the chain should fail.
@@ -170,7 +175,9 @@ class MempoolPackagesTest(BitcoinTestFramework):
             descendant_fees += mempool[x]['fee']
             if (x == chain[-1]):
                 assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee']+satoshi_round(0.00002))
+                assert_equal(mempool[x]['fees']['modified'], mempool[x]['fee']+satoshi_round(0.00002))
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 2000)
+            assert_equal(mempool[x]['fees']['descendant'], descendant_fees+satoshi_round(0.00002))
 
         # TODO: check that node1's mempool is as expected
 
