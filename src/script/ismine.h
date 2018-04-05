@@ -31,11 +31,11 @@ typedef uint8_t isminefilter;
 /* isInvalid becomes true when the script is found invalid by consensus or policy. This will terminate the recursion
  * and return ISMINE_NO immediately, as an invalid script should never be considered as "mine". This is needed as
  * different SIGVERSION may have different network rules. Currently the only use of isInvalid is indicate uncompressed
- * keys in SIGVERSION_WITNESS_V0 script, but could also be used in similar cases in the future
+ * keys in SigVersion::WITNESS_V0 script, but could also be used in similar cases in the future
  */
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion = SIGVERSION_BASE);
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVersion = SIGVERSION_BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, bool& isInvalid, SigVersion = SIGVERSION_BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion = SIGVERSION_BASE);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion = SigVersion::BASE);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVersion = SigVersion::BASE);
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, bool& isInvalid, SigVersion = SigVersion::BASE);
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion = SigVersion::BASE);
 
 #endif // BITCOIN_SCRIPT_ISMINE_H

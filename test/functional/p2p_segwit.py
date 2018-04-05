@@ -59,7 +59,7 @@ def test_witness_block(rpc, p2p, block, accepted, with_witness=True):
     p2p.sync_with_ping()
     assert_equal(rpc.getbestblockhash() == block.hash, accepted)
 
-class TestNode(P2PInterface):
+class TestP2PConn(P2PInterface):
     def __init__(self):
         super().__init__()
         self.getdataset = set()
@@ -425,7 +425,7 @@ class SegWitTest(BitcoinTestFramework):
 
         assert(self.nodes[0].getbestblockhash() == block.hash)
 
-        # Now make sure that malleating the witness nonce doesn't
+        # Now make sure that malleating the witness reserved value doesn't
         # result in a block permanently marked bad.
         block = self.build_next_block()
         add_witness_commitment(block)
@@ -436,7 +436,7 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ ser_uint256(1) ]
         test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=False)
 
-        # Changing the witness nonce doesn't change the block hash
+        # Changing the witness reserved value doesn't change the block hash
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ ser_uint256(0) ]
         test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True)
 
@@ -1511,7 +1511,7 @@ class SegWitTest(BitcoinTestFramework):
         # Make sure that this peer thinks segwit has activated.
         assert(get_bip9_status(self.nodes[node_id], 'segwit')['status'] == "active")
 
-        # Make sure this peers blocks match those of node0.
+        # Make sure this peer's blocks match those of node0.
         height = self.nodes[node_id].getblockcount()
         while height >= 0:
             block_hash = self.nodes[node_id].getblockhash(height)
@@ -1878,11 +1878,11 @@ class SegWitTest(BitcoinTestFramework):
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
         # self.test_node sets NODE_WITNESS|NODE_NETWORK
-        self.test_node = self.nodes[0].add_p2p_connection(TestNode(), services=NODE_NETWORK|NODE_WITNESS)
+        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK|NODE_WITNESS)
         # self.old_node sets only NODE_NETWORK
-        self.old_node = self.nodes[0].add_p2p_connection(TestNode(), services=NODE_NETWORK)
+        self.old_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK)
         # self.std_node is for testing node1 (fRequireStandard=true)
-        self.std_node = self.nodes[1].add_p2p_connection(TestNode(), services=NODE_NETWORK|NODE_WITNESS)
+        self.std_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK|NODE_WITNESS)
 
         network_thread_start()
 

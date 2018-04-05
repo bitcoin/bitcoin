@@ -14,6 +14,7 @@ from test_framework.netutil import *
 class RPCBindTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
+        self.bind_to_localhost_only = False
         self.num_nodes = 1
 
     def setup_network(self):
@@ -47,14 +48,14 @@ class RPCBindTest(BitcoinTestFramework):
         self.nodes[0].rpchost = None
         self.start_nodes([base_args])
         # connect to node through non-loopback interface
-        node = get_rpc_proxy(rpc_url(get_datadir_path(self.options.tmpdir, 0), 0, "%s:%d" % (rpchost, rpcport)), 0, coveragedir=self.options.coveragedir)
+        node = get_rpc_proxy(rpc_url(self.nodes[0].datadir, 0, "%s:%d" % (rpchost, rpcport)), 0, coveragedir=self.options.coveragedir)
         node.getnetworkinfo()
         self.stop_nodes()
 
     def run_test(self):
         # due to OS-specific network stats queries, this test works only on Linux
         if not sys.platform.startswith('linux'):
-            raise SkipTest("This test can only be run on linux.")
+            raise SkipTest("This test can only be run on Linux.")
         # find the first non-loopback interface for testing
         non_loopback_ip = None
         for name,ip in all_interfaces():

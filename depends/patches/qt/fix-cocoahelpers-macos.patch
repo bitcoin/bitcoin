@@ -1,0 +1,70 @@
+From 0707260a4f8e64dfadf1df5f935e74cabb7c7d27 Mon Sep 17 00:00:00 2001
+From: Jake Petroules <jake.petroules@qt.io>
+Date: Sun, 1 Oct 2017 21:48:17 -0700
+Subject: [PATCH] Fix build error with macOS 10.13 SDK
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf8
+Content-Transfer-Encoding: 8bit
+
+Several of these variables/macros are no longer defined. We didn't
+validate the preconditions on iOS, tvOS, or watchOS, so no
+need to bother validating them on macOS either. Nor did we check the
+OSStatus result on any platform anyways.
+
+Task-number: QTBUG-63401
+Change-Id: Ife64dff767cf6d3f4b839fc53ec486181c176bf3
+(cherry-picked from 861544583511d4e6f7745d2339b26ff1cd44132b)
+Reviewed-by: Timur Pocheptsov <timur.pocheptsov@qt.io>
+Reviewed-by: Tor Arne VestbÃ¸ <tor.arne.vestbo@qt.io>
+---
+ src/plugins/platforms/cocoa/qcocoahelpers.h  |  2 +-
+ src/plugins/platforms/cocoa/qcocoahelpers.mm | 13 +------------
+ 2 files changed, 2 insertions(+), 13 deletions(-)
+
+diff --git old/qtbase/src/plugins/platforms/cocoa/qcocoahelpers.h new/qtbase/src/plugins/platforms/cocoa/qcocoahelpers.h
+index bbb3793..74371d5 100644
+--- old/qtbase/src/plugins/platforms/cocoa/qcocoahelpers.h
++++ new/qtbase/src/plugins/platforms/cocoa/qcocoahelpers.h
+@@ -80,7 +80,7 @@ QColor qt_mac_toQColor(CGColorRef color);
+ // Creates a mutable shape, it's the caller's responsibility to release.
+ HIMutableShapeRef qt_mac_QRegionToHIMutableShape(const QRegion &region);
+ 
+-OSStatus qt_mac_drawCGImage(CGContextRef inContext, const CGRect *inBounds, CGImageRef inImage);
++void qt_mac_drawCGImage(CGContextRef inContext, const CGRect *inBounds, CGImageRef inImage);
+ 
+ NSDragOperation qt_mac_mapDropAction(Qt::DropAction action);
+ NSDragOperation qt_mac_mapDropActions(Qt::DropActions actions);
+diff --git old/qtbase/src/plugins/platforms/cocoa/qcocoahelpers.mm new/qtbase/src/plugins/platforms/cocoa/qcocoahelpers.mm
+index cd73148..3f8429e 100644
+--- old/qtbase/src/plugins/platforms/cocoa/qcocoahelpers.mm
++++ new/qtbase/src/plugins/platforms/cocoa/qcocoahelpers.mm
+@@ -544,15 +544,8 @@ NSRect qt_mac_flipRect(const QRect &rect)
+     return NSMakeRect(rect.x(), flippedY, rect.width(), rect.height());
+ }
+ 
+-OSStatus qt_mac_drawCGImage(CGContextRef inContext, const CGRect *inBounds, CGImageRef inImage)
++void qt_mac_drawCGImage(CGContextRef inContext, const CGRect *inBounds, CGImageRef inImage)
+ {
+-    // Verbatim copy if HIViewDrawCGImage (as shown on Carbon-Dev)
+-    OSStatus err = noErr;
+-
+-    require_action(inContext != NULL, InvalidContext, err = paramErr);
+-    require_action(inBounds != NULL, InvalidBounds, err = paramErr);
+-    require_action(inImage != NULL, InvalidImage, err = paramErr);
+-
+     CGContextSaveGState( inContext );
+     CGContextTranslateCTM (inContext, 0, inBounds->origin.y + CGRectGetMaxY(*inBounds));
+     CGContextScaleCTM(inContext, 1, -1);
+@@ -560,10 +553,6 @@ OSStatus qt_mac_drawCGImage(CGContextRef inContext, const CGRect *inBounds, CGIm
+     CGContextDrawImage(inContext, *inBounds, inImage);
+ 
+     CGContextRestoreGState(inContext);
+-InvalidImage:
+-InvalidBounds:
+-InvalidContext:
+-        return err;
+ }
+ 
+ Qt::MouseButton cocoaButton2QtButton(NSInteger buttonNum)
+-- 
+2.7.4

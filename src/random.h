@@ -11,6 +11,7 @@
 #include <uint256.h>
 
 #include <stdint.h>
+#include <limits>
 
 /* Seed OpenSSL PRNG with additional entropy data */
 void RandAddSeed();
@@ -32,7 +33,7 @@ void RandAddSeedSleep();
 
 /**
  * Function to gather random data from multiple sources, failing whenever any
- * of those source fail to provide a result.
+ * of those sources fail to provide a result.
  */
 void GetStrongRandBytes(unsigned char* buf, int num);
 
@@ -121,6 +122,12 @@ public:
 
     /** Generate a random boolean. */
     bool randbool() { return randbits(1); }
+
+    // Compatibility with the C++11 UniformRandomBitGenerator concept
+    typedef uint64_t result_type;
+    static constexpr uint64_t min() { return 0; }
+    static constexpr uint64_t max() { return std::numeric_limits<uint64_t>::max(); }
+    inline uint64_t operator()() { return rand64(); }
 };
 
 /* Number of random bytes returned by GetOSRand.

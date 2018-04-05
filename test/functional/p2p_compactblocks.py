@@ -14,8 +14,8 @@ from test_framework.util import *
 from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
 from test_framework.script import CScript, OP_TRUE
 
-# TestNode: A peer we use to send messages to bitcoind, and store responses.
-class TestNode(P2PInterface):
+# TestP2PConn: A peer we use to send messages to bitcoind, and store responses.
+class TestP2PConn(P2PInterface):
     def __init__(self):
         super().__init__()
         self.last_sendcmpct = []
@@ -548,7 +548,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Note that it's possible for bitcoind to be smart enough to know we're
         # lying, since it could check to see if the shortid matches what we're
         # sending, and eg disconnect us for misbehavior.  If that behavior
-        # change were made, we could just modify this test by having a
+        # change was made, we could just modify this test by having a
         # different peer provide the block further down, so that we're still
         # verifying that the block isn't marked bad permanently. This is good
         # enough for now.
@@ -788,9 +788,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
-        self.test_node = self.nodes[0].add_p2p_connection(TestNode())
-        self.segwit_node = self.nodes[1].add_p2p_connection(TestNode(), services=NODE_NETWORK|NODE_WITNESS)
-        self.old_node = self.nodes[1].add_p2p_connection(TestNode(), services=NODE_NETWORK)
+        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
+        self.segwit_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK|NODE_WITNESS)
+        self.old_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK)
 
         network_thread_start()
 

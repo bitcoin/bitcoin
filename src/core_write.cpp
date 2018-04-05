@@ -4,9 +4,9 @@
 
 #include <core_io.h>
 
-#include <base58.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <key_io.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <serialize.h>
@@ -209,6 +209,6 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         entry.pushKV("blockhash", hashBlock.GetHex());
 
     if (include_hex) {
-        entry.pushKV("hex", EncodeHexTx(tx, serialize_flags)); // the hex-encoded transaction. used the name "hex" to be consistent with the verbose output of "getrawtransaction".
+        entry.pushKV("hex", EncodeHexTx(tx, serialize_flags)); // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
     }
 }

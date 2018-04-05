@@ -16,33 +16,6 @@
 #include <util.h>
 #include <net.h>
 
-// Calculate the size of the transaction assuming all signatures are max size
-// Use DummySignatureCreator, which inserts 72 byte signatures everywhere.
-// TODO: re-use this in CWallet::CreateTransaction (right now
-// CreateTransaction uses the constructed dummy-signed tx to do a priority
-// calculation, but we should be able to refactor after priority is removed).
-// NOTE: this requires that all inputs must be in mapWallet (eg the tx should
-// be IsAllFromMe).
-static int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet)
-{
-    CMutableTransaction txNew(tx);
-    std::vector<CInputCoin> vCoins;
-    // Look up the inputs.  We should have already checked that this transaction
-    // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
-    // wallet, with a valid index into the vout array.
-    for (auto& input : tx.vin) {
-        const auto mi = wallet->mapWallet.find(input.prevout.hash);
-        assert(mi != wallet->mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
-        vCoins.emplace_back(CInputCoin(&(mi->second), input.prevout.n));
-    }
-    if (!wallet->DummySignTx(txNew, vCoins)) {
-        // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
-        // implies that we can sign for every input.
-        return -1;
-    }
-    return GetVirtualTransactionSize(txNew);
-}
-
 //! Check whether transaction has descendant in wallet or mempool, or has been
 //! mined, or conflicts with a mined transaction. Return a feebumper::Result.
 static feebumper::Result PreconditionChecks(const CWallet* wallet, const CWalletTx& wtx, std::vector<std::string>& errors)
@@ -262,23 +235,20 @@ Result CommitTransaction(CWallet* wallet, const uint256& txid, CMutableTransacti
         return result;
     }
 
-    CWalletTx wtxBumped(wallet, MakeTransactionRef(std::move(mtx)));
     // commit/broadcast the tx
+    CTransactionRef tx = MakeTransactionRef(std::move(mtx));
+    mapValue_t mapValue = oldWtx.mapValue;
+    mapValue["replaces_txid"] = oldWtx.GetHash().ToString();
+
     CReserveKey reservekey(wallet);
-    wtxBumped.mapValue = oldWtx.mapValue;
-    wtxBumped.mapValue["replaces_txid"] = oldWtx.GetHash().ToString();
-    wtxBumped.vOrderForm = oldWtx.vOrderForm;
-    wtxBumped.strFromAccount = oldWtx.strFromAccount;
-    wtxBumped.fTimeReceivedIsTxTime = true;
-    wtxBumped.fFromMe = true;
     CValidationState state;
-    if (!wallet->CommitTransaction(wtxBumped, reservekey, g_connman.get(), state)) {
+    if (!wallet->CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm, oldWtx.strFromAccount, reservekey, g_connman.get(), state)) {
         // NOTE: CommitTransaction never returns false, so this should never happen.
         errors.push_back(strprintf("The transaction was rejected: %s", FormatStateMessage(state)));
         return Result::WALLET_ERROR;
     }
 
-    bumped_txid = wtxBumped.GetHash();
+    bumped_txid = tx->GetHash();
     if (state.IsInvalid()) {
         // This can happen if the mempool rejected the transaction.  Report
         // what happened in the "errors" response.
@@ -286,7 +256,7 @@ Result CommitTransaction(CWallet* wallet, const uint256& txid, CMutableTransacti
     }
 
     // mark the original tx as bumped
-    if (!wallet->MarkReplaced(oldWtx.GetHash(), wtxBumped.GetHash())) {
+    if (!wallet->MarkReplaced(oldWtx.GetHash(), bumped_txid)) {
         // TODO: see if JSON-RPC has a standard way of returning a response
         // along with an exception. It would be good to return information about
         // wtxBumped to the caller even if marking the original transaction

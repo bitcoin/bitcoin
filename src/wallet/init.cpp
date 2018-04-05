@@ -5,6 +5,7 @@
 
 #include <wallet/init.h>
 
+#include <chainparams.h>
 #include <net.h>
 #include <util.h>
 #include <utilmoneystr.h>
@@ -13,10 +14,10 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-std::string GetWalletHelpString(bool showDebug)
+std::string WalletInit::GetHelpString(bool showDebug)
 {
     std::string strUsage = HelpMessageGroup(_("Wallet options:"));
-    strUsage += HelpMessageOpt("-addresstype", strprintf("What type of addresses to use (\"legacy\", \"p2sh-segwit\", or \"bech32\", default: \"%s\")", FormatOutputType(OUTPUT_TYPE_DEFAULT)));
+    strUsage += HelpMessageOpt("-addresstype", strprintf("What type of addresses to use (\"legacy\", \"p2sh-segwit\", or \"bech32\", default: \"%s\")", FormatOutputType(DEFAULT_ADDRESS_TYPE)));
     strUsage += HelpMessageOpt("-changetype", "What type of change to use (\"legacy\", \"p2sh-segwit\", or \"bech32\"). Default is same as -addresstype, except when -addresstype=p2sh-segwit a native segwit output is used when sending to a native segwit address)");
     strUsage += HelpMessageOpt("-disablewallet", _("Do not load the wallet and disable wallet RPC calls"));
     strUsage += HelpMessageOpt("-discardfee=<amt>", strprintf(_("The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). "
@@ -34,7 +35,7 @@ std::string GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), DEFAULT_SPEND_ZEROCONF_CHANGE));
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
-    strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), DEFAULT_WALLET_DAT));
+    strUsage += HelpMessageOpt("-wallet=<path>", _("Specify wallet database path. Can be specified multiple times to load multiple wallets. Path is interpreted relative to <walletdir> if it is not absolute, and will be created if it does not exist (as a directory containing a wallet.dat file and log files). For backwards compatibility this will also accept names of existing data files in <walletdir>.)"));
     strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), DEFAULT_WALLETBROADCAST));
     strUsage += HelpMessageOpt("-walletdir=<dir>", _("Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)"));
     strUsage += HelpMessageOpt("-walletnotify=<cmd>", _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)"));
@@ -55,7 +56,7 @@ std::string GetWalletHelpString(bool showDebug)
     return strUsage;
 }
 
-bool WalletParameterInteraction()
+bool WalletInit::ParameterInteraction()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         for (const std::string& wallet : gArgs.GetArgs("-wallet")) {
@@ -65,7 +66,7 @@ bool WalletParameterInteraction()
         return true;
     }
 
-    gArgs.SoftSetArg("-wallet", DEFAULT_WALLET_DAT);
+    gArgs.SoftSetArg("-wallet", "");
     const bool is_multiwallet = gArgs.GetArgs("-wallet").size() > 1;
 
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
@@ -123,6 +124,8 @@ bool WalletParameterInteraction()
                         _("This is the minimum transaction fee you pay on every transaction."));
         CWallet::minTxFee = CFeeRate(n);
     }
+
+    g_wallet_allow_fallback_fee = Params().IsFallbackFeeEnabled();
     if (gArgs.IsArgSet("-fallbackfee"))
     {
         CAmount nFeePerK = 0;
@@ -132,6 +135,7 @@ bool WalletParameterInteraction()
             InitWarning(AmountHighWarn("-fallbackfee") + " " +
                         _("This is the transaction fee you may pay when fee estimates are not available."));
         CWallet::fallbackFee = CFeeRate(nFeePerK);
+        g_wallet_allow_fallback_fee = nFeePerK != 0; //disable fallback fee in case value was set to 0, enable if non-null value
     }
     if (gArgs.IsArgSet("-discardfee"))
     {
@@ -177,22 +181,10 @@ bool WalletParameterInteraction()
     bSpendZeroConfChange = gArgs.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
     fWalletRbf = gArgs.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
 
-    g_address_type = ParseOutputType(gArgs.GetArg("-addresstype", ""));
-    if (g_address_type == OUTPUT_TYPE_NONE) {
-        return InitError(strprintf("Unknown address type '%s'", gArgs.GetArg("-addresstype", "")));
-    }
-
-    // If changetype is set in config file or parameter, check that it's valid.
-    // Default to OUTPUT_TYPE_NONE if not set.
-    g_change_type = ParseOutputType(gArgs.GetArg("-changetype", ""), OUTPUT_TYPE_NONE);
-    if (g_change_type == OUTPUT_TYPE_NONE && !gArgs.GetArg("-changetype", "").empty()) {
-        return InitError(strprintf("Unknown change type '%s'", gArgs.GetArg("-changetype", "")));
-    }
-
     return true;
 }
 
-void RegisterWalletRPC(CRPCTable &t)
+void WalletInit::RegisterRPC(CRPCTable &t)
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return;
@@ -201,7 +193,7 @@ void RegisterWalletRPC(CRPCTable &t)
     RegisterWalletRPCCommands(t);
 }
 
-bool VerifyWallets()
+bool WalletInit::Verify()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return true;
@@ -226,18 +218,22 @@ bool VerifyWallets()
     std::set<fs::path> wallet_paths;
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        if (boost::filesystem::path(walletFile).filename() != walletFile) {
-            return InitError(strprintf(_("Error loading wallet %s. -wallet parameter must only specify a filename (not a path)."), walletFile));
-        }
-
-        if (SanitizeString(walletFile, SAFE_CHARS_FILENAME) != walletFile) {
-            return InitError(strprintf(_("Error loading wallet %s. Invalid characters in -wallet filename."), walletFile));
-        }
-
+        // Do some checking on wallet path. It should be either a:
+        //
+        // 1. Path where a directory can be created.
+        // 2. Path to an existing directory.
+        // 3. Path to a symlink to a directory.
+        // 4. For backwards compatibility, the name of a data file in -walletdir.
         fs::path wallet_path = fs::absolute(walletFile, GetWalletDir());
-
-        if (fs::exists(wallet_path) && (!fs::is_regular_file(wallet_path) || fs::is_symlink(wallet_path))) {
-            return InitError(strprintf(_("Error loading wallet %s. -wallet filename must be a regular file."), walletFile));
+        fs::file_type path_type = fs::symlink_status(wallet_path).type();
+        if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
+              (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
+              (path_type == fs::regular_file && fs::path(walletFile).filename() == walletFile))) {
+            return InitError(strprintf(
+                _("Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
+                  "database/log.?????????? files can be stored, a location where such a directory could be created, "
+                  "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)"),
+                walletFile, GetWalletDir()));
         }
 
         if (!wallet_paths.insert(wallet_path).second) {
@@ -245,21 +241,21 @@ bool VerifyWallets()
         }
 
         std::string strError;
-        if (!CWalletDB::VerifyEnvironment(walletFile, GetWalletDir().string(), strError)) {
+        if (!CWalletDB::VerifyEnvironment(wallet_path, strError)) {
             return InitError(strError);
         }
 
         if (gArgs.GetBoolArg("-salvagewallet", false)) {
             // Recover readable keypairs:
-            CWallet dummyWallet;
+            CWallet dummyWallet("dummy", CWalletDBWrapper::CreateDummy());
             std::string backup_filename;
-            if (!CWalletDB::Recover(walletFile, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter, backup_filename)) {
+            if (!CWalletDB::Recover(wallet_path, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter, backup_filename)) {
                 return false;
             }
         }
 
         std::string strWarning;
-        bool dbV = CWalletDB::VerifyDatabaseFile(walletFile, GetWalletDir().string(), strWarning, strError);
+        bool dbV = CWalletDB::VerifyDatabaseFile(wallet_path, strWarning, strError);
         if (!strWarning.empty()) {
             InitWarning(strWarning);
         }
@@ -272,7 +268,7 @@ bool VerifyWallets()
     return true;
 }
 
-bool OpenWallets()
+bool WalletInit::Open()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -280,7 +276,7 @@ bool OpenWallets()
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile);
+        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()));
         if (!pwallet) {
             return false;
         }
@@ -290,25 +286,29 @@ bool OpenWallets()
     return true;
 }
 
-void StartWallets(CScheduler& scheduler) {
+void WalletInit::Start(CScheduler& scheduler)
+{
     for (CWalletRef pwallet : vpwallets) {
         pwallet->postInitProcess(scheduler);
     }
 }
 
-void FlushWallets() {
+void WalletInit::Flush()
+{
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(false);
     }
 }
 
-void StopWallets() {
+void WalletInit::Stop()
+{
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(true);
     }
 }
 
-void CloseWallets() {
+void WalletInit::Close()
+{
     for (CWalletRef pwallet : vpwallets) {
         delete pwallet;
     }

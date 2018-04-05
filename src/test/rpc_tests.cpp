@@ -5,8 +5,8 @@
 #include <rpc/server.h>
 #include <rpc/client.h>
 
-#include <base58.h>
 #include <core_io.h>
+#include <key_io.h>
 #include <netbase.h>
 
 #include <test/test_bitcoin.h>
@@ -52,7 +52,6 @@ BOOST_AUTO_TEST_CASE(rpc_rawparams)
     BOOST_CHECK_THROW(CallRPC("createrawtransaction"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("createrawtransaction null null"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("createrawtransaction not_array"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC("createrawtransaction [] []"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("createrawtransaction {} {}"), std::runtime_error);
     BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [] {}"));
     BOOST_CHECK_THROW(CallRPC("createrawtransaction [] {} extra"), std::runtime_error);

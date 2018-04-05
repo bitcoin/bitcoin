@@ -4,8 +4,8 @@
 
 #include <qt/transactionrecord.h>
 
-#include <base58.h>
 #include <consensus/consensus.h>
+#include <key_io.h>
 #include <validation.h>
 #include <timedata.h>
 #include <wallet/wallet.h>
@@ -167,10 +167,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     // Determine transaction status
 
     // Find the block the tx is in
-    CBlockIndex* pindex = nullptr;
-    BlockMap::iterator mi = mapBlockIndex.find(wtx.hashBlock);
-    if (mi != mapBlockIndex.end())
-        pindex = (*mi).second;
+    const CBlockIndex* pindex = LookupBlockIndex(wtx.hashBlock);
 
     // Sort order, unrecorded transactions sort to the top
     status.sortKey = strprintf("%010d-%01d-%010u-%03d",
@@ -254,7 +251,7 @@ bool TransactionRecord::statusUpdateNeeded() const
     return status.cur_num_blocks != chainActive.Height() || status.needsUpdate;
 }
 
-QString TransactionRecord::getTxID() const
+QString TransactionRecord::getTxHash() const
 {
     return QString::fromStdString(hash.ToString());
 }

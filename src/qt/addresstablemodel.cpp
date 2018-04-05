@@ -7,9 +7,8 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
-#include <base58.h>
+#include <key_io.h>
 #include <wallet/wallet.h>
-
 
 #include <QFont>
 #include <QDebug>
@@ -441,6 +440,8 @@ int AddressTableModel::lookupAddress(const QString &address) const
         return lst.at(0).row();
     }
 }
+
+OutputType AddressTableModel::GetDefaultAddressType() const { return wallet->m_default_address_type; };
 
 void AddressTableModel::emitDataChanged(int idx)
 {
