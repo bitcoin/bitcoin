@@ -1245,7 +1245,7 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 
 	UniValue paramsUTXO(UniValue::VARR);
 	paramsUTXO.push_back(addresses);
-	const UniValue &resUTXOs = getaddressutxos(addresses, false);
+	const UniValue &resUTXOs = getaddressutxos(paramsUTXO, false);
 	UniValue utxoArray(UniValue::VARR);
 	if (resUTXOs.isArray())
 		utxoArray = resUTXOs.get_array();
