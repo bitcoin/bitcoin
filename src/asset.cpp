@@ -263,6 +263,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("asset name too long");
 				return error(errorMessage.c_str());
 			}
+			if (theAsset.vchAsset.size() < MIN_ID_LENGTH)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("asset name not long enough");
+				return error(errorMessage.c_str());
+			}
 			if(!boost::algorithm::starts_with(stringFromVch(theAsset.sCategory), "assets"))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2013 - " + _("Must use a asset category");
@@ -289,7 +294,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Initial balance out of money range");
 				return true;
 			}
-			if (!AssetRange(theAsset.nMaxSupply))
+			if (!AssetRange(theAsset.nMaxSupply) || theAsset.nMaxSupply == 0)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Max supply out of money range");
 				return true;
@@ -583,6 +588,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 		if (op == OP_ASSET_ACTIVATE)
 		{
+			string assetLower = stringFromVch(theAsset.vchAsset);
+			boost::algorithm::to_lower(assetLower);
+			theAsset.vchAsset = stringFromVch(assetLower);
 			if (GetAsset(theAsset.vchAsset, theAsset))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Asset already exists");
@@ -635,6 +643,8 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
     vector<unsigned char> vchName = vchFromString(params[0].get_str());
+	string strName = stringFromVch(vchName);
+	boost::algorithm::to_lower(strName);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
 	string strCategory = "assets";
@@ -668,7 +678,7 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	// calculate net
     // build asset object
     CAsset newAsset;
-	newAsset.vchAsset = vchName;
+	newAsset.vchAsset = vchFromString(strName);
 	newAsset.sCategory = vchFromString(strCategory);
 	newAsset.vchPubData = vchPubData;
 	newAsset.vchAlias = vchAlias;

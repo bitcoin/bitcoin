@@ -22,6 +22,7 @@ static const unsigned int MAX_GUID_LENGTH = 71;
 static const unsigned int MAX_NAME_LENGTH = 256;
 static const unsigned int MAX_VALUE_LENGTH = 512;
 static const unsigned int MAX_ID_LENGTH = 20;
+static const unsigned int MIN_ID_LENGTH = 3;
 static const unsigned int MAX_ENCRYPTED_GUID_LENGTH = MAX_GUID_LENGTH + 85;
 static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
 enum {
