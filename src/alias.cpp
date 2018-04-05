@@ -1230,18 +1230,19 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	CMutableTransaction tx(txIn);
 	// if addresses are passed in use those, otherwise use whatever is in the wallet
 	UniValue addresses(UniValue::VOBJ);
-	if(params.size() > 1)
-		addresses = params[1];
+	UniValue addressArray(UniValue::VARR);
+	if (params.size() > 1) {
+		addressArray.push_back(params[1].get_str());
+	}
 	else {
-		UniValue addressArray(UniValue::VARR);
 		UniValue receivedList = SyscoinListReceived(false);
 		UniValue recevedListArray = receivedList.get_array();
 		for (unsigned int idx = 0; idx < recevedListArray.size(); idx++) {
 			if(find_value(recevedListArray[idx].get_obj(), "alias").get_str().empty())
 				addressArray.push_back(find_value(recevedListArray[idx].get_obj(), "address").get_str());
 		}
-		addresses.push_back(Pair("addresses", addressArray));
 	}
+	addresses.push_back(Pair("addresses", addressArray));
 
 	UniValue paramsUTXO(UniValue::VARR);
 	UniValue param(UniValue::VOBJ);
