@@ -329,6 +329,7 @@ BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 	UniValue r;
 	AliasNew("node1", "jagassetuppercase", "data");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew UPPERCASE jagassetuppercase data assets 1 1 false 0 false ''"));
+	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
