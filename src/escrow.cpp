@@ -1951,7 +1951,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() != 4)
 		throw runtime_error(
 			"escrowrefund [escrow guid] [user role] [rawtx] [witness]\n"
-			"Refunds escrow funds to buyer. User role represents either 'seller' or 'arbiter'. Third parameter (rawtx) is the signed response from escrowreleasecreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
+			"Refunds escrow funds to buyer. User role represents either 'seller' or 'arbiter'. Third parameter (rawtx) is the signed response from escrowcreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
 			+ HelpRequiringPassphrase());
 	// gather & validate inputs
 	vector<unsigned char> vchEscrow = vchFromValue(params[0]);

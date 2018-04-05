@@ -704,7 +704,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 UniValue offernew(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() != 17)
 		throw runtime_error(
-			"offernew [alias] [category] [title] [quantity] [price] [description] [currency] [cert. guid] [payment options=SYS] [private=false] [units] [offertype=BUYNOW] [auction_expires=0] [auction_reserve=0] [auction_require_witness=false] [auction_deposit=0] [witness]\n"
+			"offernew [alias] [category] [title] [quantity] [price] [description] [currency] [cert. guid] [payment options=SYS] [private=false] [units=1] [offertype=BUYNOW] [auction_expires=0] [auction_reserve=0] [auction_require_witness=false] [auction_deposit=0] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<category> category, 256 characters max.\n"
 						"<title> title, 256 characters max.\n"
