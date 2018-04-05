@@ -460,13 +460,6 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
         return false;
     }
 
-    // TODO: This is redundant and should be removed
-    // TODO: Use size validation for each specific object type (if applicable)
-    if (vchData.size() > MAX_GOVERNANCE_OBJECT_DATA_SIZE) {
-        strError = strprintf("Invalid object size %d", vchData.size());
-        return false;
-    }
-
     switch(nObjectType) {
         case GOVERNANCE_OBJECT_WATCHDOG: {
             // watchdogs are deprecated
