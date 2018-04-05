@@ -95,7 +95,9 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     {
         entry.pushKV("blockhash", wtx.hashBlock.GetHex());
         entry.pushKV("blockindex", wtx.nIndex);
-        entry.pushKV("blocktime", LookupBlockIndex(wtx.hashBlock)->GetBlockTime());
+        CBlockIndex* blockIndex = LookupBlockIndex(wtx.hashBlock);
+        assert(blockIndex);
+        entry.pushKV("blocktime", blockIndex->GetBlockTime());
     } else {
         entry.pushKV("trusted", wtx.IsTrusted());
     }
