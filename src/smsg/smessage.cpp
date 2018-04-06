@@ -2584,18 +2584,22 @@ bool CSMSG::SetSmsgAddressOption(const CKeyID &idk, std::string sOption, bool fV
         return false;
 
     if (sOption == "anon")
+    {
         if (fValue)
             key.nFlags |= SMK_RECEIVE_ANON;
         else
             key.nFlags &= ~SMK_RECEIVE_ANON;
-    else
+    } else
     if (sOption == "receive")
+    {
         if (fValue)
             key.nFlags |= SMK_RECEIVE_ON;
         else
             key.nFlags &= ~SMK_RECEIVE_ON;
-    else
+    } else
+    {
         return error("%s: Unknown option %s.\n", __func__, sOption);
+    };
 
     if (!db.WriteKey(idk, key))
         return false;

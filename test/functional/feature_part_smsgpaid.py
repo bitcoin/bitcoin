@@ -8,6 +8,14 @@ from test_framework.test_particl import isclose
 from test_framework.util import *
 import binascii
 
+def getIndexAtProperty(arr, name, value):
+    for i, o in enumerate(arr):
+        try:
+            if o[name] == value:
+                return i
+        except:
+            continue
+    return -1
 
 class SmsgPaidTest(ParticlTestFramework):
     def set_test_params(self):
@@ -237,6 +245,30 @@ class SmsgPaidTest(ParticlTestFramework):
         # Recover 5 + 1 dropped msg
         assert(len(ro['messages']) == 6)
 
+
+        addr = nodes[0].getnewaddress()
+
+        ro = nodes[0].smsglocalkeys('recv','+', addr)
+        assert('Address not found' in ro['result'])
+        ro = nodes[0].smsglocalkeys('anon', '+', addr)
+        assert('Address not found' in ro['result'])
+
+        ro = nodes[0].smsgaddlocaladdress(addr)
+        assert('Receiving messages enabled for address' in ro['result'])
+
+        ro = nodes[0].smsglocalkeys('recv',  '-',addr)
+        assert('Receive off' in ro['key'])
+        assert(addr in ro['key'])
+
+        ro = nodes[0].smsglocalkeys('anon', '-',addr)
+        assert('Anon off' in ro['key'])
+        assert(addr in ro['key'])
+
+        ro = nodes[0].smsglocalkeys('all')
+
+        n = getIndexAtProperty(ro['wallet_keys'], 'address', addr)
+        assert(ro['wallet_keys'][n]['receive'] == '0')
+        assert(ro['wallet_keys'][n]['anon'] == '0')
 
 
 

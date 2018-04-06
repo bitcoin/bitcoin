@@ -295,7 +295,7 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         if (!coinAddress.GetKeyID(keyID))
             throw std::runtime_error("Invalid address.");
 
-        if (smsgModule.SetWalletAddressOption(keyID, "receive", fValue)
+        if (!smsgModule.SetWalletAddressOption(keyID, "receive", fValue)
             && !smsgModule.SetSmsgAddressOption(keyID, "receive", fValue))
         {
             result.pushKV("result", "Address not found.");
@@ -303,12 +303,10 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         };
 
         std::string sInfo;
-        sInfo = std::string("Receive ") + (fValue ? "on, " : "off,");
-        //sInfo += std::string("Anon ") + (it->fReceiveAnon ? "on" : "off");
+        sInfo = std::string("Receive ") + (fValue ? "on" : "off");
         result.pushKV("result", "Success.");
         result.pushKV("key", coinAddress.ToString() + " " + sInfo);
         return result;
-
     } else
     if (mode == "anon")
     {
@@ -336,7 +334,7 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         if (!coinAddress.GetKeyID(keyID))
             throw std::runtime_error("Invalid address.");
 
-        if (smsgModule.SetWalletAddressOption(keyID, "anon", fValue)
+        if (!smsgModule.SetWalletAddressOption(keyID, "anon", fValue)
             && !smsgModule.SetSmsgAddressOption(keyID, "anon", fValue))
         {
             result.pushKV("result", "Address not found.");
@@ -344,7 +342,6 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         };
 
         std::string sInfo;
-        //sInfo = std::string("Receive ") + (it->fReceiveEnabled ? "on, " : "off,");
         sInfo += std::string("Anon ") + (fValue ? "on" : "off");
         result.pushKV("result", "Success.");
         result.pushKV("key", coinAddress.ToString() + " " + sInfo);
