@@ -1212,8 +1212,9 @@ UniValue ValueFromAssetAmount(const CAmount& amount,int precision, bool isInputR
 	int64_t n_abs = (sign ? -amount : amount);
 	int64_t quotient = n_abs / divByAmount;
 	int64_t remainder = n_abs % divByAmount;
+	string strPrecision = boost::lexical_cast<string>(precision);
 	return UniValue(UniValue::VNUM,
-		strprintf("%s%d.%0*d", sign ? "-" : "", quotient, remainder, precision));
+		strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
 }
 CAmount AssetAmountFromValue(const UniValue& valueIn, int precision, bool isInputRange)
 {
