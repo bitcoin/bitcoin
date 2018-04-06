@@ -662,10 +662,12 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	int precision = params[4].get_int();
 	bool bUseInputRanges = params[5].get_bool();
 	vector<unsigned char> vchWitness;
-	CAmount nBalance = AssetAmountFromValue(params[6], precision, bUseInputRanges);
+	UniValue param6 = params[6];
+	CAmount nBalance = AssetAmountFromValue(param6, precision, bUseInputRanges);
 	CAmount nMaxSupply = MAX_INPUTRANGE_ASSET;
-	if(params[7].get_str() != "-1")
-		nMaxSupply = AssetAmountFromValue(params[7], precision, bUseInputRanges);
+	UniValue param7 = params[7];
+	if(param7.get_str() != "-1")
+		nMaxSupply = AssetAmountFromValue(param7, precision, bUseInputRanges);
 	
 	float fInterestRate = params[8].get_real();
 	bool bCanAdjustInterestRate = params[9].get_bool();
@@ -1216,9 +1218,8 @@ UniValue ValueFromAssetAmount(const CAmount& amount,int precision, bool isInputR
 	return UniValue(UniValue::VNUM,
 		strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
 }
-CAmount AssetAmountFromValue(const UniValue& valueIn, int precision, bool isInputRange)
+CAmount AssetAmountFromValue(UniValue& valueIn, int precision, bool isInputRange)
 {
-	UniValue value = valueIn;
 	if (isInputRange)
 		precision = 0;
 	if(precision < 0 || precision > 8)
