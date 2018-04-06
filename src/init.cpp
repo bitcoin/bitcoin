@@ -80,7 +80,7 @@ public:
     bool ParameterInteraction() override {return true;}
     void RegisterRPC(CRPCTable &) override {}
     bool Verify() override {return true;}
-    bool Open() override {return true;}
+    bool Open() override {LogPrintf("No wallet support compiled in!\n"); return true;}
     void Start(CScheduler& scheduler) override {}
     void Flush() override {}
     void Stop() override {}
