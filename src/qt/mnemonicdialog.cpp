@@ -8,7 +8,7 @@
 #include <qt/guiutil.h>
 
 #include <qt/walletmodel.h>
-#include <wallet/hdwallet.h>
+#include <interface/wallet.h>
 
 #include <rpc/rpcutil.h>
 #include <util.h>
@@ -23,11 +23,8 @@ MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
     ui(new Ui::MnemonicDialog)
 {
     ui->setupUi(this);
-    CHDWallet *phdw = wm->getParticlWallet();
-    if (!phdw)
-        return;
 
-    if (phdw->idDefaultAccount.IsNull())
+    if (!wm->wallet().isDefaultAccountSet())
         ui->lblHelp->setText(
             "This wallet has no HD account loaded.\n"
             "An account must first be loaded in order to generate receiving addresses.\n"

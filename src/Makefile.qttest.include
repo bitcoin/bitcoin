@@ -53,7 +53,7 @@ nodist_qt_test_test_particl_qt_SOURCES = $(TEST_QT_MOC_CPP)
 qt_test_test_particl_qt_DEPENDENCIES = $(LIBPARTICLQT)
 qt_test_test_particl_qt_LDADD = $(LIBPARTICLQT) $(LIBPARTICL_SERVER)
 if ENABLE_WALLET
-qt_test_test_particl_qt_LDADD += $(LIBPARTICL_WALLET)
+qt_test_test_particl_qt_LDADD += $(LIBPARTICL_UTIL) $(LIBPARTICL_WALLET)
 endif
 if ENABLE_ZMQ
 qt_test_test_particl_qt_LDADD += $(LIBPARTICL_ZMQ) $(ZMQ_LIBS)

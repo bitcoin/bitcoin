@@ -435,7 +435,7 @@ if TARGET_WINDOWS
 endif
 qt_particl_qt_LDADD = qt/libparticlqt.a $(LIBPARTICL_SERVER)
 if ENABLE_WALLET
-qt_particl_qt_LDADD += $(LIBPARTICL_WALLET)
+qt_particl_qt_LDADD += $(LIBPARTICL_UTIL) $(LIBPARTICL_WALLET)
 endif
 if ENABLE_ZMQ
 qt_particl_qt_LDADD += $(LIBPARTICL_ZMQ) $(ZMQ_LIBS)
@@ -448,7 +448,7 @@ qt_particl_qt_LDADD += $(LIBPARTICL_CLI) $(LIBPARTICL_COMMON) $(LIBPARTICL_UTIL)
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 qt_particl_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-qt_particl_qt_LIBTOOLFLAGS = --tag CXX
+qt_particl_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)

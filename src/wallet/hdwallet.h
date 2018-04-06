@@ -404,9 +404,11 @@ public:
 
     bool LoadTxRecords(CHDWalletDB *pwdb);
 
+    bool IsLocked() const override;
     bool EncryptWallet(const SecureString &strWalletPassphrase) override;
     bool Lock() override;
     bool Unlock(const SecureString &strWalletPassphrase) override;
+
 
 
     isminetype HaveAddress(const CTxDestination &dest);

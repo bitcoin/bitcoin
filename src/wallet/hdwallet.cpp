@@ -870,6 +870,12 @@ bool CHDWallet::LoadTxRecords(CHDWalletDB *pwdb)
     return true;
 };
 
+bool CHDWallet::IsLocked() const
+{
+    LOCK(cs_wallet); // Lock cs_wallet to ensure any CHDWallet::Unlock has completed
+    return CCryptoKeyStore::IsLocked();
+};
+
 bool CHDWallet::EncryptWallet(const SecureString &strWalletPassphrase)
 {
     LogPrint(BCLog::HDWALLET, "%s\n", __func__);
@@ -1757,6 +1763,8 @@ std::set< std::set<CTxDestination> > CHDWallet::GetAddressGroupings()
 
 isminetype CHDWallet::IsMine(const CTxIn& txin) const
 {
+    if (txin.IsAnonInput())
+        return ISMINE_NO;
     LOCK(cs_wallet);
     MapWallet_t::const_iterator mi = mapWallet.find(txin.prevout.hash);
     if (mi != mapWallet.end())
