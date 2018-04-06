@@ -22,4 +22,6 @@ enum {
     LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
 };
 
+static const int BIP65_HEIGHT = 8570810;
+
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
