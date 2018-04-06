@@ -23,5 +23,6 @@ enum {
 };
 
 static const int BIP65_HEIGHT = 8570810;
+static const int V2_RULE_HEIGHT = 750;
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H

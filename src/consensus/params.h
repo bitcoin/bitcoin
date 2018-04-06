@@ -37,13 +37,6 @@ struct BIP9Deployment {
 struct Params {
     uint256 hashGenesisBlock;
     int nSubsidyHalvingInterval;
-    /** Used to check majorities for block version upgrade */
-    int nMajorityEnforceBlockUpgrade1;
-    int nMajorityRejectBlockOutdated1;
-    int nMajorityWindow1;
-    int nMajorityEnforceBlockUpgrade2;
-    int nMajorityRejectBlockOutdated2;
-    int nMajorityWindow2;
     /** Block height and hash at which BIP34 becomes active */
     //int BIP34Height;
     //uint256 BIP34Hash;

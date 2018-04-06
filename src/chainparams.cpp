@@ -71,12 +71,6 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 80640;
-        consensus.nMajorityEnforceBlockUpgrade1 = 750;
-        consensus.nMajorityRejectBlockOutdated1 = 950;
-        consensus.nMajorityWindow1 = 8000;
-        consensus.nMajorityEnforceBlockUpgrade2 = 7500;
-        consensus.nMajorityRejectBlockOutdated2 = 9500;
-        consensus.nMajorityWindow2 = 10000;
         //consensus.BIP34Height = 227931;
         //consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -188,12 +182,6 @@ class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
-        consensus.nMajorityEnforceBlockUpgrade1 = 51;
-        consensus.nMajorityRejectBlockOutdated1 = 75;
-        consensus.nMajorityWindow1 = 100;
-        consensus.nMajorityEnforceBlockUpgrade2 = 51;
-        consensus.nMajorityRejectBlockOutdated2 = 75;
-        consensus.nMajorityWindow2 = 100;
         //consensus.BIP34Height = 21111;
         //consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -267,12 +255,6 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.nMajorityEnforceBlockUpgrade1 = 750;
-        consensus.nMajorityRejectBlockOutdated1 = 950;
-        consensus.nMajorityWindow1 = 1000;
-        consensus.nMajorityEnforceBlockUpgrade2 = 750;
-        consensus.nMajorityRejectBlockOutdated2 = 950;
-        consensus.nMajorityWindow2 = 1000;
         //consensus.BIP34Height = -1; // BIP34 has not necessarily activated on regtest
         //consensus.BIP34Hash = uint256();
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
