@@ -1082,9 +1082,9 @@ bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oAsset
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
-	oAsset.push_back(Pair("balance", AssetValueFromAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
-	oAsset.push_back(Pair("total_supply", AssetValueFromAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
-	oAsset.push_back(Pair("max_supply", AssetValueFromAmount(asset.nMaxSupply, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
 	oAsset.push_back(Pair("can_adjust_interest_rate", asset.bCanAdjustInterestRate));
 	oAsset.push_back(Pair("use_input_ranges", asset.bUseInputRanges));
@@ -1117,8 +1117,8 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
-	oAsset.push_back(Pair("balance", AssetValueFromAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
-	oAsset.push_back(Pair("total_supply", AssetValueFromAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
 	return true;
 }
@@ -1129,9 +1129,9 @@ bool BuildAssetIndexerJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
 	oAsset.push_back(Pair("use_input_ranges", asset.bUseInputRanges));
-	oAsset.push_back(Pair("balance", AssetValueFromAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
-	oAsset.push_back(Pair("total_supply", AssetValueFromAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
-	oAsset.push_back(Pair("max_supply", AssetValueFromAmount(asset.nMaxSupply, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
 	return true;
 }
@@ -1162,7 +1162,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 		entry.push_back(Pair("interest_rate", asset.fInterestRate));
 
 	if (asset.nBalance != dbAsset.nBalance)
-		entry.push_back(Pair("balance", AssetValueFromAmount(asset.nBalance, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
+		entry.push_back(Pair("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 
 	CAssetAllocation assetallocation;
 	if (assetallocation.UnserializeFromData(vchData, vchHash)) {
@@ -1171,7 +1171,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 				UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 				oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
-				oAssetAllocationReceiversObj.push_back(Pair("amount", AssetValueFromAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
+				oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 				oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 			}
 
@@ -1216,7 +1216,7 @@ CAmount AssetAmountFromValue(UniValue& value, int precision, bool isInputRange)
 		throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
 	if (value.isStr() && value.get_str() == "-1") {
 		if(!isInputRange)
-			value.setInt(INT64_MAX / powf(10, precision));
+			value.setInt((int64_t)(INT64_MAX / powf(10, precision)));
 		else
 			value.setInt(MAX_INPUTRANGE_ASSET);
 	}
