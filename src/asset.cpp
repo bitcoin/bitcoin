@@ -773,8 +773,8 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 	
     if (!GetAsset( vchAsset, theAsset))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2504 - " + _("Could not find a asset with this key"));
-
-	CAmount nBalance = AssetAmountFromValue(params[3], theAsset.nPrecision, theAsset.bUseInputRanges);
+	UniValue param3 = params[3];
+	CAmount nBalance = AssetAmountFromValue(param3, theAsset.nPrecision, theAsset.bUseInputRanges);
 	CAliasIndex theAlias;
 
 	if (!GetAlias(theAsset.vchAlias, theAlias))
