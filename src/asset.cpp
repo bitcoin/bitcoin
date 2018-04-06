@@ -1206,8 +1206,9 @@ UniValue ValueFromAssetAmount(const CAmount& amount,int precision, bool isInputR
 	return UniValue(UniValue::VNUM,
 		strprintf("%s%d.%0*d", sign ? "-" : "", quotient, remainder, precision));
 }
-CAmount AssetAmountFromValue(UniValue& value, int precision, bool isInputRange)
+CAmount AssetAmountFromValue(const UniValue& valueIn, int precision, bool isInputRange)
 {
+	UniValue value = valueIn;
 	if (isInputRange)
 		precision = 0;
 	if(precision < 0 || precision > 8)
