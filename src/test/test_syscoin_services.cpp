@@ -978,7 +978,7 @@ int FindAliasDiscount(const string& node, const string& owneralias, const string
 	}
 	return 0;
 }
-void AssetNew(const string& node, const string& name, const string& alias, const string& pubdata, const string& precision, const string& useinputranges, string& supply, string& maxsupply, const string& interestrate, const string& canadjustinterest, const string& witness)
+void AssetNew(const string& node, const string& name, const string& alias, const string& pubdata, const string& precision, const string& useinputranges, const string& supply, const string& maxsupply, const string& interestrate, const string& canadjustinterest, const string& witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -1003,9 +1003,11 @@ void AssetNew(const string& node, const string& name, const string& alias, const
 	UniValue balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	UniValue maxsupplyu = find_value(r.get_obj(), "max_supply");
-	BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange) , AssetAmountFromValue(maxsupply, nprecision, binputrange));
+	string supplytmp = supply;
+	string maxsupplytmp = maxsupply;
+	BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supplytmp, nprecision, binputrange));
+	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supplytmp, nprecision, binputrange));
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange) , AssetAmountFromValue(maxsupplytmp, nprecision, binputrange));
 	BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 	bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
 	bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
@@ -1021,9 +1023,9 @@ void AssetNew(const string& node, const string& name, const string& alias, const
 		UniValue balance = find_value(r.get_obj(), "balance");
 		UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 		UniValue maxsupplyu = find_value(r.get_obj(), "max_supply");
-		BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange), AssetAmountFromValue(maxsupply, nprecision, binputrange));
+		BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supplytmp, nprecision, binputrange));
+		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supplytmp, nprecision, binputrange));
+		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange), AssetAmountFromValue(maxsupplytmp, nprecision, binputrange));
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 		bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
 		bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
@@ -1037,9 +1039,9 @@ void AssetNew(const string& node, const string& name, const string& alias, const
 		UniValue balance = find_value(r.get_obj(), "balance");
 		UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 		UniValue maxsupplyu = find_value(r.get_obj(), "max_supply");
-		BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange), AssetAmountFromValue(maxsupply, nprecision, binputrange));
+		BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supplytmp, nprecision, binputrange));
+		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supplytmp, nprecision, binputrange));
+		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange), AssetAmountFromValue(maxsupplytmp, nprecision, binputrange));
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 		bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
 		bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
