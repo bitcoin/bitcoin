@@ -82,13 +82,13 @@ public:
         consensus.nMinerConfirmationWindow = 20160; // nPowTargetTimespan / nPowTargetSpacing
         
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1520380800; // March 7, 2018
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1551916800; // March 7, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1523059200; // April 7, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1570406400; // Oct 7, 2019
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1520380800; // March 7, 2018
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1551916800; // March 7, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1523059200; // April 7, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1570406400; // Oct 7, 2019
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -194,12 +194,12 @@ public:
         
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1520380800; // March 7, 2018
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1551916800; // March 7, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1570406400; // Oct 7, 2019
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1520380800; // March 7, 2018
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1551916800; // March 7, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1570406400; // Oct 7, 2019
 
         pchMessageStart[0] = 0x05;
         pchMessageStart[1] = 0xfe;
