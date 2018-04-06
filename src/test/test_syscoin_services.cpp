@@ -1047,7 +1047,7 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 	string oldpubdata = find_value(r.get_obj(), "publicvalue").get_str();
 	string oldsupply = find_value(r.get_obj(), "total_supply").write();
 	bool binputranges = find_value(r.get_obj(), "use_input_ranges").get_bool();
-	int nprecision = find_value(r.get_obj(), "use_input_ranges").get_int();
+	int nprecision = find_value(r.get_obj(), "precision").get_int();
 	
 	CAmount oldsupplyamount = AssetAmountFromValue(find_value(r.get_obj(), "total_supply"), nprecision, binputranges);
 	CAmount supplyamount = 0;
@@ -1154,7 +1154,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
 	bool binputranges = find_value(r.get_obj(), "use_input_ranges").get_bool();
-	int nprecision = find_value(r.get_obj(), "use_input_ranges").get_int();
+	int nprecision = find_value(r.get_obj(), "precision").get_int();
 
 	CAssetAllocation theAssetAllocation;
 	UniValue valueTo;
@@ -1228,7 +1228,7 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
 	bool binputranges = find_value(r.get_obj(), "use_input_ranges").get_bool();
-	int nprecision = find_value(r.get_obj(), "use_input_ranges").get_int();
+	int nprecision = find_value(r.get_obj(), "precision").get_int();
 
 	CAssetAllocation theAssetAllocation;
 	UniValue valueTo;

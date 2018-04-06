@@ -428,6 +428,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			theAsset.nMaxSupply = dbAsset.nMaxSupply;
 			theAsset.bUseInputRanges = dbAsset.bUseInputRanges;
 			theAsset.bCanAdjustInterestRate = dbAsset.bCanAdjustInterestRate;
+			theAsset.nPrecision = dbAsset.nPrecision;
 		}
 
 		if (op == OP_ASSET_SEND) {
@@ -603,6 +604,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			}
 			// starting supply is the supplied balance upon init
 			theAsset.nTotalSupply = theAsset.nBalance;
+			// with input ranges precision is forced to 0
+			if(theAsset.bUseInputRanges)
+				theAsset.nPrecision = 0;
 		}
 		if (!bSanityCheck) {
 			if (strResponse != "") {
