@@ -1279,7 +1279,6 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
-	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
 	string fromalias = find_value(r.get_obj(), "alias").get_str();
 	string fromsupply = find_value(r.get_obj(), "total_supply").write();
