@@ -293,8 +293,8 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	// 257 bytes long
 	string baddata = gooddata + "a";
 	AssetNew("node1", "newasset", "jagassetbig1", gooddata);
-	//"assetnew [name] [alias] [public] [category=assets] [supply] [max_supply] [use_inputranges] [interest_rate] [can_adjust_interest_rate] [witness]\n"
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew newasset jagassetbig1 " + baddata + " assets 1 1 false 0 false ''"), runtime_error);
+	//"assetnew [name] [alias] [public] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew newasset jagassetbig1 " + baddata + " assets 8 false 1 1 0 false ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_small_assetname)
 {
@@ -305,9 +305,9 @@ BOOST_AUTO_TEST_CASE(generate_small_assetname)
 	// 256 bytes long
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	// cannot create this asset because its less than 3 chars
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew ab jagassetnamesmall " + gooddata + " assets 1 1 false 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew ab jagassetnamesmall " + gooddata + " assets 8 false 1 1 0 false ''"), runtime_error);
 	// its 3 chars now so its ok
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetnamesmall " + gooddata + " assets 1 1 false 0 false ''"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetnamesmall " + gooddata + " assets 8 false 1 1 0 false ''"));
 }
 BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply)
 {
@@ -318,9 +318,9 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply)
 	// 256 bytes long
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	// 0 max supply bad
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew abc jagassetmaxsupply " + gooddata + " assets 1 0 false 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew abc jagassetmaxsupply " + gooddata + " assets 8 false 1 0 0 false ''"), runtime_error);
 	// 1 max supply good
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetmaxsupply " + gooddata + " assets 1 1 false 0 false ''"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetmaxsupply " + gooddata + " assets 8 false 1 1 0 false ''"));
 }
 BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 {
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 	printf("Running generate_assetuppercase...\n");
 	UniValue r;
 	AliasNew("node1", "jagassetuppercase", "data");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew UPPERCASE jagassetuppercase data assets 1 1 false 0 false ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew UPPERCASE jagassetuppercase data assets 8 false 1 1 0 false ''"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	AliasNew("node1", "jagassetcollection", "data");
 	AliasNew("node1", "jagassetcollectionreceiver", "data");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
-	AssetNew("node1", "newassetcollection", "jagassetcollection", "data", "10000", "-1", "false", "0.05");
+	AssetNew("node1", "newassetcollection", "jagassetcollection", "data", "8", "false", "10000", "-1", "0.05");
 	AssetSend("node1", "newassetcollection", "\"[{\\\"aliasto\\\":\\\"jagassetcollectionreceiver\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo newassetcollection jagassetcollectionreceiver false"));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 5000 * COIN);
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
 	AliasNew("node1", "jagassetcollectionavg", "data");
 	AliasNew("node1", "jagassetcollectionrcveravg", "data");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
-	AssetNew("node1", "avgbalanceasset", "jagassetcollectionavg", "data", "10000", "-1", "false", "0.05");
+	AssetNew("node1", "avgbalanceasset", "jagassetcollectionavg", "8", "false", "data", "10000", "-1", "0.05");
 	AssetSend("node1", "avgbalanceasset", "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravg\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo avgbalanceasset jagassetcollectionrcveravg false"));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 1000 * COIN);
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_update_with_average_balance
 	AliasNew("node1", "jagassetcollectionavgu", "data");
 	AliasNew("node1", "jagassetcollectionrcveravgu", "data");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually), can adjust the rate
-	AssetNew("node1", "avgbalanceassetu", "jagassetcollectionavgu", "data", "10000", "-1", "false", "0.05", "true");
+	AssetNew("node1", "avgbalanceassetu", "jagassetcollectionavgu", "data", "8", "false", "10000", "-1", "0.05", "true");
 	AssetSend("node1", "avgbalanceassetu", "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravgu\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo avgbalanceassetu jagassetcollectionrcveravgu false"));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 1000 * COIN);
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_every_block)
 	AliasNew("node1", "jagassetcollection1", "data");
 	AliasNew("node1", "jagassetcollectionreceiver1", "data");
 	// setup asset with 10% interest hourly (unit test mode calculates interest hourly not annually)
-	AssetNew("node1", "newassetcollection1", "jagassetcollection1", "data", "10000", "-1", "false", "0.05");
+	AssetNew("node1", "newassetcollection1", "jagassetcollection1", "data", "8", "false", "10000", "-1", "0.05");
 	AssetSend("node1", "newassetcollection1", "\"[{\\\"aliasto\\\":\\\"jagassetcollectionreceiver1\\\",\\\"amount\\\":5000}]\"", "memoassetinterest1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo newassetcollection1 jagassetcollectionreceiver1 false"));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 5000 * COIN);
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetname)
 	// 21 bytes long
 	string badname = goodname + "1";
 	AssetNew("node1", goodname, "jagassetbig2", gooddata);
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew " + badname + " jagassetbig2 " + gooddata + " assets 1 1 false 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew " + badname + " jagassetbig2 " + gooddata + " assets 8 false 1 1 0 false ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_assetupdate)
 {
@@ -505,22 +505,22 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo assetupdatename false"));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance")), 6*COIN);
 	// update interest rate
-	AssetNew("node1", "assetupdateinterest", "jagassetupdate", "data", "1", "10", "false", "0.1", "true");
+	AssetNew("node1", "assetupdateinterest", "jagassetupdate", "data", "8", "false", "1", "10", "0.1", "true");
 	AssetUpdate("node1", "assetupdateinterest", "pub12", "0", "0.25");
 	// set can adjust rate to false and ensure can't update interest rate (use initial asset which has can adjust rate set to false)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatename jagassetupdate assets 1 0.11 ''"), runtime_error);
 	// can't change supply > max supply (current balance already 6, max is 10)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatename jagassetupdate assets 5 0 ''"), runtime_error);
 	// if max supply is -1 ensure supply can goto 10b max
-	AssetNew("node1", "assetupdatemaxsupply", "jagassetupdate", "data", "1", "-1");
+	AssetNew("node1", "assetupdatemaxsupply", "jagassetupdate", "data", "8", "false", "1", "-1");
 	string maxstr = ValueFromAmount(MAX_ASSET-COIN).write();
 	AssetUpdate("node1", "assetupdatemaxsupply", "pub12", maxstr);
 	// can't go above 10b max
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatemaxsupply jagassetupdate assets 1 0 ''"), runtime_error);
 	// can't create asset with more than 10b balance or max supply
 	string maxstrplusone = ValueFromAmount(MAX_ASSET+1).write();
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 assetupdatename pub assets " + maxstrplusone + " -1 false 0 false ''"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 assetupdatename pub assets 1 " + maxstrplusone + " false 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 assetupdatename pub assets 8 false " + maxstrplusone + " -1 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 assetupdatename pub assets 8 false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_assetsend)
 {
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend)
 	printf("Running generate_assetsend...\n");
 	AliasNew("node1", "jagassetsend", "data");
 	AliasNew("node2", "jagassetsend1", "data");
-	AssetNew("node1", "assetsendname", "jagassetsend", "data", "10", "20");
+	AssetNew("node1", "assetsendname", "jagassetsend", "data", "8", "false", "10", "20");
 	// [{\"aliasto\":\"aliasname\",\"amount\":amount},...]
 	AssetSend("node1", "assetsendname", "\"[{\\\"aliasto\\\":\\\"jagassetsend1\\\",\\\"amount\\\":7}]\"", "memoassetsend");
 	// ensure amounts are correct
@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges)
 	AliasNew("node1", "jagassetsendranges", "data");
 	AliasNew("node2", "jagassetsendranges1", "data");
 	// if use input ranges update supply and ensure adds to end of allocation, ensure balance gets updated properly
-	AssetNew("node1", "assetsendnameranges", "jagassetsendranges", "data", "10", "20", "true");
+	AssetNew("node1", "assetsendnameranges", "jagassetsendranges", "data", "8", "true", "10", "20");
 	// send range 1-2, 4-6, 8-9 and then add 1 balance and expect it to add to 10, add 9 more and expect it to add to 11, try to add one more and won't let you due to max 20 supply
 	// [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...]
 	// break ranges into 0, 3, 7
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	AliasNew("node2", "jagassetsendrangesd", "data");
 	AliasNew("node2", "jagassetsendrangese", "data");
 	// if use input ranges update supply and ensure adds to end of allocation, ensure balance gets updated properly
-	AssetNew("node1", "asset", "jagassetsendrangesowner", "asset", "1000", "1000000", "true");
+	AssetNew("node1", "asset", "jagassetsendrangesowner", "asset", "8", "true", "1000", "1000000");
 	AssetSend("node1", "asset", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesownerallocation\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":999}]}]\"", "memo1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo asset true"));
 	UniValue inputs = find_value(r.get_obj(), "inputs");
@@ -823,7 +823,7 @@ BOOST_AUTO_TEST_CASE(generate_assetpruning)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagprunealias1"));
 
 	// try to create asset with same name
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew jagprune1 jagprunealias1 pubdata assets 1 1 false 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew jagprune1 jagprunealias1 pubdata assets 8 false 1 1 0 false ''"), runtime_error);
 	StartNode("node3");
 }
 BOOST_AUTO_TEST_SUITE_END ()

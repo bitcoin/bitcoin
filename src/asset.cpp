@@ -474,7 +474,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						receiverAllocation.nBalance += amountTuple.second;
 						// adjust sender balance
 						theAsset.nBalance -= amountTuple.second;
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 							continue;
@@ -550,7 +550,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						subtractRanges(dbAsset.listAllocationInputs, input.second, outputSubtract);
 						theAsset.listAllocationInputs = outputSubtract;
 						theAsset.nBalance -= rangeTotals[i];
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 							return error(errorMessage.c_str());
@@ -628,16 +628,17 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 }
 
 UniValue assetnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 10)
+    if (fHelp || params.size() != 11)
         throw runtime_error(
-			"assetnew [name] [alias] [public] [category=assets] [supply] [max_supply] [use_inputranges] [interest_rate] [can_adjust_interest_rate] [witness]\n"
+			"assetnew [name] [alias] [public] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
 						"<name> name, 20 characters max.\n"
 						"<alias> An alias you own.\n"
                         "<public> public data, 256 characters max.\n"
 						"<category> category, 256 characters max. Defaults to assets.\n"
+						"<precision> Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion.\n"
+						"<use_inputranges> If this asset uses an input for every token, useful if you need to keep track of a token regardless of ownership. If set to true, precision is forced to 0. Maximum supply with input ranges is 10 million.\n"
 						"<supply> Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped.\n"
-						"<max_supply> Maximum supply of this asset. Set to -1 for uncapped.\n"
-						"<use_inputranges> If this asset uses an input for every token, useful if you need to keep track of a token regardless of ownership.\n"
+						"<max_supply> Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be.\n"
 						"<interest_rate> The annual interest rate if any. Money supply is still capped to total supply. Should be between 0 and 1 and represents a percentage divided by 100.\n"
 						"<can_adjust_interest_rate> Ability to adjust interest rate through assetupdate in the future.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
@@ -649,15 +650,17 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
 	string strCategory = "assets";
 	strCategory = params[3].get_str();
+	int precision = params[4].get_int();
+	bool bUseInputRanges = params[5].get_bool();
 	vector<unsigned char> vchWitness;
-	CAmount nBalance = AssetAmountFromValue(params[4]);
-	CAmount nMaxSupply = MAX_ASSET;
+	CAmount nBalance = AssetAmountFromValue(params[6], precision, bUseInputRanges);
+	CAmount nMaxSupply = MAX_INPUTRANGE_ASSET;
 	if(params[5].get_str() != "-1")
-		nMaxSupply = AssetAmountFromValue(params[5]);
-	bool bUseInputRanges = params[6].get_bool();
-	float fInterestRate = params[7].get_real();
-	bool bCanAdjustInterestRate = params[8].get_bool();
-	vchWitness = vchFromValue(params[9]);
+		nMaxSupply = AssetAmountFromValue(params[7], precision, bUseInputRanges);
+	
+	float fInterestRate = params[8].get_real();
+	bool bCanAdjustInterestRate = params[9].get_bool();
+	vchWitness = vchFromValue(params[10]);
 	// check for alias existence in DB
 	CAliasIndex theAlias;
 
@@ -686,6 +689,7 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	newAsset.nMaxSupply = nMaxSupply;
 	newAsset.bUseInputRanges = bUseInputRanges;
 	newAsset.fInterestRate = fInterestRate;
+	newAsset.nPrecision = precision;
 	newAsset.bCanAdjustInterestRate = bCanAdjustInterestRate;
 	if (bUseInputRanges)
 	{
@@ -747,7 +751,7 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 	string strCategory = "";
 	strPubData = params[1].get_str();
 	strCategory = params[2].get_str();
-	CAmount nBalance = AssetAmountFromValue(params[3]);
+	
 	float fInterestRate = params[4].get_real();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[5]);
@@ -759,6 +763,7 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
     if (!GetAsset( vchAsset, theAsset))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2504 - " + _("Could not find a asset with this key"));
 
+	CAmount nBalance = AssetAmountFromValue(params[3], theAsset.nPrecision, theAsset.bUseInputRanges);
 	CAliasIndex theAlias;
 
 	if (!GetAlias(theAsset.vchAlias, theAlias))
@@ -977,7 +982,7 @@ UniValue assetsend(const UniValue& params, bool fHelp) {
 			theAssetAllocation.listSendingAllocationInputs.push_back(make_pair(vchAliasTo, vectorOfRanges));
 		}
 		else if (amountObj.isNum()){
-			const CAmount &amount = AssetAmountFromValue(amountObj);
+			const CAmount &amount = AssetAmountFromValue(amountObj, theAsset.nPrecision, theAsset.bUseInputRanges);
 			if (amount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
 			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAliasTo, amount));
@@ -1077,12 +1082,13 @@ bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oAsset
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
-	oAsset.push_back(Pair("balance", ValueFromAmount(asset.nBalance)));
-	oAsset.push_back(Pair("total_supply", ValueFromAmount(asset.nTotalSupply)));
-	oAsset.push_back(Pair("max_supply", ValueFromAmount(asset.nMaxSupply)));
+	oAsset.push_back(Pair("balance", AssetValueFromAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("total_supply", AssetValueFromAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("max_supply", AssetValueFromAmount(asset.nMaxSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
 	oAsset.push_back(Pair("can_adjust_interest_rate", asset.bCanAdjustInterestRate));
 	oAsset.push_back(Pair("use_input_ranges", asset.bUseInputRanges));
+	oAsset.push_back(Pair("precision", asset.nPrecision));
 	if (bGetInputs) {
 		UniValue oAssetAllocationInputsArray(UniValue::VARR);
 		for (auto& input : asset.listAllocationInputs) {
@@ -1111,8 +1117,8 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
-	oAsset.push_back(Pair("balance", ValueFromAmount(asset.nBalance)));
-	oAsset.push_back(Pair("total_supply", ValueFromAmount(asset.nTotalSupply)));
+	oAsset.push_back(Pair("balance", AssetValueFromAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("total_supply", AssetValueFromAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
 	return true;
 }
@@ -1123,9 +1129,9 @@ bool BuildAssetIndexerJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
 	oAsset.push_back(Pair("use_input_ranges", asset.bUseInputRanges));
-	oAsset.push_back(Pair("balance", ValueFromAmount(asset.nBalance)));
-	oAsset.push_back(Pair("total_supply", ValueFromAmount(asset.nTotalSupply)));
-	oAsset.push_back(Pair("max_supply", ValueFromAmount(asset.nMaxSupply)));
+	oAsset.push_back(Pair("balance", AssetValueFromAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("total_supply", AssetValueFromAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
+	oAsset.push_back(Pair("max_supply", AssetValueFromAmount(asset.nMaxSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
 	return true;
 }
@@ -1156,7 +1162,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 		entry.push_back(Pair("interest_rate", asset.fInterestRate));
 
 	if (asset.nBalance != dbAsset.nBalance)
-		entry.push_back(Pair("balance", ValueFromAmount(asset.nBalance)));
+		entry.push_back(Pair("balance", AssetValueFromAmount(asset.nBalance, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 
 	CAssetAllocation assetallocation;
 	if (assetallocation.UnserializeFromData(vchData, vchHash)) {
@@ -1165,7 +1171,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 				UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 				oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
-				oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
+				oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 				oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 			}
 
@@ -1185,14 +1191,39 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	}
 
 }
-CAmount AssetAmountFromValue(const UniValue& value)
+
+UniValue ValueFromAssetAmount(const CAmount& amount,int precision, bool isInputRange)
 {
+	if (isInputRange)
+		precision = 0;
+	if (precision < 0 || precision > 8)
+		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
+	int64_t divByAmount = powf(10, precision);
+	bool sign = amount < 0;
+	int64_t n_abs = (sign ? -amount : amount);
+	int64_t quotient = n_abs / divByAmount;
+	int64_t remainder = n_abs % divByAmount;
+	return UniValue(UniValue::VNUM,
+		strprintf("%s%d.%0*d", sign ? "-" : "", quotient, remainder, precision));
+}
+CAmount AssetAmountFromValue(const UniValue& value, int precision, bool isInputRange)
+{
+	if (isInputRange)
+		precision = 0;
+	if(precision < 0 || precision > 8)
+		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
 	if (!value.isNum() && !value.isStr())
 		throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
+	if (value.isStr() && value.get_str() == "-1") {
+		if(!isInputRange)
+			value.setInt(INT64_MAX / powf(10, precision));
+		else
+			value.setInt(MAX_INPUTRANGE_ASSET);
+	}
 	CAmount amount;
-	if (!ParseFixedPoint(value.getValStr(), 8, &amount))
+	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-	if (!AssetRange(amount))
+	if (isInputRange && !AssetInputRange(amount))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
 	return amount;
 }

@@ -27,9 +27,9 @@ bool IsAssetOp(int op);
 void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string assetFromOp(int op);
 bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
-// 10b max asset circulation
-static const CAmount MAX_ASSET = (10000000000 * COIN) - COIN;
-inline bool AssetRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_ASSET); }
+// 10m max asset input range circulation
+static const CAmount MAX_INPUTRANGE_ASSET = (10000000 * COIN);
+inline bool AssetInputRange(const CAmount& nValue) { return (nValue > 0 && nValue <= MAX_INPUTRANGE_ASSET); }
 
 class CAsset {
 public:
@@ -45,6 +45,7 @@ public:
 	CAmount nTotalSupply;
 	CAmount nMaxSupply;
 	bool bUseInputRanges;
+	unsigned char nPrecision;
 	float fInterestRate;
 	bool bCanAdjustInterestRate;
     CAsset() {
@@ -78,6 +79,7 @@ public:
 		READWRITE(bUseInputRanges);
 		READWRITE(fInterestRate);
 		READWRITE(bCanAdjustInterestRate);
+		READWRITE(VARINT(nPrecision));
 	}
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
@@ -99,13 +101,14 @@ public:
 		bUseInputRanges = b.bUseInputRanges;
 		fInterestRate = b.fInterestRate;
 		bCanAdjustInterestRate = b.bCanAdjustInterestRate;
+		nPrecision = b.nPrecision;
         return *this;
     }
 
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { bCanAdjustInterestRate = false; fInterestRate = 0;  bUseInputRanges = false; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
+	inline void SetNull() { nPrecision = 8; bCanAdjustInterestRate = false; fInterestRate = 0;  bUseInputRanges = false; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
@@ -137,5 +140,5 @@ bool GetAsset(const std::vector<unsigned char> &vchAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oName);
 bool BuildAssetIndexerJson(const CAsset& asset,UniValue& oName);
 bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oName);
-CAmount AssetAmountFromValue(const UniValue& value);
+CAmount AssetAmountFromValue(const UniValue& value, int precision, bool isInputRange);
 #endif // ASSET_H

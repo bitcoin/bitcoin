@@ -87,9 +87,9 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation) {
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset) {
 	UniValue oName(UniValue::VOBJ);
-	if (BuildAssetAllocationIndexerJson(assetallocation, oName)) {
+	if (BuildAssetAllocationIndexerJson(assetallocation, asset, oName)) {
 		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetallocation");
 	}
 
@@ -190,7 +190,7 @@ bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptO
 	return true;
 }
 // revert allocation to previous state and remove 
-bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove, const uint256 &txHash, const int& nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations) {
+bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove, const CAsset &asset, const uint256 &txHash, const int& nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations) {
 	// remove the sender arrival time from this tx
 	passetallocationdb->EraseISArrivalTime(assetAllocationToRemove, txHash);
 	// only revert asset allocation once
@@ -205,9 +205,8 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 		dbAssetAllocation.vchAsset = assetAllocationToRemove.vchAsset;
 		dbAssetAllocation.nLastInterestClaimHeight = nHeight;
 	}
-	LogPrintf("RevertAssetAllocations %s\n", assetAllocationToRemove.ToString().c_str());
 	// write the state back to previous state
-	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, INT64_MAX, false))
+	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, asset, INT64_MAX, false))
 	{
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to asset allocation DB");
 		return error(errorMessage.c_str());
@@ -219,7 +218,6 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 	// remove the conflict once we revert since it is assumed to be resolved on POW
 	sorted_vector<CAssetAllocationTuple>::const_iterator it = assetAllocationConflicts.find(assetAllocationToRemove);
 	if (it != assetAllocationConflicts.end()) {
-		LogPrintf("RevertAssetAllocation: removing asset allocation conflict %s\n", assetAllocationToRemove.ToString().c_str());
 		assetAllocationConflicts.V.erase(const_iterator_cast(assetAllocationConflicts.V, it));
 	}
 
@@ -408,7 +406,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 		if (!bSanityCheck) {
 			bRevert = !fJustCheck;
 			if (bRevert) {
-				if (!RevertAssetAllocation(assetAllocationTuple, tx.GetHash(), nHeight, revertedAssetAllocations))
+				if (!RevertAssetAllocation(assetAllocationTuple, dbAsset, tx.GetHash(), nHeight, revertedAssetAllocations))
 				{
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation");
 					return error(errorMessage.c_str());
@@ -527,7 +525,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= amountTuple.second;
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -638,7 +636,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= rangeTotals[i];
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -668,7 +666,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 		}
 
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, ms, fJustCheck))
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, dbAsset, ms, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
@@ -709,6 +707,10 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	if (!valueTo.isArray())
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
 
+	CAsset theAsset;
+	if (!GetAsset(vchAsset, theAsset))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
+
 	CAliasIndex toAlias;
 	CAssetAllocation theAssetAllocation;
 	theAssetAllocation.vchAsset = vchAsset;
@@ -745,7 +747,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 			theAssetAllocation.listSendingAllocationInputs.push_back(make_pair(vchAliasTo, vectorOfRanges));
 		}
 		else if (amountObj.isNum()) {
-			const CAmount &amount = AmountFromValue(amountObj);
+			const CAmount &amount = AssetAmountFromValue(amountObj, theAsset.nPrecision, theAsset.bUseInputRanges);
 			if (amount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
 			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAliasTo, amount));
@@ -762,10 +764,6 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	// this is a syscoin txn
 	CWalletTx wtx;
 	CScript scriptPubKeyFromOrig;
-
-	CAsset theAsset;
-	if (!GetAsset(vchAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
 
 	CSyscoinAddress fromAddr;
 	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
@@ -911,7 +909,12 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
 	if (!passetallocationdb || !passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(vchAsset, vchAlias), txPos))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from assetallocation DB"));
 
-	if(!BuildAssetAllocationJson(txPos, bGetInputs, oAssetAllocation))
+	CAsset theAsset;
+	if (!GetAsset(vchAsset, theAsset))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
+
+
+	if(!BuildAssetAllocationJson(txPos, theAsset, bGetInputs, oAssetAllocation))
 		oAssetAllocation.clear();
     return oAssetAllocation;
 }
@@ -1042,7 +1045,7 @@ UniValue assetallocationsenderstatus(const UniValue& params, bool fHelp) {
 	oAssetAllocationStatus.push_back(Pair("status", nStatus));
 	return oAssetAllocationStatus;
 }
-bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const bool bGetInputs, UniValue& oAssetAllocation)
+bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& asset, const bool bGetInputs, UniValue& oAssetAllocation)
 {
 	CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
     oAssetAllocation.push_back(Pair("_id", assetAllocationTuple.ToString()));
@@ -1050,7 +1053,7 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const bool bGet
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
-	oAssetAllocation.push_back(Pair("balance", ValueFromAmount(assetallocation.nBalance)));
+	oAssetAllocation.push_back(Pair("balance", AssetValueFromAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("interest_claim_height", (int)assetallocation.nLastInterestClaimHeight));
 	oAssetAllocation.push_back(Pair("memo", stringFromVch(assetallocation.vchMemo)));
 	if (bGetInputs) {
@@ -1064,17 +1067,17 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const bool bGet
 		oAssetAllocation.push_back(Pair("inputs", oAssetAllocationInputsArray));
 	}
 	string errorMessage;
-	oAssetAllocation.push_back(Pair("accumulated_interest", ValueFromAmount(GetAssetAllocationInterest(assetallocation, chainActive.Tip()->nHeight, errorMessage))));
+	oAssetAllocation.push_back(Pair("accumulated_interest", AssetValueFromAmount(GetAssetAllocationInterest(assetallocation, chainActive.Tip()->nHeight, errorMessage), asset.nPrecision, asset.bUseInputRanges)));
 	return true;
 }
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oAssetAllocation)
 {
 	oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias).ToString()));
 	oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
-	oAssetAllocation.push_back(Pair("balance", ValueFromAmount(assetallocation.nBalance)));
+	oAssetAllocation.push_back(Pair("balance", AssetValueFromAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	return true;
 }
 void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
@@ -1083,6 +1086,10 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 	CAssetAllocation assetallocation;
 	if(!assetallocation.UnserializeFromData(vchData, vchHash))
 		return;
+	CAsset dbAsset;
+	GetAsset(assetallocation.vchAsset, dbAsset);
+
+
 	entry.push_back(Pair("txtype", opName));
 	entry.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias).ToString()));
 	entry.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
@@ -1093,7 +1100,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 		for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 			UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 			oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
-			oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
+			oAssetAllocationReceiversObj.push_back(Pair("amount", AsssetValueFromAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 			oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 		}
 
