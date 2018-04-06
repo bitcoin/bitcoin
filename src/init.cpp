@@ -1765,7 +1765,7 @@ bool AppInitMain()
     // ********************************************************* Step 11a: setup PrivateSend
 
     //lite mode disables all Dash-specific functionality
-    fLiteMode = GetBoolArg("-litemode", false);
+    fLiteMode = gArgs.GetBoolArg("-litemode", false);
     fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
 
     if(fMasternodeMode && fTxIndex == false) {
