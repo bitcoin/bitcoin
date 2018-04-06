@@ -1003,8 +1003,10 @@ void AssetNew(const string& node, const string& name, const string& alias, const
 	UniValue balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	UniValue maxsupplyu = find_value(r.get_obj(), "max_supply");
-	string supplytmp = supply;
-	string maxsupplytmp = maxsupply;
+	UniValue supplytmp;
+	supplytmp.setStr(supply);
+	UniValue maxsupplytmp;
+	maxsupplytmp.setStr(maxsupply);
 	BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supplytmp, nprecision, binputrange));
 	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supplytmp, nprecision, binputrange));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange) , AssetAmountFromValue(maxsupplytmp, nprecision, binputrange));
@@ -1062,8 +1064,11 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision, binputranges);
 	CAmount supplyamount = 0;
-	if(supply != "''")
-		supplyamount = AssetAmountFromValue(supply, nprecision, binputranges);
+	if (supply != "''") {
+		UniValue supplytmp;
+		supplytmp.setStr(supply);
+		supplyamount = AssetAmountFromValue(supplytmp, nprecision, binputranges);
+	}
 	CAmount newamount = oldsupplyamount + supplyamount;
 
 	string oldinterest = boost::lexical_cast<string>(find_value(r.get_obj(), "interest_rate").get_real());
