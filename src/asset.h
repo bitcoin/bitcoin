@@ -141,5 +141,6 @@ bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oName)
 bool BuildAssetIndexerJson(const CAsset& asset,UniValue& oName);
 bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oName);
 UniValue ValueFromAssetAmount(const CAmount& amount, int precision, bool isInputRange);
-CAmount AssetAmountFromValue(UniValue& value, int precision, bool isInputRange);
+CAmount AssetAmountFromValue(const UniValue& value, int precision, bool isInputRange);
+bool AssetRange(const CAmount& amountIn, int precision, bool isInputRange);
 #endif // ASSET_H

@@ -289,12 +289,17 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2013 - " + _("Interest must be between 0 and 1");
 				return error(errorMessage.c_str());
 			}
-			if (theAsset.nBalance <= 0 || !AssetRange(theAsset.nBalance))
+			if (theAsset.nBalance <= 0 || !AssetRange(theAsset.nBalance, theAsset.nPrecision, theAsset.bUseInputRanges))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Initial balance out of money range");
 				return true;
 			}
-			if (!AssetRange(theAsset.nMaxSupply) || theAsset.nMaxSupply == 0)
+			if (theAsset.nPrecision > 8)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Precision must be between 0 and 8");
+				return true;
+			}
+			if (!AssetRange(theAsset.nMaxSupply, theAsset.nPrecision, theAsset.bUseInputRanges) || theAsset.nMaxSupply == 0)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Max supply out of money range");
 				return true;
@@ -405,7 +410,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			theAsset.nBalance += increaseBalanceByAmount;
 			// increase total supply
 			theAsset.nTotalSupply += increaseBalanceByAmount;
-			if (!AssetRange(theAsset.nTotalSupply))
+			if (!AssetRange(theAsset.nTotalSupply, dbAsset.nPrecision, dbAsset.bUseInputRanges))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Total supply out of money range");
 				return true;
@@ -1215,7 +1220,7 @@ CAmount AssetAmountFromValue(const UniValue& valueIn, int precision, bool isInpu
 		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
 	if (!value.isNum() && !value.isStr())
 		throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
-	if (value.isStr() && value.get_str() == "-1") {
+	if ((value.isStr() && value.get_str() == "-1") || (value.isNum() && value.get_int() == -1)) {
 		if(!isInputRange)
 			value.setInt((int64_t)(INT64_MAX / powf(10, precision)));
 		else
@@ -1227,6 +1232,20 @@ CAmount AssetAmountFromValue(const UniValue& valueIn, int precision, bool isInpu
 	if (isInputRange && !AssetInputRange(amount))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
 	return amount;
+}
+bool AssetRange(const CAmount& amountIn, int precision, bool isInputRange)
+{
+	UniValue value;
+	value.setInt(amountIn);
+	if (isInputRange)
+		precision = 0;
+	
+	CAmount amount;
+	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
+		return false;
+	if (isInputRange && !AssetInputRange(amount))
+		return false;
+	return true;
 }
 
 

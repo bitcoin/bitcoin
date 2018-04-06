@@ -250,7 +250,7 @@ bool ApplyAssetAllocationInterest(const CAsset& asset, CAssetAllocation & assetA
 		return false;
 	}
 	// if interest cross max supply, reduce interest to fill up to max supply
-	const CAmount &nMaxSupply = asset.nMaxSupply > 0 ? asset.nMaxSupply : MAX_ASSET;
+	CAmount nMaxSupply = AssetAmountFromValue(asset.nMaxSupply, asset.nPrecision, asset.bUseInputRanges);
 	if ((nInterest + asset.nTotalSupply) > nMaxSupply) {
 		nInterest = nMaxSupply - asset.nTotalSupply;
 		if (nInterest <= 0) {
@@ -1100,7 +1100,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 		for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 			UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 			oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
-			oAssetAllocationReceiversObj.push_back(Pair("amount", AsssetValueFromAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
+			oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 			oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 		}
 
