@@ -45,6 +45,7 @@
 #include "evo/specialtx.h"
 #include "evo/providertx.h"
 #include "evo/deterministicmns.h"
+#include "evo/cbtx.h"
 
 #include <atomic>
 #include <sstream>
@@ -550,7 +551,12 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
 
     if (tx.IsCoinBase())
     {
-        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
+        int minCbSize = 2;
+        if (tx.nType == TRANSACTION_COINBASE) {
+            // With the introduction of CbTx, coinbase scripts are not required anymore to hold a valid block height
+            minCbSize = 1;
+        }
+        if (tx.vin[0].scriptSig.size() < minCbSize || tx.vin[0].scriptSig.size() > 100)
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
     }
     else
@@ -576,10 +582,11 @@ bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state,
                 tx.nType != TRANSACTION_PROVIDER_REGISTER &&
                 tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE &&
                 tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR &&
-                tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE) {
+                tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE &&
+                tx.nType != TRANSACTION_COINBASE) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
-            if (tx.IsCoinBase() && tx.nType != TRANSACTION_NORMAL)
+            if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-cb-type");
         } else if (tx.nType != TRANSACTION_NORMAL) {
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
@@ -3513,6 +3520,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
                               : block.GetBlockTime();
 
     bool fDIP0001Active_context = nHeight >= Params().GetConsensus().DIP0001Height;
+    bool fDIP0003Active_context = VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
 
     // Size limits
     unsigned int nMaxBlockSize = MaxBlockSize(fDIP0001Active_context);
@@ -3537,12 +3545,20 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
         return state.DoS(10, false, REJECT_INVALID, "bad-blk-sigops", false, "out-of-bounds SigOpCount");
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (nHeight >= consensusParams.BIP34Height)
+    // After DIP3/DIP4 activation, we don't enforce the height in the input script anymore.
+    // The CbTx special transaction payload will then contain the height, which is checked in CheckCbTx
+    if (nHeight >= consensusParams.BIP34Height && !fDIP0003Active_context)
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
+        }
+    }
+
+    if (fDIP0003Active_context) {
+        if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-type", false, "coinbase is not a CbTx");
         }
     }
 

@@ -18,6 +18,7 @@ enum {
     TRANSACTION_PROVIDER_UPDATE_SERVICE = 2,
     TRANSACTION_PROVIDER_UPDATE_REGISTRAR = 3,
     TRANSACTION_PROVIDER_UPDATE_REVOKE = 4,
+    TRANSACTION_COINBASE = 5,
 };
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
