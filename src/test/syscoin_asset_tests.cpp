@@ -670,8 +670,8 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	AliasNew("node2", "jagassetsendrangesd", "data");
 	AliasNew("node2", "jagassetsendrangese", "data");
 	// if use input ranges update supply and ensure adds to end of allocation, ensure balance gets updated properly
-	AssetNew("node1", "ASSET", "jagassetsendrangesowner", "asset", "1000", "1000000", "true");
-	AssetSend("node1", "ASSET", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesownerallocation\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":999}]}]\"", "memo1");
+	AssetNew("node1", "asset", "jagassetsendrangesowner", "asset", "1000", "1000000", "true");
+	AssetSend("node1", "asset", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesownerallocation\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":999}]}]\"", "memo1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo asset true"));
 	UniValue inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
