@@ -1000,9 +1000,12 @@ void AssetNew(const string& node, const string& name, const string& alias, const
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == name);
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == alias);
 	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
-	BOOST_CHECK(AssetAmountFromValue(find_value(r.get_obj(), "balance"), nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-	BOOST_CHECK(AssetAmountFromValue(find_value(r.get_obj(), "total_supply"), nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "max_supply"), nprecision, binputrange) , AssetAmountFromValue(maxsupply, nprecision, binputrange));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
+	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, nprecision, binputrange) , AssetAmountFromValue(maxsupply, nprecision, binputrange));
 	BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 	bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
 	bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
@@ -1015,9 +1018,12 @@ void AssetNew(const string& node, const string& name, const string& alias, const
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + name + " false"));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == name);
 		BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
-		BOOST_CHECK(AssetAmountFromValue(find_value(r.get_obj(), "balance"), nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-		BOOST_CHECK(AssetAmountFromValue(find_value(r.get_obj(), "total_supply"), nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-		BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "max_supply"), nprecision, binputrange), AssetAmountFromValue(maxsupply, nprecision, binputrange));
+		UniValue balance = find_value(r.get_obj(), "balance");
+		UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+		UniValue maxsupply = find_value(r.get_obj(), "max_supply");
+		BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
+		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
+		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, nprecision, binputrange), AssetAmountFromValue(maxsupply, nprecision, binputrange));
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 		bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
 		bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
@@ -1028,9 +1034,12 @@ void AssetNew(const string& node, const string& name, const string& alias, const
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + name + " false"));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == name);
 		BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
-		BOOST_CHECK(AssetAmountFromValue(find_value(r.get_obj(), "balance"), nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-		BOOST_CHECK(AssetAmountFromValue(find_value(r.get_obj(), "total_supply"), nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
-		BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "max_supply"), nprecision, binputrange), AssetAmountFromValue(maxsupply, nprecision, binputrange));
+		UniValue balance = find_value(r.get_obj(), "balance");
+		UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+		UniValue maxsupply = find_value(r.get_obj(), "max_supply");
+		BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
+		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supply, nprecision, binputrange));
+		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, nprecision, binputrange), AssetAmountFromValue(maxsupply, nprecision, binputrange));
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 		bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
 		bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
@@ -1048,8 +1057,8 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 	string oldsupply = find_value(r.get_obj(), "total_supply").write();
 	bool binputranges = find_value(r.get_obj(), "use_input_ranges").get_bool();
 	int nprecision = find_value(r.get_obj(), "precision").get_int();
-	
-	CAmount oldsupplyamount = AssetAmountFromValue(find_value(r.get_obj(), "total_supply"), nprecision, binputranges);
+	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+	CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision, binputranges);
 	CAmount supplyamount = 0;
 	if(supply != "''")
 		supplyamount = AssetAmountFromValue(supply, nprecision, binputranges);
@@ -1080,7 +1089,8 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == name);
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
 	BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(newinterest) * 1000)));
-	BOOST_CHECK(AssetAmountFromValue(find_value(r.get_obj(), "total_supply"), nprecision, binputranges) == newamount);
+	totalsupply = find_value(r.get_obj(), "total_supply");
+	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputranges) == newamount);
 	GenerateBlocks(5, node);
 	if (!otherNode1.empty())
 	{
@@ -1089,7 +1099,8 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), newpubdata);
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(newinterest) * 1000)));
-		BOOST_CHECK(AssetAmountFromValue(find_value(r.get_obj(), "total_supply"), nprecision, binputranges) == newamount);
+		totalsupply = find_value(r.get_obj(), "total_supply");
+		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputranges) == newamount);
 
 	}
 	if (!otherNode2.empty())
@@ -1099,7 +1110,8 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), newpubdata);
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(newinterest) * 1000)));
-		BOOST_CHECK(AssetAmountFromValue(find_value(r.get_obj(), "total_supply"), nprecision, binputranges) == newamount);
+		totalsupply = find_value(r.get_obj(), "total_supply");
+		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputranges) == newamount);
 
 	}
 
@@ -1207,7 +1219,8 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	GetOtherNodes(node, otherNode1, otherNode2);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + name + " " + fromalias + " false"));
-	CAmount newfromamount = AssetAmountFromValue(find_value(r.get_obj(), "balance"), nprecision, binputranges) - inputamount;
+	UniValue balance = find_value(r.get_obj(), "balance");
+	CAmount newfromamount = AssetAmountFromValue(balance, nprecision, binputranges) - inputamount;
 
 	// "assetallocationsend [asset] [aliasfrom] ( [{\"alias\":\"aliasname\",\"amount\":amount},...] or [{\"alias\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationsend " + name + " " + fromalias + " " + inputs + " " + memo + " " + witness));
@@ -1220,7 +1233,8 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	if(!usezdag)
 		GenerateBlocks(1, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + name + " " + fromalias + " false"));
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance"), nprecision, binputranges), newfromamount);
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges), newfromamount);
 	return txid;
 }
 void AssetSend(const string& node, const string& name, const string& inputs, const string& memo, const string& witness)
@@ -1282,7 +1296,8 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
 	string fromalias = find_value(r.get_obj(), "alias").get_str();
 	string fromsupply = find_value(r.get_obj(), "total_supply").write();
-	CAmount newfromamount = AssetAmountFromValue(find_value(r.get_obj(), "balance"), nprecision, binputranges) - inputamount;
+	UniValue balance = find_value(r.get_obj(), "balance");
+	CAmount newfromamount = AssetAmountFromValue(balance, nprecision, binputranges) - inputamount;
 
 	// "assetsend [asset] [aliasfrom] ( [{\"alias\":\"aliasname\",\"amount\":amount},...] or [{\"alias\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetsend " + name + " " + fromalias + " " + inputs + " " + memo + " " + witness));
@@ -1296,20 +1311,23 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").write(), fromsupply);
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance"), nprecision, binputranges) , newfromamount);
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
 
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + name + " false"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").write(), fromsupply);
-		BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance"), nprecision, binputranges) , newfromamount);
+		balance = find_value(r.get_obj(), "balance");
+		BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
 
 	}
 	if (!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + name + " false"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").write(), fromsupply);
-		BOOST_CHECK_EQUAL(AssetAmountFromValue(find_value(r.get_obj(), "balance"), nprecision, binputranges) , newfromamount);
+		balance = find_value(r.get_obj(), "balance");
+		BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
 
 	}
 
