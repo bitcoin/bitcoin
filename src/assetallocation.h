@@ -218,6 +218,6 @@ public:
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool bSanityCheck = false);
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& asset, const bool bGetInputs, UniValue& oName);
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation,UniValue& oName);
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oName);
 bool AccumulateInterestSinceLastClaim(CAssetAllocation & assetAllocation, const int& nHeight);
 #endif // ASSETALLOCATION_H
