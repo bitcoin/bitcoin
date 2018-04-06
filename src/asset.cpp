@@ -1171,7 +1171,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 				UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 				oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
-				oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
+				oAssetAllocationReceiversObj.push_back(Pair("amount", AssetValueFromAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 				oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 			}
 
