@@ -459,7 +459,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
 				// one of the first things we do per receiver is revert it to last pow state on the pow(!fJustCheck)
 				if (bRevert) {
-					if (!RevertAssetAllocation(receiverAllocationTuple, tx.GetHash(), nHeight, revertedAssetAllocations))
+					if (!RevertAssetAllocation(receiverAllocationTuple, dbAsset, tx.GetHash(), nHeight, revertedAssetAllocations))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation");
 						return error(errorMessage.c_str());
@@ -551,7 +551,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, inputTuple.first);
 				// one of the first things we do per receiver is revert it to last pow state on the pow(!fJustCheck)
 				if (bRevert) {
-					if (!RevertAssetAllocation(receiverAllocationTuple, tx.GetHash(), nHeight, revertedAssetAllocations))
+					if (!RevertAssetAllocation(receiverAllocationTuple, dbAsset, tx.GetHash(), nHeight, revertedAssetAllocations))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation");
 						return error(errorMessage.c_str());
