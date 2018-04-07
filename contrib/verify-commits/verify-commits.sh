@@ -35,6 +35,8 @@ NO_SHA1=1
 PREV_COMMIT=""
 INITIAL_COMMIT="${CURRENT_COMMIT}"
 
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+
 while true; do
 	if [ "$CURRENT_COMMIT" = $VERIFIED_ROOT ]; then
 		echo "There is a valid path from \"$INITIAL_COMMIT\" to $VERIFIED_ROOT where all commits are signed!"
@@ -123,9 +125,29 @@ while true; do
 	fi
 
 	PARENTS=$(git show -s --format=format:%P "$CURRENT_COMMIT")
-	for PARENT in $PARENTS; do
-		PREV_COMMIT="$CURRENT_COMMIT"
-		CURRENT_COMMIT="$PARENT"
-		break
-	done
+	PARENT1=${PARENTS%% *}
+	PARENT2=""
+	if [ "x$PARENT1" != "x$PARENTS" ]; then
+		PARENTX=${PARENTS#* }
+		PARENT2=${PARENTX%% *}
+		if [ "x$PARENT2" != "x$PARENTX" ]; then
+			echo "Commit $CURRENT_COMMIT is an octopus merge" > /dev/stderr
+			exit 1
+		fi
+	fi
+	if [ "x$PARENT2" != "x" ]; then
+		CURRENT_TREE="$(git show --format="%T" "$CURRENT_COMMIT")"
+		git checkout --force --quiet "$PARENT1"
+		git merge --no-ff --quiet "$PARENT2" >/dev/null
+		RECREATED_TREE="$(git show --format="%T" HEAD)"
+		if [ "$CURRENT_TREE" != "$RECREATED_TREE" ]; then
+			echo "Merge commit $CURRENT_COMMIT is not clean" > /dev/stderr
+			git diff "$CURRENT_COMMIT"
+			git checkout --force --quiet "$BRANCH"
+			exit 1
+		fi
+		git checkout --force --quiet "$BRANCH"
+	fi
+	PREV_COMMIT="$CURRENT_COMMIT"
+	CURRENT_COMMIT="$PARENT1"
 done
