@@ -319,4 +319,13 @@ template <typename Callable> void TraceThread(const std::string name,  Callable 
 
 std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear);
 
+/**
+ * On platforms that support it, tell the kernel the calling thread is
+ * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.
+ *
+ * @return The return value of sched_setschedule(), or 1 on systems without
+ * sched_setchedule().
+ */
+int ScheduleBatchPriority(void);
+
 #endif // BITCOIN_UTIL_H
