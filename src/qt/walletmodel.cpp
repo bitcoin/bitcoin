@@ -12,8 +12,8 @@
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
 
-#include <interface/handler.h>
-#include <interface/node.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
 #include <key_io.h>
 #include <ui_interface.h>
 #include <util.h> // for GetBoolArg
@@ -28,7 +28,7 @@
 #include <QTimer>
 
 
-WalletModel::WalletModel(std::unique_ptr<interface::Wallet> wallet, interface::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
+WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
@@ -70,7 +70,7 @@ void WalletModel::pollBalanceChanged()
     // avoids the GUI from getting stuck on periodical polls if the core is
     // holding the locks for a longer time - for example, during a wallet
     // rescan.
-    interface::WalletBalances new_balances;
+    interfaces::WalletBalances new_balances;
     int numBlocks = -1;
     if (!m_wallet->tryGetBalances(new_balances, numBlocks)) {
         return;
@@ -89,7 +89,7 @@ void WalletModel::pollBalanceChanged()
     }
 }
 
-void WalletModel::checkBalanceChanged(const interface::WalletBalances& new_balances)
+void WalletModel::checkBalanceChanged(const interfaces::WalletBalances& new_balances)
 {
     if(new_balances.balanceChanged(m_cached_balances)) {
         m_cached_balances = new_balances;

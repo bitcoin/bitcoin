@@ -9,7 +9,7 @@
 
 #include <amount.h>
 #include <chainparams.h>
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <random.h>
 #include <script/script.h>
 #include <script/standard.h>
@@ -67,7 +67,7 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
 void PaymentServerTests::paymentServerTests()
 {
     SelectParams(CBaseChainParams::MAIN);
-    auto node = interface::MakeNode();
+    auto node = interfaces::MakeNode();
     OptionsModel optionsModel(*node);
     PaymentServer* server = new PaymentServer(nullptr, false);
     X509_STORE* caStore = X509_STORE_new();

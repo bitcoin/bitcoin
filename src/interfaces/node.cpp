@@ -2,15 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <interface/node.h>
+#include <interfaces/node.h>
 
 #include <addrdb.h>
 #include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <init.h>
-#include <interface/handler.h>
-#include <interface/wallet.h>
+#include <interfaces/handler.h>
+#include <interfaces/wallet.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -43,7 +43,7 @@
 #include <boost/thread/thread.hpp>
 #include <univalue.h>
 
-namespace interface {
+namespace interfaces {
 namespace {
 
 class NodeImpl : public Node
@@ -305,4 +305,4 @@ class NodeImpl : public Node
 
 std::unique_ptr<Node> MakeNode() { return MakeUnique<NodeImpl>(); }
 
-} // namespace interface
+} // namespace interfaces

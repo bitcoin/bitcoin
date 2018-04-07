@@ -11,7 +11,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
 
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
 #include <net.h>
 #include <netbase.h>
@@ -24,7 +24,7 @@
 
 const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 
-OptionsModel::OptionsModel(interface::Node& node, QObject *parent, bool resetSettings) :
+OptionsModel::OptionsModel(interfaces::Node& node, QObject *parent, bool resetSettings) :
     QAbstractListModel(parent), m_node(node)
 {
     Init(resetSettings);
