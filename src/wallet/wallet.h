@@ -906,7 +906,7 @@ public:
     /**
      * Return list of available coins and locked coins grouped by non-change output address.
      */
-    std::map<CTxDestination, std::vector<COutput>> ListCoins() const;
+    virtual std::map<CTxDestination, std::vector<COutput>> ListCoins() const;
 
     /**
      * Find non-change parent output.

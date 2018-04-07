@@ -63,6 +63,7 @@ public:
     mutable bool fNeedHardwareKey = false;
     CAmount m_extrafee;
     std::map<COutPoint, CInputData> m_inputData;
+    bool fAllowLocked = false;
     //MapRecords_t mapRecords; // hack for COutputR
 
 

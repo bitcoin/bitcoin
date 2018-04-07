@@ -696,6 +696,13 @@ public:
     void AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t& nMaximumCount = 0, const int& nMinDepth = 0, const int& nMaxDepth = 0x7FFFFFFF, bool fIncludeImmature=false) const;
     //bool SelectAnonCoins(const std::vector<COutputR> &vAvailableCoins, const CAmount &nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = NULL) const;
 
+    /**
+     * Return list of available coins and locked coins grouped by non-change output address.
+     */
+    const CTxOutBase* FindNonChangeParentOutput(const CTransaction& tx, int output) const;
+    std::map<CTxDestination, std::vector<COutput>> ListCoins() const override;
+    std::map<CTxDestination, std::vector<COutputR>> ListCoins(OutputTypes nType) const;
+
     bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutputR> vCoins, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const override;

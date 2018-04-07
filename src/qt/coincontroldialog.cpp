@@ -663,7 +663,10 @@ void CoinControlDialog::updateView()
 
     int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
-    for (const auto& coins : model->wallet().listCoins()) {
+    QString sType = ui->cbxType->currentText().toLower();
+
+    for (const auto& coins : model->wallet().listCoins(
+        sType == "anon" ? OUTPUT_RINGCT : sType == "blind" ? OUTPUT_CT : OUTPUT_STANDARD)) {
 
         CCoinControlWidgetItem *itemWalletAddress = new CCoinControlWidgetItem();
         itemWalletAddress->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);

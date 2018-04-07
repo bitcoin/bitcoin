@@ -4261,7 +4261,6 @@ UniValue listunspentanon(const JSONRPCRequest &request)
 
         CAmount nValue = pout->nValue;
 
-
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", out.txhash.GetHex());
         entry.pushKV("vout", out.i);
@@ -4474,7 +4473,7 @@ UniValue listunspentblind(const JSONRPCRequest &request)
                 CScript redeemScript;
                 if (pwallet->GetCScript(hash, redeemScript))
                     entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
-            }
+            } else
             if (scriptPubKey->IsPayToScriptHash256()) {
                 const CScriptID256& hash = boost::get<CScriptID256>(address);
                 CScriptID scriptID;

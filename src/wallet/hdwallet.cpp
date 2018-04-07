@@ -10539,7 +10539,8 @@ void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyS
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(txid, r.n)))
                 continue;
 
-            if (IsLockedCoin(txid, r.n))
+            if (IsLockedCoin(txid, r.n)
+                && (!coinControl || !coinControl->fAllowLocked))
                 continue;
 
             bool fMature = true;
@@ -10713,7 +10714,8 @@ void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(txid, r.n)))
                 continue;
 
-            if (IsLockedCoin(txid, r.n))
+            if (IsLockedCoin(txid, r.n)
+                && (!coinControl || !coinControl->fAllowLocked))
                 continue;
 
             bool fMature = true;
@@ -10749,6 +10751,142 @@ bool CHDWallet::SelectAnonCoins(const std::vector<COutputR> &vAvailableCoins, co
     return false;
 };
 */
+
+const CTxOutBase* CHDWallet::FindNonChangeParentOutput(const CTransaction& tx, int output) const
+{
+    const CTransaction* ptx = &tx;
+    int n = output;
+    while (IsChange(ptx->vpout[n].get()) && ptx->vin.size() > 0) {
+        const COutPoint& prevout = ptx->vin[0].prevout;
+
+        auto it = mapWallet.find(prevout.hash);
+        if (it == mapWallet.end())
+            it = mapTempWallet.find(prevout.hash);
+
+        if (it == mapTempWallet.end() || it->second.tx->vpout.size() <= prevout.n ||
+            !IsMine(it->second.tx->vpout[prevout.n].get())) {
+            break;
+        }
+        ptx = it->second.tx.get();
+        n = prevout.n;
+    }
+    return ptx->vpout[n].get();
+}
+
+std::map<CTxDestination, std::vector<COutput>> CHDWallet::ListCoins() const
+{
+    std::map<CTxDestination, std::vector<COutput>> result;
+    std::vector<COutput> availableCoins;
+
+    LOCK2(cs_main, cs_wallet);
+    AvailableCoins(availableCoins);
+
+    for (auto& coin : availableCoins) {
+        CTxDestination address;
+        if (coin.fSpendable &&
+            ExtractDestination(*(FindNonChangeParentOutput(*coin.tx->tx, coin.i)->GetPScriptPubKey()), address)) {
+            result[address].emplace_back(std::move(coin));
+        }
+    }
+
+    std::vector<COutPoint> lockedCoins;
+    ListLockedCoins(lockedCoins);
+    for (const auto& output : lockedCoins) {
+        auto it = mapWallet.find(output.hash);
+        if (it != mapWallet.end()) {
+            int depth = it->second.GetDepthInMainChain();
+            if (depth >= 0 && output.n < it->second.tx->vpout.size() &&
+                it->second.tx->vpout[output.n]->IsStandardOutput() &&
+                IsMine(it->second.tx->vpout[output.n].get()) == ISMINE_SPENDABLE) {
+                CTxDestination address;
+                if (ExtractDestination(*(FindNonChangeParentOutput(*it->second.tx, output.n)->GetPScriptPubKey()), address)) {
+                    result[address].emplace_back(
+                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                }
+            }
+        }
+    }
+
+    return result;
+};
+
+bool GetAddress(const CHDWallet *pw, const COutputRecord *pout, CTxDestination &address)
+{
+    if (ExtractDestination(pout->scriptPubKey, address))
+        return true;
+    if (pout->vPath.size() > 0 && pout->vPath[0] == ORA_STEALTH)
+    {
+        if (pout->vPath.size() < 5)
+        {
+            LogPrintf("%s: Warning, malformed vPath.", __func__);
+        } else
+        {
+            uint32_t sidx;
+            memcpy(&sidx, &pout->vPath[1], 4);
+            CStealthAddress sx;
+            if (pw->GetStealthByIndex(sidx, sx))
+                address = sx;
+        };
+        return true;
+    };
+    return false;
+}
+
+std::map<CTxDestination, std::vector<COutputR>> CHDWallet::ListCoins(OutputTypes nType) const
+{
+    std::map<CTxDestination, std::vector<COutputR>> result;
+    std::vector<COutputR> availableCoins;
+
+    CCoinControl coinControl;
+    coinControl.fAllowLocked = true;
+    if (nType == OUTPUT_CT)
+    {
+        AvailableBlindedCoins(availableCoins, true, &coinControl);
+    } else
+    if (nType == OUTPUT_RINGCT)
+    {
+        AvailableAnonCoins(availableCoins, true, &coinControl);
+    };
+
+    for (auto& coin : availableCoins) {
+        CTxDestination address;
+        if (!coin.fSpendable)
+            continue;
+
+        const COutputRecord *oR = coin.rtx->second.GetOutput(coin.i);
+        GetAddress(this, oR, address);
+
+        result[address].emplace_back(std::move(coin));
+    }
+
+    /*
+    std::vector<COutPoint> lockedCoins;
+    ListLockedCoins(lockedCoins);
+    for (const auto& output : lockedCoins) {
+        auto it = mapRecords.find(output.hash);
+        if (it != mapRecords.end()) {
+            const COutputRecord *oR = it->second.GetOutput(output.n);
+            if (!oR || oR->nType != nType)
+                continue;
+
+            int depth = GetDepthInMainChain(it->second.blockHash, it->second.nIndex);
+            if (depth >= 0
+                && oR->nFlags & ORF_OWNED) {
+                CTxDestination address;
+                GetAddress(oR, address);
+
+                COutputR
+                result[address].emplace_back(coin
+                if (ExtractDestination(*(FindNonChangeParentOutput(*it->second.tx, output.n)->GetPScriptPubKey()), address)) {
+                    result[address].emplace_back();
+                }
+            }
+        }
+    }
+    */
+
+    return result;
+};
 
 struct CompareValueOnly
 {

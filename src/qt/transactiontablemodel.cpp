@@ -20,6 +20,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util.h>
+#include <wallet/hdwallet.h>
 
 #include <QColor>
 #include <QDateTime>
@@ -86,8 +87,6 @@ public:
                 }
             }
         }
-
-
     }
 
     /* Update our model of the wallet incrementally, to synchronize our model of the wallet

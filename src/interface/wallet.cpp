@@ -169,10 +169,25 @@ WalletTxStatus MakeWalletTxStatus(CHDWallet &wallet, const uint256 &hash, const 
 WalletTxOut MakeWalletTxOut(CWallet& wallet, const CWalletTx& wtx, int n, int depth)
 {
     WalletTxOut result;
-    result.txout = wtx.tx->vout[n];
+    result.txout.nValue = wtx.tx->vpout[n]->GetValue();
+    result.txout.scriptPubKey = *wtx.tx->vpout[n]->GetPScriptPubKey();
     result.time = wtx.GetTxTime();
     result.depth_in_main_chain = depth;
     result.is_spent = wallet.IsSpent(wtx.GetHash(), n);
+    return result;
+}
+
+WalletTxOut MakeWalletTxOut(CHDWallet& wallet, const COutputR& r, int n, int depth)
+{
+    WalletTxOut result;
+    const COutputRecord *oR = r.rtx->second.GetOutput(r.i);
+    if (!oR)
+        return result;
+    result.txout.nValue = oR->nValue;
+    result.txout.scriptPubKey = oR->scriptPubKey;
+    result.time = r.rtx->second.GetTxTime();
+    result.depth_in_main_chain = depth;
+    result.is_spent = wallet.IsSpent(r.rtx->first, r.i);
     return result;
 }
 
@@ -510,10 +525,26 @@ public:
         LOCK2(::cs_main, m_wallet.cs_wallet);
         return m_wallet.GetCredit(txout, filter);
     }
-    CoinsList listCoins() override
+    CoinsList listCoins(OutputTypes nType) override
     {
         LOCK2(::cs_main, m_wallet.cs_wallet);
+
         CoinsList result;
+        if (m_wallet_part
+            && nType != OUTPUT_STANDARD)
+        {
+            for (const auto& entry : m_wallet_part->ListCoins(nType)) {
+                auto& group = result[entry.first];
+                for (const auto& coin : entry.second) {
+                    group.emplace_back(
+                        COutPoint(coin.rtx->first, coin.i), MakeWalletTxOut(*m_wallet_part, coin, coin.i, coin.nDepth));
+                }
+            }
+            return result;
+        }
+
+
+
         for (const auto& entry : m_wallet.ListCoins()) {
             auto& group = result[entry.first];
             for (const auto& coin : entry.second) {
