@@ -9,6 +9,8 @@
 #include <consensus/validation.h>
 #include <interfaces/handler.h>
 #include <net.h>
+#include <policy/feerate.h>
+#include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/ismine.h>
@@ -20,6 +22,7 @@
 #include <uint256.h>
 #include <validation.h>
 #include <wallet/feebumper.h>
+#include <wallet/fees.h>
 #include <wallet/privatesend-client.h>
 #include <wallet/wallet.h>
 
@@ -413,6 +416,20 @@ public:
     {
         return m_wallet.GetCappedOutpointPrivateSendRounds(outpoint);
     }
+    CAmount getRequiredFee(unsigned int tx_bytes) override { return GetRequiredFee(m_wallet, tx_bytes); }
+    CAmount getMinimumFee(unsigned int tx_bytes,
+        const CCoinControl& coin_control,
+        int* returned_target,
+        FeeReason* reason) override
+    {
+        FeeCalculation fee_calc;
+        CAmount result;
+        result = GetMinimumFee(m_wallet, tx_bytes, coin_control, ::mempool, ::feeEstimator, &fee_calc);
+        if (returned_target) *returned_target = fee_calc.returnedTarget;
+        if (reason) *reason = fee_calc.reason;
+        return result;
+    }
+    unsigned int getConfirmTarget() override { return m_wallet.m_confirm_target; }
     bool hdEnabled() override { return m_wallet.IsHDEnabled(); }
     OutputType getDefaultAddressType() override { return m_wallet.m_default_address_type; }
     OutputType getDefaultChangeType() override { return m_wallet.m_default_change_type; }

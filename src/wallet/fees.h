@@ -12,35 +12,36 @@ class CBlockPolicyEstimator;
 class CCoinControl;
 class CFeeRate;
 class CTxMemPool;
+class CWallet;
 struct FeeCalculation;
 
 /**
- * Return the minimum required fee taking into account the
- * floating relay fee and user set minimum transaction fee
+ * Return the minimum required absolute fee for this size
+ * based on the required fee rate
  */
-CAmount GetRequiredFee(unsigned int nTxBytes);
+CAmount GetRequiredFee(const CWallet& wallet, unsigned int nTxBytes);
 
 /**
  * Estimate the minimum fee considering user set parameters
  * and the required fee
  */
-CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc);
+CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation* feeCalc);
 
 /**
  * Return the minimum required feerate taking into account the
- * floating relay feerate and user set minimum transaction feerate
+ * minimum relay feerate and user set minimum transaction feerate
  */
-CFeeRate GetRequiredFeeRate();
+CFeeRate GetRequiredFeeRate(const CWallet& wallet);
 
 /**
  * Estimate the minimum fee rate considering user set parameters
  * and the required fee
  */
-CFeeRate GetMinimumFeeRate(const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc);
+CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation* feeCalc);
 
 /**
  * Return the maximum feerate for discarding change.
  */
-CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator);
+CFeeRate GetDiscardRate(const CWallet& wallet, const CBlockPolicyEstimator& estimator);
 
 #endif // BITCOIN_WALLET_FEES_H

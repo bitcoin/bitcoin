@@ -163,5 +163,12 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_equal(batch[0]["result"]["chain"], "regtest")
         assert_equal(batch[1]["result"]["walletname"], "w1")
 
+        self.log.info('Check for per-wallet settxfee call')
+        assert_equal(w1.getwalletinfo()['paytxfee'], 0)
+        assert_equal(w2.getwalletinfo()['paytxfee'], 0)
+        w2.settxfee(4.0)
+        assert_equal(w1.getwalletinfo()['paytxfee'], 0)
+        assert_equal(w2.getwalletinfo()['paytxfee'], 4.0)
+
 if __name__ == '__main__':
     MultiWalletTest().main()
