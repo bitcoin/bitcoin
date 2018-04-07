@@ -14,8 +14,8 @@
 #include <qt/walletmodel.h>
 
 #include <core_io.h>
-#include <interface/handler.h>
-#include <interface/node.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
 #include <validation.h>
 #include <sync.h>
 #include <uint256.h>
@@ -73,7 +73,7 @@ public:
 
     /* Query entire wallet anew from core.
      */
-    void refreshWallet(interface::Wallet& wallet)
+    void refreshWallet(interfaces::Wallet& wallet)
     {
         qDebug() << "TransactionTablePriv::refreshWallet";
         cachedWallet.clear();
@@ -91,7 +91,7 @@ public:
 
        Call with transaction that was added, removed or changed.
      */
-    void updateWallet(interface::Wallet& wallet, const uint256 &hash, int status, bool showTransaction)
+    void updateWallet(interfaces::Wallet& wallet, const uint256 &hash, int status, bool showTransaction)
     {
         qDebug() << "TransactionTablePriv::updateWallet: " + QString::fromStdString(hash.ToString()) + " " + QString::number(status);
 
@@ -127,7 +127,7 @@ public:
             if(showTransaction)
             {
                 // Find transaction in wallet
-                interface::WalletTx wtx = wallet.getWalletTx(hash);
+                interfaces::WalletTx wtx = wallet.getWalletTx(hash);
                 if(!wtx.tx)
                 {
                     qWarning() << "TransactionTablePriv::updateWallet: Warning: Got CT_NEW, but transaction is not in wallet";
@@ -176,7 +176,7 @@ public:
         return cachedWallet.size();
     }
 
-    TransactionRecord *index(interface::Wallet& wallet, int idx)
+    TransactionRecord *index(interfaces::Wallet& wallet, int idx)
     {
         if(idx >= 0 && idx < cachedWallet.size())
         {
@@ -189,7 +189,7 @@ public:
             // If a status update is needed (blocks came in since last check),
             //  update the status of this transaction from the wallet. Otherwise,
             // simply re-use the cached status.
-            interface::WalletTxStatus wtx;
+            interfaces::WalletTxStatus wtx;
             int numBlocks;
             int64_t adjustedTime;
             if (wallet.tryGetTxStatus(rec->hash, wtx, numBlocks, adjustedTime) && rec->statusUpdateNeeded(numBlocks)) {
@@ -200,12 +200,12 @@ public:
         return 0;
     }
 
-    QString describe(interface::Node& node, interface::Wallet& wallet, TransactionRecord *rec, int unit)
+    QString describe(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit)
     {
         return TransactionDesc::toHTML(node, wallet, rec, unit);
     }
 
-    QString getTxHex(interface::Wallet& wallet, TransactionRecord *rec)
+    QString getTxHex(interfaces::Wallet& wallet, TransactionRecord *rec)
     {
         auto tx = wallet.getTx(rec->hash);
         if (tx) {

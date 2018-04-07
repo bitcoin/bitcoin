@@ -7,7 +7,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <fs.h>
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <validation.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
@@ -46,7 +46,7 @@ void RPCNestedTests::rpcNestedTests()
     std::string result;
     std::string result2;
     std::string filtered;
-    auto node = interface::MakeNode();
+    auto node = interfaces::MakeNode();
     RPCConsole::RPCExecuteCommandLine(*node, result, "getblockchaininfo()[chain]", &filtered); //simple result filtering with path
     QVERIFY(result=="main");
     QVERIFY(filtered == "getblockchaininfo()[chain]");

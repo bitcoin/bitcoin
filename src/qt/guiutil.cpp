@@ -13,7 +13,7 @@
 #include <chainparams.h>
 #include <primitives/transaction.h>
 #include <key_io.h>
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <policy/policy.h>
 #include <protocol.h>
 #include <script/script.h>
@@ -232,7 +232,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
     return ret;
 }
 
-bool isDust(interface::Node& node, const QString& address, const CAmount& amount)
+bool isDust(interfaces::Node& node, const QString& address, const CAmount& amount)
 {
     CTxDestination dest = DecodeDestination(address.toStdString());
     CScript script = GetScriptForDestination(dest);

@@ -7,7 +7,7 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <key_io.h>
 #include <wallet/wallet.h>
 
@@ -74,7 +74,7 @@ public:
     AddressTablePriv(AddressTableModel *_parent):
         parent(_parent) {}
 
-    void refreshAddressTable(interface::Wallet& wallet)
+    void refreshAddressTable(interfaces::Wallet& wallet)
     {
         cachedAddressTable.clear();
         {

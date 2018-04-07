@@ -13,7 +13,7 @@
 #include <qt/paymentrequestplus.h>
 #include <qt/walletmodeltransaction.h>
 
-#include <interface/wallet.h>
+#include <interfaces/wallet.h>
 #include <support/allocators/secure.h>
 
 #include <map>
@@ -37,9 +37,9 @@ class COutput;
 class CPubKey;
 class uint256;
 
-namespace interface {
+namespace interfaces {
 class Node;
-} // namespace interface
+} // namespace interfaces
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -111,7 +111,7 @@ class WalletModel : public QObject
     Q_OBJECT
 
 public:
-    explicit WalletModel(std::unique_ptr<interface::Wallet> wallet, interface::Node& node, const PlatformStyle *platformStyle, OptionsModel *optionsModel, QObject *parent = 0);
+    explicit WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *optionsModel, QObject *parent = 0);
     ~WalletModel();
 
     enum StatusCode // Returned by sendCoins
@@ -198,20 +198,20 @@ public:
 
     static bool isWalletEnabled();
 
-    interface::Node& node() const { return m_node; }
-    interface::Wallet& wallet() const { return *m_wallet; }
+    interfaces::Node& node() const { return m_node; }
+    interfaces::Wallet& wallet() const { return *m_wallet; }
 
     QString getWalletName() const;
 
     bool isMultiwallet();
 private:
-    std::unique_ptr<interface::Wallet> m_wallet;
-    std::unique_ptr<interface::Handler> m_handler_status_changed;
-    std::unique_ptr<interface::Handler> m_handler_address_book_changed;
-    std::unique_ptr<interface::Handler> m_handler_transaction_changed;
-    std::unique_ptr<interface::Handler> m_handler_show_progress;
-    std::unique_ptr<interface::Handler> m_handler_watch_only_changed;
-    interface::Node& m_node;
+    std::unique_ptr<interfaces::Wallet> m_wallet;
+    std::unique_ptr<interfaces::Handler> m_handler_status_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_address_book_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_transaction_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
+    std::unique_ptr<interfaces::Handler> m_handler_watch_only_changed;
+    interfaces::Node& m_node;
 
     bool fHaveWatchOnly;
     bool fForceCheckBalanceChanged;
@@ -225,7 +225,7 @@ private:
     RecentRequestsTableModel *recentRequestsTableModel;
 
     // Cache some values to be able to detect changes
-    interface::WalletBalances m_cached_balances;
+    interfaces::WalletBalances m_cached_balances;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
@@ -233,11 +233,11 @@ private:
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
-    void checkBalanceChanged(const interface::WalletBalances& new_balances);
+    void checkBalanceChanged(const interfaces::WalletBalances& new_balances);
 
 Q_SIGNALS:
     // Signal that balance in wallet changed
-    void balanceChanged(const interface::WalletBalances& balances);
+    void balanceChanged(const interfaces::WalletBalances& balances);
 
     // Encryption status of wallet changed
     void encryptionStatusChanged();

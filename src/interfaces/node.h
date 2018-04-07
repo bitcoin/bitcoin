@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_INTERFACE_NODE_H
-#define BITCOIN_INTERFACE_NODE_H
+#ifndef BITCOIN_INTERFACES_NODE_H
+#define BITCOIN_INTERFACES_NODE_H
 
 #include <addrdb.h>     // For banmap_t
 #include <amount.h>     // For CAmount
@@ -29,7 +29,7 @@ class proxyType;
 enum class FeeReason;
 struct CNodeStateStats;
 
-namespace interface {
+namespace interfaces {
 
 class Handler;
 class Wallet;
@@ -254,6 +254,6 @@ public:
 //! Return implementation of Node interface.
 std::unique_ptr<Node> MakeNode();
 
-} // namespace interface
+} // namespace interfaces
 
-#endif // BITCOIN_INTERFACE_NODE_H
+#endif // BITCOIN_INTERFACES_NODE_H

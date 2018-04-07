@@ -13,7 +13,7 @@
 
 class SendCoinsRecipient;
 
-namespace interface {
+namespace interfaces {
 class Node;
 class PendingWalletTx;
 }
@@ -26,7 +26,7 @@ public:
 
     QList<SendCoinsRecipient> getRecipients() const;
 
-    std::unique_ptr<interface::PendingWalletTx>& getWtx();
+    std::unique_ptr<interfaces::PendingWalletTx>& getWtx();
     unsigned int getTransactionSize();
 
     void setTransactionFee(const CAmount& newFee);
@@ -38,7 +38,7 @@ public:
 
 private:
     QList<SendCoinsRecipient> recipients;
-    std::unique_ptr<interface::PendingWalletTx> wtx;
+    std::unique_ptr<interfaces::PendingWalletTx> wtx;
     CAmount fee;
 };
 

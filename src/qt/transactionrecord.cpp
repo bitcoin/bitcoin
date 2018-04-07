@@ -5,7 +5,7 @@
 #include <qt/transactionrecord.h>
 
 #include <consensus/consensus.h>
-#include <interface/wallet.h>
+#include <interfaces/wallet.h>
 #include <key_io.h>
 #include <timedata.h>
 #include <validation.h>
@@ -25,7 +25,7 @@ bool TransactionRecord::showTransaction()
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface::WalletTx& wtx)
+QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interfaces::WalletTx& wtx)
 {
     QList<TransactionRecord> parts;
     int64_t nTime = wtx.time;
@@ -158,7 +158,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     return parts;
 }
 
-void TransactionRecord::updateStatus(const interface::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime)
+void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime)
 {
     // Determine transaction status
 

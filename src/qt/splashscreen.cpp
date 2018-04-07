@@ -12,9 +12,9 @@
 
 #include <clientversion.h>
 #include <init.h>
-#include <interface/handler.h>
-#include <interface/node.h>
-#include <interface/wallet.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
+#include <interfaces/wallet.h>
 #include <util.h>
 #include <ui_interface.h>
 #include <version.h>
@@ -25,7 +25,7 @@
 #include <QPainter>
 #include <QRadialGradient>
 
-SplashScreen::SplashScreen(interface::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
+SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
     QWidget(0, f), curAlignment(0), m_node(node)
 {
     // set reference point, paddings
@@ -177,7 +177,7 @@ static void ShowProgress(SplashScreen *splash, const std::string &title, int nPr
             strprintf("\n%d", nProgress) + "%");
 }
 #ifdef ENABLE_WALLET
-void SplashScreen::ConnectWallet(std::unique_ptr<interface::Wallet> wallet)
+void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
 {
     m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(boost::bind(ShowProgress, this, _1, _2, false)));
     m_connected_wallets.emplace_back(std::move(wallet));
@@ -190,7 +190,7 @@ void SplashScreen::subscribeToCoreSignals()
     m_handler_init_message = m_node.handleInitMessage(boost::bind(InitMessage, this, _1));
     m_handler_show_progress = m_node.handleShowProgress(boost::bind(ShowProgress, this, _1, _2, _3));
 #ifdef ENABLE_WALLET
-    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interface::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
+    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
 #endif
 }
 
