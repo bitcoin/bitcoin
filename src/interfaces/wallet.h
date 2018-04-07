@@ -22,8 +22,10 @@
 #include <vector>
 
 class CCoinControl;
+class CFeeRate;
 class CKey;
 class CWallet;
+enum class FeeReason;
 enum class OutputType;
 struct CRecipient;
 
@@ -217,6 +219,18 @@ public:
 
     //! Return wallet transaction output information.
     virtual std::vector<WalletTxOut> getCoins(const std::vector<COutPoint>& outputs) = 0;
+
+    //! Get required fee.
+    virtual CAmount getRequiredFee(unsigned int tx_bytes) = 0;
+
+    //! Get minimum fee.
+    virtual CAmount getMinimumFee(unsigned int tx_bytes,
+        const CCoinControl& coin_control,
+        int* returned_target,
+        FeeReason* reason) = 0;
+
+    //! Get tx confirm target.
+    virtual unsigned int getConfirmTarget() = 0;
 
     // Return whether HD enabled.
     virtual bool hdEnabled() = 0;
