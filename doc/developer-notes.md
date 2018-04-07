@@ -375,12 +375,21 @@ C++ data structures
 
 - Vector bounds checking is only enabled in debug mode. Do not rely on it
 
-- Make sure that constructors initialize all fields. If this is skipped for a
-  good reason (i.e., optimization on the critical path), add an explicit
-  comment about this
+- Initialize all non-static class members where they are defined.
+  If this is skipped for a good reason (i.e., optimization on the critical
+  path), add an explicit comment about this
 
   - *Rationale*: Ensure determinism by avoiding accidental use of uninitialized
     values. Also, static analyzers balk about this.
+    Initializing the members in the declaration makes it easy to
+    spot uninitialized ones.
+
+```cpp
+class A
+{
+    uint32_t m_count{0};
+}
+```
 
 - By default, declare single-argument constructors `explicit`.
 
@@ -398,18 +407,6 @@ C++ data structures
 
   - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
   that are not language lawyers
-
-- Initialize all non-static class members where they are defined
-
-  - *Rationale*: Initializing the members in the declaration makes it easy to spot uninitialized ones,
-  and avoids accidentally reading uninitialized memory
-
-```cpp
-class A
-{
-    uint32_t m_count{0};
-}
-```
 
 Strings and formatting
 ------------------------
