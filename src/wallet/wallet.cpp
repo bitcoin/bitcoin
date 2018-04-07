@@ -959,8 +959,9 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 
     // if nconfirmations=0 then - notify on every transaction change
     // notify an external script when a wallet transaction comes in or is updated
-    if (m_notifier.GetConfirmationsRequired() == 0)
+    if (m_notifier.GetConfirmationsRequired() == 0) {
         m_notifier.AddTransaction(*wtxIn.tx);
+    }
 
     return true;
 }
@@ -1201,8 +1202,9 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pin
     }
 
     // if we are notifying in confirmed mode and this was due to a connected block
-    if (pindex && m_notifier.GetConfirmationsRequired() >= 1)
+    if (pindex && m_notifier.GetConfirmationsRequired() >= 1) {
         m_notifier.AddTransaction(*ptx, pindex->nHeight);
+    }
 }
 
 void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {

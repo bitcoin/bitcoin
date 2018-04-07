@@ -686,8 +686,8 @@ public:
      * Should be called every time a block is connected
      *
      * When m_confirmations_required > 1, notifies
-     * of transactions that have not reached the
-     * required confirmation count
+     * of transactions that have now reached the
+     * required number of confirmations
      *
      * Internally builds a buffer of transactions from
      * up to the last (m_confirmations_required - 1) blocks
