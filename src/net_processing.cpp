@@ -1532,6 +1532,75 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
     return true;
 }
 
+void static ProcessOrphans(const CTransaction& tx, CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+{
+    std::deque<COutPoint> vWorkQueue;
+    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        vWorkQueue.emplace_back(tx.GetHash(), i);
+    }
+    std::vector<uint256> vEraseQueue;
+    std::set<NodeId> setMisbehaving;
+    while (!vWorkQueue.empty()) {
+        auto itByPrev = ::mapOrphanTransactionsByPrev.find(vWorkQueue.front());
+        vWorkQueue.pop_front();
+        if (itByPrev == ::mapOrphanTransactionsByPrev.end())
+            continue;
+        for (auto mi = itByPrev->second.begin();
+             mi != itByPrev->second.end();
+             ++mi)
+        {
+            const CTransactionRef& porphanTx = (*mi)->second.tx;
+            const CTransaction& orphanTx = *porphanTx;
+            const uint256& orphanHash = orphanTx.GetHash();
+            NodeId fromPeer = (*mi)->second.fromPeer;
+            bool fMissingInputs2 = false;
+            // Use a dummy CValidationState so someone can't setup nodes to counter-DoS based on orphan
+            // resolution (that is, feeding people an invalid transaction based on LegitTxX in order to get
+            // anyone relaying LegitTxX banned)
+            CValidationState stateDummy;
+
+
+            if (setMisbehaving.count(fromPeer))
+                continue;
+            if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, &fMissingInputs2, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+                LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
+                RelayTransaction(orphanTx, connman);
+                for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
+                    vWorkQueue.emplace_back(orphanHash, i);
+                }
+                vEraseQueue.push_back(orphanHash);
+            }
+            else if (!fMissingInputs2)
+            {
+                int nDos = 0;
+                if (stateDummy.IsInvalid(nDos) && nDos > 0)
+                {
+                    // Punish peer that gave us an invalid orphan tx
+                    Misbehaving(fromPeer, nDos);
+                    setMisbehaving.insert(fromPeer);
+                    LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s\n", orphanHash.ToString());
+                }
+                // Has inputs but not accepted to mempool
+                // Probably non-standard or insufficient fee
+                LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s\n", orphanHash.ToString());
+                vEraseQueue.push_back(orphanHash);
+                if (!orphanTx.HasWitness() && !stateDummy.CorruptionPossible()) {
+                    // Do not use rejection cache for witness transactions or
+                    // witness-stripped transactions, as they can have been malleated.
+                    // See https://github.com/bitcoin/bitcoin/issues/8279 for details.
+                    assert(recentRejects);
+                    recentRejects->insert(orphanHash);
+                }
+            }
+            mempool.check(pcoinsTip.get());
+        }
+    }
+
+    for (uint256 hash : vEraseQueue) {
+        EraseOrphanTx(hash);
+    }
+}
+
 bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
@@ -2165,8 +2234,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return true;
         }
 
-        std::deque<COutPoint> vWorkQueue;
-        std::vector<uint256> vEraseQueue;
         CTransactionRef ptx;
         vRecv >> ptx;
         const CTransaction& tx = *ptx;
@@ -2186,9 +2253,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             mempool.check(pcoinsTip.get());
             RelayTransaction(tx, connman);
-            for (unsigned int i = 0; i < tx.vout.size(); i++) {
-                vWorkQueue.emplace_back(inv.hash, i);
-            }
 
             pfrom->nLastTXTime = GetTime();
 
@@ -2198,65 +2262,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 mempool.size(), mempool.DynamicMemoryUsage() / 1000);
 
             // Recursively process any orphan transactions that depended on this one
-            std::set<NodeId> setMisbehaving;
-            while (!vWorkQueue.empty()) {
-                auto itByPrev = mapOrphanTransactionsByPrev.find(vWorkQueue.front());
-                vWorkQueue.pop_front();
-                if (itByPrev == mapOrphanTransactionsByPrev.end())
-                    continue;
-                for (auto mi = itByPrev->second.begin();
-                     mi != itByPrev->second.end();
-                     ++mi)
-                {
-                    const CTransactionRef& porphanTx = (*mi)->second.tx;
-                    const CTransaction& orphanTx = *porphanTx;
-                    const uint256& orphanHash = orphanTx.GetHash();
-                    NodeId fromPeer = (*mi)->second.fromPeer;
-                    bool fMissingInputs2 = false;
-                    // Use a dummy CValidationState so someone can't setup nodes to counter-DoS based on orphan
-                    // resolution (that is, feeding people an invalid transaction based on LegitTxX in order to get
-                    // anyone relaying LegitTxX banned)
-                    CValidationState stateDummy;
-
-
-                    if (setMisbehaving.count(fromPeer))
-                        continue;
-                    if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, &fMissingInputs2, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
-                        LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
-                        RelayTransaction(orphanTx, connman);
-                        for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
-                            vWorkQueue.emplace_back(orphanHash, i);
-                        }
-                        vEraseQueue.push_back(orphanHash);
-                    }
-                    else if (!fMissingInputs2)
-                    {
-                        int nDos = 0;
-                        if (stateDummy.IsInvalid(nDos) && nDos > 0)
-                        {
-                            // Punish peer that gave us an invalid orphan tx
-                            Misbehaving(fromPeer, nDos);
-                            setMisbehaving.insert(fromPeer);
-                            LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s\n", orphanHash.ToString());
-                        }
-                        // Has inputs but not accepted to mempool
-                        // Probably non-standard or insufficient fee
-                        LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s\n", orphanHash.ToString());
-                        vEraseQueue.push_back(orphanHash);
-                        if (!orphanTx.HasWitness() && !stateDummy.CorruptionPossible()) {
-                            // Do not use rejection cache for witness transactions or
-                            // witness-stripped transactions, as they can have been malleated.
-                            // See https://github.com/bitcoin/bitcoin/issues/8279 for details.
-                            assert(recentRejects);
-                            recentRejects->insert(orphanHash);
-                        }
-                    }
-                    mempool.check(pcoinsTip.get());
-                }
-            }
-
-            for (uint256 hash : vEraseQueue)
-                EraseOrphanTx(hash);
+            ProcessOrphans(tx, connman);
         }
         else if (fMissingInputs)
         {
