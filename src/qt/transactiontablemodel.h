@@ -12,7 +12,7 @@
 
 #include <memory>
 
-namespace interface {
+namespace interfaces {
 class Handler;
 }
 
@@ -85,8 +85,8 @@ public:
 
 private:
     WalletModel *walletModel;
-    std::unique_ptr<interface::Handler> m_handler_transaction_changed;
-    std::unique_ptr<interface::Handler> m_handler_show_progress;
+    std::unique_ptr<interfaces::Handler> m_handler_transaction_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     QStringList columns;
     TransactionTablePriv *priv;
     bool fProcessingQueuedTransactions;

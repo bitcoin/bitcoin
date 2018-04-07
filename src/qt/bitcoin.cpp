@@ -27,8 +27,8 @@
 #endif
 
 #include <init.h>
-#include <interface/handler.h>
-#include <interface/node.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
 #include <rpc/server.h>
 #include <ui_interface.h>
 #include <uint256.h>
@@ -182,7 +182,7 @@ class BitcoinCore: public QObject
 {
     Q_OBJECT
 public:
-    explicit BitcoinCore(interface::Node& node);
+    explicit BitcoinCore(interfaces::Node& node);
 
 public Q_SLOTS:
     void initialize();
@@ -197,7 +197,7 @@ private:
     /// Pass fatal exception message to UI thread
     void handleRunawayException(const std::exception *e);
 
-    interface::Node& m_node;
+    interfaces::Node& m_node;
 };
 
 /** Main Bitcoin application object */
@@ -205,7 +205,7 @@ class BitcoinApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit BitcoinApplication(interface::Node& node, int &argc, char **argv);
+    explicit BitcoinApplication(interfaces::Node& node, int &argc, char **argv);
     ~BitcoinApplication();
 
 #ifdef ENABLE_WALLET
@@ -246,7 +246,7 @@ Q_SIGNALS:
 
 private:
     QThread *coreThread;
-    interface::Node& m_node;
+    interfaces::Node& m_node;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
     BitcoinGUI *window;
@@ -264,7 +264,7 @@ private:
 
 #include <qt/bitcoin.moc>
 
-BitcoinCore::BitcoinCore(interface::Node& node) :
+BitcoinCore::BitcoinCore(interfaces::Node& node) :
     QObject(), m_node(node)
 {
 }
@@ -304,7 +304,7 @@ void BitcoinCore::shutdown()
     }
 }
 
-BitcoinApplication::BitcoinApplication(interface::Node& node, int &argc, char **argv):
+BitcoinApplication::BitcoinApplication(interfaces::Node& node, int &argc, char **argv):
     QApplication(argc, argv),
     coreThread(0),
     m_node(node),
@@ -535,7 +535,7 @@ int main(int argc, char *argv[])
 {
     SetupEnvironment();
 
-    std::unique_ptr<interface::Node> node = interface::MakeNode();
+    std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 
     /// 1. Parse command-line options. These take precedence over anything else.
     // Command-line options take precedence:
@@ -687,7 +687,7 @@ int main(int argc, char *argv[])
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
 
     // Subscribe to global signals from core
-    std::unique_ptr<interface::Handler> handler = node->handleInitMessage(InitMessage);
+    std::unique_ptr<interfaces::Handler> handler = node->handleInitMessage(InitMessage);
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());

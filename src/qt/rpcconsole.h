@@ -19,7 +19,7 @@ class PlatformStyle;
 class RPCTimerInterface;
 class WalletModel;
 
-namespace interface {
+namespace interfaces {
     class Node;
 }
 
@@ -38,11 +38,11 @@ class RPCConsole: public QWidget
     Q_OBJECT
 
 public:
-    explicit RPCConsole(interface::Node& node, const PlatformStyle *platformStyle, QWidget *parent);
+    explicit RPCConsole(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent);
     ~RPCConsole();
 
-    static bool RPCParseCommandLine(interface::Node* node, std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr);
-    static bool RPCExecuteCommandLine(interface::Node& node, std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr) {
+    static bool RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr);
+    static bool RPCExecuteCommandLine(interfaces::Node& node, std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr) {
         return RPCParseCommandLine(&node, strResult, strCommand, true, pstrFilteredOut, walletID);
     }
 
@@ -144,7 +144,7 @@ private:
 
     };
 
-    interface::Node& m_node;
+    interfaces::Node& m_node;
     Ui::RPCConsole *ui;
     ClientModel *clientModel;
     QStringList history;

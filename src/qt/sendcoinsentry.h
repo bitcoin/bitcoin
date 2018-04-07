@@ -30,7 +30,7 @@ public:
     ~SendCoinsEntry();
 
     void setModel(WalletModel *model);
-    bool validate(interface::Node& node);
+    bool validate(interfaces::Node& node);
     SendCoinsRecipient getValue();
 
     /** Return whether the entry is still empty and unedited */
