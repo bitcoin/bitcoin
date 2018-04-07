@@ -663,11 +663,9 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	bool bUseInputRanges = params[5].get_bool();
 	vector<unsigned char> vchWitness;
 	UniValue param6 = params[6];
-	CAmount nBalance = AssetAmountFromValue(param6, precision, bUseInputRanges);
-	CAmount nMaxSupply = MAX_INPUTRANGE_ASSET;
 	UniValue param7 = params[7];
-	if(param7.get_str() != "-1")
-		nMaxSupply = AssetAmountFromValue(param7, precision, bUseInputRanges);
+	CAmount nBalance = AssetAmountFromValue(param6, precision, bUseInputRanges);
+	CAmount nMaxSupply = AssetAmountFromValue(param7, precision, bUseInputRanges);
 	
 	float fInterestRate = params[8].get_real();
 	bool bCanAdjustInterestRate = params[9].get_bool();
