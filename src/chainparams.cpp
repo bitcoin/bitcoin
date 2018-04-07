@@ -96,7 +96,7 @@ public:
         consensus.BIP34Hash = uint256S("0x00000012f1c40ff12a9e6b0e9076fe4fa7ad27012e256a5ad7bcb80dc02c0409"); // PM-Tech: ChainCoin
         consensus.BIP65Height = 1800000;
         consensus.BIP66Height = 1000000;
-        consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000"); // PM-Tech: ChainCoin
+        consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 90; // PM-Tech: ChainCoin re-target at every block
         consensus.nPowTargetSpacing = 90; // PM-Tech: ChainCoin 90 seconds
         consensus.nInterval = 1; // PM-Tech: ChainCoin
@@ -228,7 +228,7 @@ public:
         consensus.BIP34Hash = uint256S("0x00000352de593a01e0efcbaec00345ec80d20c7bd2024ec7c2beec048af0e6d9");
         consensus.BIP65Height = 50000;
         consensus.BIP66Height = 1;
-        consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000");
+        consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 90; // PM-Tech: ChainCoin
         consensus.nPowTargetSpacing = 90; // PM-Tech: ChainCoin
         consensus.nInterval = 1; // PM-Tech: ChainCoin
