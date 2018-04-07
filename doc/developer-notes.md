@@ -623,7 +623,7 @@ GUI
     holds: try to not directly access core data structures from Views.
 
 - Avoid adding slow or blocking code in the GUI thread. In particular do not
-  add new `interface::Node` and `interface::Wallet` method calls, even if they
+  add new `interfaces::Node` and `interfaces::Wallet` method calls, even if they
   may be fast now, in case they are changed to lock or communicate across
   processes in the future.
 

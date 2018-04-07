@@ -13,8 +13,8 @@
 #include <chainparams.h>
 #include <checkpoints.h>
 #include <clientversion.h>
-#include <interface/handler.h>
-#include <interface/node.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
 #include <validation.h>
 #include <net.h>
 #include <txmempool.h>
@@ -32,7 +32,7 @@ class CBlockIndex;
 static int64_t nLastHeaderTipUpdateNotification = 0;
 static int64_t nLastBlockTipUpdateNotification = 0;
 
-ClientModel::ClientModel(interface::Node& node, OptionsModel *_optionsModel, QObject *parent) :
+ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent),
     m_node(node),
     optionsModel(_optionsModel),

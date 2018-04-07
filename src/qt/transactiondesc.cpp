@@ -10,7 +10,7 @@
 #include <qt/transactionrecord.h>
 
 #include <consensus/consensus.h>
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <key_io.h>
 #include <validation.h>
 #include <script/script.h>
@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <string>
 
-QString TransactionDesc::FormatTxStatus(const interface::WalletTx& wtx, const interface::WalletTxStatus& status, bool inMempool, int numBlocks, int64_t adjustedTime)
+QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks, int64_t adjustedTime)
 {
     if (!status.is_final)
     {
@@ -48,14 +48,14 @@ QString TransactionDesc::FormatTxStatus(const interface::WalletTx& wtx, const in
     }
 }
 
-QString TransactionDesc::toHTML(interface::Node& node, interface::Wallet& wallet, TransactionRecord *rec, int unit)
+QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit)
 {
     int numBlocks;
     int64_t adjustedTime;
-    interface::WalletTxStatus status;
-    interface::WalletOrderForm orderForm;
+    interfaces::WalletTxStatus status;
+    interfaces::WalletOrderForm orderForm;
     bool inMempool;
-    interface::WalletTx wtx = wallet.getWalletTxDetails(rec->hash, status, orderForm, inMempool, numBlocks, adjustedTime);
+    interfaces::WalletTx wtx = wallet.getWalletTxDetails(rec->hash, status, orderForm, inMempool, numBlocks, adjustedTime);
 
     QString strHTML;
 

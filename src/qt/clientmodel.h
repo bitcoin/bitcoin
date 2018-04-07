@@ -17,7 +17,7 @@ class PeerTableModel;
 
 class CBlockIndex;
 
-namespace interface {
+namespace interfaces {
 class Handler;
 class Node;
 }
@@ -46,10 +46,10 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(interface::Node& node, OptionsModel *optionsModel, QObject *parent = 0);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = 0);
     ~ClientModel();
 
-    interface::Node& node() const { return m_node; }
+    interfaces::Node& node() const { return m_node; }
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();
@@ -75,14 +75,14 @@ public:
     mutable std::atomic<int64_t> cachedBestHeaderTime;
 
 private:
-    interface::Node& m_node;
-    std::unique_ptr<interface::Handler> m_handler_show_progress;
-    std::unique_ptr<interface::Handler> m_handler_notify_num_connections_changed;
-    std::unique_ptr<interface::Handler> m_handler_notify_network_active_changed;
-    std::unique_ptr<interface::Handler> m_handler_notify_alert_changed;
-    std::unique_ptr<interface::Handler> m_handler_banned_list_changed;
-    std::unique_ptr<interface::Handler> m_handler_notify_block_tip;
-    std::unique_ptr<interface::Handler> m_handler_notify_header_tip;
+    interfaces::Node& m_node;
+    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_num_connections_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_network_active_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_alert_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
