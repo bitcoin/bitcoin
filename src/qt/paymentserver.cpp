@@ -10,7 +10,7 @@
 #include <qt/optionsmodel.h>
 
 #include <chainparams.h>
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <policy/policy.h>
 #include <key_io.h>
 #include <ui_interface.h>
@@ -202,7 +202,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
 // Warning: ipcSendCommandLine() is called early in init,
 // so don't use "Q_EMIT message()", but "QMessageBox::"!
 //
-void PaymentServer::ipcParseCommandLine(interface::Node& node, int argc, char* argv[])
+void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* argv[])
 {
     for (int i = 1; i < argc; i++)
     {
@@ -761,7 +761,7 @@ void PaymentServer::handlePaymentACK(const QString& paymentACKMsg)
     Q_EMIT message(tr("Payment acknowledged"), paymentACKMsg, CClientUIInterface::ICON_INFORMATION | CClientUIInterface::MODAL);
 }
 
-bool PaymentServer::verifyNetwork(interface::Node& node, const payments::PaymentDetails& requestDetails)
+bool PaymentServer::verifyNetwork(interfaces::Node& node, const payments::PaymentDetails& requestDetails)
 {
     bool fVerified = requestDetails.network() == node.getNetwork();
     if (!fVerified) {

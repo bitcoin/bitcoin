@@ -4,7 +4,7 @@
 
 #include <qt/walletmodeltransaction.h>
 
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <policy/policy.h>
 
 WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &_recipients) :
@@ -18,7 +18,7 @@ QList<SendCoinsRecipient> WalletModelTransaction::getRecipients() const
     return recipients;
 }
 
-std::unique_ptr<interface::PendingWalletTx>& WalletModelTransaction::getWtx()
+std::unique_ptr<interfaces::PendingWalletTx>& WalletModelTransaction::getWtx()
 {
     return wtx;
 }

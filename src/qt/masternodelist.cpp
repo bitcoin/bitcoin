@@ -4,7 +4,7 @@
 #include <activemasternode.h>
 #include <qt/clientmodel.h>
 #include <init.h>
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <qt/guiutil.h>
 #include <masternodeman.h>
 #include <qt/qrdialog.h>

@@ -17,7 +17,7 @@
 #include <qt/sendcoinsentry.h>
 
 #include <chainparams.h>
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <key_io.h>
 #include <wallet/coincontrol.h>
 #include <ui_interface.h>
@@ -172,9 +172,9 @@ void SendCoinsDialog::setModel(WalletModel *_model)
             }
         }
 
-        interface::WalletBalances balances = _model->wallet().getBalances();
+        interfaces::WalletBalances balances = _model->wallet().getBalances();
         setBalance(balances);
-        connect(_model, SIGNAL(balanceChanged(interface::WalletBalances)), this, SLOT(setBalance(interface::WalletBalances)));
+        connect(_model, SIGNAL(balanceChanged(interfaces::WalletBalances)), this, SLOT(setBalance(interfaces::WalletBalances)));
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
@@ -562,7 +562,7 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(const interface::WalletBalances& balances)
+void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
 {
     if(model && model->getOptionsModel())
     {

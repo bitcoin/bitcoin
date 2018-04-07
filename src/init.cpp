@@ -21,7 +21,7 @@
 #include <fs.h>
 #include <httpserver.h>
 #include <httprpc.h>
-#include <interface/moduleinterface.h>
+#include <interfaces/moduleinterface.h>
 #include <key.h>
 #include <miner.h>
 #include <net.h>
