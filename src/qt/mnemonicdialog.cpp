@@ -8,7 +8,7 @@
 #include <qt/guiutil.h>
 
 #include <qt/walletmodel.h>
-#include <interface/wallet.h>
+#include <interfaces/wallet.h>
 
 #include <rpc/rpcutil.h>
 #include <util.h>

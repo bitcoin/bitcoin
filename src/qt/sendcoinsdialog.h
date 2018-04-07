@@ -52,7 +52,7 @@ public Q_SLOTS:
     void accept();
     SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
-    void setBalance(const interface::WalletBalances& balances);
+    void setBalance(const interfaces::WalletBalances& balances);
 
 Q_SIGNALS:
     void coinsSent(const uint256& txid);

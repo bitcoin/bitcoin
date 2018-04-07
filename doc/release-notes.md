@@ -181,6 +181,7 @@ The `validateaddress` RPC output has been extended with a few new fields, and su
   add `label` fields to returned JSON objects that previously only had
   `account` fields.
 - `sendmany` now shuffles outputs to improve privacy, so any previously expected behavior with regards to output ordering can no longer be relied upon.
+- The new RPC `testmempoolaccept` can be used to test acceptance of a transaction to the mempool without adding it.
 
 External wallet files
 ---------------------

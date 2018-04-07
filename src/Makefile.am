@@ -118,9 +118,9 @@ BITCOIN_CORE_H = \
   init.h \
   anon.h \
   blind.h \
-  interface/handler.h \
-  interface/node.h \
-  interface/wallet.h \
+  interfaces/handler.h \
+  interfaces/node.h \
+  interfaces/wallet.h \
   key.h \
   key/stealth.h \
   key/extkey.h \
@@ -207,7 +207,6 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/feebumper.h \
   wallet/fees.h \
-  wallet/init.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
@@ -312,7 +311,7 @@ endif
 libparticl_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libparticl_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libparticl_wallet_a_SOURCES = \
-  interface/wallet.cpp \
+  interfaces/wallet.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/feebumper.cpp \
@@ -443,8 +442,8 @@ libparticl_util_a_SOURCES = \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
   fs.cpp \
-  interface/handler.cpp \
-  interface/node.cpp \
+  interfaces/handler.cpp \
+  interfaces/node.cpp \
   random.cpp \
   rpc/protocol.cpp \
   rpc/util.cpp \

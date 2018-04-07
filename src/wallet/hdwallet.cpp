@@ -30,7 +30,7 @@
 #include <txdb.h>
 #include <rpc/server.h>
 #include <wallet/fees.h>
-#include <wallet/init.h>
+#include <walletinitinterface.h>
 #include <wallet/walletutil.h>
 
 #if ENABLE_USBDEVICE
@@ -10539,8 +10539,8 @@ void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyS
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(txid, r.n)))
                 continue;
 
-            if (IsLockedCoin(txid, r.n)
-                && (!coinControl || !coinControl->fAllowLocked))
+            if ((!coinControl || !coinControl->fAllowLocked)
+                && IsLockedCoin(txid, r.n))
                 continue;
 
             bool fMature = true;
@@ -10714,8 +10714,8 @@ void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(txid, r.n)))
                 continue;
 
-            if (IsLockedCoin(txid, r.n)
-                && (!coinControl || !coinControl->fAllowLocked))
+            if ((!coinControl || !coinControl->fAllowLocked)
+                && IsLockedCoin(txid, r.n))
                 continue;
 
             bool fMature = true;
@@ -10775,6 +10775,7 @@ const CTxOutBase* CHDWallet::FindNonChangeParentOutput(const CTransaction& tx, i
 
 std::map<CTxDestination, std::vector<COutput>> CHDWallet::ListCoins() const
 {
+    printf("[rm] CHDWallet::ListCoins\n");
     std::map<CTxDestination, std::vector<COutput>> result;
     std::vector<COutput> availableCoins;
 
@@ -10834,6 +10835,7 @@ bool GetAddress(const CHDWallet *pw, const COutputRecord *pout, CTxDestination &
 
 std::map<CTxDestination, std::vector<COutputR>> CHDWallet::ListCoins(OutputTypes nType) const
 {
+    printf("[rm] CHDWallet::ListCoins nType %d\n", nType);
     std::map<CTxDestination, std::vector<COutputR>> result;
     std::vector<COutputR> availableCoins;
 

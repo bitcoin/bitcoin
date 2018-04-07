@@ -19,7 +19,7 @@
 
 #include <clientversion.h>
 #include <init.h>
-#include <interface/node.h>
+#include <interfaces/node.h>
 #include <util.h>
 
 #include <stdio.h>
@@ -32,7 +32,7 @@
 #include <QVBoxLayout>
 
 /** "Help message" or "About" dialog box */
-HelpMessageDialog::HelpMessageDialog(interface::Node& node, QWidget *parent, bool about) :
+HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bool about) :
     QDialog(parent),
     ui(new Ui::HelpMessageDialog)
 {
