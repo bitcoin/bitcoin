@@ -24,6 +24,8 @@ struct FeeCalculation;
 
 namespace interfaces {
 
+class Wallet;
+
 //! Interface for giving wallet processes access to blockchain state.
 class Chain
 {
@@ -187,6 +189,9 @@ public:
 
     //! Send init error.
     virtual void initError(const std::string& message) = 0;
+
+    //! Send wallet load notification to the GUI.
+    virtual void loadWallet(std::unique_ptr<Wallet> wallet) = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for
