@@ -58,11 +58,9 @@ SYSCOIN_TESTS =\
   test/cachemap_tests.cpp \
   test/cachemultimap_tests.cpp \
   test/checkblock_tests.cpp \
-  test/checkqueue_tests.cpp \
   test/coins_tests.cpp \
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
-  test/cuckoocache_tests.cpp \
   test/DoS_tests.cpp \
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
