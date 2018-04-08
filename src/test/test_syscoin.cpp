@@ -28,7 +28,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
-
+#include "script/sigcache.h"
 CClientUIInterface uiInterface; // Declared but not defined in ui_interface.h
 CWallet* pwalletMain;
 
@@ -42,6 +42,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         ECC_Start();
         SetupEnvironment();
         SetupNetworking();
+		InitSignatureCache();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);

@@ -1345,6 +1345,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 	LogPrintf("Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
 	std::ostringstream strErrors;
 
+	InitSignatureCache();
+
 	LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
 	if (nScriptCheckThreads) {
 		for (int i = 0; i<nScriptCheckThreads - 1; i++)
