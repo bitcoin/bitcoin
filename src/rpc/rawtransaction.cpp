@@ -995,14 +995,24 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
             TxInErrorToJSON(txin, vErrors, "Input not found or already spent");
             continue;
         }
-        if (coin.nType != OUTPUT_STANDARD && coin.nType != OUTPUT_CT)
-            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Bad input type: %d", coin.nType));
 
         SignatureData sigdata;
         CScript prevPubKey = coin.out.scriptPubKey;
-        CAmount amount = coin.out.nValue;
-        std::vector<uint8_t> vchAmount(8);
-        memcpy(&vchAmount[0], &amount, 8);
+
+        std::vector<uint8_t> vchAmount;
+        if (coin.nType == OUTPUT_STANDARD)
+        {
+            vchAmount.resize(8);
+            memcpy(vchAmount.data(), &coin.out.nValue, 8);
+        } else
+        if (coin.nType == OUTPUT_CT)
+        {
+            vchAmount.resize(33);
+            memcpy(vchAmount.data(), coin.commitment.data, 33);
+        } else
+        {
+            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Bad input type: %d", coin.nType));
+        };
 
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.GetNumVOuts()))

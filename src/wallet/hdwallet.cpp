@@ -9800,7 +9800,8 @@ bool CHDWallet::ProcessPlaceholder(CHDWalletDB *pwdb, const CTransaction &tx, CT
 
     CAmount nDebit = GetDebit(pwdb, rtx, ISMINE_ALL);
     CAmount nCredit = rtx.TotalOutput() + rtx.nFee;
-    if (nDebit != nCredit)
+    if (nDebit > 0
+        && nDebit != nCredit)
     {
         LogPrint(BCLog::HDWALLET, "%s: Inserting placeholder output: %s, %d\n", __func__, tx.GetHash().ToString(), nDebit - nCredit);
 
@@ -10775,7 +10776,6 @@ const CTxOutBase* CHDWallet::FindNonChangeParentOutput(const CTransaction& tx, i
 
 std::map<CTxDestination, std::vector<COutput>> CHDWallet::ListCoins() const
 {
-    printf("[rm] CHDWallet::ListCoins\n");
     std::map<CTxDestination, std::vector<COutput>> result;
     std::vector<COutput> availableCoins;
 
@@ -10835,7 +10835,6 @@ bool GetAddress(const CHDWallet *pw, const COutputRecord *pout, CTxDestination &
 
 std::map<CTxDestination, std::vector<COutputR>> CHDWallet::ListCoins(OutputTypes nType) const
 {
-    printf("[rm] CHDWallet::ListCoins nType %d\n", nType);
     std::map<CTxDestination, std::vector<COutputR>> result;
     std::vector<COutputR> availableCoins;
 

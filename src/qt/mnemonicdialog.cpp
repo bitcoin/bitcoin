@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Particl Core developers
+// Copyright (c) 2017-2018 The Particl Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,11 +42,6 @@ MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
         ui->cbxLanguage->addItem(mnLanguagesDesc[l], QString(mnLanguagesTag[l]));
 };
 
-MnemonicDialog::~MnemonicDialog()
-{
-
-};
-
 void MnemonicDialog::on_btnCancel_clicked()
 {
     close();
@@ -77,7 +72,7 @@ void MnemonicDialog::on_btnImport_clicked()
                 walletModel->warningBox(tr("Import"), QString::fromStdString(rv["warnings"][i].get_str()));
         };
     };
-}
+};
 
 void MnemonicDialog::on_btnGenerate_clicked()
 {

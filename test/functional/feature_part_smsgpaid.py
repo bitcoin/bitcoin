@@ -246,6 +246,7 @@ class SmsgPaidTest(ParticlTestFramework):
         assert(len(ro['messages']) == 6)
 
 
+        # Test smsglocalkeys
         addr = nodes[0].getnewaddress()
 
         ro = nodes[0].smsglocalkeys('recv','+', addr)
