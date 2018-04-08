@@ -228,6 +228,8 @@ protected:
     std::map<std::string, std::vector<std::string>> mapMultiArgs;
     std::unordered_set<std::string> m_negated_args;
 
+    void ReadConfigStream(std::istream& stream);
+
 public:
     void ParseParameters(int argc, const char*const argv[]);
     void ReadConfigFile(const std::string& confPath);
@@ -305,6 +307,12 @@ public:
     // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
     // been set. Also called directly in testing.
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
+
+    /**
+     * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
+     * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
+     */
+    std::string GetChainName() const;
 
 private:
 
