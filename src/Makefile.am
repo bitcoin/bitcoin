@@ -113,6 +113,7 @@ SYSCOIN_CORE_H = \
   consensus/params.h \
   consensus/validation.h \
   core_io.h \
+  cuckoocache.h \
   core_memusage.h \
   privatesend.h \
   privatesend-client.h \

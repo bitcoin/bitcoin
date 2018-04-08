@@ -791,6 +791,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
 	const CChainParams& chainparams = Params();
 	RenameThread("syscoin-loadblk");
+	ScheduleBatchPriority();
 	CImportingNow imp;
 
 	// -reindex
