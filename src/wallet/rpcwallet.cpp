@@ -3194,6 +3194,7 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
                     {
                         {RPCResult::Type::STR_HEX, "hex", "The hex-encoded raw transaction with signature(s)"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
+                        {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The fee (input amounts minus output amounts), if known"},
                         {RPCResult::Type::ARR, "errors", /* optional */ true, "Script verification errors (if there are any)",
                         {
                             {RPCResult::Type::OBJ, "", "",
@@ -3242,10 +3243,11 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
 
     // Script verification errors
     std::map<int, std::string> input_errors;
+    Optional<CAmount> inputs_amount_sum;
 
-    bool complete = pwallet->SignTransaction(mtx, coins, nHashType, input_errors);
+    bool complete = pwallet->SignTransaction(mtx, coins, nHashType, input_errors, &inputs_amount_sum);
     UniValue result(UniValue::VOBJ);
-    SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
+    SignTransactionResultToJSON(mtx, complete, coins, input_errors, result, inputs_amount_sum);
     return result;
 }
 
