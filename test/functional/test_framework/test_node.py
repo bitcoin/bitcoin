@@ -74,8 +74,19 @@ class TestNode():
         self.rpc = None
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
+        self.cleanup_on_exit = True # Whether to kill the node when this object goes away
 
         self.p2ps = []
+
+    def __del__(self):
+        # Ensure that we don't leave any bitcoind processes lying around after
+        # the test ends
+        if self.process and self.cleanup_on_exit:
+            # Should only happen on test failure
+            # Avoid using logger, as that may have already been shutdown when
+            # this destructor is called.
+            print("Cleaning up leftover process")
+            self.process.kill()
 
     def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection or a CLI instance."""
