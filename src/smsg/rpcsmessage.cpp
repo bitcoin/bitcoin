@@ -1326,7 +1326,7 @@ UniValue smsgview(const JSONRPCRequest &request)
                     vMessages.push_back(std::make_pair(msg.timestamp, objM));
                 } else
                 {
-                    LogPrintf("%s: SecureMsgDecrypt failed, %s.", __func__, HexStr(chKey, chKey+18).c_str());
+                    LogPrintf("%s: SecureMsgDecrypt failed, %s.\n", __func__, HexStr(chKey, chKey+18).c_str());
                 };
             };
             delete it;

@@ -761,7 +761,7 @@ int CSMSG::ReadIni()
             }
         } else
         {
-            LogPrintf("Unknown setting name: '%s'.", pName);
+            LogPrintf("Unknown setting name: '%s'.\n", pName);
         };
     };
 
@@ -815,7 +815,7 @@ int CSMSG::WriteIni()
 
         if (!cAddress.IsValid())
         {
-            LogPrintf("%s: Error saving address - invalid.", __func__);
+            LogPrintf("%s: Error saving address - invalid.\n", __func__);
             continue;
         };
 
@@ -2902,7 +2902,7 @@ int CSMSG::Store(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayl
             LogPrintf("nPayload: %u\n", nPayload);
             LogPrintf("bucketTime: %d\n", bucketTime);
 
-            LogPrintf("message ts: %d", token.timestamp);
+            LogPrintf("message ts: %d\n", token.timestamp);
             std::vector<uint8_t> vchShow;
             vchShow.resize(8);
             memcpy(&vchShow[0], token.sample, 8);
@@ -2911,7 +2911,7 @@ int CSMSG::Store(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayl
             LogPrintf("\nmessages in bucket:\n");
             for (it = tokenSet.begin(); it != tokenSet.end(); ++it)
             {
-                LogPrintf("message ts: %d", (*it).timestamp);
+                LogPrintf("message ts: %d\n", (*it).timestamp);
                 vchShow.resize(8);
                 memcpy(&vchShow[0], (*it).sample, 8);
                 LogPrintf(" sample %s\n", HexStr(vchShow));

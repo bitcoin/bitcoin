@@ -4,7 +4,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
-# Check the test suite naming convention
+# Check the test suite naming conventions
+
+EXIT_CODE=0
 
 NAMING_INCONSISTENCIES=$(git grep -E '^BOOST_FIXTURE_TEST_SUITE\(' -- \
     "src/test/**.cpp" "src/wallet/test/**.cpp" | \
@@ -15,5 +17,18 @@ if [[ ${NAMING_INCONSISTENCIES} != "" ]]; then
     echo "that convention:"
     echo
     echo "${NAMING_INCONSISTENCIES}"
-    exit 1
+    EXIT_CODE=1
 fi
+
+TEST_SUITE_NAME_COLLISSIONS=$(git grep -E '^BOOST_FIXTURE_TEST_SUITE\(' -- \
+    "src/test/**.cpp" "src/wallet/test/**.cpp" | cut -f2 -d'(' | cut -f1 -d, | \
+    sort | uniq -d)
+if [[ ${TEST_SUITE_NAME_COLLISSIONS} != "" ]]; then
+    echo "Test suite names must be unique. The following test suite names"
+    echo "appear to be used more than once:"
+    echo
+    echo "${TEST_SUITE_NAME_COLLISSIONS}"
+    EXIT_CODE=1
+fi
+
+exit ${EXIT_CODE}

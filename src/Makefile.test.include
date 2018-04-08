@@ -103,13 +103,13 @@ BITCOIN_TESTS += \
   wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
-  wallet/test/crypto_tests.cpp \
+  wallet/test/wallet_crypto_tests.cpp \
+  wallet/test/coinselector_tests.cpp \
   wallet/test/rpc_wallet_tests.cpp \
   wallet/test/hdwallet_test_fixture.cpp \
   wallet/test/hdwallet_test_fixture.h \
   wallet/test/hdwallet_tests.cpp \
   wallet/test/rpc_hdwallet_tests.cpp \
-  wallet/test/coinselector_tests.cpp \
   wallet/test/stake_tests.cpp
 endif
 

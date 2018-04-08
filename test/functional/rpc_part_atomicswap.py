@@ -376,7 +376,7 @@ class AtomicSwapTest(ParticlTestFramework):
 
         scriptInitiate = CreateAtomicSwapScript(payTo=pkh1_0, refundTo=pkh0_0, lockTime=lockTime, secretHash=secretAHash)
         p2sh_initiate = script_to_p2sh_part(scriptInitiate)
-        rawtxInitiate = nodes[0].createrawtransaction([], {p2sh_initiate:5.0})
+        rawtxInitiate = nodes[0].createrawtransaction([], {p2sh_initiate:amountA})
         rawtxInitiate = nodes[0].fundrawtransaction(rawtxInitiate)['hex']
         ro = nodes[0].signrawtransactionwithwallet(rawtxInitiate)
         assert(ro['complete'] == True)
@@ -415,7 +415,7 @@ class AtomicSwapTest(ParticlTestFramework):
         scriptParticipate = CreateAtomicSwapScript(payTo=pkh0_0, refundTo=pkh1_0, lockTime=lockTimeP, secretHash=secretAHash)
         p2sh_participate = script_to_p2sh_part(scriptParticipate)
 
-        rawtx_p = nodes[1].createrawtransaction([], {p2sh_participate:5.0})
+        rawtx_p = nodes[1].createrawtransaction([], {p2sh_participate:amountB})
         rawtx_p = nodes[1].fundrawtransaction(rawtx_p)['hex']
 
         ro = nodes[1].signrawtransactionwithwallet(rawtx_p)
@@ -691,9 +691,9 @@ class AtomicSwapTest(ParticlTestFramework):
         nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(nodes[0].getwalletinfo()['total_balance'] == 100000)
 
-        ro = nodes[1].extkeyimportmaster('pact mammal barrel matrix local final lecture chunk wasp survey bid various book strong spread fall ozone daring like topple door fatigue limb olympic', '', 'true')
-        ro = nodes[1].getnewextaddress('lblExtTest')
-        ro = nodes[1].rescanblockchain()
+        nodes[1].extkeyimportmaster('pact mammal barrel matrix local final lecture chunk wasp survey bid various book strong spread fall ozone daring like topple door fatigue limb olympic', '', 'true')
+        nodes[1].getnewextaddress('lblExtTest')
+        nodes[1].rescanblockchain()
         assert(nodes[1].getwalletinfo()['total_balance'] == 25000)
 
         self.test_standardtx()

@@ -54,7 +54,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                 {
                     if (r.vPath.size() < 5)
                     {
-                        LogPrintf("%s: Warning, malformed vPath.", __func__);
+                        LogPrintf("%s: Warning, malformed vPath.\n", __func__);
                     } else
                     {
                         uint32_t sidx;

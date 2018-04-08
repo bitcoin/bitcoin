@@ -70,7 +70,7 @@ typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMate
 bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext);
 bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CKeyingMaterial& vchPlaintext);
 
-namespace crypto_tests
+namespace wallet_crypto_tests
 {
     class TestCrypter;
 }
@@ -78,7 +78,7 @@ namespace crypto_tests
 /** Encryption/decryption context with key information */
 class CCrypter
 {
-friend class crypto_tests::TestCrypter; // for test access to chKey/chIV
+friend class wallet_crypto_tests::TestCrypter; // for test access to chKey/chIV
 private:
     std::vector<unsigned char, secure_allocator<unsigned char>> vchKey;
     std::vector<unsigned char, secure_allocator<unsigned char>> vchIV;

@@ -3025,7 +3025,7 @@ static void ParseRecords(
         if (record.vPath.size() > 0) {
             if (record.vPath[0] == ORA_STEALTH) {
                 if (record.vPath.size() < 5) {
-                    LogPrintf("%s: Warning, malformed vPath.", __func__);
+                    LogPrintf("%s: Warning, malformed vPath.\n", __func__);
                 } else {
                     uint32_t sidx;
                     memcpy(&sidx, &record.vPath[1], 4);
@@ -4269,7 +4269,7 @@ UniValue listunspentanon(const JSONRPCRequest &request)
         {
             if (pout->vPath.size() < 5)
             {
-                LogPrintf("%s: Warning, malformed vPath.", __func__);
+                LogPrintf("%s: Warning, malformed vPath.\n", __func__);
             } else
             {
                 uint32_t sidx;

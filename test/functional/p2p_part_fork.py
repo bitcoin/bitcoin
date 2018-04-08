@@ -35,16 +35,12 @@ class ForkTest(ParticlTestFramework):
         nodes[0].reservebalance(True, 10000000)
         nodes[3].reservebalance(True, 10000000)
 
-        ro = nodes[0].extkeyimportmaster('pact mammal barrel matrix local final lecture chunk wasp survey bid various book strong spread fall ozone daring like topple door fatigue limb olympic', '', 'true')
-        ro = nodes[0].getnewextaddress('lblExtTest')
-        assert(ro == 'pparszNetDqyrvZksLHJkwJGwJ1r9JCcEyLeHatLjerxRuD3qhdTdrdo2mE6e1ewfd25EtiwzsECooU5YwhAzRN63iFid6v5AQn9N5oE9wfBYehn')
-
-        ro = nodes[0].rescanblockchain()
+        nodes[0].extkeyimportmaster('pact mammal barrel matrix local final lecture chunk wasp survey bid various book strong spread fall ozone daring like topple door fatigue limb olympic', '', 'true')
+        nodes[0].getnewextaddress('lblExtTest')
+        nodes[0].rescanblockchain()
         assert(nodes[0].getwalletinfo()['total_balance'] == 25000)
 
-
-        ro = nodes[3].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
-        assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
+        nodes[3].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(nodes[3].getwalletinfo()['total_balance'] == 100000)
 
 

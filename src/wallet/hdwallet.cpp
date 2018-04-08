@@ -280,7 +280,7 @@ bool CHDWallet::InitLoadWallet()
                 #ifndef ENABLE_QT
                 fprintf(stdout, "%s\n", sMsg.c_str());
                 #endif
-                LogPrintf("%s", sMsg);
+                LogPrintf("%s\n", sMsg);
                 if (pwallet->MakeDefaultAccount() != 0)
                     fprintf(stdout, "Error: MakeDefaultAccount failed!\n");
             } else
@@ -290,7 +290,7 @@ bool CHDWallet::InitLoadWallet()
                 #ifndef ENABLE_QT
                 fprintf(stdout, "%s\n", sWarning.c_str());
                 #endif
-                LogPrintf("%s", sWarning);
+                LogPrintf("%s\n", sWarning);
                 */
             }
         };
@@ -300,7 +300,7 @@ bool CHDWallet::InitLoadWallet()
             #ifndef ENABLE_QT
             fprintf(stdout, "%s\n", sWarning.c_str());
             #endif
-            LogPrintf("%s", sWarning);
+            LogPrintf("%s\n", sWarning);
         };
 
         vpwallets.push_back(pwallet);
@@ -746,10 +746,10 @@ bool CHDWallet::LoadVoteTokens(CHDWalletDB *pwdb)
             {
                 if ((v.nToken >> 16) < 1
                     || (v.nToken & 0xFFFF) < 1)
-                    LogPrintf(_("Clearing vote from block %d to %d.").c_str(),
+                    LogPrintf(_("Clearing vote from block %d to %d.\n").c_str(),
                         v.nStart, v.nEnd);
                 else
-                    LogPrintf( _("Voting for option %u on proposal %u from block %d to %d.").c_str(),
+                    LogPrintf( _("Voting for option %u on proposal %u from block %d to %d.\n").c_str(),
                         v.nToken >> 16, v.nToken & 0xFFFF, v.nStart, v.nEnd);
             };
         };
@@ -1104,7 +1104,7 @@ isminetype CHDWallet::HaveKey(const CKeyID &address, const CEKAKey *&pak, const 
             CEKAKey ak = *pak; // Must copy CEKAKey, ExtKeySaveKey modifies CExtKeyAccount
             if (0 != ExtKeySaveKey(pa, address, ak))
             {
-                LogPrintf("%s: ExtKeySaveKey failed.", __func__);
+                LogPrintf("%s: ExtKeySaveKey failed.\n", __func__);
                 return ISMINE_NO;
             };
         };
@@ -3376,7 +3376,7 @@ bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r
         {
             if (jsonSettings["coldstakingaddress"].isStr())
             {
-                LogPrintf("%s: Adding coldstaking script.", __func__);
+                LogPrintf("%s: Adding coldstaking script.\n", __func__);
                 std::string sAddress = jsonSettings["coldstakingaddress"].get_str();
 
                 CBitcoinAddress addr(sAddress);
@@ -6242,7 +6242,7 @@ int CHDWallet::ExtKeyEncrypt(CStoredExtKey *sek, const CKeyingMaterial &vMKey, b
     if (!sek->kp.IsValidV())
     {
         if (LogAcceptCategory(BCLog::HDWALLET))
-            LogPrintf("%s: sek %s has no secret, encryption skipped.", __func__, sek->GetIDString58());
+            LogPrintf("%s: sek %s has no secret, encryption skipped.\n", __func__, sek->GetIDString58());
         return 0;
     };
 
@@ -6284,7 +6284,7 @@ int CHDWallet::ExtKeyEncrypt(CExtKeyAccount *sea, const CKeyingMaterial &vMKey, 
         if (!sek->kp.IsValidV()
             && LogAcceptCategory(BCLog::HDWALLET))
         {
-            LogPrintf("%s : Skipping account %s chain, no secret.", __func__, sea->GetIDString58());
+            LogPrintf("%s : Skipping account %s chain, no secret.\n", __func__, sea->GetIDString58());
             continue;
         };
 
@@ -6337,7 +6337,7 @@ int CHDWallet::ExtKeyEncryptAll(CHDWalletDB *pwdb, const CKeyingMaterial &vMKey)
             if (LogAcceptCategory(BCLog::HDWALLET))
             {
                 addr.Set(ckeyId, CChainParams::EXT_KEY_HASH);
-                LogPrintf("%s : Skipping key %s, no secret.", __func__, sek.GetIDString58());
+                LogPrintf("%s : Skipping key %s, no secret.\n", __func__, sek.GetIDString58());
             };
             continue;
         };
@@ -8291,7 +8291,7 @@ bool CHDWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::
         wtxNew.fTimeReceivedIsTxTime = true;
         wtxNew.fFromMe = true;
 
-        LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString());
+        LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString()); /* Continued */
         {
             // Take key pair from key pool so it won't be used again
             reservekey.KeepKey();
@@ -8346,7 +8346,7 @@ bool CHDWallet::CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
     {
         LOCK2(cs_main, cs_wallet);
 
-        LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString());
+        LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString()); /* Continued */
 
         AddToRecord(rtx, *wtxNew.tx, nullptr, -1);
 
@@ -9679,7 +9679,7 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
             && !pwdb->HaveLockedAnonOut(op))
         {
             rout.nValue = 0;
-            if (LogAcceptCategory(BCLog::HDWALLET)) LogPrintf("%s: Adding locked output %s, %d\n.", __func__, txhash.ToString(), rout.n);
+            if (LogAcceptCategory(BCLog::HDWALLET)) LogPrintf("%s: Adding locked output %s, %d.\n", __func__, txhash.ToString(), rout.n);
             if (!pwdb->WriteLockedAnonOut(op))
                 LogPrintf("Error: %s - WriteLockedAnonOut failed.\n");
         };
@@ -10128,7 +10128,7 @@ std::vector<uint256> CHDWallet::ResendRecordTransactionsBefore(int64_t nTime, CC
             if (0 != InsertTempTxn(txhash, &rtx)
                 || (twi = mapTempWallet.find(txhash)) == mapTempWallet.end())
             {
-                LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, txhash.ToString());
+                LogPrintf("ERROR: %s - InsertTempTxn failed %s.\n", __func__, txhash.ToString());
             };
         };
 
@@ -10342,7 +10342,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
                 if (0 != InsertTempTxn(txid, &rtx)
                     || (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
                 {
-                    LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, txid.ToString());
+                    LogPrintf("ERROR: %s - InsertTempTxn failed %s.\n", __func__, txid.ToString());
                     return;
                 };
             };
@@ -10819,7 +10819,7 @@ bool GetAddress(const CHDWallet *pw, const COutputRecord *pout, CTxDestination &
     {
         if (pout->vPath.size() < 5)
         {
-            LogPrintf("%s: Warning, malformed vPath.", __func__);
+            LogPrintf("%s: Warning, malformed vPath.\n", __func__);
         } else
         {
             uint32_t sidx;
@@ -11342,14 +11342,14 @@ void CHDWallet::MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx)
             continue;
         };
 
-        LogPrintf("%s: Warning txn %s not recorded in wallet.", __func__, now.ToString());
+        LogPrintf("%s: Warning txn %s not recorded in wallet.\n", __func__, now.ToString());
     };
 
     if (nChangedRecords > 0) // HACK, alternative is to load CStoredTransaction to get vin
         MarkDirty();
 
     if (LogAcceptCategory(BCLog::HDWALLET))
-        LogPrintf("%s: %s, %s processed %d txns.", __func__, hashBlock.ToString(), hashTx.ToString(), done.size());
+        LogPrintf("%s: %s, %s processed %d txns.\n", __func__, hashBlock.ToString(), hashTx.ToString(), done.size());
     return;
 };
 
@@ -11675,7 +11675,7 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
                         if (0 != InsertTempTxn(txid, &rtx)
                             || (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
                         {
-                            LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, txid.ToString());
+                            LogPrintf("ERROR: %s - InsertTempTxn failed %s.\n", __func__, txid.ToString());
                             return;
                         };
                     };

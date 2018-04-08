@@ -19,9 +19,6 @@ def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(decimal.Decimal(rel_tol) * decimal.Decimal(max(abs(a), abs(b))), abs_tol)
 
 class ParticlTestFramework(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
-
     def start_node(self, i, *args, **kwargs):
         kwargs['legacymode'] = False
         return super().start_node(i, *args, **kwargs)
@@ -106,3 +103,11 @@ class ParticlTestFramework(BitcoinTestFramework):
         if isinstance(obj, decimal.Decimal):
             return str(obj)
         raise TypeError
+
+    def set_test_params(self):
+        """Tests must this method to change default values for number of nodes, topology, etc"""
+        raise NotImplementedError
+
+    def run_test(self):
+        """Tests must override this method to define test logic"""
+        raise NotImplementedError
