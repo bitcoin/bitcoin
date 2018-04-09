@@ -10,7 +10,8 @@
 #include "include/secp256k1.h"
 #include "util.h"
 #include "bench.h"
-
+#include <pthread.h>
+#include "thpool.h"
 #ifdef ENABLE_OPENSSL_TESTS
 #include <openssl/bn.h>
 #include <openssl/ecdsa.h>
@@ -81,10 +82,11 @@ static void benchmark_verify_openssl(void* arg) {
 
 int main(void) {
     int i;
+	double begin, total;
     secp256k1_pubkey pubkey;
     secp256k1_ecdsa_signature sig;
     benchmark_verify_t data;
-
+	threadpool thpool = thpool_init(8);
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
     for (i = 0; i < 32; i++) {
@@ -100,7 +102,17 @@ int main(void) {
     data.pubkeylen = 33;
     CHECK(secp256k1_ec_pubkey_serialize(data.ctx, data.pubkey, &data.pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED) == 1);
 
-    run_benchmark("ecdsa_verify", benchmark_verify, NULL, NULL, &data, 10, 20000);
+  
+	begin = gettimedouble();
+	for (i = 0; i < count; i++) {
+		thpool_add_work(thpool, (void*)benchmark_verify, (void*)&data);
+	}
+	total = gettimedouble() - begin;
+	printf("%", "ecdsa_verify");
+	
+	printf("us / avg ");
+	print_number((total / 10) * 1000000.0 / 20000);
+
 #ifdef ENABLE_OPENSSL_TESTS
     data.ec_group = EC_GROUP_new_by_curve_name(NID_secp256k1);
     run_benchmark("ecdsa_verify_openssl", benchmark_verify_openssl, NULL, NULL, &data, 10, 20000);
