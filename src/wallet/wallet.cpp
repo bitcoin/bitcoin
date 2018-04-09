@@ -1486,6 +1486,31 @@ CAmount CWallet::GetImmatureCredit(const CWalletTx& wtx) const
     return 0;
 }
 
+CAmount CWallet::GetAvailableCredit(const CWalletTx& wtx) const
+{
+    // Must wait until coinbase is safely deep enough in the chain before valuing it
+    if (wtx.IsCoinBase() && wtx.GetBlocksToMaturity() > 0)
+        return 0;
+
+    if (wtx.fAvailableCreditCached)
+        return wtx.nAvailableCreditCached;
+
+    CAmount nCredit = 0;
+    uint256 hashTx = wtx.GetHash();
+    for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
+        if (!IsSpent(hashTx, i)) {
+            const CTxOut &txout = wtx.tx->vout[i];
+            nCredit += GetCredit(txout, ISMINE_SPENDABLE);
+            if (!MoneyRange(nCredit))
+                throw std::runtime_error(std::string(__func__) + " : value out of range");
+        }
+    }
+
+    wtx.nAvailableCreditCached = nCredit;
+    wtx.fAvailableCreditCached = true;
+    return nCredit;
+}
+
 CAmount CWallet::GetChange(const CTransaction& tx) const
 {
     CAmount nChange = 0;
@@ -1915,36 +1940,6 @@ std::set<uint256> CWalletTx::GetConflicts() const
     return result;
 }
 
-CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
-{
-    if (pwallet == nullptr)
-        return 0;
-
-    // Must wait until coinbase is safely deep enough in the chain before valuing it
-    if (IsCoinBase() && GetBlocksToMaturity() > 0)
-        return 0;
-
-    if (fUseCache && fAvailableCreditCached)
-        return nAvailableCreditCached;
-
-    CAmount nCredit = 0;
-    uint256 hashTx = GetHash();
-    for (unsigned int i = 0; i < tx->vout.size(); i++)
-    {
-        if (!pwallet->IsSpent(hashTx, i))
-        {
-            const CTxOut &txout = tx->vout[i];
-            nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
-            if (!MoneyRange(nCredit))
-                throw std::runtime_error(std::string(__func__) + " : value out of range");
-        }
-    }
-
-    nAvailableCreditCached = nCredit;
-    fAvailableCreditCached = true;
-    return nCredit;
-}
-
 CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool fUseCache) const
 {
     if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
@@ -2106,11 +2101,11 @@ CAmount CWallet::GetBalance() const
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
-        for (const auto& entry : mapWallet)
-        {
-            const CWalletTx* pcoin = &entry.second;
-            if (pcoin->IsTrusted())
-                nTotal += pcoin->GetAvailableCredit();
+        for (const auto& entry : mapWallet) {
+            const CWalletTx& wtx = entry.second;
+            if (wtx.IsTrusted()) {
+                nTotal += GetAvailableCredit(wtx);
+            }
         }
     }
 
@@ -2122,11 +2117,11 @@ CAmount CWallet::GetUnconfirmedBalance() const
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
-        for (const auto& entry : mapWallet)
-        {
-            const CWalletTx* pcoin = &entry.second;
-            if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
-                nTotal += pcoin->GetAvailableCredit();
+        for (const auto& entry : mapWallet) {
+            const CWalletTx& wtx = entry.second;
+            if (!wtx.IsTrusted() && wtx.GetDepthInMainChain() == 0 && wtx.InMempool()) {
+                nTotal += GetAvailableCredit(wtx);
+            }
         }
     }
     return nTotal;
