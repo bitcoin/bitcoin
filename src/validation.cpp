@@ -1147,7 +1147,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		if (fDryRun) return true;
 
 		thread_pool threadpool(nScriptCheckThreads <= 0? 1: nScriptCheckThreads);
-
+		int scriptFlags = flags;
 		threadpool.enqueue( [&] (){
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				const COutPoint &prevout = tx.vin[i].prevout;
@@ -1155,7 +1155,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				assert(coins);
 
 				// Verify signature
-				CScriptCheck check(*coins, tx, i, flags, true)();
+				CScriptCheck check(*coins, tx, i, scriptFlags, true);
+				check();
 			}
 		});
 		// Check against previous transactions
