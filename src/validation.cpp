@@ -1149,10 +1149,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		if (!g_threadpool)
 			g_threadpool = new thread_pool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
 		const int chainHeight = chainActive.Height();
-		g_threadpool->enqueue([chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fDryRun, fOverrideMempoolLimit, &pool]() {
+		g_threadpool->enqueue([chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fDryRun, fOverrideMempoolLimit, &pcoinsTip, &pool]() {
 			CValidationState vstate;
-			CCoinsView vdummy;
-			CCoinsViewCache vview(&vdummy);
+			CCoinsViewCache vview(pcoinsTip);
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 			if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
