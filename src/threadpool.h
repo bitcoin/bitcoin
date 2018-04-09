@@ -25,14 +25,10 @@ struct thread_pool {
 
 	template<class F>
 	void enqueue(F f) {
-		get_io_service().post(f);
+		get_io_service.post(f);
 	}
 
 	~thread_pool() {
-		// Explicitly stop all io_services.
-		for (std::size_t i = 0; i <work_.size(); ++i)
-			work_[i]->reset();
-		
 		// Wait for all threads in the pool to exit.
 		for (std::size_t i = 0; i < threads_.size(); ++i)
 			threads_[i]->join();
