@@ -72,7 +72,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
                                                       IsMine(wallet, result.txout_address.back()) :
                                                       ISMINE_NO);
     }
-    result.credit = wtx.GetCredit(ISMINE_ALL);
+    result.credit = wallet.GetCredit(wtx, ISMINE_ALL);
     result.debit = wallet.GetDebit(wtx, ISMINE_ALL);
     result.change = wtx.GetChange();
     result.time = wtx.GetTxTime();

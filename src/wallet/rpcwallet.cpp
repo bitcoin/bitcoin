@@ -2205,7 +2205,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
     }
     const CWalletTx& wtx = it->second;
 
-    CAmount nCredit = wtx.GetCredit(filter);
+    CAmount nCredit = pwallet->GetCredit(wtx, filter);
     CAmount nDebit = pwallet->GetDebit(wtx, filter);
     CAmount nNet = nCredit - nDebit;
     CAmount nFee = pwallet->IsFromMe(wtx, filter) ? wtx.tx->GetValueOut() - nDebit : 0;

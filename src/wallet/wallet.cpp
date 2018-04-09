@@ -1444,6 +1444,35 @@ CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) c
     return nCredit;
 }
 
+CAmount CWallet::GetCredit(const CWalletTx& wtx, const isminefilter& filter) const
+{
+    // Must wait until coinbase is safely deep enough in the chain before valuing it
+    if (wtx.IsCoinBase() && wtx.GetBlocksToMaturity() > 0)
+        return 0;
+
+    CAmount credit = 0;
+    if (filter & ISMINE_SPENDABLE) {
+        // GetBalance can assume transactions in mapWallet won't change
+        if (wtx.fCreditCached) {
+            credit += wtx.nCreditCached;
+        } else {
+            wtx.nCreditCached = GetCredit(*wtx.tx, ISMINE_SPENDABLE);
+            wtx.fCreditCached = true;
+            credit += wtx.nCreditCached;
+        }
+    }
+    if (filter & ISMINE_WATCH_ONLY) {
+        if (wtx.fWatchCreditCached) {
+            credit += wtx.nWatchCreditCached;
+        } else {
+            wtx.nWatchCreditCached = GetCredit(*wtx.tx, ISMINE_WATCH_ONLY);
+            wtx.fWatchCreditCached = true;
+            credit += wtx.nWatchCreditCached;
+        }
+    }
+    return credit;
+}
+
 CAmount CWallet::GetChange(const CTransaction& tx) const
 {
     CAmount nChange = 0;
@@ -1871,39 +1900,6 @@ std::set<uint256> CWalletTx::GetConflicts() const
         result.erase(myHash);
     }
     return result;
-}
-
-CAmount CWalletTx::GetCredit(const isminefilter& filter) const
-{
-    // Must wait until coinbase is safely deep enough in the chain before valuing it
-    if (IsCoinBase() && GetBlocksToMaturity() > 0)
-        return 0;
-
-    CAmount credit = 0;
-    if (filter & ISMINE_SPENDABLE)
-    {
-        // GetBalance can assume transactions in mapWallet won't change
-        if (fCreditCached)
-            credit += nCreditCached;
-        else
-        {
-            nCreditCached = pwallet->GetCredit(*tx, ISMINE_SPENDABLE);
-            fCreditCached = true;
-            credit += nCreditCached;
-        }
-    }
-    if (filter & ISMINE_WATCH_ONLY)
-    {
-        if (fWatchCreditCached)
-            credit += nWatchCreditCached;
-        else
-        {
-            nWatchCreditCached = pwallet->GetCredit(*tx, ISMINE_WATCH_ONLY);
-            fWatchCreditCached = true;
-            credit += nWatchCreditCached;
-        }
-    }
-    return credit;
 }
 
 CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const

@@ -441,8 +441,6 @@ public:
         MarkDirty();
     }
 
-    //! filter decides which addresses will count towards the debit
-    CAmount GetCredit(const isminefilter& filter) const;
     CAmount GetImmatureCredit(bool fUseCache=true) const;
     CAmount GetAvailableCredit(bool fUseCache=true) const;
     CAmount GetImmatureWatchOnlyCredit(const bool fUseCache=true) const;
@@ -995,6 +993,7 @@ public:
     /** Returns whether all of the inputs match the filter */
     bool IsAllFromMe(const CTransaction& tx, const isminefilter& filter) const;
     CAmount GetCredit(const CTransaction& tx, const isminefilter& filter) const;
+    CAmount GetCredit(const CWalletTx& wtx, const isminefilter& filter) const;
     CAmount GetChange(const CTransaction& tx) const;
     void SetBestChain(const CBlockLocator& loc) override;
 
