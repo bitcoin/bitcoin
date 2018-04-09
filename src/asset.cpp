@@ -1233,7 +1233,7 @@ CAmount AssetAmountFromValue(UniValue& value, int precision, bool isInputRange)
 	CAmount amount;
 	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-	if (isInputRange && !AssetInputRange(amount))
+	if (!AssetRange(amount, isInputRange))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
 	return amount;
 }
@@ -1247,7 +1247,7 @@ bool AssetRange(const CAmount& amountIn, int precision, bool isInputRange)
 	CAmount amount;
 	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
 		return false;
-	if (isInputRange && !AssetInputRange(amount))
+	if (!AssetRange(amount, isInputRange))
 		return false;
 	return true;
 }
