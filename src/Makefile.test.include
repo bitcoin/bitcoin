@@ -2,7 +2,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-TESTS += test/test_chaincoin
 bin_PROGRAMS += test/test_chaincoin
 noinst_PROGRAMS += test/test_chaincoin_fuzzy
 TEST_SRCDIR = test
@@ -154,13 +153,17 @@ chaincoin_test_check: $(TEST_BINARY) FORCE
 chaincoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_chaincoin_OBJECTS) $(TEST_BINARY)
 
-check-local:
+check-local: $(BITCOIN_TESTS:.cpp=.cpp.test)
 	@echo "Running test/util/chaincoin-util-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 endif
+
+%.cpp.test: %.cpp
+	@echo Running tests: `cat $< | grep "BOOST_FIXTURE_TEST_SUITE(\|BOOST_AUTO_TEST_SUITE(" | cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1` from $<
+	$(AM_V_at)$(TEST_BINARY) -l test_suite -t "`cat $< | grep "BOOST_FIXTURE_TEST_SUITE(\|BOOST_AUTO_TEST_SUITE(" | cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1`" > $<.log 2>&1 || (cat $<.log && false)
 
 %.json.h: %.json
 	@$(MKDIR_P) $(@D)
