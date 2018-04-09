@@ -253,6 +253,9 @@ void thpool_pause(thpool_* thpool_p) {
 
 /* Resume all threads in threadpool */
 void thpool_resume(thpool_* thpool_p) {
+	// resuming a single threadpool hasn't been
+	// implemented yet, meanwhile this supresses
+	// the warnings
 	(void)thpool_p;
 
 	threads_on_hold = 0;

@@ -107,7 +107,6 @@ int main(void) {
 	for (i = 0; i < 10; i++) {
 		thpool_add_work(thpool, (void*)benchmark_verify, (void*)&data);
 	}
-	thpool_destroy(thpool);
 	total = gettimedouble() - begin;
 	printf("ecdsa_verify ");
 	
