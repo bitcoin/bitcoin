@@ -1149,7 +1149,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		if (!g_threadpool)
 			g_threadpool = new thread_pool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
 		const int chainHeight = chainActive.Height();
-		g_threadpool->enqueue([=, &pool]() {
+		g_threadpool->enqueue([chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fDryRun, fOverrideMempoolLimit, &pool]() {
 			CValidationState vstate;
 			CCoinsView vdummy;
 			CCoinsViewCache vview(&vdummy);
