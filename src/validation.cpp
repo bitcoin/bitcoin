@@ -1148,7 +1148,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		if (fDryRun) return true;
 		if (!g_threadpool)
 			g_threadpool = new thread_pool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
-		g_threadpool->enqueue([&, tx, view, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fDryRun, fOverrideMempoolLimit]() {
+		g_threadpool->enqueue([&, state, tx, view, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fDryRun, fOverrideMempoolLimit]() {
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
