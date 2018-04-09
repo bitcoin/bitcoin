@@ -1171,7 +1171,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 	else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
 		nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
 	if(!g_threadpool)
-		g_threadpool = new threadpool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
+		g_threadpool = new thread_pool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
 	fServer = GetBoolArg("-server", false);
 
 	// block pruning; get the amount of disk space (in MiB) to allot for block & undo files
