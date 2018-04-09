@@ -6,7 +6,7 @@
 import os
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, wait_until, connect_nodes_bi
+from test_framework.util import assert_equal, wait_until, connect_nodes_bi, sync_blocks
 
 class NotificationsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -108,8 +108,60 @@ class NotificationsTest(BitcoinTestFramework):
 
         with open(self.tx_filename, 'r') as f:
             notified = f.read().splitlines()
-
             assert_equal(sorted(confirmed_txids), sorted(notified))
+
+        # test reorgs of various heights
+        os.remove(self.tx_filename)
+        for i in range(1, n_confirmations):
+            self.test_reorg(n_confirmations, i)
+
+    def test_reorg(self, n_confirmations, depth):
+        connect_nodes_bi(self.nodes, 0, 1)
+        sync_blocks(self.nodes, timeout=5)
+
+        # Ensure -walletnotifyconfirmations behaves correctly when a transaction
+        # is introduced which is later reorg'd out.
+        #
+        # 1. Mine a block on node1 whose coinbase is added to be notified on after two
+        #    additional confirmations. (height = n + 0)
+        #
+        # 2. Reorg with a longer chain (height = n + 2) which makes the transaction
+        #    we introduced in (1) stale.
+        #
+        # 3. Assert that we haven't notified on the stale transaction.
+        #
+        self.log.info("Test correctness of -walletnotifyconfirmations during a reorg nconfirmations=%s depth=%s",
+                      n_confirmations, depth)
+        self.restart_node(0)
+        self.restart_node(1, ["-walletnotifyconfirmations=%s" % n_confirmations,
+                              "-walletnotify=echo %%s >> %s" % self.tx_filename])
+        # Leave nodes unconnected to enable a reorg from node0 onto node1 later.
+
+        # 1. Generate a block only seen by node1.
+        #
+        # We should receive a notification about the coinbase txn in this block
+        # after 2 more block discoveries.
+        #
+        block_1_hash = self.nodes[1].generate(depth)[-1]
+        block_1 = self.nodes[1].getblock(block_1_hash)
+
+        assert_equal(self.nodes[1].getbestblockhash(), block_1_hash)
+
+        # 2. Now, trigger a reorg that will remove the blocks that were just mined
+        fork_blockhashes = self.nodes[0].generate(n_confirmations)
+        connect_nodes_bi(self.nodes, 0, 1)
+        sync_blocks(self.nodes, timeout=5)
+
+        # Ensure the reorg has happened.
+        for num in (0, 1):
+            assert_equal(self.nodes[num].getbestblockhash(), fork_blockhashes[-1])
+
+        # Ensure that no confirmation notifications were generated
+        assert not os.path.isfile(self.tx_filename)
+
+        # Ensure that block 1 has been reorg'd out of the main chain.
+        assert self.nodes[1].getblock(block_1_hash)['confirmations'] == -1
+
 
 if __name__ == '__main__':
     NotificationsTest().main()

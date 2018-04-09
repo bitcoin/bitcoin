@@ -720,7 +720,7 @@ public:
         }
 
         // reset the bucket for the block just connected
-        m_unconfirmed_wallet_transactions[buffer_pos(height)].empty();
+        m_unconfirmed_wallet_transactions[buffer_pos(height)].clear();
         m_buffer_height_max = height;
     }
 
