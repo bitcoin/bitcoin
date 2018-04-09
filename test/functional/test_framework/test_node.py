@@ -18,6 +18,7 @@ from .authproxy import JSONRPCException
 from .mininode import NodeConn
 from .util import (
     assert_equal,
+    delete_cookie_file,
     get_rpc_proxy,
     rpc_url,
     wait_until,
@@ -102,6 +103,10 @@ class TestNode():
             extra_args = self.extra_args
         if stderr is None:
             stderr = self.stderr
+        # Delete any existing cookie file -- if such a file exists (eg due to
+        # unclean shutdown), it will get overwritten anyway by bitcoind, and
+        # potentially interfere with our attempt to authenticate
+        delete_cookie_file(self.datadir)
         self.process = subprocess.Popen(self.args + extra_args, stderr=stderr, *args, **kwargs)
         self.running = True
         self.log.debug("dashd started, waiting for RPC to come up")
