@@ -60,6 +60,7 @@ class NotificationsTest(BitcoinTestFramework):
         txids_rpc = list(map(lambda t: t['txid'], self.nodes[1].listtransactions("*", block_count)))
         with open(self.tx_filename, 'r') as f:
             assert_equal(sorted(txids_rpc), sorted(f.read().splitlines()))
+        os.remove(self.tx_filename)
 
         # Mine another 41 up-version blocks. -alertnotify should trigger on the 51st.
         self.log.info("test -alertnotify")
@@ -81,6 +82,34 @@ class NotificationsTest(BitcoinTestFramework):
 
         self.log.info("-alertnotify should not continue notifying for more unknown version blocks")
         assert_equal(alert_text, alert_text2)
+
+        self.log.info("test -walletnotify with -walletnotifyconfirmations > 1")
+        n_confirmations = 6
+
+        # first have a different node generate blocks that we shouldn't see confirmations for
+        self.nodes[0].generate(n_confirmations + 1)
+        self.sync_all()
+        os.remove(self.tx_filename)
+
+        # now generate some blocks but don't bury any enough to be confirmed (they'll be confirmed later)
+        generated_before_restart = self.nodes[1].generate(n_confirmations - 2)
+        confirmed_txids = [t['txid'] for t in self.nodes[1].listtransactions("*", 100) if t['blockhash'] in generated_before_restart]
+
+        # restart node with notify on confirmations enabled
+        self.restart_node(1, ["-walletnotifyconfirmations=%s" % n_confirmations,
+                              "-walletnotify=echo %%s >> %s" % self.tx_filename])
+
+        # mine some more blocks (we should receive notifications on the ones above plus all but the last n_confirmations - 1 of these)
+        generated_after_restart = self.nodes[1].generate(block_count + n_confirmations - 1)[:-n_confirmations + 1]
+        wait_until(lambda: os.path.isfile(self.tx_filename) and os.stat(self.tx_filename).st_size >= (block_count * 65), timeout=10)
+
+        # file content should equal the generated transaction hashes that are confirmed
+        confirmed_txids += [t['txid'] for t in self.nodes[1].listtransactions("*", 1000) if t['blockhash'] in generated_after_restart]
+
+        with open(self.tx_filename, 'r') as f:
+            notified = f.read().splitlines()
+
+            assert_equal(sorted(confirmed_txids), sorted(notified))
 
 if __name__ == '__main__':
     NotificationsTest().main()

@@ -75,6 +75,7 @@ std::string WalletInit::GetHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), DEFAULT_WALLETBROADCAST));
     strUsage += HelpMessageOpt("-walletdir=<dir>", _("Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)"));
     strUsage += HelpMessageOpt("-walletnotify=<cmd>", _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)"));
+    strUsage += HelpMessageOpt("-walletnotifyconfirmations=<n>", strprintf(_("Number of confirmations to wait before calling wallet notify command (default: %u)"), DEFAULT_WALLETNOTIFY_NCONFIRMATIONS));
     strUsage += HelpMessageOpt("-walletrbf", strprintf(_("Send transactions with full-RBF opt-in enabled (RPC only, default: %u)"), DEFAULT_WALLET_RBF));
     strUsage += HelpMessageOpt("-zapwallettxes=<mode>", _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") +
                                " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"));
@@ -145,6 +146,15 @@ bool WalletInit::ParameterInteraction()
         return InitError("-sysperms is not allowed in combination with enabled wallet functionality");
     if (gArgs.GetArg("-prune", 0) && gArgs.GetBoolArg("-rescan", false))
         return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
+
+    if (gArgs.IsArgSet("-walletnotifyconfirmations")) {
+        int n_confirmations = gArgs.GetArg("-walletnotifyconfirmations", DEFAULT_WALLETNOTIFY_NCONFIRMATIONS);
+        if (n_confirmations < 0) {
+            return InitError(strprintf(_("-walletnotifyconfirmations must be >= 0 (value: %d)"), n_confirmations));
+        } else if (!gArgs.IsArgSet("-walletnotify")) {
+            return InitError(strprintf(_("No -walletnotify command specified but -walletnotifyconfirmations is provided (value: %d)"), n_confirmations));
+        }
+    }
 
     if (::minRelayTxFee.GetFeePerK() > HIGH_TX_FEE_PER_KB)
         InitWarning(AmountHighWarn("-minrelaytxfee") + " " +

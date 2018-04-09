@@ -31,8 +31,6 @@
 #include <assert.h>
 #include <future>
 
-#include <boost/algorithm/string/replace.hpp>
-
 std::vector<CWalletRef> vpwallets;
 /** Transaction fee set by the user */
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
@@ -956,14 +954,10 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     // Notify UI of new or updated transaction
     NotifyTransactionChanged(this, hash, fInsertedNew ? CT_NEW : CT_UPDATED);
 
+    // if nconfirmations=0 then - notify on every transaction change
     // notify an external script when a wallet transaction comes in or is updated
-    std::string strCmd = gArgs.GetArg("-walletnotify", "");
-
-    if (!strCmd.empty())
-    {
-        boost::replace_all(strCmd, "%s", wtxIn.GetHash().GetHex());
-        std::thread t(runCommand, strCmd);
-        t.detach(); // thread runs free
+    if (m_notifier.GetConfirmationsRequired() == 0) {
+        m_notifier.AddTransaction(*wtxIn.tx);
     }
 
     return true;
@@ -1203,6 +1197,11 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pin
             it->second.MarkDirty();
         }
     }
+
+    // if we are notifying in confirmed mode and this was due to a connected block
+    if (pindex && m_notifier.GetConfirmationsRequired() >= 1) {
+        m_notifier.AddTransaction(*ptx, pindex->nHeight);
+    }
 }
 
 void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
@@ -1225,6 +1224,13 @@ void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
 
 void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) {
     LOCK2(cs_main, cs_wallet);
+
+    // call the notifier to notify on any transactions that have now
+    // reached the required number of block confirmations
+    // must be done first as the bucket storing these transactions will be
+    // emptied here and then reused below in SyncTransaction
+    m_notifier.BlockConnected(pindex->nHeight);
+
     // TODO: Temporarily ensure that mempool removals are notified before
     // connected transactions.  This shouldn't matter, but the abandoned
     // state of transactions in our wallet is currently cleared when we
@@ -3986,6 +3992,15 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         walletInstance->SetMaxVersion(nMaxVersion);
     }
 
+    if (gArgs.IsArgSet("-walletnotify")) {
+        std::string notify_command = gArgs.GetArg("-walletnotify", "");
+        int confirmations_required = gArgs.GetArg("-walletnotifyconfirmations", DEFAULT_WALLETNOTIFY_NCONFIRMATIONS);
+
+        walletInstance->m_notifier = WalletTransactionNotifier(notify_command, confirmations_required, chainActive.Height());
+        std::string notification_policy = (confirmations_required == 0) ? "all updates" : strprintf("%d confirmations", confirmations_required);
+        LogPrintf("Wallet transaction notifications enabled: command_template='%s' (notification policy: %s)\n", notify_command, notification_policy);
+    }
+
     if (fFirstRun)
     {
         // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
@@ -4052,6 +4067,11 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
     walletInstance->m_last_block_processed = chainActive.Tip();
     RegisterValidationInterface(walletInstance);
 
+    // rewind the rescan start to at least the number of confirmations required in the past
+    int max_rescan_height = std::max<int>(0, chainActive.Height() - walletInstance->m_notifier.GetConfirmationsRequired() + 1);
+    if (pindexRescan && pindexRescan->nHeight > max_rescan_height)
+        pindexRescan = chainActive[max_rescan_height];
+
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
         //We can't rescan beyond non-pruned blocks, stop and throw an error
@@ -4074,7 +4094,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
         // No need to read and scan block if block was created before
         // our wallet birthday (as adjusted for block time variability)
-        while (pindexRescan && walletInstance->nTimeFirstKey && (pindexRescan->GetBlockTime() < (walletInstance->nTimeFirstKey - TIMESTAMP_WINDOW))) {
+        while (pindexRescan && pindexRescan->nHeight <= max_rescan_height && walletInstance->nTimeFirstKey && (pindexRescan->GetBlockTime() < (walletInstance->nTimeFirstKey - TIMESTAMP_WINDOW))) {
             pindexRescan = chainActive.Next(pindexRescan);
         }
 
