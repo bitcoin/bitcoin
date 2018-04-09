@@ -8,7 +8,7 @@ struct thread_pool {
 	thread_pool(int threads) :service(), service_worker(new asio_worker::element_type(service)) {
 		for (int i = 0; i < threads; ++i) {
 			auto worker = [this] { return service.run(); };
-			boost::thread_t newThread = boost::thread(worker);
+			boost::thread newThread = boost::thread(worker);
 			grp.add_thread(newThread);
 			ScheduleBatchPriority(newThread.native_handle());
 		}
