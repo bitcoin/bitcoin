@@ -1148,7 +1148,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
 		thread_pool pool(nScriptCheckThreads <= 0? 1: nScriptCheckThreads);
 
-		pool.enqueue([tx, flags] {
+		pool.enqueue([](const CTransaction& tx, int &flags){
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				const COutPoint &prevout = tx.vin[i].prevout;
 				const CCoins* coins = view.AccessCoins(prevout.hash);
