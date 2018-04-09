@@ -25,7 +25,7 @@ struct thread_pool {
 
 	template<class F>
 	void enqueue(F f) {
-		get_io_service.post(f);
+		get_io_service().post(f);
 	}
 
 	~thread_pool() {
