@@ -441,12 +441,6 @@ public:
         MarkDirty();
     }
 
-    // Get the marginal bytes if spending the specified output from this transaction
-    int GetSpendSize(unsigned int out) const
-    {
-        return CalculateMaximumSignedInputSize(tx->vout[out], pwallet);
-    }
-
     void GetAmounts(std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
 
@@ -785,6 +779,12 @@ public:
     std::set<COutPoint> setLockedCoins;
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
+
+    // Get the marginal bytes if spending the specified output from this transaction
+    int GetSpendSize(const CWalletTx& wtx, unsigned int out) const
+    {
+        return CalculateMaximumSignedInputSize(wtx.tx->vout[out], this);
+    }
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) const { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }

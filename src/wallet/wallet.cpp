@@ -4316,6 +4316,6 @@ COutput CWallet::MakeOutput(const CWalletTx& wtx, int index, int depth, bool is_
 {
     // If known and signable by the given wallet, compute input bytes
     // Failure will keep this value -1
-    int input_bytes = is_spendable ? wtx.GetSpendSize(index) : -1;
+    int input_bytes = is_spendable ? GetSpendSize(wtx, index) : -1;
     return {&wtx, index, depth, input_bytes, is_spendable, is_solvable, is_safe};
 }
