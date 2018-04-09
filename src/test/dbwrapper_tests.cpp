@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
     // Check that creating an iterator creates a snapshot
     std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
 
-    for (int x=0x00; x<256; ++x) {
+    for (unsigned int x=0x00; x<256; ++x) {
         uint8_t key = x;
         uint32_t value = x*x;
         if (x & 1) BOOST_CHECK(dbw.Write(key, value));
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
 
     for (int seek_start : {0x00, 0x80}) {
         it->Seek((uint8_t)seek_start);
-        for (int x=seek_start; x<255; ++x) {
+        for (unsigned int x=seek_start; x<255; ++x) {
             uint8_t key;
             uint32_t value;
             BOOST_CHECK(it->Valid());
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
         snprintf(buf, sizeof(buf), "%d", seek_start);
         StringContentsSerializer seek_key(buf);
         it->Seek(seek_key);
-        for (int x=seek_start; x<10; ++x) {
+        for (unsigned int x=seek_start; x<10; ++x) {
             for (int y = 0; y < 10; y++) {
                 snprintf(buf, sizeof(buf), "%d", x);
                 std::string exp_key(buf);
