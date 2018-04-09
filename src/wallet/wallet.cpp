@@ -1953,21 +1953,21 @@ void CWallet::ReacceptWalletTransactions()
     for (std::pair<const int64_t, CWalletTx*>& item : mapSorted) {
         CWalletTx& wtx = *(item.second);
         CValidationState state;
-        wtx.AcceptToMemoryPool(maxTxFee, state);
+        AcceptToMemoryPool(wtx, maxTxFee, state);
     }
 }
 
-bool CWalletTx::RelayWalletTransaction(CConnman* connman)
+bool CWallet::RelayWalletTransaction(CWalletTx& wtx, CConnman* connman)
 {
-    assert(pwallet->GetBroadcastTransactions());
-    if (!IsCoinBase() && !isAbandoned() && GetDepthInMainChain() == 0)
+    assert(GetBroadcastTransactions());
+    if (!wtx.IsCoinBase() && !wtx.isAbandoned() && wtx.GetDepthInMainChain() == 0)
     {
         CValidationState state;
         /* GetDepthInMainChain already catches known conflicts. */
-        if (InMempool() || AcceptToMemoryPool(maxTxFee, state)) {
-            LogPrintf("Relaying wtx %s\n", GetHash().ToString());
+        if (wtx.InMempool() || AcceptToMemoryPool(wtx, maxTxFee, state)) {
+            LogPrintf("Relaying wtx %s\n", wtx.GetHash().ToString());
             if (connman) {
-                CInv inv(MSG_TX, GetHash());
+                CInv inv(MSG_TX, wtx.GetHash());
                 connman->ForEachNode([&inv](CNode* pnode)
                 {
                     pnode->PushInventory(inv);
@@ -2055,8 +2055,9 @@ std::vector<uint256> CWallet::ResendWalletTransactionsBefore(int64_t nTime, CCon
     for (std::pair<const unsigned int, CWalletTx*>& item : mapSorted)
     {
         CWalletTx& wtx = *item.second;
-        if (wtx.RelayWalletTransaction(connman))
+        if (RelayWalletTransaction(wtx, connman)) {
             result.push_back(wtx.GetHash());
+        }
     }
     return result;
 }
@@ -3092,11 +3093,11 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
         if (fBroadcastTransactions)
         {
             // Broadcast
-            if (!wtx.AcceptToMemoryPool(maxTxFee, state)) {
+            if (!AcceptToMemoryPool(wtx, maxTxFee, state)) {
                 LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", FormatStateMessage(state));
                 // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
             } else {
-                wtx.RelayWalletTransaction(connman);
+                RelayWalletTransaction(wtx, connman);
             }
         }
     }
@@ -4196,16 +4197,16 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CWalletTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state)
+bool CWallet::AcceptToMemoryPool(CWalletTx& wtx, const CAmount& nAbsurdFee, CValidationState& state)
 {
     // We must set fInMempool here - while it will be re-set to true by the
     // entered-mempool callback, if we did not there would be a race where a
     // user could call sendmoney in a loop and hit spurious out of funds errors
     // because we think that this newly generated transaction's change is
     // unavailable as we're not yet aware that it is in the mempool.
-    bool ret = ::AcceptToMemoryPool(mempool, state, tx, nullptr /* pfMissingInputs */,
+    bool ret = ::AcceptToMemoryPool(mempool, state, wtx.tx, nullptr /* pfMissingInputs */,
                                 nullptr /* plTxnReplaced */, false /* bypass_limits */, nAbsurdFee);
-    fInMempool |= ret;
+    wtx.fInMempool |= ret;
     return ret;
 }
 

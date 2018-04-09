@@ -448,12 +448,6 @@ public:
 
     int64_t GetTxTime() const;
 
-    // RelayWalletTransaction may only be called if fBroadcastTransactions!
-    bool RelayWalletTransaction(CConnman* connman);
-
-    /** Pass this transaction to the mempool. Fails if absolute fee exceeds absurd fee. */
-    bool AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state);
-
     std::set<uint256> GetConflicts() const;
 };
 
@@ -787,6 +781,13 @@ public:
     bool IsTrusted(const CWalletTx& wtx) const;
 
     int GetRequestCount(const CWalletTx& wtx) const;
+
+    // RelayWalletTransaction may only be called if fBroadcastTransactions!
+    bool RelayWalletTransaction(CWalletTx& wtx, CConnman* connman);
+
+    /** Pass this transaction to the mempool. Fails if absolute fee exceeds absurd fee. */
+    bool AcceptToMemoryPool(CWalletTx& wtx, const CAmount& nAbsurdFee, CValidationState& state);
+
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) const { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
