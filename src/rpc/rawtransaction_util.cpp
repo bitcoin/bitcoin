@@ -301,7 +301,8 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
         TxInErrorToJSON(mtx.vin.at(err_pair.first), vErrors, err_pair.second);
     }
 
-    result.pushKV("hex", EncodeHexTx(CTransaction(mtx)));
+    CTransaction tx(mtx);
+    result.pushKV("hex", EncodeHexTx(tx));
     result.pushKV("complete", complete);
     if (inputs_amount_sum) {
         CAmount inout_amount = *inputs_amount_sum;
@@ -309,6 +310,11 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
             inout_amount -= txout.nValue;
         }
         result.pushKV("fee", ValueFromAmount(inout_amount));
+        result.pushKV("feerate",
+            ValueFromAmount(
+                CFeeRate(inout_amount, GetVirtualTransactionSize(tx)).GetFeePerK()
+            )
+        );
     }
     if (!vErrors.empty()) {
         if (result.exists("errors")) {
