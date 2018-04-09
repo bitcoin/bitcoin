@@ -61,6 +61,7 @@
 #include "graph.h"
 #include "base58.h"
 #include "rpc/server.h"
+#include "threadpool.h"
 using namespace std;
 
 #if defined(NDEBUG)
