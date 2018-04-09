@@ -447,8 +447,6 @@ public:
     bool InMempool() const;
 
     int64_t GetTxTime() const;
-
-    std::set<uint256> GetConflicts() const;
 };
 
 class COutput

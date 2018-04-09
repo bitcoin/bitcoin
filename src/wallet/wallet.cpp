@@ -494,6 +494,10 @@ std::set<uint256> CWallet::GetConflicts(const uint256& txid) const
         for (TxSpends::const_iterator _it = range.first; _it != range.second; ++_it)
             result.insert(_it->second);
     }
+
+    // txid should not conflict with itself
+    result.erase(txid);
+
     return result;
 }
 
@@ -1977,18 +1981,6 @@ bool CWallet::RelayWalletTransaction(CWalletTx& wtx, CConnman* connman)
         }
     }
     return false;
-}
-
-std::set<uint256> CWalletTx::GetConflicts() const
-{
-    std::set<uint256> result;
-    if (pwallet != nullptr)
-    {
-        uint256 myHash = GetHash();
-        result = pwallet->GetConflicts(myHash);
-        result.erase(myHash);
-    }
-    return result;
 }
 
 bool CWalletTx::InMempool() const

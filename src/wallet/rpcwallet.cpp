@@ -104,7 +104,7 @@ void WalletTxToJSON(const CWallet* pwallet, const CWalletTx& wtx, UniValue& entr
     uint256 hash = wtx.GetHash();
     entry.pushKV("txid", hash.GetHex());
     UniValue conflicts(UniValue::VARR);
-    for (const uint256& conflict : wtx.GetConflicts())
+    for (const uint256& conflict : pwallet->GetConflicts(hash))
         conflicts.push_back(conflict.GetHex());
     entry.pushKV("walletconflicts", conflicts);
     entry.pushKV("time", wtx.GetTxTime());
