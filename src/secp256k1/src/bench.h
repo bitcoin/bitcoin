@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <math.h>
 #include "sys/time.h"
+#include <pthread.h>
+#include "thpool.h"
 
 static double gettimedouble(void) {
     struct timeval tv;
@@ -35,6 +37,8 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
     double min = HUGE_VAL;
     double sum = 0.0;
     double max = 0.0;
+	threadpool thpool = thpool_init(8);
+
     for (i = 0; i < count; i++) {
         double begin, total;
         if (setup != NULL) {
