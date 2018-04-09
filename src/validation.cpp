@@ -1148,7 +1148,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		if (fDryRun) return true;
 		if (!g_threadpool)
 			g_threadpool = new thread_pool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
-		g_threadpool->enqueue([&, state, tx, view, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fDryRun, fOverrideMempoolLimit]() {
+		const int chainHeight = chainActive.Height();
+		g_threadpool->enqueue([=, &pool]() {
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
@@ -1168,7 +1169,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 					__func__, hash.ToString(), FormatStateMessage(state));
 			}
-			if (!CheckSyscoinInputs(tx, true, chainActive.Height(), nFees, CBlock()))
+			if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock()))
 				return false;
 			// Remove conflicting transactions from the mempool
 			BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
