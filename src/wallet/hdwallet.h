@@ -361,7 +361,7 @@ class CHDWallet : public CWallet
 public:
 
     // Create wallet with passed-in database handle
-    CHDWallet(std::string name, std::unique_ptr<CWalletDBWrapper> dbw_in) : CWallet(name, std::move(dbw_in))
+    CHDWallet(std::string name, std::unique_ptr<WalletDatabase> dbw_in) : CWallet(name, std::move(dbw_in))
     {
         SetHDWalletNull();
     }

@@ -211,27 +211,27 @@ public:
 
 
 /** Access to the wallet database */
-class CHDWalletDB : public CWalletDB
+class CHDWalletDB : public WalletBatch
 {
 public:
-    CHDWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) : CWalletDB(dbw, pszMode, _fFlushOnClose)
+    CHDWalletDB(WalletDatabase& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) : WalletBatch(dbw, pszMode, _fFlushOnClose)
     {
     };
 
     bool InTxn()
     {
-        return batch.pdb && batch.activeTxn;
+        return m_batch.pdb && m_batch.activeTxn;
     };
 
     Dbc *GetTxnCursor()
     {
-        if (!batch.pdb || !batch.activeTxn)
+        if (!m_batch.pdb || !m_batch.activeTxn)
             return nullptr;
 
-        DbTxn *ptxnid = batch.activeTxn; // call TxnBegin first
+        DbTxn *ptxnid = m_batch.activeTxn; // call TxnBegin first
 
         Dbc *pcursor = nullptr;
-        int ret = batch.pdb->cursor(ptxnid, &pcursor, 0);
+        int ret = m_batch.pdb->cursor(ptxnid, &pcursor, 0);
         if (ret != 0)
             return nullptr;
         return pcursor;
@@ -239,7 +239,7 @@ public:
 
     Dbc *GetCursor()
     {
-        return batch.GetCursor();
+        return m_batch.GetCursor();
     }
 
     template< typename T>
@@ -248,7 +248,7 @@ public:
         if (!pcursor)
             return false;
 
-        if (batch.fReadOnly)
+        if (m_batch.fReadOnly)
             assert(!"Replace called on database in read-only mode");
 
         // Value

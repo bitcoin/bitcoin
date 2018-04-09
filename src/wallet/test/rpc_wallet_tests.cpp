@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     {
         LOCK(m_wallet.cs_wallet);
 
-        CWalletDB walletdb(m_wallet.GetDBHandle());
+        WalletBatch walletdb(m_wallet.GetDBHandle());
         demoPubkey = m_wallet.GenerateNewKey(walletdb, false);
         demoAddress = CBitcoinAddress(CTxDestination(demoPubkey.GetID()));
         string strPurpose = "receive";

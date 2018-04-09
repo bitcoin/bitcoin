@@ -179,7 +179,7 @@ bool CHDWallet::InitLoadWallet()
     {
         std::string walletName = walletFile == "" ? "wallet.dat" : walletFile;
         fs::path path = fs::absolute(walletFile, GetWalletDir());
-        CHDWallet *walletInstance = new CHDWallet(walletName, CWalletDBWrapper::Create(path));
+        CHDWallet *walletInstance = new CHDWallet(walletName, WalletDatabase::Create(path));
         CHDWallet *const pwallet = (CHDWallet*) CWallet::CreateWalletFromFile(walletFile, path, walletInstance);
 
         if (!pwallet)
@@ -227,7 +227,7 @@ bool CHDWallet::InitLoadWallet()
         if (!gArgs.GetBoolArg("-rescan", false))
         {
             CBlockLocator locator;
-            CHDWalletDB walletdb(*pwallet->dbw);
+            CHDWalletDB walletdb(*pwallet->database);
             if (walletdb.ReadBestBlock(locator))
                 pindexRescan = FindForkInGlobalIndex(chainActive, locator);
         }
@@ -268,7 +268,7 @@ bool CHDWallet::InitLoadWallet()
             }
             LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
             pwallet->SetBestChain(chainActive.GetLocator());
-            pwallet->dbw->IncrementUpdateCounter();
+            pwallet->database->IncrementUpdateCounter();
         }
 
         if (!pwallet->pEKMaster)
@@ -429,7 +429,7 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
 
     LOCK(cs_wallet);
 
-    CHDWalletDB wdb(*dbw, "r");
+    CHDWalletDB wdb(*database, "r");
 
     size_t nKeys, nAcc;
     UniValue extkeys(UniValue::VARR);
@@ -820,7 +820,7 @@ bool CHDWallet::LoadTxRecords(CHDWalletDB *pwdb)
         MapRecords_t::iterator mri;
         MapWallet_t::iterator mwi;
 
-        CHDWalletDB wdb(*dbw, "r");
+        CHDWalletDB wdb(*database, "r");
         for (const auto &ri : mapRecords)
         {
             const uint256 &txhash = ri.first;
@@ -916,54 +916,54 @@ bool CHDWallet::EncryptWallet(const SecureString &strWalletPassphrase)
 
         //if (fFileBacked)
         {
-            assert(!pwalletdbEncryption);
-            pwalletdbEncryption = new CHDWalletDB(*dbw);
-            if (!pwalletdbEncryption->TxnBegin())
+            assert(!encrypted_batch);
+            encrypted_batch = new CHDWalletDB(*database);
+            if (!encrypted_batch->TxnBegin())
             {
-                delete pwalletdbEncryption;
-                pwalletdbEncryption = nullptr;
+                delete encrypted_batch;
+                encrypted_batch = nullptr;
                 return false;
             };
-            pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
+            encrypted_batch->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
         }
 
         if (!EncryptKeys(vMasterKey))
         {
             //if (fFileBacked)
             {
-                pwalletdbEncryption->TxnAbort();
-                delete pwalletdbEncryption;
+                encrypted_batch->TxnAbort();
+                delete encrypted_batch;
             }
             // We now probably have half of our keys encrypted in memory, and half not...
             // die and let the user reload the unencrypted wallet.
             assert(false);
         }
 
-        if (0 != ExtKeyEncryptAll((CHDWalletDB*)pwalletdbEncryption, vMasterKey))
+        if (0 != ExtKeyEncryptAll((CHDWalletDB*)encrypted_batch, vMasterKey))
         {
             LogPrintf("Terminating - Error: ExtKeyEncryptAll failed.\n");
             //if (fFileBacked)
             {
-                pwalletdbEncryption->TxnAbort();
-                delete pwalletdbEncryption;
+                encrypted_batch->TxnAbort();
+                delete encrypted_batch;
             }
             assert(false); // die and let the user reload the unencrypted wallet.
         };
 
         // Encryption was introduced in version 0.4.0
-        SetMinVersion(FEATURE_WALLETCRYPT, pwalletdbEncryption, true);
+        SetMinVersion(FEATURE_WALLETCRYPT, encrypted_batch, true);
 
         //if (fFileBacked)
         {
-            if (!pwalletdbEncryption->TxnCommit()) {
-                delete pwalletdbEncryption;
+            if (!encrypted_batch->TxnCommit()) {
+                delete encrypted_batch;
                 // We now have keys encrypted in memory, but not on disk...
                 // die to avoid confusion and let the user reload the unencrypted wallet.
                 assert(false);
             }
 
-            delete pwalletdbEncryption;
-            pwalletdbEncryption = nullptr;
+            delete encrypted_batch;
+            encrypted_batch = nullptr;
         }
 
         if (!Lock())
@@ -975,7 +975,7 @@ bool CHDWallet::EncryptWallet(const SecureString &strWalletPassphrase)
 
         // Need to completely rewrite the wallet file; if we don't, bdb might keep
         // bits of the unencrypted private key in slack space in the database file.
-        CDB::Rewrite(*dbw);
+        BerkeleyBatch::Rewrite(*database);
 
     }
     NotifyStatusChanged(this);
@@ -1344,7 +1344,7 @@ bool CHDWallet::ImportStealthAddress(const CStealthAddress &sxAddr, const CKey &
         };
     };
 
-    if (!CHDWalletDB(*dbw).WriteStealthAddress(sxAddr))
+    if (!CHDWalletDB(*database).WriteStealthAddress(sxAddr))
     {
         stealthAddresses.erase(sxAddr);
         return error("%s: WriteStealthAddress failed.", __func__);
@@ -1416,7 +1416,7 @@ bool CHDWallet::SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address,
                     return false;
             } else
             {
-                if (!CHDWalletDB(*dbw).WriteAddressBookEntry(CBitcoinAddress(address).ToString(), *entry))
+                if (!CHDWalletDB(*database).WriteAddressBookEntry(CBitcoinAddress(address).ToString(), *entry))
                     return false;
             };
         };
@@ -1471,7 +1471,7 @@ bool CHDWallet::SetAddressBook(const CTxDestination &address, const std::string 
     NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address) != ISMINE_NO,
                              strPurpose, nMode);
 
-    return CHDWalletDB(*dbw).WriteAddressBookEntry(CBitcoinAddress(address).ToString(), *entry);
+    return CHDWalletDB(*database).WriteAddressBookEntry(CBitcoinAddress(address).ToString(), *entry);
 };
 
 
@@ -1495,7 +1495,7 @@ bool CHDWallet::DelAddressBook(const CTxDestination &address)
                 //fOwned = si->scan_secret.size() < 32 ? false : true;
 
                 if (stealthAddresses.erase(sxAddr) < 1
-                    || !CHDWalletDB(*dbw).EraseStealthAddress(sxAddr))
+                    || !CHDWalletDB(*database).EraseStealthAddress(sxAddr))
                 {
                     LogPrintf("%s: Error: Remove stealthAddresses failed.\n", __func__);
                     return false;
@@ -1517,7 +1517,7 @@ bool CHDWallet::DelAddressBook(const CTxDestination &address)
     bool fErased = false; // CWallet::DelAddressBook can return false
     //if (fFileBacked)
     {
-        fErased = CHDWalletDB(*dbw).EraseAddressBookEntry(CBitcoinAddress(address).ToString()) ? true : fErased;
+        fErased = CHDWalletDB(*database).EraseAddressBookEntry(CBitcoinAddress(address).ToString()) ? true : fErased;
     };
     fErased = CWallet::DelAddressBook(address) ? true : fErased;
 
@@ -2123,7 +2123,7 @@ CAmount CHDWallet::GetOutputValue(const COutPoint &op, bool fAllowTXIndex)
         if (rec)
             return rec->nValue;
         CStoredTransaction stx;
-        if (!CHDWalletDB(*dbw).ReadStoredTx(op.hash, stx)) // TODO: cache / use mapTempWallet
+        if (!CHDWalletDB(*database).ReadStoredTx(op.hash, stx)) // TODO: cache / use mapTempWallet
         {
             LogPrintf("%s: ReadStoredTx failed for %s.\n", __func__, op.hash.ToString());
             return 0;
@@ -2453,7 +2453,7 @@ CAmount CHDWallet::GetLegacyBalance(const isminefilter& filter, int minDepth, co
     }
 
     if (account) {
-        balance += CWalletDB(*dbw).GetAccountCreditDebit(*account);
+        balance += WalletBatch(*database).GetAccountCreditDebit(*account);
     }
 
     for (const auto &entry : mapRecords)
@@ -4033,7 +4033,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     if (pcC)
     {
         LOCK(cs_wallet);
-        CHDWalletDB wdb(*dbw, "r+");
+        CHDWalletDB wdb(*database, "r+");
 
         std::vector<uint8_t> vEphemPath;
         uint32_t idIndex;
@@ -4379,7 +4379,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             } else
             {
                 CStoredTransaction stx;
-                if (!CHDWalletDB(*dbw).ReadStoredTx(txhash, stx))
+                if (!CHDWalletDB(*database).ReadStoredTx(txhash, stx))
                     return errorN(1, "%s: ReadStoredTx failed for %s.\n", __func__, txhash.ToString().c_str());
 
                 if (!stx.GetBlind(coin.second, &vInputBlinds[nIn * 32]))
@@ -4457,7 +4457,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 const CScript &scriptPubKey = oR->scriptPubKey;
 
                 CStoredTransaction stx;
-                if (!CHDWalletDB(*dbw).ReadStoredTx(txhash, stx))
+                if (!CHDWalletDB(*database).ReadStoredTx(txhash, stx))
                     return errorN(1, "%s: ReadStoredTx failed for %s.\n", __func__, txhash.ToString().c_str());
                 std::vector<uint8_t> vchAmount;
                 stx.tx->vpout[coin.second]->PutValue(vchAmount);
@@ -4527,7 +4527,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     if (pcC)
     {
         LOCK(cs_wallet);
-        CHDWalletDB wdb(*dbw, "r+");
+        CHDWalletDB wdb(*database, "r+");
 
         std::vector<uint8_t> vEphemPath;
         uint32_t idIndex;
@@ -4573,7 +4573,7 @@ int CHDWallet::PlaceRealOutputs(std::vector<std::vector<int64_t> > &vMI, size_t 
     //nSecretColumn %= nRingSize;
     nSecretColumn = GetRandInt(nRingSize);
 
-    CHDWalletDB wdb(*dbw);
+    CHDWalletDB wdb(*database);
     vMI.resize(vCoins.size());
 
     for (size_t k = 0; k < vCoins.size(); ++k)
@@ -5274,7 +5274,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     if (pcC)
     {
         LOCK(cs_wallet);
-        CHDWalletDB wdb(*dbw, "r+");
+        CHDWalletDB wdb(*database, "r+");
 
         std::vector<uint8_t> vEphemPath;
         uint32_t idIndex;
@@ -5401,7 +5401,7 @@ int CHDWallet::UnloadTransaction(const uint256 &hash)
     if ((itr = mapRecords.find(hash)) != mapRecords.end())
     {
         CStoredTransaction stx;
-        if (!CHDWalletDB(*dbw).ReadStoredTx(hash, stx)) // TODO: cache / use mapTempWallet
+        if (!CHDWalletDB(*database).ReadStoredTx(hash, stx)) // TODO: cache / use mapTempWallet
         {
             LogPrintf("%s: ReadStoredTx failed for %s.\n", __func__, hash.ToString());
         } else
@@ -5487,7 +5487,7 @@ int CHDWallet::GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&s
 
     if (!pwdb)
     {
-        CHDWalletDB wdb(*dbw, "r+");
+        CHDWalletDB wdb(*database, "r+");
         if (0 != ExtKeySaveAccountToDB(&wdb, idDefaultAccount, sea))
             return errorN(1,"%s: %s.", __func__, _("ExtKeySaveAccountToDB failed"));
     } else
@@ -6517,7 +6517,7 @@ int CHDWallet::ExtKeyLoadMaster()
 
     CKeyID idMaster;
 
-    CHDWalletDB wdb(*dbw, "r+");
+    CHDWalletDB wdb(*database, "r+");
     if (!wdb.ReadNamedExtKeyId("master", idMaster))
     {
         int nValue;
@@ -6618,7 +6618,7 @@ int CHDWallet::ExtKeyLoadAccounts()
 
     LOCK(cs_wallet);
 
-    CHDWalletDB wdb(*dbw);
+    CHDWalletDB wdb(*database);
 
     if (!wdb.ReadNamedExtKeyId("defaultAccount", idDefaultAccount))
     {
@@ -6782,7 +6782,7 @@ int CHDWallet::ExtKeyLoadAccountPacks()
 
     LOCK(cs_wallet);
 
-    CHDWalletDB wdb(*dbw);
+    CHDWalletDB wdb(*database);
 
     Dbc *pcursor;
     if (!(pcursor = wdb.GetCursor()))
@@ -7115,7 +7115,7 @@ int CHDWallet::ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, const CEK
     //LOCK(cs_wallet);
     AssertLockHeld(cs_wallet);
 
-    CHDWalletDB wdb(*dbw, "r+", true); // FlushOnClose
+    CHDWalletDB wdb(*database, "r+", true); // FlushOnClose
 
     if (!wdb.TxnBegin())
         return errorN(1, "%s TxnBegin failed.", __func__);
@@ -7157,7 +7157,7 @@ int CHDWallet::ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, const CEK
 {
     AssertLockHeld(cs_wallet);
 
-    CHDWalletDB wdb(*dbw, "r+");
+    CHDWalletDB wdb(*database, "r+");
 
     if (!wdb.TxnBegin())
         return errorN(1, "%s TxnBegin failed.", __func__);
@@ -7269,7 +7269,7 @@ int CHDWallet::ExtKeyGetIndex(CExtKeyAccount *sea, uint32_t &index)
 {
     LOCK(cs_wallet);
 
-    CHDWalletDB wdb(*dbw, "r+");
+    CHDWalletDB wdb(*database, "r+");
     bool requireUpdateDB;
     if (0 != ExtKeyGetIndex(&wdb, sea, index, requireUpdateDB))
         return errorN(1, "ExtKeyGetIndex failed.");
@@ -7387,7 +7387,7 @@ int CHDWallet::NewKeyFromAccount(CPubKey &pkOut, bool fInternal, bool fHardened,
 {
     {
         LOCK(cs_wallet);
-        CHDWalletDB wdb(*dbw, "r+");
+        CHDWalletDB wdb(*database, "r+");
 
         if (!wdb.TxnBegin())
             return errorN(1, "%s TxnBegin failed.", __func__);
@@ -7538,7 +7538,7 @@ int CHDWallet::NewStealthKeyFromAccount(std::string &sLabel, CEKAStealthKey &akS
 {
     {
         LOCK(cs_wallet);
-        CHDWalletDB wdb(*dbw, "r+");
+        CHDWalletDB wdb(*database, "r+");
 
         if (!wdb.TxnBegin())
             return errorN(1, "%s TxnBegin failed.", __func__);
@@ -7790,7 +7790,7 @@ int CHDWallet::NewStealthKeyV2FromAccount(std::string &sLabel, CEKAStealthKey &a
 {
     {
         LOCK(cs_wallet);
-        CHDWalletDB wdb(*dbw, "r+");
+        CHDWalletDB wdb(*database, "r+");
 
         if (!wdb.TxnBegin())
             return errorN(1, "%s TxnBegin failed.", __func__);
@@ -7931,7 +7931,7 @@ int CHDWallet::NewExtKeyFromAccount(std::string &sLabel, CStoredExtKey *sekOut,
 {
     {
         LOCK(cs_wallet);
-        CHDWalletDB wdb(*dbw, "r+");
+        CHDWalletDB wdb(*database, "r+");
 
         if (!wdb.TxnBegin())
             return errorN(1, "%s TxnBegin failed.", __func__);
@@ -7967,7 +7967,7 @@ int CHDWallet::ExtKeyGetDestination(const CExtKeyPair &ek, CPubKey &pkDest, uint
 
     CKeyID keyId = ek.GetID();
 
-    CHDWalletDB wdb(*dbw, "r+");
+    CHDWalletDB wdb(*database, "r+");
 
     CStoredExtKey sek;
     if (wdb.ReadExtKey(keyId, sek))
@@ -8001,7 +8001,7 @@ int CHDWallet::ExtKeyUpdateLooseKey(const CExtKeyPair &ek, uint32_t nKey, bool f
 
     CKeyID keyId = ek.GetID();
 
-    CHDWalletDB wdb(*dbw, "r+");
+    CHDWalletDB wdb(*database, "r+");
 
     CStoredExtKey sek;
     if (wdb.ReadExtKey(keyId, sek))
@@ -8325,7 +8325,7 @@ bool CHDWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::
                 {
                     const uint256 hash = wtxNew.GetHash();
                     UnloadTransaction(hash);
-                    CHDWalletDB wdb(*dbw);
+                    CHDWalletDB wdb(*database);
                     wdb.EraseTx(hash);
                     return false;
                 };
@@ -8363,7 +8363,7 @@ bool CHDWallet::CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
                 {
                     const uint256 hash = wtxNew.GetHash();
                     UnloadTransaction(hash);
-                    CHDWalletDB wdb(*dbw);
+                    CHDWalletDB wdb(*database);
                     wdb.EraseTxRecord(hash);
                     wdb.EraseStoredTx(hash);
                     return false;
@@ -8400,7 +8400,7 @@ int CHDWallet::LoadStealthAddresses()
 
     LOCK(cs_wallet);
 
-    CHDWalletDB wdb(*dbw);
+    CHDWalletDB wdb(*database);
 
     Dbc *pcursor;
     if (!(pcursor = wdb.GetCursor()))
@@ -8470,7 +8470,7 @@ bool CHDWallet::GetStealthKeyIndex(const CStealthAddressIndexed &sxi, uint32_t &
     LOCK(cs_wallet);
     uint160 hash = Hash160(sxi.addrRaw.begin(), sxi.addrRaw.end());
 
-    CHDWalletDB wdb(*dbw, "r+");
+    CHDWalletDB wdb(*database, "r+");
     if (wdb.ReadStealthAddressIndexReverse(hash, id))
         return true;
 
@@ -8484,7 +8484,7 @@ bool CHDWallet::UpdateStealthAddressIndex(const CKeyID &idK, const CStealthAddre
 
     uint160 hash = Hash160(sxi.addrRaw.begin(), sxi.addrRaw.end());
 
-    CHDWalletDB wdb(*dbw, "r+");
+    CHDWalletDB wdb(*database, "r+");
 
     if (wdb.ReadStealthAddressIndexReverse(hash, id))
     {
@@ -8508,7 +8508,7 @@ bool CHDWallet::GetStealthByIndex(uint32_t sxId, CStealthAddress &sx) const
 
     // TODO: cache stealth addresses
 
-    CHDWalletDB wdb(*dbw);
+    CHDWalletDB wdb(*database);
 
     CStealthAddressIndexed sxi;
     if (!wdb.ReadStealthAddressIndex(sxId, sxi))
@@ -8527,7 +8527,7 @@ bool CHDWallet::GetStealthLinked(const CKeyID &idK, CStealthAddress &sx)
 {
     LOCK(cs_wallet);
 
-    CHDWalletDB wdb(*dbw);
+    CHDWalletDB wdb(*database);
 
     uint32_t sxId;
     if (!wdb.ReadStealthAddressLink(idK, sxId))
@@ -8551,7 +8551,7 @@ bool CHDWallet::ProcessLockedStealthOutputs()
     AssertLockHeld(cs_wallet);
     LogPrint(BCLog::HDWALLET, "%s\n", __func__);
 
-    CHDWalletDB wdb(*dbw);
+    CHDWalletDB wdb(*database);
 
     if (!wdb.TxnBegin())
         return error("%s: TxnBegin failed.", __func__);
@@ -8656,14 +8656,14 @@ bool CHDWallet::ProcessLockedStealthOutputs()
             LogPrintf("%s: Adding secret to key %s.\n", __func__, CBitcoinAddress(idk).ToString());
 
 
-        pwalletdbEncryption = &wdb; // HACK: use wdb in CWallet::AddCryptedKey
+        encrypted_batch = &wdb; // HACK: use wdb in CWallet::AddCryptedKey
         if (!AddKeyPubKey(sSpendR, pk))
         {
             LogPrintf("%s: Error: AddKeyPubKey failed.\n", __func__);
-            pwalletdbEncryption = nullptr;
+            encrypted_batch = nullptr;
             continue;
         };
-        pwalletdbEncryption = nullptr;
+        encrypted_batch = nullptr;
 
         nExpanded++;
 
@@ -8691,7 +8691,7 @@ bool CHDWallet::ProcessLockedBlindedOutputs()
     std::set<uint256> setChanged;
 
     {
-    CHDWalletDB wdb(*dbw);
+    CHDWalletDB wdb(*database);
 
     if (!wdb.TxnBegin())
         return error("%s: TxnBegin failed.", __func__);
@@ -8818,7 +8818,7 @@ bool CHDWallet::CountRecords(std::string sPrefix, int64_t rv)
 {
     rv = 0;
     LOCK(cs_wallet);
-    CHDWalletDB wdb(*dbw);
+    CHDWalletDB wdb(*database);
 
     if (!wdb.TxnBegin())
         return error("%s: TxnBegin failed.", __func__);
@@ -8928,7 +8928,7 @@ bool CHDWallet::ProcessStealthOutput(const CTxDestination &address,
             CPubKey cpkScan(it->scan_pubkey);
             CStealthKeyMetadata lockedSkMeta(cpkEphem, cpkScan);
 
-            if (!CHDWalletDB(*dbw).WriteStealthKeyMeta(idExtracted, lockedSkMeta))
+            if (!CHDWalletDB(*database).WriteStealthKeyMeta(idExtracted, lockedSkMeta))
                 LogPrintf("WriteStealthKeyMeta failed for %s.\n", coinAddress.ToString());
 
             nFoundStealth++;
@@ -9341,7 +9341,7 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBloc
             {
                 nRingCT++;
 
-                CHDWalletDB wdb(*dbw, "r");
+                CHDWalletDB wdb(*database, "r");
                 uint32_t nInputs, nRingSize;
                 txin.GetAnonInfo(nInputs, nRingSize);
 
@@ -9488,7 +9488,7 @@ int CHDWallet::InsertTempTxn(const uint256 &txid, const CTransactionRecord *rtx)
     if (!GetTransaction(txid, txRef, Params().GetConsensus(), hashBlock, false))
         return errorN(1, "%s: GetTransaction failed, %s.\n", __func__, txid.ToString());
     */
-    if (!CHDWalletDB(*dbw).ReadStoredTx(txid, stx))
+    if (!CHDWalletDB(*database).ReadStoredTx(txid, stx))
         return errorN(1, "%s: ReadStoredTx failed for %s.\n", __func__, txid.ToString().c_str());
 
     wtx.BindWallet(std::remove_const<CWallet*>::type(this));
@@ -9767,7 +9767,7 @@ bool CHDWallet::AddTxinToSpends(const CTxIn &txin, const uint256 &txhash)
 
     if (txin.IsAnonInput())
     {
-        CHDWalletDB wdb(*dbw, "r");
+        CHDWalletDB wdb(*database, "r");
 
         uint32_t nInputs, nRingSize;
         txin.GetAnonInfo(nInputs, nRingSize);
@@ -9835,7 +9835,7 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
     if (LogAcceptCategory(BCLog::HDWALLET)) LogPrintf("%s: %s, %p, %d\n", __func__, tx.GetHash().ToString(), pIndex, posInBlock);
 
     AssertLockHeld(cs_wallet);
-    CHDWalletDB wdb(*dbw, "r+", fFlushOnClose);
+    CHDWalletDB wdb(*database, "r+", fFlushOnClose);
 
     uint256 txhash = tx.GetHash();
 
@@ -11132,7 +11132,7 @@ bool CHDWallet::AbandonTransaction(const uint256 &hashTx)
 {
     LOCK2(cs_main, cs_wallet);
 
-    CHDWalletDB walletdb(*dbw, "r+");
+    CHDWalletDB walletdb(*database, "r+");
 
     std::set<uint256> todo, done;
 
@@ -11263,7 +11263,7 @@ void CHDWallet::MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx)
         return;
 
     // Do not flush the wallet here for performance reasons
-    CHDWalletDB walletdb(*dbw, "r+", false);
+    CHDWalletDB walletdb(*database, "r+", false);
 
     MapRecords_t::iterator mri;
     MapWallet_t::iterator mwi;
@@ -11402,7 +11402,7 @@ bool CHDWallet::GetSetting(const std::string &setting, UniValue &json)
 {
     LOCK(cs_wallet);
 
-    CHDWalletDB wdb(*dbw, "r");
+    CHDWalletDB wdb(*database, "r");
 
     std::string sJson;
 
@@ -11419,7 +11419,7 @@ bool CHDWallet::SetSetting(const std::string &setting, const UniValue &json)
 {
     LOCK(cs_wallet);
 
-    CHDWalletDB wdb(*dbw, "r+");
+    CHDWalletDB wdb(*database, "r+");
 
     std::string sJson = json.write();
 
@@ -11433,7 +11433,7 @@ bool CHDWallet::EraseSetting(const std::string &setting)
 {
     LOCK(cs_wallet);
 
-    CHDWalletDB wdb(*dbw, "r+");
+    CHDWalletDB wdb(*database, "r+");
 
     if (!wdb.EraseWalletSetting(setting))
         return false;

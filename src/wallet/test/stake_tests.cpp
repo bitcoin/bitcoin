@@ -37,7 +37,7 @@ struct StakeTestingSetup: public TestingSetup {
         TestingSetup(chainName, true) // fParticlMode = true
     {
         bool fFirstRun;
-        pwalletMain = MakeUnique<CHDWallet>("mock_part", CWalletDBWrapper::CreateMock());
+        pwalletMain = MakeUnique<CHDWallet>("mock_part", WalletDatabase::CreateMock());
         vpwallets.push_back(pwalletMain.get());
         fParticlWallet = true;
         pwalletMain->LoadWallet(fFirstRun);
