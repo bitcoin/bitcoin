@@ -23,6 +23,9 @@
 #include "utilstrencodings.h"
 #include "hash.h"
 
+#include "evo/specialtx.h"
+#include "evo/cbtx.h"
+
 #include <stdint.h>
 
 #include <univalue.h>
@@ -131,6 +134,14 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
             txs.push_back(tx->GetHash().GetHex());
     }
     result.push_back(Pair("tx", txs));
+    if (!block.vtx[0]->vExtraPayload.empty()) {
+        CCbTx cbTx;
+        if (GetTxPayload(block.vtx[0]->vExtraPayload, cbTx)) {
+            UniValue cbTxObj;
+            cbTx.ToJson(cbTxObj);
+            result.push_back(Pair("cbTx", cbTxObj));
+        }
+    }
     result.push_back(Pair("time", block.GetBlockTime()));
     result.push_back(Pair("mediantime", (int64_t)blockindex->GetMedianTimePast()));
     result.push_back(Pair("nonce", (uint64_t)block.nNonce));

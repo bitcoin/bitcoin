@@ -28,6 +28,9 @@
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 
+#include "evo/specialtx.h"
+#include "evo/cbtx.h"
+
 #include <memory>
 #include <stdint.h>
 
@@ -735,6 +738,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("superblock", superblockObjArray));
     result.push_back(Pair("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock));
     result.push_back(Pair("superblocks_enabled", sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)));
+
+    result.push_back(Pair("coinbase_payload", HexStr(pblock->vtx[0]->vExtraPayload)));
 
     return result;
 }
