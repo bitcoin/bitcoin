@@ -80,7 +80,7 @@ CBlockIndex *pindexBestHeader = NULL;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
-thread_pool *g_threadpool;
+thread_pool *g_threadpool = NULL;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = true;
@@ -1147,7 +1147,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
 		if (!g_threadpool)
-			g_threadpool = new threadpool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
+			g_threadpool = new thread_pool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
 		g_threadpool.enqueue([&]() {
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				const COutPoint &prevout = tx.vin[i].prevout;
