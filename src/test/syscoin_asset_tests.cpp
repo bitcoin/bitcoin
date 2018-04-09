@@ -529,9 +529,9 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	CAmount negonesupply = -1;
 	string maxstr = ValueFromAssetAmount(negonesupply, 8, false).write();
 	AssetUpdate("node1", "assetupdatemaxsupply", "pub12", maxstr);
-	// can't go above 10b max
+	// can't go above max balance (10^18) / (10^8) for 8 decimal places (10 billion in this case)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatemaxsupply jagassetupdate assets 1 0 ''"), runtime_error);
-	// can't create asset with more than 10b balance or max supply
+	// can't create asset with more than max+1 balance or max+1 supply
 	string maxstrplusone = boost::lexical_cast<string>(boost::lexical_cast<int64_t>(maxstr) + 1);
 	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 assetupdatename pub assets 8 false " + maxstrplusone + " -1 0 false ''"), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 assetupdatename pub assets 8 false 1 " + maxstrplusone + " 0 false ''"), runtime_error);

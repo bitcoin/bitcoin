@@ -1226,7 +1226,7 @@ CAmount AssetAmountFromValue(UniValue& value, int precision, bool isInputRange)
 		throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
 	if ((value.isStr() && value.get_str() == "-1") || (value.isNum() && value.get_int64() == -1)) {
 		if(!isInputRange)
-			value.setInt((int64_t)(INT64_MAX / powf(10, precision)));
+			value.setInt((int64_t)(MAX_ASSET / powf(10, precision)));
 		else
 			value.setInt(MAX_INPUTRANGE_ASSET);
 	}
