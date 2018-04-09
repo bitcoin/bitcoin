@@ -2343,7 +2343,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
             bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
 
-            vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx));
+            vCoins.push_back(MakeOutput(*pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx));
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
@@ -2398,8 +2398,8 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
                 IsMine(it->second.tx->vout[output.n]) == ISMINE_SPENDABLE) {
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
-                    result[address].emplace_back(
-                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                    result[address].push_back(
+                        MakeOutput(it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */));
                 }
             }
         }
@@ -4322,4 +4322,12 @@ CTxDestination CWallet::AddAndGetDestinationForScript(const CScript& script, Out
     }
     default: assert(false);
     }
+}
+
+COutput CWallet::MakeOutput(const CWalletTx& wtx, int index, int depth, bool is_spendable, bool is_solvable, bool is_safe) const
+{
+    // If known and signable by the given wallet, compute input bytes
+    // Failure will keep this value -1
+    int input_bytes = is_spendable ? wtx.GetSpendSize(index) : -1;
+    return {&wtx, index, depth, input_bytes, is_spendable, is_solvable, is_safe};
 }

@@ -505,16 +505,6 @@ public:
      */
     bool fSafe;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn)
-    {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1;
-        // If known and signable by the given wallet, compute nInputBytes
-        // Failure will keep this value -1
-        if (fSpendable && tx) {
-            nInputBytes = tx->GetSpendSize(i);
-        }
-    }
-
     std::string ToString() const;
 };
 
@@ -1150,6 +1140,8 @@ public:
 
     /** Whether a given output is spendable by this wallet */
     bool OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const;
+
+    COutput MakeOutput(const CWalletTx& wtx, int index, int depth, bool is_spendable, bool is_solvableIn, bool is_safe) const;
 };
 
 /** A key allocated from the key pool. */
