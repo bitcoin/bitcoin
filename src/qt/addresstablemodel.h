@@ -84,7 +84,7 @@ private:
     WalletModel *walletModel;
     AddressTablePriv *priv;
     QStringList columns;
-    EditStatus editStatus;
+    EditStatus editStatus = OK;
 
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
