@@ -1150,9 +1150,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			g_threadpool = new thread_pool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
 		const int chainHeight = chainActive.Height();
 		g_threadpool->enqueue([=, &pool]() {
+			CValidationState vstate;
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
+			if (!CheckInputs(tx, vstate, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
 				LogPrintf("CheckInputs STANDARD_SCRIPT_VERIFY_FLAGS Failed");
 				return;
 			}
@@ -1166,10 +1167,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			// There is a similar check in CreateNewBlock() to prevent creating
 			// invalid blocks, however allowing such transactions into the mempool
 			// can be exploited as a DoS attack.
-			if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+			if (!CheckInputs(tx, vstate, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
 			{
 				LogPrintf("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
-					__func__, hash.ToString(), FormatStateMessage(state));
+					__func__, hash.ToString(), FormatStateMessage(vstate));
 				return;
 			}
 			if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
