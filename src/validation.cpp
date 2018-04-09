@@ -1151,9 +1151,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		const int chainHeight = chainActive.Height();
 		g_threadpool->enqueue([=, &pool]() {
 			CValidationState vstate;
+			CCoinsView vdummy;
+			CCoinsViewCache vview(&vdummy);
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-			if (!CheckInputs(tx, vstate, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
+			if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
 				LogPrintf("CheckInputs STANDARD_SCRIPT_VERIFY_FLAGS Failed");
 				return;
 			}
@@ -1167,7 +1169,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			// There is a similar check in CreateNewBlock() to prevent creating
 			// invalid blocks, however allowing such transactions into the mempool
 			// can be exploited as a DoS attack.
-			if (!CheckInputs(tx, vstate, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+			if (!CheckInputs(tx, vstate, vview, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
 			{
 				LogPrintf("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 					__func__, hash.ToString(), FormatStateMessage(vstate));
@@ -1193,12 +1195,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
 			// Add memory address index
 			if (fAddressIndex) {
-				pool.addAddressIndex(entry, view);
+				pool.addAddressIndex(entry, vview);
 			}
 
 			// Add memory spent index
 			if (fSpentIndex) {
-				pool.addSpentIndex(entry, view);
+				pool.addSpentIndex(entry, vview);
 			}
 
 			// trim mempool and check if tx was trimmed
