@@ -38,7 +38,7 @@ struct thread_pool {
 			io_services_[i]->stop();
 		
 	}
-	boost::asio::io_service& io_service_pool::get_io_service()
+	boost::asio::io_service& get_io_service()
 	{
 		// Use a round-robin scheme to choose the next io_service to use.
 		boost::asio::io_service& io_service = *io_services_[next_io_service_];
