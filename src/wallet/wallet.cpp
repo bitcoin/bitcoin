@@ -1313,6 +1313,33 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
     return 0;
 }
 
+CAmount CWallet::GetDebit(const CWalletTx& wtx, const isminefilter& filter) const
+{
+    if (wtx.tx->vin.empty())
+        return 0;
+
+    CAmount debit = 0;
+    if (filter & ISMINE_SPENDABLE) {
+        if (wtx.fDebitCached) {
+            debit += wtx.nDebitCached;
+        } else {
+            wtx.nDebitCached = GetDebit(*wtx.tx, ISMINE_SPENDABLE);
+            wtx.fDebitCached = true;
+            debit += wtx.nDebitCached;
+        }
+    }
+    if (filter & ISMINE_WATCH_ONLY) {
+        if (wtx.fWatchDebitCached) {
+            debit += wtx.nWatchDebitCached;
+        } else {
+            wtx.nWatchDebitCached = GetDebit(*wtx.tx, ISMINE_WATCH_ONLY);
+            wtx.fWatchDebitCached = true;
+            debit += wtx.nWatchDebitCached;
+        }
+    }
+    return debit;
+}
+
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
     return ::IsMine(*this, txout.scriptPubKey);
@@ -1369,7 +1396,7 @@ bool CWallet::IsFromMe(const CTransaction& tx) const
 
 bool CWallet::IsFromMe(const CWalletTx& wtx, const isminefilter& filter) const
 {
-    return wtx.GetDebit(filter) > 0;
+    return GetDebit(wtx, filter) > 0;
 }
 
 CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) const
@@ -1615,7 +1642,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
     strSentAccount = strFromAccount;
 
     // Compute fee:
-    CAmount nDebit = GetDebit(filter);
+    CAmount nDebit = pwallet->GetDebit(*this, filter);
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
         CAmount nValueOut = tx->GetValueOut();
@@ -1844,37 +1871,6 @@ std::set<uint256> CWalletTx::GetConflicts() const
         result.erase(myHash);
     }
     return result;
-}
-
-CAmount CWalletTx::GetDebit(const isminefilter& filter) const
-{
-    if (tx->vin.empty())
-        return 0;
-
-    CAmount debit = 0;
-    if(filter & ISMINE_SPENDABLE)
-    {
-        if (fDebitCached)
-            debit += nDebitCached;
-        else
-        {
-            nDebitCached = pwallet->GetDebit(*tx, ISMINE_SPENDABLE);
-            fDebitCached = true;
-            debit += nDebitCached;
-        }
-    }
-    if(filter & ISMINE_WATCH_ONLY)
-    {
-        if(fWatchDebitCached)
-            debit += nWatchDebitCached;
-        else
-        {
-            nWatchDebitCached = pwallet->GetDebit(*tx, ISMINE_WATCH_ONLY);
-            fWatchDebitCached = true;
-            debit += nWatchDebitCached;
-        }
-    }
-    return debit;
 }
 
 CAmount CWalletTx::GetCredit(const isminefilter& filter) const
@@ -2220,7 +2216,7 @@ CAmount CWallet::GetLegacyBalance(const isminefilter& filter, int minDepth, cons
 
         // Loop through tx outputs and add incoming payments. For outgoing txs,
         // treat change outputs specially, as part of the amount debited.
-        CAmount debit = wtx.GetDebit(filter);
+        CAmount debit = GetDebit(wtx, filter);
         const bool outgoing = debit > 0;
         for (const CTxOut& out : wtx.tx->vout) {
             if (outgoing && IsChange(out)) {
