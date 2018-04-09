@@ -1146,9 +1146,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
 
-		thread_pool pool(nScriptCheckThreads <= 0? 1: nScriptCheckThreads);
+		thread_pool threadpool(nScriptCheckThreads <= 0? 1: nScriptCheckThreads);
 
-		pool.enqueue([](const CTransaction& tx, int &flags){
+		threadpool.enqueue([](const CTransaction& tx, const int &flags){
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				const COutPoint &prevout = tx.vin[i].prevout;
 				const CCoins* coins = view.AccessCoins(prevout.hash);
