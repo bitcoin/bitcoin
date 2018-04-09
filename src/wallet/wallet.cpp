@@ -1311,6 +1311,7 @@ bool CWallet::IsAllFromMe(const CTransaction& tx, const isminefilter& filter) co
 {
     LOCK(cs_wallet);
 
+    if (tx.IsCoinBase()) return true;
     for (const CTxIn& txin : tx.vin)
     {
         auto mi = mapWallet.find(txin.prevout.hash);
