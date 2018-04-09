@@ -7,6 +7,8 @@ bench_bench_syscoin_SOURCES = \
   bench/bench_syscoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
+  bench/thpool.c \
+  bench/thpool.h \
   bench/Examples.cpp
 
 bench_bench_syscoin_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
