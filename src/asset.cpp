@@ -299,7 +299,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Precision must be between 0 and 8");
 				return true;
 			}
-			if (!AssetRange(theAsset.nMaxSupply, theAsset.nPrecision, theAsset.bUseInputRanges))
+			if (theAsset.nMaxSupply != -1 && !AssetRange(theAsset.nMaxSupply, theAsset.nPrecision, theAsset.bUseInputRanges))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Max supply out of money range");
 				return true;
