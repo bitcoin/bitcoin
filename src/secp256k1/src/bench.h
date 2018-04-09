@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <math.h>
 #include "sys/time.h"
-#include <pthread.h>
-#include "thpool.h"
 
 static double gettimedouble(void) {
     struct timeval tv;
