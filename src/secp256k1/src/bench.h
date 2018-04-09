@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "sys/time.h"
-#include <boost/asio/thread_pool.hpp>
+
 static double gettimedouble(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -35,7 +35,7 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
     double min = HUGE_VAL;
     double sum = 0.0;
     double max = 0.0;
-
+	// Launch the pool with four threads.
 	boost::asio::thread_pool pool(8);
 
 
@@ -46,7 +46,7 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
             setup(data);
         }
         
-
+		// Submit a lambda object to the pool.
 		boost::asio::post(pool,
 			[&]()
 		{
@@ -66,7 +66,7 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
 		});
 		
     }
-
+	// Wait for all tasks in the pool to complete.
 	pool.join();
     printf("%s: min ", name);
     print_number(min * 1000000.0 / iter);
