@@ -6,7 +6,6 @@ BENCH_BINARY = bench/bench_syscoin$(EXEEXT)
 bench_bench_syscoin_SOURCES = \
   bench/bench_syscoin.cpp \
   bench/bench.cpp \
-  bench/ctpl_stl.h \
   bench/bench.h \
   bench/Examples.cpp
 

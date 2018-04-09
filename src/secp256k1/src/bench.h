@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "sys/time.h"
-#include <ctpl_stl.h>
+#include <ctpl.h>  // or <ctpl_stl.h> if ou do not have Boost library
 static double gettimedouble(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
