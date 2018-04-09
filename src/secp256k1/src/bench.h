@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "sys/time.h"
-#include <ctpl.h>  // or <ctpl_stl.h> if ou do not have Boost library
+
 static double gettimedouble(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -35,27 +35,32 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
     double min = HUGE_VAL;
     double sum = 0.0;
     double max = 0.0;
-
-
-	double begin, total;
-	ctpl::thread_pool p(8);
-	if (setup != NULL) {
-		setup(data);
-	}
-	std::vector<std::future<void>> results(count);
-	begin = gettimedouble();
-	for (int i = 0; i < count; ++i) { // for 8 iterations,
-		results[i] = p.push([&](int) {benchmark(data);});
-	}
-	for (int j = 0; j < count; ++j) {
-		results[j].get();
-	}
-	total = gettimedouble() - begin;
-	printf("%s: min ", name);
-	printf("us / avg ");
-	print_number((total / count) * 1000000.0 / iter);
-
-    
+    for (i = 0; i < count; i++) {
+        double begin, total;
+        if (setup != NULL) {
+            setup(data);
+        }
+        begin = gettimedouble();
+        benchmark(data);
+        total = gettimedouble() - begin;
+        if (teardown != NULL) {
+            teardown(data);
+        }
+        if (total < min) {
+            min = total;
+        }
+        if (total > max) {
+            max = total;
+        }
+        sum += total;
+    }
+    printf("%s: min ", name);
+    print_number(min * 1000000.0 / iter);
+    printf("us / avg ");
+    print_number((sum / count) * 1000000.0 / iter);
+    printf("us / max ");
+    print_number(max * 1000000.0 / iter);
+    printf("us\n");
 }
 
 #endif /* SECP256K1_BENCH_H */
