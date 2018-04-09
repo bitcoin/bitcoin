@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
                 control.Add(vChecks);
             }
         }
-        BOOST_REQUIRE_EQUAL(MemoryCheck::fake_allocated_memory, 0);
+        BOOST_REQUIRE_EQUAL(MemoryCheck::fake_allocated_memory, 0U);
     }
     tg.interrupt_all();
     tg.join_all();
