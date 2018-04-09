@@ -1145,6 +1145,18 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
 
+		thread_pool pool(nScriptCheckThreads <= 0? 1: nScriptCheckThreads);
+
+		pool.enqueue([tx, flags] {
+			for (unsigned int i = 0; i < tx.vin.size(); i++) {
+				const COutPoint &prevout = tx.vin[i].prevout;
+				const CCoins* coins = view.AccessCoins(prevout.hash);
+				assert(coins);
+
+				// Verify signature
+				CScriptCheck check(*coins, tx, i, flags, true)();
+			}
+		});
 		// Check against previous transactions
 		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
