@@ -441,7 +441,6 @@ public:
         MarkDirty();
     }
 
-    CAmount GetAvailableWatchOnlyCredit(const bool fUseCache=true) const;
     CAmount GetChange() const;
 
     // Get the marginal bytes if spending the specified output from this transaction
@@ -994,6 +993,7 @@ public:
     CAmount GetImmatureCredit(const CWalletTx& wtx) const;
     CAmount GetAvailableCredit(const CWalletTx& wtx) const;
     CAmount GetImmatureWatchOnlyCredit(const CWalletTx& wtx) const;
+    CAmount GetAvailableWatchOnlyCredit(const CWalletTx& wtx) const;
 
     CAmount GetChange(const CTransaction& tx) const;
     void SetBestChain(const CBlockLocator& loc) override;
