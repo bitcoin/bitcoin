@@ -159,7 +159,7 @@ private:
     QMenu *peersTableContextMenu;
     QMenu *banTableContextMenu;
     int consoleFontSize;
-    QCompleter *autoCompleter;
+    QCompleter *autoCompleter = nullptr;
     QThread thread;
     QString m_last_wallet_id;
 

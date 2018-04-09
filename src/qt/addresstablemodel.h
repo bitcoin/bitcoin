@@ -86,7 +86,7 @@ private:
     WalletModel *walletModel;
     AddressTablePriv *priv;
     QStringList columns;
-    EditStatus editStatus;
+    EditStatus editStatus = OK;
 
     /** Look up address book data given an address string. */
     bool getAddressData(const QString &address, std::string* name, std::string* purpose) const;
