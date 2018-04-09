@@ -104,15 +104,15 @@ int main(void) {
 
   
 	begin = gettimedouble();
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < count; i++) {
 		thpool_add_work(thpool, (void*)benchmark_verify, (void*)&data);
 	}
 	total = gettimedouble() - begin;
-	printf("ecdsa_verify ");
+	printf("%", "ecdsa_verify");
 	
 	printf("us / avg ");
 	print_number((total / 10) * 1000000.0 / 20000);
-	printf("us\n");
+
 #ifdef ENABLE_OPENSSL_TESTS
     data.ec_group = EC_GROUP_new_by_curve_name(NID_secp256k1);
     run_benchmark("ecdsa_verify_openssl", benchmark_verify_openssl, NULL, NULL, &data, 10, 20000);
