@@ -17,8 +17,6 @@
 #include <rpc/register.h>
 #include <script/sigcache.h>
 
-#include <memory>
-
 void CConnmanTest::AddNode(CNode& node)
 {
     LOCK(g_connman->cs_vNodes);
