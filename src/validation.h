@@ -47,6 +47,7 @@ class CValidationInterface;
 class CValidationState;
 
 struct LockPoints;
+struct thread_pool;
 
 /** Default for accepting alerts from the P2P network. */
 // SYSCOIN
@@ -153,6 +154,7 @@ extern CConditionVariable cvBlockChange;
 extern bool fImporting;
 extern bool fReindex;
 extern int nScriptCheckThreads;
+extern thread_pool *g_threadpool;
 extern bool fTxIndex;
 extern bool fAddressIndex;
 extern bool fIsBareMultisigStd;
