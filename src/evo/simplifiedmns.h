@@ -8,6 +8,7 @@
 #include "serialize.h"
 #include "pubkey.h"
 #include "netaddress.h"
+#include "merkleblock.h"
 
 class UniValue;
 class CDeterministicMNList;
@@ -57,5 +58,54 @@ public:
 
     uint256 CalcMerkleRoot(bool *pmutated = NULL) const;
 };
+
+/// P2P messages
+
+class CGetSimplifiedMNListDiff
+{
+public:
+    uint256 baseBlockHash;
+    uint256 blockHash;
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(baseBlockHash);
+        READWRITE(blockHash);
+    }
+};
+
+class CSimplifiedMNListDiff
+{
+public:
+    uint256 baseBlockHash;
+    uint256 blockHash;
+    CPartialMerkleTree cbTxMerkleTree;
+    CTransactionRef cbTx;
+    std::vector<uint256> deletedMNs;
+    std::vector<CSimplifiedMNListEntry> mnList;
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(baseBlockHash);
+        READWRITE(blockHash);
+        READWRITE(cbTxMerkleTree);
+        READWRITE(cbTx);
+        READWRITE(deletedMNs);
+        READWRITE(mnList);
+    }
+
+public:
+    void ToJson(UniValue& obj) const;
+};
+
+bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
 
 #endif//DASH_SIMPLIFIEDMNS_H
