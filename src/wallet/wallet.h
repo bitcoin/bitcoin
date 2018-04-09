@@ -441,9 +441,6 @@ public:
         MarkDirty();
     }
 
-    void GetAmounts(std::list<COutputEntry>& listReceived,
-                    std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
-
     // True if only scriptSigs are different
     bool IsEquivalentTo(const CWalletTx& tx) const;
 
@@ -785,6 +782,9 @@ public:
     {
         return CalculateMaximumSignedInputSize(wtx.tx->vout[out], this);
     }
+
+    void GetAmounts(const CWalletTx& wtx, std::list<COutputEntry>& listReceived,
+                    std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) const { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }

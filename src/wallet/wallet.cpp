@@ -1751,34 +1751,34 @@ int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet)
     return GetVirtualTransactionInputSize(txn.vin[0]);
 }
 
-void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
-                           std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const
+void CWallet::GetAmounts(const CWalletTx& wtx, std::list<COutputEntry>& listReceived,
+                         std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const
 {
     nFee = 0;
     listReceived.clear();
     listSent.clear();
-    strSentAccount = strFromAccount;
+    strSentAccount = wtx.strFromAccount;
 
     // Compute fee:
-    CAmount nDebit = pwallet->GetDebit(*this, filter);
+    CAmount nDebit = GetDebit(wtx, filter);
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
-        CAmount nValueOut = tx->GetValueOut();
+        CAmount nValueOut = wtx.tx->GetValueOut();
         nFee = nDebit - nValueOut;
     }
 
     // Sent/received.
-    for (unsigned int i = 0; i < tx->vout.size(); ++i)
+    for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i)
     {
-        const CTxOut& txout = tx->vout[i];
-        isminetype fIsMine = pwallet->IsMine(txout);
+        const CTxOut& txout = wtx.tx->vout[i];
+        isminetype fIsMine = IsMine(txout);
         // Only need to handle txouts if AT LEAST one of these is true:
         //   1) they debit from us (sent)
         //   2) the output is to us (received)
         if (nDebit > 0)
         {
             // Don't report 'change' txouts
-            if (pwallet->IsChange(txout))
+            if (IsChange(txout))
                 continue;
         }
         else if (!(fIsMine & filter))
@@ -1790,7 +1790,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
         if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable())
         {
             LogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
-                     this->GetHash().ToString());
+                     wtx.GetHash().ToString());
             address = CNoDestination();
         }
 

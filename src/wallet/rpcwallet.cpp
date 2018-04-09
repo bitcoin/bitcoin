@@ -1672,7 +1672,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
-    wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, filter);
+    pwallet->GetAmounts(wtx, listReceived, listSent, nFee, strSentAccount, filter);
 
     bool fAllAccounts = (strAccount == std::string("*"));
     bool involvesWatchonly = pwallet->IsFromMe(wtx, ISMINE_WATCH_ONLY);
@@ -1963,7 +1963,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
         int nDepth = wtx.GetDepthInMainChain();
         if (wtx.GetBlocksToMaturity() > 0 || nDepth < 0)
             continue;
-        wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, includeWatchonly);
+        pwallet->GetAmounts(wtx, listReceived, listSent, nFee, strSentAccount, includeWatchonly);
         mapAccountBalances[strSentAccount] -= nFee;
         for (const COutputEntry& s : listSent)
             mapAccountBalances[strSentAccount] -= s.amount;
