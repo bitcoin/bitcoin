@@ -1152,8 +1152,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		g_threadpool->enqueue([=, &pool]() {
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
-				return false;
+			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
+				LogPrintf("CheckInputs STANDARD_SCRIPT_VERIFY_FLAGS Failed");
+				return;
+			}
 
 			// Check again against just the consensus-critical mandatory script
 			// verification flags, in case of bugs in the standard flags that cause
@@ -1166,11 +1168,14 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			// can be exploited as a DoS attack.
 			if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
 			{
-				return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
+				LogPrintf("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 					__func__, hash.ToString(), FormatStateMessage(state));
+				return;
 			}
-			if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock()))
-				return false;
+			if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
+				LogPrintf("CheckSyscoinInputs Failed");
+				return;
+			}
 			// Remove conflicting transactions from the mempool
 			BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
 			{
@@ -1198,8 +1203,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			// trim mempool and check if tx was trimmed
 			if (!fOverrideMempoolLimit) {
 				LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
-				if (!pool.exists(hash))
-					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
+				if (!pool.exists(hash)) {
+					LogPrintf("mempool full");
+					return;
+				}
 			}
 			if (!fDryRun)
 				GetMainSignals().SyncTransaction(tx, NULL);
