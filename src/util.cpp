@@ -1001,7 +1001,7 @@ std::string SafeIntVersionToString(uint32_t nVersion)
         return "invalid_version";
     }
 }
-int ScheduleBatchPriority(pthread thread)
+int ScheduleBatchPriority(pthread_t thread)
 {
 #ifdef SCHED_BATCH
 	const static sched_param param{ .sched_priority = 0 };

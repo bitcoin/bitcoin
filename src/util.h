@@ -308,6 +308,6 @@ std::string SafeIntVersionToString(uint32_t nVersion);
  + * @return The return value of sched_setschedule(), or 1 on systems without
  + * sched_setchedule().
  + */
- int ScheduleBatchPriority(pthread thread);
+ int ScheduleBatchPriority(pthread_t thread);
 
 #endif // SYSCOIN_UTIL_H
