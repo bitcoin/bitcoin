@@ -35,39 +35,25 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
     double min = HUGE_VAL;
     double sum = 0.0;
     double max = 0.0;
-	// Launch the pool with four threads.
-	boost::asio::thread_pool pool(8);
-
-
-
     for (i = 0; i < count; i++) {
         double begin, total;
         if (setup != NULL) {
             setup(data);
         }
-        
-		// Submit a lambda object to the pool.
-		boost::asio::post(pool,
-			[&]()
-		{
-			begin = gettimedouble();
-			benchmark(data);
-			total = gettimedouble() - begin;
-			if (teardown != NULL) {
-				teardown(data);
-			}
-			if (total < min) {
-				min = total;
-			}
-			if (total > max) {
-				max = total;
-			}
-			sum += total;
-		});
-		
+        begin = gettimedouble();
+        benchmark(data);
+        total = gettimedouble() - begin;
+        if (teardown != NULL) {
+            teardown(data);
+        }
+        if (total < min) {
+            min = total;
+        }
+        if (total > max) {
+            max = total;
+        }
+        sum += total;
     }
-	// Wait for all tasks in the pool to complete.
-	pool.join();
     printf("%s: min ", name);
     print_number(min * 1000000.0 / iter);
     printf("us / avg ");
