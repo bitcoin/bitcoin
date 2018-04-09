@@ -180,7 +180,7 @@ std::string SHA256AutoDetect()
 {
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__))
     uint32_t eax, ebx, ecx, edx;
-    if (__get_cpuid(1, &eax, &ebx, &ecx, &edx) && (ecx >> 19) & 1) {
+    if (__get_cpuid(1, &eax, &ebx, &ecx, &edx) && (ecx & bit_SSE4_1)) {
         Transform = sha256_sse4::Transform;
         assert(SelfTest(Transform));
         return "sse4";
