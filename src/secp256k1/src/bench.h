@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "sys/time.h"
-#include "threadpool.h"
+#include <boost/asio/thread_pool.hpp>
 static double gettimedouble(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -36,8 +36,8 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
     double sum = 0.0;
     double max = 0.0;
 
+	boost::asio::thread_pool pool(8);
 
-		g_threadpool = new thread_pool(8);
 
 
     for (i = 0; i < count; i++) {
@@ -47,7 +47,9 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
         }
         
 
-		g_threadpool->enqueue([&]() {
+		boost::asio::post(pool,
+			[&]()
+		{
 			begin = gettimedouble();
 			benchmark(data);
 			total = gettimedouble() - begin;
@@ -63,11 +65,9 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
 			sum += total;
 		});
 		
-	
-		
     }
 
-	delete g_threadpool;
+	pool.join();
     printf("%s: min ", name);
     print_number(min * 1000000.0 / iter);
     printf("us / avg ");
