@@ -29,7 +29,7 @@ GetResults(CWallet& wallet, std::map<CAmount, CAccountingEntry>& results)
 BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 {
     std::vector<CWalletTx*> vpwtx;
-    CWalletTx wtx(nullptr /* pwallet */, MakeTransactionRef());
+    CWalletTx wtx(MakeTransactionRef());
     CAccountingEntry ae;
     std::map<CAmount, CAccountingEntry> results;
 

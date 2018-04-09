@@ -274,9 +274,6 @@ int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet)
  */
 class CWalletTx : public CMerkleTx
 {
-private:
-    const CWallet* pwallet;
-
 public:
     /**
      * Key/value map with information about the transaction.
@@ -347,14 +344,13 @@ public:
     mutable CAmount nAvailableWatchCreditCached;
     mutable CAmount nChangeCached;
 
-    CWalletTx(const CWallet* pwalletIn, CTransactionRef arg) : CMerkleTx(std::move(arg))
+    explicit CWalletTx(CTransactionRef arg) : CMerkleTx(std::move(arg))
     {
-        Init(pwalletIn);
+        Init();
     }
 
-    void Init(const CWallet* pwalletIn)
+    void Init()
     {
-        pwallet = pwalletIn;
         mapValue.clear();
         vOrderForm.clear();
         fTimeReceivedIsTxTime = false;
@@ -404,7 +400,7 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        Init(nullptr);
+        Init();
         char fSpent;
 
         s >> static_cast<CMerkleTx&>(*this);
@@ -433,12 +429,6 @@ public:
         fImmatureWatchCreditCached = false;
         fDebitCached = false;
         fChangeCached = false;
-    }
-
-    void BindWallet(CWallet *pwalletIn)
-    {
-        pwallet = pwalletIn;
-        MarkDirty();
     }
 
     // True if only scriptSigs are different

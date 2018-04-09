@@ -899,7 +899,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     // Inserts only if not already there, returns tx inserted or tx found
     std::pair<std::map<uint256, CWalletTx>::iterator, bool> ret = mapWallet.insert(std::make_pair(hash, wtxIn));
     CWalletTx& wtx = (*ret.first).second;
-    wtx.BindWallet(this);
+    wtx.MarkDirty();
     bool fInsertedNew = ret.second;
     if (fInsertedNew)
     {
@@ -977,7 +977,7 @@ bool CWallet::LoadToWallet(const CWalletTx& wtxIn)
 {
     uint256 hash = wtxIn.GetHash();
     CWalletTx& wtx = mapWallet.emplace(hash, wtxIn).first->second;
-    wtx.BindWallet(this);
+    wtx.MarkDirty();
     wtxOrdered.insert(std::make_pair(wtx.nOrderPos, TxPair(&wtx, nullptr)));
     AddToSpends(hash);
     for (const CTxIn& txin : wtx.tx->vin) {
@@ -1053,7 +1053,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
                 }
             }
 
-            CWalletTx wtx(this, ptx);
+            CWalletTx wtx(ptx);
 
             // Get merkle branch if transaction was found in a block
             if (pIndex != nullptr)
@@ -3050,7 +3050,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     {
         LOCK2(cs_main, cs_wallet);
 
-        CWalletTx wtxNew(this, std::move(tx));
+        CWalletTx wtxNew(std::move(tx));
         wtxNew.mapValue = std::move(mapValue);
         wtxNew.vOrderForm = std::move(orderForm);
         wtxNew.strFromAccount = std::move(fromAccount);
@@ -3070,7 +3070,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
             for (const CTxIn& txin : wtxNew.tx->vin)
             {
                 CWalletTx &coin = mapWallet.at(txin.prevout.hash);
-                coin.BindWallet(this);
+                coin.MarkDirty();
                 NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
             }
         }

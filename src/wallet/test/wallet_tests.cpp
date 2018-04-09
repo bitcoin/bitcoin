@@ -179,7 +179,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
 {
     CWallet wallet("dummy", WalletDatabase::CreateDummy());
-    CWalletTx wtx(&wallet, m_coinbase_txns.back());
+    CWalletTx wtx(m_coinbase_txns.back());
     LOCK2(cs_main, wallet.cs_wallet);
     wtx.hashBlock = chainActive.Tip()->GetBlockHash();
     wtx.nIndex = 0;
@@ -211,7 +211,7 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
         block->phashBlock = &hash;
     }
 
-    CWalletTx wtx(&wallet, MakeTransactionRef(tx));
+    CWalletTx wtx(MakeTransactionRef(tx));
     if (block) {
         wtx.SetMerkleBranch(block, 0);
     }

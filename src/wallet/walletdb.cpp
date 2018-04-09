@@ -271,7 +271,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             uint256 hash;
             ssKey >> hash;
-            CWalletTx wtx(nullptr /* pwallet */, MakeTransactionRef());
+            CWalletTx wtx(MakeTransactionRef());
             ssValue >> wtx;
             CValidationState state;
             if (!(CheckTransaction(*wtx.tx, state) && (wtx.GetHash() == hash) && state.IsValid()))
@@ -672,7 +672,7 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CW
                 uint256 hash;
                 ssKey >> hash;
 
-                CWalletTx wtx(nullptr /* pwallet */, MakeTransactionRef());
+                CWalletTx wtx(MakeTransactionRef());
                 ssValue >> wtx;
 
                 vTxHash.push_back(hash);
