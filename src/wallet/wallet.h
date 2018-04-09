@@ -441,7 +441,6 @@ public:
         MarkDirty();
     }
 
-    CAmount GetImmatureWatchOnlyCredit(const bool fUseCache=true) const;
     CAmount GetAvailableWatchOnlyCredit(const bool fUseCache=true) const;
     CAmount GetChange() const;
 
@@ -994,6 +993,7 @@ public:
     CAmount GetCredit(const CWalletTx& wtx, const isminefilter& filter) const;
     CAmount GetImmatureCredit(const CWalletTx& wtx) const;
     CAmount GetAvailableCredit(const CWalletTx& wtx) const;
+    CAmount GetImmatureWatchOnlyCredit(const CWalletTx& wtx) const;
 
     CAmount GetChange(const CTransaction& tx) const;
     void SetBestChain(const CBlockLocator& loc) override;

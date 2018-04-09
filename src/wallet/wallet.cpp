@@ -1511,6 +1511,21 @@ CAmount CWallet::GetAvailableCredit(const CWalletTx& wtx) const
     return nCredit;
 }
 
+CAmount CWallet::GetImmatureWatchOnlyCredit(const CWalletTx& wtx) const
+{
+    if (wtx.IsCoinBase() && wtx.GetBlocksToMaturity() > 0 && wtx.IsInMainChain())
+    {
+        if (wtx.fImmatureWatchCreditCached) {
+            return wtx.nImmatureWatchCreditCached;
+        }
+        wtx.nImmatureWatchCreditCached = GetCredit(*wtx.tx, ISMINE_WATCH_ONLY);
+        wtx.fImmatureWatchCreditCached = true;
+        return wtx.nImmatureWatchCreditCached;
+    }
+
+    return 0;
+}
+
 CAmount CWallet::GetChange(const CTransaction& tx) const
 {
     CAmount nChange = 0;
@@ -1940,20 +1955,6 @@ std::set<uint256> CWalletTx::GetConflicts() const
     return result;
 }
 
-CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool fUseCache) const
-{
-    if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
-    {
-        if (fUseCache && fImmatureWatchCreditCached)
-            return nImmatureWatchCreditCached;
-        nImmatureWatchCreditCached = pwallet->GetCredit(*tx, ISMINE_WATCH_ONLY);
-        fImmatureWatchCreditCached = true;
-        return nImmatureWatchCreditCached;
-    }
-
-    return 0;
-}
-
 CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool fUseCache) const
 {
     if (pwallet == nullptr)
@@ -2176,10 +2177,9 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
-        for (const auto& entry : mapWallet)
-        {
-            const CWalletTx* pcoin = &entry.second;
-            nTotal += pcoin->GetImmatureWatchOnlyCredit();
+        for (const auto& entry : mapWallet) {
+            const CWalletTx& wtx = &entry.second;
+            nTotal += GetImmatureWatchOnlyCredit(wtx);
         }
     }
     return nTotal;
