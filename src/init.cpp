@@ -106,7 +106,7 @@ public:
     bool ParameterInteraction() const override {return true;}
     void RegisterRPC(CRPCTable &) const override {}
     bool Verify() const override {return true;}
-    bool Open() const override {return true;}
+    bool Open() const override {LogPrintf("No wallet support compiled in!\n"); return true;}
     void Start(CScheduler& scheduler) const override {}
     void Flush() const override {}
     void Stop() const override {}
