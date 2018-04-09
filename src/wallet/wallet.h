@@ -441,8 +441,6 @@ public:
         MarkDirty();
     }
 
-    CAmount GetChange() const;
-
     // Get the marginal bytes if spending the specified output from this transaction
     int GetSpendSize(unsigned int out) const
     {
@@ -996,6 +994,8 @@ public:
     CAmount GetAvailableWatchOnlyCredit(const CWalletTx& wtx) const;
 
     CAmount GetChange(const CTransaction& tx) const;
+    CAmount GetChange(const CWalletTx& wtx) const;
+
     void SetBestChain(const CBlockLocator& loc) override;
 
     DBErrors LoadWallet(bool& fFirstRunRet);

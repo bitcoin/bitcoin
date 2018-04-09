@@ -1381,6 +1381,16 @@ CAmount CWallet::GetChange(const CTxOut& txout) const
     return (IsChange(txout) ? txout.nValue : 0);
 }
 
+CAmount CWallet::GetChange(const CWalletTx& wtx) const
+{
+    if (wtx.fChangeCached) {
+        return wtx.nChangeCached;
+    }
+    wtx.nChangeCached = GetChange(*wtx.tx);
+    wtx.fChangeCached = true;
+    return wtx.nChangeCached;
+}
+
 bool CWallet::IsMine(const CTransaction& tx) const
 {
     for (const CTxOut& txout : tx.vout)
@@ -1979,15 +1989,6 @@ std::set<uint256> CWalletTx::GetConflicts() const
         result.erase(myHash);
     }
     return result;
-}
-
-CAmount CWalletTx::GetChange() const
-{
-    if (fChangeCached)
-        return nChangeCached;
-    nChangeCached = pwallet->GetChange(*tx);
-    fChangeCached = true;
-    return nChangeCached;
 }
 
 bool CWalletTx::InMempool() const
