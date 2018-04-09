@@ -9,7 +9,7 @@ bench_bench_syscoin_SOURCES = \
   bench/bench.h \
   bench/Examples.cpp
 
-bench_bench_syscoin_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
+bench_bench_syscoin_CPPFLAGS = $(AM_CPPFLAGS) $(BOOST_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bench_bench_syscoin_LDADD = \
   $(LIBSYSCOIN_SERVER) \
