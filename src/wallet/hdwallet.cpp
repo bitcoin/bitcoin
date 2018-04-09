@@ -9,7 +9,6 @@
 #include <crypto/sha256.h>
 
 #include <random.h>
-#include <key_io.h>
 #include <validation.h>
 #include <consensus/validation.h>
 #include <consensus/merkle.h>

@@ -9,9 +9,9 @@
 #include <leveldb/write_batch.h>
 
 #include <sync.h>
-#include <serialize.h>
-#include <streams.h>
 #include <smsg/keystore.h>
+
+class CDataStream;
 
 namespace smsg
 {

@@ -6,12 +6,11 @@
 #ifndef PARTICL_KEY_EXTKEY_H
 #define PARTICL_KEY_EXTKEY_H
 
-
+#include <util.h>
 #include <key.h>
 #include <key/stealth.h>
-#include <util.h>
-#include <key/keyutil.h>
 #include <key/types.h>
+#include <key/keyutil.h>
 #include <sync.h>
 #include <script/ismine.h>
 

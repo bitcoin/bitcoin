@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Particl developers
+// Copyright (c) 2017-2018 The Particl developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@
 #include <key/extkey.h>
 #include <key_io.h>
 #include <util.h>
+#include <utilstrencodings.h>
 
 #include <string>
 #include <boost/test/unit_test.hpp>

@@ -4,9 +4,6 @@
 
 #include <key_io.h>
 
-#include <base58.h>
-#include <bech32.h>
-#include <script/script.h>
 #include <utilstrencodings.h>
 #include <addressindex.h>
 

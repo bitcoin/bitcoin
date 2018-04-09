@@ -5,7 +5,6 @@
 
 #include <key/stealth.h>
 
-#include <key.h>
 #include <key_io.h>
 #include <key/keyutil.h>
 #include <pubkey.h>

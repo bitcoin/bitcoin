@@ -1,14 +1,12 @@
 // Copyright (c) 2012-2013 The PPCoin developers
 // Copyright (c) 2014 The BlackCoin developers
-// Copyright (c) 2017 The Particl Core developers
+// Copyright (c) 2017-2018 The Particl Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/assign/list_of.hpp>
-
 #include <pos/kernel.h>
+
 #include <txdb.h>
-#include <validation.h>
 #include <chainparams.h>
 #include <serialize.h>
 #include <streams.h>
@@ -19,6 +17,8 @@
 #include <policy/policy.h>
 #include <consensus/validation.h>
 #include <coins.h>
+
+#include <boost/assign/list_of.hpp>
 
 /**
  * Stake Modifier (hash modifier of proof-of-stake):

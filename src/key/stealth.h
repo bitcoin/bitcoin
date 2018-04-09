@@ -1,5 +1,5 @@
 // Copyright (c) 2014 The ShadowCoin developers
-// Copyright (c) 2017 The Particl developers
+// Copyright (c) 2017-2018 The Particl developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,8 @@
 #include <vector>
 #include <inttypes.h>
 
-#include <util.h>
-#include <serialize.h>
 #include <key.h>
+#include <serialize.h>
 #include <uint256.h>
 #include <key/types.h>
 

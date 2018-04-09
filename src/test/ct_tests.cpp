@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Particl Core developers
+// Copyright (c) 2017-2018 The Particl Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 #include <secp256k1.h>
 #include <secp256k1_rangeproof.h>
 #include <inttypes.h>
+#include <utilstrencodings.h>
 
 #include <boost/test/unit_test.hpp>
 

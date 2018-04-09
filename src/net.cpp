@@ -20,7 +20,6 @@
 #include <ui_interface.h>
 #include <utilstrencodings.h>
 
-#include <memory>
 #ifdef WIN32
 #include <string.h>
 #else

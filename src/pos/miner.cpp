@@ -1,8 +1,9 @@
-// Copyright (c) 2017 The Particl Core developers
+// Copyright (c) 2017-2018 The Particl Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <pos/miner.h>
+
 #include <pos/kernel.h>
 #include <miner.h>
 #include <chainparams.h>
@@ -17,12 +18,7 @@
 
 #include <wallet/hdwallet.h>
 
-#include <fs.h>
-
-#include <atomic>
 #include <stdint.h>
-#include <thread>
-#include <condition_variable>
 
 typedef CWallet* CWalletRef;
 std::vector<StakeThread*> vStakeThreads;

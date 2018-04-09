@@ -10,7 +10,7 @@
 #include <key/stealth.h>
 #include <keystore.h>
 #include <script/script.h>
-#include <script/standard.h>
+//#include <script/standard.h>
 #include <script/sign.h>
 
 //typedef std::vector<unsigned char> valtype;

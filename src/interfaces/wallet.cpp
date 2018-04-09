@@ -23,8 +23,6 @@
 #include <wallet/wallet.h>
 #include <wallet/hdwallet.h>
 
-#include <memory>
-
 extern void LockWallet(CWallet* pWallet);
 
 namespace interfaces {

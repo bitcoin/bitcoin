@@ -8,21 +8,15 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
-#include <fs.h>
-#include <key.h>
 #include <validation.h>
 #include <miner.h>
 #include <net_processing.h>
 #include <pubkey.h>
-#include <random.h>
 #include <txdb.h>
-#include <txmempool.h>
 #include <ui_interface.h>
 #include <rpc/server.h>
 #include <rpc/register.h>
 #include <script/sigcache.h>
-
-#include <memory>
 
 void CConnmanTest::AddNode(CNode& node)
 {

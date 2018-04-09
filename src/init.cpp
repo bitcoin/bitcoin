@@ -59,7 +59,6 @@
 #include <walletinitinterface.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <memory>
 
 #ifndef WIN32
 #include <signal.h>
@@ -697,7 +696,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
     RenameThread("particl-loadblk");
-    //ScheduleBatchPriority(); // segfault
+    ScheduleBatchPriority();
 
     fBusyImporting = true;
     {

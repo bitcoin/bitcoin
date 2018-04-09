@@ -4,7 +4,6 @@
 
 #include <smsg/db.h>
 #include <smsg/smessage.h>
-#include <sync.h>
 #include <serialize.h>
 #include <clientversion.h>
 

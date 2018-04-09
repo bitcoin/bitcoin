@@ -6,15 +6,16 @@
 #define BITCOIN_TEST_TEST_BITCOIN_H
 
 #include <chainparamsbase.h>
-#include <fs.h>
-#include <key.h>
-#include <pubkey.h>
-#include <random.h>
 #include <scheduler.h>
-#include <txdb.h>
+#include <random.h>
+#include <key.h>
+#include <fs.h>
 #include <txmempool.h>
-
+#include <streams.h>
+#include <clientversion.h>
+#include <primitives/transaction.h>
 #include <memory>
+
 
 #include <boost/thread.hpp>
 

@@ -48,13 +48,11 @@ Notes:
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <key_io.h>
 #include <sync.h>
 #include <random.h>
 #include <chain.h>
 #include <netmessagemaker.h>
 #include <fs.h>
-#include <smsg/keystore.h>
 
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>
@@ -64,7 +62,6 @@ Notes:
 #include <utilstrencodings.h>
 #include <clientversion.h>
 
-#include <lz4/lz4.h>
 #include <xxhash/xxhash.h>
 
 #include <smsg/crypter.h>

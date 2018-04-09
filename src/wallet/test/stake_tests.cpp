@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Particl Core developers
+// Copyright (c) 2017-2018 The Particl Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,7 @@
 #include <net.h>
 #include <validation.h>
 #include <blind.h>
+#include <txdb.h>
 
 #include <rpc/server.h>
 #include <consensus/validation.h>
