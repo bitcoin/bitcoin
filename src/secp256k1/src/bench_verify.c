@@ -12,6 +12,7 @@
 #include "bench.h"
 #include <pthread.h>
 #include "thpool.h"
+#include "ctpl_stl.h"
 #ifdef ENABLE_OPENSSL_TESTS
 #include <openssl/bn.h>
 #include <openssl/ecdsa.h>
@@ -48,6 +49,7 @@ static void benchmark_verify(void* arg) {
         data->sig[data->siglen - 2] ^= ((i >> 8) & 0xFF);
         data->sig[data->siglen - 3] ^= ((i >> 16) & 0xFF);
     }
+
 }
 
 #ifdef ENABLE_OPENSSL_TESTS
@@ -87,6 +89,7 @@ int main(void) {
     secp256k1_ecdsa_signature sig;
     benchmark_verify_t data;
 	threadpool thpool = thpool_init(8);
+	ctpl::thread_pool p(2 /* two threads in the pool */);
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
     for (i = 0; i < 32; i++) {
