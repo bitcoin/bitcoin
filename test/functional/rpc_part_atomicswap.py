@@ -589,11 +589,21 @@ class AtomicSwapTest(ParticlTestFramework):
         self.stakeBlocks(1)
 
 
-        # Party A sends B rawtxInitiate/txnid1 and script
+        # Party A sends B rawtx_i/txnid1, script and output_amounts_i
 
 
         # auditcontract
         # Party B extracts the secrethash and verifies the txn:
+
+        ro = nodes[1].decoderawtransaction(rawtx_i)
+        n = getOutputByAddr(ro, p2sh_initiate)
+        valueCommitment = ro['vout'][n]['valueCommitment']
+
+        amount = output_amounts_i[str(n)]['value']
+        blind = output_amounts_i[str(n)]['blind']
+
+        assert(nodes[1].verifycommitment(valueCommitment, blind, amount)['result'] == True)
+
 
 
         # Participate B -> A

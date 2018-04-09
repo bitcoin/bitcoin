@@ -5126,108 +5126,6 @@ UniValue sendtypeto(const JSONRPCRequest &request)
     return SendToInner(req, typeIn, typeOut);
 };
 
-UniValue buildscript(const JSONRPCRequest &request)
-{
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            "buildscript json\n"
-            "\nArguments:\n"
-            "{recipe: , ...}\n"
-            "\nRecipes:\n"
-            "{\"recipe\":\"ifcoinstake\", \"addrstake\":\"addrA\", \"addrspend\":\"addrB\"}"
-            "{\"recipe\":\"abslocktime\", \"time\":timestamp, \"addr\":\"addr\"}"
-            "{\"recipe\":\"rellocktime\", \"time\":timestamp, \"addr\":\"addr\"}"
-            );
-
-    if (!request.params[0].isObject())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Input must be a json object.");
-
-    const UniValue &params = request.params[0].get_obj();
-
-    const UniValue &recipe = params["recipe"];
-    if (!recipe.isStr())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing recipe.");
-
-    std::string sRecipe = recipe.get_str();
-
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("recipe", sRecipe);
-
-    CScript scriptOut;
-
-    if (sRecipe == "ifcoinstake")
-    {
-        RPCTypeCheckObj(params,
-        {
-            {"addrstake", UniValueType(UniValue::VSTR)},
-            {"addrspend", UniValueType(UniValue::VSTR)},
-        });
-
-        CBitcoinAddress addrTrue(params["addrstake"].get_str());
-        CBitcoinAddress addrFalse(params["addrspend"].get_str());
-
-        if (!addrTrue.IsValid())
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrstake.");
-
-        if (!addrFalse.IsValid())
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrspend.");
-        if (addrFalse.IsValid(CChainParams::PUBKEY_ADDRESS))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrspend, can't be p2pkh.");
-
-        CScript scriptTrue = GetScriptForDestination(addrTrue.Get());
-        CScript scriptFalse = GetScriptForDestination(addrFalse.Get());
-        // TODO: More checks
-
-        scriptOut = CScript() << OP_ISCOINSTAKE << OP_IF;
-        scriptOut += scriptTrue;
-        scriptOut << OP_ELSE;
-        scriptOut += scriptFalse;
-        scriptOut << OP_ENDIF;
-    } else
-    if (sRecipe == "abslocktime")
-    {
-        RPCTypeCheckObj(params,
-        {
-            {"time", UniValueType(UniValue::VNUM)},
-            {"addr", UniValueType(UniValue::VSTR)},
-        });
-
-        CBitcoinAddress addr(params["addr"].get_str());
-        if (!addr.IsValid())
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addr.");
-
-        CScript scriptAddr = GetScriptForDestination(addr.Get());
-
-        scriptOut = CScript() << params["time"].get_int64() << OP_CHECKLOCKTIMEVERIFY << OP_DROP;
-        scriptOut += scriptAddr;
-    } else
-    if (sRecipe == "rellocktime")
-    {
-        RPCTypeCheckObj(params,
-        {
-            {"time", UniValueType(UniValue::VNUM)},
-            {"addr", UniValueType(UniValue::VSTR)},
-        });
-
-        CBitcoinAddress addr(params["addr"].get_str());
-        if (!addr.IsValid())
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addr.");
-
-        CScript scriptAddr = GetScriptForDestination(addr.Get());
-
-        scriptOut = CScript() << params["time"].get_int64() << OP_CHECKSEQUENCEVERIFY << OP_DROP;
-        scriptOut += scriptAddr;
-    } else
-    {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown recipe.");
-    };
-
-    obj.pushKV("hex", HexStr(scriptOut.begin(), scriptOut.end()));
-    obj.pushKV("asm", ScriptToAsmStr(scriptOut));
-
-    return obj;
-};
-
 UniValue createsignaturewithwallet(const JSONRPCRequest &request)
 {
     CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
@@ -5248,7 +5146,7 @@ UniValue createsignaturewithwallet(const JSONRPCRequest &request)
             "     \"vout\":n,                      (numeric, required) The output number\n"
             "     \"scriptPubKey\": \"hex\",         (string, required) script key\n"
             "     \"redeemScript\": \"hex\",         (string, required for P2SH or P2WSH) redeem script\n"
-            "     \"amount\": value                (numeric, required) The amount spent\n"
+            "     \"amount\": value                (numeric or string, required) The amount spent\n"
             "     \"amount_commitment\": \"hex\",    (string, required) The amount spent\n"
             "   }\n"
             "3. \"address\"                        (string, required) The address of the private key to sign with\n"
@@ -5297,7 +5195,7 @@ UniValue createsignaturewithwallet(const JSONRPCRequest &request)
     std::vector<unsigned char> pkData(ParseHexO(prevOut, "scriptPubKey"));
     CScript scriptRedeem, scriptPubKey(pkData.begin(), pkData.end());
 
-    std::vector<uint8_t> vchAmount(8);
+    std::vector<uint8_t> vchAmount;
     if (prevOut.exists("amount"))
     {
         CAmount nValue = AmountFromValue(prevOut["amount"]);
@@ -5395,7 +5293,7 @@ UniValue createsignaturewithkey(const JSONRPCRequest &request)
             "     \"vout\":n,                      (numeric, required) The output number\n"
             "     \"scriptPubKey\": \"hex\",         (string, required) script key\n"
             "     \"redeemScript\": \"hex\",         (string, required for P2SH or P2WSH) redeem script\n"
-            "     \"amount\": value                (numeric, required) The amount spent\n"
+            "     \"amount\": value                (numeric or string, required) The amount spent\n"
             "     \"amount_commitment\": \"hex\",    (string, required) The amount spent\n"
             "   }\n"
             "3. \"privkey\"                        (string, required) A base58-encoded private key for signing\n"
@@ -5518,7 +5416,6 @@ UniValue createsignaturewithkey(const JSONRPCRequest &request)
 
     return HexStr(vchSig);
 }
-
 
 UniValue debugwallet(const JSONRPCRequest &request)
 {
@@ -6446,6 +6343,108 @@ UniValue tallyvotes(const JSONRPCRequest &request)
     return result;
 };
 
+UniValue buildscript(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "buildscript json\n"
+            "\nArguments:\n"
+            "{recipe: , ...}\n"
+            "\nRecipes:\n"
+            "{\"recipe\":\"ifcoinstake\", \"addrstake\":\"addrA\", \"addrspend\":\"addrB\"}"
+            "{\"recipe\":\"abslocktime\", \"time\":timestamp, \"addr\":\"addr\"}"
+            "{\"recipe\":\"rellocktime\", \"time\":timestamp, \"addr\":\"addr\"}"
+            );
+
+    if (!request.params[0].isObject())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Input must be a json object.");
+
+    const UniValue &params = request.params[0].get_obj();
+
+    const UniValue &recipe = params["recipe"];
+    if (!recipe.isStr())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing recipe.");
+
+    std::string sRecipe = recipe.get_str();
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("recipe", sRecipe);
+
+    CScript scriptOut;
+
+    if (sRecipe == "ifcoinstake")
+    {
+        RPCTypeCheckObj(params,
+        {
+            {"addrstake", UniValueType(UniValue::VSTR)},
+            {"addrspend", UniValueType(UniValue::VSTR)},
+        });
+
+        CBitcoinAddress addrTrue(params["addrstake"].get_str());
+        CBitcoinAddress addrFalse(params["addrspend"].get_str());
+
+        if (!addrTrue.IsValid())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrstake.");
+
+        if (!addrFalse.IsValid())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrspend.");
+        if (addrFalse.IsValid(CChainParams::PUBKEY_ADDRESS))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrspend, can't be p2pkh.");
+
+        CScript scriptTrue = GetScriptForDestination(addrTrue.Get());
+        CScript scriptFalse = GetScriptForDestination(addrFalse.Get());
+        // TODO: More checks
+
+        scriptOut = CScript() << OP_ISCOINSTAKE << OP_IF;
+        scriptOut += scriptTrue;
+        scriptOut << OP_ELSE;
+        scriptOut += scriptFalse;
+        scriptOut << OP_ENDIF;
+    } else
+    if (sRecipe == "abslocktime")
+    {
+        RPCTypeCheckObj(params,
+        {
+            {"time", UniValueType(UniValue::VNUM)},
+            {"addr", UniValueType(UniValue::VSTR)},
+        });
+
+        CBitcoinAddress addr(params["addr"].get_str());
+        if (!addr.IsValid())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addr.");
+
+        CScript scriptAddr = GetScriptForDestination(addr.Get());
+
+        scriptOut = CScript() << params["time"].get_int64() << OP_CHECKLOCKTIMEVERIFY << OP_DROP;
+        scriptOut += scriptAddr;
+    } else
+    if (sRecipe == "rellocktime")
+    {
+        RPCTypeCheckObj(params,
+        {
+            {"time", UniValueType(UniValue::VNUM)},
+            {"addr", UniValueType(UniValue::VSTR)},
+        });
+
+        CBitcoinAddress addr(params["addr"].get_str());
+        if (!addr.IsValid())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addr.");
+
+        CScript scriptAddr = GetScriptForDestination(addr.Get());
+
+        scriptOut = CScript() << params["time"].get_int64() << OP_CHECKSEQUENCEVERIFY << OP_DROP;
+        scriptOut += scriptAddr;
+    } else
+    {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown recipe.");
+    };
+
+    obj.pushKV("hex", HexStr(scriptOut.begin(), scriptOut.end()));
+    obj.pushKV("asm", ScriptToAsmStr(scriptOut));
+
+    return obj;
+};
+
 UniValue createrawparttransaction(const JSONRPCRequest& request)
 {
     CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
@@ -7089,7 +7088,7 @@ UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
 
     for (const CTxIn& txin : tx.vin) {
         coinControl.Select(txin.prevout);
-    }
+    };
 
 
     CTransactionRef tx_new;
@@ -7127,8 +7126,8 @@ UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
     for (const CTxIn& txin : tx.vin) {
         if (lockUnspents) {
             pwallet->LockCoin(txin.prevout);
-        }
-    }
+        };
+    };
 
 
     UniValue outputValues(UniValue::VOBJ);
@@ -7146,13 +7145,70 @@ UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
         {
             outputValue.pushKV("value", ValueFromAmount(r.nAmount));
             outputValues.pushKV(strprintf("%d", r.n), outputValue);
-        }
+        };
     };
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("hex", EncodeHexTx(tx));
     result.pushKV("output_amounts", outputValues);
 
+    return result;
+};
+
+UniValue verifycommitment(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() != 3)
+        throw std::runtime_error(
+            "verifycommitment \"commitment\" \"blind\" amount\n"
+            "\nVerify value commitment.\n"
+
+            "\nArguments:\n"
+            "1. \"commitment\"                     (string, required) The 33byte commitment hex string\n"
+            "2. \"blind\"                          (string, required) The 32byte blinding factor hex string\n"
+            "3. amount                           (numeric or string, required) The amount committed to\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"result\": true,                   (boolean) If valid commitment, else throw error.\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("verifycommitment", "\"commitment\" \"blind\" 1.1")
+            + HelpExampleRpc("verifycommitment", "\"commitment\", \"blind\", 1.1")
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR});
+
+    std::vector<uint8_t> vchCommitment;
+    uint256 blind;
+
+    {
+        std::string s = request.params[0].get_str();
+        if (!IsHex(s) || !(s.size() == 66))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "commitment must be 33 bytes and hex encoded.");
+        vchCommitment = ParseHex(s);
+    }
+
+    {
+        std::string s = request.params[1].get_str();
+        if (!IsHex(s) || !(s.size() == 64))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Blinding factor must be 32 bytes and hex encoded.");
+        blind.SetHex(s);
+    };
+
+    CAmount nValue = AmountFromValue(request.params[2]);
+
+    secp256k1_pedersen_commitment commitment;
+    if (!secp256k1_pedersen_commit(secp256k1_ctx_blind,
+        &commitment, blind.begin(),
+        nValue, secp256k1_generator_h))
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("secp256k1_pedersen_commit failed."));
+
+    if (memcmp(vchCommitment.data(), commitment.data, 33) != 0)
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("Mismatched commitment."));
+
+
+    UniValue result(UniValue::VOBJ);
+    bool rv = true;
+    result.pushKV("result", rv);
     return result;
 };
 
@@ -7200,9 +7256,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendtypeto",                       &sendtypeto,                    {"typein","typeout","outputs","comment","comment_to","ringsize","inputs_per_sig","test_fee","coincontrol"} },
 
 
-    { "wallet",             "buildscript",                      &buildscript,                   {"json"} },
+
     { "wallet",             "createsignaturewithwallet",        &createsignaturewithwallet,     {"hexstring","prevtx","address","sighashtype"} },
-    { "wallet",             "createsignaturewithkey",           &createsignaturewithkey,        {"hexstring","prevtx","privkey","sighashtype"} },
+    { "rawtransactions",    "createsignaturewithkey",           &createsignaturewithkey,        {"hexstring","prevtx","privkey","sighashtype"} },
 
     { "wallet",             "debugwallet",                      &debugwallet,                   {"attempt_repair"} },
     { "wallet",             "rewindchain",                      &rewindchain,                   {"height"} },
@@ -7212,12 +7268,15 @@ static const CRPCCommand commands[] =
     { "wallet",             "transactionblinds",                &transactionblinds,             {"txnid"} },
     { "wallet",             "derivefromstealthaddress",         &derivefromstealthaddress,      {"stealthaddress","ephempubkey"} },
 
+
     { "governance",         "setvote",                          &setvote,                       {"proposal","option","height_start","height_end"} },
     { "governance",         "votehistory",                      &votehistory,                   {"current_only"} },
     { "governance",         "tallyvotes",                       &tallyvotes,                    {"proposal","height_start","height_end"} },
 
+    { "rawtransactions",    "buildscript",                      &buildscript,                   {"json"} },
     { "rawtransactions",    "createrawparttransaction",         &createrawparttransaction,      {"inputs","outputs","locktime","replaceable"} },
     { "rawtransactions",    "fundrawtransactionfrom",           &fundrawtransactionfrom,        {"input_type","hexstring","input_amounts","output_amounts","options"} },
+    { "rawtransactions",    "verifycommitment",                 &verifycommitment,              {"commitment","blind","amount"} },
 };
 
 void RegisterHDWalletRPCCommands(CRPCTable &t)
