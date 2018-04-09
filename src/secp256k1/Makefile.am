@@ -71,21 +71,21 @@ endif
 endif
 
 libsecp256k1_la_SOURCES = src/secp256k1.c
-libsecp256k1_la_CPPFLAGS = -DSECP256K1_BUILD -I$(top_srcdir)/include -I$(top_srcdir)/src $(SECP_INCLUDES) $(BOOST_CPPFLAGS) 
-libsecp256k1_la_LIBADD = $(JNI_LIB) $(BOOST_LIBS) $(SECP_LIBS) $(COMMON_LIB)
+libsecp256k1_la_CPPFLAGS = -DSECP256K1_BUILD -I$(top_srcdir)/include -I$(top_srcdir)/src $(SECP_INCLUDES)
+libsecp256k1_la_LIBADD = $(JNI_LIB) $(SECP_LIBS) $(COMMON_LIB)
 
 libsecp256k1_jni_la_SOURCES  = src/java/org_syscoin_NativeSecp256k1.c src/java/org_syscoin_Secp256k1Context.c
-libsecp256k1_jni_la_CPPFLAGS = -DSECP256K1_BUILD $(JNI_INCLUDES) $(BOOST_CPPFLAGS) 
+libsecp256k1_jni_la_CPPFLAGS = -DSECP256K1_BUILD $(JNI_INCLUDES)
 
 noinst_PROGRAMS =
 if USE_BENCHMARK
 noinst_PROGRAMS += bench_verify bench_sign bench_internal
 bench_verify_SOURCES = src/bench_verify.c
-bench_verify_LDADD = libsecp256k1.la $(BOOST_LIBS) $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
+bench_verify_LDADD = libsecp256k1.la $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
 bench_sign_SOURCES = src/bench_sign.c
-bench_sign_LDADD = libsecp256k1.la $(BOOST_LIBS) $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
+bench_sign_LDADD = libsecp256k1.la $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
 bench_internal_SOURCES = src/bench_internal.c
-bench_internal_LDADD = $(SECP_LIBS) $(BOOST_LIBS) $(COMMON_LIB)
+bench_internal_LDADD = $(SECP_LIBS) $(COMMON_LIB)
 bench_internal_CPPFLAGS = -DSECP256K1_BUILD $(SECP_INCLUDES)
 endif
 
