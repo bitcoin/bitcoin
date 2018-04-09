@@ -54,9 +54,15 @@ protected:
     ScriptMap mapScripts;
     WatchOnlySet setWatchOnly;
 
+    bool m_implicit_segwit;
+
     void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey);
 
 public:
+    CBasicKeyStore() : m_implicit_segwit(false) { }
+
+    bool HasImplicitSegwit() const { return m_implicit_segwit; }
+
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
     bool AddKey(const CKey &key) { return AddKeyPubKey(key, key.GetPubKey()); }
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;

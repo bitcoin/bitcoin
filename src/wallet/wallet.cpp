@@ -3939,6 +3939,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
     CWallet *walletInstance = new CWallet(name, CWalletDBWrapper::Create(path));
+    walletInstance->m_implicit_segwit = gArgs.GetBoolArg("-walletimplicitsegwit", DEFAULT_WALLET_IMPLICIT_SEGWIT);
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DBErrors::LOAD_OK)
     {
@@ -4019,7 +4020,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         }
     }
 
-    walletInstance->m_default_address_type = ParseOutputType(gArgs.GetArg("-addresstype", ""), DEFAULT_ADDRESS_TYPE);
+    walletInstance->m_default_address_type = ParseOutputType(gArgs.GetArg("-addresstype", ""), (walletInstance->m_implicit_segwit ? DEFAULT_ADDRESS_TYPE : OutputType::LEGACY));
     if (walletInstance->m_default_address_type == OutputType::NONE) {
         InitError(strprintf("Unknown address type '%s'", gArgs.GetArg("-addresstype", "")));
         return nullptr;
@@ -4254,8 +4255,10 @@ void CWallet::LearnRelatedScripts(const CPubKey& key, OutputType type)
 
 void CWallet::LearnAllRelatedScripts(const CPubKey& key)
 {
-    // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
-    LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
+    if (m_implicit_segwit) {
+        // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
+        LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
+    }
 }
 
 CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
@@ -4277,10 +4280,10 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
     }
 }
 
-std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
+std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key, const bool include_segwit)
 {
     CKeyID keyid = key.GetID();
-    if (key.IsCompressed()) {
+    if (key.IsCompressed() && include_segwit) {
         CTxDestination segwit = WitnessV0KeyHash(keyid);
         CTxDestination p2sh = CScriptID(GetScriptForDestination(segwit));
         return std::vector<CTxDestination>{std::move(keyid), std::move(p2sh), std::move(segwit)};

@@ -65,6 +65,7 @@ static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
 //! -walletrbf default
 static const bool DEFAULT_WALLET_RBF = false;
 static const bool DEFAULT_WALLETBROADCAST = true;
+static const bool DEFAULT_WALLET_IMPLICIT_SEGWIT = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 
 static const int64_t TIMESTAMP_MIN = 0;
@@ -1223,7 +1224,7 @@ const std::string& FormatOutputType(OutputType type);
 CTxDestination GetDestinationForKey(const CPubKey& key, OutputType);
 
 /** Get all destinations (potentially) supported by the wallet for the given key. */
-std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key);
+std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key, bool include_segwit);
 
 /** RAII object to check and reserve a wallet rescan */
 class WalletRescanReserver
