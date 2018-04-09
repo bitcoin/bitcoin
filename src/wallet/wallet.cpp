@@ -1639,35 +1639,35 @@ int64_t CWalletTx::GetTxTime() const
     return n ? n : nTimeReceived;
 }
 
-int CWalletTx::GetRequestCount() const
+int CWallet::GetRequestCount(const CWalletTx& wtx) const
 {
     // Returns -1 if it wasn't being tracked
     int nRequests = -1;
     {
-        LOCK(pwallet->cs_wallet);
-        if (IsCoinBase())
+        LOCK(cs_wallet);
+        if (wtx.IsCoinBase())
         {
             // Generated block
-            if (!hashUnset())
+            if (!wtx.hashUnset())
             {
-                std::map<uint256, int>::const_iterator mi = pwallet->mapRequestCount.find(hashBlock);
-                if (mi != pwallet->mapRequestCount.end())
+                std::map<uint256, int>::const_iterator mi = mapRequestCount.find(wtx.hashBlock);
+                if (mi != mapRequestCount.end())
                     nRequests = (*mi).second;
             }
         }
         else
         {
             // Did anyone request this transaction?
-            std::map<uint256, int>::const_iterator mi = pwallet->mapRequestCount.find(GetHash());
-            if (mi != pwallet->mapRequestCount.end())
+            std::map<uint256, int>::const_iterator mi = mapRequestCount.find(wtx.GetHash());
+            if (mi != mapRequestCount.end())
             {
                 nRequests = (*mi).second;
 
                 // How about the block it's in?
-                if (nRequests == 0 && !hashUnset())
+                if (nRequests == 0 && !wtx.hashUnset())
                 {
-                    std::map<uint256, int>::const_iterator _mi = pwallet->mapRequestCount.find(hashBlock);
-                    if (_mi != pwallet->mapRequestCount.end())
+                    std::map<uint256, int>::const_iterator _mi = mapRequestCount.find(wtx.hashBlock);
+                    if (_mi != mapRequestCount.end())
                         nRequests = (*_mi).second;
                     else
                         nRequests = 1; // If it's in someone else's block it must have got out

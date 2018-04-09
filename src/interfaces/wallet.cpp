@@ -90,7 +90,7 @@ WalletTxStatus MakeWalletTxStatus(const CWallet& wallet, const CWalletTx& wtx)
     result.block_height = (block ? block->nHeight : std::numeric_limits<int>::max()),
     result.blocks_to_maturity = wtx.GetBlocksToMaturity();
     result.depth_in_main_chain = wtx.GetDepthInMainChain();
-    result.request_count = wtx.GetRequestCount();
+    result.request_count = wallet.GetRequestCount(wtx);
     result.time_received = wtx.nTimeReceived;
     result.lock_time = wtx.tx->nLockTime;
     result.is_final = CheckFinalTx(*wtx.tx);
