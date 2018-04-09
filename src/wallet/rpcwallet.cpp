@@ -87,7 +87,7 @@ void EnsureWalletIsUnlocked(CWallet * const pwallet)
     }
 }
 
-void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
+void WalletTxToJSON(const CWallet* pwallet, const CWalletTx& wtx, UniValue& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
     entry.pushKV("confirmations", confirms);
@@ -99,7 +99,7 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
         entry.pushKV("blockindex", wtx.nIndex);
         entry.pushKV("blocktime", LookupBlockIndex(wtx.hashBlock)->GetBlockTime());
     } else {
-        entry.pushKV("trusted", wtx.IsTrusted());
+        entry.pushKV("trusted", pwallet->IsTrusted(wtx));
     }
     uint256 hash = wtx.GetHash();
     entry.pushKV("txid", hash.GetHex());
@@ -1696,7 +1696,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
             if (fLong)
-                WalletTxToJSON(wtx, entry);
+                WalletTxToJSON(pwallet, wtx, entry);
             entry.pushKV("abandoned", wtx.isAbandoned());
             ret.push_back(entry);
         }
@@ -1738,7 +1738,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
                 }
                 entry.pushKV("vout", r.vout);
                 if (fLong)
-                    WalletTxToJSON(wtx, entry);
+                    WalletTxToJSON(pwallet, wtx, entry);
                 ret.push_back(entry);
             }
         }
@@ -2215,7 +2215,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
         entry.pushKV("fee", ValueFromAmount(nFee));
     }
 
-    WalletTxToJSON(wtx, entry);
+    WalletTxToJSON(pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
     ListTransactions(pwallet, wtx, "*", 0, false, details, filter);

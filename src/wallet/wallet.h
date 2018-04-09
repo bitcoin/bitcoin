@@ -445,7 +445,6 @@ public:
     bool IsEquivalentTo(const CWalletTx& tx) const;
 
     bool InMempool() const;
-    bool IsTrusted() const;
 
     int64_t GetTxTime() const;
     int GetRequestCount() const;
@@ -785,6 +784,8 @@ public:
 
     void GetAmounts(const CWalletTx& wtx, std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
+
+    bool IsTrusted(const CWalletTx& wtx) const;
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) const { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }

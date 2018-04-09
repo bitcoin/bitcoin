@@ -1996,32 +1996,32 @@ bool CWalletTx::InMempool() const
     return fInMempool;
 }
 
-bool CWalletTx::IsTrusted() const
+bool CWallet::IsTrusted(const CWalletTx& wtx) const
 {
     // Quick answer in most cases
-    if (!CheckFinalTx(*tx))
+    if (!CheckFinalTx(*wtx.tx))
         return false;
-    int nDepth = GetDepthInMainChain();
+    int nDepth = wtx.GetDepthInMainChain();
     if (nDepth >= 1)
         return true;
     if (nDepth < 0)
         return false;
-    if (!bSpendZeroConfChange || !pwallet->IsFromMe(*this, ISMINE_ALL)) // using wtx's cached debit
+    if (!bSpendZeroConfChange || !IsFromMe(wtx, ISMINE_ALL)) // using wtx's cached debit
         return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
-    if (!InMempool())
+    if (!wtx.InMempool())
         return false;
 
     // Trusted if all inputs are from us and are in the mempool:
-    for (const CTxIn& txin : tx->vin)
+    for (const CTxIn& txin : wtx.tx->vin)
     {
         // Transactions not sent by us: not trusted
-        const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
+        const CWalletTx* parent = GetWalletTx(txin.prevout.hash);
         if (parent == nullptr)
             return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
-        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
+        if (IsMine(parentOut) != ISMINE_SPENDABLE)
             return false;
     }
     return true;
@@ -2102,7 +2102,7 @@ CAmount CWallet::GetBalance() const
         LOCK2(cs_main, cs_wallet);
         for (const auto& entry : mapWallet) {
             const CWalletTx& wtx = entry.second;
-            if (wtx.IsTrusted()) {
+            if (IsTrusted(wtx)) {
                 nTotal += GetAvailableCredit(wtx);
             }
         }
@@ -2118,7 +2118,7 @@ CAmount CWallet::GetUnconfirmedBalance() const
         LOCK2(cs_main, cs_wallet);
         for (const auto& entry : mapWallet) {
             const CWalletTx& wtx = entry.second;
-            if (!wtx.IsTrusted() && wtx.GetDepthInMainChain() == 0 && wtx.InMempool()) {
+            if (!IsTrusted(wtx) && wtx.GetDepthInMainChain() == 0 && wtx.InMempool()) {
                 nTotal += GetAvailableCredit(wtx);
             }
         }
@@ -2146,7 +2146,7 @@ CAmount CWallet::GetWatchOnlyBalance() const
         LOCK2(cs_main, cs_wallet);
         for (const auto& entry : mapWallet) {
             const CWalletTx& wtx = entry.second;
-            if (wtx.IsTrusted()) {
+            if (IsTrusted(wtx)) {
                 nTotal += GetAvailableWatchOnlyCredit(wtx);
             }
         }
@@ -2162,7 +2162,7 @@ CAmount CWallet::GetUnconfirmedWatchOnlyBalance() const
         LOCK2(cs_main, cs_wallet);
         for (const auto& entry : mapWallet) {
             const CWalletTx& wtx = entry.second;
-            if (!wtx.IsTrusted() && wtx.GetDepthInMainChain() == 0 && wtx.InMempool()) {
+            if (!IsTrusted(wtx) && wtx.GetDepthInMainChain() == 0 && wtx.InMempool()) {
                 nTotal += GetAvailableWatchOnlyCredit(wtx);
             }
         }
@@ -2269,7 +2269,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
         if (nDepth == 0 && !pcoin->InMempool())
             continue;
 
-        bool safeTx = pcoin->IsTrusted();
+        bool safeTx = IsTrusted(*pcoin);
 
         // We should not consider coins from transactions that are replacing
         // other transactions.
@@ -3494,7 +3494,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
         {
             const CWalletTx& wtx = walletEntry.second;
 
-            if (!wtx.IsTrusted())
+            if (!IsTrusted(wtx))
                 continue;
 
             if (wtx.IsCoinBase() && wtx.GetBlocksToMaturity() > 0)

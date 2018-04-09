@@ -82,7 +82,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 }
 
 //! Construct wallet tx status struct.
-WalletTxStatus MakeWalletTxStatus(const CWalletTx& wtx)
+WalletTxStatus MakeWalletTxStatus(const CWallet& wallet, const CWalletTx& wtx)
 {
     WalletTxStatus result;
     auto mi = ::mapBlockIndex.find(wtx.hashBlock);
@@ -94,7 +94,7 @@ WalletTxStatus MakeWalletTxStatus(const CWalletTx& wtx)
     result.time_received = wtx.nTimeReceived;
     result.lock_time = wtx.tx->nLockTime;
     result.is_final = CheckFinalTx(*wtx.tx);
-    result.is_trusted = wtx.IsTrusted();
+    result.is_trusted = wallet.IsTrusted(wtx);
     result.is_abandoned = wtx.isAbandoned();
     result.is_coinbase = wtx.IsCoinBase();
     result.is_in_main_chain = wtx.IsInMainChain();
@@ -300,7 +300,7 @@ public:
         }
         num_blocks = ::chainActive.Height();
         adjusted_time = GetAdjustedTime();
-        tx_status = MakeWalletTxStatus(mi->second);
+        tx_status = MakeWalletTxStatus(m_wallet, mi->second);
         return true;
     }
     WalletTx getWalletTxDetails(const uint256& txid,
@@ -317,7 +317,7 @@ public:
             adjusted_time = GetAdjustedTime();
             in_mempool = mi->second.InMempool();
             order_form = mi->second.vOrderForm;
-            tx_status = MakeWalletTxStatus(mi->second);
+            tx_status = MakeWalletTxStatus(m_wallet, mi->second);
             return MakeWalletTx(m_wallet, mi->second);
         }
         return {};
