@@ -266,4 +266,17 @@ BOOST_AUTO_TEST_CASE( conversion )
     BOOST_CHECK(R2L.GetHex() == UintToArith256(R2L).GetHex());
 }
 
+BOOST_AUTO_TEST_CASE( operator_with_self )
+{
+    arith_uint256 v = UintToArith256(uint256S("02"));
+    v *= v;
+    BOOST_CHECK(v == UintToArith256(uint256S("04")));
+    v /= v;
+    BOOST_CHECK(v == UintToArith256(uint256S("01")));
+    v += v;
+    BOOST_CHECK(v == UintToArith256(uint256S("02")));
+    v -= v;
+    BOOST_CHECK(v == UintToArith256(uint256S("0")));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
