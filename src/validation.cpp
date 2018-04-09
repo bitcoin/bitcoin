@@ -80,6 +80,7 @@ CBlockIndex *pindexBestHeader = NULL;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
+thread_pool *g_threadpool;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = true;
@@ -911,7 +912,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		CAmount nModifiedFees = nFees;
 		double nPriorityDummy = 0;
 		// SYSCOIN, don't apply any deltas for sys txs, should be minrelayfees regardless
-		if(tx.nVersion != SYSCOIN_TX_VERSION)
+		if (tx.nVersion != SYSCOIN_TX_VERSION)
 			pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
 
 		CAmount inChainInputValue;
@@ -1145,10 +1146,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
-
-		thread_pool threadpool(nScriptCheckThreads <= 0? 1: nScriptCheckThreads);
-
-		threadpool.enqueue( [&] (){
+		if (!g_threadpool)
+			g_threadpool = new threadpool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
+		g_threadpool.enqueue([&]() {
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				const COutPoint &prevout = tx.vin[i].prevout;
 				const CCoins* coins = view.AccessCoins(prevout.hash);
@@ -1158,62 +1158,63 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				CScriptCheck check(*coins, tx, i, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 				check();
 			}
+			// Check against previous transactions
+			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
+			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
+				return false;
+
+			// Check again against just the consensus-critical mandatory script
+			// verification flags, in case of bugs in the standard flags that cause
+			// transactions to pass as valid when they're actually invalid. For
+			// instance the STRICTENC flag was incorrectly allowing certain
+			// CHECKSIG NOT scripts to pass, even though they were invalid.
+			//
+			// There is a similar check in CreateNewBlock() to prevent creating
+			// invalid blocks, however allowing such transactions into the mempool
+			// can be exploited as a DoS attack.
+			if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+			{
+				return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
+					__func__, hash.ToString(), FormatStateMessage(state));
+			}
+			if (!CheckSyscoinInputs(tx, true, chainActive.Height(), nFees, CBlock()))
+				return false;
+			// Remove conflicting transactions from the mempool
+			BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
+			{
+				LogPrint("mempool", "replacing tx %s with %s for %s SYS additional fees, %d delta bytes\n",
+					it->GetTx().GetHash().ToString(),
+					hash.ToString(),
+					FormatMoney(nModifiedFees - nConflictingFees),
+					(int)nSize - (int)nConflictingSize);
+			}
+			pool.RemoveStaged(allConflicting);
+
+			// Store transaction in memory
+			pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
+
+			// Add memory address index
+			if (fAddressIndex) {
+				pool.addAddressIndex(entry, view);
+			}
+
+			// Add memory spent index
+			if (fSpentIndex) {
+				pool.addSpentIndex(entry, view);
+			}
+
+			// trim mempool and check if tx was trimmed
+			if (!fOverrideMempoolLimit) {
+				LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+				if (!pool.exists(hash))
+					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
+			}
+			if (!fDryRun)
+				GetMainSignals().SyncTransaction(tx, NULL);
 		});
-		// Check against previous transactions
-		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
-			return false;
-
-		// Check again against just the consensus-critical mandatory script
-		// verification flags, in case of bugs in the standard flags that cause
-		// transactions to pass as valid when they're actually invalid. For
-		// instance the STRICTENC flag was incorrectly allowing certain
-		// CHECKSIG NOT scripts to pass, even though they were invalid.
-		//
-		// There is a similar check in CreateNewBlock() to prevent creating
-		// invalid blocks, however allowing such transactions into the mempool
-		// can be exploited as a DoS attack.
-		if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
-		{
-			return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
-				__func__, hash.ToString(), FormatStateMessage(state));
-		}
-		if (!CheckSyscoinInputs(tx, true, chainActive.Height(), nFees, CBlock()))
-			return false;
-		// Remove conflicting transactions from the mempool
-		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
-		{
-			LogPrint("mempool", "replacing tx %s with %s for %s SYS additional fees, %d delta bytes\n",
-				it->GetTx().GetHash().ToString(),
-				hash.ToString(),
-				FormatMoney(nModifiedFees - nConflictingFees),
-				(int)nSize - (int)nConflictingSize);
-		}
-		pool.RemoveStaged(allConflicting);
-
-		// Store transaction in memory
-		pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
-
-		// Add memory address index
-		if (fAddressIndex) {
-			pool.addAddressIndex(entry, view);
-		}
-
-		// Add memory spent index
-		if (fSpentIndex) {
-			pool.addSpentIndex(entry, view);
-		}
-
-		// trim mempool and check if tx was trimmed
-		if (!fOverrideMempoolLimit) {
-			LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
-			if (!pool.exists(hash))
-				return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
-		}
 	}
 
-	if (!fDryRun)
-		GetMainSignals().SyncTransaction(tx, NULL);
+
 
 	return true;
 }

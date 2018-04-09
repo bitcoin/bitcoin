@@ -74,6 +74,7 @@
 #include "escrow.h"
 #include "asset.h"
 #include "assetallocation.h"
+#include "threadpool.h"
 
 #ifndef WIN32
 #include <signal.h>
@@ -325,6 +326,8 @@ void PrepareShutdown()
 		pcoinsdbview = NULL;
 		delete pblocktree;
 		pblocktree = NULL;
+		delete g_threadpool;
+		g_threadpool = NULL;
 	}
 #ifdef ENABLE_WALLET
 	if (pwalletMain)
@@ -791,7 +794,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
 	const CChainParams& chainparams = Params();
 	RenameThread("syscoin-loadblk");
-	ScheduleBatchPriority();
+	ScheduleBatchPriority(pthread_self());
 	CImportingNow imp;
 
 	// -reindex
@@ -1167,7 +1170,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 		nScriptCheckThreads = 0;
 	else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
 		nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
-
+	if(!g_threadpool)
+		g_threadpool = new threadpool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
 	fServer = GetBoolArg("-server", false);
 
 	// block pruning; get the amount of disk space (in MiB) to allot for block & undo files

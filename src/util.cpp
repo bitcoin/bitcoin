@@ -1001,11 +1001,11 @@ std::string SafeIntVersionToString(uint32_t nVersion)
         return "invalid_version";
     }
 }
-int ScheduleBatchPriority(void)
+int ScheduleBatchPriority(pthread thread)
 {
 #ifdef SCHED_BATCH
 	const static sched_param param{ .sched_priority = 0 };
-	if (int ret = pthread_setschedparam(0, SCHED_BATCH, &param)) {
+	if (int ret = pthread_setschedparam(thread, SCHED_BATCH, &param)) {
 		LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(errno));
 		return ret;
 	}

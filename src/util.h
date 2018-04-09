@@ -30,6 +30,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <thread>
 
 // Debugging macros
 
@@ -307,6 +308,6 @@ std::string SafeIntVersionToString(uint32_t nVersion);
  + * @return The return value of sched_setschedule(), or 1 on systems without
  + * sched_setchedule().
  + */
- int ScheduleBatchPriority(void);
+ int ScheduleBatchPriority(pthread thread);
 
 #endif // SYSCOIN_UTIL_H
