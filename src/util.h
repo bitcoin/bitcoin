@@ -30,7 +30,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/exceptions.hpp>
-#include <thread>
+#include <pthread.h>
 
 // Debugging macros
 
