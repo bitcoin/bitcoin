@@ -1163,7 +1163,7 @@ int ScheduleBatchPriority(void)
 {
 #ifdef SCHED_BATCH
     const static sched_param param{.sched_priority = 0};
-    if (int ret = pthread_setschedparam(0, SCHED_BATCH, &param)) {
+    if (int ret = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param)) {
         LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(errno));
         return ret;
     }
