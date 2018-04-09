@@ -67,7 +67,6 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <memory>
 
 #include <bls/bls.h>
 
