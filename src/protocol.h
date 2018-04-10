@@ -379,7 +379,7 @@ public:
         uint64_t nServicesInt = nServices;
         READWRITE(nServicesInt);
         nServices = static_cast<ServiceFlags>(nServicesInt);
-        READWRITE(*static_cast<CService*>(this));
+        READWRITEAS(CService, *this);
     }
 
     // TODO: make private (improves encapsulation)
