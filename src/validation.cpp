@@ -1151,18 +1151,17 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			if (!mthread_pool) {
 				mthread_pool = new ctpl::thread_pool(nScriptCheckThreads);
 			}
-			mthread_pool->push([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit]() {
+			mthread_pool->push([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit](bool res) {
 				CValidationState vstate;
 				CCoinsView vdummy;
-				CCoinsViewCache vview(&dummy);
+				CCoinsViewCache vview(&vdummy);
 				CCoinsViewMemPool vviewMemPool(pcoinsTip, pool);
 				vview.SetBackend(vviewMemPool);
 					
 				// Check against previous transactions
 				// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
-					LogPrintf("CheckInputs STANDARD_SCRIPT_VERIFY_FLAGS Failed");
-					return;
+					return false;
 				}
 				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
 				vview.SetBackend(vdummy);
@@ -1177,13 +1176,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				// can be exploited as a DoS attack.
 				if (!CheckInputs(tx, vstate, vview, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
 				{
-					LogPrintf("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
-						__func__, hash.ToString(), FormatStateMessage(vstate));
-					return;
+					return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
+						__func__, hash.ToString(), FormatStateMessage(state));
 				}
 				if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
-					LogPrintf("CheckSyscoinInputs Failed");
-					return;
+					return false;
 				}
 				// Remove conflicting transactions from the mempool
 				BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
@@ -1213,8 +1210,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				if (!fOverrideMempoolLimit) {
 					LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
 					if (!pool.exists(hash)) {
-						LogPrintf("mempool full");
-						return;
+						return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 					}
 				}
 				GetMainSignals().SyncTransaction(tx, NULL);
