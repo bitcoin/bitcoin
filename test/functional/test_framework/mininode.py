@@ -554,13 +554,13 @@ class P2PDataStore(P2PInterface):
         if reject_reason is not None:
             wait_until(lambda: self.reject_reason_received == reject_reason, lock=mininode_lock)
 
-    def send_txs_and_test(self, txs, rpc, success=True, reject_code=None, reject_reason=None):
+    def send_txs_and_test(self, txs, rpc, success=True, expect_disconnect=False, reject_code=None, reject_reason=None):
         """Send txs to test node and test whether they're accepted to the mempool.
 
          - add all txs to our tx_store
          - send tx messages for all txs
-         - if success is True: assert that the tx is accepted to the mempool
-         - if success is False: assert that the tx is not accepted to the mempool
+         - if success is True: assert that the txs are accepted to the mempool
+         - if expect_disconnect is True: Skip the sync with ping
          - if reject_code and reject_reason are set: assert that the correct reject message is received."""
 
         with mininode_lock:
@@ -573,7 +573,10 @@ class P2PDataStore(P2PInterface):
         for tx in txs:
             self.send_message(msg_tx(tx))
 
-        self.sync_with_ping()
+        if expect_disconnect:
+            self.wait_for_disconnect()
+        else:
+            self.sync_with_ping()
 
         raw_mempool = rpc.getrawmempool()
         if success:
