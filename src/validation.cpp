@@ -65,7 +65,6 @@
 #include <future>
 #include <functional>
 using namespace std;
-extern bool fLoaded;
 #if defined(NDEBUG)
 # error "Syscoin Core cannot be compiled without assertions."
 #endif
@@ -82,6 +81,8 @@ CBlockIndex *pindexBestHeader = NULL;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
+// SYSCOIN
+bool fLoaded = false;
 tp::ThreadPool threadpool;
 bool fImporting = false;
 bool fReindex = false;

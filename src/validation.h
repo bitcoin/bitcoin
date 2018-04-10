@@ -51,6 +51,7 @@ struct thread_pool;
 
 /** Default for accepting alerts from the P2P network. */
 // SYSCOIN
+extern bool fLoaded;
 static const bool DEFAULT_ALERTS = false;
 /** Default for DEFAULT_WHITELISTRELAY. */
 static const bool DEFAULT_WHITELISTRELAY = true;
