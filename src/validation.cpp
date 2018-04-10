@@ -1202,15 +1202,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 				GetMainSignals().SyncTransaction(tx, NULL);
 			});
 			threadpool.post(t);
-			// Remove conflicting transactions from the mempool
-			BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
-			{
-				LogPrint("mempool", "replacing tx %s with %s for %s SYS additional fees, %d delta bytes\n",
-					it->GetTx().GetHash().ToString(),
-					hash.ToString(),
-					FormatMoney(nModifiedFees - nConflictingFees),
-					(int)nSize - (int)nConflictingSize);
-			}
 		}
 		else {
 			// Check against previous transactions
@@ -1295,9 +1286,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, bool bMultiThreaded, CValidationState 
 		pool.remove(tx, dummy, true);
 	}
 	if (bMultiThreaded && res) {
-		uint256 hash = tx.GetHash();
+		uint256 hash = tx.GetHash();		
 		pool.RemoveStaged(allConflicting);
-
 		// Store transaction in memory
 		pool.addUnchecked(tx.GetHash(), entry, setAncestors, !IsInitialBlockDownload());
 
