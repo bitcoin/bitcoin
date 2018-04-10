@@ -10,7 +10,7 @@ void BlockValidationRequest::operator()()
     LogPrint(BCLog::VALIDATION, "%s: validating request=%s\n", __func__, GetId());
     auto res = m_validation_layer.ValidateInternal(m_block, m_force_processing);
     LogPrint(BCLog::VALIDATION, "%s: validation result request=%s block_valid=%d is_new=%d\n",
-        __func__, GetId(), res.block_valid, res.is_new);
+             __func__, GetId(), res.block_valid, res.is_new);
 
     m_promise.set_value(res);
     if (m_on_ready) {

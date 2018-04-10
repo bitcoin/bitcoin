@@ -17,6 +17,7 @@
 #include <rpc/server.h>
 #include <rpc/register.h>
 #include <script/sigcache.h>
+#include <validation_layer.h>
 
 void CConnmanTest::AddNode(CNode& node)
 {
@@ -107,7 +108,11 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
             threadGroup.create_thread(&ThreadScriptCheck);
         g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
         connman = g_connman.get();
-        peerLogic.reset(new PeerLogicValidation(connman, scheduler, /*enable_bip61=*/true));
+
+        g_validation_layer.reset(new ValidationLayer(Params()));
+        g_validation_layer->Start();
+
+        peerLogic.reset(new PeerLogicValidation(connman, *g_validation_layer, scheduler, /*enable_bip61=*/true));
 }
 
 TestingSetup::~TestingSetup()
@@ -118,6 +123,8 @@ TestingSetup::~TestingSetup()
         GetMainSignals().UnregisterBackgroundSignalScheduler();
         g_connman.reset();
         peerLogic.reset();
+        if (g_validation_layer) g_validation_layer->Stop();
+        g_validation_layer.reset();
         UnloadBlockIndex();
         pcoinsTip.reset();
         pcoinsdbview.reset();
@@ -126,6 +133,7 @@ TestingSetup::~TestingSetup()
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 {
+
     // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
     // TODO: fix the code to support SegWit blocks.
     UpdateVersionBitsParameters(Consensus::DEPLOYMENT_SEGWIT, 0, Consensus::BIP9Deployment::NO_TIMEOUT);
@@ -165,7 +173,7 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
+    g_validation_layer->Validate(shared_pblock, true);
 
     CBlock result = block;
     return result;

@@ -48,6 +48,7 @@
 #include <walletinitinterface.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <validation_layer.h>
 
 #ifndef WIN32
 #include <signal.h>
@@ -73,6 +74,7 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
+std::unique_ptr<ValidationLayer> g_validation_layer;
 
 #if !(ENABLE_WALLET)
 class DummyWalletInit : public WalletInitInterface {
@@ -209,6 +211,7 @@ void Shutdown()
     // using the other before destroying them.
     if (peerLogic) UnregisterValidationInterface(peerLogic.get());
     if (g_connman) g_connman->Stop();
+    if (g_validation_layer) g_validation_layer->Stop();
     peerLogic.reset();
     g_connman.reset();
     if (g_txindex) {
@@ -1306,7 +1309,10 @@ bool AppInitMain()
     g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
     CConnman& connman = *g_connman;
 
-    peerLogic.reset(new PeerLogicValidation(&connman, scheduler, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
+    g_validation_layer.reset(new ValidationLayer(chainparams));
+    g_validation_layer->Start();
+
+    peerLogic.reset(new PeerLogicValidation(&connman, *g_validation_layer, scheduler, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
     RegisterValidationInterface(peerLogic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size

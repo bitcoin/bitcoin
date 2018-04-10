@@ -10,6 +10,9 @@
 #include <validationinterface.h>
 #include <consensus/params.h>
 
+struct BlockValidationResponse;
+class ValidationLayer;
+
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 /** Default number of orphan+recently-replaced txn to keep around for block reconstruction */
@@ -20,9 +23,10 @@ static constexpr bool DEFAULT_ENABLE_BIP61 = true;
 class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
 private:
     CConnman* const connman;
+    ValidationLayer& m_validation_layer;
 
 public:
-    explicit PeerLogicValidation(CConnman* connman, CScheduler &scheduler, bool enable_bip61);
+    explicit PeerLogicValidation(CConnman* connman, ValidationLayer& validation_layer, CScheduler& scheduler, bool enable_bip61);
 
     /**
      * Overridden from CValidationInterface.
@@ -66,6 +70,8 @@ public:
     void CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams);
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
     void EvictExtraOutboundPeers(int64_t time_in_seconds);
+
+    void ProcessBlockValidationResponse(CNode*, std::shared_ptr<const CBlock>, const CBlockIndex*, const BlockValidationResponse&) override;
 
 private:
     int64_t m_stale_tip_check_time; //! Next time to check for stale tip

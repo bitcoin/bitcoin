@@ -23,19 +23,23 @@
 #include <threadinterrupt.h>
 
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <deque>
+#include <future>
+#include <memory>
 #include <stdint.h>
 #include <thread>
-#include <memory>
-#include <condition_variable>
 
 #ifndef WIN32
 #include <arpa/inet.h>
 #endif
 
-
+struct BlockValidationResponse;
 class CScheduler;
 class CNode;
+class CBlock;
+class CBlockIndex;
 
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 2 * 60;
@@ -478,6 +482,7 @@ public:
     virtual bool SendMessages(CNode* pnode) = 0;
     virtual void InitializeNode(CNode* pnode) = 0;
     virtual void FinalizeNode(NodeId id, bool& update_connection_time) = 0;
+    virtual void ProcessBlockValidationResponse(CNode* pfrom, const std::shared_ptr<const CBlock> pblock, const CBlockIndex* pindex, const BlockValidationResponse& validation_response) = 0;
 
 protected:
     /**
@@ -755,6 +760,13 @@ private:
     // Our address, as reported by the peer
     CService addrLocal;
     mutable CCriticalSection cs_addrLocal;
+
+    // If an asynchronous request to validate a block received over the network is pending
+    // these members hold details of that request
+    std::future<BlockValidationResponse> m_block_validation_response;
+    std::shared_ptr<const CBlock> m_block_validating;
+    const CBlockIndex* m_block_validating_index;
+
 public:
 
     NodeId GetId() const {
@@ -865,6 +877,16 @@ public:
     std::string GetAddrName() const;
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
+
+    //! Is an asynchronous internal request pending
+    bool IsAwaitingInternalRequest();
+
+    //! If a result from an asynchronous internal request is ready, process the results
+    bool ProcessInternalRequestResults(NetEventsInterface*);
+
+    //! Mark this node as waiting for an asynchronous internal request to complete
+    //! before any further processing of this node may occurb
+    void SetPendingInternalRequest(const std::shared_ptr<const CBlock> block, std::future<BlockValidationResponse>&& pending_response, const CBlockIndex* pindex = nullptr);
 };
 
 
