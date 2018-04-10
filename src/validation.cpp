@@ -1153,7 +1153,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 			std::packaged_task<void()> t([&pcoinsTip, &pool, chainHeight, tx, nFees, hash, vHashTxnToUncache]() {
 				CValidationState vstate;
 				CCoinsView vdummy;
-				CCoinsViewCache vview(&dummy);
+				CCoinsViewCache vview(&vdummy);
 				CCoinsViewMemPool vviewMemPool(pcoinsTip, pool);
 				vview.SetBackend(vviewMemPool);
 					
