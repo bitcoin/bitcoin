@@ -1151,7 +1151,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			if (!mthread_pool) {
 				mthread_pool = new ctpl::thread_pool(nScriptCheckThreads);
 			}
-			mthread_pool->push([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit](bool res) {
+			mthread_pool->push([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit](bool) {
 				CValidationState vstate;
 				CCoinsView vdummy;
 				CCoinsViewCache vview(&vdummy);
@@ -1214,6 +1214,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 					}
 				}
 				GetMainSignals().SyncTransaction(tx, NULL);
+				return true;
 			});
 		}
 		else {
