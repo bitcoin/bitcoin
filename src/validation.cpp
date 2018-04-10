@@ -62,6 +62,8 @@
 #include "base58.h"
 #include "rpc/server.h"
 #include "thread_pool.hpp"
+#include <future>
+#include <functional>
 using namespace std;
 
 #if defined(NDEBUG)
@@ -1150,7 +1152,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		const int chainHeight = chainActive.Height();
 		if (!fDryRun) {
 
-			std::packaged_task<int()> t([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit]() {
+			std::packaged_task<void()> t([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit]() {
 				CValidationState vstate;
 				CCoinsView vdummy;
 				CCoinsViewCache vview(&dummy);
