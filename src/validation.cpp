@@ -80,7 +80,7 @@ CBlockIndex *pindexBestHeader = NULL;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
-tp::ThreadPool pool;
+tp::ThreadPool threadpool;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = true;
@@ -1150,16 +1150,21 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		const int chainHeight = chainActive.Height();
 		if (!fDryRun) {
 
-			pool.post([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit, &pcoinsTip, &pool]() {
+			threadpool.post([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit, &pcoinsTip, &pool]() {
 				CValidationState vstate;
-				CCoinsViewCache vview(pcoinsTip);
+				CCoinsView vdummy;
+				CCoinsViewCache vview(&dummy);
+				CCoinsViewMemPool vviewMemPool(pcoinsTip, pool);
+				vview.SetBackend(vviewMemPool);
+					
 				// Check against previous transactions
 				// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
 					LogPrintf("CheckInputs STANDARD_SCRIPT_VERIFY_FLAGS Failed");
 					return;
 				}
-
+				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
+				vview.SetBackend(vdummy);
 				// Check again against just the consensus-critical mandatory script
 				// verification flags, in case of bugs in the standard flags that cause
 				// transactions to pass as valid when they're actually invalid. For
