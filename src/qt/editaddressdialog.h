@@ -45,6 +45,9 @@ public Q_SLOTS:
 private:
     bool saveCurrentRow();
 
+    /** Return a descriptive string when adding an already-existing address fails. */
+    QString getDuplicateAddressWarning() const;
+
     Ui::EditAddressDialog *ui;
     QDataWidgetMapper *mapper;
     Mode mode;

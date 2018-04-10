@@ -408,19 +408,29 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex &parent
     return true;
 }
 
-/* Look up label for address in address book, if not found return empty string.
- */
 QString AddressTableModel::labelForAddress(const QString &address) const
 {
-    {
-        CTxDestination destination = DecodeDestination(address.toStdString());
-        std::string name;
-        if (walletModel->wallet().getAddress(destination, &name))
-        {
-            return QString::fromStdString(name);
-        }
+    std::string name;
+    if (getAddressData(address, &name, /* purpose= */ nullptr)) {
+        return QString::fromStdString(name);
     }
     return QString();
+}
+
+QString AddressTableModel::purposeForAddress(const QString &address) const
+{
+    std::string purpose;
+    if (getAddressData(address, /* name= */ nullptr, &purpose)) {
+        return QString::fromStdString(purpose);
+    }
+    return QString();
+}
+
+bool AddressTableModel::getAddressData(const QString &address,
+        std::string* name,
+        std::string* purpose) const {
+    CTxDestination destination = DecodeDestination(address.toStdString());
+    return walletModel->wallet().getAddress(destination, name, /* is_mine= */ nullptr, purpose);
 }
 
 int AddressTableModel::lookupAddress(const QString &address) const
