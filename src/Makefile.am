@@ -190,6 +190,8 @@ SYSCOIN_CORE_H = \
   tinyformat.h \
   thread_pool.hpp \
   thread_pool/fixed_function.hpp \
+  thread_pool/rouser.hpp \
+  thread_pool/slotted_bag.hpp \
   thread_pool/mpmc_bounded_queue.hpp \
   thread_pool/thread_pool.hpp \
   thread_pool/thread_pool_options.hpp \
