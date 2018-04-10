@@ -663,7 +663,9 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 				good = false;
 				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				{
-					if (!FindAliasInTx(tx, vvchAliasArgs)) {
+					// fLoaded ensures that we don't fail on verifydb which loads recent UTXO and will fail if the input is already spent, 
+					// but during runtime fLoaded should be true so it should check UTXO in correct state
+					if (!FindAliasInTx(tx, vvchAliasArgs) && fLoaded) {
 						LogPrintf("CheckSyscoinInputs2: Cannot find alias input to this transaction\n");
 						return false;
 					}
