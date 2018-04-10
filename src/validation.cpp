@@ -107,7 +107,7 @@ uint256 hashAssumeValid;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying, mining and transaction creation) */
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_LEGACY_MIN_RELAY_TX_FEE);
 
-static CTxMemPool mempool(::minRelayTxFee);
+CTxMemPool mempool(::minRelayTxFee);
 map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 
 /**
@@ -197,7 +197,7 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
 	return chain.Genesis();
 }
 
-static CCoinsViewCache *pcoinsTip = NULL;
+CCoinsViewCache *pcoinsTip = NULL;
 CBlockTreeDB *pblocktree = NULL;
 
 enum FlushStateMode {
