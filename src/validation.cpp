@@ -1151,7 +1151,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		const int chainHeight = chainActive.Height();
 		if (!fDryRun) {
 			
-			g_threadpool->enqueue([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fDryRun, fOverrideMempoolLimit, &pcoinsTip, &pool]() {
+			g_threadpool->enqueue([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit, &pcoinsTip, &pool]() {
 				CValidationState vstate;
 				CCoinsViewCache vview(pcoinsTip);
 				// Check against previous transactions
