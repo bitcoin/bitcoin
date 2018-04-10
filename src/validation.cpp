@@ -79,7 +79,7 @@ CBlockIndex *pindexBestHeader = NULL;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
-ctpl::threadpool *thread_pool = NULL;
+ctpl::thread_pool *thread_pool = NULL;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = true;
