@@ -121,6 +121,14 @@ Configuring the github-merge tool for the bitcoin repository is done in the foll
     git config githubmerge.testcmd "make -j4 check" (adapt to whatever you want to use for testing)
     git config --global user.signingkey mykeyid (if you want to GPG sign)
 
+Create and verify timestamps of merge commits
+---------------------------------------------
+To create or verify timestamps on the merge commits, install the OpenTimestamps
+client via `pip3 install opentimestamps-client`. Then, dowload the gpg wrapper
+`ots-git-gpg-wrapper.sh` and set it as git's `gpg.program`. See
+[the ots git integration documentation](https://github.com/opentimestamps/opentimestamps-client/blob/master/doc/git-integration.md#usage)
+for further details.
+
 optimize-pngs.py
 ================
 
