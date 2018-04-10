@@ -39,7 +39,7 @@ static const CAmount MAX_INPUTRANGE_ASSET = (10000000 * COIN);
 *  9999999999999999999  10^19-1     (would overflow)
 */
 static const CAmount MAX_ASSET = 1000000000000000000LL - 1LL;
-inline bool AssetRange(const CAmount& nValue, bool bUseInputRange) { return (nValue > 0 && nValue <= bUseInputRange? MAX_INPUTRANGE_ASSET: MAX_ASSET); }
+inline bool AssetRange(const CAmount& nValue, bool bUseInputRange) { return (nValue > 0 && nValue <= (bUseInputRange? MAX_INPUTRANGE_ASSET: MAX_ASSET)); }
 
 class CAsset {
 public:
