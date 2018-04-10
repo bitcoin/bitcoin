@@ -1147,10 +1147,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
 		if (!g_threadpool)
-			g_threadpool = new thread_pool(nScriptCheckThreads <= 0 ? 1 : nScriptCheckThreads);
+			g_threadpool = new thread_pool(nScriptCheckThreads > 0 ? nScriptCheckThreads : 1);
 		const int chainHeight = chainActive.Height();
 		if (!fDryRun) {
-			
+
 			g_threadpool->enqueue([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit, &pcoinsTip, &pool]() {
 				CValidationState vstate;
 				CCoinsViewCache vview(pcoinsTip);
