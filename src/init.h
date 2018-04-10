@@ -41,5 +41,4 @@ enum HelpMessageMode {
 std::string HelpMessage(HelpMessageMode mode);
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();
-extern bool fLoaded;
 #endif // SYSCOIN_INIT_H

@@ -95,7 +95,8 @@
 #endif
 
 using namespace std;
-bool fLoaded = false;
+// SYSCOIN
+static bool fLoaded = false;
 extern void ThreadSendAlert(CConnman& connman);
 
 #ifdef ENABLE_WALLET

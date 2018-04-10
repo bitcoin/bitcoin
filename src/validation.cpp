@@ -65,7 +65,7 @@
 #include <future>
 #include <functional>
 using namespace std;
-
+extern bool fLoaded;
 #if defined(NDEBUG)
 # error "Syscoin Core cannot be compiled without assertions."
 #endif
