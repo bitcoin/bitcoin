@@ -46,7 +46,10 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
 {
     *this = other;
 }
-
+CTxMemPoolEntry::CTxMemPoolEntry()
+{
+	
+}
 double
 CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 {

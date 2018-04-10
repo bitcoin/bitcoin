@@ -107,6 +107,7 @@ public:
                     bool poolHasNoInputsOf, CAmount _inChainInputValue, bool spendsCoinbase,
                     unsigned int nSigOps, LockPoints lp);
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
+	CTxMemPoolEntry();
 
     const CTransaction& GetTx() const { return this->tx; }
     /**
