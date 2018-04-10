@@ -14,6 +14,19 @@ std::ostream& operator<<(std::ostream& os, uint256 value)
     return os << value.ToString();
 }
 
+bool operator == (const CTxBudgetPayment& a, const CTxBudgetPayment& b)
+{
+    return a.nProposalHash == b.nProposalHash &&
+           a.nAmount == b.nAmount &&
+           a.payee == b.payee;
+}
+
+std::ostream& operator<<(std::ostream& os, const CTxBudgetPayment& value)
+{
+    return os << "{" << value.nProposalHash.ToString() << ":" << value.nAmount << "@" << value.payee.ToString() << "}";
+}
+
+
 namespace
 {
     auto CreateKeyPair(std::vector<unsigned char> privKey)
@@ -104,7 +117,7 @@ namespace
             fMasterNode = true;
             strBudgetMode = "auto"s;
 
-            // Build a main chain 100000 blocks long.
+            // Build a main chain 100500 blocks long.
             for (size_t i = 0; i < blocks.size(); ++i)
             {
                 FillBlock(blocks[i], hashes[i], &blocks[i - 1], i);
@@ -384,6 +397,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
 
     BOOST_AUTO_TEST_CASE(IsTransactionValid_Block0)
     {
+        // Set Up
         auto txBudgetPayments = std::vector<CTxBudgetPayment> {
             GetPayment(proposalA),
             GetPayment(proposalB)
@@ -393,11 +407,13 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         auto expected = CMutableTransaction{};
         expected.vout.emplace_back(proposalA.GetAmount(), proposalA.GetPayee());
 
+        // Call & Check
         BOOST_CHECK(budget.IsTransactionValid(expected, blockStart));
     }
 
     BOOST_AUTO_TEST_CASE(IsTransactionValid_Block0_Invalid)
     {
+        // Set Up
         auto txBudgetPayments = std::vector<CTxBudgetPayment> {
             GetPayment(proposalA),
             GetPayment(proposalB)
@@ -410,12 +426,14 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         auto wrong2 = CMutableTransaction{};
         wrong2.vout.emplace_back(proposalC.GetAmount(), proposalA.GetPayee());
 
+        // Call & Check
         BOOST_CHECK(!budget.IsTransactionValid(wrong1, blockStart));
         BOOST_CHECK(!budget.IsTransactionValid(wrong2, blockStart));
     }
 
     BOOST_AUTO_TEST_CASE(IsTransactionValid_Block1)
     {
+        // Set Up
         auto txBudgetPayments = std::vector<CTxBudgetPayment> {
             GetPayment(proposalA),
             GetPayment(proposalB)
@@ -425,7 +443,72 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         auto expected = CMutableTransaction{};
         expected.vout.emplace_back(proposalB.GetAmount(), proposalB.GetPayee());
 
+        // Call & Check
         BOOST_CHECK(budget.IsTransactionValid(expected, blockStart + 1));
+    }
+
+    BOOST_AUTO_TEST_CASE(IsTransactionValid_Block2)
+    {
+        // Set Up
+        auto txBudgetPayments = std::vector<CTxBudgetPayment> {
+            GetPayment(proposalA),
+            GetPayment(proposalB)
+        };
+        auto budget = CFinalizedBudgetBroadcast(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+
+        auto expected = CMutableTransaction{};
+        expected.vout.emplace_back(proposalB.GetAmount(), proposalB.GetPayee());
+
+        // Call & Check
+        BOOST_CHECK(!budget.IsTransactionValid(expected, blockStart + 2));
+    }
+
+    BOOST_AUTO_TEST_CASE(GetBudgetPaymentByBlock_Block0)
+    {
+        // Set Up
+        auto txBudgetPayments = std::vector<CTxBudgetPayment> {
+            GetPayment(proposalA),
+            GetPayment(proposalB)
+        };
+        auto budget = CFinalizedBudgetBroadcast(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        auto actual = CTxBudgetPayment{};
+
+        // Call & Check
+        auto result = budget.GetBudgetPaymentByBlock(blockStart, actual);
+
+        BOOST_CHECK_EQUAL(actual, GetPayment(proposalA));
+        BOOST_CHECK(result);
+    }
+
+    BOOST_AUTO_TEST_CASE(GetBudgetPaymentByBlock_Block1)
+    {
+        // Set Up
+        auto txBudgetPayments = std::vector<CTxBudgetPayment> {
+            GetPayment(proposalA),
+            GetPayment(proposalB)
+        };
+        auto budget = CFinalizedBudgetBroadcast(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        auto actual = CTxBudgetPayment{};
+
+        // Call & Check
+        auto result = budget.GetBudgetPaymentByBlock(blockStart + 1, actual);
+
+        BOOST_CHECK_EQUAL(actual, GetPayment(proposalB));
+        BOOST_CHECK(result);
+    }
+
+    BOOST_AUTO_TEST_CASE(GetBudgetPaymentByBlock_Block2)
+    {
+        // Set Up
+        auto txBudgetPayments = std::vector<CTxBudgetPayment> {
+            GetPayment(proposalA),
+            GetPayment(proposalB)
+        };
+        auto budget = CFinalizedBudgetBroadcast(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        auto dummy = CTxBudgetPayment{};
+
+        // Call & Check
+        BOOST_CHECK(!budget.GetBudgetPaymentByBlock(blockStart + 2, dummy));
     }
 
 
