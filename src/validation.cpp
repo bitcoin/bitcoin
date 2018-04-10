@@ -1166,6 +1166,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					}
 					list<CTransaction> dummy;
 					pool.remove(tx, dummy, true);
+					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
+					CValidationState stateDummy;
+					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					return;
 				}
 				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
@@ -1188,6 +1191,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					}
 					list<CTransaction> dummy;
 					pool.remove(tx, dummy, true);
+					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
+					CValidationState stateDummy;
+					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					return;
 				}
 				if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
@@ -1197,6 +1203,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					}
 					list<CTransaction> dummy;
 					pool.remove(tx, dummy, true);
+					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
+					CValidationState stateDummy;
+					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					return;
 				}
 				GetMainSignals().SyncTransaction(tx, NULL);
