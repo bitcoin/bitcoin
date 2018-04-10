@@ -154,7 +154,7 @@ extern CConditionVariable cvBlockChange;
 extern bool fImporting;
 extern bool fReindex;
 extern int nScriptCheckThreads;
-extern ctpl::thread_pool mthread_pool;
+extern ctpl::thread_pool *mthread_pool;
 extern bool fTxIndex;
 extern bool fAddressIndex;
 extern bool fIsBareMultisigStd;
