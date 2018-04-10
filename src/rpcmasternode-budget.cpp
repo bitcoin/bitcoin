@@ -700,7 +700,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         BOOST_FOREACH(CFinalizedBudget* finalizedBudget, winningFbs)
         {
             Object bObj;
-            bObj.push_back(Pair("FeeTX",  finalizedBudget->nFeeTXHash.ToString()));
+            bObj.push_back(Pair("FeeTX",  finalizedBudget->GetFeeTxHash().ToString()));
             bObj.push_back(Pair("Hash",  finalizedBudget->GetHash().ToString()));
             bObj.push_back(Pair("BlockStart",  (int64_t)finalizedBudget->GetBlockStart()));
             bObj.push_back(Pair("BlockEnd",    (int64_t)finalizedBudget->GetBlockEnd()));
@@ -733,19 +733,16 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         if(pfinalBudget == NULL) return "Unknown budget hash";
 
-        std::map<uint256, CFinalizedBudgetVote>::iterator it = pfinalBudget->mapVotes.begin();
-        while(it != pfinalBudget->mapVotes.end()){
-
+        const auto fbVotes = pfinalBudget->GetVotes();
+        for (const auto& votePair: fbVotes)
+        {
             Object bObj;
-            bObj.push_back(Pair("nHash",  (*it).first.ToString().c_str()));
-            bObj.push_back(Pair("nTime",  (int64_t)(*it).second.nTime));
-            bObj.push_back(Pair("fValid",  (*it).second.fValid));
+            bObj.push_back(Pair("nHash", votePair.first.ToString().c_str()));
+            bObj.push_back(Pair("nTime", static_cast<int64_t>(votePair.second.nTime)));
+            bObj.push_back(Pair("fValid", votePair.second.fValid));
 
-            obj.push_back(Pair((*it).second.vin.prevout.ToStringShort(), bObj));
-
-            it++;
+            obj.push_back(Pair(votePair.second.vin.prevout.ToStringShort(), bObj));
         }
-
 
         return obj;
     }

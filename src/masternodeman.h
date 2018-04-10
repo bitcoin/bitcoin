@@ -92,7 +92,7 @@ public:
     CMasternodeMan(CMasternodeMan& other);
 
     /// Add an entry
-    bool Add(CMasternode &mn);
+    bool Add(const CMasternode &mn);
 
     /// Ask (source) node for mnb
     void AskForMN(CNode *pnode, CTxIn &vin);

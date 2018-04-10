@@ -207,7 +207,7 @@ CMasternodeMan::CMasternodeMan() {
     nDsqCount = 0;
 }
 
-bool CMasternodeMan::Add(CMasternode &mn)
+bool CMasternodeMan::Add(const CMasternode &mn)
 {
     LOCK(cs);
 
