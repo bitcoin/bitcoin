@@ -573,14 +573,14 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		else
 			nDescrepency = nExpectedFee - nFees;
 		if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
-			LogPrintf("CheckSyscoinInputs: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
+			LogPrintf("CheckSyscoinInputs: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s\n", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
 			return false;
 		}
 		bool bDestCheckFailed = false;
 		if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 		{
 			if (!FindAliasInTx(tx, vvchAliasArgs)) {
-				LogPrintf("CheckSyscoinInputs1: Cannot find alias input to this transaction");
+				LogPrintf("CheckSyscoinInputs1: Cannot find alias input to this transaction\n");
 				return false;
 			}
 			// it is assumed if no alias output is found, then it is for another service so this would be an alias update
@@ -664,7 +664,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				{
 					if (!FindAliasInTx(tx, vvchAliasArgs)) {
-						LogPrintf("CheckSyscoinInputs2: Cannot find alias input to this transaction");
+						LogPrintf("CheckSyscoinInputs2: Cannot find alias input to this transaction\n");
 						return false;
 					}
 					// it is assumed if no alias output is found, then it is for another service so this would be an alias update
@@ -2572,7 +2572,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 		pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 	}
 	if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
-		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
+		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n",
 			block.GetHash().ToString());
 	int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
 	LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * 0.000001);
