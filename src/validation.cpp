@@ -1285,7 +1285,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 	CTxMemPool::setEntries setAncestors;
 	CTxMemPoolEntry entry;
 	CCoinsViewCache view(&dummy);
-	bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache, allConflicting, allConflicting, setAncestors, entry, view, fDryRun);
+	bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache, allConflicting, setAncestors, entry, view, fDryRun);
 	if (!res || fDryRun) {
 		if (!res) LogPrint("mempool", "%s: %s %s\n", __func__, tx.GetHash().ToString(), state.GetRejectReason());
 		BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache)
