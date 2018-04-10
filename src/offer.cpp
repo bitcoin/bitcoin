@@ -314,7 +314,6 @@ bool RevertOffer(const std::vector<unsigned char>& vchOffer, const int op, const
 
 	string errorMessage = "";
 	COffer dbOffer;
-	LogPrintf("RevertOffer %s\n", stringFromVch(vchOffer).c_str());
 	// if prev state doesn't exist, probably offeractivate, in which case delete the offer and let pow create it again.
 	if (!pofferdb->ReadLastOffer(vchOffer, dbOffer)) {
 		if(!pofferdb->EraseOffer(vchOffer))

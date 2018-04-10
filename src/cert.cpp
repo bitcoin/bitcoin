@@ -253,7 +253,6 @@ bool RevertCert(const std::vector<unsigned char>& vchCert, const int op, const u
 
 	string errorMessage = "";
 	CCert dbCert;
-	LogPrintf("RevertCert %s\n", stringFromVch(vchCert).c_str());
 	// if prev state doesn't exist, probably certactivate, in which case delete the cert and let pow create it again.
 	if (!pcertdb->ReadLastCert(vchCert, dbCert)) {
 		if (!pcertdb->EraseCert(vchCert))
