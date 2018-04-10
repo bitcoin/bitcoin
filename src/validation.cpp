@@ -1255,12 +1255,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
 			// Add memory address index
 			if (fAddressIndex) {
-				pool.addAddressIndex(entry, vview);
+				pool.addAddressIndex(entry, view);
 			}
 
 			// Add memory spent index
 			if (fSpentIndex) {
-				pool.addSpentIndex(entry, vview);
+				pool.addSpentIndex(entry, view);
 			}
 
 			// trim mempool and check if tx was trimmed
