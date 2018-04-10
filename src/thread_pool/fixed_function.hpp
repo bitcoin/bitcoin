@@ -21,7 +21,7 @@ template <typename SIGNATURE, size_t STORAGE_SIZE = 128>
 class FixedFunction;
 
 template <typename R, typename... ARGS, size_t STORAGE_SIZE>
-class FixedFunction<R(ARGS...), STORAGE_SIZE> final
+class FixedFunction<R(ARGS...), STORAGE_SIZE>
 {
 
     typedef R (*func_ptr_type)(ARGS...);
