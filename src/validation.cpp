@@ -1292,10 +1292,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 			pcoinsTip->Uncache(hashTx);
 	}
 	if (res && !fDryRun) {
+		uint256 hash = tx.GetHash();
 		pool.RemoveStaged(allConflicting);
 
 		// Store transaction in memory
-		pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
+		pool.addUnchecked(tx.GetHash(), entry, setAncestors, !IsInitialBlockDownload());
 
 		// Add memory address index
 		if (fAddressIndex) {
@@ -1317,7 +1318,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 					pool.removeSpentIndex(hashTx);
 					pool.removeAddressIndex(hashTx);
 				}
-				return;
 			}
 		}
 	}
