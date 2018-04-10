@@ -1173,29 +1173,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 				}
 				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
 				vview.SetBackend(vdummy);
-				// Check again against just the consensus-critical mandatory script
-				// verification flags, in case of bugs in the standard flags that cause
-				// transactions to pass as valid when they're actually invalid. For
-				// instance the STRICTENC flag was incorrectly allowing certain
-				// CHECKSIG NOT scripts to pass, even though they were invalid.
-				//
-				// There is a similar check in CreateNewBlock() to prevent creating
-				// invalid blocks, however allowing such transactions into the mempool
-				// can be exploited as a DoS attack.
-				if (!CheckInputs(tx, vstate, vview, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
-				{
-					LogPrintf("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
-						__func__, hash.ToString(), FormatStateMessage(vstate));
-					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
-						pcoinsTip->Uncache(hashTx);
-					}
-					list<CTransaction> dummy;
-					pool.remove(tx, dummy, true);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					return;
-				}
+
 				if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
 					LogPrintf("CheckSyscoinInputs Failed");
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
@@ -1219,20 +1197,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 				return false;
 			}
 
-			// Check again against just the consensus-critical mandatory script
-			// verification flags, in case of bugs in the standard flags that cause
-			// transactions to pass as valid when they're actually invalid. For
-			// instance the STRICTENC flag was incorrectly allowing certain
-			// CHECKSIG NOT scripts to pass, even though they were invalid.
-			//
-			// There is a similar check in CreateNewBlock() to prevent creating
-			// invalid blocks, however allowing such transactions into the mempool
-			// can be exploited as a DoS attack.
-			if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
-			{
-				return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
-					__func__, hash.ToString(), FormatStateMessage(state));
-			}
 			if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
 				return false;
 			}
@@ -1888,18 +1852,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 					check.swap(pvChecks->back());
 				}
 				else if (!check()) {
-					if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
-						// Check whether the failure was caused by a
-						// non-mandatory script verification check, such as
-						// non-standard DER encodings or non-null dummy
-						// arguments; if so, don't trigger DoS protection to
-						// avoid splitting the network between upgraded and
-						// non-upgraded nodes.
-						CScriptCheck check2(*coins, tx, i,
-							flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheStore);
-						if (check2())
-							return state.Invalid(false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
-					}
 					// Failures of other flags indicate a transaction that is
 					// invalid in new blocks, e.g. a invalid P2SH. We DoS ban
 					// such nodes as they are not following the protocol. That
