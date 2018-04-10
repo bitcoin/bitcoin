@@ -84,8 +84,8 @@ namespace
         const CKey keyPairC = CreateKeyPair({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0});
 
         const CBudgetProposal proposalA = CreateProposal("A", keyPairA, 42);
-        const CBudgetProposal proposalB = CreateProposal("B", keyPairA, 404);
-        const CBudgetProposal proposalC = CreateProposal("C", keyPairA, 101);
+        const CBudgetProposal proposalB = CreateProposal("B", keyPairB, 404);
+        const CBudgetProposal proposalC = CreateProposal("C", keyPairC, 101);
 
         const CMasternode mn1 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(1), 1 * COIN}});
         const CMasternode mn2 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(2), 1 * COIN}});
@@ -381,4 +381,52 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         BOOST_CHECK_EQUAL(budget.IsAutoChecked(), true);
         BOOST_CHECK(result);
     }
+
+    BOOST_AUTO_TEST_CASE(IsTransactionValid_Block0)
+    {
+        auto txBudgetPayments = std::vector<CTxBudgetPayment> {
+            GetPayment(proposalA),
+            GetPayment(proposalB)
+        };
+        auto budget = CFinalizedBudgetBroadcast(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+
+        auto expected = CMutableTransaction{};
+        expected.vout.emplace_back(proposalA.GetAmount(), proposalA.GetPayee());
+
+        BOOST_CHECK(budget.IsTransactionValid(expected, blockStart));
+    }
+
+    BOOST_AUTO_TEST_CASE(IsTransactionValid_Block0_Invalid)
+    {
+        auto txBudgetPayments = std::vector<CTxBudgetPayment> {
+            GetPayment(proposalA),
+            GetPayment(proposalB)
+        };
+        auto budget = CFinalizedBudgetBroadcast(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+
+        auto wrong1 = CMutableTransaction{};
+        wrong1.vout.emplace_back(proposalA.GetAmount(), proposalC.GetPayee());
+
+        auto wrong2 = CMutableTransaction{};
+        wrong2.vout.emplace_back(proposalC.GetAmount(), proposalA.GetPayee());
+
+        BOOST_CHECK(!budget.IsTransactionValid(wrong1, blockStart));
+        BOOST_CHECK(!budget.IsTransactionValid(wrong2, blockStart));
+    }
+
+    BOOST_AUTO_TEST_CASE(IsTransactionValid_Block1)
+    {
+        auto txBudgetPayments = std::vector<CTxBudgetPayment> {
+            GetPayment(proposalA),
+            GetPayment(proposalB)
+        };
+        auto budget = CFinalizedBudgetBroadcast(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+
+        auto expected = CMutableTransaction{};
+        expected.vout.emplace_back(proposalB.GetAmount(), proposalB.GetPayee());
+
+        BOOST_CHECK(budget.IsTransactionValid(expected, blockStart + 1));
+    }
+
+
 BOOST_AUTO_TEST_SUITE_END()
