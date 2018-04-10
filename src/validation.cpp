@@ -1290,7 +1290,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, bool bMultiThreaded, CValidationState 
 		}
 		pool.remove(tx, dummy, true);
 	}
-	if (res && !fDryRun) {
+	if (bMultiThreaded && res) {
 		uint256 hash = tx.GetHash();
 		pool.RemoveStaged(allConflicting);
 
