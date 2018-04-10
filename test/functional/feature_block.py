@@ -82,10 +82,7 @@ class FullBlockTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node
 
-        # reconnect_p2p() expects the network thread to be running
-        network_thread_start()
-
-        self.reconnect_p2p()
+        self.bootstrap_p2p()  # Add one p2p connection to the node
 
         self.block_heights = {}
         self.coinbase_key = CECKey()
@@ -1296,14 +1293,10 @@ class FullBlockTest(BitcoinTestFramework):
         self.blocks[block_number] = block
         return block
 
-    def reconnect_p2p(self):
+    def bootstrap_p2p(self):
         """Add a P2P connection to the node.
 
-        The node gets disconnected several times in this test. This helper
-        method reconnects the p2p and restarts the network thread."""
-
-        network_thread_join()
-        self.nodes[0].disconnect_p2ps()
+        Helper to connect and wait for version handshake."""
         self.nodes[0].add_p2p_connection(P2PDataStore())
         network_thread_start()
         # We need to wait for the initial getheaders from the peer before we
@@ -1313,6 +1306,15 @@ class FullBlockTest(BitcoinTestFramework):
         # IBD and one for the INV. We'd respond to both and could get
         # unexpectedly disconnected if the DoS score for that error is 50.
         self.nodes[0].p2p.wait_for_getheaders(timeout=5)
+
+    def reconnect_p2p(self):
+        """Tear down and bootstrap the P2P connection to the node.
+
+        The node gets disconnected several times in this test. This helper
+        method reconnects the p2p and restarts the network thread."""
+        self.nodes[0].disconnect_p2ps()
+        network_thread_join()
+        self.bootstrap_p2p()
 
     def sync_blocks(self, blocks, success=True, reject_code=None, reject_reason=None, request_block=True, reconnect=False, timeout=60):
         """Sends blocks to test node. Syncs and verifies that tip has advanced to most recent block.
