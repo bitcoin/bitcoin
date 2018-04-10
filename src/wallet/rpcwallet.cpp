@@ -1706,7 +1706,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				vector<vector<unsigned char> > aliasVvch;
 				UniValue oAssetAllocationReceiversArray(UniValue::VARR);
 				string aliasName = "";
-				if (mapSysTx[wtx.GetHash()])
+				if (mapSysTx.find(wtx.GetHash()) != mapSysTx.end())
 					continue;
 				mapSysTx[wtx.GetHash()] = true;
 				string strResponseEnglish = "";
@@ -1793,7 +1793,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 					vector<vector<unsigned char> > aliasVvch;
 					UniValue oAssetAllocationReceiversArray(UniValue::VARR);
 					string aliasName = "";
-					if (mapSysTx[wtx.GetHash()])
+					if (mapSysTx.find(wtx.GetHash()) != mapSysTx.end())
 						continue;
 					mapSysTx[wtx.GetHash()] = true;
 					string strResponseEnglish = "";
