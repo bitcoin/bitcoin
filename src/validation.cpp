@@ -580,7 +580,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 		{
 			if (!FindAliasInTx(tx, vvchAliasArgs)) {
-				LogPrintf("CheckSyscoinInputs: Cannot find alias input to this transaction");
+				LogPrintf("CheckSyscoinInputs1: Cannot find alias input to this transaction");
 				return false;
 			}
 			// it is assumed if no alias output is found, then it is for another service so this would be an alias update
@@ -664,7 +664,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				{
 					if (!FindAliasInTx(tx, vvchAliasArgs)) {
-						LogPrintf("CheckSyscoinInputs: Cannot find alias input to this transaction");
+						LogPrintf("CheckSyscoinInputs2: Cannot find alias input to this transaction");
 						return false;
 					}
 					// it is assumed if no alias output is found, then it is for another service so this would be an alias update
