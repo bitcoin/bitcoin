@@ -1164,6 +1164,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
 					}
+					list<CTransaction> dummy;
 					pool.remove(tx, dummy, true);
 					return;
 				}
@@ -1185,6 +1186,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
 					}
+					list<CTransaction> dummy;
 					pool.remove(tx, dummy, true);
 					return;
 				}
@@ -1193,6 +1195,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);	
 					}
+					list<CTransaction> dummy;
 					pool.remove(tx, dummy, true);
 					return;
 				}
@@ -1288,6 +1291,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, bool bMultiThreaded, CValidationState 
 		BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache) {
 			pcoinsTip->Uncache(hashTx);
 		}
+		list<CTransaction> dummy;
 		pool.remove(tx, dummy, true);
 	}
 	if (bMultiThreaded && res) {
@@ -1315,6 +1319,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, bool bMultiThreaded, CValidationState 
 				BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache) {
 					pcoinsTip->Uncache(hashTx);
 				}
+				list<CTransaction> dummy;
 				pool.remove(tx, dummy, true);
 			}
 		}
