@@ -61,6 +61,9 @@
 #include "graph.h"
 #include "base58.h"
 #include "rpc/server.h"
+#include "thread_pool.hpp"
+#include <future>
+#include <functional>
 using namespace std;
 
 #if defined(NDEBUG)
@@ -79,7 +82,7 @@ CBlockIndex *pindexBestHeader = NULL;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
-ctpl::threadpool *thread_pool = NULL;
+tp::ThreadPool threadpool;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = true;
@@ -1148,10 +1151,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
 		const int chainHeight = chainActive.Height();
 		if (!fDryRun) {
-			if (!thread_pool) {
-				thread_pool = new ctpl::thread_pool(nScriptCheckThreads);
-			}
-			thread_pool->push([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit]() {
+
+			std::packaged_task<void()> t([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit]() {
 				CValidationState vstate;
 				CCoinsView vdummy;
 				CCoinsViewCache vview(&dummy);
@@ -1219,6 +1220,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				}
 				GetMainSignals().SyncTransaction(tx, NULL);
 			});
+			threadpool.post(t);
 		}
 		else {
 			// Check against previous transactions

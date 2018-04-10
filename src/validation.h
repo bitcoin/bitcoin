@@ -34,7 +34,6 @@
 
 #include <boost/unordered_map.hpp>
 #include <boost/filesystem/path.hpp>
-#include "ctpl.h"
 
 class CBlockIndex;
 class CBlockTreeDB;
@@ -155,7 +154,6 @@ extern CConditionVariable cvBlockChange;
 extern bool fImporting;
 extern bool fReindex;
 extern int nScriptCheckThreads;
-extern ctpl::thread_pool thread_pool;
 extern bool fTxIndex;
 extern bool fAddressIndex;
 extern bool fIsBareMultisigStd;
