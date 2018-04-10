@@ -1150,7 +1150,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 		const int chainHeight = chainActive.Height();
 		if (bMultiThreaded) {
 
-			std::packaged_task<void()> t([&, chainHeight, tx, nFees, hash, vHashTxnToUncache]() {
+			std::packaged_task<void()> t([&pcoinsTip, &pool, chainHeight, tx, nFees, hash, vHashTxnToUncache]() {
 				CValidationState vstate;
 				CCoinsView vdummy;
 				CCoinsViewCache vview(&dummy);
