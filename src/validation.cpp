@@ -1152,7 +1152,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		const int chainHeight = chainActive.Height();
 		if (!fDryRun) {
 
-			std::packaged_task<void()> t([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit]() {
+			std::packaged_task<void()> t([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit, vHashTxnToUncache]() {
 				CValidationState vstate;
 				CCoinsView vdummy;
 				CCoinsViewCache vview(&dummy);
@@ -1163,6 +1163,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
 					LogPrintf("CheckInputs STANDARD_SCRIPT_VERIFY_FLAGS Failed");
+					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache)
+						pcoinsTip->Uncache(hashTx);
 					return;
 				}
 				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
@@ -1180,10 +1182,14 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				{
 					LogPrintf("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 						__func__, hash.ToString(), FormatStateMessage(vstate));
+					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache)
+						pcoinsTip->Uncache(hashTx);
 					return;
 				}
 				if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
 					LogPrintf("CheckSyscoinInputs Failed");
+					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache)
+						pcoinsTip->Uncache(hashTx);
 					return;
 				}
 				// Remove conflicting transactions from the mempool
@@ -1215,10 +1221,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 					LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
 					if (!pool.exists(hash)) {
 						LogPrintf("mempool full");
+						BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache)
+							pcoinsTip->Uncache(hashTx);
 						return;
 					}
 				}
 				GetMainSignals().SyncTransaction(tx, NULL);
+				pool.check(pcoinsTip);
 			});
 			threadpool.post(t);
 		}
