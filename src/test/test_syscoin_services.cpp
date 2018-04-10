@@ -2504,8 +2504,6 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
 	BOOST_CHECK(AmountFromValue(arr[1]) >= 0);
-	// rawtx should be partially signed already, now complete the signing process
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + rawtx));
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	// ensure escrow tx is fully signed
 	const UniValue& complete_value = find_value(r.get_obj(), "complete");

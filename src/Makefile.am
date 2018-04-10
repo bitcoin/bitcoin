@@ -188,6 +188,7 @@ SYSCOIN_CORE_H = \
   threadinterrupt.h \
   timedata.h \
   tinyformat.h \
+  ctpl.h \
   thread_pool.hpp \
   thread_pool/fixed_function.hpp \
   thread_pool/mpmc_bounded_queue.hpp \
