@@ -79,7 +79,7 @@ CBlockIndex *pindexBestHeader = NULL;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
-ctpl::thread_pool *thread_pool = NULL;
+ctpl::thread_pool *mthread_pool = NULL;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = true;
@@ -1148,10 +1148,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
 		const int chainHeight = chainActive.Height();
 		if (!fDryRun) {
-			if (!thread_pool) {
-				thread_pool = new ctpl::thread_pool(nScriptCheckThreads);
+			if (!mthread_pool) {
+				mthread_pool = new ctpl::thread_pool(nScriptCheckThreads);
 			}
-			thread_pool->push([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit]() {
+			mthread_pool->push([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit]() {
 				CValidationState vstate;
 				CCoinsView vdummy;
 				CCoinsViewCache vview(&dummy);

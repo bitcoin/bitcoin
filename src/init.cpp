@@ -325,8 +325,8 @@ void PrepareShutdown()
 		pcoinsdbview = NULL;
 		delete pblocktree;
 		pblocktree = NULL;
-		delete thread_pool;
-		thread_pool = NULL;
+		delete mthread_pool;
+		mthread_pool = NULL;
 	}
 #ifdef ENABLE_WALLET
 	if (pwalletMain)
