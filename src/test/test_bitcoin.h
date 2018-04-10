@@ -18,6 +18,8 @@
 
 #include <boost/thread.hpp>
 
+class ValidationLayer;
+
 extern uint256 insecure_rand_seed;
 extern FastRandomContext insecure_rand_ctx;
 

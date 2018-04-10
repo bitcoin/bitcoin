@@ -14,11 +14,12 @@
 #include <consensus/consensus.h>
 #include <crypto/common.h>
 #include <crypto/sha256.h>
-#include <primitives/transaction.h>
 #include <netbase.h>
+#include <primitives/transaction.h>
 #include <scheduler.h>
 #include <ui_interface.h>
 #include <utilstrencodings.h>
+#include <validation_layer.h>
 
 #ifdef WIN32
 #include <string.h>
@@ -2034,11 +2035,28 @@ void CConnman::ThreadMessageHandler()
             if (pnode->fDisconnect)
                 continue;
 
-            // Receive messages
-            bool fMoreNodeWork = m_msgproc->ProcessMessages(pnode, flagInterruptMsgProc);
-            fMoreWork |= (fMoreNodeWork && !pnode->fPauseSend);
+            bool request_was_queued = pnode->IsAwaitingInternalRequest();
+
+            // If an internal request was queued and it's not done yet, skip this node
+            if (request_was_queued && !pnode->ProcessInternalRequestResults(m_msgproc))
+                continue;
+
+            // If no internal request was queued receive messages
+            if (!request_was_queued) {
+                bool fMoreNodeWork = m_msgproc->ProcessMessages(pnode, flagInterruptMsgProc);
+                request_was_queued = pnode->IsAwaitingInternalRequest();
+
+                fMoreWork |= (fMoreNodeWork && !pnode->fPauseSend && !request_was_queued);
+            } else {
+                request_was_queued = false;
+            }
+
             if (flagInterruptMsgProc)
                 return;
+
+            if (request_was_queued)
+                continue;
+
             // Send messages
             {
                 LOCK(pnode->cs_sendProcessing);
@@ -2807,6 +2825,37 @@ void CNode::AskFor(const CInv& inv)
     else
         mapAlreadyAskedFor.insert(std::make_pair(inv.hash, nRequestTime));
     mapAskFor.insert(std::make_pair(nRequestTime, inv));
+}
+
+bool CNode::IsAwaitingInternalRequest()
+{
+    return m_block_validation_response.valid();
+}
+
+bool CNode::ProcessInternalRequestResults(NetEventsInterface* peerlogic)
+{
+    bool all_cleared = true;
+
+    if (m_block_validation_response.valid()) {
+        if (m_block_validation_response.wait_for(std::chrono::milliseconds::zero()) == std::future_status::ready) {
+            peerlogic->ProcessBlockValidationResponse(this, m_block_validating, m_block_validating_index, m_block_validation_response.get());
+
+            m_block_validating = nullptr;
+            m_block_validating_index = nullptr;
+            m_block_validation_response = std::future<BlockValidationResponse>();
+        } else {
+            all_cleared = false;
+        }
+    }
+
+    return all_cleared;
+}
+
+void CNode::SetPendingInternalRequest(const std::shared_ptr<const CBlock> block, std::future<BlockValidationResponse>&& pending_response, const CBlockIndex* pindex)
+{
+    m_block_validating = block;
+    m_block_validating_index = pindex;
+    m_block_validation_response = std::move(pending_response);
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)
