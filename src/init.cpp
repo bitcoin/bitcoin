@@ -74,7 +74,6 @@
 #include "escrow.h"
 #include "asset.h"
 #include "assetallocation.h"
-#include "threadpool.h"
 
 #ifndef WIN32
 #include <signal.h>
@@ -326,8 +325,6 @@ void PrepareShutdown()
 		pcoinsdbview = NULL;
 		delete pblocktree;
 		pblocktree = NULL;
-		delete g_threadpool;
-		g_threadpool = NULL;
 	}
 #ifdef ENABLE_WALLET
 	if (pwalletMain)

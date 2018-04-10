@@ -114,7 +114,6 @@ SYSCOIN_CORE_H = \
   consensus/validation.h \
   core_io.h \
   cuckoocache.h \
-  threadpool.h \
   core_memusage.h \
   privatesend.h \
   privatesend-client.h \
@@ -189,6 +188,12 @@ SYSCOIN_CORE_H = \
   threadinterrupt.h \
   timedata.h \
   tinyformat.h \
+  thread_pool.hpp \
+  thread_pool/fixed_function.hpp \
+  thread_pool/mpmc_bounded_queue.hpp \
+  thread_pool/thread_pool.hpp \
+  thread_pool/thread_pool_options.hpp \
+  thread_pool/worker.hpp \
   torcontrol.h \
   txdb.h \
   txmempool.h \

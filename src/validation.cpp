@@ -61,7 +61,7 @@
 #include "graph.h"
 #include "base58.h"
 #include "rpc/server.h"
-#include "threadpool.h"
+#include "thread_pool.hpp"
 using namespace std;
 
 #if defined(NDEBUG)
@@ -80,7 +80,7 @@ CBlockIndex *pindexBestHeader = NULL;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
-thread_pool *g_threadpool = NULL;
+tp::ThreadPool pool;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = true;
@@ -1146,12 +1146,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
-		if (!g_threadpool)
-			g_threadpool = new thread_pool(nScriptCheckThreads > 0 ? nScriptCheckThreads : 1);
+
 		const int chainHeight = chainActive.Height();
 		if (!fDryRun) {
 
-			g_threadpool->enqueue([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit, &pcoinsTip, &pool]() {
+			pool.post([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit, &pcoinsTip, &pool]() {
 				CValidationState vstate;
 				CCoinsViewCache vview(pcoinsTip);
 				// Check against previous transactions
