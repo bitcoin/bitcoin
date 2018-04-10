@@ -730,7 +730,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 	return true;
 
 }
-bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
+bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidationState &state, const CTransaction &tx, bool fLimitFree,
 	bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
 	std::vector<uint256>& vHashTxnToUncache, CTxMemPool::setEntries &allConflicting, CTxMemPool::setEntries &setAncestor, CTxMemPoolEntry &entry, CCoinsViewCache &view, bool fDryRun)
 {
@@ -1148,7 +1148,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		if (fDryRun) return true;
 
 		const int chainHeight = chainActive.Height();
-		if (!fDryRun) {
+		if (bMultiThreaded) {
 
 			std::packaged_task<void()> t([&, chainHeight, tx, nFees, hash, vHashTxnToUncache]() {
 				CValidationState vstate;
@@ -1163,9 +1163,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 					LogPrintf("CheckInputs STANDARD_SCRIPT_VERIFY_FLAGS Failed");
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
-						pool.removeSpentIndex(hashTx);
-						pool.removeAddressIndex(hashTx);
 					}
+					pool.remove(tx, dummy, true);
 					return;
 				}
 				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
@@ -1185,18 +1184,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 						__func__, hash.ToString(), FormatStateMessage(vstate));
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
-						pool.removeSpentIndex(hashTx);
-						pool.removeAddressIndex(hashTx);
 					}
+					pool.remove(tx, dummy, true);
 					return;
 				}
 				if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
 					LogPrintf("CheckSyscoinInputs Failed");
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
-						pcoinsTip->Uncache(hashTx);
-						pool.removeSpentIndex(hashTx);
-						pool.removeAddressIndex(hashTx);
+						pcoinsTip->Uncache(hashTx);	
 					}
+					pool.remove(tx, dummy, true);
 					return;
 				}
 				GetMainSignals().SyncTransaction(tx, NULL);
@@ -1275,7 +1272,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 	return true;
 }
 
-bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
+bool AcceptToMemoryPool(CTxMemPool& pool, bool bMultiThreaded, CValidationState &state, const CTransaction &tx, bool fLimitFree,
 	bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee, bool fDryRun)
 {
 	std::vector<uint256> vHashTxToUncache;
@@ -1285,14 +1282,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 	CTxMemPool::setEntries setAncestors;
 	CTxMemPoolEntry entry;
 	CCoinsViewCache view(&dummy);
-	bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache, allConflicting, setAncestors, entry, view, fDryRun);
+	bool res = AcceptToMemoryPoolWorker(pool, bMultiThreaded, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache, allConflicting, setAncestors, entry, view, fDryRun);
 	if (!res || fDryRun) {
 		if (!res) LogPrint("mempool", "%s: %s %s\n", __func__, tx.GetHash().ToString(), state.GetRejectReason());
 		BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache) {
 			pcoinsTip->Uncache(hashTx);
-			pool.removeSpentIndex(hashTx);
-			pool.removeAddressIndex(hashTx);
 		}
+		pool.remove(tx, dummy, true);
 	}
 	if (res && !fDryRun) {
 		uint256 hash = tx.GetHash();
@@ -1318,9 +1314,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 				LogPrintf("mempool full");
 				BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache) {
 					pcoinsTip->Uncache(hashTx);
-					pool.removeSpentIndex(hashTx);
-					pool.removeAddressIndex(hashTx);
 				}
+				pool.remove(tx, dummy, true);
 			}
 		}
 	}
@@ -2952,7 +2947,7 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
 		// ignore validation errors in resurrected transactions
 		list<CTransaction> removed;
 		CValidationState stateDummy;
-		if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL, true)) {
+		if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, false, stateDummy, tx, false, NULL, true)) {
 			mempool.remove(tx, removed, true);
 		}
 		else if (mempool.exists(tx.GetHash())) {

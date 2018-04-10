@@ -2343,6 +2343,8 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	const UniValue& complete_value = find_value(r.get_obj(), "complete");
 	BOOST_CHECK(hex_value.get_str() != rawtx);
 	BOOST_CHECK(complete_value.get_bool());
+	// ensure that you cannot refund with partially signed tx
+	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterefund " + guid + " " + rawtx + " ''"), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterefund " + guid + " " + hex_value.get_str() + " ''"));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
@@ -2509,6 +2511,8 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	const UniValue& complete_value = find_value(r.get_obj(), "complete");
 	BOOST_CHECK(hex_value.get_str() != rawtx);
 	BOOST_CHECK(complete_value.get_bool());
+	// ensure that you cannot release with partially signed tx
+	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterelease " + guid + " " + rawtx + " ''"), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterelease " + guid + " " + hex_value.get_str() + " ''"));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
