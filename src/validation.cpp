@@ -1150,7 +1150,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		const int chainHeight = chainActive.Height();
 		if (!fDryRun) {
 
-			threadpool.post([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit, &pcoinsTip, &pool]() {
+			std::packaged_task<int()> t([&, chainHeight, fAddressIndex, fSpentIndex, tx, allConflicting, nModifiedFees, nConflictingFees, nFees, hash, entry, nSize, nConflictingSize, setAncestors, fOverrideMempoolLimit]() {
 				CValidationState vstate;
 				CCoinsView vdummy;
 				CCoinsViewCache vview(&dummy);
@@ -1218,6 +1218,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				}
 				GetMainSignals().SyncTransaction(tx, NULL);
 			});
+			threadpool.post(t);
 		}
 		else {
 			// Check against previous transactions
