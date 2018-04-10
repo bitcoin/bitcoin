@@ -1637,7 +1637,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 				instantsend.Vote(tx.GetHash(), connman);
             }
 
-            //mempool.check(pcoinsTip);
+			mempool.check(pcoinsTip);
             connman.RelayTransaction(tx);
             vWorkQueue.push_back(inv.hash);
 
@@ -1695,7 +1695,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         assert(recentRejects);
                         recentRejects->insert(orphanHash);
                     }
-                    //mempool.check(pcoinsTip);
+                    mempool.check(pcoinsTip);
                 }
             }
 

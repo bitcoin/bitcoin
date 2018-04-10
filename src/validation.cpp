@@ -732,7 +732,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 }
 bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
 	bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
-	std::vector<uint256>& vHashTxnToUncache, bool fDryRun)
+	std::vector<uint256>& vHashTxnToUncache, CTxMemPool::setEntries &allConflicting, CTxMemPool::setEntries &setAncestor, CTxMemPoolEntry &entry, CCoinsViewCache &view, bool fDryRun)
 {
 	AssertLockHeld(cs_main);
 	if (pfMissingInputs)
@@ -850,8 +850,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
 	{
 		CCoinsView dummy;
-		CCoinsViewCache view(&dummy);
-
 		CAmount nValueIn = 0;
 		LockPoints lp;
 		{
@@ -931,7 +929,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			}
 		}
 
-		CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
+		entry = CTxMemPoolEntry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
 		unsigned int nSize = entry.GetTxSize();
 
 		// Check that the transaction doesn't have an excessive number of
@@ -981,7 +979,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				strprintf("%d > %d", nFees, ::minRelayTxFee.GetFee(nSize) * 10000));
 
 		// Calculate in-mempool ancestors, up to a limit.
-		CTxMemPool::setEntries setAncestors;
 		size_t nLimitAncestors = GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
 		size_t nLimitAncestorSize = GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT) * 1000;
 		size_t nLimitDescendants = GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
@@ -1012,7 +1009,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		CAmount nConflictingFees = 0;
 		size_t nConflictingSize = 0;
 		uint64_t nConflictingCount = 0;
-		CTxMemPool::setEntries allConflicting;
+		
 
 		// If we don't hold the lock allConflicting might be incomplete; the
 		// subsequent RemoveStaged() and addUnchecked() calls don't guarantee
@@ -1163,8 +1160,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
 					LogPrintf("CheckInputs STANDARD_SCRIPT_VERIFY_FLAGS Failed");
-					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache)
+					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
+						pool.removeSpentIndex(hashTx);
+						pool.removeAddressIndex(hashTx);
+					}
 					return;
 				}
 				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
@@ -1182,54 +1182,34 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				{
 					LogPrintf("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 						__func__, hash.ToString(), FormatStateMessage(vstate));
-					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache)
+					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
+						pool.removeSpentIndex(hashTx);
+						pool.removeAddressIndex(hashTx);
+					}
 					return;
 				}
 				if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
 					LogPrintf("CheckSyscoinInputs Failed");
-					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache)
+					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
+						pool.removeSpentIndex(hashTx);
+						pool.removeAddressIndex(hashTx);
+					}
 					return;
 				}
-				// Remove conflicting transactions from the mempool
-				BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
-				{
-					LogPrint("mempool", "replacing tx %s with %s for %s SYS additional fees, %d delta bytes\n",
-						it->GetTx().GetHash().ToString(),
-						hash.ToString(),
-						FormatMoney(nModifiedFees - nConflictingFees),
-						(int)nSize - (int)nConflictingSize);
-				}
-				pool.RemoveStaged(allConflicting);
-
-				// Store transaction in memory
-				pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
-
-				// Add memory address index
-				if (fAddressIndex) {
-					pool.addAddressIndex(entry, vview);
-				}
-
-				// Add memory spent index
-				if (fSpentIndex) {
-					pool.addSpentIndex(entry, vview);
-				}
-
-				// trim mempool and check if tx was trimmed
-				if (!fOverrideMempoolLimit) {
-					LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
-					if (!pool.exists(hash)) {
-						LogPrintf("mempool full");
-						BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache)
-							pcoinsTip->Uncache(hashTx);
-						return;
-					}
-				}
 				GetMainSignals().SyncTransaction(tx, NULL);
-				pool.check(pcoinsTip);
 			});
 			threadpool.post(t);
+			// Remove conflicting transactions from the mempool
+			BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
+			{
+				LogPrint("mempool", "replacing tx %s with %s for %s SYS additional fees, %d delta bytes\n",
+					it->GetTx().GetHash().ToString(),
+					hash.ToString(),
+					FormatMoney(nModifiedFees - nConflictingFees),
+					(int)nSize - (int)nConflictingSize);
+			}
 		}
 		else {
 			// Check against previous transactions
@@ -1298,11 +1278,47 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 	bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee, bool fDryRun)
 {
 	std::vector<uint256> vHashTxToUncache;
-	bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache, fDryRun);
+	CCoinsView dummy;
+	
+	CTxMemPool::setEntries allConflicting;
+	CTxMemPool::setEntries setAncestors;
+	CTxMemPoolEntry entry;
+	CCoinsViewCache view(&dummy);
+	bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache, allConflicting, allConflicting, setAncestors, entry, view, fDryRun);
 	if (!res || fDryRun) {
 		if (!res) LogPrint("mempool", "%s: %s %s\n", __func__, tx.GetHash().ToString(), state.GetRejectReason());
 		BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache)
 			pcoinsTip->Uncache(hashTx);
+	}
+	if (res && !fDryRun) {
+		pool.RemoveStaged(allConflicting);
+
+		// Store transaction in memory
+		pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
+
+		// Add memory address index
+		if (fAddressIndex) {
+			pool.addAddressIndex(entry, view);
+		}
+
+		// Add memory spent index
+		if (fSpentIndex) {
+			pool.addSpentIndex(entry, view);
+		}
+
+		// trim mempool and check if tx was trimmed
+		if (!fOverrideMempoolLimit) {
+			LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+			if (!pool.exists(hash)) {
+				LogPrintf("mempool full");
+				BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache) {
+					pcoinsTip->Uncache(hashTx);
+					pool.removeSpentIndex(hashTx);
+					pool.removeAddressIndex(hashTx);
+				}
+				return;
+			}
+		}
 	}
 	// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
 	CValidationState stateDummy;
