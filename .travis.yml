@@ -31,13 +31,13 @@ env:
 # bitcoind
     - HOST=x86_64-unknown-linux-gnu TEST_ZMQ=1 PACKAGES="python3-pip libudev-dev bc" DEP_OPTS="DEBUG=1 NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-gui --enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER" LDFLAGS=-static-libstdc++"
 # Win32
-    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6" DEP_OPTS="NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-reduce-exports" UNIT_TESTS_TIMEOUT=600
+    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6" DEP_OPTS="NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-reduce-exports" UNIT_TESTS_TIMEOUT=1200
+# Win64
+    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="nsis g++-mingw-w64-x86-64 wine1.6" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-reduce-exports"
 # Qt4 & system libs
 #    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3-zmq qt4-dev-tools libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libdb5.1++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev xvfb" NO_DEPENDS=1 NEED_XVFB=1 RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --enable-glibc-back-compat --enable-reduce-exports --with-gui=qt4 CPPFLAGS=-DDEBUG_LOCKORDER"
 # 32-bit + dash
     - HOST=i686-pc-linux-gnu PACKAGES="libudev-dev:i386 g++-multilib bc" DEP_OPTS="NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
-# Win64
-    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="nsis g++-mingw-w64-x86-64 wine1.6" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-reduce-exports"
 # x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
     - HOST=x86_64-unknown-linux-gnu PACKAGES="libudev-dev qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
 # x86_64 Linux, No wallet

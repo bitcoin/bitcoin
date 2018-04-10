@@ -1,6 +1,6 @@
-This directory contains the BitcoinQT graphical user interface (GUI). It uses the cross platform framework [QT](https://www1.qt.io/developers/).
+This directory contains the BitcoinQT graphical user interface (GUI). It uses the cross-platform framework [Qt](https://www1.qt.io/developers/).
 
-The current precise version for QT 5 is specified in [qt.mk](/depends/packages/qt.mk). QT 4 is also supported (see [#8263](https://github.com/bitcoin/bitcoin/issues/8263)).
+The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/qt.mk). Qt 4 is also supported (see [#8263](https://github.com/bitcoin/bitcoin/issues/8263)).
 
 ## Compile and run
 
@@ -36,7 +36,7 @@ Represents the main window of the Bitcoin UI.
 
 ### \*model.(h/cpp)
 
-The model. When it has a corresponding controller, it generally inherits from  [QAbstractTableModel](http://doc.qt.io/qt-5/qabstracttablemodel.html). Models that are used by controllers as helpers inherit from other QT classes like [QValidator](http://doc.qt.io/qt-5/qvalidator.html).
+The model. When it has a corresponding controller, it generally inherits from  [QAbstractTableModel](http://doc.qt.io/qt-5/qabstracttablemodel.html). Models that are used by controllers as helpers inherit from other Qt classes like [QValidator](http://doc.qt.io/qt-5/qvalidator.html).
 
 ClientModel is used by the main application `bitcoingui` and several models like `peertablemodel`.
 
@@ -69,7 +69,7 @@ Represents the view to a single wallet.
 
 ## Contribute
 
-See [CONTRIBUTING.md](/CONTRIBUTING.md) for general guidelines. Specifically for QT:
+See [CONTRIBUTING.md](/CONTRIBUTING.md) for general guidelines. Specifically for Qt:
 
 * don't change `local/bitcoin_en.ts`; this happens [automatically](/doc/translation_process.md#writing-code-with-translations)
 
@@ -83,7 +83,7 @@ Uncheck everything except Qt Creator during the installation process.
 
 Instructions for OSX:
 
-1. Make sure you installed everything through Homebrew mentioned in the [OSX build instructions](/docs/build-osx.md)
+1. Make sure you installed everything through Homebrew mentioned in the [OSX build instructions](/doc/build-osx.md)
 2. Use `./configure` with the `--enable-debug` flag
 3. In Qt Creator do "New Project" -> Import Project -> Import Existing Project
 4. Enter "bitcoin-qt" as project name, enter src/qt as location
