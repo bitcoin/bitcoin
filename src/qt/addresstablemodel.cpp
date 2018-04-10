@@ -267,7 +267,8 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
             }
             // Check for duplicate addresses to prevent accidental deletion of addresses, if you try
             // to paste an existing address over another address (with a different label)
-            if (walletModel->wallet().getAddress(newAddress))
+            if (walletModel->wallet().getAddress(
+                    newAddress, /* name= */ nullptr, /* is_mine= */ nullptr, /* purpose= */ nullptr))
             {
                 editStatus = DUPLICATE_ADDRESS;
                 return false;
@@ -352,7 +353,8 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         }
         // Check for duplicate addresses
         {
-            if(walletModel->wallet().getAddress(DecodeDestination(strAddress)))
+            if (walletModel->wallet().getAddress(
+                    DecodeDestination(strAddress), /* name= */ nullptr, /* is_mine= */ nullptr, /* purpose= */ nullptr))
             {
                 editStatus = DUPLICATE_ADDRESS;
                 return QString();
