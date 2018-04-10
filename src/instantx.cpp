@@ -22,7 +22,6 @@
 #include <boost/thread.hpp>
 
 extern CWallet* pwalletMain;
-extern CTxMemPool mempool;
 
 bool fEnableInstantSend = true;
 int nInstantSendDepth = DEFAULT_INSTANTSEND_DEPTH;
