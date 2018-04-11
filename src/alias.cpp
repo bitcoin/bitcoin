@@ -315,6 +315,7 @@ bool CheckAliasInputs(const CTransaction &tx, CCoinsViewCache& view, int op, con
 			vector<vector<unsigned char> > vvch;
 			int pop;
 			const COutPoint& outpoint = tx.vin[i].prevout;
+			int pop;
 			const CCoins* prevCoins = view.AccessCoins(outpoint.hash);
 			if (!prevCoins || (unsigned int)outpoint.n >= prevCoins->vout.size() || prevCoins->vout[outpoint.n].IsNull())
 				return NULL;
@@ -341,6 +342,7 @@ bool CheckAliasInputs(const CTransaction &tx, CCoinsViewCache& view, int op, con
 				const CCoins* prevCoins = view.AccessCoins(outpoint.hash);
 				if (!prevCoins || (unsigned int)outpoint.n >= prevCoins->vout.size() || prevCoins->vout[outpoint.n].IsNull())
 					return NULL;
+				return coins;
 				// ensure inputs are unspent when doing consensus check to add to block
 				if (!prevCoins || !IsSyscoinScript(prevCoins->vout[outpoint.n].scriptPubKey, pop, vvch))
 				{
