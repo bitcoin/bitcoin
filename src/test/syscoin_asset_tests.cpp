@@ -536,8 +536,8 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatemaxsupply jagassetupdate assets 1 0 ''"), runtime_error);
 	// can't create asset with more than max+1 balance or max+1 supply
 	string maxstrplusone = ValueFromAssetAmount(negonesupply+1, 8, false).get_str();
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 assetupdatename pub assets 8 false " + maxstrplusone + " -1 0 false ''"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 assetupdatename pub assets 8 false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false " + maxstrplusone + " -1 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_assetsend)
 {
