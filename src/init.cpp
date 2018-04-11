@@ -1033,7 +1033,7 @@ bool AppInitParameterInteraction()
                     InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
                     continue;
                 }
-                logCategories |= flag;
+                g_logger->EnableCategory(static_cast<BCLog::LogFlags>(flag));
             }
         }
     }
@@ -1045,7 +1045,7 @@ bool AppInitParameterInteraction()
             InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
             continue;
         }
-        logCategories &= ~flag;
+        g_logger->DisableCategory(static_cast<BCLog::LogFlags>(flag));
     }
 
     // Check for -debugnet
@@ -1297,7 +1297,7 @@ bool AppInitMain()
     CreatePidFile(GetPidFile(), getpid());
 #endif
     if (g_logger->fPrintToDebugLog) {
-        if (gArgs.GetBoolArg("-shrinkdebugfile", logCategories == BCLog::NONE)) {
+        if (gArgs.GetBoolArg("-shrinkdebugfile", g_logger->DefaultShrinkDebugFile())) {
             // Do this first since it both loads a bunch of debug.log into memory,
             // and because this needs to happen before any other debug.log printing
             g_logger->ShrinkDebugFile();
