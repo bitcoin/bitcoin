@@ -528,13 +528,14 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	AssetNew("node1", "assetupdatemaxsupply", "jagassetupdate", "data", "8", "false", "1", "-1");
 	UniValue negonevalue(UniValue::VSTR);
 	negonevalue.setStr("-1");
-	CAmount negonesupply = AssetAmountFromValue(negonevalue, 8, false);
+	// get max value - 1 (1 is already the supply, and this value is cumulative)
+	CAmount negonesupply = AssetAmountFromValue(negonevalue, 8, false) - 1;
 	string maxstr = ValueFromAssetAmount(negonesupply, 8, false).get_str();
 	AssetUpdate("node1", "assetupdatemaxsupply", "pub12", maxstr);
 	// can't go above max balance (10^18) / (10^8) for 8 decimal places (10 billion in this case)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatemaxsupply jagassetupdate assets 1 0 ''"), runtime_error);
 	// can't create asset with more than max+1 balance or max+1 supply
-	string maxstrplusone = boost::lexical_cast<string>(boost::lexical_cast<int64_t>(maxstr) + 1);
+	string maxstrplusone = ValueFromAssetAmount(negonesupply+1, 8, false).get_str();
 	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 assetupdatename pub assets 8 false " + maxstrplusone + " -1 0 false ''"), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 assetupdatename pub assets 8 false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
 }
