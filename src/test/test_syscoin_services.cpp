@@ -1058,10 +1058,11 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
 	string oldalias = find_value(r.get_obj(), "alias").get_str();
 	string oldpubdata = find_value(r.get_obj(), "publicvalue").get_str();
-	string oldsupply = find_value(r.get_obj(), "total_supply").write();
+	string oldsupply = find_value(r.get_obj(), "total_supply").get_str();
 	bool binputranges = find_value(r.get_obj(), "use_input_ranges").get_bool();
 	int nprecision = find_value(r.get_obj(), "precision").get_int();
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+
 	CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision, binputranges);
 	CAmount supplyamount = 0;
 	if (supply != "''") {
