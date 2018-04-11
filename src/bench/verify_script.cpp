@@ -53,7 +53,7 @@ static CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, co
 static void VerifyScriptBench(benchmark::State& state)
 {
     const int flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;
-    const int witnessversion = 0;
+    const unsigned char witnessversion = 0;
 
     // Keypair.
     CKey key;
