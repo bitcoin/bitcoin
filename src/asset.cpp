@@ -390,14 +390,14 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				}
 				// ensure the new inputs being added are greator than the last input
 				for (auto&input : theAsset.listAllocationInputs) {
-					if(input.start < (dbAsset.nTotalSupply/COIN))
+					if(input.start < dbAsset.nTotalSupply)
 					{
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this asset. New asset inputs must be added to the end of the supply: ") + boost::lexical_cast<std::string>(input.start) + " vs " + boost::lexical_cast<std::string>(dbAsset.nTotalSupply / COIN);
 						return true;
 					}
 				}
 				vector<CRange> outputMerge;
-				increaseBalanceByAmount = validateRangesAndGetCount(theAsset.listAllocationInputs)*COIN;
+				increaseBalanceByAmount = validateRangesAndGetCount(theAsset.listAllocationInputs);
 				if (increaseBalanceByAmount == 0)
 				{
 					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Invalid input ranges");
