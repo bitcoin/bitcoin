@@ -1303,7 +1303,7 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 	GetOtherNodes(node, otherNode1, otherNode2);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
 	string fromalias = find_value(r.get_obj(), "alias").get_str();
-	string fromsupply = find_value(r.get_obj(), "total_supply").c_str();
+	string fromsupply = find_value(r.get_obj(), "total_supply").get_str();
 	UniValue balance = find_value(r.get_obj(), "balance");
 	CAmount newfromamount = AssetAmountFromValue(balance, nprecision, binputranges) - inputamount;
 
@@ -1318,14 +1318,14 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 	GenerateBlocks(1, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
 
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").c_str(), fromsupply);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
 
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + name + " false"));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").c_str(), fromsupply);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
 		balance = find_value(r.get_obj(), "balance");
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
 
@@ -1333,7 +1333,7 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 	if (!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + name + " false"));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").c_str(), fromsupply);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
 		balance = find_value(r.get_obj(), "balance");
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
 
