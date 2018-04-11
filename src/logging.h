@@ -11,6 +11,8 @@
 
 #include <atomic>
 #include <cstdint>
+#include <list>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -59,6 +61,10 @@ namespace BCLog {
     class Logger
     {
     private:
+        FILE* fileout = nullptr;
+        std::mutex mutexDebugLog;
+        std::list<std::string> vMsgsBeforeOpenLog;
+
         /**
          * fStartedNewLine is a state variable that will suppress printing of
          * the timestamp when multiple calls are made that don't end in a
@@ -82,6 +88,10 @@ namespace BCLog {
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const { return fPrintToConsole || fPrintToDebugLog; }
+
+        fs::path GetDebugLogPath() const;
+        bool OpenDebugLog();
+        void ShrinkDebugFile();
     };
 
 } // namespace BCLog
@@ -140,9 +150,5 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
     } \
 } while(0)
 #endif
-
-fs::path GetDebugLogPath();
-bool OpenDebugLog();
-void ShrinkDebugFile();
 
 #endif // BITCOIN_LOGGING_H
