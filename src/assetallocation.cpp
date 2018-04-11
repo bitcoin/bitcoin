@@ -249,10 +249,8 @@ bool ApplyAssetAllocationInterest(const CAsset& asset, CAssetAllocation & assetA
 	if (nInterest <= 0) {
 		return false;
 	}
-	UniValue value;
-	value.setInt(asset.nMaxSupply);
 	// if interest cross max supply, reduce interest to fill up to max supply
-	CAmount nMaxSupply = AssetAmountFromValue(value, asset.nPrecision, asset.bUseInputRanges);
+	CAmount nMaxSupply = AssetAmountFromValue(ValueFromAmount(asset.nMaxSupply), asset.nPrecision, asset.bUseInputRanges);
 	if ((nInterest + asset.nTotalSupply) > nMaxSupply) {
 		nInterest = nMaxSupply - asset.nTotalSupply;
 		if (nInterest <= 0) {
