@@ -2409,113 +2409,135 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 	}
 	return false;
 }
-string GetSyscoinTransactionDescription(const int op, string& responseEnglish, const char &type)
+string GetSyscoinTransactionDescription(const CWalletTx* wtx, const int op, string& responseEnglish, const char &type, string& responseGUID)
 {
 	string strResponse = "";
-	COffer offer;
-	CEscrow escrow;
 	if (type == ALIAS) {
-		if (op == OP_ALIAS_ACTIVATE) {
-			strResponse = _("Alias Activated");
-			responseEnglish = "Alias Activated";
-		}
-		else if (op == OP_ALIAS_UPDATE) {
-			strResponse = _("Alias Updated");
-			responseEnglish = "Alias Updated";
+		CAliasIndex alias(tx);
+		if (!alias.IsNull()) {
+			responseGUID = stringFromVch(alias.vchAlias);
+			if (op == OP_ALIAS_ACTIVATE) {
+				strResponse = _("Alias Activated");
+				responseEnglish = "Alias Activated";
+			}
+			else if (op == OP_ALIAS_UPDATE) {
+				strResponse = _("Alias Updated");
+				responseEnglish = "Alias Updated";
+			}
 		}
 	}
 	else if (type == OFFER) {
-		if (op == OP_OFFER_ACTIVATE) {
-			strResponse = _("Offer Activated");
-			responseEnglish = "Offer Activated";
-		}
-		else if (op == OP_OFFER_UPDATE) {
-			strResponse = _("Offer Updated");
-			responseEnglish = "Offer Updated";
+		COffer offer(tx);
+		if (!offer.IsNull()) {
+			responseGUID = stringFromVch(offer.vchOffer);
+			if (op == OP_OFFER_ACTIVATE) {
+				strResponse = _("Offer Activated");
+				responseEnglish = "Offer Activated";
+			}
+			else if (op == OP_OFFER_UPDATE) {
+				strResponse = _("Offer Updated");
+				responseEnglish = "Offer Updated";
+			}
 		}
 	}
 	else if (type == CERT) {
-		if (op == OP_CERT_ACTIVATE) {
-			strResponse = _("Certificate Activated");
-			responseEnglish = "Certificate Activated";
-		}
-		else if (op == OP_CERT_UPDATE) {
-			strResponse = _("Certificate Updated");
-			responseEnglish = "Certificate Updated";
-		}
-		else if (op == OP_CERT_TRANSFER) {
-			strResponse = _("Certificate Transferred");
-			responseEnglish = "Certificate Transferred";
+		CCert cert(tx);
+		if (!cert.IsNull()) {
+			responseGUID = stringFromVch(cert.vchCert);
+			if (op == OP_CERT_ACTIVATE) {
+				strResponse = _("Certificate Activated");
+				responseEnglish = "Certificate Activated";
+			}
+			else if (op == OP_CERT_UPDATE) {
+				strResponse = _("Certificate Updated");
+				responseEnglish = "Certificate Updated";
+			}
+			else if (op == OP_CERT_TRANSFER) {
+				strResponse = _("Certificate Transferred");
+				responseEnglish = "Certificate Transferred";
+			}
 		}
 	}
 	else if (type == ASSET) {
-		if (op == OP_ASSET_ACTIVATE) {
-			strResponse = _("Asset Activated");
-			responseEnglish = "Asset Activated";
-		}
-		else if (op == OP_ASSET_UPDATE) {
-			strResponse = _("Asset Updated");
-			responseEnglish = "Asset Updated";
-		}
-		else if (op == OP_ASSET_TRANSFER) {
-			strResponse = _("Asset Transferred");
-			responseEnglish = "Asset Transferred";
-		}
-		else if (op == OP_ASSET_SEND) {
-			strResponse = _("Asset Sent");
-			responseEnglish = "Asset Sent";
+		CAsset asset(tx);
+		if (!asset.IsNull()) {
+			responseGUID = stringFromVch(asset.vchAsset);
+			if (op == OP_ASSET_ACTIVATE) {
+				strResponse = _("Asset Activated");
+				responseEnglish = "Asset Activated";
+			}
+			else if (op == OP_ASSET_UPDATE) {
+				strResponse = _("Asset Updated");
+				responseEnglish = "Asset Updated";
+			}
+			else if (op == OP_ASSET_TRANSFER) {
+				strResponse = _("Asset Transferred");
+				responseEnglish = "Asset Transferred";
+			}
+			else if (op == OP_ASSET_SEND) {
+				strResponse = _("Asset Sent");
+				responseEnglish = "Asset Sent";
+			}
 		}
 	}
 	else if (type == ASSETALLOCATION) {
-		if (op == OP_ASSET_ALLOCATION_SEND) {
-			strResponse = _("Asset Allocation Sent");
-			responseEnglish = "Asset Allocation Sent";
-		}
-		else if (op == OP_ASSET_COLLECT_INTEREST) {
-			strResponse = _("Asset Collect Interest");
-			responseEnglish = "Asset Collect Interest";
+		CAssetAllocation assetallocation(tx);
+		if (!assetallocation.IsNull()) {
+			responseGUID = stringFromVch(assetallocation.vchAsset);
+			if (op == OP_ASSET_ALLOCATION_SEND) {
+				strResponse = _("Asset Allocation Sent");
+				responseEnglish = "Asset Allocation Sent";
+			}
+			else if (op == OP_ASSET_COLLECT_INTEREST) {
+				strResponse = _("Asset Collect Interest");
+				responseEnglish = "Asset Collect Interest";
+			}
 		}
 	}
 	else if (type == ESCROW) {
-		if (op == OP_ESCROW_ACTIVATE) {
-			strResponse = _("Escrow Activated");
-			responseEnglish = "Escrow Activated";
-		}
-		else if (op == OP_ESCROW_ACKNOWLEDGE) {
-			strResponse = _("Escrow Acknowledged");
-			responseEnglish = "Escrow Acknowledged";
-		}
-		else if (op == OP_ESCROW_RELEASE) {
-			strResponse = _("Escrow Released");
-			responseEnglish = "Escrow Released";
-		}
-		else if (op == OP_ESCROW_RELEASE_COMPLETE) {
-			strResponse = _("Escrow Release Complete");
-			responseEnglish = "Escrow Release Complete";
-		}
-		else if (op == OP_ESCROW_FEEDBACK) {
-			strResponse = _("Escrow Feedback");
-			responseEnglish = "Escrow Feedback";
-		}
-		else if (op == OP_ESCROW_BID) {
-			strResponse = _("Escrow Bid");
-			responseEnglish = "Escrow Bid";
-		}
-		else if (op == OP_ESCROW_ADD_SHIPPING) {
-			strResponse = _("Escrow Add Shipping");
-			responseEnglish = "Escrow Add Shipping";
-		}
-		else if (op == OP_ESCROW_REFUND) {
-			strResponse = _("Escrow Refunded");
-			responseEnglish = "Escrow Refunded";
-		}
-		else if (op == OP_ESCROW_REFUND_COMPLETE) {
-			strResponse = _("Escrow Refund Complete");
-			responseEnglish = "Escrow Refund Complete";
+		CEscrow escrow(tx);
+		if (!escrow.IsNull()) {
+			responseGUID = stringFromVch(escrow.vchEscrow);
+			if (op == OP_ESCROW_ACTIVATE) {
+				strResponse = _("Escrow Activated");
+				responseEnglish = "Escrow Activated";
+			}
+			else if (op == OP_ESCROW_ACKNOWLEDGE) {
+				strResponse = _("Escrow Acknowledged");
+				responseEnglish = "Escrow Acknowledged";
+			}
+			else if (op == OP_ESCROW_RELEASE) {
+				strResponse = _("Escrow Released");
+				responseEnglish = "Escrow Released";
+			}
+			else if (op == OP_ESCROW_RELEASE_COMPLETE) {
+				strResponse = _("Escrow Release Complete");
+				responseEnglish = "Escrow Release Complete";
+			}
+			else if (op == OP_ESCROW_FEEDBACK) {
+				strResponse = _("Escrow Feedback");
+				responseEnglish = "Escrow Feedback";
+			}
+			else if (op == OP_ESCROW_BID) {
+				strResponse = _("Escrow Bid");
+				responseEnglish = "Escrow Bid";
+			}
+			else if (op == OP_ESCROW_ADD_SHIPPING) {
+				strResponse = _("Escrow Add Shipping");
+				responseEnglish = "Escrow Add Shipping";
+			}
+			else if (op == OP_ESCROW_REFUND) {
+				strResponse = _("Escrow Refunded");
+				responseEnglish = "Escrow Refunded";
+			}
+			else if (op == OP_ESCROW_REFUND_COMPLETE) {
+				strResponse = _("Escrow Refund Complete");
+				responseEnglish = "Escrow Refund Complete";
+			}
 		}
 	}
 	else{
 		return "";
 	}
-	return strResponse;
+	return strResponse + " " + responseGUID;
 }

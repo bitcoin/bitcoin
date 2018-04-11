@@ -54,7 +54,7 @@ extern std::vector<unsigned char> vchFromString(const std::string &str);
 extern unsigned int MAX_ALIAS_UPDATES_PER_BLOCK;
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
 extern void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, const unsigned int aliasInputCount, const COutPoint& aliasOutPoint, CAmount& nFeeRequired, bool bSelectAll);
-extern string GetSyscoinTransactionDescription(const int op, string& responseEnglish, const char &type);
+extern string GetSyscoinTransactionDescription(const CWalletTx* wtx, const int op, string& responseEnglish, const char &type, string& responseGUID);
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
@@ -1700,7 +1700,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			if (wtx.nVersion == SYSCOIN_TX_VERSION && (IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, vvchArgs, type))))
+			if (wtx.nVersion == SYSCOIN_TX_VERSION && IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs))
 			{
 				int aliasOp;
 				vector<vector<unsigned char> > aliasVvch;
@@ -1710,13 +1710,18 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 					continue;
 				mapSysTx[wtx.GetHash()] = true;
 				string strResponseEnglish = "";
-				string strResponseGUID = stringFromVch(vvchArgs[0]);
-				strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, type) + " " + strResponseGUID;
+				string strResponseGUID = "";
+				strResponse = GetSyscoinTransactionDescription(wtx, op, strResponseEnglish, type, strResponseGUID);
 				entry.push_back(Pair("systx", strResponse));
 				entry.push_back(Pair("systype", strResponseEnglish));
 				entry.push_back(Pair("sysguid", strResponseGUID));
-				if (DecodeAliasTx(wtx, aliasOp, aliasVvch))
-					aliasName = stringFromVch(aliasVvch[0]);
+				{
+					LOCK(cs_main);
+					if (!FindAliasInTx(wtx, aliasVvch)) {
+						continue;
+					}
+				}
+				aliasName = stringFromVch(aliasVvch[0]);
 					
 				entry.push_back(Pair("sysalias", aliasName));
 				if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_SEND) {
@@ -1787,7 +1792,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				if (wtx.nVersion == SYSCOIN_TX_VERSION && (IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, vvchArgs, type))))
+				if (wtx.nVersion == SYSCOIN_TX_VERSION && IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs))
 				{
 					int aliasOp;
 					vector<vector<unsigned char> > aliasVvch;
@@ -1797,13 +1802,18 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 						continue;
 					mapSysTx[wtx.GetHash()] = true;
 					string strResponseEnglish = "";
-					string strResponseGUID = stringFromVch(vvchArgs[0]);
-					strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, type) + " " + strResponseGUID;
+					string strResponseGUID = "";
+					strResponse = GetSyscoinTransactionDescription(wtx, op, strResponseEnglish, type, strResponseGUID);
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
 					entry.push_back(Pair("sysguid", strResponseGUID));
-					if (DecodeAliasTx(wtx, aliasOp, aliasVvch))
-						aliasName = stringFromVch(aliasVvch[0]);
+					{
+						LOCK(cs_main);
+						if (!FindAliasInTx(wtx, aliasVvch)) {
+							continue;
+						}
+					}
+					aliasName = stringFromVch(aliasVvch[0]);
 
 					entry.push_back(Pair("sysalias", aliasName));
 					if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_SEND) {
