@@ -526,7 +526,9 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatename jagassetupdate assets 5 0 ''"), runtime_error);
 	// if max supply is -1 ensure supply can goto 10b max
 	AssetNew("node1", "assetupdatemaxsupply", "jagassetupdate", "data", "8", "false", "1", "-1");
-	CAmount negonesupply = -1;
+	UniValue negonevalue(UniValue::VSTR);
+	negonevalue.setStr("-1");
+	CAmount negonesupply = AssetAmountFromValue(negonevalue, 8, false);
 	string maxstr = ValueFromAssetAmount(negonesupply, 8, false).write();
 	AssetUpdate("node1", "assetupdatemaxsupply", "pub12", maxstr);
 	// can't go above max balance (10^18) / (10^8) for 8 decimal places (10 billion in this case)
