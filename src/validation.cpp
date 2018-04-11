@@ -557,6 +557,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, CCoinsV
 	// but during runtime fLoaded should be true so it should check UTXO in correct state
 	if (!fLoaded)
 		return true;
+	string statusRpc = "";
 	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(&statusRpc)))
 		return true;
 	vector<vector<unsigned char> > vvchArgs;
@@ -569,7 +570,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, CCoinsV
 		nHeight = chainActive.Height();
 	string errorMessage;
 	bool good = false;
-	string statusRpc = "";
+
 	CAmount nDescrepency;
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
 		const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
