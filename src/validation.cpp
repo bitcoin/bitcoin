@@ -857,8 +857,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 	}
 
 	{
-		CCoinsViewCache view(&dummy);
 		CCoinsView dummy;
+		CCoinsViewCache view(&dummy);
 		CAmount nValueIn = 0;
 		LockPoints lp;
 		{
