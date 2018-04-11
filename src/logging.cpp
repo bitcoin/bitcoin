@@ -26,9 +26,6 @@ BCLog::Logger* const g_logger = new BCLog::Logger();
 
 bool fLogIPs = DEFAULT_LOGIPS;
 
-/** Log categories bitfield. */
-std::atomic<uint32_t> logCategories(0);
-
 static int FileWriteStr(const std::string &str, FILE *fp)
 {
     return fwrite(str.data(), 1, str.size(), fp);
@@ -60,6 +57,26 @@ bool BCLog::Logger::OpenDebugLog()
     }
 
     return true;
+}
+
+void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
+{
+    logCategories |= flag;
+}
+
+void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
+{
+    logCategories &= ~flag;
+}
+
+bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
+{
+    return (logCategories.load(std::memory_order_relaxed) & category) != 0;
+}
+
+bool BCLog::Logger::DefaultShrinkDebugFile() const
+{
+    return logCategories == BCLog::NONE;
 }
 
 struct CLogCategoryDesc
