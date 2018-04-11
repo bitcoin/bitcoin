@@ -1616,7 +1616,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             mnodeman.DisallowMixing(dstx.vin.prevout);
         }
 
-        //LOCK(cs_main);
+        LOCK(cs_main);
 
         bool fMissingInputs = false;
         CValidationState state;
@@ -1683,7 +1683,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         int nDos = 0;
                         if (stateDummy.IsInvalid(nDos) && nDos > 0)
                         {
-							LOCK(cs_main);
                             // Punish peer that gave us an invalid orphan tx
                             Misbehaving(fromPeer, nDos);
                             setMisbehaving.insert(fromPeer);
