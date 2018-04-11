@@ -75,7 +75,7 @@ void RPCTypeCheck(const UniValue& params,
 /**
  * Type-check one argument; throws JSONRPCError if wrong type given.
  */
-void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected);
+void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected, bool allow_null = false);
 
 /*
   Check for expected keys/value types in an Object.
