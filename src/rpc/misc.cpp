@@ -391,18 +391,17 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
 void EnableOrDisableLogCategories(UniValue cats, bool enable) {
     cats = cats.get_array();
     for (unsigned int i = 0; i < cats.size(); ++i) {
-        uint32_t flag = 0;
         std::string cat = cats[i].get_str();
-        if (!GetLogCategory(&flag, &cat)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown logging category " + cat);
-        }
-        if (flag == BCLog::NONE) {
-            return;
-        }
+
+        bool success;
         if (enable) {
-            g_logger->EnableCategory(static_cast<BCLog::LogFlags>(flag));
+            success = g_logger->EnableCategory(cat);
         } else {
-            g_logger->DisableCategory(static_cast<BCLog::LogFlags>(flag));
+            success = g_logger->DisableCategory(cat);
+        }
+
+        if (!success) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown logging category " + cat);
         }
     }
 }

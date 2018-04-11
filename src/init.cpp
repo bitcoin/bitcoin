@@ -1028,24 +1028,18 @@ bool AppInitParameterInteraction()
         if (std::none_of(categories.begin(), categories.end(),
             [](std::string cat){return cat == "0" || cat == "none";})) {
             for (const auto& cat : categories) {
-                uint32_t flag = 0;
-                if (!GetLogCategory(&flag, &cat)) {
+                if (!g_logger->EnableCategory(cat)) {
                     InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
-                    continue;
                 }
-                g_logger->EnableCategory(static_cast<BCLog::LogFlags>(flag));
             }
         }
     }
 
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : gArgs.GetArgs("-debugexclude")) {
-        uint32_t flag = 0;
-        if (!GetLogCategory(&flag, &cat)) {
+        if (!g_logger->DisableCategory(cat)) {
             InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
-            continue;
         }
-        g_logger->DisableCategory(static_cast<BCLog::LogFlags>(flag));
     }
 
     // Check for -debugnet
