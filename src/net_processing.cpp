@@ -1616,7 +1616,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             mnodeman.DisallowMixing(dstx.vin.prevout);
         }
 
-        //LOCK(cs_main);
+        LOCK(cs_main);
 
         bool fMissingInputs = false;
         CValidationState state;

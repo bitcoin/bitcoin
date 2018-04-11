@@ -551,7 +551,7 @@ std::string FormatStateMessage(const CValidationState &state)
 		state.GetRejectCode());
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, CCoinsViewCache& view, bool fJustCheck, int nHeight, const CAmount& nFees, const CBlock& block)
+bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJustCheck, int nHeight, const CAmount& nFees, const CBlock& block)
 {
 	// Ensure that we don't fail on verifydb which loads recent UTXO and will fail if the input is already spent, 
 	// but during runtime fLoaded should be true so it should check UTXO in correct state
@@ -583,14 +583,14 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, CCoinsV
 		bool bDestCheckFailed = false;
 		if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 		{
-			if (!FindAliasInTx(tx, view, vvchAliasArgs)) {
+			if (!FindAliasInTx(tx, vvchAliasArgs)) {
 				return state.DoS(100, false, REJECT_INVALID, strprintf("no-alias-input-found-mempool"));
 			}
 			// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 			op = OP_ALIAS_UPDATE;
 		}
 		errorMessage.clear();
-		good = CheckAliasInputs(tx, view, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+		good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
 		if (fDebug && !errorMessage.empty())
 			LogPrintf("%s\n", errorMessage.c_str());
 
@@ -666,14 +666,14 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, CCoinsV
 				good = false;
 				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				{
-					if (!FindAliasInTx(tx, view, vvchAliasArgs)) {
+					if (!FindAliasInTx(tx, vvchAliasArgs)) {
 						return state.DoS(100, false, REJECT_INVALID, strprintf("no-alias-input-found"));
 					}
 					// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 					op = OP_ALIAS_UPDATE;
 				}
 				errorMessage.clear();
-				good = CheckAliasInputs(tx, view, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+				good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 
@@ -736,7 +736,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 	bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
 	std::vector<uint256>& vHashTxnToUncache, bool fDryRun, NodeId fromPeer)
 {
-	//AssertLockHeld(cs_main);
+	AssertLockHeld(cs_main);
 	if (pfMissingInputs)
 		*pfMissingInputs = false;
 
@@ -851,89 +851,87 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 	}
 
 	{
+		CCoinsViewCache view(&dummy);
+		CCoinsView dummy;
+		CAmount nValueIn = 0;
+		LockPoints lp;
 		{
-			LOCK(cs_main);
-			CCoinsView dummy;
-			CCoinsViewCache view(&dummy);
-			CAmount nValueIn = 0;
-			LockPoints lp;
-			{
-				LOCK(pool.cs);
-				CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
-				view.SetBackend(viewMemPool);
+			LOCK(pool.cs);
+			CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
+			view.SetBackend(viewMemPool);
 
-				// do we already have it?
-				bool fHadTxInCache = pcoinsTip->HaveCoinsInCache(hash);
-				if (view.HaveCoins(hash)) {
-					if (!fHadTxInCache)
-						vHashTxnToUncache.push_back(hash);
-					return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
-				}
-
-				// do all inputs exist?
-				// Note that this does not check for the presence of actual outputs (see the next check for that),
-				// and only helps with filling in pfMissingInputs (to determine missing vs spent).
-				BOOST_FOREACH(const CTxIn txin, tx.vin) {
-					if (!pcoinsTip->HaveCoinsInCache(txin.prevout.hash))
-						vHashTxnToUncache.push_back(txin.prevout.hash);
-					if (!view.HaveCoins(txin.prevout.hash)) {
-						if (pfMissingInputs)
-							*pfMissingInputs = true;
-						return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
-					}
-				}
-
-				// are the actual inputs available?
-				if (!view.HaveInputs(tx))
-					return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
-
-				// Bring the best block into scope
-				view.GetBestBlock();
-
-				nValueIn = view.GetValueIn(tx);
-
-				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
-				view.SetBackend(dummy);
-
-				// Only accept BIP68 sequence locked transactions that can be mined in the next
-				// block; we don't want our mempool filled up with transactions that can't
-				// be mined yet.
-				// Must keep pool.cs for this unless we change CheckSequenceLocks to take a
-				// CoinsViewCache instead of create its own
-				if (!CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
-					return state.DoS(0, false, REJECT_NONSTANDARD, "non-BIP68-final");
+			// do we already have it?
+			bool fHadTxInCache = pcoinsTip->HaveCoinsInCache(hash);
+			if (view.HaveCoins(hash)) {
+				if (!fHadTxInCache)
+					vHashTxnToUncache.push_back(hash);
+				return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
 			}
 
-			// Check for non-standard pay-to-script-hash in inputs
-			if (fRequireStandard && !AreInputsStandard(tx, view))
-				return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
-
-			unsigned int nSigOps = GetLegacySigOpCount(tx);
-			nSigOps += GetP2SHSigOpCount(tx, view);
-
-			CAmount nValueOut = tx.GetValueOut();
-			CAmount nFees = nValueIn - nValueOut;
-			// nModifiedFees includes any fee deltas from PrioritiseTransaction
-			CAmount nModifiedFees = nFees;
-			double nPriorityDummy = 0;
-			// SYSCOIN, don't apply any deltas for sys txs, should be minrelayfees regardless
-			if (tx.nVersion != SYSCOIN_TX_VERSION)
-				pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
-
-			CAmount inChainInputValue;
-			double dPriority = view.GetPriority(tx, chainActive.Height(), inChainInputValue);
-
-			// Keep track of transactions that spend a coinbase, which we re-scan
-			// during reorgs to ensure COINBASE_MATURITY is still met.
-			bool fSpendsCoinbase = false;
-			BOOST_FOREACH(const CTxIn &txin, tx.vin) {
-				const CCoins *coins = view.AccessCoins(txin.prevout.hash);
-				if (coins->IsCoinBase()) {
-					fSpendsCoinbase = true;
-					break;
+			// do all inputs exist?
+			// Note that this does not check for the presence of actual outputs (see the next check for that),
+			// and only helps with filling in pfMissingInputs (to determine missing vs spent).
+			BOOST_FOREACH(const CTxIn txin, tx.vin) {
+				if (!pcoinsTip->HaveCoinsInCache(txin.prevout.hash))
+					vHashTxnToUncache.push_back(txin.prevout.hash);
+				if (!view.HaveCoins(txin.prevout.hash)) {
+					if (pfMissingInputs)
+						*pfMissingInputs = true;
+					return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
 				}
+			}
+
+			// are the actual inputs available?
+			if (!view.HaveInputs(tx))
+				return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
+
+			// Bring the best block into scope
+			view.GetBestBlock();
+
+			nValueIn = view.GetValueIn(tx);
+
+			// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
+			view.SetBackend(dummy);
+
+			// Only accept BIP68 sequence locked transactions that can be mined in the next
+			// block; we don't want our mempool filled up with transactions that can't
+			// be mined yet.
+			// Must keep pool.cs for this unless we change CheckSequenceLocks to take a
+			// CoinsViewCache instead of create its own
+			if (!CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
+				return state.DoS(0, false, REJECT_NONSTANDARD, "non-BIP68-final");
+		}
+
+		// Check for non-standard pay-to-script-hash in inputs
+		if (fRequireStandard && !AreInputsStandard(tx, view))
+			return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
+
+		unsigned int nSigOps = GetLegacySigOpCount(tx);
+		nSigOps += GetP2SHSigOpCount(tx, view);
+
+		CAmount nValueOut = tx.GetValueOut();
+		CAmount nFees = nValueIn - nValueOut;
+		// nModifiedFees includes any fee deltas from PrioritiseTransaction
+		CAmount nModifiedFees = nFees;
+		double nPriorityDummy = 0;
+		// SYSCOIN, don't apply any deltas for sys txs, should be minrelayfees regardless
+		if (tx.nVersion != SYSCOIN_TX_VERSION)
+			pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
+
+		CAmount inChainInputValue;
+		double dPriority = view.GetPriority(tx, chainActive.Height(), inChainInputValue);
+
+		// Keep track of transactions that spend a coinbase, which we re-scan
+		// during reorgs to ensure COINBASE_MATURITY is still met.
+		bool fSpendsCoinbase = false;
+		BOOST_FOREACH(const CTxIn &txin, tx.vin) {
+			const CCoins *coins = view.AccessCoins(txin.prevout.hash);
+			if (coins->IsCoinBase()) {
+				fSpendsCoinbase = true;
+				break;
 			}
 		}
+
 		CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
 		unsigned int nSize = entry.GetTxSize();
 
@@ -1187,8 +1185,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 			}
 			std::packaged_task<void()> t([&pcoinsTip, &pool, chainHeight, tx, nFees, hash, vHashTxnToUncache, fromPeer]() {
 				CValidationState vstate;
-				CCoinsViewCache &vview = *pcoinsTip;
-				
+				CCoinsView vdummy;
+				CCoinsViewCache vview(&vdummy);
+				CCoinsViewMemPool vviewMemPool(pcoinsTip, pool);
+				vview.SetBackend(vviewMemPool);
+					
 				// Check against previous transactions
 				// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
@@ -1209,14 +1210,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					return;
 				}
-				{
-					LOCK(cs_main);
-					bool res = CheckSyscoinInputs(tx, vstate, vview, true, chainHeight, nFees, CBlock());
-				}
-				if (!res) {
+				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
+				vview.SetBackend(vdummy);
+
+				if (!CheckSyscoinInputs(tx, vstate, true, chainHeight, nFees, CBlock())) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
-						pcoinsTip->Uncache(hashTx);
+						pcoinsTip->Uncache(hashTx);	
 					}
 					list<CTransaction> dummy;
 					pool.remove(tx, dummy, true);
@@ -1231,19 +1231,14 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					return;
 				}
-				
 				GetMainSignals().SyncTransaction(tx, NULL);
 			});
 			threadpool.post(t);
 		}
 		else {
-			LOCK(cs_main);
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
-				return false;
-			}
-			if (!CheckSyscoinInputs(tx, state, view, true, chainHeight, nFees, CBlock())) {
 				return false;
 			}
 			// Remove conflicting transactions from the mempool
@@ -1277,6 +1272,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 				}
 			}
+			if (!CheckSyscoinInputs(tx, state, true, chainHeight, nFees, CBlock())) {
+				return false;
+			}
 		}
 	}
 
@@ -1297,6 +1295,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, bool bMultiThreaded, CValidationState 
 		BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache) {
 			pcoinsTip->Uncache(hashTx);
 		}
+		list<CTransaction> dummy;
+		pool.remove(tx, dummy, true);
 	}
 	// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
 	CValidationState stateDummy;
@@ -2582,10 +2582,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 		vPos.push_back(std::make_pair(tx.GetHash(), pos));
 		pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 	}
-	if (!control.Wait())
-		return state.DoS(100, false);
-
-	if (!CheckSyscoinInputs(block.vtx[0], state, view, fJustCheck, pindex->nHeight, nFees, block))
+	if (!CheckSyscoinInputs(block.vtx[0], state, fJustCheck, pindex->nHeight, nFees, block))
 		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n",
 			block.GetHash().ToString());
 	int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
@@ -2646,6 +2643,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 		return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
 	}
 	// END SYS
+
+	if (!control.Wait())
+		return state.DoS(100, false);
 	int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
 	LogPrint("bench", "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime4 - nTime2), nInputs <= 1 ? 0 : 0.001 * (nTime4 - nTime2) / (nInputs - 1), nTimeVerify * 0.000001);
 

@@ -253,7 +253,7 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
 }
 
 
-bool CheckAliasInputs(const CTransaction &tx, CCoinsViewCache& view, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bSanityCheck) {
+bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bSanityCheck) {
 	if (!paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
@@ -314,13 +314,9 @@ bool CheckAliasInputs(const CTransaction &tx, CCoinsViewCache& view, int op, con
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
 			int pop;
-			const COutPoint& outpoint = tx.vin[i].prevout;
-			int pop;
-			const CCoins* prevCoins = view.AccessCoins(outpoint.hash);
-			if (!prevCoins || (unsigned int)outpoint.n >= prevCoins->vout.size() || prevCoins->vout[outpoint.n].IsNull())
-				return NULL;
+			const CCoins *prevCoins = GetUTXOCoins(tx.vin[i].prevout);
 			// ensure inputs are unspent when doing consensus check to add to block
-			if(!prevCoins || !IsSyscoinScript(prevCoins->vout[outpoint.n].scriptPubKey, pop, vvch))
+			if(!prevCoins || !IsSyscoinScript(prevCoins->vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
 			{
 				continue;
 			}
@@ -328,7 +324,7 @@ bool CheckAliasInputs(const CTransaction &tx, CCoinsViewCache& view, int op, con
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				pprevCoins = prevCoins;
-				prevOutputIndex = outpoint.n;
+				prevOutputIndex = tx.vin[i].prevout.n;
 				break;
 			}
 		}
@@ -337,14 +333,10 @@ bool CheckAliasInputs(const CTransaction &tx, CCoinsViewCache& view, int op, con
 			bool bWitnessSigFound = false;
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				vector<vector<unsigned char> > vvch;
-				const COutPoint& outpoint = tx.vin[i].prevout;
 				int pop;
-				const CCoins* prevCoins = view.AccessCoins(outpoint.hash);
-				if (!prevCoins || (unsigned int)outpoint.n >= prevCoins->vout.size() || prevCoins->vout[outpoint.n].IsNull())
-					return NULL;
-				return coins;
+				const CCoins *prevCoins = GetUTXOCoins(tx.vin[i].prevout);
 				// ensure inputs are unspent when doing consensus check to add to block
-				if (!prevCoins || !IsSyscoinScript(prevCoins->vout[outpoint.n].scriptPubKey, pop, vvch))
+				if (!prevCoins || !IsSyscoinScript(prevCoins->vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
 				{
 					continue;
 				}
@@ -972,15 +964,12 @@ bool DecodeAliasTx(const CTransaction& tx, int& op,
 
 	return found;
 }
-bool FindAliasInTx(const CTransaction& tx, CCoinsViewCache& view, vector<vector<unsigned char> >& vvch) {
+bool FindAliasInTx(const CTransaction& tx, vector<vector<unsigned char> >& vvch) {
 	int op;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		const COutPoint &outpoint = tx.vin[i].prevout;
-		const CCoins* prevCoins = view.AccessCoins(outpoint.hash);
-		if (!prevCoins || (unsigned int)outpoint.n >= prevCoins->vout.size() || prevCoins->vout[outpoint.n].IsNull())
-			return NULL;
+		const CCoins *prevCoins = GetUTXOCoins(tx.vin[i].prevout);
 		// ensure inputs are unspent when doing consensus check to add to block
-		if (DecodeAliasScript(prevCoins->vout[outpoint.n].scriptPubKey, op, vvch)) {
+		if (prevCoins && DecodeAliasScript(prevCoins->vout[tx.vin[i].prevout.n].scriptPubKey, op, vvch)) {
 			return true;
 		}
 	}
@@ -1339,12 +1328,10 @@ UniValue aliasnewfund(const UniValue& params, bool fHelp) {
 	bool bCheckDestError = false;
 	if (DecodeAliasTx(tx, op, vvch))
 	{
-		LOCK(cs_main);
-		CCoinsViewCache view(pcoinsTip);
-		CheckAliasInputs(tx, view, op, vvch, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
+		CheckAliasInputs(tx, op, vvch, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckAliasInputs(tx, view, op, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, true);
+		CheckAliasInputs(tx, op, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
