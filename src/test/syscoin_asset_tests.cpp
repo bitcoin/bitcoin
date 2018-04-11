@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_update_with_average_balance
 	// 3 hours later send 1k more
 	GenerateBlocks((60 * 3)-11);
 	// update interest rate to 10%
-	AssetUpdate("node1", "avgbalanceassetu", "pub", "0", "0.1");
+	AssetUpdate("node1", "avgbalanceassetu", "pub", "''", "0.1");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
 	AssetSend("node1", "avgbalanceassetu", "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravgu\\\",\\\"amount\\\":3000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo avgbalanceassetu jagassetcollectionrcveravgu false"));
@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_update_with_average_balance
 	GenerateBlocks((60 * 2) - 11);
 
 	// interest rate to back to 5%
-	AssetUpdate("node1", "avgbalanceassetu", "pub", "0", "0.05");
+	AssetUpdate("node1", "avgbalanceassetu", "pub", "''", "0.05");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
 	AssetSend("node1", "avgbalanceassetu", "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravgu\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo avgbalanceassetu jagassetcollectionrcveravgu false"));
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_update_with_average_balance
 	GenerateBlocks((60 * 1) - 11);
 
 	// at the end set rate to 50% but this shouldn't affect the result since we set this rate recently
-	AssetUpdate("node1", "avgbalanceassetu", "pub", "0", "0.5");
+	AssetUpdate("node1", "avgbalanceassetu", "pub", "''", "0.5");
 	// total interest (1000*180 + 4000*120 + 5000*60) / 360 = 2666.67 - average balance over 6hrs, calculate interest on that balance and apply it to 5k
 	// total interest rate (0.05*180 + 0.1*120 + 0.05*60) / 360 = 0.0667% - average interest over 6hrs
 	// formula is  ((averagebalance*pow((1 + ((double)asset.fInterestRate / 60)), (60*6)))) - averagebalance;

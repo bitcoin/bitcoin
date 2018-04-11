@@ -1066,7 +1066,7 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 	CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision, binputranges);
 	CAmount supplyamount = 0;
 	if (supply != "''") {
-		UniValue supplytmp;
+		UniValue supplytmp(UniValue::VSTR);
 		supplytmp.setStr(supply);
 		supplyamount = AssetAmountFromValue(supplytmp, nprecision, binputranges);
 	}
