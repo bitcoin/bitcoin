@@ -805,10 +805,11 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
             + HelpExampleCli("estimatesmartfee", "6")
             );
 
-    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VSTR});
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
     unsigned int conf_target = ParseConfirmTarget(request.params[0]);
     bool conservative = true;
+
+    RPCTypeCheckArgument(request.params[1], UniValue::VSTR, true /* allow_null */);
     if (!request.params[1].isNull()) {
         FeeEstimateMode fee_mode;
         if (!FeeModeFromString(request.params[1].get_str(), fee_mode)) {
@@ -874,10 +875,11 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
             + HelpExampleCli("estimaterawfee", "6 0.9")
             );
 
-    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VNUM}, true);
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
     unsigned int conf_target = ParseConfirmTarget(request.params[0]);
     double threshold = 0.95;
+
+    RPCTypeCheckArgument(request.params[1], UniValue::VNUM, true /* allow_null */);
     if (!request.params[1].isNull()) {
         threshold = request.params[1].get_real();
     }
