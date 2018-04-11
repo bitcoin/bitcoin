@@ -507,7 +507,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid input range");
 						return true;
 					}
-					const CAmount rangeTotalAmount = rangeTotal*COIN;
+					const CAmount rangeTotalAmount = rangeTotal;
 					rangeTotals.push_back(rangeTotalAmount);
 					nTotal += rangeTotalAmount;
 				}
@@ -1213,11 +1213,12 @@ UniValue ValueFromAssetAmount(const CAmount& amount,int precision, bool isInputR
 	int64_t n_abs = (sign ? -amount : amount);
 	int64_t quotient = n_abs;
 	int64_t divByAmount = 1;
+	int64_t remainder = 0;
 	if (precision > 0) {
 		divByAmount = powf(10, precision);
 		quotient = n_abs / divByAmount;
+		remainder = n_abs % divByAmount;
 	}
-	int64_t remainder = n_abs % divByAmount;
 	string strPrecision = boost::lexical_cast<string>(precision);
 	return UniValue(UniValue::VSTR,
 		strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));

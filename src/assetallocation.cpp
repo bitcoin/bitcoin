@@ -564,7 +564,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid input ranges");
 					return true;
 				}
-				const CAmount rangeTotalAmount = rangeTotal*COIN;
+				const CAmount rangeTotalAmount = rangeTotal;
 				rangeTotals.push_back(rangeTotalAmount);
 				nTotal += rangeTotalAmount;
 			}

@@ -1210,7 +1210,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 			}
 			const unsigned int rangeTotal = validateRangesAndGetCount(vectorOfRanges);
 			BOOST_CHECK(rangeTotal > 0);
-			inputamount += rangeTotal*COIN;
+			inputamount += rangeTotal;
 			theAssetAllocation.listSendingAllocationInputs.push_back(make_pair(vchAliasTo, vectorOfRanges));
 		}
 		else if (amountObj.isNum()) {
@@ -1286,7 +1286,7 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 			}
 			const unsigned int rangeTotal = validateRangesAndGetCount(vectorOfRanges);
 			BOOST_CHECK(rangeTotal > 0);
-			inputamount += rangeTotal*COIN;
+			inputamount += rangeTotal;
 			theAssetAllocation.listSendingAllocationInputs.push_back(make_pair(vchAliasTo, vectorOfRanges));
 		}
 		else if (amountObj.isNum()) {

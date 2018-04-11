@@ -28,7 +28,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 std::string assetFromOp(int op);
 bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 // 10m max asset input range circulation
-static const CAmount MAX_INPUTRANGE_ASSET = (10000000 * COIN);
+static const CAmount MAX_INPUTRANGE_ASSET = 10000000;
 /** Upper bound for mantissa.
 * 10^18-1 is the largest arbitrary decimal that will fit in a signed 64-bit integer.
 * Larger integers cannot consist of arbitrary combinations of 0-9:
