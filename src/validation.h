@@ -302,7 +302,7 @@ void PruneAndFlush();
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, bool bMultiThreaded, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs, bool fOverrideMempoolLimit=false, bool fRejectAbsurdFee=false, bool fDryRun=false);
+                        bool* pfMissingInputs, bool fOverrideMempoolLimit=false, bool fRejectAbsurdFee=false, bool fDryRun=false, NodeId fromPeer=-1);
 
 const CCoins* GetUTXOCoins(const COutPoint& outpoint);
 int GetUTXOHeight(const COutPoint& outpoint);
@@ -312,7 +312,7 @@ int GetUTXOConfirmations(const COutPoint& outpoint);
 std::string FormatStateMessage(const CValidationState &state);
 
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, const CAmount& nFees, const CBlock& block);
+bool CheckSyscoinInputs(const CTransaction& tx, CValidationState &state, bool fJustCheck, int nHeight, const CAmount& nFees, const CBlock& block);
 
 /** Get the BIP9 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);

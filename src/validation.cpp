@@ -551,7 +551,7 @@ std::string FormatStateMessage(const CValidationState &state)
 		state.GetRejectCode());
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, const CAmount& nFees, const CBlock& block)
+bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJustCheck, int nHeight, const CAmount& nFees, const CBlock& block)
 {
 	// Ensure that we don't fail on verifydb which loads recent UTXO and will fail if the input is already spent, 
 	// but during runtime fLoaded should be true so it should check UTXO in correct state
@@ -578,15 +578,13 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		else
 			nDescrepency = nExpectedFee - nFees;
 		if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
-			LogPrintf("CheckSyscoinInputs: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s\n", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
-			return false;
+			return state.DoS(100, false, REJECT_INVALID, strprintf("fees-not-correct nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str()));
 		}
 		bool bDestCheckFailed = false;
 		if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 		{
 			if (!FindAliasInTx(tx, vvchAliasArgs)) {
-				LogPrintf("CheckSyscoinInputs1: Cannot find alias input to this transaction\n");
-				return false;
+				return state.DoS(100, false, REJECT_INVALID, strprintf("no-alias-input-found-mempool"));
 			}
 			// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 			op = OP_ALIAS_UPDATE;
@@ -637,7 +635,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		}
 		if (!good)
 		{
-			return false;
+			return state.DoS(100, false, REJECT_INVALID, strprintf("syscoin-inputs-error-mempool"));
 		}
 	}
 	else if (!block.vtx.empty()) {
@@ -651,7 +649,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 			GraphRemoveCycles(sortedBlock.vtx, conflictedIndexes, graph, vertices, mapTxIndex);
 			if (!sortedBlock.vtx.empty()) {
 				if (!DAGTopologicalSort(sortedBlock.vtx, conflictedIndexes, graph, mapTxIndex)) {
-					return false;
+					return state.DoS(100, false, REJECT_INVALID, strprintf("dag-toposort-error"));
 				}
 			}
 		}
@@ -669,8 +667,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				{
 					if (!FindAliasInTx(tx, vvchAliasArgs)) {
-						LogPrintf("CheckSyscoinInputs2: Cannot find alias input to this transaction\n");
-						return false;
+						return state.DoS(100, false, REJECT_INVALID, strprintf("no-alias-input-found"));
 					}
 					// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 					op = OP_ALIAS_UPDATE;
@@ -727,7 +724,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		}
 		if (!good)
 		{
-			return false;
+			return state.DoS(100, false, REJECT_INVALID, strprintf("syscoin-inputs-error"));
 		}
 	}
 
@@ -737,7 +734,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 }
 bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidationState &state, const CTransaction &tx, bool fLimitFree,
 	bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
-	std::vector<uint256>& vHashTxnToUncache, CTxMemPool::setEntries &allConflicting, CTxMemPool::setEntries &setAncestor, CTxMemPoolEntry &entry, CCoinsViewCache &view, bool fDryRun)
+	std::vector<uint256>& vHashTxnToUncache, bool fDryRun, NodeId fromPeer)
 {
 	AssertLockHeld(cs_main);
 	if (pfMissingInputs)
@@ -854,6 +851,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 	}
 
 	{
+		CCoinsViewCache view(&dummy);
 		CCoinsView dummy;
 		CAmount nValueIn = 0;
 		LockPoints lp;
@@ -934,7 +932,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 			}
 		}
 
-		entry = CTxMemPoolEntry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
+		CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
 		unsigned int nSize = entry.GetTxSize();
 
 		// Check that the transaction doesn't have an excessive number of
@@ -1015,7 +1013,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 		CAmount nConflictingFees = 0;
 		size_t nConflictingSize = 0;
 		uint64_t nConflictingCount = 0;
-		
+		CTxMemPool::setEntries allConflicting;
 
 		// If we don't hold the lock allConflicting might be incomplete; the
 		// subsequent RemoveStaged() and addUnchecked() calls don't guarantee
@@ -1154,8 +1152,38 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 
 		const int chainHeight = chainActive.Height();
 		if (bMultiThreaded) {
+			// Remove conflicting transactions from the mempool
+			BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
+			{
+				LogPrint("mempool", "replacing tx %s with %s for %s SYS additional fees, %d delta bytes\n",
+					it->GetTx().GetHash().ToString(),
+					hash.ToString(),
+					FormatMoney(nModifiedFees - nConflictingFees),
+					(int)nSize - (int)nConflictingSize);
+			}
+			pool.RemoveStaged(allConflicting);
 
-			std::packaged_task<void()> t([&pcoinsTip, &pool, chainHeight, tx, nFees, hash, vHashTxnToUncache]() {
+			// Store transaction in memory
+			pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
+
+			// Add memory address index
+			if (fAddressIndex) {
+				pool.addAddressIndex(entry, view);
+			}
+
+			// Add memory spent index
+			if (fSpentIndex) {
+				pool.addSpentIndex(entry, view);
+			}
+
+			// trim mempool and check if tx was trimmed
+			if (!fOverrideMempoolLimit) {
+				LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+				if (!pool.exists(hash)) {
+					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
+				}
+			}
+			std::packaged_task<void()> t([&pcoinsTip, &pool, chainHeight, tx, nFees, hash, vHashTxnToUncache, fromPeer]() {
 				CValidationState vstate;
 				CCoinsView vdummy;
 				CCoinsViewCache vview(&vdummy);
@@ -1165,12 +1193,18 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 				// Check against previous transactions
 				// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
-					LogPrintf("CheckInputs STANDARD_SCRIPT_VERIFY_FLAGS Failed");
+					LogPrint("mempool", "%s: %s %s\n", "CheckInputs", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
 					}
 					list<CTransaction> dummy;
 					pool.remove(tx, dummy, true);
+					int nDos = 0;
+					if (vstate.IsInvalid(nDos) && nDos > 0 && fromPeer >= 0)
+					{
+						// Punish peer that gave us an invalid signature
+						Misbehaving(fromPeer, nDos);
+					}
 					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
 					CValidationState stateDummy;
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
@@ -1179,13 +1213,19 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
 				vview.SetBackend(vdummy);
 
-				if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
-					LogPrintf("CheckSyscoinInputs Failed");
+				if (!CheckSyscoinInputs(tx, vstate, true, chainHeight, nFees, CBlock())) {
+					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);	
 					}
 					list<CTransaction> dummy;
 					pool.remove(tx, dummy, true);
+					int nDos = 0;
+					if (vstate.IsInvalid(nDos) && nDos > 0 && fromPeer >= 0)
+					{
+						// Punish peer that gave us an invalid syscoin transaction
+						Misbehaving(fromPeer, nDos);
+					}
 					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
 					CValidationState stateDummy;
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
@@ -1199,10 +1239,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
-				return false;
-			}
-
-			if (!CheckSyscoinInputs(tx, true, chainHeight, nFees, CBlock())) {
 				return false;
 			}
 			// Remove conflicting transactions from the mempool
@@ -1236,6 +1272,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 				}
 			}
+			if (!CheckSyscoinInputs(tx, state, true, chainHeight, nFees, CBlock())) {
+				return false;
+			}
 		}
 	}
 
@@ -1245,16 +1284,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 }
 
 bool AcceptToMemoryPool(CTxMemPool& pool, bool bMultiThreaded, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-	bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee, bool fDryRun)
+	bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee, bool fDryRun, NodeId fromPeer)
 {
 	std::vector<uint256> vHashTxToUncache;
-	CCoinsView dummy;
 	
-	CTxMemPool::setEntries allConflicting;
-	CTxMemPool::setEntries setAncestors;
-	CTxMemPoolEntry entry;
-	CCoinsViewCache view(&dummy);
-	bool res = AcceptToMemoryPoolWorker(pool, bMultiThreaded, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache, allConflicting, setAncestors, entry, view, fDryRun);
+	
+	bool res = AcceptToMemoryPoolWorker(pool, bMultiThreaded, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache, fDryRun, fromPeer);
 	if (!res || fDryRun) {
 		if (!res) LogPrint("mempool", "%s: %s %s\n", __func__, tx.GetHash().ToString(), state.GetRejectReason());
 		BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache) {
@@ -1262,35 +1297,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, bool bMultiThreaded, CValidationState 
 		}
 		list<CTransaction> dummy;
 		pool.remove(tx, dummy, true);
-	}
-	if (bMultiThreaded && res) {
-		uint256 hash = tx.GetHash();		
-		pool.RemoveStaged(allConflicting);
-		// Store transaction in memory
-		pool.addUnchecked(tx.GetHash(), entry, setAncestors, !IsInitialBlockDownload());
-
-		// Add memory address index
-		if (fAddressIndex) {
-			pool.addAddressIndex(entry, view);
-		}
-
-		// Add memory spent index
-		if (fSpentIndex) {
-			pool.addSpentIndex(entry, view);
-		}
-
-		// trim mempool and check if tx was trimmed
-		if (!fOverrideMempoolLimit) {
-			LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
-			if (!pool.exists(hash)) {
-				LogPrintf("mempool full");
-				BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache) {
-					pcoinsTip->Uncache(hashTx);
-				}
-				list<CTransaction> dummy;
-				pool.remove(tx, dummy, true);
-			}
-		}
 	}
 	// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
 	CValidationState stateDummy;
@@ -2576,7 +2582,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 		vPos.push_back(std::make_pair(tx.GetHash(), pos));
 		pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 	}
-	if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
+	if (!CheckSyscoinInputs(block.vtx[0], state, fJustCheck, pindex->nHeight, nFees, block))
 		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n",
 			block.GetHash().ToString());
 	int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
