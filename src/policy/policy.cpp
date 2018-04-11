@@ -35,7 +35,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
         return 0;
 
     size_t nSize = GetSerializeSize(txout, SER_DISK, 0);
-    int witnessversion = 0;
+    unsigned char witnessversion = 0;
     std::vector<unsigned char> witnessprogram;
 
     if (txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
@@ -222,7 +222,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             prevScript = CScript(stack.back().begin(), stack.back().end());
         }
 
-        int witnessversion = 0;
+        unsigned char witnessversion = 0;
         std::vector<unsigned char> witnessprogram;
 
         // Non-witness program must not be associated with any witness

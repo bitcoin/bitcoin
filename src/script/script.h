@@ -573,13 +573,15 @@ public:
     }
 
     /** Encode/decode small integers: */
-    static int DecodeOP_N(opcodetype opcode)
+    static unsigned char DecodeOP_N(opcodetype opcode)
     {
         if (opcode == OP_0)
             return 0;
         assert(opcode >= OP_1 && opcode <= OP_16);
-        return (int)opcode - (int)(OP_1 - 1);
+        return (unsigned char)opcode - (unsigned char)(OP_1 - 1);
     }
+    static_assert((unsigned char)OP_16 - (unsigned char)(OP_1 - 1) == 16, "Unexpected value for OP_N calculation");
+
     static opcodetype EncodeOP_N(int n)
     {
         assert(n >= 0 && n <= 16);
@@ -642,7 +644,7 @@ public:
 
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
-    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
+    bool IsWitnessProgram(unsigned char& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;

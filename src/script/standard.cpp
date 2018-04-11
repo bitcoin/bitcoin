@@ -63,7 +63,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         return true;
     }
 
-    int witnessversion;
+    unsigned char witnessversion;
     std::vector<unsigned char> witnessprogram;
     if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
         if (witnessversion == 0 && witnessprogram.size() == 20) {
@@ -78,7 +78,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         }
         if (witnessversion != 0) {
             typeRet = TX_WITNESS_UNKNOWN;
-            vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
+            vSolutionsRet.push_back(std::vector<unsigned char>{witnessversion});
             vSolutionsRet.push_back(std::move(witnessprogram));
             return true;
         }
@@ -161,7 +161,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
                 if (opcode1 == OP_0 ||
                     (opcode1 >= OP_1 && opcode1 <= OP_16))
                 {
-                    char n = (char)CScript::DecodeOP_N(opcode1);
+                    unsigned char n = CScript::DecodeOP_N(opcode1);
                     vSolutionsRet.push_back(valtype(1, n));
                 }
                 else
