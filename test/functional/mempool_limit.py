@@ -14,7 +14,6 @@ class MempoolLimitTest(BitcoinTestFramework):
         self.extra_args = [["-maxmempool=5", "-spendzeroconfchange=0"]]
 
     def run_test(self):
-        txouts = gen_return_txouts()
         relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
         self.log.info('Check that mempoolminfee is minrelytxfee')
@@ -39,7 +38,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         base_fee = relayfee*100
         for i in range (3):
             txids.append([])
-            txids[i] = create_lots_of_big_transactions(self.nodes[0], txouts, utxos[30*i:30*i+30], 30, (i+1)*base_fee)
+            txids[i] = create_lots_of_big_transactions(self.nodes[0], utxos[30*i:30*i+30], 30, (i+1)*base_fee)
 
         self.log.info('The tx should be evicted by now')
         assert(txid not in self.nodes[0].getrawmempool())

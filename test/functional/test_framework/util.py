@@ -495,25 +495,86 @@ def create_confirmed_utxos(fee, node, count):
     assert(len(utxos) >= count)
     return utxos
 
-# Create large OP_RETURN txouts that can be appended to a transaction
+
+# Flip the endian-ness of a hex str
+#
+# '0033aaff' -> 'ffaa3300'
+def reverse_endian(hex_str):
+    return ''.join([hex_str[i-2:i] for i in range(len(hex_str), 0, -2)])
+
+
+# Get a varint hex string from an integer
+# According to protocol:
+#
+# Value            Storage length    Format
+# < 0xFD            1                uint8_t
+# <= 0xFFFF         3                0xFD followed by the length as uint16_t
+# <= 0xFFFF FFFF    5                0xFE followed by the length as uint32_t
+# -                 9                0xFF followed by the length as uint64_t
+def get_varint_hex(num):
+    if num < int("fd", 16):
+        return "{:02x}".format(num)
+    elif num <= int("ffff", 16):
+        return "fd" + reverse_endian("{:04x}".format(num))
+    elif num <= int("ffffffff", 16):
+        return "fe" + reverse_endian("{:08x}".format(num))
+    else:
+        return "ff" + reverse_endian("{:16x}".format(num))
+
+
+# Get bytes required for a PUSHDATA of size num
+def pushdata_size_bytes(num):
+    if num < int("ff", 16):
+        return 1
+    elif num <= int("ffff", 16):
+        return 2
+    elif num <= int("ffffffff", 16):
+        return 4
+
+
+# Given numoutputs pushing data_push_sz to the tx stack
+# calculate the expected size of the outputs splice
+def calculate_txouts_size(numoutputs, data_push_sz):
+    # 2 bytes for [OP_RETURN, OP_PUSHDATAX] + DATA_SIZE + <DATA BYTES>
+    script_pubkey_bytes = 2 + pushdata_size_bytes(data_push_sz) + data_push_sz
+    num_outputs_varint_sz = int(len(get_varint_hex(numoutputs + 1)) / 2)
+    script_pubkey_varint_sz = int(len(get_varint_hex(script_pubkey_bytes)) / 2)
+    return (num_outputs_varint_sz + (numoutputs * (8 + script_pubkey_varint_sz + script_pubkey_bytes)))
+
+
+# Create OP_RETURN txouts that can be appended to a transaction
 # to make it large (helper for constructing large transactions).
-def gen_return_txouts():
-    # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
-    # So we have big transactions (and therefore can't fit very many into each block)
-    # create one script_pubkey
-    script_pubkey = "6a4d0200"  # OP_RETURN OP_PUSH2 512 bytes
-    for i in range(512):
-        script_pubkey = script_pubkey + "01"
-    # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
-    txouts = "81"
-    for k in range(128):
-        # add txout value
-        txouts = txouts + "0000000000000000"
-        # add length of script_pubkey
-        txouts = txouts + "fd0402"
-        # add script_pubkey
-        txouts = txouts + script_pubkey
+def gen_return_txouts(numoutputs=128, data_push_sz=512):
+
+    # OP_RETURN OP_PUSHDATA1 DATA_SIZE <DATA_BYTES>
+    if data_push_sz <= int('ff', 16):
+        script_pubkey = "6a4c{:02x}".format(data_push_sz) + ("01" * data_push_sz)
+    # OP_RETURN OP_PUSHDATA2 DATA_SIZE <DATA_BYTES>
+    elif data_push_sz <= int('ffff', 16):
+        script_pubkey = "6a4d{:04x}".format(data_push_sz) + ("01" * data_push_sz)
+    # OP_RETURN OP_PUSHDATA4 DATA_SIZE <DATA_BYTES>
+    else:
+        script_pubkey = "6a4e{:08x}".format(data_push_sz) + ("01" * data_push_sz)
+
+    # number is + 1 because this will be spliced into single output tx
+    num_outputs_varint = get_varint_hex(numoutputs + 1)
+
+    # 3-6 bytes for OP_RETURN OP_PUSHDATA DATA_SIZE
+    sz_script_pubkey_varint = get_varint_hex(2 + pushdata_size_bytes(data_push_sz) + data_push_sz)
+
+    # Output format:
+    #   8 bytes for Amount = 0x0000000000000000
+    #   VarInt for scriptPubKey size
+    #   scriptPubKey
+    tx_output = "0000000000000000" + sz_script_pubkey_varint + script_pubkey
+
+    # Combine number of outputs as varint with the repeated outputs
+    txouts = num_outputs_varint + (tx_output * numoutputs)
+
+    assert_equal(len(txouts)/2, calculate_txouts_size(numoutputs, data_push_sz))
+
     return txouts
+
 
 def create_tx(node, coinbase, to_address, amount):
     inputs = [{"txid": coinbase, "vout": 0}]
@@ -523,35 +584,108 @@ def create_tx(node, coinbase, to_address, amount):
     assert_equal(signresult["complete"], True)
     return signresult["hex"]
 
+
+# For very large transactions, need to find utxo that has enough to pay large fee
+def get_utxo_with_amount(node, amount):
+    for utxo in node.listunspent():
+        if utxo['amount'] >= amount:
+            return utxo
+
+    fee = node.getnetworkinfo()['relayfee'] * 1000
+    for utxo in create_confirmed_utxos(fee, node, 1):
+        if utxo['amount'] >= amount:
+            return utxo
+
+# Create a transaction that is target_vsize. May not be exact in cases where
+# (target_vsize - base_vsize) < 13 bytes (min output size)
+# or when the difference is close to a VarInt boundary.
+def create_tx_with_size(node, target_vsize, utxo=None, addr=None, fee=None):
+
+    if not fee:
+        # 10 sat / byte
+        fee = target_vsize / 10000000
+    if not utxo:
+        utxo = get_utxo_with_amount(node, fee + 1/10000000)
+    if not addr:
+        addr = node.getnewaddress()
+
+    fee = Decimal(fee)
+    inputs = [{"txid": utxo["txid"], "vout": utxo["vout"]}]
+    outputs = {addr: satoshi_round(utxo['amount'] - fee)}
+    tx = (node.decoderawtransaction(
+          node.signrawtransactionwithwallet(
+          node.createrawtransaction(inputs, outputs), None, "NONE")['hex']))
+
+    base_vsize = tx['vsize']
+
+    assert_greater_than(target_vsize, base_vsize)
+
+    # Output is:
+    # 8 bytes for amount
+    # 1/3/5 byte VarInt for size of scriptPubKey
+    # 2 bytes for OP codes
+    # 1/2/4 bytes for <DATA_SIZE>
+    # DATA_BYTES (can range from 1 byte to just under maxblocksize)
+
+    # For 8 byte amount and 2 byes of OP codes
+    base_output_size = 10
+    bytes_to_add = target_vsize - base_vsize
+
+    # Now have to figure out the size of varints needed based on bytes to add
+    if bytes_to_add <= 12:
+        logger.warn("Bytes to add to transaction is smaller than minimum output size")
+        data_push_sz = 1
+    elif bytes_to_add <= 264:
+        # VarInt for scriptPubKey size is 1 byte and 1 byte for PUSHDATA1
+        data_push_sz = bytes_to_add - base_output_size - 2
+    elif bytes_to_add <= 65550:
+        # VarInt for scriptPubKey size is 3 bytes and 2 byte for PUSHDATA2
+        data_push_sz = bytes_to_add - base_output_size - 5
+    else:
+        # VarInt for scriptPubKey size is 5 bytes and 4 byte for PUSHDATA4
+        data_push_sz = bytes_to_add - base_output_size - 9
+
+    txouts = gen_return_txouts(numoutputs=1, data_push_sz=data_push_sz)
+
+    return create_transaction_with_outputs(node, txouts, utxo, addr, fee)
+
+
+# Create a normal transaction form the utxo and then
+# splice in the additional ouputs in txouts that are
+# generated with gen_return_txouts()
+def create_transaction_with_outputs(node, txouts, utxo, addr, fee):
+    inputs = [{"txid": utxo["txid"], "vout": utxo["vout"]}]
+    outputs = {}
+    change = utxo['amount'] - fee
+    outputs[addr] = satoshi_round(change)
+    rawtx = node.createrawtransaction(inputs, outputs)
+    newtx = rawtx[0:92]
+    newtx = newtx + txouts
+    newtx = newtx + rawtx[94:]
+    signresult = node.signrawtransactionwithwallet(newtx, None, "NONE")
+    txid = node.sendrawtransaction(signresult["hex"], True)
+    return txid
+
+
 # Create a spend of each passed-in utxo, splicing in "txouts" to each raw
 # transaction to make it large.  See gen_return_txouts() above.
-def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
+def create_lots_of_big_transactions(node, utxos, num, fee):
+    txouts = gen_return_txouts()
     addr = node.getnewaddress()
     txids = []
+    assert_greater_than_or_equal(num, len(utxos))
     for _ in range(num):
-        t = utxos.pop()
-        inputs = [{"txid": t["txid"], "vout": t["vout"]}]
-        outputs = {}
-        change = t['amount'] - fee
-        outputs[addr] = satoshi_round(change)
-        rawtx = node.createrawtransaction(inputs, outputs)
-        newtx = rawtx[0:92]
-        newtx = newtx + txouts
-        newtx = newtx + rawtx[94:]
-        signresult = node.signrawtransactionwithwallet(newtx, None, "NONE")
-        txid = node.sendrawtransaction(signresult["hex"], True)
-        txids.append(txid)
+        txids.append(create_transaction_with_outputs(node, txouts, utxos.pop(), addr, fee))
     return txids
 
 def mine_large_block(node, utxos=None):
     # generate a 66k transaction,
     # and 14 of them is close to the 1MB block limit
     num = 14
-    txouts = gen_return_txouts()
     utxos = utxos if utxos is not None else []
     if len(utxos) < num:
         utxos.clear()
         utxos.extend(node.listunspent())
     fee = 100 * node.getnetworkinfo()["relayfee"]
-    create_lots_of_big_transactions(node, txouts, utxos, num, fee=fee)
+    create_lots_of_big_transactions(node, utxos, num, fee=fee)
     node.generate(1)
