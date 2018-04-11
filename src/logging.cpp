@@ -12,13 +12,22 @@
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
-bool fPrintToConsole = false;
-bool fPrintToDebugLog = true;
+/**
+ * NOTE: the logger instances is leaked on exit. This is ugly, but will be
+ * cleaned up by the OS/libc. Defining a logger as a global object doesn't work
+ * since the order of destruction of static/global objects is undefined.
+ * Consider if the logger gets destroyed, and then some later destructor calls
+ * LogPrintf, maybe indirectly, and you get a core dump at shutdown trying to
+ * access the logger. When the shutdown sequence is fully audited and tested,
+ * explicit destruction of these objects can be implemented by changing this
+ * from a raw pointer to a std::unique_ptr.
+ *
+ * This method of initialization was originally introduced in
+ * ee3374234c60aba2cc4c5cd5cac1c0aefc2d817c.
+ */
+BCLog::Logger* const g_logger = new BCLog::Logger();
 
-bool fLogTimestamps = DEFAULT_LOGTIMESTAMPS;
-bool fLogTimeMicros = DEFAULT_LOGTIMEMICROS;
 bool fLogIPs = DEFAULT_LOGIPS;
-std::atomic<bool> fReopenDebugLog(false);
 
 /** Log categories bitfield. */
 std::atomic<uint32_t> logCategories(0);
@@ -174,19 +183,14 @@ std::vector<CLogCategoryActive> ListActiveLogCategories()
     return ret;
 }
 
-/**
- * fStartedNewLine is a state variable held by the calling context that will
- * suppress printing of the timestamp when multiple calls are made that don't
- * end in a newline. Initialize it to true, and hold it, in the calling context.
- */
-static std::string LogTimestampStr(const std::string &str, std::atomic_bool *fStartedNewLine)
+std::string BCLog::Logger::LogTimestampStr(const std::string &str)
 {
     std::string strStamped;
 
     if (!fLogTimestamps)
         return str;
 
-    if (*fStartedNewLine) {
+    if (fStartedNewLine) {
         int64_t nTimeMicros = GetTimeMicros();
         strStamped = FormatISO8601DateTime(nTimeMicros/1000000);
         if (fLogTimeMicros) {
@@ -202,19 +206,18 @@ static std::string LogTimestampStr(const std::string &str, std::atomic_bool *fSt
         strStamped = str;
 
     if (!str.empty() && str[str.size()-1] == '\n')
-        *fStartedNewLine = true;
+        fStartedNewLine = true;
     else
-        *fStartedNewLine = false;
+        fStartedNewLine = false;
 
     return strStamped;
 }
 
-int LogPrintStr(const std::string &str)
+int BCLog::Logger::LogPrintStr(const std::string &str)
 {
     int ret = 0; // Returns total number of characters written
-    static std::atomic_bool fStartedNewLine(true);
 
-    std::string strTimestamped = LogTimestampStr(str, &fStartedNewLine);
+    std::string strTimestamped = LogTimestampStr(str);
 
     if (fPrintToConsole) {
         // print to console

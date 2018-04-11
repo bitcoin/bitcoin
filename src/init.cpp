@@ -305,7 +305,7 @@ static void HandleSIGTERM(int)
 
 static void HandleSIGHUP(int)
 {
-    fReopenDebugLog = true;
+    g_logger->fReopenDebugLog = true;
 }
 
 #ifndef WIN32
@@ -831,10 +831,11 @@ void InitLogging()
     // debug.log.
     LogPrintf("\n\n\n\n\n");
 
-    fPrintToConsole = gArgs.GetBoolArg("-printtoconsole", !gArgs.GetBoolArg("-daemon", false));
-    fPrintToDebugLog = !gArgs.IsArgNegated("-debuglogfile");
-    fLogTimestamps = gArgs.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
-    fLogTimeMicros = gArgs.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
+    g_logger->fPrintToConsole = gArgs.GetBoolArg("-printtoconsole", !gArgs.GetBoolArg("-daemon", false));
+    g_logger->fPrintToDebugLog = !gArgs.IsArgNegated("-debuglogfile");
+    g_logger->fLogTimestamps = gArgs.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
+    g_logger->fLogTimeMicros = gArgs.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
+
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     std::string version_string = FormatFullVersion();
@@ -1230,7 +1231,7 @@ bool AppInitMain()
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
 #endif
-    if (fPrintToDebugLog) {
+    if (g_logger->fPrintToDebugLog) {
         if (gArgs.GetBoolArg("-shrinkdebugfile", logCategories == BCLog::NONE)) {
             // Do this first since it both loads a bunch of debug.log into memory,
             // and because this needs to happen before any other debug.log printing
@@ -1241,7 +1242,7 @@ bool AppInitMain()
         }
     }
 
-    if (!fLogTimestamps)
+    if (!g_logger->fLogTimestamps)
         LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
     LogPrintf("Using data directory %s\n", GetDataDir().string());
