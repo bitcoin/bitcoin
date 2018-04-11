@@ -1191,10 +1191,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 			}
 			std::packaged_task<void()> t([&pcoinsTip, &pool, chainHeight, tx, nFees, hash, vHashTxnToUncache, fromPeer]() {
 				CValidationState vstate;
-				CCoinsView vdummy;
-				CCoinsViewCache vview(&vdummy);
-				CCoinsViewMemPool vviewMemPool(pcoinsTip, pool);
-				vview.SetBackend(vviewMemPool);
+				CCoinsViewCache &vview = *pcoinsTip;
 					
 				// Check against previous transactions
 				// This is done last to help prevent CPU exhaustion denial-of-service attacks.
