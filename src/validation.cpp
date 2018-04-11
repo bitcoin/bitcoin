@@ -553,6 +553,12 @@ std::string FormatStateMessage(const CValidationState &state)
 // SYSCOIN
 bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, const CAmount& nFees, const CBlock& block)
 {
+	// Ensure that we don't fail on verifydb which loads recent UTXO and will fail if the input is already spent, 
+	// but during runtime fLoaded should be true so it should check UTXO in correct state
+	if (!fLoaded)
+		return true;
+	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(&statusRpc)))
+		return true;
 	vector<vector<unsigned char> > vvchArgs;
 	vector<vector<unsigned char> > vvchAliasArgs;
 	sorted_vector<CAssetAllocationTuple> revertedAssetAllocations;
@@ -565,8 +571,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 	bool good = false;
 	string statusRpc = "";
 	CAmount nDescrepency;
-	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(&statusRpc)))
-		return true;
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
 		const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
 		if (nFees > nExpectedFee)
@@ -664,9 +668,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 				good = false;
 				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				{
-					// fLoaded ensures that we don't fail on verifydb which loads recent UTXO and will fail if the input is already spent, 
-					// but during runtime fLoaded should be true so it should check UTXO in correct state
-					if (!FindAliasInTx(tx, vvchAliasArgs) && fLoaded) {
+					if (!FindAliasInTx(tx, vvchAliasArgs)) {
 						LogPrintf("CheckSyscoinInputs2: Cannot find alias input to this transaction\n");
 						return false;
 					}
