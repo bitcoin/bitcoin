@@ -122,6 +122,7 @@ BITCOIN_TESTS =\
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
+  test/subsidy_tests.cpp \
   test/test_dash.cpp \
   test/test_dash.h \
   test/test_random.h \
