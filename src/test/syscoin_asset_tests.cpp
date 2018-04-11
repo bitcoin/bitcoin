@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	UniValue negonevalue(UniValue::VSTR);
 	negonevalue.setStr("-1");
 	// get max value - 1 (1 is already the supply, and this value is cumulative)
-	CAmount negonesupply = AssetAmountFromValue(negonevalue, 8, false) - 1;
+	CAmount negonesupply = AssetAmountFromValue(negonevalue, 8, false) - COIN;
 	string maxstr = ValueFromAssetAmount(negonesupply, 8, false).get_str();
 	AssetUpdate("node1", "assetupdatemaxsupply", "pub12", maxstr);
 	// can't go above max balance (10^18) / (10^8) for 8 decimal places (10 billion in this case)
