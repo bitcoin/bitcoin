@@ -79,28 +79,31 @@ Options when installing required Boost library files:
 individual boost development packages, so the following can be used to only
 install necessary parts of boost:
 
-        sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
+    sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
 
 2. If that doesn't work, you can install all boost development packages with:
 
-        sudo apt-get install libboost-all-dev
+    sudo apt-get install libboost-all-dev
 
-BerkeleyDB is required for the wallet.
+BerkeleyDB is required for the wallet. Unfortunately, there is a binary incompatibility between BerkeleyDB 4.8 and latest 5.x series. There are three options:
 
-**For Ubuntu only:** db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
-You can add the repository and install using the following commands:
+- If you need the wallet and don't need the binary wallet compatibility install the latest Berkeley DB with following commands, then, pass `--with-incompatible-bdb` to configure to build without binary compatibility:
 
-    sudo apt-get install software-properties-common
-    sudo add-apt-repository ppa:bitcoin/bitcoin
-    sudo apt-get update
-    sudo apt-get install libdb4.8-dev libdb4.8++-dev
+    sudo apt-get install libdb-dev libdb++-dev
 
-Ubuntu and Debian have their own libdb-dev and libdb++-dev packages, but these will install
-BerkeleyDB 5.1 or later, which break binary wallet compatibility with the distributed executables which
-are based on BerkeleyDB 4.8. If you do not care about wallet compatibility,
-pass `--with-incompatible-bdb` to configure.
+- Find and install Berkeley DB 4.8 for full binary compatibility
 
-See the section "Disable-wallet mode" to build Bitcoin Core without wallet.
+  **For Ubuntu only:** db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin). You can add the repository and install using the following commands:
+
+      sudo apt-get install software-properties-common
+      sudo add-apt-repository ppa:bitcoin/bitcoin
+      sudo apt-get update
+      sudo apt-get install libdb4.8-dev libdb4.8++-dev
+
+- Disabling the wallet
+  
+  See the section "Disable-wallet mode" to build Bitcoin Core without wallet.
+
 
 Optional (see --with-miniupnpc and --enable-upnp-default):
 
