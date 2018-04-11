@@ -9,6 +9,7 @@ using namespace boost;
 using namespace std;
 typedef typename std::vector<int> container;
 bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
+	LOCK(cs_main);
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	std::vector<CTransaction> orderedVtx;
