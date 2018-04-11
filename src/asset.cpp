@@ -1097,7 +1097,7 @@ bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oAsset
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
 	oAsset.push_back(Pair("can_adjust_interest_rate", asset.bCanAdjustInterestRate));
 	oAsset.push_back(Pair("use_input_ranges", asset.bUseInputRanges));
-	oAsset.push_back(Pair("precision", asset.nPrecision));
+	oAsset.push_back(Pair("precision", (int)asset.nPrecision));
 	if (bGetInputs) {
 		UniValue oAssetAllocationInputsArray(UniValue::VARR);
 		for (auto& input : asset.listAllocationInputs) {
