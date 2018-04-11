@@ -8,7 +8,6 @@
 
 #include "addrdb.h"
 #include "addrman.h"
-#include "amount.h"
 #include "bloom.h"
 #include "compat.h"
 #include "hash.h"
@@ -798,11 +797,6 @@ public:
     std::atomic<int64_t> nMinPingUsecTime;
     // Whether a ping is requested.
     std::atomic<bool> fPingQueued;
-    // Minimum fee rate with which to filter inv's to this node
-    CAmount minFeeFilter;
-    CCriticalSection cs_feeFilter;
-    CAmount lastSentFeeFilter;
-    int64_t nextSendTimeFeeFilter;
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();

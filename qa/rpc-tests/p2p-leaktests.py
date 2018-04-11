@@ -55,7 +55,6 @@ class CLazyNode(NodeConnCB):
     def on_ping(self, conn, message): self.bad_message(message)
     def on_mempool(self, conn): self.bad_message(message)
     def on_pong(self, conn, message): self.bad_message(message)
-    def on_feefilter(self, conn, message): self.bad_message(message)
     def on_sendheaders(self, conn, message): self.bad_message(message)
     def on_sendcmpct(self, conn, message): self.bad_message(message)
     def on_cmpctblock(self, conn, message): self.bad_message(message)

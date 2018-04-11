@@ -183,7 +183,6 @@ testScriptsExt = [
     'p2p-timeouts.py',
     # vv Tests less than 60s vv
     'bip9-softforks.py',
-    'p2p-feefilter.py',
     'rpcbind_test.py',
     # vv Tests less than 30s vv
     'bip65-cltv.py',

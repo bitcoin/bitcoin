@@ -1201,23 +1201,6 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf')):
 
     return False
 
-class msg_feefilter(object):
-    command = b"feefilter"
-
-    def __init__(self, feerate=0):
-        self.feerate = feerate
-
-    def deserialize(self, f):
-        self.feerate = struct.unpack("<Q", f.read(8))[0]
-
-    def serialize(self):
-        r = b""
-        r += struct.pack("<Q", self.feerate)
-        return r
-
-    def __repr__(self):
-        return "msg_feefilter(feerate=%08x)" % self.feerate
-
 class msg_sendcmpct(object):
     command = b"sendcmpct"
 
@@ -1370,7 +1353,6 @@ class NodeConnCB(object):
     def on_close(self, conn): pass
     def on_mempool(self, conn): pass
     def on_pong(self, conn, message): pass
-    def on_feefilter(self, conn, message): pass
     def on_sendheaders(self, conn, message): pass
     def on_sendcmpct(self, conn, message): pass
     def on_cmpctblock(self, conn, message): pass
@@ -1428,7 +1410,6 @@ class NodeConn(asyncore.dispatcher):
         b"getheaders": msg_getheaders,
         b"reject": msg_reject,
         b"mempool": msg_mempool,
-        b"feefilter": msg_feefilter,
         b"sendheaders": msg_sendheaders,
         b"sendcmpct": msg_sendcmpct,
         b"cmpctblock": msg_cmpctblock,
