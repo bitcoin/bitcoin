@@ -79,7 +79,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const Conse
     return bnNew.GetCompact();
 }
 
-unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const Consensus::Params& params) {
+unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params) {
     /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dash.org */
     const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     int64_t nPastBlocks = 24;
@@ -87,6 +87,19 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const Consens
     // make sure we have at least (nPastBlocks + 1) blocks, otherwise just return powLimit
     if (!pindexLast || pindexLast->nHeight < nPastBlocks) {
         return bnPowLimit.GetCompact();
+    }
+
+    if (params.fPowAllowMinDifficultyBlocks && (
+        // testnet ...
+        (params.hashDevnetGenesisBlock.IsNull() && pindexLast->nChainWork >= UintToArith256(uint256S("0x000000000000000000000000000000000000000000000000003e9ccfe0e03e01"))) ||
+        // or devnet
+        !params.hashDevnetGenesisBlock.IsNull())) {
+        // Special difficulty rule for testnet/devnet:
+        // If the new block's timestamp is more than 2* 2.5 minutes
+        // then allow mining of a min-difficulty block.
+        // TODO: "testnet OR devenet" part on next testnet hard-fork
+        if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
+            return bnPowLimit.GetCompact();
     }
 
     const CBlockIndex *pindex = pindexLast;
@@ -172,7 +185,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 {
     // Most recent algo first
     if (pindexLast->nHeight + 1 >= params.nPowDGWHeight) {
-        return DarkGravityWave(pindexLast, params);
+        return DarkGravityWave(pindexLast, pblock, params);
     }
     else if (pindexLast->nHeight + 1 >= params.nPowKGWHeight) {
         return KimotoGravityWell(pindexLast, params);
