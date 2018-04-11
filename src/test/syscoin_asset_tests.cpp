@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	// can't go above max balance (10^18) / (10^8) for 8 decimal places (10 billion in this case)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatemaxsupply jagassetupdate assets 1 0 ''"), runtime_error);
 	// can't create asset with more than max+1 balance or max+1 supply
-	string maxstrplusone = ValueFromAssetAmount(negonesupply+COIN+1, 8, false).get_str();
+	string maxstrplusone = ValueFromAssetAmount(negonesupply+(COIN*2), 8, false).get_str();
 	maxstr = ValueFromAssetAmount(negonesupply+COIN, 8, false).get_str();
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false " + maxstr + " -1 0 false ''"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false 1 " + maxstr + " 0 false ''"));
