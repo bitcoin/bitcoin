@@ -1205,6 +1205,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					int nDos = 0;
 					if (vstate.IsInvalid(nDos) && nDos > 0 && fromPeer >= 0)
 					{
+						LOCK(cs_main);
 						// Punish peer that gave us an invalid signature
 						Misbehaving(fromPeer, nDos);
 					}
@@ -1224,6 +1225,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					int nDos = 0;
 					if (vstate.IsInvalid(nDos) && nDos > 0 && fromPeer >= 0)
 					{
+						LOCK(cs_main);
 						// Punish peer that gave us an invalid syscoin transaction
 						Misbehaving(fromPeer, nDos);
 					}
@@ -1240,6 +1242,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
+				return false;
+			}
+			if (!CheckSyscoinInputs(tx, state, true, chainHeight, nFees, CBlock())) {
 				return false;
 			}
 			// Remove conflicting transactions from the mempool
@@ -1272,9 +1277,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 				if (!pool.exists(hash)) {
 					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 				}
-			}
-			if (!CheckSyscoinInputs(tx, state, true, chainHeight, nFees, CBlock())) {
-				return false;
 			}
 		}
 	}

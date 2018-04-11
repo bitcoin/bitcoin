@@ -1239,15 +1239,15 @@ CAmount AssetAmountFromValue(UniValue& value, int precision, bool isInputRange)
 }
 bool AssetRange(const CAmount& amountIn, int precision, bool isInputRange)
 {
-	UniValue value;
-	value.setInt(amountIn);
 	if (isInputRange)
 		precision = 0;
-	
-	CAmount amount;
-	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
-		return false;
-	if (!AssetRange(amount, isInputRange))
+	if (precision < 0 || precision > 8)
+		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
+	int64_t divByAmount = powf(10, precision);
+	bool sign = amount < 0;
+	int64_t n_abs = (sign ? -amount : amount);
+	int64_t quotient = n_abs / divByAmount;
+	if (!AssetRange(quotient, isInputRange))
 		return false;
 	return true;
 }
