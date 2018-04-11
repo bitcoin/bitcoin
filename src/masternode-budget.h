@@ -216,7 +216,6 @@ public:
 
 class CFinalizedBudget
 {
-
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
@@ -230,12 +229,23 @@ protected:
     map<uint256, CFinalizedBudgetVote> mapVotes;
     uint256 nFeeTXHash;
 
+    static auto ComparePayments(const CTxBudgetPayment& a, const CTxBudgetPayment& b)
+    {
+        if (a.nAmount != b.nAmount)
+            return a.nAmount > b.nAmount;
+        else if (a.nProposalHash != b.nProposalHash)
+            return a.nProposalHash < b.nProposalHash;
+        else if (a.payee != b.payee)
+            return a.payee < b.payee;
+    }
+
 public:
     bool fValid;
     int64_t nTime;
 
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
+    CFinalizedBudget(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
 
     void CleanAndRemove(bool fSignatureCheck);
     bool AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::string& strError);
@@ -254,27 +264,8 @@ public:
     int GetBlockEnd() const {return nBlockStart + (int)(vecBudgetPayments.size() - 1);}
     int GetVoteCount() const {return (int)mapVotes.size();}
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    bool GetBudgetPaymentByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment) const
-    {
-        LOCK(cs);
-
-        int i = nBlockHeight - GetBlockStart();
-        if(i < 0) return false;
-        if(i > (int)vecBudgetPayments.size() - 1) return false;
-        payment = vecBudgetPayments[i];
-        return true;
-    }
-    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, CAmount& nAmount) const
-    {
-        LOCK(cs);
-
-        int i = nBlockHeight - GetBlockStart();
-        if(i < 0) return false;
-        if(i > (int)vecBudgetPayments.size() - 1) return false;
-        payee = vecBudgetPayments[i].payee;
-        nAmount = vecBudgetPayments[i].nAmount;
-        return true;
-    }
+    bool GetBudgetPaymentByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment) const;
+    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, CAmount& nAmount) const;
 
     //check to see if we should vote on this
     bool AutoCheck();
@@ -293,7 +284,6 @@ public:
 
     uint256 GetHash() const{
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << strBudgetName;
         ss << nBlockStart;
         ss << vecBudgetPayments;
 

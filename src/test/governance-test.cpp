@@ -98,7 +98,7 @@ namespace
 
         const CBudgetProposal proposalA = CreateProposal("A", keyPairA, 42);
         const CBudgetProposal proposalB = CreateProposal("B", keyPairB, 404);
-        const CBudgetProposal proposalC = CreateProposal("C", keyPairC, 101);
+        const CBudgetProposal proposalC = CreateProposal("C", keyPairC, 42);
 
         const CMasternode mn1 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(1), 1 * COIN}});
         const CMasternode mn2 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(2), 1 * COIN}});
@@ -200,7 +200,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         );
 
         // Call & Check
-        BOOST_CHECK(budget1.GetHash() != budget2.GetHash());
+        BOOST_CHECK_EQUAL(budget1.GetHash(), budget2.GetHash());
     }
 
     BOOST_AUTO_TEST_CASE(CompareHash_DifferentSet)
@@ -242,7 +242,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         );
 
         // Call & Check
-        BOOST_CHECK(budget1.GetHash() != budget2.GetHash());
+        BOOST_CHECK_EQUAL(budget1.GetHash(), budget2.GetHash());
     }
     
     BOOST_AUTO_TEST_CASE(AutoCheck_OneProposal)
@@ -405,7 +405,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         auto budget = CFinalizedBudgetBroadcast(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
 
         auto expected = CMutableTransaction{};
-        expected.vout.emplace_back(proposalA.GetAmount(), proposalA.GetPayee());
+        expected.vout.emplace_back(proposalB.GetAmount(), proposalB.GetPayee());
 
         // Call & Check
         BOOST_CHECK(budget.IsTransactionValid(expected, blockStart));
@@ -424,7 +424,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         wrong1.vout.emplace_back(proposalA.GetAmount(), proposalC.GetPayee());
 
         auto wrong2 = CMutableTransaction{};
-        wrong2.vout.emplace_back(proposalC.GetAmount(), proposalA.GetPayee());
+        wrong2.vout.emplace_back(proposalB.GetAmount(), proposalA.GetPayee());
 
         // Call & Check
         BOOST_CHECK(!budget.IsTransactionValid(wrong1, blockStart));
@@ -441,7 +441,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         auto budget = CFinalizedBudgetBroadcast(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
 
         auto expected = CMutableTransaction{};
-        expected.vout.emplace_back(proposalB.GetAmount(), proposalB.GetPayee());
+        expected.vout.emplace_back(proposalA.GetAmount(), proposalA.GetPayee());
 
         // Call & Check
         BOOST_CHECK(budget.IsTransactionValid(expected, blockStart + 1));
@@ -476,7 +476,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         // Call & Check
         auto result = budget.GetBudgetPaymentByBlock(blockStart, actual);
 
-        BOOST_CHECK_EQUAL(actual, GetPayment(proposalA));
+        BOOST_CHECK_EQUAL(actual, GetPayment(proposalB));
         BOOST_CHECK(result);
     }
 
@@ -493,7 +493,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         // Call & Check
         auto result = budget.GetBudgetPaymentByBlock(blockStart + 1, actual);
 
-        BOOST_CHECK_EQUAL(actual, GetPayment(proposalB));
+        BOOST_CHECK_EQUAL(actual, GetPayment(proposalA));
         BOOST_CHECK(result);
     }
 
