@@ -145,6 +145,8 @@ BOOST_AUTO_TEST_CASE(siphash)
         BOOST_CHECK_EQUAL(SipHashUint256(k1, k2, x), sip256.Finalize());
         BOOST_CHECK_EQUAL(SipHashUint256Extra(k1, k2, x, n), sip288.Finalize());
     }*/
+
+    BOOST_CHECK_EQUAL(SipHashUint256(1, 2, ss.GetHash()), 0x79751e980c2a0a35ULL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
