@@ -1213,8 +1213,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					return;
 				}
-				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
-				vview.SetBackend(vdummy);
 
 				if (!CheckSyscoinInputs(tx, vstate, true, chainHeight, nFees, CBlock())) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs", hash.ToString(), vstate.GetRejectReason());
