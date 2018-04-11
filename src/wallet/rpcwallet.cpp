@@ -1423,7 +1423,7 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             "                                                 configured for transactions locked via InstantSend\n"
             "    \"label\" : \"label\",               (string) A comment for the address/transaction, if any\n"
             "    \"txids\": [\n"
-            "       n,                                (numeric) The ids of transactions received with the address \n"
+            "       \"txid\",                         (string) The ids of transactions received with the address \n"
             "       ...\n"
             "    ]\n"
             "  }\n"
