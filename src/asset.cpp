@@ -361,7 +361,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			user2 = stringFromVch(theAsset.vchAlias);
 		}
 		string strResponseEnglish = "";
-		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSET);
+		string strResponseGUID = "";
+		string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, ASSET, strResponseGUID);
 		CAsset dbAsset;
 		if (!GetAsset(op == OP_ASSET_SEND ? theAssetAllocation.vchAsset : theAsset.vchAsset, dbAsset))
 		{

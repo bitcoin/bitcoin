@@ -384,7 +384,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 		user2 = stringFromVch(theCert.vchAlias);
 	}
 	string strResponseEnglish = "";
-	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, CERT);
+	string strResponseGUID = "";
+	string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, CERT, strResponseGUID);
 	// if not an certnew, load the cert data from the DB
 	CCert dbCert;
 	if (!GetCert(theCert.vchCert, dbCert))

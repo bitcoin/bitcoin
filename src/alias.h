@@ -329,7 +329,7 @@ void AliasTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName);
 void CleanupSyscoinServiceDatabases(int &servicesCleaned);
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& script, const uint32_t nPaymentOption=1);
-std::string GetSyscoinTransactionDescription(const CWalletTx& wtx, const int op, std::string& responseEnglish, const char &type, std::string& responseGUID);
+std::string GetSyscoinTransactionDescription(const CTransaction& tx, const int op, std::string& responseEnglish, const char &type, std::string& responseGUID);
 bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName);
 bool DoesAliasExist(const std::string &strAddress);
 #endif // ALIAS_H

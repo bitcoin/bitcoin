@@ -531,7 +531,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		user2 = stringFromVch(theOffer.vchAlias);
 	}
 	string strResponseEnglish = "";
-	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, OFFER);
+	string strResponseGUID = "";
+	string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, OFFER, strResponseGUID);
 	COffer dbOffer;
 	// load the offer data from the DB
 	if (!GetOffer(theOffer.vchOffer, dbOffer))

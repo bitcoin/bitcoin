@@ -359,7 +359,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 	const string &user2 = "";
 	const string &user1 = stringFromVch(vchAlias);
 	string strResponseEnglish = "";
-	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSETALLOCATION);
+	string strResponseGUID = "";
+	string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, ASSETALLOCATION, strResponseGUID);
 	CAssetAllocation dbAssetAllocation;
 	CAsset dbAsset;
 	bool bRevert = false;

@@ -469,7 +469,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 		bool theAliasNull = theAlias.IsNull();
 		string strResponseEnglish = "";
-		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ALIAS);
+		string strResponseGUID = "";
+		string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, ALIAS, strResponseGUID);
 		const string &user1 = stringFromVch(vvchArgs[0]);
 		string user2 = "";
 		string user3 = "";
@@ -2409,7 +2410,7 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 	}
 	return false;
 }
-string GetSyscoinTransactionDescription(const CWalletTx& tx, const int op, string& responseEnglish, const char &type, string& responseGUID)
+string GetSyscoinTransactionDescription(const CTransaction& tx, const int op, string& responseEnglish, const char &type, string& responseGUID)
 {
 	string strResponse = "";
 	if (type == ALIAS) {

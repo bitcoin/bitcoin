@@ -604,7 +604,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 		CEscrow serializedEscrow = theEscrow;
 		escrowOp = serializedEscrow.op;
 		string strResponseEnglish = "";
-		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ESCROW);
+		string strResponseGUID = "";
+		string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, ESCROW, strResponseGUID);
 		string user1 = "";
 		string user2 = "";
 		string user3 = "";
