@@ -580,57 +580,60 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, CCoinsV
 		if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
 			return state.DoS(100, false, REJECT_INVALID, strprintf("fees-not-correct nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str()));
 		}
-		bool bDestCheckFailed = false;
-		if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 		{
-			if (!FindAliasInTx(tx, view, vvchAliasArgs)) {
-				return state.DoS(100, false, REJECT_INVALID, strprintf("no-alias-input-found-mempool"));
+			LOCK(cs_main);
+			bool bDestCheckFailed = false;
+			if (!DecodeAliasTx(tx, op, vvchAliasArgs))
+			{
+				if (!FindAliasInTx(tx, view, vvchAliasArgs)) {
+					return state.DoS(100, false, REJECT_INVALID, strprintf("no-alias-input-found-mempool"));
+				}
+				// it is assumed if no alias output is found, then it is for another service so this would be an alias update
+				op = OP_ALIAS_UPDATE;
 			}
-			// it is assumed if no alias output is found, then it is for another service so this would be an alias update
-			op = OP_ALIAS_UPDATE;
-		}
-		errorMessage.clear();
-		good = CheckAliasInputs(tx, view, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
-		if (fDebug && !errorMessage.empty())
-			LogPrintf("%s\n", errorMessage.c_str());
+			errorMessage.clear();
+			good = CheckAliasInputs(tx, view, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+			if (fDebug && !errorMessage.empty())
+				LogPrintf("%s\n", errorMessage.c_str());
 
-		if (!bDestCheckFailed && vvchArgs.empty() && good)
-		{
+			if (!bDestCheckFailed && vvchArgs.empty() && good)
+			{
 
-			if (DecodeCertTx(tx, op, vvchArgs))
-			{
-				errorMessage.clear();
-				good = CheckCertInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage);
-				if (fDebug && !errorMessage.empty())
-					LogPrintf("%s\n", errorMessage.c_str());
-			}
-			if (DecodeAssetTx(tx, op, vvchArgs))
-			{
-				errorMessage.clear();
-				good = CheckAssetInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
-				if (fDebug && !errorMessage.empty())
-					LogPrintf("%s\n", errorMessage.c_str());
-			}
-			else if (DecodeAssetAllocationTx(tx, op, vvchArgs))
-			{
-				errorMessage.clear();
-				good = CheckAssetAllocationInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
-				if (fDebug && !errorMessage.empty())
-					LogPrintf("%s\n", errorMessage.c_str());
-			}
-			else if (DecodeEscrowTx(tx, op, vvchArgs))
-			{
-				errorMessage.clear();
-				good = CheckEscrowInputs(tx, op, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
-				if (fDebug && !errorMessage.empty())
-					LogPrintf("%s\n", errorMessage.c_str());
-			}
-			else if (DecodeOfferTx(tx, op, vvchArgs))
-			{
-				errorMessage.clear();
-				good = CheckOfferInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage);
-				if (fDebug && !errorMessage.empty())
-					LogPrintf("%s\n", errorMessage.c_str());
+				if (DecodeCertTx(tx, op, vvchArgs))
+				{
+					errorMessage.clear();
+					good = CheckCertInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage);
+					if (fDebug && !errorMessage.empty())
+						LogPrintf("%s\n", errorMessage.c_str());
+				}
+				if (DecodeAssetTx(tx, op, vvchArgs))
+				{
+					errorMessage.clear();
+					good = CheckAssetInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+					if (fDebug && !errorMessage.empty())
+						LogPrintf("%s\n", errorMessage.c_str());
+				}
+				else if (DecodeAssetAllocationTx(tx, op, vvchArgs))
+				{
+					errorMessage.clear();
+					good = CheckAssetAllocationInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+					if (fDebug && !errorMessage.empty())
+						LogPrintf("%s\n", errorMessage.c_str());
+				}
+				else if (DecodeEscrowTx(tx, op, vvchArgs))
+				{
+					errorMessage.clear();
+					good = CheckEscrowInputs(tx, op, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+					if (fDebug && !errorMessage.empty())
+						LogPrintf("%s\n", errorMessage.c_str());
+				}
+				else if (DecodeOfferTx(tx, op, vvchArgs))
+				{
+					errorMessage.clear();
+					good = CheckOfferInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage);
+					if (fDebug && !errorMessage.empty())
+						LogPrintf("%s\n", errorMessage.c_str());
+				}
 			}
 		}
 		if (!good)
@@ -655,70 +658,72 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, CCoinsV
 		}
 		if (fJustCheck)
 			return true;
-		
-		good = true;
-		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
 		{
-			const CTransaction &tx = sortedBlock.vtx[i];
-			if (tx.nVersion == SYSCOIN_TX_VERSION)
+			LOCK(cs_main);
+			good = true;
+			for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
 			{
-				bool bDestCheckFailed = false;
-				good = false;
-				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
+				const CTransaction &tx = sortedBlock.vtx[i];
+				if (tx.nVersion == SYSCOIN_TX_VERSION)
 				{
-					if (!FindAliasInTx(tx, view, vvchAliasArgs)) {
-						return state.DoS(100, false, REJECT_INVALID, strprintf("no-alias-input-found"));
+					bool bDestCheckFailed = false;
+					good = false;
+					if (!DecodeAliasTx(tx, op, vvchAliasArgs))
+					{
+						if (!FindAliasInTx(tx, view, vvchAliasArgs)) {
+							return state.DoS(100, false, REJECT_INVALID, strprintf("no-alias-input-found"));
+						}
+						// it is assumed if no alias output is found, then it is for another service so this would be an alias update
+						op = OP_ALIAS_UPDATE;
 					}
-					// it is assumed if no alias output is found, then it is for another service so this would be an alias update
-					op = OP_ALIAS_UPDATE;
-				}
-				errorMessage.clear();
-				good = CheckAliasInputs(tx, view, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
-				if (fDebug && !errorMessage.empty())
-					LogPrintf("%s\n", errorMessage.c_str());
+					errorMessage.clear();
+					good = CheckAliasInputs(tx, view, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+					if (fDebug && !errorMessage.empty())
+						LogPrintf("%s\n", errorMessage.c_str());
 
-				if (!bDestCheckFailed && !vvchAliasArgs.empty() && good)
-				{
-					if (DecodeCertTx(tx, op, vvchArgs))
+					if (!bDestCheckFailed && !vvchAliasArgs.empty() && good)
 					{
-						errorMessage.clear();
-						good = CheckCertInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage);
-						if (fDebug && !errorMessage.empty())
-							LogPrintf("%s\n", errorMessage.c_str());
-					}
-					if (DecodeAssetTx(tx, op, vvchArgs))
-					{
-						errorMessage.clear();
-						good = CheckAssetInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
-						if (fDebug && !errorMessage.empty())
-							LogPrintf("%s\n", errorMessage.c_str());
-					}
-					else if (DecodeAssetAllocationTx(tx, op, vvchArgs))
-					{
-						errorMessage.clear();
-						good = CheckAssetAllocationInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
-						if (fDebug && !errorMessage.empty())
-							LogPrintf("%s\n", errorMessage.c_str());
+						if (DecodeCertTx(tx, op, vvchArgs))
+						{
+							errorMessage.clear();
+							good = CheckCertInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage);
+							if (fDebug && !errorMessage.empty())
+								LogPrintf("%s\n", errorMessage.c_str());
+						}
+						if (DecodeAssetTx(tx, op, vvchArgs))
+						{
+							errorMessage.clear();
+							good = CheckAssetInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+							if (fDebug && !errorMessage.empty())
+								LogPrintf("%s\n", errorMessage.c_str());
+						}
+						else if (DecodeAssetAllocationTx(tx, op, vvchArgs))
+						{
+							errorMessage.clear();
+							good = CheckAssetAllocationInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+							if (fDebug && !errorMessage.empty())
+								LogPrintf("%s\n", errorMessage.c_str());
 
+						}
+						else if (DecodeEscrowTx(tx, op, vvchArgs))
+						{
+							errorMessage.clear();
+							good = CheckEscrowInputs(tx, op, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+							if (fDebug && !errorMessage.empty())
+								LogPrintf("%s\n", errorMessage.c_str());
+						}
+						else if (DecodeOfferTx(tx, op, vvchArgs))
+						{
+							errorMessage.clear();
+							good = CheckOfferInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage);
+							if (fDebug && !errorMessage.empty())
+								LogPrintf("%s\n", errorMessage.c_str());
+						}
 					}
-					else if (DecodeEscrowTx(tx, op, vvchArgs))
+					if (!good)
 					{
-						errorMessage.clear();
-						good = CheckEscrowInputs(tx, op, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
-						if (fDebug && !errorMessage.empty())
-							LogPrintf("%s\n", errorMessage.c_str());
+						break;
 					}
-					else if (DecodeOfferTx(tx, op, vvchArgs))
-					{
-						errorMessage.clear();
-						good = CheckOfferInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage);
-						if (fDebug && !errorMessage.empty())
-							LogPrintf("%s\n", errorMessage.c_str());
-					}
-				}
-				if (!good)
-				{
-					break;
 				}
 			}
 		}
@@ -1201,6 +1206,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					int nDos = 0;
 					if (vstate.IsInvalid(nDos) && nDos > 0 && fromPeer >= 0)
 					{
+						LOCK(cs_main);
 						// Punish peer that gave us an invalid signature
 						Misbehaving(fromPeer, nDos);
 					}
@@ -1209,11 +1215,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					return;
 				}
-				{
-					LOCK(cs_main);
-					bool res = CheckSyscoinInputs(tx, vstate, vview, true, chainHeight, nFees, CBlock());
-				}
-				if (!res) {
+				
+					
+				
+				if (!CheckSyscoinInputs(tx, vstate, vview, true, chainHeight, nFees, CBlock())) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
@@ -1223,6 +1228,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					int nDos = 0;
 					if (vstate.IsInvalid(nDos) && nDos > 0 && fromPeer >= 0)
 					{
+						LOCK(cs_main);
 						// Punish peer that gave us an invalid syscoin transaction
 						Misbehaving(fromPeer, nDos);
 					}
