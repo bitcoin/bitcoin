@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 
     CBlockHeader blockHeader;
     blockHeader.nTime = 1408732505; // Block #123457
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParams->GetConsensus()), 0x1b1441de); // Block #123457 has 0x1b1441de
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParams->GetConsensus()), 0x1b1441deU); // Block #123457 has 0x1b1441de
 
     // test special rules for slow blocks on devnet/testnet
     gArgs.SoftSetBoolArg("-devnet", true);
@@ -126,18 +126,18 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 
     // make sure normal rules apply
     blockHeader.nTime = 1408732505; // Block #123457
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1b1441de); // Block #123457 has 0x1b1441de
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1b1441deU); // Block #123457 has 0x1b1441de
 
     // 10x higher target
     blockHeader.nTime = 1408733090; // Block #123457 (10m+1sec)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1c00c8f8); // Block #123457 has 0x1c00c8f8
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1c00c8f8U); // Block #123457 has 0x1c00c8f8
     blockHeader.nTime = 1408733689; // Block #123457 (20m)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1c00c8f8); // Block #123457 has 0x1c00c8f8
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1c00c8f8U); // Block #123457 has 0x1c00c8f8
     // lowest diff possible
     blockHeader.nTime = 1408739690; // Block #123457 (2h+1sec)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x207fffff); // Block #123457 has 0x207fffff
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x207fffffU); // Block #123457 has 0x207fffff
     blockHeader.nTime = 1408743289; // Block #123457 (3h)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x207fffff); // Block #123457 has 0x207fffff
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x207fffffU); // Block #123457 has 0x207fffff
 }
 
 /* Test the constraint on the upper bound for next work */
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 //     pindexLast.nHeight = 2015;
 //     pindexLast.nTime = 1233061996;  // Block #2015
 //     pindexLast.nBits = 0x1d00ffff;
-//     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00ffff);
+//     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00ffffU);
 // }
 
 /* Test the constraint on the lower bound for actual time taken */
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 //     pindexLast.nHeight = 68543;
 //     pindexLast.nTime = 1279297671;  // Block #68543
 //     pindexLast.nBits = 0x1c05a3f4;
-//     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1c0168fd);
+//     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1c0168fdU);
 // }
 
 /* Test the constraint on the upper bound for actual time taken */
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 //     pindexLast.nHeight = 46367;
 //     pindexLast.nTime = 1269211443;  // Block #46367
 //     pindexLast.nBits = 0x1c387f6f;
-//     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00e1fd);
+//     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00e1fdU);
 // }
 
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)

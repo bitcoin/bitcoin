@@ -100,7 +100,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     }
     // spends[1] should have been removed from the mempool when the
     // block with spends[0] is accepted:
-    BOOST_CHECK_EQUAL(mempool.size(), 0);
+    BOOST_CHECK_EQUAL(mempool.size(), 0U);
 }
 
 // Run CheckInputs (using pcoinsTip) on the given transaction, for all script
@@ -212,7 +212,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
         // not caching invalidity (if that changes, delete this test case).
         std::vector<CScriptCheck> scriptchecks;
         BOOST_CHECK(CheckInputs(spend_tx, state, pcoinsTip.get(), true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_DERSIG, true, true, ptd_spend_tx, &scriptchecks));
-        BOOST_CHECK_EQUAL(scriptchecks.size(), 1);
+        BOOST_CHECK_EQUAL(scriptchecks.size(), 1U);
 
         // Test that CheckInputs returns true iff DERSIG-enforcing flags are
         // not present.  Don't add these checks to the cache, so that we can

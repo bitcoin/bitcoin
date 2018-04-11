@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     poolSize = testPool.size();
     testPool.removeRecursive(txParent);
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 5);
-    BOOST_CHECK_EQUAL(testPool.size(), 0);
+    BOOST_CHECK_EQUAL(testPool.size(), 0U);
 
     // Add children and grandchildren, but NOT the parent (simulate the parent being in a block)
     for (int i = 0; i < 3; i++)
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     poolSize = testPool.size();
     testPool.removeRecursive(txParent);
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 6);
-    BOOST_CHECK_EQUAL(testPool.size(), 0);
+    BOOST_CHECK_EQUAL(testPool.size(), 0U);
 }
 
 template<typename name>
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx5.vout[0].nValue = 11 * COIN;
     entry.nTime = 1;
     pool.addUnchecked(tx5.GetHash(), entry.Fee(10000LL).FromTx(tx5));
-    BOOST_CHECK_EQUAL(pool.size(), 5);
+    BOOST_CHECK_EQUAL(pool.size(), 5U);
 
     std::vector<std::string> sortedOrder;
     sortedOrder.resize(5);
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx6.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx6.vout[0].nValue = 20 * COIN;
     pool.addUnchecked(tx6.GetHash(), entry.Fee(0LL).FromTx(tx6));
-    BOOST_CHECK_EQUAL(pool.size(), 6);
+    BOOST_CHECK_EQUAL(pool.size(), 6U);
     // Check that at this point, tx6 is sorted low
     sortedOrder.insert(sortedOrder.begin(), tx6.GetHash().ToString());
     CheckSort<descendant_score>(pool, sortedOrder);
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     BOOST_CHECK(setAncestorsCalculated == setAncestors);
 
     pool.addUnchecked(tx7.GetHash(), entry.FromTx(tx7), setAncestors);
-    BOOST_CHECK_EQUAL(pool.size(), 7);
+    BOOST_CHECK_EQUAL(pool.size(), 7U);
 
     // Now tx6 should be sorted higher (high fee child): tx7, tx6, tx2, ...
     sortedOrder.erase(sortedOrder.begin());
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     pool.addUnchecked(tx9.GetHash(), entry.Fee(0LL).Time(3).FromTx(tx9), setAncestors);
 
     // tx9 should be sorted low
-    BOOST_CHECK_EQUAL(pool.size(), 9);
+    BOOST_CHECK_EQUAL(pool.size(), 9U);
     sortedOrder.insert(sortedOrder.begin(), tx9.GetHash().ToString());
     CheckSort<descendant_score>(pool, sortedOrder);
 
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     CheckSort<descendant_score>(pool, sortedOrder);
 
     // there should be 10 transactions in the mempool
-    BOOST_CHECK_EQUAL(pool.size(), 10);
+    BOOST_CHECK_EQUAL(pool.size(), 10U);
 
     // Now try removing tx10 and verify the sort order returns to normal
     pool.removeRecursive(pool.mapTx.find(tx10.GetHash())->GetTx());
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     tx5.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx5.vout[0].nValue = 11 * COIN;
     pool.addUnchecked(tx5.GetHash(), entry.Fee(10000LL).FromTx(tx5));
-    BOOST_CHECK_EQUAL(pool.size(), 5);
+    BOOST_CHECK_EQUAL(pool.size(), 5U);
 
     std::vector<std::string> sortedOrder;
     sortedOrder.resize(5);
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     uint64_t tx6Size = ::GetSerializeSize(tx6, SER_NETWORK, PROTOCOL_VERSION);
 
     pool.addUnchecked(tx6.GetHash(), entry.Fee(0LL).FromTx(tx6));
-    BOOST_CHECK_EQUAL(pool.size(), 6);
+    BOOST_CHECK_EQUAL(pool.size(), 6U);
     // Ties are broken by hash
     if (tx3.GetHash() < tx6.GetHash())
         sortedOrder.push_back(tx6.GetHash().ToString());
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     CAmount fee = (20000/tx2Size)*(tx7Size + tx6Size) - 1;
 
     pool.addUnchecked(tx7.GetHash(), entry.Fee(fee).FromTx(tx7));
-    BOOST_CHECK_EQUAL(pool.size(), 7);
+    BOOST_CHECK_EQUAL(pool.size(), 7U);
     sortedOrder.insert(sortedOrder.begin()+1, tx7.GetHash().ToString());
     CheckSort<ancestor_score>(pool, sortedOrder);
 
