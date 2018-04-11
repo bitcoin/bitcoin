@@ -1214,12 +1214,14 @@ UniValue ValueFromAssetAmount(const CAmount& amount,int precision, bool isInputR
 	int64_t quotient = n_abs;
 	int64_t divByAmount = 1;
 	int64_t remainder = 0;
+	string strPrecision = "0";
 	if (precision > 0) {
 		divByAmount = powf(10, precision);
 		quotient = n_abs / divByAmount;
 		remainder = n_abs % divByAmount;
+		strPrecision = boost::lexical_cast<string>(precision);
 	}
-	string strPrecision = boost::lexical_cast<string>(precision);
+
 	return UniValue(UniValue::VSTR,
 		strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
 }

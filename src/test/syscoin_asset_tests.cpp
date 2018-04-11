@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges)
 	BOOST_CHECK_EQUAL(find_value(inputsArray[2].get_obj(), "start").get_int(), 8);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[2].get_obj(), "end").get_int(), 9);
 	UniValue balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 7 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 7);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memoassetsendranges");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
 
@@ -632,9 +632,9 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges)
 	balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 3 * COIN);
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 10 * COIN);
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 20 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 3);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 10);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 20);
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
@@ -652,9 +652,9 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges)
 	balance = find_value(r.get_obj(), "balance");
 	totalsupply = find_value(r.get_obj(), "total_supply");
 	maxsupply = find_value(r.get_obj(), "max_supply");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 4 * COIN);
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 11 * COIN);
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 20 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 4);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 11);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 20);
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
@@ -673,9 +673,9 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges)
 	balance = find_value(r.get_obj(), "balance");
 	totalsupply = find_value(r.get_obj(), "total_supply");
 	maxsupply = find_value(r.get_obj(), "max_supply");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 13 * COIN);
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 20 * COIN);
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 20 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 13);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 20);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 20);
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
@@ -724,7 +724,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 199);
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangesa true"));
@@ -735,7 +735,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 199);
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangesb true"));
@@ -746,7 +746,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 200);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 399);
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangesc true"));
@@ -757,7 +757,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 400);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 599);
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangesd true"));
@@ -768,7 +768,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 600);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 799);
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo asset jagassetsendrangese true"));
@@ -779,7 +779,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 800);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 999);
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
 
@@ -789,9 +789,9 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 1000 * COIN);
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 2000 * COIN);
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 1000000 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 1000);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 2000);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 1000000);
 	inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
 	inputsArray = inputs.get_array();
