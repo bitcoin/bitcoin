@@ -31,6 +31,14 @@ POSSIBILITY OF SUCH DAMAGE.
 #else
 #include <sys/time.h>
 #endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 int natpmp_gettimeofday(struct timeval* p, void* tz /* IGNORED */);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 #endif

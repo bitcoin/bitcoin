@@ -37,11 +37,19 @@ typedef unsigned short uint16_t;
 #endif
 /* #include "declspec.h" */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* getdefaultgateway() :
  * return value :
  *    0 : success
  *   -1 : failure    */
 /* NATPMP_LIBSPEC */
 int getdefaultgateway(in_addr_t * addr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
