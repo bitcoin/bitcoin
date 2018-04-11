@@ -48,8 +48,8 @@ class WalletHDTest(BitcoinTestFramework):
         # Also send funds to each add
         self.nodes[0].generate(101)
         hd_add = None
-        num_hd_adds = 300
-        for i in range(num_hd_adds):
+        NUM_HD_ADDS = 10
+        for i in range(NUM_HD_ADDS):
             hd_add = self.nodes[1].getnewaddress()
             hd_info = self.nodes[1].getaddressinfo(hd_add)
             assert_equal(hd_info["hdkeypath"], "m/0'/0'/"+str(i)+"'")
@@ -65,7 +65,7 @@ class WalletHDTest(BitcoinTestFramework):
         assert_equal(change_addrV["hdkeypath"], "m/0'/1'/1'") #second internal child key
 
         self.sync_all()
-        assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
+        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
 
         self.log.info("Restore backup ...")
         self.stop_node(1)
@@ -78,10 +78,10 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Assert that derivation is deterministic
         hd_add_2 = None
-        for _ in range(num_hd_adds):
+        for i in range(NUM_HD_ADDS):
             hd_add_2 = self.nodes[1].getnewaddress()
             hd_info_2 = self.nodes[1].getaddressinfo(hd_add_2)
-            assert_equal(hd_info_2["hdkeypath"], "m/0'/0'/"+str(_)+"'")
+            assert_equal(hd_info_2["hdkeypath"], "m/0'/0'/"+str(i)+"'")
             assert_equal(hd_info_2["hdmasterkeyid"], masterkeyid)
         assert_equal(hd_add, hd_add_2)
         connect_nodes_bi(self.nodes, 0, 1)
@@ -90,7 +90,7 @@ class WalletHDTest(BitcoinTestFramework):
         # Needs rescan
         self.stop_node(1)
         self.start_node(1, extra_args=self.extra_args[1] + ['-rescan'])
-        assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
+        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
 
         # Try a RPC based rescan
         self.stop_node(1)
@@ -100,13 +100,15 @@ class WalletHDTest(BitcoinTestFramework):
         self.start_node(1, extra_args=self.extra_args[1])
         connect_nodes_bi(self.nodes, 0, 1)
         self.sync_all()
+        # Wallet automatically scans blocks older than key on startup
+        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
         out = self.nodes[1].rescanblockchain(0, 1)
         assert_equal(out['start_height'], 0)
         assert_equal(out['stop_height'], 1)
         out = self.nodes[1].rescanblockchain()
         assert_equal(out['start_height'], 0)
         assert_equal(out['stop_height'], self.nodes[1].getblockcount())
-        assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
+        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
 
         # send a tx and make sure its using the internal chain for the changeoutput
         txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)
