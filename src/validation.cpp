@@ -1189,7 +1189,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 				}
 			}
-			std::packaged_task<void()> t([&pcoinsTip, &pool, chainHeight, tx, nFees, hash, vHashTxnToUncache, fromPeer]() {
+			std::packaged_task<void()> t([&pool, chainHeight, tx, nFees, hash, vHashTxnToUncache, fromPeer]() {
 				CValidationState vstate;
 				CCoinsViewCache &vview = *pcoinsTip;
 					
