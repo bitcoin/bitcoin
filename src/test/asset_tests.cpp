@@ -2,18 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <ravenscroll/ravenscroll.h>
+#include <assets/assets.h>
 
 #include <test/test_raven.h>
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(ravenscroll_tests, BasicTestingSetup)
+#include <amount.h>
 
-BOOST_AUTO_TEST_CASE(ravenscroll_test1)
+BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(validation_tests)
 {
-  RavenScrollPaymentRef paymentRef = RavenScrollPaymentRefRandom();
-  BOOST_CHECK(paymentRef > 0);
+	BOOST_CHECK(IsAssetUnitsValid(COIN));
+	BOOST_CHECK(IsAssetUnitsValid(CENT));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

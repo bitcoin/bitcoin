@@ -38,8 +38,63 @@ UniValue CallRPC(std::string args)
     }
 }
 
+// asset fixtures
+static const std::string ok_address = "R9hNxkyzXrHmpxg7Z1qbW1PrKFriqzXBAU";
+static const std::string bad_address = "X9hNxkyzXrHmpxg7Z1qbW1PrKFriqzXBAU";
+static const std::string ok_asset_name = "OK_ASSET";
 
 BOOST_FIXTURE_TEST_SUITE(rpc_tests, TestingSetup)
+
+BOOST_AUTO_TEST_CASE(rpc_assets_issue)
+{
+    // missing required params
+    BOOST_CHECK_THROW(CallRPC("issue"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name), std::runtime_error);
+
+    // valid params
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000"));
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 1"));
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 0.00000001 true"));
+
+    // invalid to_address
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+bad_address+" "+ok_asset_name+" 1000 0.0001 true"), std::runtime_error);
+
+    // invalid asset_name
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+"X"+" 1000 0.0001 true"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+"XX"+" 1000 0.0001 true"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+"BAD_A$$ET"+" 1000 0.0001 true"), std::runtime_error);
+
+    // invalid qty
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 0 0.0001 true"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" -1 0.0001 true"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" NaN 0.0001 true"), std::runtime_error);
+
+    // invalid units
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 2 true"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 0.0002 true"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 0.000000001 true"), std::runtime_error);
+
+    // invalid reissuable
+    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 1 NaB"), std::runtime_error);
+
+}
+
+BOOST_AUTO_TEST_CASE(rpc_assets_getaddressbalances)
+{
+    // missing required params
+    BOOST_CHECK_THROW(CallRPC("getaddressbalances"), std::runtime_error);
+
+    // valid params
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("getaddressbalances ")+ok_address));
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("getaddressbalances ")+ok_address+" 5"));
+
+    // invalid address
+    BOOST_CHECK_THROW(CallRPC(std::string("getaddressbalances ")+bad_address), std::runtime_error);
+
+    // invalid minconf
+    BOOST_CHECK_THROW(CallRPC(std::string("getaddressbalances ")+ok_address+" NaN"), std::runtime_error);
+}
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {

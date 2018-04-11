@@ -116,5 +116,3 @@ test/cache/*
 
 libravenconsensus.pc
 contrib/devtools/split-debug.sh
-.idea
-cmake-build-debug/

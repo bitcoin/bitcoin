@@ -29,6 +29,9 @@ public:
  */
 static const CRPCConvertParam vRPCConvertParams[] =
 {
+    { "issue", 2, "qty" },
+    { "issue", 4, "reissuable" },
+    { "getaddressbalances", 1, "minconf" },
     { "setmocktime", 0, "timestamp" },
     { "generate", 0, "nblocks" },
     { "generate", 1, "maxtries" },

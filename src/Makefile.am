@@ -207,6 +207,7 @@ libraven_server_a_SOURCES = \
   policy/rbf.cpp \
   pow.cpp \
   rest.cpp \
+  rpc/assets.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
@@ -335,8 +336,8 @@ libraven_consensus_a_SOURCES = \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \
-  ravenscroll/ravenscroll.c \
-  ravenscroll/ravenscroll.h \
+  assets/assets.cpp \
+  assets/assets.h \
   script/ravenconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
