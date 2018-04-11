@@ -1237,7 +1237,7 @@ CAmount AssetAmountFromValue(UniValue& value, int precision, bool isInputRange)
 		throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
 	return amount;
 }
-bool AssetRange(const CAmount& amountIn, int precision, bool isInputRange)
+bool AssetRange(const CAmount& amount, int precision, bool isInputRange)
 {
 	if (isInputRange)
 		precision = 0;
