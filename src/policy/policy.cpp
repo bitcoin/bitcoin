@@ -229,7 +229,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
           return false;
 
       // Check P2WSH standard limits
-      if (witnessversion == 0 && witnessprogram.size() == 32) {
+      if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
           if (tx.vin[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
               return false;
           size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 1;
