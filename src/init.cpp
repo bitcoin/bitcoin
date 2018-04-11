@@ -1300,10 +1300,11 @@ bool AppInitMain()
         if (gArgs.GetBoolArg("-shrinkdebugfile", logCategories == BCLog::NONE)) {
             // Do this first since it both loads a bunch of debug.log into memory,
             // and because this needs to happen before any other debug.log printing
-            ShrinkDebugFile();
+            g_logger->ShrinkDebugFile();
         }
-        if (!OpenDebugLog()) {
-            return InitError(strprintf("Could not open debug log file %s", GetDebugLogPath().string()));
+        if (!g_logger->OpenDebugLog()) {
+            return InitError(strprintf("Could not open debug log file %s",
+                                       g_logger->GetDebugLogPath().string()));
         }
     }
 
