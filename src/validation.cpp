@@ -275,7 +275,8 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
 {
     AssertLockHeld(cs_main);
 
-    // Find the first block the caller has in the main chain
+    // Find the latest block common to locator and chain - we expect that
+    // locator.vHave is sorted descending by height.
     for (const uint256& hash : locator.vHave) {
         CBlockIndex* pindex = LookupBlockIndex(hash);
         if (pindex) {
