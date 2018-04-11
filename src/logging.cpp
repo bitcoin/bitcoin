@@ -5,7 +5,6 @@
 
 #include <logging.h>
 #include <util.h>
-#include <utilstrencodings.h>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
@@ -64,9 +63,25 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
     logCategories |= flag;
 }
 
+bool BCLog::Logger::EnableCategory(const std::string& str)
+{
+    BCLog::LogFlags flag;
+    if (!GetLogCategory(flag, str)) return false;
+    EnableCategory(flag);
+    return true;
+}
+
 void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
 {
     logCategories &= ~flag;
+}
+
+bool BCLog::Logger::DisableCategory(const std::string& str)
+{
+    BCLog::LogFlags flag;
+    if (!GetLogCategory(flag, str)) return false;
+    DisableCategory(flag);
+    return true;
 }
 
 bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
@@ -81,7 +96,7 @@ bool BCLog::Logger::DefaultShrinkDebugFile() const
 
 struct CLogCategoryDesc
 {
-    uint32_t flag;
+    BCLog::LogFlags flag;
     std::string category;
 };
 
@@ -114,18 +129,16 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::ALL, "all"},
 };
 
-bool GetLogCategory(uint32_t *f, const std::string *str)
+bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
 {
-    if (f && str) {
-        if (*str == "") {
-            *f = BCLog::ALL;
+    if (str == "") {
+        flag = BCLog::ALL;
+        return true;
+    }
+    for (const CLogCategoryDesc& category_desc : LogCategories) {
+        if (category_desc.category == str) {
+            flag = category_desc.flag;
             return true;
-        }
-        for (unsigned int i = 0; i < ARRAYLEN(LogCategories); i++) {
-            if (LogCategories[i].category == *str) {
-                *f = LogCategories[i].flag;
-                return true;
-            }
         }
     }
     return false;
@@ -135,11 +148,11 @@ std::string ListLogCategories()
 {
     std::string ret;
     int outcount = 0;
-    for (unsigned int i = 0; i < ARRAYLEN(LogCategories); i++) {
+    for (const CLogCategoryDesc& category_desc : LogCategories) {
         // Omit the special cases.
-        if (LogCategories[i].flag != BCLog::NONE && LogCategories[i].flag != BCLog::ALL) {
+        if (category_desc.flag != BCLog::NONE && category_desc.flag != BCLog::ALL) {
             if (outcount != 0) ret += ", ";
-            ret += LogCategories[i].category;
+            ret += category_desc.category;
             outcount++;
         }
     }
@@ -149,12 +162,12 @@ std::string ListLogCategories()
 std::vector<CLogCategoryActive> ListActiveLogCategories()
 {
     std::vector<CLogCategoryActive> ret;
-    for (unsigned int i = 0; i < ARRAYLEN(LogCategories); i++) {
+    for (const CLogCategoryDesc& category_desc : LogCategories) {
         // Omit the special cases.
-        if (LogCategories[i].flag != BCLog::NONE && LogCategories[i].flag != BCLog::ALL) {
+        if (category_desc.flag != BCLog::NONE && category_desc.flag != BCLog::ALL) {
             CLogCategoryActive catActive;
-            catActive.category = LogCategories[i].category;
-            catActive.active = LogAcceptCategory(LogCategories[i].flag);
+            catActive.category = category_desc.category;
+            catActive.active = LogAcceptCategory(category_desc.flag);
             ret.push_back(catActive);
         }
     }

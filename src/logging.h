@@ -95,8 +95,12 @@ namespace BCLog {
         void ShrinkDebugFile();
 
         uint32_t GetCategoryMask() const { return logCategories.load(); }
+
         void EnableCategory(LogFlags flag);
+        bool EnableCategory(const std::string& str);
         void DisableCategory(LogFlags flag);
+        bool DisableCategory(const std::string& str);
+
         bool WillLogCategory(LogFlags category) const;
 
         bool DefaultShrinkDebugFile() const;
@@ -118,8 +122,8 @@ std::string ListLogCategories();
 /** Returns a vector of the active log categories. */
 std::vector<CLogCategoryActive> ListActiveLogCategories();
 
-/** Return true if str parses as a log category and set the flags in f */
-bool GetLogCategory(uint32_t *f, const std::string *str);
+/** Return true if str parses as a log category and set the flag */
+bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 
 /** Get format string from VA_ARGS for error reporting */
 template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, const Args&... args) { return fmt; }
