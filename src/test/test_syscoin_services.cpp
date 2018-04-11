@@ -1003,9 +1003,9 @@ void AssetNew(const string& node, const string& name, const string& alias, const
 	UniValue balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	UniValue maxsupplyu = find_value(r.get_obj(), "max_supply");
-	UniValue supplytmp;
+	UniValue supplytmp(UniValue::VSTR);
 	supplytmp.setStr(supply);
-	UniValue maxsupplytmp;
+	UniValue maxsupplytmp(UniValue::VSTR);
 	maxsupplytmp.setStr(maxsupply);
 	BOOST_CHECK(AssetAmountFromValue(balance, nprecision, binputrange) == AssetAmountFromValue(supplytmp, nprecision, binputrange));
 	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision, binputrange) == AssetAmountFromValue(supplytmp, nprecision, binputrange));
