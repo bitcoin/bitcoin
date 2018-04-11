@@ -47,8 +47,11 @@ std::string GetWarnings(const std::string& strFor)
     LOCK(cs_warnings);
 
     if (!CLIENT_VERSION_IS_RELEASE) {
-        strStatusBar = "This is a pre-release test build - use at your own risk - do not use for mining or merchant applications";
-        strGUI = _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications");
+        const char *PRE_RELEASE_MSG =
+            "This is a pre-release test build - use at your own risk - do not use for "
+            "mining or merchant applications.";
+        strStatusBar = PRE_RELEASE_MSG;
+        strGUI = _(PRE_RELEASE_MSG);
     }
 
     if (gArgs.GetBoolArg("-testsafemode", DEFAULT_TESTSAFEMODE))
@@ -63,13 +66,19 @@ std::string GetWarnings(const std::string& strFor)
 
     if (fLargeWorkForkFound)
     {
-        strStatusBar = strRPC = "Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.";
-        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.");
+        const char *LARGE_WORK_FORK_MSG =
+            "Warning: The network does not appear to fully agree! Some miners appear to be "
+            "experiencing issues.";
+        strStatusBar = strRPC = LARGE_WORK_FORK_MSG;
+        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _(LARGE_WORK_FORK_MSG);
     }
     else if (fLargeWorkInvalidChainFound)
     {
-        strStatusBar = strRPC = "Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.";
-        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.");
+        const char *INVALID_CHAIN_MSG =
+            "Warning: We do not appear to fully agree with our peers! You may need to upgrade, "
+            "or other nodes may need to upgrade.";
+        strStatusBar = strRPC = INVALID_CHAIN_MSG;
+        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _(INVALID_CHAIN_MSG);
     }
 
     if (strFor == "gui")
