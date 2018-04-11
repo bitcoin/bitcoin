@@ -749,7 +749,7 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 						"<asset> Asset name.\n"
                         "<public> Public data, 256 characters max.\n"                
 						"<category> Category, 256 characters max. Defaults to assets\n"
-						"<supply> New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped.\n"
+						"<supply> New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
 						"<interest_rate> The annual interest rate if any. Money supply is still capped to total supply. Should be between 0 and 1 and represents a percentage divided by 100. Can only set if this asset allows adjustment of interest rate.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
@@ -1209,10 +1209,14 @@ UniValue ValueFromAssetAmount(const CAmount& amount,int precision, bool isInputR
 		precision = 0;
 	if (precision < 0 || precision > 8)
 		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-	int64_t divByAmount = powf(10, precision);
 	bool sign = amount < 0;
 	int64_t n_abs = (sign ? -amount : amount);
-	int64_t quotient = n_abs / divByAmount;
+	int64_t quotient = n_abs;
+	int64_t divByAmount = 1;
+	if (precision > 0) {
+		divByAmount = powf(10, precision);
+		quotient = n_abs / divByAmount;
+	}
 	int64_t remainder = n_abs % divByAmount;
 	string strPrecision = boost::lexical_cast<string>(precision);
 	return UniValue(UniValue::VSTR,
@@ -1245,10 +1249,13 @@ bool AssetRange(const CAmount& amount, int precision, bool isInputRange)
 		precision = 0;
 	if (precision < 0 || precision > 8)
 		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-	int64_t divByAmount = powf(10, precision);
 	bool sign = amount < 0;
 	int64_t n_abs = (sign ? -amount : amount);
-	int64_t quotient = n_abs / divByAmount;
+	int64_t quotient = n_abs;
+	if (precision > 0) {
+		int64_t divByAmount = powf(10, precision);
+		quotient = n_abs / divByAmount;
+	}
 	if (!AssetRange(quotient, isInputRange))
 		return false;
 	return true;

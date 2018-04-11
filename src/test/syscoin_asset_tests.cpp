@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 6*COIN);
 	// update interest rate
 	AssetNew("node1", "assetupdateinterest", "jagassetupdate", "data", "8", "false", "1", "10", "0.1", "true");
-	AssetUpdate("node1", "assetupdateinterest", "pub12", "0", "0.25");
+	AssetUpdate("node1", "assetupdateinterest", "pub12", "''", "0.25");
 	// set can adjust rate to false and ensure can't update interest rate (use initial asset which has can adjust rate set to false)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatename jagassetupdate assets 1 0.11 ''"), runtime_error);
 	// can't change supply > max supply (current balance already 6, max is 10)
