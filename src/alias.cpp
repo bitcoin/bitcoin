@@ -2409,7 +2409,7 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 	}
 	return false;
 }
-string GetSyscoinTransactionDescription(const CWalletTx* wtx, const int op, string& responseEnglish, const char &type, string& responseGUID)
+string GetSyscoinTransactionDescription(const CWalletTx& tx, const int op, string& responseEnglish, const char &type, string& responseGUID)
 {
 	string strResponse = "";
 	if (type == ALIAS) {

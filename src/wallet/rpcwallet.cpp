@@ -54,7 +54,7 @@ extern std::vector<unsigned char> vchFromString(const std::string &str);
 extern unsigned int MAX_ALIAS_UPDATES_PER_BLOCK;
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
 extern void aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, const unsigned int aliasInputCount, const COutPoint& aliasOutPoint, CAmount& nFeeRequired, bool bSelectAll);
-extern string GetSyscoinTransactionDescription(const CWalletTx* wtx, const int op, string& responseEnglish, const char &type, string& responseGUID);
+extern string GetSyscoinTransactionDescription(const CWalletTx& wtx, const int op, string& responseEnglish, const char &type, string& responseGUID);
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
