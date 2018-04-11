@@ -741,7 +741,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 	bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
 	std::vector<uint256>& vHashTxnToUncache, bool fDryRun, NodeId fromPeer)
 {
-	AssertLockHeld(cs_main);
+	//AssertLockHeld(cs_main);
 	if (pfMissingInputs)
 		*pfMissingInputs = false;
 
@@ -856,87 +856,89 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 	}
 
 	{
-		CCoinsView dummy;
-		CCoinsViewCache view(&dummy);
-		CAmount nValueIn = 0;
-		LockPoints lp;
 		{
-			LOCK(pool.cs);
-			CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
-			view.SetBackend(viewMemPool);
+			LOCK(cs_main);
+			CCoinsView dummy;
+			CCoinsViewCache view(&dummy);
+			CAmount nValueIn = 0;
+			LockPoints lp;
+			{
+				LOCK(pool.cs);
+				CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
+				view.SetBackend(viewMemPool);
 
-			// do we already have it?
-			bool fHadTxInCache = pcoinsTip->HaveCoinsInCache(hash);
-			if (view.HaveCoins(hash)) {
-				if (!fHadTxInCache)
-					vHashTxnToUncache.push_back(hash);
-				return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
+				// do we already have it?
+				bool fHadTxInCache = pcoinsTip->HaveCoinsInCache(hash);
+				if (view.HaveCoins(hash)) {
+					if (!fHadTxInCache)
+						vHashTxnToUncache.push_back(hash);
+					return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
+				}
+
+				// do all inputs exist?
+				// Note that this does not check for the presence of actual outputs (see the next check for that),
+				// and only helps with filling in pfMissingInputs (to determine missing vs spent).
+				BOOST_FOREACH(const CTxIn txin, tx.vin) {
+					if (!pcoinsTip->HaveCoinsInCache(txin.prevout.hash))
+						vHashTxnToUncache.push_back(txin.prevout.hash);
+					if (!view.HaveCoins(txin.prevout.hash)) {
+						if (pfMissingInputs)
+							*pfMissingInputs = true;
+						return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
+					}
+				}
+
+				// are the actual inputs available?
+				if (!view.HaveInputs(tx))
+					return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
+
+				// Bring the best block into scope
+				view.GetBestBlock();
+
+				nValueIn = view.GetValueIn(tx);
+
+				// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
+				view.SetBackend(dummy);
+
+				// Only accept BIP68 sequence locked transactions that can be mined in the next
+				// block; we don't want our mempool filled up with transactions that can't
+				// be mined yet.
+				// Must keep pool.cs for this unless we change CheckSequenceLocks to take a
+				// CoinsViewCache instead of create its own
+				if (!CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
+					return state.DoS(0, false, REJECT_NONSTANDARD, "non-BIP68-final");
 			}
 
-			// do all inputs exist?
-			// Note that this does not check for the presence of actual outputs (see the next check for that),
-			// and only helps with filling in pfMissingInputs (to determine missing vs spent).
-			BOOST_FOREACH(const CTxIn txin, tx.vin) {
-				if (!pcoinsTip->HaveCoinsInCache(txin.prevout.hash))
-					vHashTxnToUncache.push_back(txin.prevout.hash);
-				if (!view.HaveCoins(txin.prevout.hash)) {
-					if (pfMissingInputs)
-						*pfMissingInputs = true;
-					return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
+			// Check for non-standard pay-to-script-hash in inputs
+			if (fRequireStandard && !AreInputsStandard(tx, view))
+				return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
+
+			unsigned int nSigOps = GetLegacySigOpCount(tx);
+			nSigOps += GetP2SHSigOpCount(tx, view);
+
+			CAmount nValueOut = tx.GetValueOut();
+			CAmount nFees = nValueIn - nValueOut;
+			// nModifiedFees includes any fee deltas from PrioritiseTransaction
+			CAmount nModifiedFees = nFees;
+			double nPriorityDummy = 0;
+			// SYSCOIN, don't apply any deltas for sys txs, should be minrelayfees regardless
+			if (tx.nVersion != SYSCOIN_TX_VERSION)
+				pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
+
+			CAmount inChainInputValue;
+			double dPriority = view.GetPriority(tx, chainActive.Height(), inChainInputValue);
+
+			// Keep track of transactions that spend a coinbase, which we re-scan
+			// during reorgs to ensure COINBASE_MATURITY is still met.
+			bool fSpendsCoinbase = false;
+			BOOST_FOREACH(const CTxIn &txin, tx.vin) {
+				const CCoins *coins = view.AccessCoins(txin.prevout.hash);
+				if (coins->IsCoinBase()) {
+					fSpendsCoinbase = true;
+					break;
 				}
 			}
-
-			// are the actual inputs available?
-			if (!view.HaveInputs(tx))
-				return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
-
-			// Bring the best block into scope
-			view.GetBestBlock();
-
-			nValueIn = view.GetValueIn(tx);
-
-			// we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
-			view.SetBackend(dummy);
-
-			// Only accept BIP68 sequence locked transactions that can be mined in the next
-			// block; we don't want our mempool filled up with transactions that can't
-			// be mined yet.
-			// Must keep pool.cs for this unless we change CheckSequenceLocks to take a
-			// CoinsViewCache instead of create its own
-			if (!CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
-				return state.DoS(0, false, REJECT_NONSTANDARD, "non-BIP68-final");
 		}
-
-		// Check for non-standard pay-to-script-hash in inputs
-		if (fRequireStandard && !AreInputsStandard(tx, view))
-			return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
-
-		unsigned int nSigOps = GetLegacySigOpCount(tx);
-		nSigOps += GetP2SHSigOpCount(tx, view);
-
-		CAmount nValueOut = tx.GetValueOut();
-		CAmount nFees = nValueIn - nValueOut;
-		// nModifiedFees includes any fee deltas from PrioritiseTransaction
-		CAmount nModifiedFees = nFees;
-		double nPriorityDummy = 0;
-		// SYSCOIN, don't apply any deltas for sys txs, should be minrelayfees regardless
-		if (tx.nVersion != SYSCOIN_TX_VERSION)
-			pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
-
-		CAmount inChainInputValue;
-		double dPriority = view.GetPriority(tx, chainActive.Height(), inChainInputValue);
-
-		// Keep track of transactions that spend a coinbase, which we re-scan
-		// during reorgs to ensure COINBASE_MATURITY is still met.
-		bool fSpendsCoinbase = false;
-		BOOST_FOREACH(const CTxIn &txin, tx.vin) {
-			const CCoins *coins = view.AccessCoins(txin.prevout.hash);
-			if (coins->IsCoinBase()) {
-				fSpendsCoinbase = true;
-				break;
-			}
-		}
-		
 		CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
 		unsigned int nSize = entry.GetTxSize();
 
