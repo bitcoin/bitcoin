@@ -1802,7 +1802,8 @@ namespace Consensus {
 		{
 			const COutPoint &prevout = tx.vin[i].prevout;
 			const CCoins *coins = inputs.AccessCoins(prevout.hash);
-			assert(coins);
+			if (!coins)
+				return false;
 
 			// If prev is coinbase, check that it's matured
 			if (coins->IsCoinBase()) {
@@ -1857,7 +1858,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				const COutPoint &prevout = tx.vin[i].prevout;
 				const CCoins* coins = inputs.AccessCoins(prevout.hash);
-				assert(coins);
+				if (!coins)
+					return false;
 
 				// Verify signature
 				CScriptCheck check(*coins, tx, i, flags, cacheStore);
