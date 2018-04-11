@@ -41,7 +41,7 @@ extern bool DecodeCertTx(const CTransaction& tx, int& op, vector<vector<unsigned
 extern bool DecodeAssetTx(const CTransaction& tx, int& op, vector<vector<unsigned char> >& vvch);
 extern bool DecodeAssetAllocationTx(const CTransaction& tx, int& op, vector<vector<unsigned char> >& vvch);
 extern bool DecodeEscrowTx(const CTransaction& tx, int& op, vector<vector<unsigned char> >& vvch);
-extern bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bSanityCheck);
+extern bool CheckAliasInputs(const CTransaction &tx, CCoinsViewCache& view, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bSanityCheck);
 extern bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, string &errorMessage, bool bSanityCheck);
 extern bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedCerts, string &errorMessage, bool bSanityCheck);
 extern bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck);
@@ -542,18 +542,20 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	vector<vector<unsigned char> > vvchAlias;
 	int op;
 	if (wtxNew.nVersion == SYSCOIN_TX_VERSION) {
+		LOCK(cs_main);
+		CCoinsViewCache view(pcoinsTip);
 		if (!DecodeAliasTx(wtxNew, op, vvchAlias))
 		{
-			if (!FindAliasInTx(wtxNew, vvchAlias)) {
+			if (!FindAliasInTx(wtxNew, view, vvchAlias)) {
 				throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9001 - " + _("Cannot find alias input to this transaction"));
 			}
 			// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 			op = OP_ALIAS_UPDATE;
 		}
-		CheckAliasInputs(wtxNew, op, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
+		CheckAliasInputs(wtxNew, view, op, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckAliasInputs(wtxNew, op, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight+1, errorMessage, bCheckDestError, true);
+		CheckAliasInputs(wtxNew, view, op, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight+1, errorMessage, bCheckDestError, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 		

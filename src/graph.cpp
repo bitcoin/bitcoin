@@ -12,6 +12,7 @@ bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	std::vector<CTransaction> orderedVtx;
 	int op;
+	CCoinsViewCache &view = *pcoinsTip;
 	// order the arrival times in ascending order using a map
 	std::multimap<int64_t, int> orderedIndexes;
 	for (unsigned int n = 0; n < blockVtx.size(); n++) {
@@ -20,7 +21,7 @@ bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
-				if (!FindAliasInTx(tx, vvchAliasArgs)) {
+				if (!FindAliasInTx(tx, view, vvchAliasArgs)) {
 					continue;
 				}
 				ArrivalTimesMap arrivalTimes;
