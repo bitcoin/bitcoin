@@ -2448,6 +2448,8 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 		status = "escrow feedback";
 	else if (escrow.op == OP_ESCROW_ACKNOWLEDGE)
 		status = "escrow acknowledge";
+	else if(escrow.op == OP_ESCROW_BID)
+		status = "in escrow (bid)";
 
 	oEscrow.push_back(Pair("expired", expired));
 	oEscrow.push_back(Pair("acknowledged", escrow.bPaymentAck));

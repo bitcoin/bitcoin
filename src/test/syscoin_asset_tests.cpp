@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
 	AliasNew("node1", "jagassetcollectionavg", "data");
 	AliasNew("node1", "jagassetcollectionrcveravg", "data");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
-	AssetNew("node1", "avgbalanceasset", "jagassetcollectionavg", "8", "false", "data", "10000", "-1", "0.05");
+	AssetNew("node1", "avgbalanceasset", "jagassetcollectionavg", "data", "8", "false", "10000", "-1", "0.05");
 	AssetSend("node1", "avgbalanceasset", "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravg\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo avgbalanceasset jagassetcollectionrcveravg false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
