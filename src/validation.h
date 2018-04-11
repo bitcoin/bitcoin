@@ -47,7 +47,8 @@ class CValidationInterface;
 class CValidationState;
 
 struct LockPoints;
-struct thread_pool;
+typedef int NodeId;
+
 
 /** Default for accepting alerts from the P2P network. */
 // SYSCOIN
