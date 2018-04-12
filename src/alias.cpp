@@ -1482,9 +1482,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKey;
 	if (bActivation)
-		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias1 << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	else
-		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias << OP_2DROP << OP_DROP;
+		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias1 << OP_2DROP << OP_DROP;
 
 	CSyscoinAddress newAddress;
 	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
@@ -1512,11 +1512,11 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	{
 		LOCK(cs_main);
 		if (pwalletMain)
-			pwalletMain->UnlockCoin(mapAliasRegistrations[vchHashAlias]);
+			pwalletMain->UnlockCoin(mapAliasRegistrations[vchHashAlias1]);
 		vecSend.push_back(fee);
 		// add the registration input to the alias activation transaction
 		CCoinsViewCache view(pcoinsTip);
-		const COutPoint &regOut = mapAliasRegistrations[vchHashAlias];
+		const COutPoint &regOut = mapAliasRegistrations[vchHashAlias1];
 		const CCoins* pcoin = view.AccessCoins(regOut.hash);
 		if (!pcoin) {
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot find alias registration transaction, please ensure it has confirmed or re-submit the registration transaction again"));
