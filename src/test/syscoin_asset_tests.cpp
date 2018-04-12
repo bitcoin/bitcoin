@@ -547,6 +547,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 	printf("Running generate_assetupdate_precision...\n");
 	UniValue r;
 	for (int i = 0; i <= 8; i++) {
+		printf("precision %d\n", i);
 		string assetName = "jagassetprecision" + boost::lexical_cast<string>(i);
 		string aliasName = "jagaliasprecision" + boost::lexical_cast<string>(i);
 		AliasNew("node1", aliasName, "data");
