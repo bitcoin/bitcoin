@@ -80,4 +80,7 @@ typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > Crypt
 /** Return the CKeyID of the key involved in a script (if there is a unique one). */
 CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest);
 
+/** Checks if a CKey is in the given CKeyStore compressed or otherwise*/
+bool HaveKey(const CKeyStore& store, const CKey& key);
+
 #endif // BITCOIN_KEYSTORE_H
