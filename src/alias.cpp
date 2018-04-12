@@ -1433,7 +1433,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.vchPublicValue = vchPublicValue;
 	newAlias.nExpireTime = nTime;
 	newAlias.nAcceptTransferFlags = nAcceptTransferFlags;
-	if (strAddress.empty())
+	bool foundRegistration = mapAliasRegistrationData.count(vchAlias) > 0;
+	if (strAddress.empty() && !foundRegistration)
 	{
 		// generate new address in this wallet if not passed in
 		CKey privKey;
@@ -1454,7 +1455,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	uint256 hash;
 	bool bActivation = false;
 	newAlias1 = newAlias;
-	if (mapAliasRegistrationData.count(vchAlias) > 0)
+	if (foundRegistration)
 	{
 		data = mapAliasRegistrationData[vchAlias];
 		hash = Hash(data.begin(), data.end());
@@ -1507,7 +1508,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		fYears = 1;
 	fee.nAmount = GetDataFee(scriptData) * powf(2.88, fYears);
 	
-	if (bActivation && mapAliasRegistrations.count(vchHashAlias) > 0)
+	if (bActivation)
 	{
 		LOCK(cs_main);
 		if (pwalletMain)
