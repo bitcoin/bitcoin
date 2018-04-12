@@ -1460,12 +1460,15 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		hash = Hash(data.begin(), data.end());
 		vchHashAlias = vchFromValue(hash.GetHex());
 		vector<unsigned char> vchHashAlias1;
-		if (!newAlias.UnserializeFromData(data, vchHashAlias1))
+		if (!newAlias.UnserializeFromData(data, vchHashAlias))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
+		// ensure that the stored alias registration and the creation of alias from parameters matches hash, if not then the params must have changed so re-register
+		newAlias.Serialize(data);
+		hash = Hash(data.begin(), data.end());
+		vchHashAlias1 = vchFromValue(hash.GetHex());
 		if(vchHashAlias1 == vchHashAlias)
 			bActivation = true;
 		else {
-			mapAliasRegistrationData.erase(vchAlias);
 			mapAliasRegistrationData.insert(make_pair(vchAlias, data));
 		}
 	}
