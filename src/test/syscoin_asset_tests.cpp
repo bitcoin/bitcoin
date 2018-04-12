@@ -579,10 +579,10 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 	// can't create asset with more than max+1 balance or max+1 supply
 	string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i, true).get_str();
 	maxstr = ValueFromAssetAmount(negonesupply + precisionCoin, i, true).get_str();
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false " + maxstr + " -1 0 false ''"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false 1 " + maxstr + " 0 false ''"));
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false " + maxstrplusone + " -1 0 false ''"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " true " + maxstr + " -1 0 false ''"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " true 1 " + maxstr + " 0 false ''"));
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " true " + maxstrplusone + " -1 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " true 1 " + maxstrplusone + " 0 false ''"), runtime_error);
 
 }
 BOOST_AUTO_TEST_CASE(generate_assetsend)
