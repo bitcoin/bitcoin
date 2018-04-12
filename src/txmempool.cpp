@@ -878,6 +878,21 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
     mapDeltas.erase(hash);
 }
 
+CFeeRate CTxMemPool::CalculateFeeRate(double portion) const
+{
+    LOCK(cs);
+    auto iters = GetSortedDepthAndScore();
+
+    uint64_t weight = 0; // weight of hypothetical block
+    uint64_t target = MAX_BLOCK_WEIGHT * portion; // at what weight do we want to "bump"
+    for (const auto& it : iters) {
+        weight += it->GetTxWeight();
+        if (weight >= target) return CFeeRate(it->GetFee(), it->GetTxSize());
+        printf("- %llu: %s\n", weight, CFeeRate(it->GetFee(), it->GetTxSize()).ToString().c_str());
+    }
+    return CFeeRate(1000);
+}
+
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
     for (unsigned int i = 0; i < tx.vin.size(); i++)

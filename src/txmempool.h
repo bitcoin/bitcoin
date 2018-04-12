@@ -564,6 +564,13 @@ public:
     void ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const;
     void ClearPrioritisation(const uint256 hash);
 
+    /**
+     * Calculate the fee rate required to bump out `portion` (0..1) portion
+     * of other transactions currently in the mempool from a hypothetical
+     * new block.
+     */
+    CFeeRate CalculateFeeRate(double portion) const;
+
 public:
     /** Remove a set of transactions from the mempool.
      *  If a transaction is in this set, then all in-mempool descendants must
