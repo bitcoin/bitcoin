@@ -1018,7 +1018,7 @@ UniValue ico_accountsStatement(const JSONRPCRequest &request)
         end_block = request.params[2].get_int();
     }
     if (end_block > chainheight - 4)
-        end_block = start_block;
+        end_block = chainheight - 4;
 
     UniValue blockrange(UniValue::VARR);
     blockrange.push_back(start_block);
