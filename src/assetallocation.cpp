@@ -1001,8 +1001,8 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 				const unsigned int rangeCount = validateRangesAndGetCount(inputTuple.second);
 				if (rangeCount == 0)
 					continue;
-				senderBalance -= rangeCount*COIN;
-				mapBalances[inputTuple.first] += rangeCount*COIN;
+				senderBalance -= rangeCount;
+				mapBalances[inputTuple.first] += rangeCount;
 				// if running balance overruns the stored balance then we have a potential conflict
 				if (senderBalance < 0) {
 					return ZDAG_MINOR_CONFLICT_OK;

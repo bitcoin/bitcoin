@@ -524,35 +524,18 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatename jagassetupdate assets 1 0.11 ''"), runtime_error);
 	// can't change supply > max supply (current balance already 6, max is 10)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatename jagassetupdate assets 5 0 ''"), runtime_error);
-	// test max supply
-	AssetNew("node1", "assetupdatemaxsupply", "jagassetupdate", "data", "8", "false", "1", "-1");
-	UniValue negonevalue(UniValue::VSTR);
-	negonevalue.setStr("-1");
-	// get max value - 1 (1 is already the supply, and this value is cumulative)
-	CAmount negonesupply = AssetAmountFromValue(negonevalue, 8, false) - COIN;
-	string maxstr = ValueFromAssetAmount(negonesupply, 8, false).get_str();
-	AssetUpdate("node1", "assetupdatemaxsupply", "pub12", maxstr);
-	// can't go above max balance (10^18) / (10^8) for 8 decimal places (10 billion in this case)
-	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatemaxsupply jagassetupdate assets 1 0 ''"), runtime_error);
-	// can't create asset with more than max+1 balance or max+1 supply
-	string maxstrplusone = ValueFromAssetAmount(negonesupply+(COIN*2), 8, false).get_str();
-	maxstr = ValueFromAssetAmount(negonesupply+COIN, 8, false).get_str();
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false " + maxstr + " -1 0 false ''"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false 1 " + maxstr + " 0 false ''"));
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false " + maxstrplusone + " -1 0 false ''"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 {
 	printf("Running generate_assetupdate_precision...\n");
 	UniValue r;
 	for (int i = 0; i <= 8; i++) {
-		printf("precision %d\n", i);
-		string assetName = "jagassetprecision" + boost::lexical_cast<string>(i);
-		string aliasName = "jagaliasprecision" + boost::lexical_cast<string>(i);
+		string istr = boost::lexical_cast<string>(i);
+		string assetName = "jagassetprecision" + istr;
+		string aliasName = "jagaliasprecision" + istr;
 		AliasNew("node1", aliasName, "data");
-		// test max supply
-		AssetNew("node1", assetName, aliasName, "data", boost::lexical_cast<string>(i), "false", "1", "-1");
+		// test max supply for every possible precision
+		AssetNew("node1", assetName, aliasName, "data", istr, "false", "1", "-1");
 		UniValue negonevalue(UniValue::VSTR);
 		negonevalue.setStr("-1");
 		CAmount precisionCoin = powf(10, i);
@@ -565,12 +548,13 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 		// can't create asset with more than max+1 balance or max+1 supply
 		string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i, false).get_str();
 		maxstr = ValueFromAssetAmount(negonesupply + precisionCoin, i, false).get_str();
-		printf("maxstr %s negonesupply %lld precisionCoin %lld\n", maxstr, negonesupply, precisionCoin);
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets 8 false " + maxstr + " -1 0 false ''"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets 8 false 1 " + maxstr + " 0 false ''"));
-		BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets 8 false " + maxstrplusone + " -1 0 false ''"), runtime_error);
-		BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets 8 false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false " + maxstr + " -1 0 false ''"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false 1 " + maxstr + " 0 false ''"));
+		BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false " + maxstrplusone + " -1 0 false ''"), runtime_error);
+		BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
 	}
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_assetsend)
 {
