@@ -303,11 +303,16 @@ fi
 # Check for optional instruction set support. Enabling these does _not_ imply that all code will
 # be compiled with them, rather that specific objects/libs may use them after checking for runtime
 # compatibility.
-AX_CHECK_COMPILE_FLAG([-msse4.2],[[SSE42_CXXFLAGS="-msse4.2"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-msse4.2],[[CRCACCEL_CXXFLAGS="-msse4.2"]],,[[$CXXFLAG_WERROR]])
 
+# -fpermissive is a workaround for gcc 7.2.0 and 7.3.0, which have an issue in
+# arm_acle.h __arm_stc2* causing incompatibility with C++
+AX_CHECK_COMPILE_FLAG([-march=armv8-a+crc],[[CRCACCEL_CXXFLAGS="-march=armv8-a+crc -fpermissive"]],,[[$CXXFLAG_WERROR]])
+
+# Check whether x86(_64) SSE4.2 crc32c instructions can be used
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $SSE42_CXXFLAGS"
-AC_MSG_CHECKING(for assembler crc32 support)
+AC_MSG_CHECKING(for SSE4.2 assembler crc32 support)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #if defined(_MSC_VER)
@@ -322,7 +327,32 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     l = _mm_crc32_u64(l, 0);
     return l;
   ]])],
- [ AC_MSG_RESULT(yes); enable_hwcrc32=yes],
+ [ AC_MSG_RESULT(yes); enable_hwcrc32_sse42=yes],
+ [ AC_MSG_RESULT(no)]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
+
+# Check whether ARMv8 crc32c instructions can be used, and that (Linux specific) HWCAPx_CRC32 exists to detect it
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS $CRCACCEL_CXXFLAGS"
+AC_MSG_CHECKING(for ARMv8 assembler crc32 support)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <arm_acle.h>
+    #include <sys/auxv.h>
+    #include <asm/hwcap.h>
+  ]],[[
+    uint32_t l = 0;
+    l = __crc32cb(l, 0);
+    l = __crc32cw(l, 0);
+    l = __crc32cd(l, 0);
+#if defined(__aarch64__) && defined(__GNUC__)
+    l += (getauxval(AT_HWCAP) & HWCAP_CRC32) != 0;
+#elif defined(__arm__) && defined(__GNUC__)
+    l += (getauxval(AT_HWCAP2) & HWCAP2_CRC32) != 0;
+#endif
+    return l;
+  ]])],
+ [ AC_MSG_RESULT(yes); enable_hwcrc32_armv8=yes],
  [ AC_MSG_RESULT(no)]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
@@ -1248,7 +1278,8 @@ AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
 AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
-AM_CONDITIONAL([ENABLE_HWCRC32],[test x$enable_hwcrc32 = xyes])
+AM_CONDITIONAL([ENABLE_HWCRC32_SSE42],[test x$enable_hwcrc32_sse42 = xyes])
+AM_CONDITIONAL([ENABLE_HWCRC32_ARMV8],[test x$enable_hwcrc32_armv8 = xyes])
 AM_CONDITIONAL([USE_ASM],[test x$use_asm = xyes])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
@@ -1286,7 +1317,7 @@ AC_SUBST(PIC_FLAGS)
 AC_SUBST(PIE_FLAGS)
 AC_SUBST(SANITIZER_CXXFLAGS)
 AC_SUBST(SANITIZER_LDFLAGS)
-AC_SUBST(SSE42_CXXFLAGS)
+AC_SUBST(CRCACCEL_CXXFLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
