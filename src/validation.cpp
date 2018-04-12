@@ -2534,8 +2534,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	if (!CheckSyscoinInputs(block.vtx[0], state, fJustCheck, pindex->nHeight, nFees, block))
 		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n",
 			block.GetHash().ToString());
-	int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
-	LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * 0.000001);
+	int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime1;
+	LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime1), 0.001 * (nTime3 - nTime1) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime1) / (nInputs - 1), nTimeConnect * 0.000001);
 
 	// SYSCOIN
 	CAmount nTotalRewardWithMasternodes;
