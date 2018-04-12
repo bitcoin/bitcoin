@@ -565,20 +565,20 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 	string assetName = "jagassetir" + istr;
 	string aliasName = "jagaliasir" + istr;
 	AliasNew("node1", aliasName, "data");
-	// test max supply for every possible precision
+	// test max supply
 	AssetNew("node1", assetName, aliasName, "data", istr, "true", "1", "-1");
 	UniValue negonevalue(UniValue::VSTR);
 	negonevalue.setStr("-1");
 	CAmount precisionCoin = powf(10, i);
 	// get max value - 1 (1 is already the supply, and this value is cumulative)
-	CAmount negonesupply = AssetAmountFromValue(negonevalue, i, false) - precisionCoin;
-	string maxstr = ValueFromAssetAmount(negonesupply, i, false).get_str();
+	CAmount negonesupply = AssetAmountFromValue(negonevalue, i, true) - precisionCoin;
+	string maxstr = ValueFromAssetAmount(negonesupply, i, true).get_str();
 	AssetUpdate("node1", assetName, "pub12", maxstr);
 	// can't go above max balance (10^18) / (10^i) for i decimal places
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + assetName + " " + aliasName + " assets 1 0 ''"), runtime_error);
 	// can't create asset with more than max+1 balance or max+1 supply
-	string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i, false).get_str();
-	maxstr = ValueFromAssetAmount(negonesupply + precisionCoin, i, false).get_str();
+	string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i, true).get_str();
+	maxstr = ValueFromAssetAmount(negonesupply + precisionCoin, i, true).get_str();
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false " + maxstr + " -1 0 false ''"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false 1 " + maxstr + " 0 false ''"));
 	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false " + maxstrplusone + " -1 0 false ''"), runtime_error);
