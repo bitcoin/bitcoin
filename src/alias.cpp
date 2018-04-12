@@ -1434,8 +1434,10 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.nExpireTime = nTime;
 	newAlias.nAcceptTransferFlags = nAcceptTransferFlags;
 	bool foundRegistration = mapAliasRegistrationData.count(vchAlias) > 0;
+	bool newKey = false;
 	if (strAddress.empty() && !foundRegistration)
 	{
+		newKey = true;
 		// generate new address in this wallet if not passed in
 		CKey privKey;
 		privKey.MakeNewKey(true);
@@ -1462,7 +1464,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		vchHashAlias = vchFromValue(hash.GetHex());
 		if (!newAlias.UnserializeFromData(data, vchHashAlias))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
-		if (strAddress.empty())
+		if (newKey)
 			newAlias1.vchAddress = newAlias.vchAddress;
 
 		newAlias1.vchGUID = newAlias.vchGUID;
