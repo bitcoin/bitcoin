@@ -1466,6 +1466,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.Serialize(data);
 	hash = Hash(data.begin(), data.end());
 	vchHashAlias1 = vchFromValue(hash.GetHex());
+	// vchHashAlias might be empty anyway if this is an initial registration or if they need to re-register as per the comments above
 	if (vchHashAlias1 == vchHashAlias)
 		bActivation = true;
 	else {
