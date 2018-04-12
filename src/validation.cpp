@@ -1803,7 +1803,7 @@ namespace Consensus {
 			const COutPoint &prevout = tx.vin[i].prevout;
 			const CCoins *coins = inputs.AccessCoins(prevout.hash);
 			if (!coins)
-				return state.Invalid(0, false, REJECT_INVALID, "undefined-coins");
+				return state.Invalid(false, REJECT_INVALID, "undefined-coins");
 
 			// If prev is coinbase, check that it's matured
 			if (coins->IsCoinBase()) {
@@ -1859,7 +1859,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 				const COutPoint &prevout = tx.vin[i].prevout;
 				const CCoins* coins = inputs.AccessCoins(prevout.hash);
 				if (!coins) {
-					return state.Invalid(0, false, REJECT_INVALID, "undefined-coins");
+					return state.Invalid(false, REJECT_INVALID, "undefined-coins");
 				}
 
 				// Verify signature
