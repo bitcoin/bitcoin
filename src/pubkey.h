@@ -71,8 +71,20 @@ private:
 
 public:
 
-    bool static ValidSize(const std::vector<unsigned char> &vch) {
-      return vch.size() > 0 && GetLen(vch[0]) == vch.size();
+    /**
+     *  @return true if the pubkey header and size are valid for a pubkey
+     */
+    bool static ValidSize(const std::vector<unsigned char> &vch)
+    {
+        return vch.size() > 0 && GetLen(vch[0]) == vch.size();
+    }
+
+    /**
+     *  @return true if the pubkey header and size match that of a compressed pubkey
+     */
+    bool static IsCompressed(const std::vector<unsigned char>& vch)
+    {
+        return vch.size() > 0 && GetLen(vch[0]) == COMPRESSED_PUBLIC_KEY_SIZE && vch.size() == COMPRESSED_PUBLIC_KEY_SIZE;
     }
 
     //! Construct an invalid public key.
