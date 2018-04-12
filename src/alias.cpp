@@ -1484,12 +1484,12 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKey;
 	if (bActivation)
-		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias1 << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias1.vchGUID << vchHashAlias1 << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	else
 		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias1 << OP_2DROP << OP_DROP;
 
 	CSyscoinAddress newAddress;
-	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
+	GetAddress(newAlias1, &newAddress, scriptPubKeyOrig);
 	scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
