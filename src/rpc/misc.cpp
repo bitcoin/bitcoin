@@ -389,9 +389,14 @@ CScript _createmultisig_redeemScript(const UniValue& params)
 		{
 			address = CSyscoinAddress(strAddress);
 			pubkeys[i] = vchPubKey;
+			if (!pubkeys[i].IsFullyValid())
+				throw runtime_error(" Invalid public key: " + ks);
 		}
-		else if (GetAliasFromAddress(ks, strAlias, vchPubKey) && address.IsValid())
+		else if (GetAliasFromAddress(ks, strAlias, vchPubKey) && address.IsValid()) {
 			pubkeys[i] = vchPubKey;
+			if (!pubkeys[i].IsFullyValid())
+				throw runtime_error(" Invalid public key: " + ks);
+		}
 		else if (pwalletMain && address.IsValid())
 		{
 			CKeyID keyID;

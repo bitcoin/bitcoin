@@ -559,16 +559,16 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 
 		BOOST_CHECK_EQUAL(negonesupply, MAX_ASSET / precisionCoin - precisionCoin);
 		string maxstr = ValueFromAssetAmount(negonesupply, i, false).get_str();
-		AssetUpdate("node1", "assetupdatemaxsupply", "pub12", maxstr);
+		AssetUpdate("node1", assetName, "pub12", maxstr);
 		// can't go above max balance (10^18) / (10^i) for i decimal places
-		BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate assetupdatemaxsupply jagassetupdate assets 1 0 ''"), runtime_error);
+		BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + assetName + " " + aliasName + " assets 1 0 ''"), runtime_error);
 		// can't create asset with more than max+1 balance or max+1 supply
 		string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i, false).get_str();
 		maxstr = ValueFromAssetAmount(negonesupply + precisionCoin, i, false).get_str();
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false " + maxstr + " -1 0 false ''"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false 1 " + maxstr + " 0 false ''"));
-		BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false " + maxstrplusone + " -1 0 false ''"), runtime_error);
-		BOOST_CHECK_THROW(CallRPC("node1", "assetnew assetupdatename2 jagassetupdate pub assets 8 false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + " " + aliasName + " pub assets 8 false " + maxstr + " -1 0 false ''"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + " " + aliasName + " pub assets 8 false 1 " + maxstr + " 0 false ''"));
+		BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + " " + aliasName + " pub assets 8 false " + maxstrplusone + " -1 0 false ''"), runtime_error);
+		BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + " " + aliasName + " pub assets 8 false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
 	}
 }
 BOOST_AUTO_TEST_CASE(generate_assetsend)
