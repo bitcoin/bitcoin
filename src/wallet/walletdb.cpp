@@ -163,6 +163,11 @@ bool WalletBatch::WriteAccount(const std::string& strAccount, const CAccount& ac
     return WriteIC(std::make_pair(std::string("acc"), strAccount), account);
 }
 
+bool WalletBatch::EraseAccount(const std::string& strAccount)
+{
+    return EraseIC(std::make_pair(std::string("acc"), strAccount));
+}
+
 bool WalletBatch::WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry)
 {
     return WriteIC(std::make_pair(std::string("acentry"), std::make_pair(acentry.strAccount, nAccEntryNum)), acentry);
@@ -229,13 +234,14 @@ public:
     unsigned int nCKeys;
     unsigned int nWatchKeys;
     unsigned int nKeyMeta;
+    unsigned int m_unknown_records;
     bool fIsEncrypted;
     bool fAnyUnordered;
     int nFileVersion;
     std::vector<uint256> vWalletUpgrade;
 
     CWalletScanState() {
-        nKeys = nCKeys = nWatchKeys = nKeyMeta = 0;
+        nKeys = nCKeys = nWatchKeys = nKeyMeta = m_unknown_records = 0;
         fIsEncrypted = false;
         fAnyUnordered = false;
         nFileVersion = 0;
@@ -506,6 +512,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: SetHDChain failed";
                 return false;
             }
+        } else if (strType != "bestblock" && strType != "bestblock_nomerkle"){
+            wss.m_unknown_records++;
         }
     } catch (...)
     {
@@ -600,8 +608,8 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     LogPrintf("nFileVersion = %d\n", wss.nFileVersion);
 
-    LogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total\n",
-           wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys);
+    LogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total. Unknown wallet records: %u\n",
+           wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys, wss.m_unknown_records);
 
     // nTimeFirstKey is only reliable if all keys have metadata
     if ((wss.nKeys + wss.nCKeys + wss.nWatchKeys) != wss.nKeyMeta)
