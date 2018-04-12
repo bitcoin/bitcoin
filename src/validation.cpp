@@ -64,6 +64,7 @@
 #include "thread_pool.hpp"
 #include <future>
 #include <functional>
+#include "cuckoocache.h"
 using namespace std;
 #if defined(NDEBUG)
 # error "Syscoin Core cannot be compiled without assertions."
@@ -1872,7 +1873,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			// We only use the first 19 bytes of nonce to avoid a second SHA
 			// round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
 			static_assert(55 - sizeof(flags) - 32 >= 128 / 8, "Want at least 128 bits of nonce for script execution cache");
-			CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetWitnessHash().begin(), 32).Write((unsigned char*)&flags, sizeof(flags)).Finalize(hashCacheEntry.begin());
+			CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Finalize(hashCacheEntry.begin());
 			if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
 				return true;
 			}
