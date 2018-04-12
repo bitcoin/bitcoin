@@ -64,6 +64,7 @@
 #include "thread_pool.hpp"
 #include <future>
 #include <functional>
+#include "cuckoocache.h"
 using namespace std;
 #if defined(NDEBUG)
 # error "Syscoin Core cannot be compiled without assertions."
