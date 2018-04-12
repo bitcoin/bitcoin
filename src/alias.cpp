@@ -1450,7 +1450,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 
 	vector<unsigned char> data;
-	vector<unsigned char> vchHashAlias;
+	vector<unsigned char> vchHashAlias, vchHashAlias1;
 	uint256 hash;
 	bool bActivation = false;
 
@@ -1459,27 +1459,18 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		data = mapAliasRegistrationData[vchAlias];
 		hash = Hash(data.begin(), data.end());
 		vchHashAlias = vchFromValue(hash.GetHex());
-		vector<unsigned char> vchHashAlias1;
 		if (!newAlias.UnserializeFromData(data, vchHashAlias))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
-		// ensure that the stored alias registration and the creation of alias from parameters matches hash, if not then the params must have changed so re-register
-		newAlias.Serialize(data);
-		hash = Hash(data.begin(), data.end());
-		vchHashAlias1 = vchFromValue(hash.GetHex());
-		if(vchHashAlias1 == vchHashAlias)
-			bActivation = true;
-		else {
-			mapAliasRegistrationData.insert(make_pair(vchAlias, data));
-		}
 	}
-	else
-	{
-		newAlias.Serialize(data);
-		hash = Hash(data.begin(), data.end());
-		vchHashAlias = vchFromValue(hash.GetHex());
+	// ensure that the stored alias registration and the creation of alias from parameters matches hash, if not then the params must have changed so re-register
+	newAlias.Serialize(data);
+	hash = Hash(data.begin(), data.end());
+	vchHashAlias1 = vchFromValue(hash.GetHex());
+	if (vchHashAlias1 == vchHashAlias)
+		bActivation = true;
+	else {
 		mapAliasRegistrationData.insert(make_pair(vchAlias, data));
 	}
-
 
 	CScript scriptPubKey;
 	if (bActivation)
