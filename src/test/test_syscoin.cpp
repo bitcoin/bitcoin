@@ -39,6 +39,7 @@ extern void noui_connect();
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 {
+		SHA256AutoDetect();
         ECC_Start();
         SetupEnvironment();
         SetupNetworking();

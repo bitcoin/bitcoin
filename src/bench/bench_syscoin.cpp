@@ -8,10 +8,12 @@
 #include "key.h"
 #include "validation.h"
 #include "util.h"
+#include "crypto/sha256.h"
 
 int
 main(int argc, char** argv)
 {
+	SHA256AutoDetect();
     ECC_Start();
     SetupEnvironment();
     fPrintToDebugLog = false; // don't want to write to debug.log file
