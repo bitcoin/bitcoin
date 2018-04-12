@@ -42,8 +42,8 @@ public:
      * script supports up to 75 for single byte push
      */
     static_assert(
-        PUBLIC_KEY_SIZE >= COMPRESSED_PUBLIC_KEY_SIZE,
-        "COMPRESSED_PUBLIC_KEY_SIZE is larger than PUBLIC_KEY_SIZE");
+        PUBLIC_KEY_SIZE > COMPRESSED_PUBLIC_KEY_SIZE,
+        "COMPRESSED_PUBLIC_KEY_SIZE should be smaller than PUBLIC_KEY_SIZE");
 
 private:
 
