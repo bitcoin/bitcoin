@@ -553,8 +553,10 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 		BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false " + maxstrplusone + " -1 0 false ''"), runtime_error);
 		BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
 	}
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
+	AliasNew("node1", "badprecisionalias", "data");
+	// invalid precisions
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew highprecision badprecisionalias pub assets 9 false 1 2 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew lowprecision badprecisionalias pub assets -1 false 1 2 0 false ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_assetsend)
 {
