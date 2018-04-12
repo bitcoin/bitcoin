@@ -950,6 +950,7 @@ static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
             ReleaseDirectoryLocks();
             ch = true; // Always succeeds
             rv = write(fd, &ch, 1);
+            assert(rv == 1);
             break;
         case ExitCommand:
             close(fd);
