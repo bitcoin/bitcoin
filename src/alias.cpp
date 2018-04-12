@@ -1470,6 +1470,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (vchHashAlias1 == vchHashAlias)
 		bActivation = true;
 	else {
+		// if this is a re-registration we should remove old one first
+		mapAliasRegistrationData.erase(vchAlias);
 		mapAliasRegistrationData.insert(make_pair(vchAlias, data));
 	}
 
