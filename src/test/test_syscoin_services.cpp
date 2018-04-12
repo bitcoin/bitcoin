@@ -1320,14 +1320,16 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
+	if(newfromamount > 0)
+		BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
 
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + name + " false"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
 		balance = find_value(r.get_obj(), "balance");
-		BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
+		if(newfromamount > 0)
+			BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
 
 	}
 	if (!otherNode2.empty())
@@ -1335,7 +1337,8 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + name + " false"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
 		balance = find_value(r.get_obj(), "balance");
-		BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
+		if(newfromamount > 0)
+			BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
 
 	}
 
