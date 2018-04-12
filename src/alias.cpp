@@ -1510,7 +1510,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		fYears = 1;
 	fee.nAmount = GetDataFee(scriptData) * powf(2.88, fYears);
 	
-	if (bActivation)
+	if (bActivation && mapAliasRegistrations.count(vchHashAlias) > 0)
 	{
 		LOCK(cs_main);
 		if (pwalletMain)
