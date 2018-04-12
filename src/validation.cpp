@@ -1196,7 +1196,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 				// Check against previous transactions
 				// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
-					LogPrint("mempool", "%s: %s %s\n", "CheckInputs", hash.ToString(), vstate.GetRejectReason());
+					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
 					}
@@ -1216,7 +1216,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 				}
 
 				if (!CheckSyscoinInputs(tx, vstate, true, chainHeight, nFees, CBlock())) {
-					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs", hash.ToString(), vstate.GetRejectReason());
+					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs Frror", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);	
 					}
