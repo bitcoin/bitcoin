@@ -61,17 +61,17 @@ static inline void popstack(std::vector<valtype>& stack)
 }
 
 bool static IsCompressedOrUncompressedPubKey(const valtype &vchPubKey) {
-    if (vchPubKey.size() < CPubKey::COMPRESSED_PUBLIC_KEY_SIZE) {
+    if (vchPubKey.size() < CPubKey::COMPRESSED_SIZE) {
         //  Non-canonical public key: too short
         return false;
     }
     if (vchPubKey[0] == 0x04) {
-        if (vchPubKey.size() != CPubKey::PUBLIC_KEY_SIZE) {
+        if (vchPubKey.size() != CPubKey::SIZE) {
             //  Non-canonical public key: invalid length for uncompressed key
             return false;
         }
     } else if (vchPubKey[0] == 0x02 || vchPubKey[0] == 0x03) {
-        if (vchPubKey.size() != CPubKey::COMPRESSED_PUBLIC_KEY_SIZE) {
+        if (vchPubKey.size() != CPubKey::COMPRESSED_SIZE) {
             //  Non-canonical public key: invalid length for compressed key
             return false;
         }
@@ -83,7 +83,7 @@ bool static IsCompressedOrUncompressedPubKey(const valtype &vchPubKey) {
 }
 
 bool static IsCompressedPubKey(const valtype &vchPubKey) {
-    if (vchPubKey.size() != CPubKey::COMPRESSED_PUBLIC_KEY_SIZE) {
+    if (vchPubKey.size() != CPubKey::COMPRESSED_SIZE) {
         //  Non-canonical public key: invalid length for compressed key
         return false;
     }
