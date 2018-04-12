@@ -3,8 +3,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import configparser
+
 from test_framework.test_particl import ParticlTestFramework
 from test_framework.test_particl import isclose
+from test_framework.test_framework import SkipTest
 from test_framework.util import *
 
 class USBDeviceTest(ParticlTestFramework):
@@ -24,6 +27,16 @@ class USBDeviceTest(ParticlTestFramework):
         self.sync_all()
 
     def run_test(self):
+
+        # Check that particl has been built with USB device enabled
+        config = configparser.ConfigParser()
+        if not self.options.configfile:
+            self.options.configfile = os.path.dirname(__file__) + "/../config.ini"
+        config.read_file(open(self.options.configfile))
+
+        if not config["components"].getboolean("ENABLE_USBDEVICE"):
+            raise SkipTest("particld has not been built with usb device enabled.")
+
         nodes = self.nodes
 
         # Stop staking

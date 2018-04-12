@@ -24,17 +24,18 @@ env:
     - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
     - SDK_URL=https://bitcoincore.org/depends-sources/sdks
     - WINEDEBUG=fixme-all
+    - UNIT_TESTS_TIMEOUT = 6000 # Run unit tests if compilation took less than UNIT_TESTS_TIMEOUT seconds
   matrix:
 # ARM
     - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf python3-pip shellcheck" DEP_OPTS="NO_USB=1 NO_QT=1" CHECK_DOC=1 GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # bitcoind
     - HOST=x86_64-unknown-linux-gnu TEST_ZMQ=1 PACKAGES="python3-pip libudev-dev bc" DEP_OPTS="DEBUG=1 NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-gui --enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
 # Win32
-    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6" DEP_OPTS="NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-reduce-exports"
+    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6" DEP_OPTS="NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-reduce-exports" UNIT_TESTS_TIMEOUT=1200
 # Win64
     - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="nsis g++-mingw-w64-x86-64 wine1.6" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-reduce-exports"
 # Qt4 & system libs
-#    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3-zmq qt4-dev-tools libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libdb5.1++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev xvfb" NO_DEPENDS=1 NEED_XVFB=1 RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --enable-glibc-back-compat --enable-reduce-exports --with-gui=qt4 CPPFLAGS=-DDEBUG_LOCKORDER"
+    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3-pip qt4-dev-tools libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libdb5.1++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev xvfb" NO_DEPENDS=1 NEED_XVFB=1 RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--disable-zmq --with-incompatible-bdb --enable-glibc-back-compat --enable-reduce-exports --with-gui=qt4 CPPFLAGS=-DDEBUG_LOCKORDER" RUN_UNIT_TESTS=true TEST_ZMQ=0
 # 32-bit + dash
     - HOST=i686-pc-linux-gnu PACKAGES="libudev-dev:i386 g++-multilib bc" DEP_OPTS="NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
 # x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
@@ -45,6 +46,7 @@ env:
     - HOST=x86_64-apple-darwin11 PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev" RUN_TESTS=false BITCOIN_CONFIG="--enable-usbdevice --enable-gui --enable-reduce-exports --enable-werror" OSX_SDK=10.11 GOAL="deploy"
 
 before_install:
+    - export START_TIME=`date +%s`
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
 install:
     - if [ -n "$DPKG_ADD_ARCH" ]; then sudo dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
@@ -85,6 +87,9 @@ script:
     - ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
+    - if [ $((`date +%s`-$START_TIME)) -gt "$UNIT_TESTS_TIMEOUT" ]; then RUN_UNIT_TESTS=false; fi
+    - echo $((`date +%s`-$START_TIME))
+    - echo "$RUN_UNIT_TESTS"
     - if [ "$RUN_UNIT_TESTS" = "true" ]; then travis_wait 50 make $MAKEJOBS check VERBOSE=1; fi
     - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude feature_pruning,feature_dbcrash"; fi
 #   - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --combinedlogslen=4000 --coverage --quiet ${extended}; fi

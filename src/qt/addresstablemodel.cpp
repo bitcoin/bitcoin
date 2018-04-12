@@ -467,12 +467,3 @@ void AddressTableModel::emitDataChanged(int idx)
     Q_EMIT dataChanged(index(idx, 0, QModelIndex()), index(idx, columns.length()-1, QModelIndex()));
 }
 
-void AddressTableModel::warningBox(QString msg)
-{
-    qWarning() << msg;
-    QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
-    msgParams.second = CClientUIInterface::MSG_WARNING;
-    msgParams.first = msg;
-
-    Q_EMIT walletModel->message(tr("Address Table"), msgParams.first, msgParams.second);
-}

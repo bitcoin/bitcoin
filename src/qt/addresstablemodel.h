@@ -95,7 +95,6 @@ private:
 
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
-    void warningBox(QString msg);
 
 public Q_SLOTS:
     /* Update address list from core.

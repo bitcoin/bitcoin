@@ -25,14 +25,14 @@ class ZMQTest(ParticlTestFramework):
         except ImportError:
             raise SkipTest("python3-zmq module not available.")
 
-        # Check that bitcoin has been built with ZMQ enabled
+        # Check that particl has been built with ZMQ enabled
         config = configparser.ConfigParser()
         if not self.options.configfile:
             self.options.configfile = os.path.dirname(__file__) + "/../config.ini"
         config.read_file(open(self.options.configfile))
 
         if not config["components"].getboolean("ENABLE_ZMQ"):
-            raise SkipTest("bitcoind has not been built with zmq enabled.")
+            raise SkipTest("particld has not been built with zmq enabled.")
 
         self.zmq = zmq
         self.zmqContext = zmq.Context()
