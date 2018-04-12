@@ -718,7 +718,8 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	UniValue inputsArray = inputs.get_array();
 	BOOST_CHECK_EQUAL(inputsArray.size(), 0);
 	UniValue balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 0);
+	// 0 balance always throws
+	BOOST_CHECK_THROW(AssetAmountFromValue(balance, 8, true), runtime_error);
 
 	AssetAllocationTransfer(true, "node1", "asset", "jagassetsendrangesownerallocation", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesa\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":199}]},{\\\"aliasto\\\":\\\"jagassetsendrangesb\\\",\\\"ranges\\\":[{\\\"start\\\":200,\\\"end\\\":399}]},{\\\"aliasto\\\":\\\"jagassetsendrangesc\\\",\\\"ranges\\\":[{\\\"start\\\":400,\\\"end\\\":599}]},{\\\"aliasto\\\":\\\"jagassetsendrangesd\\\",\\\"ranges\\\":[{\\\"start\\\":600,\\\"end\\\":799}]},{\\\"aliasto\\\":\\\"jagassetsendrangese\\\",\\\"ranges\\\":[{\\\"start\\\":800,\\\"end\\\":999}]}]\"", "memo");
 	// ensure receiver get's it
