@@ -728,7 +728,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 199);
-	balance = find_value(r.get_obj(), "balance");
+	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
 
