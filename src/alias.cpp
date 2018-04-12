@@ -1423,7 +1423,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	const vector<unsigned char> &vchRandAlias = vchFromString(GenerateSyscoinGuid());
 
 	// build alias
-	CAliasIndex newAlias;
+	CAliasIndex newAlias, newAlias1;
 	newAlias.vchGUID = vchRandAlias;
 	newAlias.vchAlias = vchAlias;
 	if (!strEncryptionPublicKey.empty())
@@ -1453,7 +1453,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHashAlias, vchHashAlias1;
 	uint256 hash;
 	bool bActivation = false;
-
+	newAlias1 = newAlias;
 	if (mapAliasRegistrationData.count(vchAlias) > 0)
 	{
 		data = mapAliasRegistrationData[vchAlias];
@@ -1461,9 +1461,10 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		vchHashAlias = vchFromValue(hash.GetHex());
 		if (!newAlias.UnserializeFromData(data, vchHashAlias))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
+		newAlias1.vchAddress = newAlias.vchAddress;
 	}
 	// ensure that the stored alias registration and the creation of alias from parameters matches hash, if not then the params must have changed so re-register
-	newAlias.Serialize(data);
+	newAlias1.Serialize(data);
 	hash = Hash(data.begin(), data.end());
 	vchHashAlias1 = vchFromValue(hash.GetHex());
 	// vchHashAlias might be empty anyway if this is an initial registration or if they need to re-register as per the comments above
