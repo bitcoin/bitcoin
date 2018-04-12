@@ -629,7 +629,7 @@ std::string HelpMessage(HelpMessageMode mode)
 		strUsage += HelpMessageOpt("-mocktime=<n>", "Replace actual time with <n> seconds since epoch (default: 0)");
 		strUsage += HelpMessageOpt("-limitfreerelay=<n>", strprintf("Continuously rate-limit free transactions to <n>*1000 bytes per minute (default: %u)", DEFAULT_LIMITFREERELAY));
 		strUsage += HelpMessageOpt("-relaypriority", strprintf("Require high priority for relaying free or low-fee transactions (default: %u)", DEFAULT_RELAYPRIORITY));
-		strUsage += HelpMessageOpt("-maxsigcachesize=<n>", strprintf("Limit size of signature cache to <n> MiB (default: %u)", DEFAULT_MAX_SIG_CACHE_SIZE));
+		strUsage += HelpMessageOpt("-maxsigcachesize=<n>", strprintf("Limit sum of signature cache and script execution cache sizes to <n> MiB (default: %u)", DEFAULT_MAX_SIG_CACHE_SIZE));
 	}
 	strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
 		CURRENCY_UNIT, FormatMoney(DEFAULT_LEGACY_MIN_RELAY_TX_FEE)));
@@ -1350,6 +1350,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 	std::ostringstream strErrors;
 
 	InitSignatureCache();
+	InitScriptExecutionCache();
 
 	LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
 	if (nScriptCheckThreads) {

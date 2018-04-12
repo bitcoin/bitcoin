@@ -1193,9 +1193,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 				CValidationState vstate;
 				CCoinsViewCache &vview = *pcoinsTip;
 					
-				// Check against previous transactions
-				// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
+				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true)) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const uint256& hashTx, vHashTxnToUncache) {
 						pcoinsTip->Uncache(hashTx);
@@ -1241,7 +1239,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, bool bMultiThreaded, CValidation
 		else {
 			// Check against previous transactions
 			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
+			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true)) {
 				return false;
 			}
 			if (!CheckSyscoinInputs(tx, state, true, chainHeight, nFees, CBlock())) {
@@ -1834,8 +1832,18 @@ namespace Consensus {
 		return true;
 	}
 }// namespace Consensus
+static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
+static uint256 scriptExecutionCacheNonce(GetRandHash());
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
+void InitScriptExecutionCache() {
+	// nMaxCacheSize is unsigned. If -maxsigcachesize is set to zero,
+	// setup_bytes creates the minimum possible cache (2 elements).
+	size_t nMaxCacheSize = std::min(std::max((int64_t)0, gArgs.GetArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) / 2), MAX_MAX_SIG_CACHE_SIZE) * ((size_t)1 << 20);
+	size_t nElems = scriptExecutionCache.setup_bytes(nMaxCacheSize);
+	LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
+		(nElems * sizeof(uint256)) >> 20, (nMaxCacheSize * 2) >> 20, nElems);
+}
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks)
 {
 	if (!tx.IsCoinBase())
 	{
@@ -1855,6 +1863,19 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 		// Of course, if an assumed valid block is invalid due to false scriptSigs
 		// this optimization would allow an invalid chain to be accepted.
 		if (fScriptChecks) {
+			// First check if script executions have been cached with the same
+			// flags. Note that this assumes that the inputs provided are
+			// correct (ie that the transaction hash which is in tx's prevouts
+			// properly commits to the scriptPubKey in the inputs view of that
+			// transaction).
+			uint256 hashCacheEntry;
+			// We only use the first 19 bytes of nonce to avoid a second SHA
+			// round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
+			static_assert(55 - sizeof(flags) - 32 >= 128 / 8, "Want at least 128 bits of nonce for script execution cache");
+			CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetWitnessHash().begin(), 32).Write((unsigned char*)&flags, sizeof(flags)).Finalize(hashCacheEntry.begin());
+			if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
+				return true;
+			}
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				const COutPoint &prevout = tx.vin[i].prevout;
 				const CCoins* coins = inputs.AccessCoins(prevout.hash);
@@ -1863,7 +1884,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 				}
 
 				// Verify signature
-				CScriptCheck check(*coins, tx, i, flags, cacheStore);
+				CScriptCheck check(*coins, tx, i, flags, cacheSigStore);
 				if (pvChecks) {
 					pvChecks->push_back(CScriptCheck());
 					check.swap(pvChecks->back());
@@ -1878,6 +1899,11 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 					// super-majority vote has passed.
 					return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
 				}
+			}
+			if (cacheFullScriptStore && !pvChecks) {
+				// We executed all of the provided scripts, and were told to
+				// cache the result. Do so now.
+				scriptExecutionCache.insert(hashCacheEntry);
 			}
 		}
 	}
@@ -2473,7 +2499,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			}
 			std::vector<CScriptCheck> vChecks;
 			bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-			if (!CheckInputs(tx, state, view, fScriptChecks, STANDARD_SCRIPT_VERIFY_FLAGS, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
+			if (!CheckInputs(tx, state, view, fScriptChecks, STANDARD_SCRIPT_VERIFY_FLAGS, fCacheResults, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			control.Add(vChecks);
