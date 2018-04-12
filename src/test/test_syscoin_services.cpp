@@ -1242,7 +1242,8 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 		GenerateBlocks(1, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + name + " " + fromalias + " false"));
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges), newfromamount);
+	if(newfromamount > 0)
+		BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges), newfromamount);
 	return txid;
 }
 void AssetSend(const string& node, const string& name, const string& inputs, const string& memo, const string& witness)
