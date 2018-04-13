@@ -2595,7 +2595,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                     vInv.clear();
                 }
             }
-            pto->vInventoryToSend = vInvWait;
+            //pto->vInventoryToSend = vInvWait;
         }
         if (!vInv.empty()) {
             LogPrint("net", "SendMessages -- pushing tailing inv's: count=%d peer=%d\n", vInv.size(), pto->id);
