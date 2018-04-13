@@ -1509,7 +1509,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		fYears = 1;
 	fee.nAmount = GetDataFee(scriptData) * powf(2.88, fYears);
 	
-	if (bActivation && mapAliasRegistrations.count(vchHashAlias) > 0)
+	if (bActivation && mapAliasRegistrations.count(vchHashAlias1) > 0)
 	{
 		LOCK(cs_main);
 		if (pwalletMain)
@@ -1780,8 +1780,11 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 		{
 			if(vvch.size() == 1)
 			{
-				if (mapAliasRegistrations.find(vvch[0]) != mapAliasRegistrations.end()) 
+				if (mapAliasRegistrations.find(vvch[0]) != mapAliasRegistrations.end()) {
+					if (pwalletMain)
+						pwalletMain->UnlockCoin(mapAliasRegistrations[vvch[0]]);
 					mapAliasRegistrations.erase(vvch[0]);
+				}
 
 				COutPoint prevOut(tx.GetHash(), i);
 				mapAliasRegistrations.insert(make_pair(vvch[0], prevOut));
