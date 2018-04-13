@@ -1467,6 +1467,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 			newAlias1.vchAddress = newAlias.vchAddress;
 
 		newAlias1.vchGUID = newAlias.vchGUID;
+		newAlias1.nExpireTime = newAlias.nExpireTime;
 	}
 	// ensure that the stored alias registration and the creation of alias from parameters matches hash, if not then the params must have changed so re-register
 	newAlias1.Serialize(data);
