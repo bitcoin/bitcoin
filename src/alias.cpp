@@ -1478,6 +1478,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	else {
 		// if this is a re-registration we should remove old one first
 		mapAliasRegistrationData.erase(vchAlias);
+		mapAliasRegistrations.erase(vchHashAlias);
 		mapAliasRegistrationData.insert(make_pair(vchAlias, data));
 	}
 	
@@ -1781,7 +1782,7 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 			if(vvch.size() == 1)
 			{
 				auto it = mapAliasRegistrations.find(vvch[0]);
-				if (it != mapAliasRegistrations.end()) {
+				if (it == mapAliasRegistrations.end()) {
 					COutPoint prevOut(tx.GetHash(), i);
 					mapAliasRegistrations.insert(make_pair(vvch[0], prevOut));
 					if (pwalletMain)
