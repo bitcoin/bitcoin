@@ -1469,6 +1469,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	}
 	
 	// ensure that the stored alias registration and the creation of alias from parameters matches hash, if not then the params must have changed so re-register
+	data.clear();
 	newAlias1.Serialize(data);
 	hash = Hash(data.begin(), data.end());
 	vchHashAlias1 = vchFromValue(hash.GetHex());
