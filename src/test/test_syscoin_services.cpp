@@ -2554,7 +2554,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	balanceSellerBefore += (nTotalWithoutFee - nCommission);
 	BOOST_CHECK(role == EscrowRoles::ARBITER || role == EscrowRoles::BUYER);
 	// if buyer released it, he should get arbiter fee back
-	if (role == role == EscrowRoles::BUYER)
+	if (role == EscrowRoles::BUYER)
 		balanceBuyerBefore += nArbiterFee;
 	// else arbiter should get the fee
 	else if(role == EscrowRoles::ARBITER)
