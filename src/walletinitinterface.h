@@ -13,23 +13,23 @@ class CRPCTable;
 class WalletInitInterface {
 public:
     /** Get wallet help string */
-    virtual std::string GetHelpString(bool showDebug) = 0;
+    virtual std::string GetHelpString(bool showDebug) const = 0;
     /** Check wallet parameter interaction */
-    virtual bool ParameterInteraction() = 0;
+    virtual bool ParameterInteraction() const = 0;
     /** Register wallet RPC*/
-    virtual void RegisterRPC(CRPCTable &) = 0;
+    virtual void RegisterRPC(CRPCTable &) const = 0;
     /** Verify wallets */
-    virtual bool Verify() = 0;
+    virtual bool Verify() const = 0;
     /** Open wallets*/
-    virtual bool Open() = 0;
+    virtual bool Open() const = 0;
     /** Start wallets*/
-    virtual void Start(CScheduler& scheduler) = 0;
+    virtual void Start(CScheduler& scheduler) const = 0;
     /** Flush Wallets*/
-    virtual void Flush() = 0;
+    virtual void Flush() const = 0;
     /** Stop Wallets*/
-    virtual void Stop() = 0;
+    virtual void Stop() const = 0;
     /** Close wallets */
-    virtual void Close() = 0;
+    virtual void Close() const = 0;
 
     virtual ~WalletInitInterface() {}
 };
