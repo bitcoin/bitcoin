@@ -79,7 +79,6 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5);	
 	// activate
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 " + newaddress + " '' '' ''"));
 	UniValue varray5 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray5[0].get_str()));
