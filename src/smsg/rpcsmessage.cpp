@@ -833,7 +833,8 @@ UniValue smsginbox(const JSONRPCRequest &request)
                 };
                 messageList.push_back(objM);
 
-                if (fCheckReadStatus)
+                // only set 'read' status if the message decrypted succesfully
+                if (fCheckReadStatus && rv == 0)
                 {
                     smsgStored.status &= ~SMSG_MASK_UNREAD;
                     dbInbox.WriteSmesg(chKey, smsgStored);
