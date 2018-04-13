@@ -1,2 +1,0 @@
-##log read and write operations
-diaglog=3
