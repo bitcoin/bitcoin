@@ -498,10 +498,10 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 UniValue certnew(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 5)
         throw runtime_error(
-			"certnew [alias] [title] [public] [category=certificates] [witness]\n"
+			"certnew [alias] [title] [public value] [category=certificates] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<title> title, 256 characters max.\n"
-                        "<public> public data, 256 characters max.\n"
+                        "<public value> public data, 256 characters max.\n"
 						"<category> category, 256 characters max. Defaults to certificates\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
@@ -581,11 +581,11 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 UniValue certupdate(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 5)
         throw runtime_error(
-			"certupdate [guid] [title] [public] [category=certificates] [witness]\n"
+			"certupdate [guid] [title] [public value] [category=certificates] [witness]\n"
 						"Perform an update on an certificate you control.\n"
 						"<guid> Certificate guidkey.\n"
 						"<title> Certificate title, 256 characters max.\n"
-                        "<public> Public data, 256 characters max.\n"                
+                        "<public value> Public data, 256 characters max.\n"                
 						"<category> Category, 256 characters max. Defaults to certificates\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
@@ -678,11 +678,11 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 UniValue certtransfer(const UniValue& params, bool fHelp) {
  if (fHelp || params.size() != 5)
         throw runtime_error(
-			"certtransfer [guid] [alias] [public] [accessflags=2] [witness]\n"
+			"certtransfer [guid] [alias] [public value] [accessflags=2] [witness]\n"
 						"Transfer a certificate you own to another alias.\n"
 						"<guid> certificate guidkey.\n"
 						"<alias> alias to transfer to.\n"
-                        "<public> public data, 256 characters max.\n"	
+                        "<public value> public data, 256 characters max.\n"	
 						"<accessflags> Set new access flags for new owner for this certificate, 0 for read-only, 1 for edit, 2 for edit and transfer access. Default is 2.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());

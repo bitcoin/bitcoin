@@ -640,10 +640,10 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 UniValue assetnew(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 11)
         throw runtime_error(
-			"assetnew [name] [alias] [public] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
+			"assetnew [name] [alias] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
 						"<name> name of asset in uppercase, 3 characters miniumum, 20 characters max.\n"
 						"<alias> An alias you own.\n"
-                        "<public> public data, 256 characters max.\n"
+                        "<public value> public data, 256 characters max.\n"
 						"<category> category, 256 characters max. Defaults to assets.\n"
 						"<precision> Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion.\n"
 						"<use_inputranges> If this asset uses an input for every token, useful if you need to keep track of a token regardless of ownership. If set to true, precision is forced to 0. Maximum supply with input ranges is 10 million.\n"
@@ -745,10 +745,10 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 UniValue assetupdate(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 6)
         throw runtime_error(
-			"assetupdate [asset] [public] [category=assets] [supply] [interest_rate] [witness]\n"
+			"assetupdate [asset] [public value] [category=assets] [supply] [interest_rate] [witness]\n"
 						"Perform an update on an asset you control.\n"
 						"<asset> Asset name.\n"
-                        "<public> Public data, 256 characters max.\n"                
+                        "<public value> Public data, 256 characters max.\n"                
 						"<category> Category, 256 characters max. Defaults to assets\n"
 						"<supply> New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
 						"<interest_rate> The annual interest rate if any. Money supply is still capped to total supply. Should be between 0 and 1 and represents a percentage divided by 100. Can only set if this asset allows adjustment of interest rate.\n"
