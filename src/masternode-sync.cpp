@@ -118,7 +118,7 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
 std::string CMasternodeSync::GetSyncStatus()
 {
     switch (masternodeSync.nRequestedMasternodeAssets) {
-        case MASTERNODE_SYNC_INITIAL:       return _("Synchroning blockchain...");
+        case MASTERNODE_SYNC_INITIAL:       return _("Synchronizing blockchain...");
         case MASTERNODE_SYNC_WAITING:       return _("Synchronization pending...");
         case MASTERNODE_SYNC_LIST:          return _("Synchronizing masternodes...");
         case MASTERNODE_SYNC_MNW:           return _("Synchronizing masternode payments...");
