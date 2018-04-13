@@ -2289,7 +2289,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	string buyeralias = find_value(r.get_obj(), "buyer").get_str();
 	string arbiteralias = find_value(r.get_obj(), "arbiter").get_str();
 	string witnessalias = find_value(r.get_obj(), "witness").get_str();
-	string role = find_value(r.get_obj(), "role").get_str();
+	int role = find_value(r.get_obj(), "role").get_int();
 	CAmount nTotalWithoutFee = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	CAmount nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
 	CAmount nNetworkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
@@ -2394,12 +2394,12 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	// if buy it now(not auction), we must have paid total, otherwise we only refund some of the fees
 	if (bBuyNow)
 		balanceBuyerBefore += nTotalWithoutFee;
-	BOOST_CHECK(role == "arbiter" || role == "seller");
+	BOOST_CHECK(role == EscrowRoles::Arbiter || role == EscrowRoles::SELLER);
 	// if seller refunds it, buyer should get arbiter fee back
-	if (role == "seller")
+	if (role == EscrowRoles::SELLER)
 		balanceBuyerBefore += nArbiterFee;
 	// else arbiter should get the fee
-	else if (role == "arbiter")
+	else if (role == EscrowRoles::Arbiter)
 		balanceArbiterBefore += nArbiterFee;
 
 
@@ -2432,7 +2432,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	string buyeralias = find_value(r.get_obj(), "buyer").get_str();
 	string arbiteralias = find_value(r.get_obj(), "arbiter").get_str();
 	string witnessalias = find_value(r.get_obj(), "witness").get_str();
-	string role = find_value(r.get_obj(), "role").get_str();
+	int role = find_value(r.get_obj(), "role").get_int();
 	int nQty = find_value(r.get_obj(), "quantity").get_int();
 	CAmount nTotalWithoutFee = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	CAmount nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
@@ -2552,12 +2552,12 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	}
 
 	balanceSellerBefore += (nTotalWithoutFee - nCommission);
-	BOOST_CHECK(role == "arbiter" || role == "buyer");
+	BOOST_CHECK(role == EscrowRoles::Arbiter || role == EscrowRoles::BUYER);
 	// if buyer released it, he should get arbiter fee back
-	if (role == "buyer")
+	if (role == role == EscrowRoles::BUYER)
 		balanceBuyerBefore += nArbiterFee;
 	// else arbiter should get the fee
-	else if(role == "arbiter")
+	else if(role == EscrowRoles::Arbiter)
 		balanceArbiterBefore += nArbiterFee;
 
 	balanceResellerBefore += nCommission;

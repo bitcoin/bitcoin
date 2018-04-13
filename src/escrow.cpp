@@ -121,6 +121,23 @@ uint64_t GetEscrowExpiration(const CEscrow& escrow) {
 	return nTime;
 }
 
+int escrowEnumFromOp(int op) {
+	switch (op) {
+	case OP_ESCROW_ACTIVATE:
+		return EscrowStatus::InEscrow;
+	case OP_ESCROW_RELEASE:
+		return EscrowStatus::EscrowReleased;
+	case OP_ESCROW_REFUND:
+		return EscrowStatus::EscrowRefunded;
+	case OP_ESCROW_REFUND_COMPLETE:
+		return EscrowStatus::EscrowRefundComplete;
+	case OP_ESCROW_RELEASE_COMPLETE:
+		return EscrowStatus::EscrowReleaseComplete;
+	default:
+		return EscrowStatus::Unknown;
+	}
+	return EscrowStatus::Unknown;
+}
 
 string escrowFromOp(int op) {
     switch (op) {
@@ -146,19 +163,6 @@ string escrowFromOp(int op) {
         return "<unknown escrow op>";
     }
 	return "<unknown escrow op>";
-}
-string EscrowRoleToString(int role) {
-	switch (role) {
-	case EscrowRoles::BUYER:
-		return "buyer";
-	case EscrowRoles::SELLER:
-		return "seller";
-	case EscrowRoles::ARBITER:
-		return "arbiter";
-	default:
-		return "unknown";
-	}
-	return "unknown";
 }
 bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
@@ -403,7 +407,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
     COffer theOffer, myLinkOffer;
 	string retError = "";
 	CTransaction txOffer;
-	int escrowOp = OP_ESCROW_ACTIVATE;
 	COffer dbOffer;
 	if(fJustCheck)
 	{
@@ -436,11 +439,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("escrow hex guid too long");
 					return error(errorMessage.c_str());
 				}
-				if(theEscrow.op != OP_ESCROW_ACTIVATE)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Invalid op, should be escrow activate");
-					return error(errorMessage.c_str());
-				}
 				if(!IsValidPaymentOption(theEscrow.nPaymentOption))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4015 - " + _("Invalid payment option");
@@ -463,12 +461,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				}
 				break;
 			case OP_ESCROW_BID:
-				if (theEscrow.op != OP_ESCROW_ACTIVATE)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Invalid op, should be escrow activate");
-					return error(errorMessage.c_str());
-				}
-				
 				if (!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4018 - " + _("Cannot leave feedback in escrow bid");
@@ -476,11 +468,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				}
 				break;
 			case OP_ESCROW_ADD_SHIPPING:
-				if (theEscrow.op != OP_ESCROW_ADD_SHIPPING)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Invalid op, should be escrow activate");
-					return error(errorMessage.c_str());
-				}
 				if (!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4018 - " + _("Cannot leave feedback in escrow bid");
@@ -491,11 +478,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				if(!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4020 - " + _("Cannot leave feedback in escrow release");
-					return error(errorMessage.c_str());
-				}
-				if(theEscrow.op != OP_ESCROW_RELEASE)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4022 - " + _("Invalid op, should be escrow release");
 					return error(errorMessage.c_str());
 				}									
 				if (theEscrow.role != EscrowRoles::BUYER && theEscrow.role != EscrowRoles::ARBITER)
@@ -510,37 +492,16 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4020 - " + _("Cannot leave feedback in escrow release");
 					return error(errorMessage.c_str());
 				}
-
-				if (theEscrow.op != OP_ESCROW_RELEASE_COMPLETE)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4021 - " + _("Invalid op, should be escrow complete");
-					return error(errorMessage.c_str());
-				}
 				break;
 			case OP_ESCROW_FEEDBACK:
-				if (theEscrow.op == OP_ESCROW_REFUND_COMPLETE || theEscrow.op == OP_ESCROW_RELEASE_COMPLETE)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4024 - " + _("Invalid op, should be escrow complete");
-					return error(errorMessage.c_str());
-				}
 				if(theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4025 - " + _("Feedback must leave a message");
 					return error(errorMessage.c_str());
 				}
 
-				if(theEscrow.op != OP_ESCROW_FEEDBACK)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4026 - " + _("Invalid op, should be escrow feedback");
-					return error(errorMessage.c_str());
-				}
 				break;
-			case OP_ESCROW_REFUND:
-				if(theEscrow.op != OP_ESCROW_REFUND)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4031 - " + _("Invalid op, should be escrow refund");
-					return error(errorMessage.c_str());
-				}										
+			case OP_ESCROW_REFUND:									
 				if (theEscrow.role != EscrowRoles::SELLER && theEscrow.role != EscrowRoles::ARBITER)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4046 - " + _("Invalid role specified. Only arbiter or seller can initiate an escrow refund");
@@ -557,12 +518,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 
 				break;
 			case OP_ESCROW_REFUND_COMPLETE:
-				if (theEscrow.op != OP_ESCROW_REFUND_COMPLETE)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4030 - " + _("Invalid op, should be escrow complete");
-					return error(errorMessage.c_str());
-				}
-				
 				// Check input
 				if (!theEscrow.feedback.IsNull())
 				{
@@ -602,7 +557,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 		if (vvchAliasArgs.size() >= 4 && !vvchAliasArgs[3].empty())
 			theEscrow.vchWitness = vvchAliasArgs[3];
 		CEscrow serializedEscrow = theEscrow;
-		escrowOp = serializedEscrow.op;
 		string strResponseEnglish = "";
 		string strResponseGUID = "";
 		string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, ESCROW, strResponseGUID);
@@ -704,7 +658,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				}
 				theEscrow.fBidPerUnit = serializedEscrow.fBidPerUnit;
 				theEscrow.nAmountOrBidPerUnit = serializedEscrow.nAmountOrBidPerUnit;
-				theEscrow.op = escrowOp;
 				theEscrow.txHash = tx.GetHash();
 				theEscrow.nHeight = nHeight;
 				// write escrow bid
@@ -714,7 +667,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				}
 			}
 			else if (op == OP_ESCROW_ADD_SHIPPING) {
-				if (theEscrow.op == OP_ESCROW_FEEDBACK || theEscrow.op == OP_ESCROW_REFUND_COMPLETE || theEscrow.op == OP_ESCROW_RELEASE_COMPLETE)
+				if (theEscrow.op != OP_ESCROW_ACTIVATE && theEscrow.op != OP_ESCROW_RELEASE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4044 - " + _("Can only add shipping to an active escrow");
 					return true;
@@ -764,6 +717,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 			}
 			else if (op == OP_ESCROW_REFUND)
 			{
+				if (theEscrow.op != OP_ESCROW_ACTIVATE && theEscrow.op != OP_ESCROW_RELEASE)
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4044 - " + _("Can only refund an active escrow");
+					return true;
+				}
 				if (!GetOffer(theEscrow.vchOffer, dbOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot find escrow offer. It may be expired");
@@ -806,22 +764,13 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 					return true;
 				}
 
-				if (theEscrow.op == OP_ESCROW_FEEDBACK || theEscrow.op == OP_ESCROW_REFUND_COMPLETE || theEscrow.op == OP_ESCROW_RELEASE_COMPLETE)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4044 - " + _("Can only refund an active escrow");
-					return true;
-				}
-				if (theEscrow.op == OP_ESCROW_RELEASE)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4045 - " + _("Cannot refund an escrow that is already released");
-					return true;
-				}
 				if (vvchAliasArgs[0] != theEscrow.vchSellerAlias && vvchAliasArgs[0] != theEscrow.vchArbiterAlias)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4046 - " + _("Only arbiter or seller can initiate an escrow refund");
 					return true;
 				}
 				theEscrow.role = serializedEscrow.role;
+				theEscrow.op = op;
 				// if this escrow was actually a series of bids, set the bid status to 'refunded' in escrow bid collection
 				if (!bSanityCheck && !theEscrow.bBuyNow) {
 					pescrowdb->WriteEscrowBid(theEscrow, "refunded");
@@ -841,9 +790,15 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4051 - " + _("Only buyer can claim an escrow refund");
 					return true;
 				}
+				theEscrow.op = op;
 			}
 			else if (op == OP_ESCROW_RELEASE)
 			{
+				if (theEscrow.op != OP_ESCROW_ACTIVATE && theEscrow.op != OP_ESCROW_REFUND)
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4054 - " + _("Can only release an active escrow");
+					return true;
+				}
 				if (!GetOffer(theEscrow.vchOffer, dbOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot find escrow offer. It may be expired");
@@ -885,22 +840,13 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4053 - " + _("Cannot find arbiter alias. It may be expired");
 					return true;
 				}
-				if (theEscrow.op == OP_ESCROW_FEEDBACK || theEscrow.op == OP_ESCROW_REFUND_COMPLETE || theEscrow.op == OP_ESCROW_RELEASE_COMPLETE)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4054 - " + _("Can only release an active escrow");
-					return true;
-				}
-				if (theEscrow.op == OP_ESCROW_REFUND)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4055 - " + _("Cannot release an escrow that is already refunded");
-					return true;
-				}
 				if (vvchAliasArgs[0] != theEscrow.vchBuyerAlias && vvchAliasArgs[0] != theEscrow.vchArbiterAlias)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4056 - " + _("Only arbiter or buyer can initiate an escrow release");
 					return true;
 				}
 				theEscrow.role = serializedEscrow.role;
+				theEscrow.op = op;
 			}
 			else if (op == OP_ESCROW_RELEASE_COMPLETE)
 			{
@@ -916,9 +862,15 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4059 - " + _("Only seller can claim an escrow release");
 					return true;
 				}
+				theEscrow.op = op;
 			}
 			else if (op == OP_ESCROW_FEEDBACK)
 			{
+				if (theEscrow.op == OP_ESCROW_ACTIVATE)
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058 - " + _("Can not leave feedback on an active escrow");
+					return true;
+				}
 				vector<unsigned char> vchSellerAlias = theEscrow.vchSellerAlias;
 				if (!theEscrow.vchLinkSellerAlias.empty())
 					vchSellerAlias = theEscrow.vchLinkSellerAlias;
@@ -1006,6 +958,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 					}
 				}
 				theEscrow.vchOffer = dbOffer.vchOffer;
+				theEscrow.op = op;
 			}
 			else
 			{
@@ -1061,7 +1014,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 			}
 		}
 		// set the escrow's txn-dependent values
-		theEscrow.op = escrowOp;
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;
 		// write escrow
@@ -1122,7 +1074,6 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << bidderalias.vchAlias << bidderalias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 	theEscrow.ClearEscrow();
-	theEscrow.op = OP_ESCROW_ACTIVATE;
 	theEscrow.nAmountOrBidPerUnit = nBid;
 	theEscrow.fBidPerUnit = fBid;
 	vector<unsigned char> data;
@@ -1200,7 +1151,6 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 
 	theEscrow.ClearEscrow();
-	theEscrow.op = OP_ESCROW_ADD_SHIPPING;
 	theEscrow.nShipping += nShipping;
 	vector<unsigned char> data;
 	theEscrow.Serialize(data);
@@ -1444,7 +1394,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	// send to seller/arbiter so they can track the escrow through GUI
     // build escrow
     CEscrow newEscrow;
-	newEscrow.op = OP_ESCROW_ACTIVATE;
 	newEscrow.vchEscrow = vchEscrow;
 	newEscrow.vchBuyerAlias = buyeralias.vchAlias;
 	newEscrow.vchArbiterAlias = arbiteralias.vchAlias;
@@ -1554,7 +1503,6 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias += sellerScript;
 
 	escrow.ClearEscrow();
-	escrow.op = OP_ESCROW_ACKNOWLEDGE;
 
 	vector<unsigned char> data;
 	escrow.Serialize(data);
@@ -1809,7 +1757,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CTransaction signedTx;
 	DecodeHexTx(signedTx, rawtx);
 	escrow.ClearEscrow();
-	escrow.op = OP_ESCROW_RELEASE;
 	for (int i = 0; i < signedTx.vin.size(); i++) {
 		if(!signedTx.vin[i].scriptSig.empty())
 			escrow.scriptSigs.push_back((CScriptBase)signedTx.vin[i].scriptSig);
@@ -1899,7 +1846,6 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias += sellerScript;
 
 	escrow.ClearEscrow();
-	escrow.op = OP_ESCROW_RELEASE_COMPLETE;
 	escrow.bPaymentAck = false;
 	escrow.redeemTxId = myRawTx.GetHash();
     CScript scriptPubKeyBuyer, scriptPubKeySeller;
@@ -2007,7 +1953,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CTransaction signedTx;
 	DecodeHexTx(signedTx, rawtx);
 	escrow.ClearEscrow();
-	escrow.op = OP_ESCROW_REFUND;
 	for (int i = 0; i < signedTx.vin.size(); i++) {
 		if (!signedTx.vin[i].scriptSig.empty())
 			escrow.scriptSigs.push_back((CScriptBase)signedTx.vin[i].scriptSig);
@@ -2100,7 +2045,6 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 
 
 	escrow.ClearEscrow();
-	escrow.op = OP_ESCROW_REFUND_COMPLETE;
 	escrow.bPaymentAck = false;
 	escrow.redeemTxId = myRawTx.GetHash();
 	CScript scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyArbiter;
@@ -2230,7 +2174,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 	escrow.ClearEscrow();
 	escrow.vchEscrow = vchEscrow;
-	escrow.op = OP_ESCROW_FEEDBACK;
 	escrow.bPaymentAck = false;
 	// buyer
 	CFeedback feedback;
@@ -2427,34 +2370,17 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 	oEscrow.push_back(Pair("redeem_script", HexStr(escrow.vchRedeemScript)));
     oEscrow.push_back(Pair("txid", escrow.txHash.GetHex()));
     oEscrow.push_back(Pair("height", (int)escrow.nHeight));
-	oEscrow.push_back(Pair("role", EscrowRoleToString(escrow.role)));
+	oEscrow.push_back(Pair("role", (int)escrow.role));
 	int64_t expired_time = GetEscrowExpiration(escrow);
 	bool expired = false;
     if(expired_time <= chainActive.Tip()->GetMedianTimePast())
 	{
 		expired = true;
 	}
-	string status = "unknown";
-	if(escrow.op == OP_ESCROW_ACTIVATE || escrow.op == OP_ESCROW_ADD_SHIPPING)
-		status = "in escrow";
-	else if(escrow.op == OP_ESCROW_RELEASE)
-		status = "escrow released";
-	else if (escrow.op == OP_ESCROW_RELEASE_COMPLETE)
-		status = "escrow release complete";
-	else if(escrow.op == OP_ESCROW_REFUND)
-		status = "escrow refunded";
-	else if (escrow.op == OP_ESCROW_REFUND_COMPLETE)
-		status = "escrow refund complete";
-	else if(escrow.op == OP_ESCROW_FEEDBACK)
-		status = "escrow feedback";
-	else if (escrow.op == OP_ESCROW_ACKNOWLEDGE)
-		status = "escrow acknowledge";
-	else if(escrow.op == OP_ESCROW_BID)
-		status = "in escrow (bid)";
 
 	oEscrow.push_back(Pair("expired", expired));
 	oEscrow.push_back(Pair("acknowledged", escrow.bPaymentAck));
-	oEscrow.push_back(Pair("status", status));
+	oEscrow.push_back(Pair("status", escrowEnumFromOp(escrow.op)));
 	return true;
 }
 bool BuildEscrowIndexerJson(const CEscrow &escrow, UniValue& oEscrow)
@@ -2465,6 +2391,7 @@ bool BuildEscrowIndexerJson(const CEscrow &escrow, UniValue& oEscrow)
 	oEscrow.push_back(Pair("seller", stringFromVch(escrow.vchSellerAlias)));
 	oEscrow.push_back(Pair("arbiter", stringFromVch(escrow.vchArbiterAlias)));
 	oEscrow.push_back(Pair("buyer", stringFromVch(escrow.vchBuyerAlias)));
+	oEscrow.push_back(Pair("status", escrowEnumFromOp(escrow.op)));
 	return true;
 }
 void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)

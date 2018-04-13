@@ -27,6 +27,14 @@ enum EscrowRoles {
 	SELLER = 2,
 	ARBITER = 3,
 };
+enum EscrowStatus {
+	Unknown = 0,
+	InEscrow = 1,
+	EscrowRelease = 2,
+	EscrowReleaseComplete = 3,
+	EscrowRefund = 3,
+	EscrowRefundComplete = 4
+};
 class CEscrow {
 public:
 	std::vector<unsigned char> vchEscrow;
