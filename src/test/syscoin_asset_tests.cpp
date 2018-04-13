@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 	GenerateBlocks(5);
 	// assetinfo is case incensitive
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo uppercase false"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id"), "UPPERCASE");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id").get_str(), "UPPERCASE");
 }
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 {
