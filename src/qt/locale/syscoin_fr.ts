@@ -4406,7 +4406,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Soumis au masternode, dans la file d'attente %s</translation>
     </message>
     <message>
-        <source>Synchroning blockchain...</source>
+        <source>Synchronizing blockchain...</source>
         <translation>Synchronisation de la chaîne de blocs...</translation>
     </message>
     <message>

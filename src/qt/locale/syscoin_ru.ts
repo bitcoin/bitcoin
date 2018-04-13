@@ -4406,7 +4406,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Отправлено на мастерноду, ожидаем в очереди %s</translation>
     </message>
     <message>
-        <source>Synchroning blockchain...</source>
+        <source>Synchronizing blockchain...</source>
         <translation>Синхронизация блокчейна...</translation>
     </message>
     <message>

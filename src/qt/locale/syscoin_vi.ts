@@ -4406,7 +4406,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Đã được gửi cho masternode, đang đợi trong hàng đợi %s</translation>
     </message>
     <message>
-        <source>Synchroning blockchain...</source>
+        <source>Synchronizing blockchain...</source>
         <translation>Đang đồng bộ chuỗi khối...</translation>
     </message>
     <message>

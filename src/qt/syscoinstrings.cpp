@@ -495,7 +495,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Spend unconfirmed change when sending transac
 QT_TRANSLATE_NOOP("syscoin-core", "Submitted following entries to masternode: %u / %d"),
 QT_TRANSLATE_NOOP("syscoin-core", "Submitted to masternode, waiting for more entries ( %u / %d ) %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "Submitted to masternode, waiting in queue %s"),
-QT_TRANSLATE_NOOP("syscoin-core", "Synchroning blockchain..."),
+QT_TRANSLATE_NOOP("syscoin-core", "Synchronizing blockchain..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Synchronization failed"),
 QT_TRANSLATE_NOOP("syscoin-core", "Synchronization finished"),
 QT_TRANSLATE_NOOP("syscoin-core", "Synchronization pending..."),

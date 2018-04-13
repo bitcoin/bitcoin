@@ -4410,7 +4410,7 @@ Syscoin Core wird heruntergefahren.</translation>
         <translation>An Masternode übermittelt, wartet in Warteschlange %s</translation>
     </message>
     <message>
-        <source>Synchroning blockchain...</source>
+        <source>Synchronizing blockchain...</source>
         <translation>Synchronisiere Blockchain...</translation>
     </message>
     <message>

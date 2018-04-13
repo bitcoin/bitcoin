@@ -4330,7 +4330,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>己經提交到主節點，在隊列%s 中等待 </translation>
     </message>
     <message>
-        <source>Synchroning blockchain...</source>
+        <source>Synchronizing blockchain...</source>
         <translation>正在同步區塊鏈...</translation>
     </message>
     <message>

@@ -4411,7 +4411,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Esitetty masternodelle, odotetaan jonossa %s</translation>
     </message>
     <message>
-        <source>Synchroning blockchain...</source>
+        <source>Synchronizing blockchain...</source>
         <translation>Synkronoidaan lohkoketju...</translation>
     </message>
     <message>

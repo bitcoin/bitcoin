@@ -4390,7 +4390,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Przesłano do masterdnoda, czekaj na swoją kolej %s</translation>
     </message>
     <message>
-        <source>Synchroning blockchain...</source>
+        <source>Synchronizing blockchain...</source>
         <translation>Synchronizuję łańcuch bloków...</translation>
     </message>
     <message>

@@ -5679,8 +5679,8 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Synchroning blockchain...</source>
-        <translation>Synchroning blockchain...</translation>
+        <source>Synchronizing blockchain...</source>
+        <translation>Synchronizing blockchain...</translation>
     </message>
     <message>
         <location line="+1"/>

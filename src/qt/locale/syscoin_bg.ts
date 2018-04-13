@@ -4406,7 +4406,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Изпратено към Мастернода, чака в опашката %s</translation>
     </message>
     <message>
-        <source>Synchroning blockchain...</source>
+        <source>Synchronizing blockchain...</source>
         <translation>Синхронизиране на блок-веригата...</translation>
     </message>
     <message>
