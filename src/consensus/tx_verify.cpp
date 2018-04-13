@@ -209,7 +209,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent", false,
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent",
                          strprintf("%s: inputs missing/spent", __func__));
     }
 
@@ -235,7 +235,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 
     const CAmount value_out = tx.GetValueOut();
     if (nValueIn < value_out) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout",
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
 
