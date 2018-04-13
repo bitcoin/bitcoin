@@ -21,39 +21,39 @@ class WalletInit : public WalletInitInterface {
 public:
 
     //! Return the wallets help message.
-    std::string GetHelpString(bool showDebug) override;
+    std::string GetHelpString(bool showDebug) const override;
 
     //! Wallets parameter interaction
-    bool ParameterInteraction() override;
+    bool ParameterInteraction() const override;
 
     //! Register wallet RPCs.
-    void RegisterRPC(CRPCTable &tableRPC) override;
+    void RegisterRPC(CRPCTable &tableRPC) const override;
 
     //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
     //  This function will perform salvage on the wallet if requested, as long as only one wallet is
     //  being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
-    bool Verify() override;
+    bool Verify() const override;
 
     //! Load wallet databases.
-    bool Open() override;
+    bool Open() const override;
 
     //! Complete startup of wallets.
-    void Start(CScheduler& scheduler, CConnman* connman) override;
+    void Start(CScheduler& scheduler, CConnman* connman) const override;
 
     //! Flush all wallets in preparation for shutdown.
-    void Flush() override;
+    void Flush() const override;
 
     //! Stop all wallets. Wallets will be flushed first.
-    void Stop() override;
+    void Stop() const override;
 
     //! Close all wallets.
-    void Close() override;
+    void Close() const override;
 };
 
 static WalletInit g_wallet_init;
 WalletInitInterface* const g_wallet_init_interface = &g_wallet_init;
 
-std::string WalletInit::GetHelpString(bool showDebug)
+std::string WalletInit::GetHelpString(bool showDebug) const
 {
     std::string strUsage = HelpMessageGroup(_("Wallet options:"));
     strUsage += HelpMessageOpt("-addresstype", strprintf(_("What type of addresses to use (\"legacy\", \"p2sh-segwit\", or \"bech32\", default: \"%s\")"), FormatOutputType(DEFAULT_ADDRESS_TYPE)));
@@ -102,7 +102,7 @@ std::string WalletInit::GetHelpString(bool showDebug)
     return strUsage;
 }
 
-bool WalletInit::ParameterInteraction()
+bool WalletInit::ParameterInteraction() const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         for (const std::string& wallet : gArgs.GetArgs("-wallet")) {
@@ -261,7 +261,7 @@ bool WalletInit::ParameterInteraction()
     return true;
 }
 
-void WalletInit::RegisterRPC(CRPCTable &t)
+void WalletInit::RegisterRPC(CRPCTable &t) const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return;
@@ -270,7 +270,7 @@ void WalletInit::RegisterRPC(CRPCTable &t)
     RegisterWalletRPCCommands(t);
 }
 
-bool WalletInit::Verify()
+bool WalletInit::Verify() const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return true;
@@ -352,7 +352,7 @@ bool WalletInit::Verify()
     return true;
 }
 
-bool WalletInit::Open()
+bool WalletInit::Open() const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -370,7 +370,7 @@ bool WalletInit::Open()
     return true;
 }
 
-void WalletInit::Start(CScheduler& scheduler, CConnman* connman)
+void WalletInit::Start(CScheduler& scheduler, CConnman* connman) const
 {
     for (CWalletRef pwallet : vpwallets) {
         pwallet->postInitProcess(scheduler, gArgs.GetBoolArg("-mnconflock", true) ? true : false);
@@ -380,14 +380,14 @@ void WalletInit::Start(CScheduler& scheduler, CConnman* connman)
     }
 }
 
-void WalletInit::Flush()
+void WalletInit::Flush() const
 {
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(false);
     }
 }
 
-void WalletInit::Stop()
+void WalletInit::Stop() const
 {
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(true);
@@ -397,7 +397,7 @@ void WalletInit::Stop()
     privateSendClient.ResetPool();
 }
 
-void WalletInit::Close()
+void WalletInit::Close() const
 {
     for (CWalletRef pwallet : vpwallets) {
         delete pwallet;
