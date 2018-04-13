@@ -64,14 +64,16 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 TWnXcTHMiKtZME84Y8YA5DwXtdYBAZ5SVc '' '' ''"));
 	UniValue varray3 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray3[0].get_str()));
+	UniValue varray4 = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray4[0].get_str()));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5);	
 	// activate
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 TWnXcTHMiKtZME84Y8YA5DwXtdYBAZ5SVc '' '' ''"));
-	UniValue varray4 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray4[0].get_str()));
 	UniValue varray5 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray5[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray5[0].get_str()));
+	UniValue varray6 = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray6[0].get_str()));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5);
 	// ensure last registration wins
