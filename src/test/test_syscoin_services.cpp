@@ -2394,12 +2394,12 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	// if buy it now(not auction), we must have paid total, otherwise we only refund some of the fees
 	if (bBuyNow)
 		balanceBuyerBefore += nTotalWithoutFee;
-	BOOST_CHECK(role == EscrowRoles::Arbiter || role == EscrowRoles::SELLER);
+	BOOST_CHECK(role == EscrowRoles::ARBITER || role == EscrowRoles::SELLER);
 	// if seller refunds it, buyer should get arbiter fee back
 	if (role == EscrowRoles::SELLER)
 		balanceBuyerBefore += nArbiterFee;
 	// else arbiter should get the fee
-	else if (role == EscrowRoles::Arbiter)
+	else if (role == EscrowRoles::ARBITER)
 		balanceArbiterBefore += nArbiterFee;
 
 
@@ -2552,12 +2552,12 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	}
 
 	balanceSellerBefore += (nTotalWithoutFee - nCommission);
-	BOOST_CHECK(role == EscrowRoles::Arbiter || role == EscrowRoles::BUYER);
+	BOOST_CHECK(role == EscrowRoles::ARBITER || role == EscrowRoles::BUYER);
 	// if buyer released it, he should get arbiter fee back
 	if (role == role == EscrowRoles::BUYER)
 		balanceBuyerBefore += nArbiterFee;
 	// else arbiter should get the fee
-	else if(role == EscrowRoles::Arbiter)
+	else if(role == EscrowRoles::ARBITER)
 		balanceArbiterBefore += nArbiterFee;
 
 	balanceResellerBefore += nCommission;
