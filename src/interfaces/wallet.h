@@ -65,6 +65,9 @@ public:
     virtual bool changeWalletPassphrase(const SecureString& old_wallet_passphrase,
         const SecureString& new_wallet_passphrase) = 0;
 
+    //! Abort a rescan.
+    virtual void abortRescan() = 0;
+
     //! Back up wallet.
     virtual bool backupWallet(const std::string& filename) = 0;
 
