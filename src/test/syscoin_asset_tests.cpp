@@ -335,8 +335,9 @@ BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
 
 	GenerateBlocks(5);
-	BOOST_CHECK_THROW(r = CallRPC("node1", "assetinfo UPPERCASE false"), runtime_error);
+	// assetinfo is case incensitive
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo uppercase false"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id"), "UPPERCASE");
 }
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 {
