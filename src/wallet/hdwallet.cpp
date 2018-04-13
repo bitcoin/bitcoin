@@ -1916,7 +1916,7 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
     {
         // TODO: This could be optimized some by doing some work after the above solver
         SignatureData sigs;
-        return ProduceSignature(DummySignatureCreatorParticl(this), scriptPubKey, sigs) ? ISMINE_WATCH_SOLVABLE : ISMINE_WATCH_UNSOLVABLE;
+        return ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR_PARTICL, scriptPubKey, sigs) ? ISMINE_WATCH_SOLVABLE : ISMINE_WATCH_UNSOLVABLE;
     };
     return ISMINE_NO;
 };
@@ -3725,7 +3725,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 const CScript& scriptPubKey = coin.txout.scriptPubKey;
                 SignatureData sigdata;
 
-                if (!ProduceSignature(DummySignatureCreatorParticl(this), scriptPubKey, sigdata))
+                if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR_PARTICL, scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, "Dummy signature failed.");
                 UpdateTransaction(txNew, nIn, sigdata);
                 nIn++;
@@ -3859,7 +3859,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 memcpy(vchAmount.data(), &coin.txout.nValue, 8);
 
                 SignatureData sigdata;
-                if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
+                if (!ProduceSignature(*this, TransactionSignatureCreator(&txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, _("Signing transaction failed").c_str());
 
                 UpdateTransaction(txNew, nIn, sigdata);
@@ -3916,7 +3916,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
                     pDevice->sError.clear();
                     SignatureData sigdata;
-                    ProduceSignature(DeviceSignatureCreator(pDevice, this, &txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata);
+                    ProduceSignature(*this, DeviceSignatureCreator(pDevice, &txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata);
 
                     if (!pDevice->sError.empty())
                     {
@@ -4253,7 +4253,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 {
                     sigdata.scriptWitness = it->second.scriptWitness;
                 } else
-                if (!ProduceSignature(DummySignatureCreatorParticl(this), scriptPubKey, sigdata))
+                if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR_PARTICL, scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, "Dummy signature failed.");
                 UpdateTransaction(txNew, nIn, sigdata);
                 nIn++;
@@ -4464,7 +4464,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
                 SignatureData sigdata;
 
-                if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
+                if (!ProduceSignature(*this, TransactionSignatureCreator(&txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, _("Signing transaction failed").c_str());
                 UpdateTransaction(txNew, nIn, sigdata);
 
@@ -8206,7 +8206,7 @@ bool CHDWallet::SignTransaction(CMutableTransaction &tx)
 
         std::vector<uint8_t> vchAmount(8);
         memcpy(&vchAmount[0], &amount, 8);
-        if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata)) {
+        if (!ProduceSignature(*this, TransactionSignatureCreator(&txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata)) {
             return false;
         }
         UpdateTransaction(tx, nIn, sigdata);
@@ -8385,7 +8385,7 @@ bool CHDWallet::DummySignInput(CTxIn &tx_in, const CTxOut &txout) const
     const CScript &scriptPubKey = txout.scriptPubKey;
     SignatureData sigdata;
 
-    if (!ProduceSignature(DummySignatureCreatorParticl(this), scriptPubKey, sigdata))
+    if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR_PARTICL, scriptPubKey, sigdata))
     {
         return false;
     } else {
@@ -12067,7 +12067,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
 
         SignatureData sigdata;
         CTransaction txToConst(txNew);
-        if (!ProduceSignature(TransactionSignatureCreator(this,&txToConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKeyOut, sigdata))
+        if (!ProduceSignature(*this, TransactionSignatureCreator(&txToConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKeyOut, sigdata))
             return error("%s: ProduceSignature failed.", __func__);
 
         UpdateTransaction(txNew, nIn, sigdata);

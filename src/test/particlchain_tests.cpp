@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(signature_test)
 
     CTransaction txToConst(txn2);
     SignatureData sigdata;
-    BOOST_CHECK(ProduceSignature(TransactionSignatureCreator(&keystore, &txToConst, 0, vchAmount, SIGHASH_ALL), script, sigdata));
+    BOOST_CHECK(ProduceSignature(keystore, TransactionSignatureCreator(&txToConst, 0, vchAmount, SIGHASH_ALL), script, sigdata));
 
     ScriptError serror = SCRIPT_ERR_OK;
     BOOST_CHECK(VerifyScript(txn2.vin[0].scriptSig, out1->scriptPubKey, &sigdata.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txToConst, 0, vchAmount), &serror));
@@ -226,8 +226,8 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
 
 
 
-    BOOST_CHECK(ProduceSignature(TransactionSignatureCreator(&keystoreA, &txnConst, 0, vchAmount, SIGHASH_ALL), script, sigdataA));
-    BOOST_CHECK(!ProduceSignature(TransactionSignatureCreator(&keystoreB, &txnConst, 0, vchAmount, SIGHASH_ALL), script, sigdataB));
+    BOOST_CHECK(ProduceSignature(keystoreA, TransactionSignatureCreator(&txnConst, 0, vchAmount, SIGHASH_ALL), script, sigdataA));
+    BOOST_CHECK(!ProduceSignature(keystoreB, TransactionSignatureCreator(&txnConst, 0, vchAmount, SIGHASH_ALL), script, sigdataB));
 
 
     ScriptError serror = SCRIPT_ERR_OK;
@@ -244,8 +244,8 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
     // This should fail anyway as the txn changed
     BOOST_CHECK(!VerifyScript(scriptSig, script, &sigdataA.scriptWitness, nFlags, TransactionSignatureChecker(&txnConst2, 0, vchAmount), &serror));
 
-    BOOST_CHECK(!ProduceSignature(TransactionSignatureCreator(&keystoreA, &txnConst2, 0, vchAmount, SIGHASH_ALL), script, sigdataC));
-    BOOST_CHECK(ProduceSignature(TransactionSignatureCreator(&keystoreB, &txnConst2, 0, vchAmount, SIGHASH_ALL), script, sigdataB));
+    BOOST_CHECK(!ProduceSignature(keystoreA, TransactionSignatureCreator(&txnConst2, 0, vchAmount, SIGHASH_ALL), script, sigdataC));
+    BOOST_CHECK(ProduceSignature(keystoreB, TransactionSignatureCreator(&txnConst2, 0, vchAmount, SIGHASH_ALL), script, sigdataB));
 
     BOOST_CHECK(VerifyScript(scriptSig, script, &sigdataB.scriptWitness, nFlags, TransactionSignatureChecker(&txnConst2, 0, vchAmount), &serror));
 

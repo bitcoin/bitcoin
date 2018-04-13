@@ -92,20 +92,20 @@ CUSBDevice *SelectDevice(std::vector<std::unique_ptr<CUSBDevice> > &vDevices, st
     return vDevices[0].get();
 };
 
-DeviceSignatureCreator::DeviceSignatureCreator(CUSBDevice *pDeviceIn, const CKeyStore *keystoreIn, const CTransaction *txToIn,
+DeviceSignatureCreator::DeviceSignatureCreator(CUSBDevice *pDeviceIn, const CTransaction *txToIn,
     unsigned int nInIn, const std::vector<uint8_t> &amountIn, int nHashTypeIn)
-    : BaseSignatureCreator(keystoreIn), txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn), pDevice(pDeviceIn)
+    : BaseSignatureCreator(), txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn), pDevice(pDeviceIn)
 {
 };
 
-bool DeviceSignatureCreator::CreateSig(std::vector<unsigned char> &vchSig, const CKeyID &keyid, const CScript &scriptCode, SigVersion sigversion) const
+bool DeviceSignatureCreator::CreateSig(const SigningProvider& provider, std::vector<unsigned char> &vchSig, const CKeyID &keyid, const CScript &scriptCode, SigVersion sigversion) const
 {
     if (!pDevice)
         return false;
 
     //uint256 hash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion);
 
-    const CHDWallet *pw = dynamic_cast<const CHDWallet*>(m_provider);
+    const CHDWallet *pw = dynamic_cast<const CHDWallet*>(&provider);
     if (pw)
     {
         const CEKAKey *pak = nullptr;
@@ -143,7 +143,7 @@ bool DeviceSignatureCreator::CreateSig(std::vector<unsigned char> &vchSig, const
         return true;
     };
 
-    const CPathKeyStore *pks = dynamic_cast<const CPathKeyStore*>(m_provider);
+    const CPathKeyStore *pks = dynamic_cast<const CPathKeyStore*>(&provider);
     if (pks)
     {
         CPathKey pathkey;

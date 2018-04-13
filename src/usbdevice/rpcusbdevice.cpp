@@ -525,7 +525,7 @@ UniValue devicesignrawtransaction(const JSONRPCRequest &request)
         if (!fHashSingle || (i < mtx.GetNumVOuts()))
         {
             pDevice->sError.clear();
-            ProduceSignature(DeviceSignatureCreator(pDevice, &keystore, &txConst, i, vchAmount, nHashType), prevPubKey, sigdata);
+            ProduceSignature(keystore, DeviceSignatureCreator(pDevice, &txConst, i, vchAmount, nHashType), prevPubKey, sigdata);
 
             if (!pDevice->sError.empty())
             {

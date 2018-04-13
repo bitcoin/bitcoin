@@ -328,10 +328,9 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
         SignatureData sigdata;
 
         CAmount amount = 11*CENT;
-        //std::vector<uint8_t> vchAmount(&amount, &amount+sizeof(amount));
         std::vector<uint8_t> vchAmount(8);
         memcpy(vchAmount.data(), &amount, 8);
-        ProduceSignature(MutableTransactionSignatureCreator(&keystore, &valid_with_witness_tx, 0, vchAmount, SIGHASH_ALL), spend_tx.vout[1].scriptPubKey, sigdata);
+        ProduceSignature(keystore, MutableTransactionSignatureCreator(&valid_with_witness_tx, 0, vchAmount, SIGHASH_ALL), spend_tx.vout[1].scriptPubKey, sigdata);
         UpdateTransaction(valid_with_witness_tx, 0, sigdata);
 
         // This should be valid under all script flags.
@@ -362,7 +361,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
             CAmount amount = 11*CENT;
             std::vector<uint8_t> vchAmount(8);
             memcpy(vchAmount.data(), &amount, 8);
-            ProduceSignature(MutableTransactionSignatureCreator(&keystore, &tx, i, vchAmount, SIGHASH_ALL), spend_tx.vout[i].scriptPubKey, sigdata);
+            ProduceSignature(keystore, MutableTransactionSignatureCreator(&tx, i, vchAmount, SIGHASH_ALL), spend_tx.vout[i].scriptPubKey, sigdata);
             UpdateTransaction(tx, i, sigdata);
         }
 

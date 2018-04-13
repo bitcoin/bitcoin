@@ -1012,9 +1012,9 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
         };
 
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
-        if (!fHashSingle || (i < mtx.GetNumVOuts()))
-            ProduceSignature(MutableTransactionSignatureCreator(keystore, &mtx, i, vchAmount, nHashType), prevPubKey, sigdata);
-
+        if (!fHashSingle || (i < mtx.GetNumVOuts())) {
+            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, vchAmount, nHashType), prevPubKey, sigdata);
+        }
         sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(mtx, i));
         UpdateTransaction(mtx, i, sigdata);
 
