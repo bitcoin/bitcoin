@@ -132,7 +132,8 @@ static inline int LogPrint(const char* category, const char* format)
 }
 static inline bool error(const char* format)
 {
-    LogPrintStr(std::string("ERROR: ") + format + "\n");
+	if(fDebug)
+		LogPrintStr(std::string("ERROR: ") + format + "\n");
     return false;
 }
 
