@@ -1512,7 +1512,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (bActivation && it != mapAliasRegistrations.end())
 	{
 		LOCK(cs_main);
-		const COutPoint &regOut = it;
+		const COutPoint &regOut = it->second;
 		if (pwalletMain)
 			pwalletMain->UnlockCoin(regOut);
 		vecSend.push_back(fee);
