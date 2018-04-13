@@ -47,8 +47,7 @@ public:
     void Close() const override;
 };
 
-static WalletInit g_wallet_init;
-WalletInitInterface* const g_wallet_init_interface = &g_wallet_init;
+const WalletInitInterface& g_wallet_init_interface = WalletInit();
 
 std::string WalletInit::GetHelpString(bool showDebug) const
 {
