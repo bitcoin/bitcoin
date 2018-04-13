@@ -16,7 +16,7 @@
 #include "chainparams.h"
 #include "coincontrol.h"
 #include <boost/algorithm/hex.hpp>
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
@@ -595,9 +595,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 		if (op == OP_ASSET_ACTIVATE)
 		{
-			string assetLower = stringFromVch(theAsset.vchAsset);
-			boost::algorithm::to_lower(assetLower);
-			theAsset.vchAsset = vchFromString(assetLower);
+			string assetUpper = stringFromVch(theAsset.vchAsset);
+			boost::algorithm::to_upper(assetUpper);
+			theAsset.vchAsset = vchFromString(assetUpper);
 			if (GetAsset(theAsset.vchAsset, theAsset))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Asset already exists");
@@ -641,7 +641,7 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 11)
         throw runtime_error(
 			"assetnew [name] [alias] [public] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
-						"<name> name, 20 characters max.\n"
+						"<name> name of asset in uppercase, 3 characters miniumum, 20 characters max.\n"
 						"<alias> An alias you own.\n"
                         "<public> public data, 256 characters max.\n"
 						"<category> category, 256 characters max. Defaults to assets.\n"
@@ -655,7 +655,7 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 						+ HelpRequiringPassphrase());
     vector<unsigned char> vchName = vchFromString(params[0].get_str());
 	string strName = stringFromVch(vchName);
-	boost::algorithm::to_lower(strName);
+	boost::algorithm::to_upper(strName);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
 	string strCategory = "assets";
@@ -755,7 +755,9 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-
+	string assetUpper = stringFromVch(vchAsset);
+	boost::algorithm::to_upper(assetUpper);
+	vchAsset = vchFromString(assetUpper);
 	string strData = "";
 	string strPubData = "";
 	string strCategory = "";
@@ -852,6 +854,9 @@ UniValue assettransfer(const UniValue& params, bool fHelp) {
 
     // gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	string assetUpper = stringFromVch(vchAsset);
+	boost::algorithm::to_upper(assetUpper);
+	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 
 	vector<unsigned char> vchWitness;
@@ -937,6 +942,9 @@ UniValue assetsend(const UniValue& params, bool fHelp) {
 
 	// gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	string assetUpper = stringFromVch(vchAsset);
+	boost::algorithm::to_upper(assetUpper);
+	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
 	UniValue valueTo = params[2];
 	vector<unsigned char> vchMemo = vchFromValue(params[3]);
@@ -1067,6 +1075,9 @@ UniValue assetinfo(const UniValue& params, bool fHelp) {
                 "Show stored values of a single asset and its. Set getinputs to true if you want to get the allocation inputs, if applicable.\n");
 
     vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	string assetUpper = stringFromVch(vchAsset);
+	boost::algorithm::to_upper(assetUpper);
+	vchAsset = vchFromString(assetUpper);
 	bool bGetInputs = params[1].get_bool();
 	UniValue oAsset(UniValue::VOBJ);
 

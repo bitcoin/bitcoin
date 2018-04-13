@@ -702,6 +702,9 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 
 	// gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	string assetUpper = stringFromVch(vchAsset);
+	boost::algorithm::to_upper(assetUpper);
+	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
 	UniValue valueTo = params[2];
 	vector<unsigned char> vchMemo = vchFromValue(params[3]);
@@ -837,6 +840,9 @@ UniValue assetallocationcollectinterest(const UniValue& params, bool fHelp) {
 
 	// gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	string assetUpper = stringFromVch(vchAsset);
+	boost::algorithm::to_upper(assetUpper);
+	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
@@ -903,6 +909,9 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
                 "Show stored values of a single asset allocation. Set getinputs to true if you want to get the allocation inputs, if applicable.\n");
 
     vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	string assetUpper = stringFromVch(vchAsset);
+	boost::algorithm::to_upper(assetUpper);
+	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 	bool bGetInputs = params[2].get_bool();
 	UniValue oAssetAllocation(UniValue::VOBJ);
@@ -1030,6 +1039,9 @@ UniValue assetallocationsenderstatus(const UniValue& params, bool fHelp) {
 			"Level 2 means an active double spend was found and any depending asset allocation sends are also flagged as dangerous and should wait for POW confirmation before proceeding.\n");
 
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	string assetUpper = stringFromVch(vchAsset);
+	boost::algorithm::to_upper(assetUpper);
+	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAliasSender = vchFromValue(params[1]);
 	uint256 txid;
 	txid.SetNull();

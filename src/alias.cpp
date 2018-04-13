@@ -1531,7 +1531,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		if (!vchWitness.empty())
 		{
 			COutPoint aliasOutPointWitness;
-			CAmount nFeeRequired;
 			aliasunspent(vchWitness, aliasOutPointWitness);
 			if (aliasOutPointWitness.IsNull())
 			{
