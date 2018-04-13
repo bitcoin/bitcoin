@@ -7,6 +7,7 @@
 using namespace boost;
 using namespace std;
 typedef typename std::vector<int> container;
+extern CCriticalSection cs_main;
 bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
