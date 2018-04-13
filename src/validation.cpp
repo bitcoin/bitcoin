@@ -2808,11 +2808,11 @@ void static UpdateTip(CBlockIndex *pindexNew) {
 
 	// New best block
 	mempool.AddTransactionsUpdated(1);
-
-	LogPrintf("%s: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f  cache=%.1fMiB(%utx)\n", __func__,
-		chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble()) / log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
-		DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
-		Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), chainActive.Tip()), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1 << 20)), pcoinsTip->GetCacheSize());
+	if(fDebug)
+		LogPrintf("%s: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f  cache=%.1fMiB(%utx)\n", __func__,
+			chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble()) / log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
+			DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
+			Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), chainActive.Tip()), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1 << 20)), pcoinsTip->GetCacheSize());
 
 	cvBlockChange.notify_all();
 
@@ -3881,8 +3881,8 @@ bool ProcessNewBlock(const CChainParams& chainparams, const CBlock* pblock, bool
 	CValidationState state; // Only used to report errors, not invalidity - ignore it
 	if (!ActivateBestChain(state, chainparams, pblock))
 		return error("%s: ActivateBestChain failed", __func__);
-
-	LogPrintf("%s : ACCEPTED\n", __func__);
+	if(fDebug)
+		LogPrintf("%s : ACCEPTED\n", __func__);
 	return true;
 }
 

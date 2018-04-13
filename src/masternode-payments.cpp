@@ -214,7 +214,8 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
 		int nCount = 0;
 		if (!mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount, mnInfo)) {
 			// ...and we can't calculate it on our own
-			LogPrintf("CMasternodePayments::FillBlockPayee -- Failed to detect masternode to pay\n");
+			if(fDebug)
+				LogPrintf("CMasternodePayments::FillBlockPayee -- Failed to detect masternode to pay\n");
 			return;
 		}
 		// fill payee with locally calculated winner and hope for the best
