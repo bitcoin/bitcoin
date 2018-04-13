@@ -1784,7 +1784,7 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 				auto it = mapAliasRegistrations.find(vvch[0]);
 				if (it != mapAliasRegistrations.end()) {
 					if (pwalletMain)
-						pwalletMain->UnlockCoin(it);
+						pwalletMain->UnlockCoin(it->second);
 					mapAliasRegistrations.erase(vvch[0]);
 				}
 
