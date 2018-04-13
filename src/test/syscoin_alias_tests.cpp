@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasnewfund " + varray[0].get_str()), runtime_error);
 
 	// override registration with different address
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew jag2 pub 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"));
 	UniValue varray1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray1[0].get_str()));
 	UniValue varray2 = r.get_array();
@@ -61,13 +61,13 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5);
 	// second registration changes address
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew jag2 pub 3 0 TWnXcTHMiKtZME84Y8YA5DwXtdYBAZ5SVc '' '' ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 TWnXcTHMiKtZME84Y8YA5DwXtdYBAZ5SVc '' '' ''"));
 	UniValue varray3 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray3[0].get_str()));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5);	
 	// activate
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew jag2 pub 3 0 TWnXcTHMiKtZME84Y8YA5DwXtdYBAZ5SVc '' '' ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 TWnXcTHMiKtZME84Y8YA5DwXtdYBAZ5SVc '' '' ''"));
 	UniValue varray4 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray4[0].get_str()));
 	UniValue varray5 = r.get_array();
