@@ -126,9 +126,9 @@ int escrowEnumFromOp(int op) {
 	case OP_ESCROW_ACTIVATE:
 		return EscrowStatus::InEscrow;
 	case OP_ESCROW_RELEASE:
-		return EscrowStatus::EscrowReleased;
+		return EscrowStatus::EscrowRelease;
 	case OP_ESCROW_REFUND:
-		return EscrowStatus::EscrowRefunded;
+		return EscrowStatus::EscrowRefund;
 	case OP_ESCROW_REFUND_COMPLETE:
 		return EscrowStatus::EscrowRefundComplete;
 	case OP_ESCROW_RELEASE_COMPLETE:
