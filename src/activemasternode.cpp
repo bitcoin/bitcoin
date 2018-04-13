@@ -198,7 +198,7 @@ void CActiveMasternode::ManageStateInitial(CConnman* connman)
                 LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
                 return;
             }
-            connected = ConnectSocketDirectly(service, hSocket, nConnectTimeout);
+            connected = ConnectSocketDirectly(service, hSocket, nConnectTimeout, true);
         }
     }
 
