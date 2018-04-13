@@ -884,7 +884,7 @@ CFeeRate CTxMemPool::CalculateFeeRate(double portion) const
     auto iters = GetSortedDepthAndScore();
 
     uint64_t weight = 0; // weight of hypothetical block
-    uint64_t target = MAX_BLOCK_WEIGHT * portion; // at what weight do we want to "bump"
+    uint64_t target = MAX_BLOCK_WEIGHT * (1.0 - portion); // at what weight do we want to "bump"
     for (const auto& it : iters) {
         weight += it->GetTxWeight();
         if (weight >= target) return CFeeRate(it->GetFee(), it->GetTxSize());
