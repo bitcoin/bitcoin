@@ -1434,10 +1434,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.nExpireTime = nTime;
 	newAlias.nAcceptTransferFlags = nAcceptTransferFlags;
 	bool foundRegistration = mapAliasRegistrationData.count(vchAlias) > 0;
-	bool newKey = false;
 	if (strAddress.empty() && !foundRegistration)
 	{
-		newKey = true;
 		// generate new address in this wallet if not passed in
 		CKey privKey;
 		privKey.MakeNewKey(true);
@@ -1449,7 +1447,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Error adding key to wallet"));
 	}
 	CScript scriptPubKeyOrig;
-
+	DecodeBase58(strAddress, newAlias.vchAddress);
 
 	vector<unsigned char> data;
 	vector<unsigned char> vchHashAlias, vchHashAlias1;
@@ -1463,12 +1461,13 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		vchHashAlias = vchFromValue(hash.GetHex());
 		if (!newAlias.UnserializeFromData(data, vchHashAlias))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
-		if (newKey)
+		if (strAddress.empty())
 			newAlias1.vchAddress = newAlias.vchAddress;
 
 		newAlias1.vchGUID = newAlias.vchGUID;
 		newAlias1.nExpireTime = newAlias.nExpireTime;
 	}
+	
 	// ensure that the stored alias registration and the creation of alias from parameters matches hash, if not then the params must have changed so re-register
 	newAlias1.Serialize(data);
 	hash = Hash(data.begin(), data.end());
@@ -1549,7 +1548,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	for (auto& recp : vecSend) {
 		tx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
 	}
-	DecodeBase58(strAddress, newAlias1.vchAddress);
+	
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(tx));
 	res.push_back(strAddress);
