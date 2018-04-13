@@ -32,8 +32,8 @@ enum EscrowStatus {
 	InEscrow = 1,
 	EscrowRelease = 2,
 	EscrowReleaseComplete = 3,
-	EscrowRefund = 3,
-	EscrowRefundComplete = 4
+	EscrowRefund = 4,
+	EscrowRefundComplete = 5
 };
 class CEscrow {
 public:
