@@ -27,6 +27,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/thread.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 #include "ranges.h"
 static int node1LastBlock=0;
 static int node2LastBlock=0;
