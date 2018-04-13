@@ -208,7 +208,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 	// write the state back to previous state
 	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, asset, INT64_MAX, false))
 	{
-		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to asset allocation DB");
+		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1000 - " + _("Failed to write to asset allocation DB");
 		return error(errorMessage.c_str());
 	}
 
@@ -297,7 +297,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 	int nDataOut;
 	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theAssetAllocation.UnserializeFromData(vchData, vchHash))
 	{
-		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 2001 - " + _("Cannot unserialize data inside of this transaction relating to a assetallocation");
+		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Cannot unserialize data inside of this transaction relating to a assetallocation");
 		return true;
 	}
 
@@ -305,12 +305,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 	{
 		if(vvchArgs.size() != 1)
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2002 - " + _("Asset arguments incorrect size");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1002 - " + _("Asset arguments incorrect size");
 			return error(errorMessage.c_str());
 		}		
 		if(vchHash != vvchArgs[0])
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2003 - " + _("Hash provided doesn't match the calculated hash of the data");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1003 - " + _("Hash provided doesn't match the calculated hash of the data");
 			return true;
 		}		
 	}
@@ -323,34 +323,34 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 		case OP_ASSET_ALLOCATION_SEND:
 			if (theAssetAllocation.listSendingAllocationInputs.empty() && theAssetAllocation.listSendingAllocationAmounts.empty())
 			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Asset send must send an input or transfer balance");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Asset send must send an input or transfer balance");
 				return error(errorMessage.c_str());
 			}
 			if (theAssetAllocation.listSendingAllocationInputs.size() > 250 || theAssetAllocation.listSendingAllocationAmounts.size() > 250)
 			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Too many receivers in one allocation send, maximum of 250 is allowed at once");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1005 - " + _("Too many receivers in one allocation send, maximum of 250 is allowed at once");
 				return error(errorMessage.c_str());
 			}
 			if (theAssetAllocation.vchMemo.size() > MAX_MEMO_LENGTH)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("memo too long, must be 128 character or less");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1006 - " + _("memo too long, must be 128 character or less");
 				return error(errorMessage.c_str());
 			}
 			break;
 		case OP_ASSET_COLLECT_INTEREST:
 			if (!theAssetAllocation.listSendingAllocationInputs.empty() || !theAssetAllocation.listSendingAllocationAmounts.empty())
 			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Cannot send tokens in an interest collection transaction");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1007 - " + _("Cannot send tokens in an interest collection transaction");
 				return error(errorMessage.c_str());
 			}
 			if (theAssetAllocation.vchMemo.size() > 0)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Cannot send memo when collecting interest");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1008 - " + _("Cannot send memo when collecting interest");
 				return error(errorMessage.c_str());
 			}
 			break;
 		default:
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Asset transaction has unknown op");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1009 - " + _("Asset transaction has unknown op");
 			return error(errorMessage.c_str());
 		}
 	}
@@ -370,17 +370,17 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 	{
 		if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find asset allocation to collect interest on");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Cannot find asset allocation to collect interest on");
 			return true;
 		}
 		if (!GetAsset(dbAssetAllocation.vchAsset, dbAsset))
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from asset DB");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1011 - " + _("Failed to read from asset DB");
 			return true;
 		}
 		if (dbAsset.fInterestRate <= 0)
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Cannot collect interest on this asset, no interest rate has been defined");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1012 - " + _("Cannot collect interest on this asset, no interest rate has been defined");
 			return true;
 		}
 		theAssetAllocation = dbAssetAllocation;
@@ -389,7 +389,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			string errorMessageCollection = "";
 			if(!ApplyAssetAllocationInterest(dbAsset, theAssetAllocation, nHeight, errorMessageCollection))
 			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("You cannot collect interest on this asset: ") + errorMessageCollection;
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1013 - " + _("You cannot collect interest on this asset: ") + errorMessageCollection;
 				return true;
 			}
 		}
@@ -410,19 +410,19 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			if (bRevert) {
 				if (!RevertAssetAllocation(assetAllocationTuple, dbAsset, tx.GetHash(), nHeight, revertedAssetAllocations))
 				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation");
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Failed to revert asset allocation");
 					return error(errorMessage.c_str());
 				}
 			}
 		}
 		if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find sender asset allocation.");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot find sender asset allocation.");
 			return true;
 		}
 		if (!GetAsset(dbAssetAllocation.vchAsset, dbAsset))
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from asset DB");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Failed to read from asset DB");
 			return true;
 		}
 		theAssetAllocation.vchAlias = vchAlias;
@@ -447,12 +447,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 		// commit sender details to database
 		if (dbAssetAllocation.vchAlias != vchAlias)
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1017 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 			return true;
 		}
 		if (!theAssetAllocation.listSendingAllocationAmounts.empty()) {
 			if (dbAsset.bUseInputRanges) {
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid asset send, request to send amounts but asset uses input ranges");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1018 - " + _("Invalid asset send, request to send amounts but asset uses input ranges");
 				return true;
 			}
 			// check balance is sufficient on sender
@@ -463,21 +463,21 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 				if (bRevert) {
 					if (!RevertAssetAllocation(receiverAllocationTuple, dbAsset, tx.GetHash(), nHeight, revertedAssetAllocations))
 					{
-						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation");
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1019 - " + _("Failed to revert asset allocation");
 						return error(errorMessage.c_str());
 					}
 				}
 				nTotal += amountTuple.second;
 				if (amountTuple.second <= 0)
 				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Receiving amount must be positive");
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1020 - " + _("Receiving amount must be positive");
 					return true;
 				}
 			}
 
 			if (theAssetAllocation.nBalance < nTotal) {
 				bBalanceOverrun = true;
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Sender balance is insufficient");
 				if (fJustCheck && !bSanityCheck) {
 					// add conflicting sender
 					assetAllocationConflicts.insert(assetAllocationTuple);
@@ -493,7 +493,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				CAssetAllocation receiverAllocation;
 				if (amountTuple.first == vchAlias) {
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot send an asset allocation to yourself");
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1022 - " + _("Cannot send an asset allocation to yourself");
 					return true;
 				}
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
@@ -529,7 +529,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
 					{
-						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
 					}
 
@@ -543,7 +543,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 		}
 		else if (!theAssetAllocation.listSendingAllocationInputs.empty()) {
 			if (!dbAsset.bUseInputRanges) {
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid asset send, request to send input ranges but asset uses amounts");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Invalid asset send, request to send input ranges but asset uses amounts");
 				return true;
 			}
 			// check balance is sufficient on sender
@@ -555,14 +555,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 				if (bRevert) {
 					if (!RevertAssetAllocation(receiverAllocationTuple, dbAsset, tx.GetHash(), nHeight, revertedAssetAllocations))
 					{
-						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation");
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1025 - " + _("Failed to revert asset allocation");
 						return error(errorMessage.c_str());
 					}
 				}
 				const unsigned int rangeTotal = validateRangesAndGetCount(inputTuple.second);
 				if(rangeTotal == 0)
 				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid input ranges");
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1026 - " + _("Invalid input ranges");
 					return true;
 				}
 				const CAmount rangeTotalAmount = rangeTotal;
@@ -571,7 +571,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			}
 			if (dbAssetAllocation.nBalance < nTotal) {
 				bBalanceOverrun = true;
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1027 - " + _("Sender balance is insufficient");
 				if (fJustCheck && !bSanityCheck) {
 					// add conflicting sender
 					assetAllocationConflicts.insert(assetAllocationTuple);
@@ -588,7 +588,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 				InputRanges &input = theAssetAllocation.listSendingAllocationInputs[i];
 				CAssetAllocation receiverAllocation;
 				if (input.first == vchAlias) {
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot send an asset allocation to yourself");
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1028 - " + _("Cannot send an asset allocation to yourself");
 					return true;
 				}
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, input.first);
@@ -601,7 +601,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 				// ensure entire allocation range being subtracted exists on sender (full inclusion check)
 				if (!doesRangeContain(dbAssetAllocation.listAllocationInputs, input.second))
 				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Input not found");
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1029 - " + _("Input not found");
 					return true;
 				}
 				if (!bSanityCheck) {
@@ -640,7 +640,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
 					{
-						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1030 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
 					}
 
@@ -670,7 +670,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, dbAsset, ms, fJustCheck))
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
 		}
 		// debug
@@ -714,7 +714,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 
 	CAsset theAsset;
 	if (!GetAsset(vchAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset with this key"));
 
 	CAliasIndex toAlias;
 	CAssetAllocation theAssetAllocation;
@@ -730,7 +730,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 		UniValue receiverObj = receiver.get_obj();
 		vector<unsigned char> vchAliasTo = vchFromValue(find_value(receiverObj, "aliasto"));
 		if (!GetAlias(vchAliasTo, toAlias))
-			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read recipient alias from DB"));
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Failed to read recipient alias from DB"));
 
 		UniValue inputRangeObj = find_value(receiverObj, "ranges");
 		UniValue amountObj = find_value(receiverObj, "amount");
@@ -764,7 +764,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	// check for alias existence in DB
 	CAliasIndex fromAlias;
 	if (!GetAlias(vchAliasFrom, fromAlias))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read sender alias from DB"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1502 - " + _("Failed to read sender alias from DB"));
 
 	// this is a syscoin txn
 	CWalletTx wtx;
@@ -787,12 +787,12 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 			minLatency = 1000;
 		// if this tx arrived within the minimum latency period flag it as potentially conflicting
 		if ((nNow - arrivalTime.second) < minLatency) {
-			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("Please wait a few more seconds and try again..."));
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1503 - " + _("Please wait a few more seconds and try again..."));
 		}
 	}
 	
 	if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("This asset allocation is involved in a conflict which must be resolved with Proof-Of-Work. Please wait for a block confirmation and try again..."));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1504 - " + _("This asset allocation is involved in a conflict which must be resolved with Proof-Of-Work. Please wait for a block confirmation and try again..."));
 	
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);
@@ -854,7 +854,7 @@ UniValue assetallocationcollectinterest(const UniValue& params, bool fHelp) {
 	// check for alias existence in DB
 	CAliasIndex fromAlias;
 	if (!GetAlias(vchAliasFrom, fromAlias))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read alias from DB"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1505 - " + _("Failed to read alias from DB"));
 
 	// this is a syscoin txn
 	CWalletTx wtx;
@@ -862,7 +862,7 @@ UniValue assetallocationcollectinterest(const UniValue& params, bool fHelp) {
 
 	CAsset theAsset;
 	if (!GetAsset(vchAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1506 - " + _("Could not find a asset with this key"));
 
 	CSyscoinAddress fromAddr;
 	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
@@ -918,11 +918,11 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
 
 	CAssetAllocation txPos;
 	if (!passetallocationdb || !passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(vchAsset, vchAlias), txPos))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from assetallocation DB"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
 
 	CAsset theAsset;
 	if (!GetAsset(vchAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
 
 
 	if(!BuildAssetAllocationJson(txPos, theAsset, bGetInputs, oAssetAllocation))
