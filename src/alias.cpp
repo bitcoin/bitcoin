@@ -1448,7 +1448,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		if (pwalletMain && !pwalletMain->AddKeyPubKey(privKey, pubKey))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Error adding key to wallet"));
 	}
-	DecodeBase58(strAddress, newAlias.vchAddress);
 	CScript scriptPubKeyOrig;
 
 
@@ -1481,7 +1480,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		mapAliasRegistrationData.erase(vchAlias);
 		mapAliasRegistrationData.insert(make_pair(vchAlias, data));
 	}
-
+	
 	CScript scriptPubKey;
 	if (bActivation)
 		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias1.vchGUID << vchHashAlias1 << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
@@ -1549,6 +1548,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	for (auto& recp : vecSend) {
 		tx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
 	}
+	DecodeBase58(strAddress, newAlias1.vchAddress);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(tx));
 	res.push_back(strAddress);
