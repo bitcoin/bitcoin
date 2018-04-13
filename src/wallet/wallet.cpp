@@ -4340,7 +4340,7 @@ void CWallet::GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
 	script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
 }
 
-void CWallet::LockCoin(COutPoint& output)
+void CWallet::LockCoin(const COutPoint& output)
 {
 	AssertLockHeld(cs_wallet); // setLockedCoins
 	setLockedCoins.insert(output);
@@ -4351,7 +4351,7 @@ void CWallet::LockCoin(COutPoint& output)
 	fAnonymizableTallyCachedNonDenom = false;
 }
 
-void CWallet::UnlockCoin(COutPoint& output)
+void CWallet::UnlockCoin(const COutPoint& output)
 {
 	AssertLockHeld(cs_wallet); // setLockedCoins
 	setLockedCoins.erase(output);
