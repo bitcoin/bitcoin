@@ -1780,12 +1780,15 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 		{
 			if(vvch.size() == 1)
 			{
-				if (!mapAliasRegistrations.count(vvch[0])) {
-					COutPoint prevOut(tx.GetHash(), i);
-					mapAliasRegistrations.insert(make_pair(vvch[0], prevOut));
-					if(pwalletMain)
-						pwalletMain->LockCoin(prevOut);
-				}
+				if (mapAliasRegistrations.find(vvch[0]) != mapAliasRegistrations.end()) 
+					mapAliasRegistrations.erase(vvch[0]);
+
+				COutPoint prevOut(tx.GetHash(), i);
+				mapAliasRegistrations.insert(make_pair(vvch[0], prevOut));
+				if(pwalletMain)
+					pwalletMain->LockCoin(prevOut);
+				
+
 			}
 			else if(vvch.size() >= 3)
 			{

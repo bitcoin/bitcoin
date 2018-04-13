@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	string baddata = gooddata + "a";
 	AliasNew("node1", "jag1", gooddata);
-	// registeration goes through even with big data
+	// registration goes through even with big data
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 " + baddata + " 3 0 TPbBz99JatywT2BUTFzDYFHXBGWz5be3bw '' '' ''"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray[0].get_str()));
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	varray = r.get_array();
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasnewfund " + varray[0].get_str()), runtime_error);
 
-	// override registeration with different address
+	// override registration with different address
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew jag2 pub 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"));
 	varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray[0].get_str()));
