@@ -1508,16 +1508,17 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fYears < 1)
 		fYears = 1;
 	fee.nAmount = GetDataFee(scriptData) * powf(2.88, fYears);
-	
-	if (bActivation && mapAliasRegistrations.count(vchHashAlias1) > 0)
+	auto it = mapAliasRegistrations.find(vchHashAlias1);
+	if (bActivation && it != mapAliasRegistrations.end())
 	{
 		LOCK(cs_main);
+		const COutPoint &regOut = *it;
 		if (pwalletMain)
-			pwalletMain->UnlockCoin(mapAliasRegistrations[vchHashAlias1]);
+			pwalletMain->UnlockCoin(regOut);
 		vecSend.push_back(fee);
 		// add the registration input to the alias activation transaction
 		CCoinsViewCache view(pcoinsTip);
-		const COutPoint &regOut = mapAliasRegistrations[vchHashAlias1];
+		
 		const CCoins* pcoin = view.AccessCoins(regOut.hash);
 		if (!pcoin) {
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot find alias registration transaction, please ensure it has confirmed or re-submit the registration transaction again"));
@@ -1780,9 +1781,10 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 		{
 			if(vvch.size() == 1)
 			{
-				if (mapAliasRegistrations.find(vvch[0]) != mapAliasRegistrations.end()) {
+				auto it = mapAliasRegistrations.find(vvch[0]);
+				if (it != mapAliasRegistrations.end()) {
 					if (pwalletMain)
-						pwalletMain->UnlockCoin(mapAliasRegistrations[vvch[0]]);
+						pwalletMain->UnlockCoin(it);
 					mapAliasRegistrations.erase(vvch[0]);
 				}
 
@@ -1795,9 +1797,9 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 			}
 			else if(vvch.size() >= 3)
 			{
-				if(mapAliasRegistrations.count(vvch[2]) > 0)
-					mapAliasRegistrations.erase(vvch[2]);
-				if(mapAliasRegistrationData.count(vvch[0]) > 0)
+				if(mapAliasRegistrations.find(vvch[0]) != mapAliasRegistrations.end())
+					mapAliasRegistrations.erase(vvch[0]);
+				if(mapAliasRegistrationData.find(vvch[0]) != mapAliasRegistrationData.end())
 					mapAliasRegistrationData.erase(vvch[0]);
 			}
 			break;
