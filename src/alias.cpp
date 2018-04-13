@@ -1782,24 +1782,18 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 			{
 				auto it = mapAliasRegistrations.find(vvch[0]);
 				if (it != mapAliasRegistrations.end()) {
+					COutPoint prevOut(tx.GetHash(), i);
+					mapAliasRegistrations.insert(make_pair(vvch[0], prevOut));
 					if (pwalletMain)
-						pwalletMain->UnlockCoin(it->second);
-					mapAliasRegistrations.erase(vvch[0]);
+						pwalletMain->LockCoin(prevOut);
 				}
-
-				COutPoint prevOut(tx.GetHash(), i);
-				mapAliasRegistrations.insert(make_pair(vvch[0], prevOut));
-				if(pwalletMain)
-					pwalletMain->LockCoin(prevOut);
 				
 
 			}
 			else if(vvch.size() >= 3)
 			{
-				if(mapAliasRegistrations.find(vvch[0]) != mapAliasRegistrations.end())
-					mapAliasRegistrations.erase(vvch[0]);
-				if(mapAliasRegistrationData.find(vvch[0]) != mapAliasRegistrationData.end())
-					mapAliasRegistrationData.erase(vvch[0]);
+				mapAliasRegistrations.erase(vvch[2]);
+				mapAliasRegistrationData.erase(vvch[0]);
 			}
 			break;
 		}
