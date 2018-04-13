@@ -794,7 +794,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 			}
 			else if (op == OP_ESCROW_RELEASE)
 			{
-				if (theEscrow.op != OP_ESCROW_ACTIVATE && theEscrow.op != OP_ESCROW_REFUND)
+				if (theEscrow.op != OP_ESCROW_ACTIVATE && theEscrow.op != OP_ESCROW_REFUND && theEscrow.op != OP_ESCROW_RELEASE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4054 - " + _("Can only release an active escrow");
 					return true;

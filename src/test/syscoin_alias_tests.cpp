@@ -45,8 +45,16 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew jag2 pub 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 TWnXcTHMiKtZME84Y8YA5DwXtdYBAZ5SVc '' '' ''"));
+	varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray[0].get_str()));
+	varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5);	
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jag2"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), "TWnXcTHMiKtZME84Y8YA5DwXtdYBAZ5SVc");
 }
 BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 {
