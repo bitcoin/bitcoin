@@ -80,8 +80,6 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	GenerateBlocks(5);	
 	// activate
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
-	newaddress = r.get_str();
-	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 " + newaddress + " '' '' ''"));
 	UniValue varray5 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray5[0].get_str()));
