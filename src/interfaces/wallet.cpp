@@ -601,7 +601,7 @@ public:
         return MakeHandler(m_wallet_part->NotifyWaitingForDevice.connect(fn));
     }
 
-    bool IsParticlWallet()
+    bool IsParticlWallet() override
     {
         return m_wallet_part;
     }
@@ -620,61 +620,61 @@ public:
         return m_wallet_part->HaveAddress(dest);
     }
 
-    bool isUnlockForStakingOnlySet()
+    bool isUnlockForStakingOnlySet() override
     {
         if (!m_wallet_part)
             return false;
         return m_wallet_part->fUnlockForStakingOnly;
     }
 
-    CAmount getAvailableAnonBalance(const CCoinControl& coin_control)
+    CAmount getAvailableAnonBalance(const CCoinControl& coin_control) override
     {
         if (!m_wallet_part)
             return 0;
         return m_wallet_part->GetAvailableAnonBalance(&coin_control);
     }
 
-    CAmount getAvailableBlindBalance(const CCoinControl& coin_control)
+    CAmount getAvailableBlindBalance(const CCoinControl& coin_control) override
     {
         if (!m_wallet_part)
             return 0;
         return m_wallet_part->GetAvailableBlindBalance(&coin_control);
     }
 
-    CHDWallet *getParticlWallet()
+    CHDWallet *getParticlWallet() override
     {
         return m_wallet_part;
     }
 
-    bool setReserveBalance(CAmount nValue)
+    bool setReserveBalance(CAmount nValue) override
     {
         if (!m_wallet_part)
             return false;
         return m_wallet_part->SetReserveBalance(nValue);
     }
 
-    void lockWallet()
+    void lockWallet() override
     {
         if (!m_wallet_part)
             return;
         ::LockWallet(m_wallet_part);
     }
 
-    bool isDefaultAccountSet()
+    bool isDefaultAccountSet() override
     {
         if (!m_wallet_part)
             return false;
         return (!m_wallet_part->idDefaultAccount.IsNull());
     }
 
-    CAmount getCredit(const CTxOutBase *txout, isminefilter filter)
+    CAmount getCredit(const CTxOutBase *txout, isminefilter filter) override
     {
         if (!m_wallet_part)
             return 0;
         return m_wallet_part->GetCredit(txout, filter);
     }
 
-    isminetype txoutIsMine(const CTxOutBase *txout)
+    isminetype txoutIsMine(const CTxOutBase *txout) override
     {
         if (!m_wallet_part)
             return ISMINE_NO;

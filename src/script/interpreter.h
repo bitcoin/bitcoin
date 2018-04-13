@@ -158,7 +158,10 @@ public:
         return false;
     }
 
-    virtual bool IsParticlVersion() const { return false; }
+    virtual bool IsParticlVersion() const
+    {
+        return false;
+    }
 
     virtual ~BaseSignatureChecker() {}
 };
@@ -178,8 +181,8 @@ public:
     TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(nullptr) {}
     TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn, const PrecomputedTransactionData& txdataIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(&txdataIn) {}
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
-    bool CheckLockTime(const CScriptNum& nLockTime) const;
-    bool CheckSequence(const CScriptNum& nSequence) const;
+    bool CheckLockTime(const CScriptNum& nLockTime) const override;
+    bool CheckSequence(const CScriptNum& nSequence) const override;
 
     virtual bool IsCoinStake() const override
     {

@@ -525,7 +525,8 @@ class DummySignatureCheckerParticl : public DummySignatureChecker
 {
 // IsParticlVersion() must return true to skip stack evaluation
 public:
-    bool IsParticlVersion() const { return true; }
+    DummySignatureCheckerParticl() : DummySignatureChecker() {}
+    bool IsParticlVersion() const override { return true; }
 };
 const DummySignatureCheckerParticl DUMMY_CHECKER_PARTICL;
 
@@ -533,7 +534,7 @@ class DummySignatureCreatorParticl : public DummySignatureCreator {
 public:
     DummySignatureCreatorParticl() : DummySignatureCreator() {}
     const BaseSignatureChecker& Checker() const override { return DUMMY_CHECKER_PARTICL; }
-    bool IsParticlVersion() const { return true; }
+    bool IsParticlVersion() const override { return true; }
 };
 
 }

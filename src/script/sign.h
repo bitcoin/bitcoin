@@ -33,7 +33,7 @@ public:
     virtual const BaseSignatureChecker& Checker() const =0;
 
     virtual bool IsParticlVersion() const { return false; }
-    virtual bool IsCoinStake() const  { return false; }
+    virtual bool IsCoinStake() const { return false; }
 
     /** Create a singular (non-script) signature. */
     virtual bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const =0;
@@ -49,20 +49,19 @@ class TransactionSignatureCreator : public BaseSignatureCreator {
 
 public:
     TransactionSignatureCreator(const CTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn, int nHashTypeIn=SIGHASH_ALL);
-    const BaseSignatureChecker& Checker() const { return checker; }
+    const BaseSignatureChecker& Checker() const override { return checker; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
 
-    bool IsParticlVersion() const { return txTo && txTo->IsParticlVersion(); }
-    bool IsCoinStake() const { return txTo && txTo->IsCoinStake(); }
+    bool IsParticlVersion() const override { return txTo && txTo->IsParticlVersion(); }
+    bool IsCoinStake() const override { return txTo && txTo->IsCoinStake(); }
 };
 
 class MutableTransactionSignatureCreator : public TransactionSignatureCreator {
     CTransaction tx;
 
 public:
-    bool IsParticlVersion() const { return tx.IsParticlVersion(); }
-
     MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn, int nHashTypeIn) : TransactionSignatureCreator(&tx, nInIn, amountIn, nHashTypeIn), tx(*txToIn) {}
+    bool IsParticlVersion() const override { return tx.IsParticlVersion(); }
 };
 
 /** A signature creator that just produces 72-byte empty signatures. */

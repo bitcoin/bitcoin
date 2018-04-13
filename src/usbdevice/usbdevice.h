@@ -153,10 +153,10 @@ class DeviceSignatureCreator : public BaseSignatureCreator {
 
 public:
     DeviceSignatureCreator(CUSBDevice *pDeviceIn, const CTransaction *txToIn, unsigned int nInIn, const std::vector<uint8_t> &amountIn, int nHashTypeIn=SIGHASH_ALL);
-    const BaseSignatureChecker &Checker() const { return checker; }
+    const BaseSignatureChecker &Checker() const override { return checker; }
 
-    bool IsParticlVersion() const { return txTo && txTo->IsParticlVersion(); }
-    bool IsCoinStake() const { return txTo && txTo->IsCoinStake(); }
+    bool IsParticlVersion() const override { return txTo && txTo->IsParticlVersion(); }
+    bool IsCoinStake() const override { return txTo && txTo->IsCoinStake(); }
 
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char> &vchSig, const CKeyID &keyid, const CScript &scriptCode, SigVersion sigversion) const override;
 };
