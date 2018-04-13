@@ -86,15 +86,14 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 		const CTransaction& tx = blockVtx[n];
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
 		{
-			{
-				LOCK(cs_main);
-				if (!FindAliasInTx(tx, vvchAliasArgs)) {
-					continue;
-				}
-			}
-
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
+				{
+					LOCK(cs_main);
+					if (!FindAliasInTx(tx, vvchAliasArgs)) {
+						continue;
+					}
+				}
 				const string& sender = stringFromVch(vvchAliasArgs[0]);
 				AliasMap::const_iterator it = mapAliasIndex.find(sender);
 				if (it == mapAliasIndex.end()) {
