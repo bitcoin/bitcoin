@@ -132,6 +132,7 @@ SYSCOIN_CORE_H = \
   hdchain.h \
   httprpc.h \
   httpserver.h \
+  indirectmap.h \
   init.h \
   instantx.h \
   key.h \
@@ -165,6 +166,7 @@ SYSCOIN_CORE_H = \
   protocol.h \
   pubkey.h \
   random.h \
+  reverse_iterator.h \
   reverselock.h \
   rpc/client.h \
   rpc/protocol.h \
