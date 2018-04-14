@@ -5295,7 +5295,10 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, std::string& strBack
     }
 
     // Create backup of the ...
-    std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d-%H-%M", GetTime());
+    struct tm ts;
+    time_t time_val = GetTime();
+    gmtime_r(&time_val, &ts);
+    std::string dateTimeStr = strprintf(".%04i-%02i-%02i-%02i-%02i", ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday, ts.tm_hour, ts.tm_min);
     if (wallet_path.empty()) {
         // ... opened wallet
         LOCK2(cs_main, cs_wallet);

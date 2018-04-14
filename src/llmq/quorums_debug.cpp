@@ -117,7 +117,7 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
     UniValue ret(UniValue::VOBJ);
 
     ret.pushKV("time", nTime);
-    ret.pushKV("timeStr", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime));
+    ret.pushKV("timeStr", FormatISO8601DateTime(nTime));
 
     UniValue sessionsJson(UniValue::VOBJ);
     for (const auto& p : sessions) {
