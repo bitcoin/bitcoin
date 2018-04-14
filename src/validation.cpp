@@ -4884,7 +4884,7 @@ bool DumpMempool(void)
 			file << mi->GetTx();
 			file << mi->GetTime();
 			file << mi->GetFeeDelta();
-			mapDeltas.erase(mi->GetTx()->GetHash());
+			mapDeltas.erase(mi->GetTx().GetHash());
 		}
 
 		file << mapDeltas;
