@@ -1006,13 +1006,14 @@ std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
 
 	return ret;
 }
-bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
+
+CTransaction CTxMemPool::get(const uint256& hash) const
 {
 	LOCK(cs);
 	indexed_transaction_set::const_iterator i = mapTx.find(hash);
-	if (i == mapTx.end()) return false;
-	result = i->GetTx();
-	return true;
+	if (i == mapTx.end())
+		return nullptr;
+	return i->GetSharedTx();
 }
 
 TxMempoolInfo CTxMemPool::info(const uint256& hash) const
