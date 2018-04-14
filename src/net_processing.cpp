@@ -2551,11 +2551,12 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
         vector<CInv> vInv;
         vector<CInv> vInvWait;
         {
-            bool fSendTrickle = pto->fWhitelisted;
+           /* bool fSendTrickle = pto->fWhitelisted;
             if (pto->nNextInvSend < nNow) {
                 fSendTrickle = true;
                 pto->nNextInvSend = PoissonNextSend(nNow, AVG_INVENTORY_BROADCAST_INTERVAL);
-            }
+            }*/
+			bool fSendTrickle = true;
             LOCK(pto->cs_inventory);
             vInv.reserve(std::min<size_t>(1000, pto->vInventoryToSend.size()));
             vInvWait.reserve(pto->vInventoryToSend.size());
@@ -2568,13 +2569,13 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                 if (inv.type == MSG_TX && !fSendTrickle)
                 {
                     // 1/4 of tx invs blast to all immediately
-                   /* static uint256 hashSalt;
+                    static uint256 hashSalt;
                     if (hashSalt.IsNull())
                         hashSalt = GetRandHash();
                     uint256 hashRand = ArithToUint256(UintToArith256(inv.hash) ^ UintToArith256(hashSalt));
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
-                    bool fTrickleWait = ((UintToArith256(hashRand) & 3) != 0);*/
-					bool fTrickleWait = true;
+                    bool fTrickleWait = ((UintToArith256(hashRand) & 3) != 0);
+					bool fTrickleWait = false;
                     if (fTrickleWait)
                     {
                         LogPrint("net", "SendMessages -- queued inv(vInvWait): %s  index=%d peer=%d\n", inv.ToString(), vInvWait.size(), pto->id);
