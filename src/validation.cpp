@@ -4775,7 +4775,6 @@ static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
 bool LoadMempool(void)
 {
-	int64_t nExpiryTimeout = GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
 	FILE* filestr = fsbridge::fopen(GetDataDir() / "mempool.dat", "rb");
 	CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
 	if (file.IsNull()) {
@@ -4784,10 +4783,8 @@ bool LoadMempool(void)
 	}
 
 	int64_t count = 0;
-	int64_t expired = 0;
 	int64_t failed = 0;
 	int64_t already_there = 0;
-	int64_t nNow = GetTime();
 
 	try {
 		uint64_t version;
@@ -4798,9 +4795,10 @@ bool LoadMempool(void)
 		uint64_t num;
 		file >> num;
 		while (num--) {
-			CTransactionRef tx;
-			int64_t nTime;
+			CTransaction tx;
 			int64_t nFeeDelta;
+			int64_t nTime;
+
 			file >> tx;
 			file >> nTime;
 			file >> nFeeDelta;
@@ -4846,8 +4844,8 @@ bool LoadMempool(void)
 		LogPrintf("Failed to deserialize mempool data on disk: %s. Continuing anyway.\n", e.what());
 		return false;
 	}
-
-	LogPrintf("Imported mempool transactions from disk: %i succeeded, %i failed, %i expired, %i already there\n", count, failed, expired, already_there);
+	if(fDebug)
+		LogPrintf("Imported mempool transactions from disk: %i succeeded, %i failed, %i expired, %i already there\n", count, failed, expired, already_there);
 	return true;
 }
 
@@ -4856,14 +4854,12 @@ bool DumpMempool(void)
 	int64_t start = GetTimeMicros();
 
 	std::map<uint256, CAmount> mapDeltas;
-	std::vector<TxMempoolInfo> vinfo;
 
 	{
 		LOCK(mempool.cs);
 		for (const auto &i : mempool.mapDeltas) {
 			mapDeltas[i.first] = i.second;
 		}
-		vinfo = mempool.infoAll();
 	}
 
 	int64_t mid = GetTimeMicros();
@@ -4879,12 +4875,15 @@ bool DumpMempool(void)
 		uint64_t version = MEMPOOL_DUMP_VERSION;
 		file << version;
 
-		file << (uint64_t)vinfo.size();
-		for (const auto& i : vinfo) {
-			file << *(i.tx);
-			file << (int64_t)i.nTime;
-			file << (int64_t)i.nFeeDelta;
-			mapDeltas.erase(i.tx->GetHash());
+		file << (uint64_t)mempool.size();
+
+		LOCK(cs);
+		
+		for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
+			file << mi->GetTx();
+			file << mi->GetTime();
+			file << mi->GetFeeDelta();
+			mapDeltas.erase(mi->GetTx()->GetHash());
 		}
 
 		file << mapDeltas;
