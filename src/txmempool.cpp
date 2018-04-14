@@ -976,75 +976,7 @@ CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
     }
     return true;
 }
-namespace {
-	class DepthAndScoreComparator
-	{
-	public:
-		bool operator()(const CTxMemPool::indexed_transaction_set::const_iterator& a, const CTxMemPool::indexed_transaction_set::const_iterator& b)
-		{
-			uint64_t counta = a->GetCountWithAncestors();
-			uint64_t countb = b->GetCountWithAncestors();
-			if (counta == countb) {
-				return CompareTxMemPoolEntryByScore()(*a, *b);
-			}
-			return counta < countb;
-		}
-	};
-} // namespace
 
-std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::GetSortedDepthAndScore() const
-{
-	std::vector<indexed_transaction_set::const_iterator> iters;
-	AssertLockHeld(cs);
-
-	iters.reserve(mapTx.size());
-
-	for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
-		iters.push_back(mi);
-	}
-	std::sort(iters.begin(), iters.end(), DepthAndScoreComparator());
-	return iters;
-}
-
-void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
-{
-	LOCK(cs);
-	auto iters = GetSortedDepthAndScore();
-
-	vtxid.clear();
-	vtxid.reserve(mapTx.size());
-
-	for (auto it : iters) {
-		vtxid.push_back(it->GetTx().GetHash());
-	}
-}
-static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it) {
-	return TxMempoolInfo{ it->GetSharedTx(), it->GetTime(), CFeeRate(it->GetFee(), it->GetTxSize()), it->GetModifiedFee() - it->GetFee() };
-}
-
-std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
-{
-	LOCK(cs);
-	auto iters = GetSortedDepthAndScore();
-
-	std::vector<TxMempoolInfo> ret;
-	ret.reserve(mapTx.size());
-	for (auto it : iters) {
-		ret.push_back(GetInfo(it));
-	}
-
-	return ret;
-}
-
-
-TxMempoolInfo CTxMemPool::info(const uint256& hash) const
-{
-	LOCK(cs);
-	indexed_transaction_set::const_iterator i = mapTx.find(hash);
-	if (i == mapTx.end())
-		return TxMempoolInfo();
-	return GetInfo(i);
-}
 void CTxMemPool::PrioritiseTransaction(const uint256 hash, const string strHash, double dPriorityDelta, const CAmount& nFeeDelta)
 {
     {
