@@ -65,6 +65,7 @@
 #include <future>
 #include <functional>
 #include "cuckoocache.h"
+#include "fs.h"
 using namespace std;
 #if defined(NDEBUG)
 # error "Syscoin Core cannot be compiled without assertions."
@@ -4775,6 +4776,7 @@ static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
 bool LoadMempool(void)
 {
+	int64_t nExpiryTimeout = GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
 	FILE* filestr = fsbridge::fopen(GetDataDir() / "mempool.dat", "rb");
 	CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
 	if (file.IsNull()) {
@@ -4783,9 +4785,10 @@ bool LoadMempool(void)
 	}
 
 	int64_t count = 0;
+	int64_t expired = 0;
 	int64_t failed = 0;
 	int64_t already_there = 0;
-
+	int64_t nNow = GetTime();
 	try {
 		uint64_t version;
 		file >> version;
@@ -4805,7 +4808,7 @@ bool LoadMempool(void)
 
 			CAmount amountdelta = nFeeDelta;
 			if (amountdelta) {
-				mempool.PrioritiseTransaction(tx->GetHash(), tx->GetHash().ToString(), 0, amountdelta);
+				mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 0, amountdelta);
 			}
 			CValidationState state;
 			if (nTime + nExpiryTimeout > nNow) {
@@ -4819,7 +4822,7 @@ bool LoadMempool(void)
 					// wallet(s) having loaded it while we were processing
 					// mempool transactions; consider these as valid, instead of
 					// failed, but mark them as 'already there'
-					if (mempool.exists(tx->GetHash())) {
+					if (mempool.exists(tx.GetHash())) {
 						++already_there;
 					}
 					else {
@@ -4858,7 +4861,7 @@ bool DumpMempool(void)
 	{
 		LOCK(mempool.cs);
 		for (const auto &i : mempool.mapDeltas) {
-			mapDeltas[i.first] = i.second;
+			mapDeltas[i.first] = i.second.second;
 		}
 	}
 
@@ -4877,9 +4880,7 @@ bool DumpMempool(void)
 
 		file << (uint64_t)mempool.size();
 
-		LOCK(cs);
-		
-		for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
+		for (indexed_transaction_set::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi) {
 			file << mi->GetTx();
 			file << mi->GetTime();
 			file << mi->GetFeeDelta();

@@ -120,6 +120,7 @@ SYSCOIN_CORE_H = \
   privatesend-server.h \
   privatesend-util.h \
   dsnotificationinterface.h \
+  fs.h \
   governance.h \
   governance-classes.h \
   governance-exceptions.h \
@@ -248,6 +249,7 @@ libsyscoin_server_a_SOURCES = \
   httpserver.cpp \
   init.cpp \
   dbwrapper.cpp \
+  fs.cpp \
   governance.cpp \
   governance-classes.cpp \
   governance-object.cpp \
