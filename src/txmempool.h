@@ -653,7 +653,7 @@ public:
 		return (mapTx.count(hash) != 0);
 	}
 
-	CTransaction get(const uint256& hash) const;
+	bool lookup(uint256 hash, CTransaction& result) const;
 	TxMempoolInfo info(const uint256& hash) const;
 	std::vector<TxMempoolInfo> infoAll() const;
 
