@@ -26,6 +26,7 @@ public:
 
     CWalletTx *getTransaction() const;
     unsigned int getTransactionSize();
+    double getTransactionFeePerByte();
 
     void setTransactionFee(const CAmount& newFee);
     CAmount getTransactionFee() const;

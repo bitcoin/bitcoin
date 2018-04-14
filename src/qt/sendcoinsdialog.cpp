@@ -318,23 +318,16 @@ void SendCoinsDialog::on_sendButton_clicked()
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
         questionString.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
-
         questionString.append("</span> ");
         questionString.append(tr("added as transaction fee"));
 
-        double txSize = (double)currentTransaction.getTransactionSize();
-
-        // safe to assume that txSize cannot be 0 at this point?
-        double satPerVByte = txFee / txSize; // txFee is already in satoshis
-
+        unsigned int txSize = currentTransaction.getTransactionSize();
         // append transaction size
-        questionString.append(" (");
-        questionString.append(GUIUtil::formatBytes(txSize));
+        questionString.append(" (" + QString::number(txSize / 1000.0) + " kB");
 
-
+        double satPerVByte = currentTransaction.getTransactionFeePerByte();
         // append sat/vbyte as another representation of the fee
         questionString.append(" at " + QString::number(satPerVByte) + " sat/vbyte");
-
         questionString.append(")");
     }
 

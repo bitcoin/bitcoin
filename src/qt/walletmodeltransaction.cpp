@@ -35,6 +35,19 @@ unsigned int WalletModelTransaction::getTransactionSize()
     return (!walletTransaction ? 0 : ::GetVirtualTransactionSize(*walletTransaction->tx));
 }
 
+double WalletModelTransaction::getTransactionFeePerByte()
+{
+    CAmount txFee = this->getTransactionFee();
+    double txSize = (double)this->getTransactionSize();
+
+    // Prevent divide by 0
+    if (txSize <= 0) {
+      return 0;
+    }
+
+    return txFee / txSize;
+}
+
 CAmount WalletModelTransaction::getTransactionFee() const
 {
     return fee;
