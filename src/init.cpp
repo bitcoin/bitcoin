@@ -202,7 +202,7 @@ public:
 static CCoinsViewDB *pcoinsdbview = NULL;
 static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 static boost::scoped_ptr<ECCVerifyHandle> globalVerifyHandle;
-
+static boost::thread_group threadGroup;
 void Interrupt(boost::thread_group& threadGroup)
 {
 	InterruptHTTPServer();
@@ -373,6 +373,15 @@ void Shutdown()
 	}
 	// Shutdown part 2: Stop TOR thread and delete wallet instance
 	StopTorControl();
+
+	// After everything has been shut down, but before things get flushed, stop the
+	// CScheduler/checkqueue threadGroup
+	threadGroup.interrupt_all();
+	threadGroup.join_all();
+
+	if (g_is_mempool_loaded && GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+		DumpMempool();
+	}
 #ifdef ENABLE_WALLET
 	delete pwalletMain;
 	pwalletMain = NULL;
@@ -464,6 +473,7 @@ std::string HelpMessage(HelpMessageMode mode)
 	strUsage += HelpMessageOpt("-mempoolexpiry=<n>", strprintf(_("Do not keep transactions in the mempool longer than <n> hours (default: %u)"), DEFAULT_MEMPOOL_EXPIRY));
 	strUsage += HelpMessageOpt("-par=<n>", strprintf(_("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)"),
 		-GetNumCores(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS));
+	strUsage += HelpMessageOpt("-persistmempool", strprintf(_("Whether to save the mempool on shutdown and load on restart (default: %u)"), DEFAULT_PERSIST_MEMPOOL));
 #ifndef WIN32
 	strUsage += HelpMessageOpt("-pid=<file>", strprintf(_("Specify pid file (default: %s)"), SYSCOIN_PID_FILENAME));
 #endif
@@ -853,6 +863,11 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 		LogPrintf("Stopping after block import\n");
 		StartShutdown();
 	}
+
+	if (GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+		LoadMempool();
+	}
+	g_is_mempool_loaded = !fRequestShutdown;
 }
 
 /** Sanity checks
@@ -874,7 +889,7 @@ bool InitSanityCheck(void)
 	return true;
 }
 
-bool AppInitServers(boost::thread_group& threadGroup)
+bool AppInitServers()
 {
 	RPCServer::OnStopped(&OnRPCStopped);
 	RPCServer::OnPreCommand(&OnRPCPreCommand);
@@ -1028,7 +1043,7 @@ void InitLogging()
 /** Initialize Syscoin Core.
 *  @pre Parameters should be parsed and config file should be read.
 */
-bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
+bool AppInit2(CScheduler& scheduler)
 {
 	// ********************************************************* Step 1: setup
 #ifdef _MSC_VER
@@ -1376,7 +1391,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 	if (fServer)
 	{
 		uiInterface.InitMessage.connect(SetRPCWarmupStatus);
-		if (!AppInitServers(threadGroup))
+		if (!AppInitServers())
 			return InitError(_("Unable to start HTTP server. See debug log for details."));
 	}
 

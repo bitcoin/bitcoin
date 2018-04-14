@@ -130,7 +130,8 @@ static const bool DEFAULT_ADDRESSINDEX = true;
 static const bool DEFAULT_TIMESTAMPINDEX = false;
 static const bool DEFAULT_SPENTINDEX = false;
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
-
+/** Default for -persistmempool */
+static const bool DEFAULT_PERSIST_MEMPOOL = true;
 static const bool DEFAULT_TESTSAFEMODE = false;
 /** Default for -mempoolreplacement */
 static const bool DEFAULT_ENABLE_REPLACEMENT = false;
@@ -146,6 +147,7 @@ struct BlockHasher
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
+extern std::atomic_bool g_is_mempool_loaded;
 typedef boost::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap mapBlockIndex;
 extern uint64_t nLastBlockTx;
@@ -314,7 +316,11 @@ std::string FormatStateMessage(const CValidationState &state);
 
 // SYSCOIN
 bool CheckSyscoinInputs(const CTransaction& tx, CValidationState &state, bool fJustCheck, int nHeight, const CAmount& nFees, const CBlock& block);
+/** Dump the mempool to disk. */
+bool DumpMempool();
 
+/** Load the mempool from disk. */
+bool LoadMempool();
 /** Get the BIP9 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
