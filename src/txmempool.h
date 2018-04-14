@@ -54,23 +54,7 @@ struct LockPoints
 
     LockPoints() : height(0), time(0), maxInputBlock(NULL) { }
 };
-/**
-* Information about a mempool transaction.
-*/
-struct TxMempoolInfo
-{
-	/** The transaction itself */
-	CTransaction tx;
 
-	/** Time the transaction entered the mempool. */
-	int64_t nTime;
-
-	/** Feerate of the transaction. */
-	CFeeRate feeRate;
-
-	/** The fee delta. */
-	int64_t nFeeDelta;
-};
 class CTxMemPool;
 
 /** \class CTxMemPoolEntry
