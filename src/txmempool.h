@@ -95,7 +95,7 @@ public:
 		bool spendsCoinbase,
 		int64_t nSigOpsCost, LockPoints lp);
 
-	const CTransaction& GetTx() const { return this->tx; }
+	const CTransaction& GetTx() const { return *this->tx; }
 	CTransaction GetSharedTx() const { return this->tx; }
 	const CAmount& GetFee() const { return nFee; }
 	size_t GetTxSize() const;
@@ -198,7 +198,7 @@ struct mempoolentry_txid
 
 	result_type operator() (const CTransaction& tx) const
 	{
-		return tx.GetHash();
+		return tx->GetHash();
 	}
 };
 
@@ -718,7 +718,7 @@ protected:
 
 public:
 	CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
-	bool GetCoin(const COutPoint &outpoint, CCoins &coin) const override;
+	bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
 };
 
 /**
@@ -790,7 +790,7 @@ struct DisconnectedBlockTransactions {
 			return;
 		}
 		for (auto const &tx : vtx) {
-			auto it = queuedTx.find(tx.GetHash());
+			auto it = queuedTx.find(tx->GetHash());
 			if (it != queuedTx.end()) {
 				cachedInnerUsage -= RecursiveDynamicUsage(*it);
 				queuedTx.erase(it);
