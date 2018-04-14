@@ -915,6 +915,8 @@ void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std:
  * in chainActive to our peers.
  */
 void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
+    LogPrint(BCLog::NET, "UpdatedBlockTip callback: new block hash: %s\n", pindexNew->GetBlockHash().ToString());
+    if (pindexFork) LogPrint(BCLog::NET, "fork block hash: %s\n", pindexFork->GetBlockHash().ToString());
     const int nNewHeight = pindexNew->nHeight;
     connman->SetBestHeight(nNewHeight);
 
@@ -944,6 +946,7 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
     }
 
     nTimeBestReceived = GetTime();
+    LogPrint(BCLog::NET, "UpdatedBlockTip exiting\n");
 }
 
 /**
@@ -3444,6 +3447,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                 }
             }
             pto->vBlockHashesToAnnounce.clear();
+            LogPrint(BCLog::NET, "vBlockHashesToAnnounce drained\n");
         }
 
         //
