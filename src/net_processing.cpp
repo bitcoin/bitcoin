@@ -2551,6 +2551,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
         vector<CInv> vInv;
         vector<CInv> vInvWait;
         {
+			// SYSCOIN
            /* bool fSendTrickle = pto->fWhitelisted;
             if (pto->nNextInvSend < nNow) {
                 fSendTrickle = true;
