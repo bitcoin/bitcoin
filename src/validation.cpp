@@ -4880,7 +4880,7 @@ bool DumpMempool(void)
 
 		file << (uint64_t)mempool.size();
 
-		for (indexed_transaction_set::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi) {
+		for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi) {
 			file << mi->GetTx();
 			file << mi->GetTime();
 			file << mi->GetFeeDelta();
