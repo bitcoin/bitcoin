@@ -970,7 +970,7 @@ void InitParameterInteraction()
 	}
 	// -zapwallettxes implies dropping the mempool on startup
 	if (GetBoolArg("-zapwallettxes", false) && SoftSetBoolArg("-persistmempool", false)) {
-		LogPrintf("%s: parameter interaction: -zapwallettxes=%s -> setting -persistmempool=0\n", __func__, zapwallettxes);
+		LogPrintf("%s: parameter interaction: -zapwallettxes=%s -> setting -persistmempool=0\n", __func__, GetBoolArg("-zapwallettxes", false));
 	}
 	// -zapwallettx implies a rescan
 	if (GetBoolArg("-zapwallettxes", false)) {
