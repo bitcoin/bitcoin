@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	GenerateBlocks(5);
 	AliasNew("node1", "jagassetallocationsend1", "data");
 	AliasNew("node2", "jagassetallocationsend2", "data");
-	string guid = AssetNew("node1", "newassetsend", "jagassetallocationsend1", "data", "8", "false", "1", "-1");
+	string guid = AssetNew("node1", "usd", "jagassetallocationsend1", "data", "8", "false", "1", "-1");
 
 	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend1\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetallocationsend1 false"));
