@@ -372,7 +372,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5006 - " + _("Encryption private key too long");
 			return error(errorMessage.c_str());
 		}
-		if(theAlias.vchEncryptionPublicKey.size() > MAX_GUID_LENGTH)
+		if(theAlias.vchEncryptionPublicKey.size() > MAX_ENCRYPTED_GUID_LENGTH)
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5007 - " + _("Encryption public key too long");
 			return error(errorMessage.c_str());
