@@ -37,8 +37,7 @@ private:
     std::string strDebugMessage;
 public:
     CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
-    bool DoS(int level, bool ret = false,
-             unsigned int chRejectCodeIn=0, const std::string &strRejectReasonIn="",
+    bool DoS(int level, bool ret, unsigned int chRejectCodeIn, const std::string &strRejectReasonIn,
              bool corruptionIn=false,
              const std::string &strDebugMessageIn="") {
         chRejectCode = chRejectCodeIn;
@@ -51,8 +50,7 @@ public:
         mode = MODE_INVALID;
         return ret;
     }
-    bool Invalid(bool ret = false,
-                 unsigned int _chRejectCode=0, const std::string &_strRejectReason="",
+    bool Invalid(bool ret, unsigned int _chRejectCode, const std::string &_strRejectReason,
                  const std::string &_strDebugMessage="") {
         return DoS(0, ret, _chRejectCode, _strRejectReason, false, _strDebugMessage);
     }
