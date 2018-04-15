@@ -1474,7 +1474,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	CWalletTx wtx;
 	CEscrow escrow;
 	if (!GetEscrow(vchEscrow, escrow))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4518 - " + _("Could not find a escrow with this key"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4518 - " + _("Could not find an escrow with this key"));
 
 	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest;
 	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress, resellerPaymentAddress;
@@ -1559,7 +1559,7 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 
 	CEscrow escrow;
 	if (!GetEscrow(vchEscrow, escrow))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4519 - " + _("Could not find a escrow with this key"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4519 - " + _("Could not find an escrow with this key"));
 	COffer theOffer, linkedOffer;
 	if (!GetOffer(escrow.vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4520 - " + _("Could not find offer related to this escrow"));
@@ -1715,7 +1715,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	CEscrow escrow;
     if (!GetEscrow( vchEscrow,escrow))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4527 - " + _("Could not find a escrow with this key"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4527 - " + _("Could not find an escrow with this key"));
 	COffer theOffer;
 	if (!GetOffer(escrow.vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4528 - " + _("Could not find offer related to this escrow"));
@@ -1824,7 +1824,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 
 	CEscrow escrow;
 	if (!GetEscrow(vchEscrow, escrow))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4530 - " + _("Could not find a escrow with this key"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4530 - " + _("Could not find an escrow with this key"));
 
 	bool extPayment = false;
 	if (escrow.nPaymentOption != PAYMENTOPTION_SYS)
@@ -1911,7 +1911,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
 	CEscrow escrow;
 	if (!GetEscrow(vchEscrow, escrow))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4531 - " + _("Could not find a escrow with this key"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4531 - " + _("Could not find an escrow with this key"));
 	COffer theOffer;
 	if (!GetOffer(escrow.vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4532 - " + _("Could not find offer related to this escrow"));
@@ -2022,7 +2022,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 
 	CEscrow escrow;
 	if (!GetEscrow(vchEscrow, escrow))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4534 - " + _("Could not find a escrow with this key"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4534 - " + _("Could not find an escrow with this key"));
 
 	bool extPayment = false;
 	if (escrow.nPaymentOption != PAYMENTOPTION_SYS)
@@ -2113,7 +2113,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
     CWalletTx wtx;
 	CEscrow escrow;
 	if (!GetEscrow(vchEscrow, escrow))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4535 - " + _("Could not find a escrow with this key"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4535 - " + _("Could not find an escrow with this key"));
 
 	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest;
 	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress, resellerPaymentAddress;
