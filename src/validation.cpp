@@ -4859,7 +4859,7 @@ bool DumpMempool(void)
 	std::map<uint256, CAmount> mapDeltas;
 
 	{
-		LOCK(mempool.cs);
+		TRY_LOCK(mempool.cs);
 		for (const auto &i : mempool.mapDeltas) {
 			mapDeltas[i.first] = i.second.second;
 		}
