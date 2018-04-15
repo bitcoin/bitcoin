@@ -305,15 +305,15 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
 	GenerateBlocks(5);
-	printf("Running generate_small_assetname...\n");
+	printf("Running generate_big_assetname...\n");
 	GenerateBlocks(5);
-	AliasNew("node1", "jagassetnamesmall", "data");
+	AliasNew("node1", "jagassetnamebig", "data");
 	// 256 bytes long
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	// cannot create this asset because its more than 8 chars
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew 123456789 jagassetnamesmall " + gooddata + " assets 8 false 1 1 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew 123456789 jagassetnamebig " + gooddata + " assets 8 false 1 1 0 false ''"), runtime_error);
 	// its 3 chars now so its ok
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetnamesmall " + gooddata + " assets 8 false 1 1 0 false ''"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetnamebig " + gooddata + " assets 8 false 1 1 0 false ''"));
 }
 BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply)
 {
@@ -851,7 +851,7 @@ BOOST_AUTO_TEST_CASE(generate_assettransfer)
 
 	string guid1 = AssetNew("node1", "dow", "jagasset1", "pubdata");
 	string guid2 = AssetNew("node1", "cat", "jagasset1", "pubdata");
-	AssetUpdate("node1", "asset1", "pub3");
+	AssetUpdate("node1", guid1, "pub3");
 	UniValue r;
 	AssetTransfer("node1", "node2", guid1, "jagasset2");
 	AssetTransfer("node1", "node3", guid2, "jagasset3");
