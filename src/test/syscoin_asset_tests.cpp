@@ -880,7 +880,7 @@ BOOST_AUTO_TEST_CASE(generate_assetpruning)
 	// we can find it as normal first
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagprunealias1"));
 	// make sure our offer alias doesn't expire
-	AssetUpdate("node1", "jagprune1");
+	AssetUpdate("node1", guid);
 	GenerateBlocks(5, "node1");
 	ExpireAlias("jagprunealias1");
 	StartNode("node2");
@@ -895,7 +895,7 @@ BOOST_AUTO_TEST_CASE(generate_assetpruning)
 	StopNode("node3");
 	
 	AliasNew("node1", "jagprunealias1", "changeddata1");
-	AssetUpdate("node1", "jagprune1");
+	AssetUpdate("node1", guid);
 
 	// stop and start node1
 	StopNode("node1");
