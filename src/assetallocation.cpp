@@ -690,7 +690,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 		throw runtime_error(
 			"assetallocationsend [asset] [aliasfrom] ( [{\"aliasto\":\"aliasname\",\"amount\":amount},...] or [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
 			"Send an asset allocation you own to another alias. Maximimum recipients is 250.\n"
-			"<asset> Asset name.\n"
+			"<asset> Asset guid.\n"
 			"<aliasfrom> Alias to transfer from.\n"
 			"<aliasto> Alias to transfer to.\n"
 			"<amount> Quantity of asset to send.\n"
@@ -702,9 +702,6 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 
 	// gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	string assetUpper = stringFromVch(vchAsset);
-	boost::algorithm::to_upper(assetUpper);
-	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
 	UniValue valueTo = params[2];
 	vector<unsigned char> vchMemo = vchFromValue(params[3]);
@@ -833,16 +830,13 @@ UniValue assetallocationcollectinterest(const UniValue& params, bool fHelp) {
 		throw runtime_error(
 			"assetallocationcollectinterest [asset] [alias] [witness]\n"
 			"Collect interest on this asset allocation if an interest rate is set on this asset.\n"
-			"<asset> Asset name.\n"
+			"<asset> Asset guid.\n"
 			"<alias> alias which owns this asset allocation.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 			+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	string assetUpper = stringFromVch(vchAsset);
-	boost::algorithm::to_upper(assetUpper);
-	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
@@ -909,9 +903,6 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
                 "Show stored values of a single asset allocation. Set getinputs to true if you want to get the allocation inputs, if applicable.\n");
 
     vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	string assetUpper = stringFromVch(vchAsset);
-	boost::algorithm::to_upper(assetUpper);
-	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 	bool bGetInputs = params[2].get_bool();
 	UniValue oAssetAllocation(UniValue::VOBJ);
@@ -1039,9 +1030,6 @@ UniValue assetallocationsenderstatus(const UniValue& params, bool fHelp) {
 			"Level 2 means an active double spend was found and any depending asset allocation sends are also flagged as dangerous and should wait for POW confirmation before proceeding.\n");
 
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	string assetUpper = stringFromVch(vchAsset);
-	boost::algorithm::to_upper(assetUpper);
-	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAliasSender = vchFromValue(params[1]);
 	uint256 txid;
 	txid.SetNull();

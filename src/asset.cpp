@@ -258,14 +258,14 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 		switch (op) {
 		case OP_ASSET_ACTIVATE:
-			if (theAsset.vchAsset.size() > MAX_ID_LENGTH)
+			if (theAsset.vchAsset.size() > MAX_GUID_LENGTH)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("asset name too long");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("asset guid too long");
 				return error(errorMessage.c_str());
 			}
-			if (theAsset.vchAsset.size() < MIN_ID_LENGTH)
+			if (theAsset.vchSymbol.size() < MIN_SYMBOL_LENGTH || theAsset.vchSymbol.size() > MAX_SYMBOL_LENGTH)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2006 - " + _("asset name not long enough");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2006 - " + _("asset symbol must be between 1 and 8 characters in length");
 				return error(errorMessage.c_str());
 			}
 			if(!boost::algorithm::starts_with(stringFromVch(theAsset.sCategory), "assets"))
@@ -424,12 +424,14 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 
 		}
 		else if (op != OP_ASSET_ACTIVATE) {
+			// these fields cannot change after activation
 			theAsset.nBalance = dbAsset.nBalance;
 			theAsset.nTotalSupply = dbAsset.nBalance;
 			theAsset.nMaxSupply = dbAsset.nMaxSupply;
 			theAsset.bUseInputRanges = dbAsset.bUseInputRanges;
 			theAsset.bCanAdjustInterestRate = dbAsset.bCanAdjustInterestRate;
 			theAsset.nPrecision = dbAsset.nPrecision;
+			theAsset.vchSymbol = dbAsset.vchSymbol;
 		}
 
 		if (op == OP_ASSET_SEND) {
@@ -595,9 +597,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 		if (op == OP_ASSET_ACTIVATE)
 		{
-			string assetUpper = stringFromVch(theAsset.vchAsset);
+			string assetUpper = stringFromVch(theAsset.vchSymbol);
 			boost::algorithm::to_upper(assetUpper);
-			theAsset.vchAsset = vchFromString(assetUpper);
+			theAsset.vchSymbol = vchFromString(assetUpper);
 			if (GetAsset(theAsset.vchAsset, theAsset))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2038 - " + _("Asset already exists");
@@ -626,9 +628,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			}
 			// debug
 			if (fDebug)
-				LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d\n",
+				LogPrintf("CONNECTED ASSET: op=%s asset=%s symbol=%s hash=%s height=%d fJustCheck=%d\n",
 					assetFromOp(op).c_str(),
-					stringFromVch(op == OP_ASSET_SEND ? theAssetAllocation.vchAsset : theAsset.vchAsset).c_str(),
+					stringFromVch(op == OP_ASSET_SEND ? theAssetAllocation.vchAsset : theAsset.vchAsset).c_str(), stringFromVch(theAsset.vchSymbol).c_str(),
 					tx.GetHash().ToString().c_str(),
 					nHeight,
 					fJustCheck ? 1 : 0);
@@ -640,8 +642,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 UniValue assetnew(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 11)
         throw runtime_error(
-			"assetnew [name] [alias] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
-						"<name> name of asset in uppercase, 3 characters miniumum, 20 characters max.\n"
+			"assetnew [symbol] [alias] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
+						"<symbol> symbol of asset in uppercase, 1 characters miniumum, 8 characters max.\n"
 						"<alias> An alias you own.\n"
                         "<public value> public data, 256 characters max.\n"
 						"<category> category, 256 characters max. Defaults to assets.\n"
@@ -691,7 +693,8 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	// calculate net
     // build asset object
     CAsset newAsset;
-	newAsset.vchAsset = vchFromString(strName);
+	newAsset.vchSymbol = vchFromString(strName);
+	newAsset.vchAsset = vchFromString(GenerateSyscoinGuid());
 	newAsset.sCategory = vchFromString(strCategory);
 	newAsset.vchPubData = vchPubData;
 	newAsset.vchAlias = vchAlias;
@@ -747,7 +750,7 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
         throw runtime_error(
 			"assetupdate [asset] [public value] [category=assets] [supply] [interest_rate] [witness]\n"
 						"Perform an update on an asset you control.\n"
-						"<asset> Asset name.\n"
+						"<asset> Asset guid.\n"
                         "<public value> Public data, 256 characters max.\n"                
 						"<category> Category, 256 characters max. Defaults to assets\n"
 						"<supply> New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
@@ -755,9 +758,6 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	string assetUpper = stringFromVch(vchAsset);
-	boost::algorithm::to_upper(assetUpper);
-	vchAsset = vchFromString(assetUpper);
 	string strData = "";
 	string strPubData = "";
 	string strCategory = "";
@@ -847,16 +847,13 @@ UniValue assettransfer(const UniValue& params, bool fHelp) {
         throw runtime_error(
 			"assettransfer [asset] [alias] [witness]\n"
 						"Transfer a asset allocation you own to another alias.\n"
-						"<asset> Asset name.\n"
+						"<asset> Asset guid.\n"
 						"<alias> alias to transfer to.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 
     // gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	string assetUpper = stringFromVch(vchAsset);
-	boost::algorithm::to_upper(assetUpper);
-	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 
 	vector<unsigned char> vchWitness;
@@ -930,7 +927,7 @@ UniValue assetsend(const UniValue& params, bool fHelp) {
 		throw runtime_error(
 			"assetsend [asset] [aliasfrom] ( [{\"aliasto\":\"aliasname\",\"amount\":amount},...] or [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
 			"Send an asset you own to another alias as an asset allocation. Maximimum recipients is 250.\n"
-			"<asset> Asset name.\n"
+			"<asset> Asset guid.\n"
 			"<aliasfrom> Alias to transfer from.\n"
 			"<aliasto> Alias to transfer to.\n"
 			"<amount> Quantity of asset to send.\n"
@@ -942,9 +939,6 @@ UniValue assetsend(const UniValue& params, bool fHelp) {
 
 	// gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	string assetUpper = stringFromVch(vchAsset);
-	boost::algorithm::to_upper(assetUpper);
-	vchAsset = vchFromString(assetUpper);
 	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
 	UniValue valueTo = params[2];
 	vector<unsigned char> vchMemo = vchFromValue(params[3]);
@@ -1075,9 +1069,6 @@ UniValue assetinfo(const UniValue& params, bool fHelp) {
                 "Show stored values of a single asset and its. Set getinputs to true if you want to get the allocation inputs, if applicable.\n");
 
     vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	string assetUpper = stringFromVch(vchAsset);
-	boost::algorithm::to_upper(assetUpper);
-	vchAsset = vchFromString(assetUpper);
 	bool bGetInputs = params[1].get_bool();
 	UniValue oAsset(UniValue::VOBJ);
 
@@ -1092,6 +1083,7 @@ UniValue assetinfo(const UniValue& params, bool fHelp) {
 bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oAsset)
 {
     oAsset.push_back(Pair("_id", stringFromVch(asset.vchAsset)));
+	oAsset.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
     oAsset.push_back(Pair("txid", asset.txHash.GetHex()));
     oAsset.push_back(Pair("height", (int)asset.nHeight));
 	int64_t nTime = 0;
@@ -1128,6 +1120,7 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 {
 	oAsset.push_back(Pair("_id", asset.txHash.GetHex()));
 	oAsset.push_back(Pair("asset", stringFromVch(asset.vchAsset)));
+	oAsset.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
 	oAsset.push_back(Pair("height", (int)asset.nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= asset.nHeight) {
@@ -1148,6 +1141,7 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 bool BuildAssetIndexerJson(const CAsset& asset, UniValue& oAsset)
 {
 	oAsset.push_back(Pair("_id", stringFromVch(asset.vchAsset)));
+	oAsset.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
 	oAsset.push_back(Pair("height", (int)asset.nHeight));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
@@ -1171,6 +1165,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 
 	entry.push_back(Pair("txtype", opName));
 	entry.push_back(Pair("_id", stringFromVch(asset.vchAsset)));
+	entry.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
 
 	if(!asset.vchPubData.empty() && asset.vchPubData != dbAsset.vchPubData)
 		entry.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
