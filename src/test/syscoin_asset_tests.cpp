@@ -297,10 +297,10 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	string guid1 = AssetNew("node1", "usd", "jagassetbig1", gooddata);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
-	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "NEWASSET");
+	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "CHF");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1 + " false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid1);
-	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "NEWASSET");
+	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "USD");
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 
 	GenerateBlocks(5);
 	// assetinfo is case incensitive
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + arr[0].get_str() + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + arr[1].get_str() + " false"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "symbol").get_str(), "UPPER");
 }
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)

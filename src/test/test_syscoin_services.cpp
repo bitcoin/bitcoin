@@ -1101,7 +1101,7 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == name);
-	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == oldsymbol);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "symbol").get_str(), oldsymbol);
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
 	BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(newinterest) * 1000)));
 	totalsupply = find_value(r.get_obj(), "total_supply");
@@ -1111,7 +1111,7 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + name + " false"));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == name);
-		BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == oldsymbol);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "symbol").get_str() , oldsymbol);
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), newpubdata);
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(newinterest) * 1000)));
@@ -1123,7 +1123,7 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + name + " false"));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == name);
-		BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == oldsymbol);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "symbol").get_str(), oldsymbol);
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), newpubdata);
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(newinterest) * 1000)));
