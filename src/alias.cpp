@@ -705,7 +705,7 @@ bool GetSyscoinData(const CTransaction &tx, vector<unsigned char> &vchData, vect
 }
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias)
 {
-	return (vchAlias.size() <= MAX_GUID_LENGTH && vchAlias.size() >= 3);
+	return (vchAlias.size() <= 71 && vchAlias.size() >= 3);
 }
 bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData, vector<unsigned char> &vchHash)
 {
