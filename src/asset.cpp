@@ -428,10 +428,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			theAsset.nBalance = dbAsset.nBalance;
 			theAsset.nTotalSupply = dbAsset.nBalance;
 			theAsset.nMaxSupply = dbAsset.nMaxSupply;
-			theAsset.bUseInputRanges = dbAsset.bUseInputRanges;
-			theAsset.bCanAdjustInterestRate = dbAsset.bCanAdjustInterestRate;
-			theAsset.nPrecision = dbAsset.nPrecision;
-			theAsset.vchSymbol = dbAsset.vchSymbol;
 		}
 
 		if (op == OP_ASSET_SEND) {
@@ -536,7 +532,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 							receiverAllocation.nLastInterestClaimHeight = nHeight;
 						}
-						
+
 						receiverAllocation.txHash = tx.GetHash();
 						if (theAsset.fInterestRate > 0) {
 							if (receiverAllocation.nHeight > 0) {
@@ -552,7 +548,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						mergeRanges(receiverAllocation.listAllocationInputs, outputMerge);
 						receiverAllocation.listAllocationInputs = outputMerge;
 						receiverAllocation.nBalance += rangeTotals[i];
-		
+
 
 						// figure out senders subtracted ranges and balance
 						vector<CRange> outputSubtract;
@@ -574,6 +570,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 		else if (op != OP_ASSET_ACTIVATE)
 		{
+			// these fields cannot change after activation
+			theAsset.bUseInputRanges = dbAsset.bUseInputRanges;
+			theAsset.bCanAdjustInterestRate = dbAsset.bCanAdjustInterestRate;
+			theAsset.nPrecision = dbAsset.nPrecision;
+			theAsset.vchSymbol = dbAsset.vchSymbol;
 			if (theAsset.vchAlias.empty())
 				theAsset.vchAlias = dbAsset.vchAlias;
 			if (theAsset.vchPubData.empty())
