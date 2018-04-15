@@ -4812,7 +4812,7 @@ bool LoadMempool(void)
 			}
 			CValidationState state;
 			if (nTime + nExpiryTimeout > nNow) {
-				LOCK(cs_main);
+				TRY_LOCK(cs_main);
 				AcceptToMemoryPool(mempool, false, state, tx, false, NULL);
 				if (state.IsValid()) {
 					++count;
