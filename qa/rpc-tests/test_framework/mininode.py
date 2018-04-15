@@ -231,6 +231,14 @@ def ser_int_vector(l):
         r += struct.pack("<i", i)
     return r
 
+# Deserialize from a hex string representation (eg from RPC)
+def FromHex(obj, hex_string):
+    obj.deserialize(cStringIO.StringIO(binascii.unhexlify(hex_string)))
+    return obj
+
+# Convert a binary-serializable object to hex (eg for submission via RPC)
+def ToHex(obj):
+    return binascii.hexlify(obj.serialize()).decode('utf-8')
 
 # Objects that map to bitcoind objects, which can be serialized/deserialized
 

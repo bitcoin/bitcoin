@@ -1,4 +1,4 @@
-Bitcoin Core 0.12.0
+Bitcoin Core 0.12.1
 =====================
 
 Intro

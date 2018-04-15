@@ -16,6 +16,7 @@
 #include "net.h"
 #include "script/script_error.h"
 #include "sync.h"
+#include "versionbits.h"
 
 #include <algorithm>
 #include <exception>
@@ -39,9 +40,10 @@ class CValidationInterface;
 class CValidationState;
 
 struct CNodeStateStats;
+struct LockPoints;
 
 /** Default for accepting alerts from the P2P network. */
-static const bool DEFAULT_ALERTS = true;
+static const bool DEFAULT_ALERTS = false;
 /** Default for DEFAULT_WHITELISTRELAY. */
 static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for DEFAULT_WHITELISTFORCERELAY. */
@@ -96,6 +98,10 @@ static const unsigned int AVG_ADDRESS_BROADCAST_INTERVAL = 30;
 /** Average delay between trickled inventory broadcasts in seconds.
  *  Blocks, whitelisted receivers, and a random 25% of transactions bypass this. */
 static const unsigned int AVG_INVENTORY_BROADCAST_INTERVAL = 5;
+/** Block download timeout base, expressed in millionths of the block interval (i.e. 10 min) */
+static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
+/** Additional block download timeout per parallel downloading peer (i.e. 5 min) */
+static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 500000;
 
 static const unsigned int DEFAULT_LIMITFREERELAY = 15;
 static const bool DEFAULT_RELAYPRIORITY = true;
@@ -274,6 +280,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 /** Convert CValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const CValidationState &state);
 
+/** Get the BIP9 state for a given deployment at the current tip. */
+ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
+
 struct CNodeStateStats {
     int nMisbehavior;
     int nSyncHeight;
@@ -353,7 +362,31 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
  */
 bool CheckFinalTx(const CTransaction &tx, int flags = -1);
 
-/** 
+/**
+ * Test whether the LockPoints height and time are still valid on the current chain
+ */
+bool TestLockPointValidity(const LockPoints* lp);
+
+/**
+ * Check if transaction is final per BIP 68 sequence numbers and can be included in a block.
+ * Consensus critical. Takes as input a list of heights at which tx's inputs (in order) confirmed.
+ */
+bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block);
+
+/**
+ * Check if transaction will be BIP 68 final in the next block to be created.
+ *
+ * Simulates calling SequenceLocks() with data from the tip of the current active chain.
+ * Optionally stores in LockPoints the resulting height and time calculated and the hash
+ * of the block needed for calculation or skips the calculation and uses the LockPoints
+ * passed in for evaluation.
+ * The LockPoints should not be considered valid if CheckSequenceLocks returns false.
+ *
+ * See consensus/consensus.h for flag definitions.
+ */
+bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = NULL, bool useExistingLockPoints = false);
+
+/**
  * Closure representing one script verification
  * Note that this stores references to the spending transaction 
  */
@@ -502,6 +535,11 @@ extern CBlockTreeDB *pblocktree;
  * This is also true for mempool checks.
  */
 int GetSpendHeight(const CCoinsViewCache& inputs);
+
+/**
+ * Determine what nVersion a new block should use.
+ */
+int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
 /** Reject codes greater or equal to this can be returned by AcceptToMemPool
  * for transactions, to signal internal conditions. They cannot and should not

@@ -1347,6 +1347,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
                 WalletTxToJSON(wtx, entry);
+            entry.push_back(Pair("abandoned", wtx.isAbandoned()));
             ret.push_back(entry);
         }
     }

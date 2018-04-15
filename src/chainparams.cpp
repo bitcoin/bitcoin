@@ -71,12 +71,6 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 80640;
-        consensus.nMajorityEnforceBlockUpgrade1 = 750;
-        consensus.nMajorityRejectBlockOutdated1 = 950;
-        consensus.nMajorityWindow1 = 8000;
-        consensus.nMajorityEnforceBlockUpgrade2 = 7500;
-        consensus.nMajorityRejectBlockOutdated2 = 9500;
-        consensus.nMajorityWindow2 = 10000;
         //consensus.BIP34Height = 227931;
         //consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -84,7 +78,19 @@ public:
         consensus.nPowTargetSpacing = 30;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        /** 
+        consensus.nRuleChangeActivationThreshold = 19160; // 95% of 20160
+        consensus.nMinerConfirmationWindow = 20160; // nPowTargetTimespan / nPowTargetSpacing
+        
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1523059200; // April 7, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1570406400; // Oct 7, 2019
+
+        // Deployment of BIP68, BIP112, and BIP113.
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1523059200; // April 7, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1570406400; // Oct 7, 2019
+
+        /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
@@ -176,12 +182,6 @@ class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
-        consensus.nMajorityEnforceBlockUpgrade1 = 51;
-        consensus.nMajorityRejectBlockOutdated1 = 75;
-        consensus.nMajorityWindow1 = 100;
-        consensus.nMajorityEnforceBlockUpgrade2 = 51;
-        consensus.nMajorityRejectBlockOutdated2 = 75;
-        consensus.nMajorityWindow2 = 100;
         //consensus.BIP34Height = 21111;
         //consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -189,6 +189,18 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
+        consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
+        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
+        
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1520380800; // March 7, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1570406400; // Oct 7, 2019
+
+        // Deployment of BIP68, BIP112, and BIP113.
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1520380800; // March 7, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1570406400; // Oct 7, 2019
+
         pchMessageStart[0] = 0x05;
         pchMessageStart[1] = 0xfe;
         pchMessageStart[2] = 0xa9;
@@ -243,12 +255,6 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.nMajorityEnforceBlockUpgrade1 = 750;
-        consensus.nMajorityRejectBlockOutdated1 = 950;
-        consensus.nMajorityWindow1 = 1000;
-        consensus.nMajorityEnforceBlockUpgrade2 = 750;
-        consensus.nMajorityRejectBlockOutdated2 = 950;
-        consensus.nMajorityWindow2 = 1000;
         //consensus.BIP34Height = -1; // BIP34 has not necessarily activated on regtest
         //consensus.BIP34Hash = uint256();
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -256,6 +262,14 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
+        consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
+        consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0x0f;
