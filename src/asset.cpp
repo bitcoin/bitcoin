@@ -258,7 +258,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 		switch (op) {
 		case OP_ASSET_ACTIVATE:
-			if (theAsset.vchAsset.size() > MAX_GUID_LENGTH)
+			if (theAsset.vchAsset.size() > MAX_ID  _LENGTH)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("asset guid too long");
 				return error(errorMessage.c_str());

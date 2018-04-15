@@ -425,7 +425,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4005 - " + _("Quantity of order must be greator than 0");
 			return error(errorMessage.c_str());
 		}
-		if(theEscrow.vchOffer.size() > MAX_ID_LENGTH)
+		if(theEscrow.vchOffer.size() > MAX_GUID_LENGTH)
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4006 - " + _("Escrow offer guid too long");
 			return error(errorMessage.c_str());

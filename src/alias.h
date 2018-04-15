@@ -18,7 +18,7 @@ class COutPoint;
 class CSyscoinAddress;
 struct CRecipient;
 
-static const unsigned int MAX_GUID_LENGTH = 71;
+static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_NAME_LENGTH = 256;
 static const unsigned int MAX_VALUE_LENGTH = 512;
 static const unsigned int MAX_SYMBOL_LENGTH = 8;
