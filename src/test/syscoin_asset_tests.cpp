@@ -907,7 +907,7 @@ BOOST_AUTO_TEST_CASE(generate_assetpruning)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagprunealias1"));
 
 	// try to create asset with same name
-	BOOST_CHECK_THROW(CallRPC("node1", "assetnew sys jagprunealias1 pubdata assets 8 false 1 1 0 false ''"), runtime_error);
+	AssetNew("node1", "bcf", "jagprunealias1", "pubdata");
 	StartNode("node3");
 }
 BOOST_AUTO_TEST_SUITE_END ()
