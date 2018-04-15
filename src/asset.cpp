@@ -742,6 +742,7 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
+	res.push_back(stringFromVch(newAsset.vchAsset));
 	return res;
 }
 
