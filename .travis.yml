@@ -1,5 +1,5 @@
 sudo: required
-dist: trusty
+dist: xenial
 os: linux
 language: minimal
 cache:
@@ -24,7 +24,7 @@ env:
 # ARM
     - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf python3-pip shellcheck" DEP_OPTS="NO_QT=1" CHECK_DOC=1 GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Win32
-    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
+    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="software-properties-common python3 nsis g++-mingw-w64-i686 wine1.6" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
 # Win64
     - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.6" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
 # 32-bit + dash
@@ -32,7 +32,7 @@ env:
 # x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
     - HOST=x86_64-unknown-linux-gnu PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
 # Qt4 & system libs
-    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3-zmq qt4-dev-tools libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libdb5.1++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev xvfb" NO_DEPENDS=1 NEED_XVFB=1 RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --enable-glibc-back-compat --enable-reduce-exports --with-gui=qt4 CPPFLAGS=-DDEBUG_LOCKORDER"
+    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3-zmq qt4-dev-tools libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev xvfb" NO_DEPENDS=1 NEED_XVFB=1 RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --enable-glibc-back-compat --enable-reduce-exports --with-gui=qt4 CPPFLAGS=-DDEBUG_LOCKORDER"
 # x86_64 Linux, No wallet
     - HOST=x86_64-unknown-linux-gnu PACKAGES="python3" DEP_OPTS="NO_WALLET=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Cross-Mac
@@ -43,7 +43,12 @@ before_install:
 install:
     - if [ -n "$DPKG_ADD_ARCH" ]; then sudo dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
+    - if [ "$HOST" = "x86_64-w64-mingw32" ]; then travis_retry sudo apt install software-properties-common; fi
+    - if [ "$HOST" = "x86_64-w64-mingw32" ]; then travis_retry sudo add-apt-repository "deb http://us-central1.gce.archive.ubuntu.com/ubuntu artful universe"; fi
+    - if [ "$HOST" = "x86_64-w64-mingw32" ]; then travis_retry sudo apt update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
+    - if [ "$HOST" = "x86_64-w64-mingw32" ]; then sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix; fi
+    - if [ "$HOST" = "i686-w64-mingw32" ]; then sudo update-alternatives --set i686-w64-mingw32-g++ /usr/bin/i686-w64-mingw32-g++-posix; fi
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then travis_retry pip3 install flake8 --user; fi
 before_script:
     - if [ "$CHECK_DOC" = 1 ]; then git fetch --unshallow; fi
