@@ -47,6 +47,28 @@ int GetBudgetPaymentCycleBlocks()
         return 50; //for testing purposes
 }
 
+auto GetVotingThreshold()
+{
+    if (Params().NetworkID() == CBaseChainParams::MAIN)
+        return BlocksBeforeSuperblockToSubmitFinalBudget();
+    else
+        return BlocksBeforeSuperblockToSubmitFinalBudget() / 4; // 10 blocks for 50-block cycle
+}
+
+auto GetNextSuperblock(int height)
+{
+    return height - height % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+}
+
+auto GetBlockHeight()
+{
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if (!pindexPrev)
+        return 0;
+
+    return pindexPrev->nHeight;
+}
+
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf)
 {
     CTransaction txCollateral;
@@ -601,28 +623,6 @@ bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight)
     return false;
 }
 
-bool CBudgetManager::HasNextFinalizedBudget()
-{
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(!pindexPrev) return false;
-
-    if(masternodeSync.IsBudgetFinEmpty()) return true;
-
-    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    CAmount amount = 1440;
-    if (Params().NetworkID() == CBaseChainParams::TESTNET) {
-        // Relatively 43200 / 30 = 1440, for testnet 50 / 30 ~ 2
-        amount = 2;
-    }
-    if(nBlockStart - pindexPrev->nHeight > amount*2) return true; //we wouldn't have the budget yet
-
-    if(budget.IsBudgetPaymentBlock(nBlockStart)) return true;
-
-    LogPrintf("CBudgetManager::HasNextFinalizedBudget() - Client is missing budget - %lli\n", nBlockStart);
-
-    return false;
-}
-
 bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
 {
     LOCK(cs);
@@ -1126,12 +1126,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     }
 }
 
-bool CBudgetManager::PropExists(uint256 nHash)
-{
-    if(mapProposals.count(nHash)) return true;
-    return false;
-}
-
 //mark that a full sync is needed
 void CBudgetManager::ResetSync()
 {
@@ -1254,9 +1248,34 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
 }
 
+bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& strError)
+{
+    auto found = mapProposals.find(vote.nProposalHash);
+    if (found == std::end(mapProposals))
+    {
+        strError = "Proposal not found!";
+        return false;
+    }
+
+    auto& proposal = found->second;
+    auto height = GetBlockHeight();
+
+    if (proposal.nBlockStart <= GetNextSuperblock(height) &&
+        proposal.nBlockEnd > GetNextSuperblock(height) &&
+        GetNextSuperblock(height) - height <= GetVotingThreshold()
+        )
+    {
+        strError = "Vote is too close to superblock. Voting during budget finalziation is not allowed";
+        return false;
+    }
+
+    return proposal.AddOrUpdateVote(vote, strError);
+}
+
 bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError)
 {
     LOCK(cs);
+
 
     if(!mapProposals.count(vote.nProposalHash)){
         if(pfrom){
@@ -1279,6 +1298,19 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
 
 
     CBudgetProposal& proposal = mapProposals[vote.nProposalHash];
+    auto height = GetBlockHeight();
+    if (proposal.nBlockStart < GetNextSuperblock(height) && proposal.nBlockEnd > GetNextSuperblock(height))
+    {
+        const auto votingThresholdTime = (GetNextSuperblock(height) - GetVotingThreshold()) * Params().TargetSpacing() * 0.75;
+        const auto superblockProjectedTime = GetNextSuperblock(height) * Params().TargetSpacing();
+
+        if (superblockProjectedTime - proposal.nTime <= votingThresholdTime)
+        {
+            strError = "Vote is too close to superblock.";
+            return false;
+        }
+    }
+
     if(!proposal.AddOrUpdateVote(vote, strError))
         return false;
 
@@ -1426,7 +1458,7 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral) cons
     return true;
 }
 
-bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
+bool CBudgetProposal::AddOrUpdateVote(const CBudgetVote& vote, std::string& strError)
 {
     LOCK(cs);
 

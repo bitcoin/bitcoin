@@ -14,6 +14,11 @@ std::ostream& operator<<(std::ostream& os, uint256 value)
     return os << value.ToString();
 }
 
+std::ostream& operator<<(std::ostream& os, const CTxIn& value)
+{
+    return os << value.ToString();
+}
+
 bool operator == (const CTxBudgetPayment& a, const CTxBudgetPayment& b)
 {
     return a.nProposalHash == b.nProposalHash &&
@@ -287,11 +292,11 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote4a(mn4.vin, proposalA.GetHash(), VOTE_YES);
         CBudgetVote vote5a(mn5.vin, proposalA.GetHash(), VOTE_YES);
 
-        budget.UpdateProposal(vote1a, nullptr, error);
-        budget.UpdateProposal(vote2a, nullptr, error);
-        budget.UpdateProposal(vote3a, nullptr, error);
-        budget.UpdateProposal(vote4a, nullptr, error);
-        budget.UpdateProposal(vote5a, nullptr, error);
+        budget.SubmitProposalVote(vote1a, error);
+        budget.SubmitProposalVote(vote2a, error);
+        budget.SubmitProposalVote(vote3a, error);
+        budget.SubmitProposalVote(vote4a, error);
+        budget.SubmitProposalVote(vote5a, error);
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
@@ -334,18 +339,18 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote1c(mn1.vin, proposalC.GetHash(), VOTE_YES);
         CBudgetVote vote2c(mn2.vin, proposalC.GetHash(), VOTE_YES);
 
-        budget.UpdateProposal(vote1a, nullptr, error);
-        budget.UpdateProposal(vote2a, nullptr, error);
-        budget.UpdateProposal(vote3a, nullptr, error);
-        budget.UpdateProposal(vote4a, nullptr, error);
-        budget.UpdateProposal(vote5a, nullptr, error);
+        budget.SubmitProposalVote(vote1a, error);
+        budget.SubmitProposalVote(vote2a, error);
+        budget.SubmitProposalVote(vote3a, error);
+        budget.SubmitProposalVote(vote4a, error);
+        budget.SubmitProposalVote(vote5a, error);
 
-        budget.UpdateProposal(vote1b, nullptr, error);
-        budget.UpdateProposal(vote2b, nullptr, error);
-        budget.UpdateProposal(vote3b, nullptr, error);
+        budget.SubmitProposalVote(vote1b, error);
+        budget.SubmitProposalVote(vote2b, error);
+        budget.SubmitProposalVote(vote3b, error);
 
-        budget.UpdateProposal(vote1c, nullptr, error);
-        budget.UpdateProposal(vote2c, nullptr, error);
+        budget.SubmitProposalVote(vote1c, error);
+        budget.SubmitProposalVote(vote2c, error);
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
@@ -390,18 +395,18 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote1a(mn1.vin, proposalA.GetHash(), VOTE_YES);
         CBudgetVote vote2a(mn2.vin, proposalA.GetHash(), VOTE_YES);
 
-        budget.UpdateProposal(vote1c, nullptr, error);
-        budget.UpdateProposal(vote2c, nullptr, error);
-        budget.UpdateProposal(vote3c, nullptr, error);
-        budget.UpdateProposal(vote4c, nullptr, error);
-        budget.UpdateProposal(vote5c, nullptr, error);
+        budget.SubmitProposalVote(vote1c, error);
+        budget.SubmitProposalVote(vote2c, error);
+        budget.SubmitProposalVote(vote3c, error);
+        budget.SubmitProposalVote(vote4c, error);
+        budget.SubmitProposalVote(vote5c, error);
 
-        budget.UpdateProposal(vote1b, nullptr, error);
-        budget.UpdateProposal(vote2b, nullptr, error);
-        budget.UpdateProposal(vote3b, nullptr, error);
+        budget.SubmitProposalVote(vote1b, error);
+        budget.SubmitProposalVote(vote2b, error);
+        budget.SubmitProposalVote(vote3b, error);
 
-        budget.UpdateProposal(vote1a, nullptr, error);
-        budget.UpdateProposal(vote2a, nullptr, error);
+        budget.SubmitProposalVote(vote1a, error);
+        budget.SubmitProposalVote(vote2a, error);
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
@@ -540,5 +545,101 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         BOOST_CHECK(!budget.GetBudgetPaymentByBlock(blockStart + 2, dummy));
     }
 
+
+BOOST_AUTO_TEST_SUITE_END()
+
+namespace
+{
+    struct BudgetManagerVotingFixture
+    {
+        const int nextSbStart = 129600;
+        const int blockHeight = nextSbStart - 2880 + 1;
+        const CKey keyPair = CreateKeyPair({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1});
+        const CMasternode mn = CreateMasternode(CTxIn{COutPoint{ArithToUint256(1), 1 * COIN}});
+
+        std::vector<uint256> hashes{static_cast<size_t>(blockHeight)};
+        std::vector<CBlockIndex> blocks{static_cast<size_t>(blockHeight)};
+        std::string error;
+
+        BudgetManagerVotingFixture()
+        {
+//        SetMockTime(GetTime());
+
+            for (size_t i = 0; i < blocks.size(); ++i)
+            {
+                FillBlock(blocks[i], hashes[i], &blocks[i - 1], i);
+            }
+            chainActive.SetTip(&blocks.back());
+
+        }
+
+
+        ~BudgetManagerVotingFixture()
+        {
+            SetMockTime(0);
+
+            budget.Clear();
+            chainActive = CChain{};
+        }
+
+        auto CreateProposal(int blockStart, CKey payee, CAmount amount) -> CBudgetProposal
+        {
+            auto p = CBudgetProposal{
+                "test proposal",
+                "",
+                blockStart,
+                blockStart + GetBudgetPaymentCycleBlocks() * 2,
+                PayToPublicKey(payee.GetPubKey()),
+                amount * COIN,
+                uint256()
+            };
+            p.nTime = GetTime();
+            return p;
+        }
+    };
+}
+
+
+BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
+
+    BOOST_AUTO_TEST_CASE(SubmitVoteSuccess)
+    {
+        const CBudgetProposal proposal = CreateProposal(nextSbStart + GetBudgetPaymentCycleBlocks(), keyPair, 42);
+        budget.AddProposal(proposal, false); // false = don't check collateral
+
+        const auto vote = CBudgetVote{mn.vin, proposal.GetHash(), VOTE_YES};
+        const auto isSubmitted = budget.SubmitProposalVote(vote, error);
+
+        BOOST_CHECK(isSubmitted);
+        BOOST_CHECK(error.empty());
+        BOOST_CHECK_EQUAL(budget.mapProposals[proposal.GetHash()].mapVotes[vote.vin.prevout.GetHash()].vin, vote.vin);
+    }
+
+    BOOST_AUTO_TEST_CASE(SubmitVoteTooClose)
+    {
+        const auto proposal = CreateProposal(nextSbStart, keyPair, 42);
+        budget.AddProposal(proposal, false); // false = don't check collateral
+
+        const auto vote = CBudgetVote{mn.vin, proposal.GetHash(), VOTE_YES};
+        const auto isSubmitted = budget.SubmitProposalVote(vote, error);
+
+        BOOST_CHECK(!isSubmitted);
+        BOOST_CHECK(!error.empty());
+        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+    }
+
+    BOOST_AUTO_TEST_CASE(SubmitVoteProposalNotExists)
+    {
+        const auto proposal = CreateProposal(nextSbStart + GetBudgetPaymentCycleBlocks(), keyPair, 42);
+        budget.AddProposal(proposal, false); // false = don't check collateral
+
+        const auto wrongProposal = CreateProposal(nextSbStart + GetBudgetPaymentCycleBlocks(), keyPair, 43);
+        const auto vote = CBudgetVote{mn.vin, wrongProposal.GetHash(), VOTE_YES};
+        const auto isSubmitted = budget.SubmitProposalVote(vote, error);
+
+        BOOST_CHECK(!isSubmitted);
+        BOOST_CHECK(!error.empty());
+        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+    }
 
 BOOST_AUTO_TEST_SUITE_END()
