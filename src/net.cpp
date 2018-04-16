@@ -142,7 +142,7 @@ bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
     return nBestScore >= 0;
 }
 
-//! Convert the pnSeeds6 array into usable address objects.
+//! Convert the pnSeed6 array into usable address objects.
 static std::vector<CAddress> convertSeed6(const std::vector<SeedSpec6> &vSeedsIn)
 {
     // It'll only connect to one or two seed nodes because once it connects,
