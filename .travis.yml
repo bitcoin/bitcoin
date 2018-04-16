@@ -24,9 +24,9 @@ env:
 # ARM
     - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf python3-pip shellcheck" DEP_OPTS="NO_QT=1" CHECK_DOC=1 GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Win32
-    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
+    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-i686" WINEHQ=true RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
 # Win64
-    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.6" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
+    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-x86-64" WINEHQ=true RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
 # 32-bit + dash
     - HOST=i686-pc-linux-gnu PACKAGES="g++-multilib python3-zmq" DEP_OPTS="NO_QT=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
 # x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
@@ -44,6 +44,10 @@ install:
     - if [ -n "$DPKG_ADD_ARCH" ]; then sudo dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
+    - if [ "$WINEHQ" = true ]; then sudo apt-key add depends/apt/winehq.key; sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ trusty main'; fi
+    - if [ "$WINEHQ" = true ]; then printf 'package wine\ninterpreter /usr/bin/wine\nmagic MZ\n' | sudo dd of=/usr/share/binfmts/wine; sudo update-binfmts --import wine; fi
+    - if [ "$WINEHQ" = true ]; then sudo apt-get update; fi
+    - if [ "$WINEHQ" = true ]; then sudo apt-get install --no-install-recommends winehq-stable; fi
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then travis_retry pip3 install flake8 --user; fi
 before_script:
     - if [ "$CHECK_DOC" = 1 ]; then git fetch --unshallow; fi
@@ -78,7 +82,7 @@ script:
     - ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
-    - if [ "$RUN_TESTS" = "true" ]; then travis_wait 50 make $MAKEJOBS check VERBOSE=1; fi
+    - if [ "$RUN_TESTS" = "true" ]; then travis_wait 30 make $MAKEJOBS check VERBOSE=1; fi
     - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude feature_pruning,feature_dbcrash"; fi
     - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --combinedlogslen=4000 --coverage --quiet ${extended}; fi
 after_script:
