@@ -13,11 +13,23 @@
 
 typedef std::vector<unsigned char> valtype;
 
+/**
+ * This is an enum that tracks the execution context of a script, similar to
+ * SigVersion in script/interpreter. It is separate however because we want to
+ * distinguish between top-level scriptPubKey execution and P2SH redeemScript
+ * execution (a distinction that has no impact on consensus rules).
+ */
 enum class IsMineSigVersion
 {
-    BASE = 0,
-    WITNESS_V0 = 1
+    TOP = 0,        //! scriptPubKey execution
+    P2SH = 1,       //! P2SH redeemScript
+    WITNESS_V0 = 2  //! P2WSH witness script execution
 };
+
+static bool PermitsUncompressed(IsMineSigVersion sigversion)
+{
+    return sigversion == IsMineSigVersion::TOP || sigversion == IsMineSigVersion::P2SH;
+}
 
 static bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore)
 {
@@ -49,7 +61,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
         break;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
-        if (sigversion != IsMineSigVersion::BASE && vSolutions[0].size() != 33) {
+        if (!PermitsUncompressed(sigversion) && vSolutions[0].size() != 33) {
             isInvalid = true;
             return ISMINE_NO;
         }
@@ -71,7 +83,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
     }
     case TX_PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
-        if (sigversion != IsMineSigVersion::BASE) {
+        if (!PermitsUncompressed(sigversion)) {
             CPubKey pubkey;
             if (keystore.GetPubKey(keyID, pubkey) && !pubkey.IsCompressed()) {
                 isInvalid = true;
@@ -86,7 +98,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            isminetype ret = IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::BASE);
+            isminetype ret = IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::P2SH);
             if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
                 return ret;
         }
@@ -117,7 +129,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
         // them) enable spend-out-from-under-you attacks, especially
         // in shared-wallet situations.
         std::vector<valtype> keys(vSolutions.begin()+1, vSolutions.begin()+vSolutions.size()-1);
-        if (sigversion != IsMineSigVersion::BASE) {
+        if (!PermitsUncompressed(sigversion)) {
             for (size_t i = 0; i < keys.size(); i++) {
                 if (keys[i].size() != 33) {
                     isInvalid = true;
@@ -141,7 +153,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid)
 {
-    return IsMineInner(keystore, scriptPubKey, isInvalid, IsMineSigVersion::BASE);
+    return IsMineInner(keystore, scriptPubKey, isInvalid, IsMineSigVersion::TOP);
 }
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey)
