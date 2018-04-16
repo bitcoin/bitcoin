@@ -186,7 +186,7 @@ bool AppInit(int argc, char* argv[])
     } else {
         WaitForShutdown(&threadGroup);
     }
-    Shutdown();
+    Shutdown(threadGroup);
 
     return fRet;
 }

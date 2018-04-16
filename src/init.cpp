@@ -211,7 +211,7 @@ void Interrupt(boost::thread_group& threadGroup)
 	InterruptTorControl();
 	if (g_connman)
 		g_connman->Interrupt();
-
+	threadGroup.interrupt_all();
 }
 
 /** Preparing steps before shutting down or restarting the wallet */
@@ -372,10 +372,8 @@ void Shutdown()
 	}
 	// Shutdown part 2: Stop TOR thread and delete wallet instance
 	StopTorControl();
-	// After everything has been shut down, but before things get flushed, stop the
-	// CScheduler/checkqueue threadGroup
-	threadGroup.interrupt_all();
-	threadGroup.join_all();
+
+
 	if (g_is_mempool_loaded && GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
 		DumpMempool();
 	}
@@ -886,7 +884,7 @@ bool InitSanityCheck(void)
 	return true;
 }
 
-bool AppInitServers(boost::thread_group& threadGroup)
+bool AppInitServers()
 {
 	RPCServer::OnStopped(&OnRPCStopped);
 	RPCServer::OnPreCommand(&OnRPCPreCommand);
@@ -1043,7 +1041,7 @@ void InitLogging()
 /** Initialize Syscoin Core.
 *  @pre Parameters should be parsed and config file should be read.
 */
-bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
+bool AppInit2(CScheduler& scheduler)
 {
 	// ********************************************************* Step 1: setup
 #ifdef _MSC_VER
@@ -1391,7 +1389,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 	if (fServer)
 	{
 		uiInterface.InitMessage.connect(SetRPCWarmupStatus);
-		if (!AppInitServers(threadGroup))
+		if (!AppInitServers())
 			return InitError(_("Unable to start HTTP server. See debug log for details."));
 	}
 
