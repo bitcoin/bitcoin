@@ -2569,7 +2569,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	// SYSCOIN
 	CAmount nTotalRewardWithMasternodes;
 	CAmount blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
-	if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, nFees, nTotalRewardWithMasternodes)) {
+	if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, nFees, blockReward, nTotalRewardWithMasternodes)) {
 		mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
 		return state.DoS(0, error("ConnectBlock(SYS): couldn't find masternode or superblock payments"),
 			REJECT_INVALID, "bad-cb-payee");
