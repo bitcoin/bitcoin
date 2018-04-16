@@ -55,7 +55,7 @@ public:
 
     CMasternodePayee(CScript payee, uint256 hashIn, int nStart) :
         scriptPubKey(payee),
-		nStartHeight(nStart)
+		nStartHeight(nStart),
         vecVoteHashes()
     {
         vecVoteHashes.push_back(hashIn);
