@@ -53,8 +53,8 @@ Cross-compilation for Ubuntu and Windows Subsystem for Linux
 
 At the time of writing the Windows Subsystem for Linux installs Ubuntu Xenial 16.04. The Mingw-w64 package
 for Ubuntu Xenial does not produce working executables for some of the Bitcoin Core applications.
-It is possible to build on Ubuntu Xenial by installing the cross compiler packages from Ubuntu Zesty, see the steps below.
-Building on Ubuntu Zesty 17.04 up to 17.10 has been verified to work.
+It is possible to build on Ubuntu Xenial by installing the cross compiler packages from Ubuntu Artful, see the steps below.
+Building on Ubuntu Artful 17.10 has been verified to work.
 
 The steps below can be performed on Ubuntu (including in a VM) or WSL. The depends system
 will also work on other Linux distributions, however the commands for
@@ -88,12 +88,12 @@ Ubuntu Trusty 14.04:
 Ubuntu Xenial 16.04 and Windows Subsystem for Linux <sup>[1](#footnote1),[2](#footnote2)</sup>:
 
     sudo apt install software-properties-common
-    sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu zesty universe"
+    sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu artful universe"
     sudo apt update
     sudo apt upgrade
     sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
 
-Ubuntu Zesty 17.04 <sup>[2](#footnote2)</sup>:
+Ubuntu Artful 17.10 <sup>[2](#footnote2)</sup>:
 
     sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
 
@@ -123,7 +123,7 @@ To build executables for Windows 32-bit, install the following dependencies:
 
     sudo apt install g++-mingw-w64-i686 mingw-w64-i686-dev
 
-For Ubuntu Xenial 16.04, Ubuntu Zesty 17.04 and Windows Subsystem for Linux <sup>[2](#footnote2)</sup>:
+For Ubuntu Xenial 16.04, Ubuntu Artful 17.10 and Windows Subsystem for Linux <sup>[2](#footnote2)</sup>:
 
     sudo update-alternatives --config i686-w64-mingw32-g++  # Set the default mingw32 g++ compiler option to posix.
 
@@ -165,7 +165,7 @@ Footnotes
 <a name="footnote1">1</a>: There is currently a bug in the 64 bit Mingw-w64 cross compiler packaged for WSL/Ubuntu Xenial 16.04 that
 causes two of the bitcoin executables to crash shortly after start up. The bug is related to the
 -fstack-protector-all g++ compiler flag which is used to mitigate buffer overflows.
-Installing the Mingw-w64 packages from the Ubuntu 17 distribution solves the issue, however, this is not
+Installing the Mingw-w64 packages from the Ubuntu 17.10 distribution solves the issue, however, this is not
 an officially supported approach and it's only recommended if you are prepared to reinstall WSL/Ubuntu should
 something break.
 
