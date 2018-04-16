@@ -4858,12 +4858,11 @@ bool DumpMempool(void)
 
 	std::map<uint256, CAmount> mapDeltas;
 
-	{
+	for (const auto &i : mempool.mapDeltas) {
 		TRY_LOCK(mempool.cs, lockMempool);
-		for (const auto &i : mempool.mapDeltas) {
-			mapDeltas[i.first] = i.second.second;
-		}
+		mapDeltas[i.first] = i.second.second;
 	}
+	
 
 	int64_t mid = GetTimeMicros();
 
