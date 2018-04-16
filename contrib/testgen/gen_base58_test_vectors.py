@@ -74,12 +74,12 @@ def gen_invalid_vector(template, corrupt_prefix, randomize_payload_size, corrupt
         prefix = os.urandom(1)
     else:
         prefix = bytearray(template[0])
-    
+
     if randomize_payload_size:
         payload = os.urandom(max(int(random.expovariate(0.5)), 50))
     else:
         payload = os.urandom(template[1])
-    
+
     if corrupt_suffix:
         suffix = os.urandom(len(template[2]))
     else:
@@ -114,7 +114,8 @@ def gen_invalid_vectors():
                 yield val,
 
 if __name__ == '__main__':
-    import sys, json
+    import sys
+    import json
     iters = {'valid':gen_valid_vectors, 'invalid':gen_invalid_vectors}
     try:
         uiter = iters[sys.argv[1]]
@@ -124,7 +125,7 @@ if __name__ == '__main__':
         count = int(sys.argv[2])
     except IndexError:
         count = 0
-   
+
     data = list(islice(uiter(), count))
     json.dump(data, sys.stdout, sort_keys=True, indent=4)
     sys.stdout.write('\n')

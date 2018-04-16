@@ -43,8 +43,10 @@ def b58encode(v):
     # leading 0-bytes in the input become leading-1s
     nPad = 0
     for c in v:
-        if c == 0: nPad += 1
-        else: break
+        if c == 0:
+            nPad += 1
+        else:
+            break
 
     return (__b58chars[0]*nPad) + result
 
@@ -98,7 +100,8 @@ def b58decode_chk(v):
 def get_bcaddress_version(strAddress):
     """ Returns None if strAddress is invalid.  Otherwise returns integer version of address. """
     addr = b58decode_chk(strAddress)
-    if addr is None or len(addr)!=21: return None
+    if addr is None or len(addr)!=21:
+        return None
     version = addr[0]
     return ord(version)
 
