@@ -4812,7 +4812,7 @@ bool LoadMempool(void)
 			}
 			CValidationState state;
 			if (nTime + nExpiryTimeout > nNow) {
-				TRY_LOCK(cs_main);
+				TRY_LOCK(cs_main, lockMain);
 				AcceptToMemoryPool(mempool, false, state, tx, false, NULL);
 				if (state.IsValid()) {
 					++count;
@@ -4859,7 +4859,7 @@ bool DumpMempool(void)
 	std::map<uint256, CAmount> mapDeltas;
 
 	{
-		TRY_LOCK(mempool.cs);
+		TRY_LOCK(mempool.cs, lockMempool);
 		for (const auto &i : mempool.mapDeltas) {
 			mapDeltas[i.first] = i.second.second;
 		}

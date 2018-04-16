@@ -211,7 +211,7 @@ void Interrupt(boost::thread_group& threadGroup)
 	InterruptTorControl();
 	if (g_connman)
 		g_connman->Interrupt();
-	threadGroup.interrupt_all();
+
 }
 
 /** Preparing steps before shutting down or restarting the wallet */
@@ -372,7 +372,10 @@ void Shutdown()
 	}
 	// Shutdown part 2: Stop TOR thread and delete wallet instance
 	StopTorControl();
-
+	// After everything has been shut down, but before things get flushed, stop the
+	// CScheduler/checkqueue threadGroup
+	threadGroup.interrupt_all();
+	threadGroup.join_all();
 	if (g_is_mempool_loaded && GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
 		DumpMempool();
 	}
