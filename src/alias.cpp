@@ -1169,7 +1169,7 @@ UniValue SyscoinListReceived(bool includeempty=true)
 	}
 
 	vector<COutput> vecOutputs;
-	pwalletMain->AvailableCoins(vecOutputs, false, NULL, includeempty);
+	pwalletMain->AvailableCoins(vecOutputs, false, NULL, includeempty, ALL_COINS, false, true);
 	BOOST_FOREACH(const COutput& out, vecOutputs) {
 		CTxDestination address;
 		if (!ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))

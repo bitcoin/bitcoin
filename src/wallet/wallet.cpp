@@ -2370,7 +2370,7 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
 	return nTotal;
 }
 
-void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue, AvailableCoinsType nCoinType, bool fUseInstantSend) const
+void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue, AvailableCoinsType nCoinType, bool fUseInstantSend, bool fIncludeSyscoin) const
 {
 	vCoins.clear();
 
@@ -2401,21 +2401,23 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 
 			for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 				// SYSCOIN
-				if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint((*it).first, i)))
-					continue;
-				// SYSCOIN txs are unspendable by wallet unless using coincontrol(and the tx is selected)
-				if (!coinControl || !coinControl->IsSelected(COutPoint((*it).first, i)))
-				{
-					CTxDestination sysdestination;
-					if (pcoin->vout.size() >= i && ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
+				if (!fIncludeSyscoin) {
+					if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint((*it).first, i)))
+						continue;
+					// SYSCOIN txs are unspendable by wallet unless using coincontrol(and the tx is selected)
+					if (!coinControl || !coinControl->IsSelected(COutPoint((*it).first, i)))
 					{
-						int op;
-						vector<vector<unsigned char> > vvchArgs;
-						if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
-							continue;
-						CSyscoinAddress address = CSyscoinAddress(sysdestination);
-						if (DoesAliasExist(address.ToString()))
-							continue;
+						CTxDestination sysdestination;
+						if (pcoin->vout.size() >= i && ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
+						{
+							int op;
+							vector<vector<unsigned char> > vvchArgs;
+							if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
+								continue;
+							CSyscoinAddress address = CSyscoinAddress(sysdestination);
+							if (DoesAliasExist(address.ToString()))
+								continue;
+						}
 					}
 				}
 				

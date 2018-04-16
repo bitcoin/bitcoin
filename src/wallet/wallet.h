@@ -700,7 +700,7 @@ public:
 	/**
 	* populate vCoins with vector of available COutputs.
 	*/
-	void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed = true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue = false, AvailableCoinsType nCoinType = ALL_COINS, bool fUseInstantSend = false) const;
+	void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed = true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue = false, AvailableCoinsType nCoinType = ALL_COINS, bool fUseInstantSend = false, bool fIncludeSyscoin = false) const;
 
 	/**
 	* Shuffle and select coins until nTargetValue is reached while avoiding
