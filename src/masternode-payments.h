@@ -35,7 +35,7 @@ extern CMasternodePayments mnpayments;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &nFee, const CAmount &blockReward, std::string &strErrorRet);
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &nFee, const CAmount &blockReward, const CAmount &masternodePayment);
+bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &nFee, const CAmount &blockReward, const CAmount& nTotalRewardWithMasternodes);
 void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmount &nFee, CAmount blockReward, CTxOut& txoutMasternodeRet, std::vector<CTxOut>& voutSuperblockRet);
 std::string GetRequiredPaymentsString(int nBlockHeight);
 
@@ -44,15 +44,18 @@ class CMasternodePayee
 private:
     CScript scriptPubKey;
     std::vector<uint256> vecVoteHashes;
+	
 
 public:
+	int nStartHeight;
     CMasternodePayee() :
         scriptPubKey(),
-        vecVoteHashes()
+        vecVoteHashes(), nStartHeight(0),
         {}
 
-    CMasternodePayee(CScript payee, uint256 hashIn) :
+    CMasternodePayee(CScript payee, uint256 hashIn, int nStart) :
         scriptPubKey(payee),
+		nStartHeight(nStart)
         vecVoteHashes()
     {
         vecVoteHashes.push_back(hashIn);
@@ -64,6 +67,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(*(CScriptBase*)(&scriptPubKey));
         READWRITE(vecVoteHashes);
+		READWRITE(nStartHeight);
     }
 
     CScript GetPayee() { return scriptPubKey; }
@@ -99,9 +103,10 @@ public:
 
     void AddPayee(const CMasternodePaymentVote& vote);
     bool GetBestPayee(CScript& payeeRet);
+	bool GetBestPayee(CScript& payeeRet, int &nStartHeight);
     bool HasPayeeWithVotes(const CScript& payeeIn, int nVotesReq);
 
-    bool IsTransactionValid(const CTransaction& txNew, const CAmount &nFee, const CAmount& nMasternodePayment);
+    bool IsTransactionValid(const CTransaction& txNew, const CAmount &nFee, const int64_t &nHeight, const CAmount& nTotalRewardWithMasternodes);
 
     std::string GetRequiredPaymentsString();
 };
@@ -111,21 +116,21 @@ class CMasternodePaymentVote
 {
 public:
     CTxIn vinMasternode;
-
+	int nStartHeight;
     int nBlockHeight;
     CScript payee;
     std::vector<unsigned char> vchSig;
 
     CMasternodePaymentVote() :
         vinMasternode(),
-        nBlockHeight(0),
+        nBlockHeight(0), nStartHeight(0),
         payee(),
         vchSig()
         {}
 
-    CMasternodePaymentVote(COutPoint outpointMasternode, int nBlockHeight, CScript payee) :
+    CMasternodePaymentVote(COutPoint outpointMasternode, int nBlockHeight, CScript payee, int nStart ) :
         vinMasternode(outpointMasternode),
-        nBlockHeight(nBlockHeight),
+        nBlockHeight(nBlockHeight), nStartHeight(nStart)
         payee(payee),
         vchSig()
         {}
@@ -136,6 +141,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vinMasternode);
         READWRITE(nBlockHeight);
+		READWRITE(nStartHeight);
         READWRITE(*(CScriptBase*)(&payee));
         READWRITE(vchSig);
     }
@@ -144,6 +150,7 @@ public:
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << *(CScriptBase*)(&payee);
         ss << nBlockHeight;
+		ss << nStartHeight;
         ss << vinMasternode.prevout;
         return ss.GetHash();
     }
@@ -204,7 +211,8 @@ public:
     void CheckAndRemove();
 
     bool GetBlockPayee(int nBlockHeight, CScript& payee);
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount &nFee, const CAmount& nMasternodePayment);
+	bool GetBlockPayee(int nBlockHeight, CScript& payee, int &nStartHeight);
+    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount &nFee, const CAmount& nTotalRewardWithMasternodes);
     bool IsScheduled(CMasternode& mn, int nNotBlockHeight);
 
     bool CanVote(COutPoint outMasternode, int nBlockHeight);
