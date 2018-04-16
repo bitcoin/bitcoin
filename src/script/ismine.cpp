@@ -22,19 +22,7 @@ static bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keyst
     return true;
 }
 
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVersion sigversion)
-{
-    bool isInvalid = false;
-    return IsMine(keystore, scriptPubKey, isInvalid, sigversion);
-}
-
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion sigversion)
-{
-    CScript script = GetScriptForDestination(dest);
-    return IsMine(keystore, script, sigversion);
-}
-
-isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion sigversion)
+static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion sigversion)
 {
     isInvalid = false;
 
@@ -70,7 +58,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
             // This also applies to the P2WSH case.
             break;
         }
-        isminetype ret = ::IsMine(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), isInvalid, SigVersion::WITNESS_V0);
+        isminetype ret = IsMineInner(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), isInvalid, SigVersion::WITNESS_V0);
         if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
             return ret;
         break;
@@ -92,7 +80,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            isminetype ret = IsMine(keystore, subscript, isInvalid);
+            isminetype ret = IsMineInner(keystore, subscript, isInvalid, SigVersion::BASE);
             if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
                 return ret;
         }
@@ -108,7 +96,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         CScriptID scriptID = CScriptID(hash);
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            isminetype ret = IsMine(keystore, subscript, isInvalid, SigVersion::WITNESS_V0);
+            isminetype ret = IsMineInner(keystore, subscript, isInvalid, SigVersion::WITNESS_V0);
             if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
                 return ret;
         }
@@ -143,4 +131,21 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         return ProduceSignature(keystore, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigs) ? ISMINE_WATCH_SOLVABLE : ISMINE_WATCH_UNSOLVABLE;
     }
     return ISMINE_NO;
+}
+
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid)
+{
+    return IsMineInner(keystore, scriptPubKey, isInvalid, SigVersion::BASE);
+}
+
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey)
+{
+    bool isInvalid = false;
+    return IsMine(keystore, scriptPubKey, isInvalid);
+}
+
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest)
+{
+    CScript script = GetScriptForDestination(dest);
+    return IsMine(keystore, script);
 }
