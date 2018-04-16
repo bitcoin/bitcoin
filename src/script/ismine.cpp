@@ -70,7 +70,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
         break;
     case TX_WITNESS_V0_KEYHASH:
     {
-        if (!keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
+        if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
             // We do not support bare witness outputs unless the P2SH version of it would be
             // acceptable as well. This protects against matching before segwit activates.
             // This also applies to the P2WSH case.
@@ -106,7 +106,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
     }
     case TX_WITNESS_V0_SCRIPTHASH:
     {
-        if (!keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
+        if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
             break;
         }
         uint160 hash;
