@@ -2575,7 +2575,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			REJECT_INVALID, "bad-cb-payee");
 	}
 	std::string strError = "";
-	if (!IsBlockValueValid(block, pindex->nHeight, nFees, blockReward, strError)) {
+	if (!IsBlockValueValid(block, pindex->nHeight, nFees, nTotalRewardWithMasternodes, strError)) {
 		return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
 	}
 	// END SYS

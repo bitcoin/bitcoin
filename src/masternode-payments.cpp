@@ -103,7 +103,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &nFe
     return isBlockRewardValueMet;
 }
 
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &nFee, const CAmount &blockReward, const CAmount& nTotalRewardWithMasternodes)
+bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &nFee, const CAmount &blockReward, CAmount& nTotalRewardWithMasternodes)
 {
     if(!masternodeSync.IsSynced()) {
         //there is no budget data to use to check anything, let's just accept the longest chain
@@ -517,7 +517,7 @@ bool CMasternodeBlockPayees::HasPayeeWithVotes(const CScript& payeeIn, int nVote
     return false;
 }
 
-bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const CAmount &nFee, const int64_t &nHeight, const CAmount& nTotalRewardWithMasternodes)
+bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const CAmount &nFee, const int64_t &nHeight, CAmount& nTotalRewardWithMasternodes)
 {
     LOCK(cs_vecPayees);
 
@@ -604,7 +604,7 @@ std::string CMasternodePayments::GetRequiredPaymentsString(int nBlockHeight)
     return "Unknown";
 }
 
-bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount& nFee, const CAmount& nTotalRewardWithMasternodes)
+bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount& nFee, CAmount& nTotalRewardWithMasternodes)
 {
     LOCK(cs_mapMasternodeBlocks);
 
