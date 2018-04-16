@@ -4,15 +4,15 @@
 
 LIBLEVELDB_INT = leveldb/libleveldb.a
 LIBMEMENV_INT  = leveldb/libmemenv.a
-LIBLEVELDB_SSE42_INT  = leveldb/libleveldb_sse42.a
+LIBLEVELDB_CRCACCEL_INT  = leveldb/libleveldb_crcaccel.a
 
 EXTRA_LIBRARIES += $(LIBLEVELDB_INT)
 EXTRA_LIBRARIES += $(LIBMEMENV_INT)
-EXTRA_LIBRARIES += $(LIBLEVELDB_SSE42_INT)
+EXTRA_LIBRARIES += $(LIBLEVELDB_CRCACCEL_INT)
 
 LIBLEVELDB += $(LIBLEVELDB_INT)
 LIBMEMENV += $(LIBMEMENV_INT)
-LIBLEVELDB_SSE42 = $(LIBLEVELDB_SSE42_INT)
+LIBLEVELDB_CRCACCEL = $(LIBLEVELDB_CRCACCEL_INT)
 
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/helpers/memenv
@@ -140,10 +140,17 @@ leveldb_libmemenv_a_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
 leveldb_libmemenv_a_SOURCES =  leveldb/helpers/memenv/memenv.cc
 leveldb_libmemenv_a_SOURCES += leveldb/helpers/memenv/memenv.h
 
-leveldb_libleveldb_sse42_a_CPPFLAGS = $(leveldb_libleveldb_a_CPPFLAGS)
-leveldb_libleveldb_sse42_a_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
-if ENABLE_HWCRC32
-leveldb_libleveldb_sse42_a_CPPFLAGS += -DLEVELDB_PLATFORM_POSIX_SSE
-leveldb_libleveldb_sse42_a_CXXFLAGS += $(SSE42_CXXFLAGS)
-endif
-leveldb_libleveldb_sse42_a_SOURCES =  leveldb/port/port_posix_sse.cc
+leveldb_libleveldb_crcaccel_a_CPPFLAGS = $(leveldb_libleveldb_a_CPPFLAGS)
+leveldb_libleveldb_crcaccel_a_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
+leveldb_libleveldb_crcaccel_a_CXXFLAGS += $(CRCACCEL_CXXFLAGS)
+if ENABLE_HWCRC32_ARMV8
+leveldb_libleveldb_crcaccel_a_CPPFLAGS += -DLEVELDB_PLATFORM_POSIX_ARMV8
+leveldb_libleveldb_crcaccel_a_SOURCES =  leveldb/port/port_posix_armv8.cc
+else
+if ENABLE_HWCRC32_SSE42
+leveldb_libleveldb_crcaccel_a_CPPFLAGS += -DLEVELDB_PLATFORM_POSIX_SSE
+leveldb_libleveldb_crcaccel_a_SOURCES =  leveldb/port/port_posix_sse.cc
+else
+leveldb_libleveldb_crcaccel_a_SOURCES =  leveldb/port/port_posix_dummy.cc
+endif # ENABLE_HWCRC32_SSE42
+endif # ENABLE_HWCRC32_ARMV8

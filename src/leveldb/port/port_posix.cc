@@ -11,6 +11,10 @@
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
 #include <cpuid.h>
 #endif
+#if (defined(__aarch64__) || defined(__arm__)) && defined(__GNUC__)
+#include <sys/auxv.h>
+#include <asm/hwcap.h>
+#endif
 
 namespace leveldb {
 namespace port {
@@ -58,6 +62,10 @@ bool HasAcceleratedCRC32C() {
   unsigned int eax, ebx, ecx, edx;
   __get_cpuid(1, &eax, &ebx, &ecx, &edx);
   return (ecx & (1 << 20)) != 0;
+#elif defined(__aarch64__) && defined(__GNUC__)
+  return (getauxval(AT_HWCAP) & HWCAP_CRC32) != 0;
+#elif defined(__arm__) && defined(__GNUC__)
+  return (getauxval(AT_HWCAP2) & HWCAP2_CRC32) != 0;
 #else
   return false;
 #endif
