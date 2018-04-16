@@ -379,7 +379,7 @@ class CScriptNum():
             r.append(0x80 if neg else 0)
         elif neg:
             r[-1] |= 0x80
-        return bytes(bytes([len(r)]) + r)
+        return bytes([len(r)]) + r
 
 
 class CScript(bytes):
@@ -404,9 +404,9 @@ class CScript(bytes):
                 other = CScriptNum.encode(other)
         elif isinstance(other, int):
             if 0 <= other <= 16:
-                other = bytes(bytes([CScriptOp.encode_op_n(other)]))
+                other = bytes([CScriptOp.encode_op_n(other)])
             elif other == -1:
-                other = bytes(bytes([OP_1NEGATE]))
+                other = bytes([OP_1NEGATE])
             else:
                 other = CScriptOp.encode_op_pushdata(bn2vch(other))
         elif isinstance(other, (bytes, bytearray)):
