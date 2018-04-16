@@ -50,7 +50,8 @@ public:
 	int nStartHeight;
     CMasternodePayee() :
         scriptPubKey(),
-        vecVoteHashes(), nStartHeight(0),
+        vecVoteHashes(), 
+		nStartHeight(0)
         {}
 
     CMasternodePayee(CScript payee, uint256 hashIn, int nStart) :
@@ -130,7 +131,8 @@ public:
 
     CMasternodePaymentVote(COutPoint outpointMasternode, int nBlockHeight, CScript payee, int nStart ) :
         vinMasternode(outpointMasternode),
-        nBlockHeight(nBlockHeight), nStartHeight(nStart)
+        nBlockHeight(nBlockHeight),
+		nStartHeight(nStart),
         payee(payee),
         vchSig()
         {}
