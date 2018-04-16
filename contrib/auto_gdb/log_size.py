@@ -9,8 +9,8 @@ import traceback
 import datetime
 import sys
 import os
-sys.path.append(os.getcwd())
 import common_helpers
+sys.path.append(os.getcwd())
 
 
 class LogSizeCommand (gdb.Command):

@@ -8,8 +8,8 @@ except ImportError as e:
 import traceback
 import sys
 import os
-sys.path.append(os.getcwd())
 import common_helpers
+sys.path.append(os.getcwd())
 
 
 class UsedSizeCommand (gdb.Command):

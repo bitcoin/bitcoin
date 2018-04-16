@@ -25,7 +25,7 @@ salt = "".join([x[2:] for x in hexseq])
 
 #Create 32 byte b64 password
 password = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
- 
+
 m = hmac.new(bytearray(salt, 'utf-8'), bytearray(password, 'utf-8'), "SHA256")
 result = m.hexdigest()
 

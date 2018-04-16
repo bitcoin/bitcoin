@@ -3,9 +3,9 @@
 
 import sys
 import os
-sys.path.append(os.getcwd())
 import stl_containers
 import simple_class_obj
+sys.path.append(os.getcwd())
 
 SIZE_OF_INT = 4
 SIZE_OF_BOOL = 1

@@ -3,8 +3,8 @@
 
 import sys
 import os
-sys.path.append(os.getcwd())
 import common_helpers
+sys.path.append(os.getcwd())
 
 
 simple_types = ["CMasternode", "CMasternodeVerification",

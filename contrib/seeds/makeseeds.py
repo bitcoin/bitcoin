@@ -6,6 +6,13 @@
 # Generate seeds.txt from "protx list valid 1"
 #
 
+import re
+import sys
+import dns.resolver
+import collections
+import json
+import multiprocessing
+
 NSEEDS=512
 
 MAX_SEEDS_PER_ASN=4
@@ -14,13 +21,6 @@ MAX_SEEDS_PER_ASN=4
 # aggressively connecting to every node).
 SUSPICIOUS_HOSTS = {
 }
-
-import re
-import sys
-import dns.resolver
-import collections
-import json
-import multiprocessing
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
 PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
