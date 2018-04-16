@@ -54,6 +54,7 @@ from decimal import Decimal
 import itertools
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.messages import *
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -289,6 +290,31 @@ class AddressTypeTest(BitcoinTestFramework):
         self.log.info("Except for getrawchangeaddress if specified:")
         self.test_address(4, self.nodes[4].getrawchangeaddress(), multisig=False, typ='p2sh-segwit')
         self.test_address(4, self.nodes[4].getrawchangeaddress('bech32'), multisig=False, typ='bech32')
+
+        # test that payments to bare multisig without addmultisigaddress aren't accepted
+        for do_addmultisig in [False, True]:
+            addr1 = self.nodes[1].getnewaddress()
+            addr2 = self.nodes[1].getnewaddress()
+            pubkey1 = self.nodes[1].getaddressinfo(addr1)['pubkey']
+            pubkey2 = self.nodes[1].getaddressinfo(addr2)['pubkey']
+            script = "5221" + pubkey1 + "21" + pubkey2 + "52ae"
+            if do_addmultisig:
+                script2 = self.nodes[1].addmultisigaddress(2, [addr1, addr2], "", "legacy")['redeemScript']
+                assert_equal(script, script2)
+            txout = CTxOut(100000000, hex_str_to_bytes(script))
+            tx = CTransaction()
+            tx.vout = [txout]
+            balance = self.nodes[1].getbalance()
+            hextx = self.nodes[2].signrawtransactionwithwallet(self.nodes[2].fundrawtransaction(ToHex(tx))['hex'])['hex']
+            self.nodes[2].sendrawtransaction(hextx)
+            self.nodes[2].generate(1)
+            sync_blocks(self.nodes)
+            new_balance = self.nodes[1].getbalance()
+            if do_addmultisig:
+                assert_equal(new_balance, balance + 1)
+            else:
+                assert_equal(new_balance, balance)
+
 
 if __name__ == '__main__':
     AddressTypeTest().main()

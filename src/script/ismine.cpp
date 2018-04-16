@@ -123,6 +123,10 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
 
     case TX_MULTISIG:
     {
+        // Do not accept bare multisig payment outputs unless the script is explicitly known.
+        if (!keystore.HaveCScript(CScriptID(scriptPubKey))) {
+            break;
+        }
         // Only consider transactions "mine" if we own ALL the
         // keys involved. Multi-signature transactions that are
         // partially owned (somebody else has a key that can spend
