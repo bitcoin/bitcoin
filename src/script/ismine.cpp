@@ -13,6 +13,12 @@
 
 typedef std::vector<unsigned char> valtype;
 
+enum class IsMineSigVersion
+{
+    BASE = 0,
+    WITNESS_V0 = 1
+};
+
 static bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore)
 {
     for (const valtype& pubkey : pubkeys) {
@@ -22,7 +28,7 @@ static bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keyst
     return true;
 }
 
-static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion sigversion)
+static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, IsMineSigVersion sigversion)
 {
     isInvalid = false;
 
@@ -43,7 +49,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
         break;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
-        if (sigversion != SigVersion::BASE && vSolutions[0].size() != 33) {
+        if (sigversion != IsMineSigVersion::BASE && vSolutions[0].size() != 33) {
             isInvalid = true;
             return ISMINE_NO;
         }
@@ -58,14 +64,14 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
             // This also applies to the P2WSH case.
             break;
         }
-        isminetype ret = IsMineInner(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), isInvalid, SigVersion::WITNESS_V0);
+        isminetype ret = IsMineInner(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), isInvalid, IsMineSigVersion::WITNESS_V0);
         if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
             return ret;
         break;
     }
     case TX_PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
-        if (sigversion != SigVersion::BASE) {
+        if (sigversion != IsMineSigVersion::BASE) {
             CPubKey pubkey;
             if (keystore.GetPubKey(keyID, pubkey) && !pubkey.IsCompressed()) {
                 isInvalid = true;
@@ -80,7 +86,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            isminetype ret = IsMineInner(keystore, subscript, isInvalid, SigVersion::BASE);
+            isminetype ret = IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::BASE);
             if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
                 return ret;
         }
@@ -96,7 +102,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
         CScriptID scriptID = CScriptID(hash);
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            isminetype ret = IsMineInner(keystore, subscript, isInvalid, SigVersion::WITNESS_V0);
+            isminetype ret = IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::WITNESS_V0);
             if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
                 return ret;
         }
@@ -111,7 +117,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
         // them) enable spend-out-from-under-you attacks, especially
         // in shared-wallet situations.
         std::vector<valtype> keys(vSolutions.begin()+1, vSolutions.begin()+vSolutions.size()-1);
-        if (sigversion != SigVersion::BASE) {
+        if (sigversion != IsMineSigVersion::BASE) {
             for (size_t i = 0; i < keys.size(); i++) {
                 if (keys[i].size() != 33) {
                     isInvalid = true;
@@ -135,7 +141,7 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid)
 {
-    return IsMineInner(keystore, scriptPubKey, isInvalid, SigVersion::BASE);
+    return IsMineInner(keystore, scriptPubKey, isInvalid, IsMineSigVersion::BASE);
 }
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey)
