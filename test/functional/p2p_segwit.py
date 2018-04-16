@@ -450,7 +450,7 @@ class SegWitTest(BitcoinTestFramework):
         block = self.build_next_block()
 
         assert(len(self.utxo) > 0)
-        
+
         # Create a P2WSH transaction.
         # The witness program will be a bunch of OP_2DROP's, followed by OP_TRUE.
         # This should give us plenty of room to tweak the spending tx's
@@ -562,7 +562,7 @@ class SegWitTest(BitcoinTestFramework):
         self.log.info("Testing extra witness data in tx")
 
         assert(len(self.utxo) > 0)
-        
+
         block = self.build_next_block()
 
         witness_program = CScript([OP_DROP, OP_TRUE])
@@ -730,7 +730,7 @@ class SegWitTest(BitcoinTestFramework):
         witness_program = CScript([OP_DROP, OP_TRUE])
         witness_hash = sha256(witness_program)
         scriptPubKey = CScript([OP_0, witness_hash])
-        
+
         # Create a transaction that splits our utxo into many outputs
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))

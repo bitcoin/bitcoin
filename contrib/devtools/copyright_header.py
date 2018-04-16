@@ -286,7 +286,7 @@ Arguments:
 def report_cmd(argv):
     if len(argv) == 2:
         sys.exit(REPORT_USAGE)
-        
+
     base_directory = argv[2]
     if not os.path.exists(base_directory):
         sys.exit("*** bad <base_directory>: %s" % base_directory)
@@ -444,7 +444,7 @@ def print_file_action_message(filename, action):
 def update_cmd(argv):
     if len(argv) != 3:
         sys.exit(UPDATE_USAGE)
-    
+
     base_directory = argv[2]
     if not os.path.exists(base_directory):
         sys.exit("*** bad base_directory: %s" % base_directory)
@@ -570,13 +570,13 @@ def insert_cmd(argv):
     _, extension = os.path.splitext(filename)
     if extension not in ['.h', '.cpp', '.cc', '.c', '.py']:
         sys.exit("*** cannot insert for file extension %s" % extension)
-   
+
     if extension == '.py': 
         style = 'python'
     else:
         style = 'cpp'
     exec_insert_header(filename, style)
-         
+
 ################################################################################
 # UI
 ################################################################################

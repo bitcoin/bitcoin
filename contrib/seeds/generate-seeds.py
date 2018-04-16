@@ -34,7 +34,8 @@ These should be pasted into `src/chainparamsseeds.h`.
 
 from base64 import b32decode
 from binascii import a2b_hex
-import sys, os
+import sys
+import os
 import re
 
 # ipv4 in ipv6 prefix
@@ -46,7 +47,7 @@ def name_to_ipv6(addr):
     if len(addr)>6 and addr.endswith('.onion'):
         vchAddr = b32decode(addr[0:-6], True)
         if len(vchAddr) != 16-len(pchOnionCat):
-            raise ValueError('Invalid onion %s' % s)
+            raise ValueError('Invalid onion %s' % vchAddr)
         return pchOnionCat + vchAddr
     elif '.' in addr: # IPv4
         return pchIPv4 + bytearray((int(x) for x in addr.split('.')))
@@ -132,7 +133,7 @@ def main():
     with open(os.path.join(indir,'nodes_test.txt'),'r') as f:
         process_nodes(g, f, 'pnSeed6_test', 18333)
     g.write('#endif // BITCOIN_CHAINPARAMSSEEDS_H\n')
-            
+
 if __name__ == '__main__':
     main()
 
