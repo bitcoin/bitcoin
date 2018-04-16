@@ -84,6 +84,7 @@ public:
     void SetCorruptionPossible() {
         corruptionPossible = true;
     }
+    int GetDoS(void) const { return nDoS; }
     unsigned int GetRejectCode() const { return chRejectCode; }
     std::string GetRejectReason() const { return strRejectReason; }
     std::string GetDebugMessage() const { return strDebugMessage; }
