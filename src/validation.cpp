@@ -1562,12 +1562,15 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, C
 	{
 		std::string chain = ChainNameFromCommandLine();
 		// SYSCOIN 3 snapshot
-		return 532150364 * COIN;
+		nTotalRewardWithMasternodes = 532150364 * COIN;
+		return nTotalRewardWithMasternodes;
 	}
 	CAmount nSubsidy = 38.5 * COIN;
 	int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
-	if (reductions >= 50)
-		return 0;
+	if (reductions >= 50) {
+		nTotalRewardWithMasternodes = 0;
+		return nTotalRewardWithMasternodes;
+	}
 	// Subsidy is cut in half every 525600 blocks which will occur approximately every year.
 	// yearly decline of production by 5% per year, projected ~888M coins max by year 2067+.
 	for (int i = 0; i < reductions; i++) {
@@ -2568,7 +2571,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 	// SYSCOIN
 	CAmount nTotalRewardWithMasternodes;
-	CAmount blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
+	const CAmount &blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 	if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, nFees, blockReward, nTotalRewardWithMasternodes)) {
 		mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
 		return state.DoS(0, error("ConnectBlock(SYS): couldn't find masternode or superblock payments"),

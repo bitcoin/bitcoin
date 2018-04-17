@@ -535,8 +535,8 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
 	// SYSCOIN
 	// some part of all blocks issued during the cycle goes to superblock, see GetBlockSubsidy
 	CAmount nTotalRewardWithMasternodes;
-	CAmount nSuperblockPartOfSubsidy = GetBlockSubsidy(nBlockHeight, consensusParams, nTotalRewardWithMasternodes, true);
-	CAmount nPaymentsLimit = nSuperblockPartOfSubsidy * consensusParams.nSuperblockCycle;
+	const CAmount &nSuperblockPartOfSubsidy = GetBlockSubsidy(nBlockHeight, consensusParams, nTotalRewardWithMasternodes, true);
+	const CAmount &nPaymentsLimit = nSuperblockPartOfSubsidy * consensusParams.nSuperblockCycle;
 	LogPrint("gobject", "CSuperblock::GetPaymentsLimit -- Valid superblock height %d, payments max %lld\n", nBlockHeight, nPaymentsLimit);
 
 
