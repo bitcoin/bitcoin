@@ -604,10 +604,13 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
 
     BOOST_AUTO_TEST_CASE(SubmitVoteSuccess)
     {
+        // Set Up
         const CBudgetProposal proposal = CreateProposal(nextSbStart + GetBudgetPaymentCycleBlocks(), keyPair, 42);
         budget.AddProposal(proposal, false); // false = don't check collateral
 
         const auto vote = CBudgetVote{mn.vin, proposal.GetHash(), VOTE_YES};
+
+        // Call & Check
         const auto isSubmitted = budget.SubmitProposalVote(vote, error);
 
         BOOST_CHECK(isSubmitted);
@@ -617,10 +620,13 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
 
     BOOST_AUTO_TEST_CASE(SubmitVoteTooClose)
     {
+        // Set Up
         const auto proposal = CreateProposal(nextSbStart, keyPair, 42);
         budget.AddProposal(proposal, false); // false = don't check collateral
 
         const auto vote = CBudgetVote{mn.vin, proposal.GetHash(), VOTE_YES};
+
+        // Call & Check
         const auto isSubmitted = budget.SubmitProposalVote(vote, error);
 
         BOOST_CHECK(!isSubmitted);
@@ -630,12 +636,112 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
 
     BOOST_AUTO_TEST_CASE(SubmitVoteProposalNotExists)
     {
+        // Set Up
         const auto proposal = CreateProposal(nextSbStart + GetBudgetPaymentCycleBlocks(), keyPair, 42);
         budget.AddProposal(proposal, false); // false = don't check collateral
 
         const auto wrongProposal = CreateProposal(nextSbStart + GetBudgetPaymentCycleBlocks(), keyPair, 43);
         const auto vote = CBudgetVote{mn.vin, wrongProposal.GetHash(), VOTE_YES};
+
+        // Call & Check
         const auto isSubmitted = budget.SubmitProposalVote(vote, error);
+
+        BOOST_CHECK(!isSubmitted);
+        BOOST_CHECK(!error.empty());
+        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+    }
+
+    BOOST_AUTO_TEST_CASE(UpdateProposalSuccess)
+    {
+        // Set Up
+        const CBudgetProposal proposal = CreateProposal(nextSbStart, keyPair, 42);
+        budget.AddProposal(proposal, false); // false = don't check collateral
+
+        SetMockTime(100500 * 1000);
+
+        const auto superblockProjectedTime = GetTime() + (nextSbStart - chainActive.Tip()->nHeight) * Params().TargetSpacing();
+        const auto currentTime = superblockProjectedTime - 2161 * Params().TargetSpacing();
+
+        SetMockTime(currentTime);
+
+        const auto vote = CBudgetVote{mn.vin, proposal.GetHash(), VOTE_YES};
+
+        blocks.resize(nextSbStart - 1);
+        hashes.resize(nextSbStart - 1);
+        for (size_t i = 0; i < blocks.size(); ++i)
+        {
+            FillBlock(blocks[i], hashes[i], &blocks[i - 1], i);
+        }
+        chainActive.SetTip(&blocks.back());
+        SetMockTime(superblockProjectedTime - 2 * Params().TargetSpacing());
+
+        // Call & Check
+        const auto isSubmitted = budget.UpdateProposal(vote, nullptr, error);
+
+        BOOST_CHECK(isSubmitted);
+        BOOST_CHECK(error.empty());
+        BOOST_CHECK_EQUAL(budget.mapProposals[proposal.GetHash()].mapVotes[vote.vin.prevout.GetHash()].vin, vote.vin);
+    }
+
+    BOOST_AUTO_TEST_CASE(UpdateProposalNotExists)
+    {
+        // Set Up
+        const auto proposal = CreateProposal(nextSbStart, keyPair, 42);
+        budget.AddProposal(proposal, false); // false = don't check collateral
+
+        SetMockTime(100500 * 1000);
+
+        const auto superblockProjectedTime = GetTime() + (nextSbStart - chainActive.Tip()->nHeight) * Params().TargetSpacing();
+        const auto currentTime = superblockProjectedTime - 2160 * Params().TargetSpacing();
+
+        SetMockTime(currentTime);
+
+        const auto wrongProposal = CreateProposal(nextSbStart, keyPair, 43);
+        const auto vote = CBudgetVote{mn.vin, wrongProposal.GetHash(), VOTE_YES};
+
+        blocks.resize(nextSbStart - 1);
+        hashes.resize(nextSbStart - 1);
+        for (size_t i = 0; i < blocks.size(); ++i)
+        {
+            FillBlock(blocks[i], hashes[i], &blocks[i - 1], i);
+        }
+        chainActive.SetTip(&blocks.back());
+        SetMockTime(superblockProjectedTime - 2 * Params().TargetSpacing());
+
+        // Call & Check
+        const auto isSubmitted = budget.UpdateProposal(vote, nullptr, error);
+
+        BOOST_CHECK(!isSubmitted);
+        BOOST_CHECK(!error.empty());
+        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+    }
+
+    BOOST_AUTO_TEST_CASE(UpdateProposalTooClose)
+    {
+        // Set Up
+        const auto proposal = CreateProposal(nextSbStart, keyPair, 42);
+        budget.AddProposal(proposal, false); // false = don't check collateral
+
+        SetMockTime(100500 * 1000);
+
+        const auto superblockProjectedTime = GetTime() + (nextSbStart - chainActive.Tip()->nHeight) * Params().TargetSpacing();
+        const auto currentTime = superblockProjectedTime - 2160 * Params().TargetSpacing();
+
+        SetMockTime(currentTime);
+
+        const auto vote = CBudgetVote{mn.vin, proposal.GetHash(), VOTE_YES};
+
+        blocks.resize(nextSbStart - 1);
+        hashes.resize(nextSbStart - 1);
+        for (size_t i = 0; i < blocks.size(); ++i)
+        {
+            FillBlock(blocks[i], hashes[i], &blocks[i - 1], i);
+        }
+        chainActive.SetTip(&blocks.back());
+        SetMockTime(superblockProjectedTime - 2 * Params().TargetSpacing());
+
+        // Call & Check
+        const auto isSubmitted = budget.UpdateProposal(vote, nullptr, error);
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());

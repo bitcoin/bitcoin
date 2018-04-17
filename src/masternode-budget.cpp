@@ -1272,7 +1272,7 @@ bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& st
     return proposal.AddOrUpdateVote(vote, strError);
 }
 
-bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError)
+bool CBudgetManager::UpdateProposal(const CBudgetVote& vote, CNode* pfrom, std::string& strError)
 {
     LOCK(cs);
 
@@ -1299,12 +1299,14 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
 
     CBudgetProposal& proposal = mapProposals[vote.nProposalHash];
     auto height = GetBlockHeight();
-    if (proposal.nBlockStart < GetNextSuperblock(height) && proposal.nBlockEnd > GetNextSuperblock(height))
+    if (proposal.nBlockStart <= GetNextSuperblock(height) && proposal.nBlockEnd > GetNextSuperblock(height))
     {
-        const auto votingThresholdTime = (GetNextSuperblock(height) - GetVotingThreshold()) * Params().TargetSpacing() * 0.75;
-        const auto superblockProjectedTime = GetNextSuperblock(height) * Params().TargetSpacing();
+        const auto votingThresholdTime = GetVotingThreshold() * Params().TargetSpacing() * 0.75;
+        const auto superblockProjectedTime = GetAdjustedTime() + (GetNextSuperblock(height) - height) * Params().TargetSpacing();
+        const auto x = GetNextSuperblock(height) - height;
+        const auto y = GetAdjustedTime();
 
-        if (superblockProjectedTime - proposal.nTime <= votingThresholdTime)
+        if (superblockProjectedTime - vote.nTime <= votingThresholdTime)
         {
             strError = "Vote is too close to superblock.";
             return false;

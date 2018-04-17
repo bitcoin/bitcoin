@@ -132,7 +132,7 @@ public:
     bool AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
     void SubmitFinalBudget();
 
-    bool UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError);
+    bool UpdateProposal(const CBudgetVote& vote, CNode* pfrom, std::string& strError);
     bool SubmitProposalVote(const CBudgetVote& vote, std::string& strError);
     bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom, std::string& strError);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
