@@ -247,7 +247,7 @@ make cov
 
 **Sanitizers**
 
-Bitcoin can be compiled with various "sanitizers" enabled, which add
+Bitcoin Core can be compiled with various "sanitizers" enabled, which add
 instrumentation for issues regarding things like memory safety, thread race
 conditions, or undefined behavior. This is controlled with the
 `--with-sanitizers` configure flag, which should be a comma separated list of
