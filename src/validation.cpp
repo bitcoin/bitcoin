@@ -1410,21 +1410,25 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                         // Check whether the failure was caused by a
                         // non-mandatory script verification check, such as
                         // non-standard DER encodings or non-null dummy
-                        // arguments; if so, don't trigger DoS protection to
-                        // avoid splitting the network between upgraded and
-                        // non-upgraded nodes.
+                        // arguments; if so, ensure we return NOT_STANDARD
+                        // instead of CONSENSUS to avoid downstream users
+                        // splitting the network between upgraded and
+                        // non-upgraded nodes by banning CONSENSUS-failing
+                        // data providers.
                         CScriptCheck check2(coin.out, tx, i,
                                 flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
                         if (check2())
                             return state.Invalid(ValidationInvalidReason::TX_NOT_STANDARD, false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
                     }
-                    // Failures of other flags indicate a transaction that is
-                    // invalid in new blocks, e.g. an invalid P2SH. We DoS ban
-                    // such nodes as they are not following the protocol. That
-                    // said during an upgrade careful thought should be taken
-                    // as to the correct behavior - we may want to continue
-                    // peering with non-upgraded nodes even after soft-fork
-                    // super-majority signaling has occurred.
+                    // MANDATORY flag failures correspond to
+                    // ValidationInvalidReason::CONSENSUS. Because CONSENSUS
+                    // failures are the most serious case of validation
+                    // failures, we may need to consider using
+                    // RECENT_CONSENSUS_CHANGE for any script failure that
+                    // could be due to non-upgraded nodes which we may want to
+                    // support, to avoid splitting the network (but this
+                    // depends on the details of how net_processing handles
+                    // such errors).
                     return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
