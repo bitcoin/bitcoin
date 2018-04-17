@@ -40,8 +40,8 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 	arith_uint256 PastDifficultyAveragePrev;
 
 	// SYSCOIN 600 needed for snapshot unit test
-	if (BlockLastSolved == NULL || BlockLastSolved->nHeight <= 600) {
-		return nProofOfWorkLimit.GetCompact();
+	if (BlockLastSolved == NULL || BlockLastSolved->nHeight <= 600 ) {
+		return UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit).GetCompact();
 	}
 
 	for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
@@ -86,14 +86,17 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
+	if (chainActive.Height() <= 600)
+		return true;
     bool fNegative;
     bool fOverflow;
     arith_uint256 bnTarget;
 
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
-	// Check range
-	if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
-		return false;
+	arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
+    // Check range
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > nProofOfWorkLimit)
+        return error("CheckProofOfWork(): nBits below minimum work");
 
     // Check proof of work matches claimed amount
     if (UintToArith256(hash) > bnTarget)
