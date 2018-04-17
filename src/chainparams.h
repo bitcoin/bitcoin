@@ -25,6 +25,12 @@ struct CCheckpointData {
     MapCheckpoints mapCheckpoints;
 };
 
+/**
+ * Holds various statistics on transactions within a chain. Used to estimate
+ * verification progress during chain sync.
+ *
+ * See also: CChainParams::TxData, GuessVerificationProgress.
+ */
 struct ChainTxData {
     int64_t nTime;
     int64_t nTxCount;
