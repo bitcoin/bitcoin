@@ -113,6 +113,41 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     BOOST_CHECK_THROW(reader >> d, std::ios_base::failure);
 }
 
+BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
+{
+    CDataStream data(SER_NETWORK, INIT_PROTO_VERSION);
+
+    BitStreamWriter<CDataStream> bit_writer(data);
+    bit_writer.Write(0, 1);
+    bit_writer.Write(2, 2);
+    bit_writer.Write(6, 3);
+    bit_writer.Write(11, 4);
+    bit_writer.Write(1, 5);
+    bit_writer.Write(32, 6);
+    bit_writer.Write(7, 7);
+    bit_writer.Write(30497, 16);
+    bit_writer.Flush();
+
+    CDataStream data_copy(data);
+    uint32_t serialized_int1;
+    data >> serialized_int1;
+    BOOST_CHECK_EQUAL(serialized_int1, (uint32_t)0x7700C35A); // NOTE: Serialized as LE
+    uint16_t serialized_int2;
+    data >> serialized_int2;
+    BOOST_CHECK_EQUAL(serialized_int2, (uint16_t)0x1072); // NOTE: Serialized as LE
+
+    BitStreamReader<CDataStream> bit_reader(data_copy);
+    BOOST_CHECK_EQUAL(bit_reader.Read(1), 0);
+    BOOST_CHECK_EQUAL(bit_reader.Read(2), 2);
+    BOOST_CHECK_EQUAL(bit_reader.Read(3), 6);
+    BOOST_CHECK_EQUAL(bit_reader.Read(4), 11);
+    BOOST_CHECK_EQUAL(bit_reader.Read(5), 1);
+    BOOST_CHECK_EQUAL(bit_reader.Read(6), 32);
+    BOOST_CHECK_EQUAL(bit_reader.Read(7), 7);
+    BOOST_CHECK_EQUAL(bit_reader.Read(16), 30497);
+    BOOST_CHECK_THROW(bit_reader.Read(8), std::ios_base::failure);
+}
+
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
     std::vector<char> in;
