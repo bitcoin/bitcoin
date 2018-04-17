@@ -10,6 +10,7 @@
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/utilsbitcoin.h"
@@ -485,7 +486,8 @@ static void prune_state_files(const CBlockIndex* topIndex)
         CBlockIndex const *curIndex = GetBlockIndex(*iter);
 
         // if we have nothing int the index, or this block is too old..
-        if (NULL == curIndex || (topIndex->nHeight - curIndex->nHeight) > MAX_STATE_HISTORY) {
+        if (NULL == curIndex || (((topIndex->nHeight - curIndex->nHeight) > MAX_STATE_HISTORY)
+                && (curIndex->nHeight % STORE_EVERY_N_BLOCK != 0))) {
             if (msc_debug_persistence) {
                 if (curIndex) {
                     PrintToLog("State from Block:%s is no longer need, removing files (age-from-tip: %d)\n", (*iter).ToString(), topIndex->nHeight - curIndex->nHeight);
@@ -509,7 +511,8 @@ static void prune_state_files(const CBlockIndex* topIndex)
  */
 bool IsPersistenceEnabled(int blockHeight) {
     // if too far away from the top -- do not write
-    if (GetHeight() > (blockHeight + MAX_STATE_HISTORY)) {
+    if (GetHeight() > (blockHeight + MAX_STATE_HISTORY)
+            && (blockHeight % STORE_EVERY_N_BLOCK != 0)) {
         return false;
     }
 
@@ -716,18 +719,22 @@ int LoadMostRelevantInMemoryState()
     // using the SP's watermark after its fixed-up as the tip
     // walk backwards until we find a valid and full set of persisted state files
     // for each block we discard, roll back the SP database
-    // Note: to avoid rolling back all the way to the genesis block (which appears as if client is hung) abort after MAX_STATE_HISTORY attempts
     CBlockIndex const *curTip = spBlockIndex;
-    int abortRollBackBlock;
-    if (curTip != NULL) abortRollBackBlock = curTip->nHeight - (MAX_STATE_HISTORY + 1);
-    while (NULL != curTip && persistedBlocks.size() > 0 && curTip->nHeight > abortRollBackBlock) {
-        if (persistedBlocks.find(spBlockIndex->GetBlockHash()) != persistedBlocks.end()) {
+    int abortRollBackBlock = 9999999;
+    if (curTip != NULL) {
+        abortRollBackBlock = ConsensusParams().GENESIS_BLOCK - 1;
+    }
+    while (NULL != curTip && persistedBlocks.size() > 0 && curTip->nHeight > abortRollBackBlock ) {
+        if (persistedBlocks.find(curTip->GetBlockHash()) != persistedBlocks.end()) {
             int success = -1;
             for (int i = 0; i < NUM_FILETYPES; ++i) {
                 boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[i], curTip->GetBlockHash().ToString());
                 const std::string strFile = path.string();
                 success = RestoreInMemoryState(strFile, i, true);
                 if (success < 0) {
+                    PrintToConsole("Found a state inconsistency at block height %d. "
+                            "Reverting up to %d blocks.. this may take a few minutes.\n",
+                            curTip->nHeight, (curTip->nHeight - abortRollBackBlock - 1));
                     break;
                 }
             }
@@ -742,7 +749,7 @@ int LoadMostRelevantInMemoryState()
         }
 
         // go to the previous block
-        if (0 > _my_sps->popBlock(curTip->GetBlockHash())) {
+        if (_my_sps->popBlock(curTip->GetBlockHash()) <= 0) {
             // trigger a full reparse, if the levelDB cannot roll back
             return -1;
         }

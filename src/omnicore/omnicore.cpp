@@ -1474,7 +1474,7 @@ static int msc_initial_scan(int nFirstBlock)
         PrintToConsole("Scan stopped early at block %d of block %d\n", nBlock, nLastBlock);
     }
 
-    PrintToConsole("%d transactions processed, %d meta transactions found\n", nTxsTotal, nTxsFoundTotal);
+    PrintToConsole("%d new transactions processed, %d meta transactions found\n", nTxsTotal, nTxsFoundTotal);
 
     return 0;
 }
@@ -1508,6 +1508,45 @@ void clear_all_state()
     p_feehistory->Clear();
     assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
+}
+
+void RewindDBsAndState(int nHeight, int nBlockPrev = 0, bool fInitialParse = false)
+{
+    // Check if any freeze related transactions would be rolled back - if so wipe the state and startclean
+    bool reorgContainsFreeze = p_txlistdb->CheckForFreezeTxs(nHeight);
+
+    // NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
+    p_txlistdb->isMPinBlockRange(nHeight, reorgRecoveryMaxHeight, true);
+    t_tradelistdb->deleteAboveBlock(nHeight);
+    s_stolistdb->deleteAboveBlock(nHeight);
+    p_feecache->RollBackCache(nHeight);
+    p_feehistory->RollBackHistory(nHeight);
+    reorgRecoveryMaxHeight = 0;
+
+    nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
+
+    if (reorgContainsFreeze && !fInitialParse) {
+       PrintToConsole("Reorganization containing freeze related transactions detected, forcing a reparse...\n");
+       clear_all_state(); // unable to reorg freezes safely, clear state and reparse
+    } else {
+        int best_state_block = LoadMostRelevantInMemoryState();
+        if (best_state_block < 0) {
+            // unable to recover easily, remove stale stale state bits and reparse from the beginning.
+            clear_all_state();
+        } else {
+            nWaterlineBlock = best_state_block;
+        }
+    }
+
+    // clear the global wallet property list, perform a forced wallet update and tell the UI that state is no longer valid, and UI views need to be reinit
+    global_wallet_property_list.clear();
+    CheckWalletUpdate(true);
+    uiInterface.OmniStateInvalidated();
+
+    if (nWaterlineBlock < nBlockPrev) {
+        // scan from the block after the best active block to catch up to the active chain
+        msc_initial_scan(nWaterlineBlock + 1);
+    }
 }
 
 /**
@@ -1588,6 +1627,11 @@ int mastercore_init()
     ++mastercoreInitialized;
 
     nWaterlineBlock = LoadMostRelevantInMemoryState();
+
+    if (!startClean && nWaterlineBlock > 0 && nWaterlineBlock < GetHeight()) {
+        RewindDBsAndState(nWaterlineBlock + 1, 0, true);
+    }
+
     bool noPreviousState = (nWaterlineBlock <= 0);
 
     if (startClean) {
@@ -1799,42 +1843,7 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
 
     if (reorgRecoveryMode > 0) {
         reorgRecoveryMode = 0; // clear reorgRecovery here as this is likely re-entrant
-
-        // Check if any freeze related transactions would be rolled back - if so wipe the state and startclean
-        bool reorgContainsFreeze = p_txlistdb->CheckForFreezeTxs(pBlockIndex->nHeight);
-
-        // NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
-        p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true);
-        t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight);
-        s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight);
-        p_feecache->RollBackCache(pBlockIndex->nHeight);
-        p_feehistory->RollBackHistory(pBlockIndex->nHeight);
-        reorgRecoveryMaxHeight = 0;
-
-        nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
-
-        if (reorgContainsFreeze) {
-           PrintToLog("Reorganization containing freeze related transactions detected, forcing a reparse...\n");
-           clear_all_state(); // unable to reorg freezes safely, clear state and reparse
-        } else {
-            int best_state_block = LoadMostRelevantInMemoryState();
-            if (best_state_block < 0) {
-                // unable to recover easily, remove stale stale state bits and reparse from the beginning.
-                clear_all_state();
-            } else {
-                nWaterlineBlock = best_state_block;
-            }
-        }
-
-        // clear the global wallet property list, perform a forced wallet update and tell the UI that state is no longer valid, and UI views need to be reinit
-        global_wallet_property_list.clear();
-        CheckWalletUpdate(true);
-        uiInterface.OmniStateInvalidated();
-
-        if (nWaterlineBlock < nBlockPrev) {
-            // scan from the block after the best active block to catch up to the active chain
-            msc_initial_scan(nWaterlineBlock + 1);
-        }
+        RewindDBsAndState(pBlockIndex->nHeight, nBlockPrev);
     }
 
     // handle any features that go live with this block
@@ -1897,7 +1906,10 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     bool checkpointValid = VerifyCheckpoint(nBlockNow, pBlockIndex->GetBlockHash());
     if (!checkpointValid) {
         // failed checkpoint, can't be trusted to provide valid data - shutdown client
-        const std::string& msg = strprintf("Shutting down due to failed checkpoint for block %d (hash %s)\n", nBlockNow, pBlockIndex->GetBlockHash().GetHex());
+        const std::string& msg = strprintf(
+                "Shutting down due to failed checkpoint for block %d (hash %s). "
+                "Please restart with -startclean flag and if this doesn't work, please reach out to the support.\n",
+                nBlockNow, pBlockIndex->GetBlockHash().GetHex());
         PrintToLog(msg);
         if (!GetBoolArg("-overrideforcedshutdown", false)) {
             boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
@@ -1906,7 +1918,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
         }
     } else {
         // save out the state after this block
-        if (IsPersistenceEnabled(nBlockNow)) {
+        if (IsPersistenceEnabled(nBlockNow) && nBlockNow >= ConsensusParams().GENESIS_BLOCK) {
             PersistInMemoryState(pBlockIndex);
         }
     }

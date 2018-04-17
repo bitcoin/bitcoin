@@ -497,6 +497,12 @@ void CMPTxList::LoadAlerts(int blockHeight)
             PrintToLog("ERROR: While loading alert %s: tx in levelDB but does not exist.\n", txid.GetHex());
             continue;
         }
+        CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
+        int currentBlockHeight = pBlockIndex->nHeight;
+        if (currentBlockHeight > blockHeight) {
+            // skipping, because it's in the future
+            continue;
+        }
         if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) {
             PrintToLog("ERROR: While loading alert %s: failed ParseTransaction.\n", txid.GetHex());
             continue;
@@ -577,8 +583,12 @@ void CMPTxList::LoadActivations(int blockHeight)
             PrintToLog("ERROR: While loading activation transaction %s: failed to retrieve block index.\n", hash.GetHex());
             continue;
         }
-        int blockHeight = pBlockIndex->nHeight;
-        if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) {
+        int currentBlockHeight = pBlockIndex->nHeight;
+        if (currentBlockHeight > blockHeight) {
+            // skipping, because it's in the future
+            continue;
+        }
+        if (0 != ParseTransaction(wtx, currentBlockHeight, 0, mp_obj)) {
             PrintToLog("ERROR: While loading activation transaction %s: failed ParseTransaction.\n", hash.GetHex());
             continue;
         }
@@ -652,12 +662,12 @@ bool CMPTxList::LoadFreezeState(int blockHeight)
             PrintToLog("ERROR: While loading freeze transaction %s: failed to retrieve block index.\n", hash.GetHex());
             return false;
         }
-        int txBlockHeight = pBlockIndex->nHeight;
-        if (txBlockHeight > blockHeight) {
-            PrintToLog("ERROR: While loading freeze transaction %s: transaction is in the future.\n", hash.GetHex());
-            return false;
+        int currentBlockHeight = pBlockIndex->nHeight;
+        if (currentBlockHeight > blockHeight) {
+            // skipping, because it's in the future
+            continue;
         }
-        if (0 != ParseTransaction(wtx, txBlockHeight, 0, mp_obj)) {
+        if (0 != ParseTransaction(wtx, currentBlockHeight, 0, mp_obj)) {
             PrintToLog("ERROR: While loading freeze transaction %s: failed ParseTransaction.\n", hash.GetHex());
             return false;
         }
