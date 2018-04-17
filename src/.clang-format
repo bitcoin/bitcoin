@@ -13,7 +13,10 @@ AlwaysBreakTemplateDeclarations: true
 BinPackArguments: true
 BinPackParameters: false
 BreakBeforeBinaryOperators: false
-BreakBeforeBraces: Linux
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterFunction: true
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
 BreakConstructorInitializers: AfterColon
