@@ -13,7 +13,7 @@ class CScheduler;
 class CWallet;
 
 class WalletInitInterface;
-extern WalletInitInterface* const g_wallet_init_interface;
+extern const WalletInitInterface& g_wallet_init_interface;
 
 namespace boost
 {
