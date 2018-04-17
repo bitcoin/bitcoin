@@ -352,8 +352,14 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
 
     CTransactionRef tx;
     uint256 hashBlock = uint256();
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
+    GetTransactionResult res = GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true);
+    if (res == GetTransactionResult::BLOCK_PRUNED) {
+        return RESTERR(req, HTTP_NOT_FOUND, "Block no longer available (pruned)");
+    } else if (res == GetTransactionResult::BLOCK_LOAD_ERROR) {
+        return RESTERR(req, HTTP_NOT_FOUND, "Error loading block");
+    } else if (res != GetTransactionResult::LOAD_OK) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
+    }
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     ssTx << tx;

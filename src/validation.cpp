@@ -1006,7 +1006,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
  * Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock.
  * If blockIndex is provided, the transaction is fetched from the corresponding block.
  */
-bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus::Params& consensusParams, uint256& hashBlock, bool fAllowSlow, CBlockIndex* blockIndex)
+GetTransactionResult GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus::Params& consensusParams, uint256& hashBlock, bool fAllowSlow, CBlockIndex* blockIndex)
 {
     CBlockIndex* pindexSlow = blockIndex;
 
@@ -1016,31 +1016,36 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
         CTransactionRef ptx = mempool.get(hash);
         if (ptx) {
             txOut = ptx;
-            return true;
+            return GetTransactionResult::LOAD_OK;
         }
 
         if (fTxIndex) {
             CDiskTxPos postx;
             if (pblocktree->ReadTxIndex(hash, postx)) {
                 CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
-                if (file.IsNull())
-                    return error("%s: OpenBlockFile failed", __func__);
+                if (file.IsNull()) {
+                    error("%s: OpenBlockFile failed", __func__);
+                    return GetTransactionResult::BLOCK_LOAD_ERROR;
+                }
                 CBlockHeader header;
                 try {
                     file >> header;
                     fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
                     file >> txOut;
                 } catch (const std::exception& e) {
-                    return error("%s: Deserialize or I/O error - %s", __func__, e.what());
+                    error("%s: Deserialize or I/O error - %s", __func__, e.what());
+                    return GetTransactionResult::BLOCK_LOAD_ERROR;
                 }
                 hashBlock = header.GetHash();
-                if (txOut->GetHash() != hash)
-                    return error("%s: txid mismatch", __func__);
-                return true;
+                if (txOut->GetHash() != hash) {
+                    error("%s: txid mismatch", __func__);
+                    return GetTransactionResult::BLOCK_LOAD_ERROR;
+                }
+                return GetTransactionResult::LOAD_OK;
             }
 
             // transaction not found in index, nothing more can be done
-            return false;
+            return GetTransactionResult::NOT_FOUND;
         }
 
         if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
@@ -1056,13 +1061,13 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
                 if (tx->GetHash() == hash) {
                     txOut = tx;
                     hashBlock = pindexSlow->GetBlockHash();
-                    return true;
+                    return GetTransactionResult::LOAD_OK;
                 }
             }
         }
     }
 
-    return false;
+    return GetTransactionResult::NOT_FOUND;
 }
 
 

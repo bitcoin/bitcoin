@@ -169,13 +169,18 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
 
     CTransactionRef tx;
     uint256 hash_block;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, true, blockindex)) {
+    GetTransactionResult res = GetTransaction(hash, tx, Params().GetConsensus(), hash_block, true, blockindex);
+    if (res != GetTransactionResult::LOAD_OK) {
         std::string errmsg;
         if (blockindex) {
             if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
             }
             errmsg = "No such transaction found in the provided block";
+        } else if (res == GetTransactionResult::BLOCK_PRUNED) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
+        } else if (res == GetTransactionResult::BLOCK_LOAD_ERROR) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Block load error");
         } else {
             errmsg = fTxIndex
               ? "No such mempool or blockchain transaction"
@@ -255,7 +260,7 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
     if (pblockindex == nullptr)
     {
         CTransactionRef tx;
-        if (!GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock, false) || hashBlock.IsNull())
+        if (GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock, false) != GetTransactionResult::LOAD_OK || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         pblockindex = LookupBlockIndex(hashBlock);
         if (!pblockindex) {
