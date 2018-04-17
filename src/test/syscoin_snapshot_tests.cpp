@@ -23,11 +23,11 @@ void SendSnapShotPayment(const std::string &strSend, const std::string &strSendA
 	std::string strSendMany = "sendmany \"\" {" + strSend + "}";
 	BOOST_CHECK_THROW(CallRPC("mainnet1", strSendMany, false), runtime_error);
 
-	string sendString = "sendtoaddress " + strSendAddress + " " + "10";
-	BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
+	for (int i = 0; i < 200; i++) {
+		string sendString = "sendtoaddress " + strSendAddress + " " + "10";
+		BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
+	}
 
-	sendString = "sendtoaddress " + strSendAddress + " " + "10";
-	BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
@@ -39,7 +39,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 
-	int numberOfTxPerBlock = 250;
+	int numberOfTxPerBlock = 1000;
 	int totalTx = 0;
 	double nTotal  =0;
 	std::string sendManyString = "";
