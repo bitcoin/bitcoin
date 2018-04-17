@@ -25,7 +25,7 @@ CPrivateSendClient privateSendClient;
 
 bool CPrivateSendClient::getWallet(const std::string walletIn)
 {
-    pmixingwallet = GetWalletForPSRequest(walletIn);
+    pmixingwallet = GetWallet(walletIn);
     if (!pmixingwallet)
         return false;
     else

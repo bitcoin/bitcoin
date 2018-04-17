@@ -363,7 +363,7 @@ bool WalletInit::Open() const
         if (!pwallet) {
             return false;
         }
-        vpwallets.push_back(pwallet);
+        AddWallet(pwallet);
     }
 
     return true;
@@ -371,24 +371,22 @@ bool WalletInit::Open() const
 
 void WalletInit::Start(CScheduler& scheduler, CConnman* connman) const
 {
-    for (CWallet* pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         pwallet->postInitProcess(scheduler, gArgs.GetBoolArg("-mnconflock", true) ? true : false);
     }
-    if (privateSendClient.getWallet(vpwallets[0]->GetName())) {
-        privateSendClient.Controller(scheduler, connman);
-    }
+    if(!GetWallets().empty()) privateSendClient.Controller(scheduler, connman);
 }
 
 void WalletInit::Flush() const
 {
-    for (CWallet* pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         pwallet->Flush(false);
     }
 }
 
 void WalletInit::Stop() const
 {
-    for (CWallet* pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         pwallet->Flush(true);
     }
     // Stop PrivateSend, release keys
@@ -398,10 +396,10 @@ void WalletInit::Stop() const
 
 void WalletInit::Close() const
 {
-    for (CWallet* pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
+        RemoveWallet(pwallet);
         delete pwallet;
     }
-    vpwallets.clear();
 }
 
 class CWalletInterface : public WalletInterface {
@@ -418,7 +416,7 @@ WalletInterface* const g_wallet_interface = &g_wallet;
 bool CWalletInterface::CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
 {
     bool foundmnout = false;
-    for (CWallet* pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         if (pwallet->GetMasternodeOutpointAndKeys(outpointRet, destRet, pubKeyRet, keyRet, strTxHash, strOutputIndex))
             foundmnout = true;
     }

@@ -417,7 +417,14 @@ public:
     OutputType getDefaultAddressType() override { return m_wallet.m_default_address_type; }
     OutputType getDefaultChangeType() override { return m_wallet.m_default_change_type; }
 
+    int64_t GetKeysLeftSinceBackup() override { return m_wallet.nKeysLeftSinceAutoBackup; }
+
     int GetPSRounds() override { return privateSendClient.nPrivateSendRounds; }
+
+    bool DoAutoBackup(std::string walletIn, std::string& strBackupWarning, std::string& strBackupError) override
+    {
+        return AutoBackupWallet(GetWallet(walletIn), nullptr, strBackupWarning, strBackupError);
+    }
 
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
