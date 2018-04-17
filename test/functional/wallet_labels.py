@@ -6,25 +6,38 @@
 
 RPCs tested are:
     - getlabeladdress
-    - getaddressesbyaccount
+    - getaddressesbyaccount/getaddressesbylabel
     - listaddressgroupings
     - setlabel
     - sendfrom (with account arguments)
     - move (with account arguments)
+
+Run the test twice - once using the accounts API and once using the labels API.
+The accounts API test can be removed in V0.18.
 """
 from collections import defaultdict
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class WalletLabelsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 1
-        self.extra_args = [['-deprecatedrpc=accounts']]
+        self.num_nodes = 2
+        self.extra_args = [['-deprecatedrpc=accounts'], []]
+
+    def setup_network(self):
+        """Don't connect nodes."""
+        self.setup_nodes()
 
     def run_test(self):
-        node = self.nodes[0]
+        """Run the test twice - once using the accounts API and once using the labels API."""
+        self.log.info("Test accounts API")
+        self._run_subtest(True, self.nodes[0])
+        self.log.info("Test labels API")
+        self._run_subtest(False, self.nodes[1])
+
+    def _run_subtest(self, accounts_api, node):
         # Check that there's no UTXO on any of the nodes
         assert_equal(len(node.listunspent()), 0)
 
@@ -77,7 +90,7 @@ class WalletLabelsTest(BitcoinTestFramework):
 
         # Create labels and make sure subsequent label API calls
         # recognize the label/address associations.
-        labels = [Label(name) for name in ("a", "b", "c", "d", "e")]
+        labels = [Label(name, accounts_api) for name in ("a", "b", "c", "d", "e")]
         for label in labels:
             label.add_receive_address(node.getlabeladdress(label=label.name, force=True))
             label.verify(node)
@@ -101,21 +114,23 @@ class WalletLabelsTest(BitcoinTestFramework):
 
         # Check that sendfrom label reduces listaccounts balances.
         for i, label in enumerate(labels):
-            to_label = labels[(i+1) % len(labels)]
+            to_label = labels[(i + 1) % len(labels)]
             node.sendfrom(label.name, to_label.receive_address, amount_to_send)
         node.generate(1)
         for label in labels:
             label.add_receive_address(node.getlabeladdress(label.name))
             label.verify(node)
             assert_equal(node.getreceivedbylabel(label.name), 2)
-            node.move(label.name, "", node.getbalance(label.name))
+            if accounts_api:
+                node.move(label.name, "", node.getbalance(label.name))
             label.verify(node)
         node.generate(101)
         expected_account_balances = {"": 5200}
         for label in labels:
             expected_account_balances[label.name] = 0
-        assert_equal(node.listaccounts(), expected_account_balances)
-        assert_equal(node.getbalance(""), 5200)
+        if accounts_api:
+            assert_equal(node.listaccounts(), expected_account_balances)
+            assert_equal(node.getbalance(""), 5200)
 
         # Check that setlabel can assign a label to a new unused address.
         for label in labels:
@@ -123,7 +138,10 @@ class WalletLabelsTest(BitcoinTestFramework):
             node.setlabel(address, label.name)
             label.add_address(address)
             label.verify(node)
-            assert(address not in node.getaddressesbyaccount(""))
+            if accounts_api:
+                assert(address not in node.getaddressesbyaccount(""))
+            else:
+                assert_raises_rpc_error(-11, "No addresses with label", node.getaddressesbylabel, "")
 
         # Check that addmultisigaddress can assign labels.
         for label in labels:
@@ -136,8 +154,9 @@ class WalletLabelsTest(BitcoinTestFramework):
             label.verify(node)
             node.sendfrom("", multisig_address, 50)
         node.generate(101)
-        for label in labels:
-            assert_equal(node.getbalance(label.name), 50)
+        if accounts_api:
+            for label in labels:
+                assert_equal(node.getbalance(label.name), 50)
 
         # Check that setlabel can change the label of an address from a
         # different label.
@@ -156,9 +175,10 @@ class WalletLabelsTest(BitcoinTestFramework):
         change_label(node, labels[2].receive_address, labels[2], labels[2])
 
 class Label:
-    def __init__(self, name):
+    def __init__(self, name, accounts_api):
         # Label name
         self.name = name
+        self.accounts_api = accounts_api
         # Current receiving address associated with this label.
         self.receive_address = None
         # List of all addresses assigned with this label
@@ -184,13 +204,16 @@ class Label:
                 node.getaddressinfo(address)['labels'][0],
                 {"name": self.name,
                  "purpose": self.purpose[address]})
-            assert_equal(node.getaccount(address), self.name)
+            if self.accounts_api:
+                assert_equal(node.getaccount(address), self.name)
+            else:
+                assert_equal(node.getaddressinfo(address)['label'], self.name)
 
         assert_equal(
             node.getaddressesbylabel(self.name),
             {address: {"purpose": self.purpose[address]} for address in self.addresses})
-        assert_equal(
-            set(node.getaddressesbyaccount(self.name)), set(self.addresses))
+        if self.accounts_api:
+            assert_equal(set(node.getaddressesbyaccount(self.name)), set(self.addresses))
 
 
 def change_label(node, address, old_label, new_label):
