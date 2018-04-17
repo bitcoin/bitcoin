@@ -198,6 +198,12 @@ RPC
 - A new `submitheader` RPC allows submitting block headers independently
   from their block.  This is likely only useful for testing.
 
+- In getmempoolancestors, getmempooldescendants, getmempoolentry and
+  getrawmempool RPCs, to be consistent with the returned value and other
+  RPCs such as getrawtransaction, vsize has been added and size is now
+  deprecated. size will only be returned if bitcoind is started with
+  -deprecatedrpc=size.
+
 Configuration
 -------------
 
