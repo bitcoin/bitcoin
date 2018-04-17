@@ -40,8 +40,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         # This will raise an exception because the transaction is not yet in a block
         assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[0].gettxoutproof, [txid1])
 
-        self.nodes[0].generate(1)
-        blockhash = self.nodes[0].getblockhash(chain_height + 1)
+        blockhash = self.nodes[0].generate(1)[0]
         self.sync_all()
 
         txlist = []
@@ -49,9 +48,9 @@ class MerkleBlockTest(BitcoinTestFramework):
         txlist.append(blocktxn[1])
         txlist.append(blocktxn[2])
 
-        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1])), [txid1])
-        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1, txid2])), txlist)
-        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1, txid2], blockhash)), txlist)
+        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1])), {"txids":[txid1], "blockhash":blockhash})
+        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1, txid2])), {"txids":txlist, "blockhash":blockhash})
+        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1, txid2], blockhash)), {"txids":txlist, "blockhash":blockhash})
 
         txin_spent = self.nodes[1].listunspent(1).pop()
         tx3 = self.nodes[1].createrawtransaction([txin_spent], {self.nodes[0].getnewaddress(): 49.98})
@@ -65,18 +64,20 @@ class MerkleBlockTest(BitcoinTestFramework):
         # We can't find the block from a fully-spent tx
         assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[2].gettxoutproof, [txid_spent])
         # We can get the proof if we specify the block
-        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid_spent], blockhash)), [txid_spent])
+        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid_spent], blockhash)), {"txids":[txid_spent], "blockhash":blockhash})
         # We can't get the proof if we specify a non-existent block
         assert_raises_rpc_error(-5, "Block not found", self.nodes[2].gettxoutproof, [txid_spent], "00000000000000000000000000000000")
         # We can get the proof if the transaction is unspent
-        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid_unspent])), [txid_unspent])
+        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid_unspent])), {"txids":[txid_unspent], "blockhash":blockhash})
         # We can get the proof if we provide a list of transactions and one of them is unspent. The ordering of the list should not matter.
-        assert_equal(sorted(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1, txid2]))), sorted(txlist))
-        assert_equal(sorted(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid2, txid1]))), sorted(txlist))
+        assert_equal(sorted(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1, txid2]))["txids"]), sorted(txlist))
+        assert_equal(sorted(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid2, txid1]))["txids"]), sorted(txlist))
         # We can always get a proof if we have a -txindex
-        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[3].gettxoutproof([txid_spent])), [txid_spent])
+        assert_equal(self.nodes[2].verifytxoutproof(self.nodes[3].gettxoutproof([txid_spent])), {"txids":[txid_spent], "blockhash":blockhash})
         # We can't get a proof if we specify transactions from different blocks
         assert_raises_rpc_error(-5, "Not all transactions found in specified or retrieved block", self.nodes[2].gettxoutproof, [txid1, txid3])
+        # Invalid proof throws an error
+        assert_raises_rpc_error(-8, "No valid transaction commitments are found in the proof", self.nodes[2].verifytxoutproof, "0000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
 
 
 if __name__ == '__main__':
