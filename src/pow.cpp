@@ -39,8 +39,8 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 	arith_uint256 PastDifficultyAverage;
 	arith_uint256 PastDifficultyAveragePrev;
 
-	if (BlockLastSolved == NULL) {
-		return nProofOfWorkLimit.GetCompact();
+	if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0) {
+		return UintToArith256(params.powLimit).GetCompact();
 	}
 
 	for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
