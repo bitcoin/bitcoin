@@ -48,7 +48,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     {
         spends[i].nVersion = 1;
         spends[i].vin.resize(1);
-        spends[i].vin[0].prevout.hash = coinbaseTxns[0].GetHash();
+        spends[i].vin[0].prevout.hash = m_coinbase_txns[0]->GetHash();
         spends[i].vin[0].prevout.n = 0;
         spends[i].vout.resize(1);
         spends[i].vout[0].nValue = 11*CENT;
@@ -174,7 +174,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
 
     spend_tx.nVersion = 1;
     spend_tx.vin.resize(1);
-    spend_tx.vin[0].prevout.hash = coinbaseTxns[0].GetHash();
+    spend_tx.vin[0].prevout.hash = m_coinbase_txns[0]->GetHash();
     spend_tx.vin[0].prevout.n = 0;
     spend_tx.vout.resize(4);
     spend_tx.vout[0].nValue = 11*CENT;

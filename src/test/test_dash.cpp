@@ -150,7 +150,7 @@ TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::
     {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
-        coinbaseTxns.push_back(*b.vtx[0]);
+        m_coinbase_txns.push_back(b.vtx[0]);
     }
 }
 
@@ -241,12 +241,12 @@ TestChainSetup::~TestChainSetup()
 
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx) {
-    CTransaction txn(tx);
-    return FromTx(txn);
+    return FromTx(MakeTransactionRef(tx));
 }
 
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransaction &txn) {
-    return CTxMemPoolEntry(MakeTransactionRef(txn), nFee, nTime, nHeight,
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransactionRef& tx)
+{
+    return CTxMemPoolEntry(tx, nFee, nTime, nHeight,
                            spendsCoinbase, sigOpCount, lp);
 }
 

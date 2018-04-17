@@ -23,7 +23,7 @@ protected:
     CTransactionRef txval;
 public:
     CSerializeMethodsTestSingle() = default;
-    CSerializeMethodsTestSingle(int intvalin, bool boolvalin, std::string stringvalin, const char* charstrvalin, CTransaction txvalin) : intval(intvalin), boolval(boolvalin), stringval(std::move(stringvalin)), txval(MakeTransactionRef(txvalin))
+    CSerializeMethodsTestSingle(int intvalin, bool boolvalin, std::string stringvalin, const char* charstrvalin, const CTransactionRef& txvalin) : intval(intvalin), boolval(boolvalin), stringval(std::move(stringvalin)), txval(txvalin)
     {
         memcpy(charstrval, charstrvalin, sizeof(charstrval));
     }
@@ -399,8 +399,9 @@ BOOST_AUTO_TEST_CASE(class_methods)
     std::string stringval("testing");
     const char charstrval[16] = "testing charstr";
     CMutableTransaction txval;
-    CSerializeMethodsTestSingle methodtest1(intval, boolval, stringval, charstrval, txval);
-    CSerializeMethodsTestMany methodtest2(intval, boolval, stringval, charstrval, txval);
+    CTransactionRef tx_ref{MakeTransactionRef(txval)};
+    CSerializeMethodsTestSingle methodtest1(intval, boolval, stringval, charstrval, tx_ref);
+    CSerializeMethodsTestMany methodtest2(intval, boolval, stringval, charstrval, tx_ref);
     CSerializeMethodsTestSingle methodtest3;
     CSerializeMethodsTestMany methodtest4;
     CDataStream ss(SER_DISK, PROTOCOL_VERSION);
