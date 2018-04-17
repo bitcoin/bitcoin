@@ -292,19 +292,22 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
         pfrom->setAskFor.erase(nHash);
 
 		if (!masternodeSync.IsMasternodeListSynced()) return;
-        {
-            LOCK(cs_mapMasternodePaymentVotes);
-            if(mapMasternodePaymentVotes.count(nHash)) {
-                LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nHeight=%d seen\n", nHash.ToString(), nCachedBlockHeight);
-                return;
-            }
+		{
+			LOCK(cs_mapMasternodePaymentVotes);
 
-            // Avoid processing same vote multiple times
-            mapMasternodePaymentVotes[nHash] = vote;
-            // but first mark vote as non-verified,
-            // AddPaymentVote() below should take care of it if vote is actually ok
-            mapMasternodePaymentVotes[nHash].MarkAsNotVerified();
-        }
+			auto res = mapMasternodePaymentVotes.emplace(nHash, vote);
+
+			// Avoid processing same vote multiple times
+			if (!res.second) {
+				LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nBlockHeight=%d/%d seen\n",
+					nHash.ToString(), vote.nBlockHeight, nCachedBlockHeight);
+				return;
+			}
+
+			// Mark vote as non-verified when it's seen for the first time,
+			// AddPaymentVote() below should take care of it if vote is actually ok
+			res.first->second.MarkAsNotVerified();
+		}
 
         int nFirstBlock = nCachedBlockHeight - GetStorageLimit();
         if(vote.nBlockHeight < nFirstBlock || vote.nBlockHeight > nCachedBlockHeight+20) {
@@ -426,12 +429,13 @@ bool CMasternodePayments::AddPaymentVote(const CMasternodePaymentVote& vote)
 {
     uint256 blockHash = uint256();
     if(!GetBlockHash(blockHash, vote.nBlockHeight - 101)) return false;
+	uint256 nHash = vote.GetHash();
 
-    if(HasVerifiedPaymentVote(vote.GetHash())) return false;
+    if(HasVerifiedPaymentVote(nHash)) return false;
 
     LOCK2(cs_mapMasternodeBlocks, cs_mapMasternodePaymentVotes);
 
-    mapMasternodePaymentVotes[vote.GetHash()] = vote;
+    mapMasternodePaymentVotes[nHash] = vote;
 
     if(!mapMasternodeBlocks.count(vote.nBlockHeight)) {
        CMasternodeBlockPayees blockPayees(vote.nBlockHeight);
@@ -453,14 +457,14 @@ bool CMasternodePayments::HasVerifiedPaymentVote(uint256 hashIn)
 void CMasternodeBlockPayees::AddPayee(const CMasternodePaymentVote& vote)
 {
     LOCK(cs_vecPayees);
-
+	uint256 nVoteHash = vote.GetHash();
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
         if (payee.GetPayee() == vote.payee) {
-            payee.AddVoteHash(vote.GetHash());
+            payee.AddVoteHash(nVoteHash);
             return;
         }
     }
-    CMasternodePayee payeeNew(vote.payee, vote.GetHash(), vote.nStartHeight);
+    CMasternodePayee payeeNew(vote.payee, nVoteHash, vote.nStartHeight);
     vecPayees.push_back(payeeNew);
 }
 
@@ -468,7 +472,7 @@ bool CMasternodeBlockPayees::GetBestPayee(CScript& payeeRet)
 {
     LOCK(cs_vecPayees);
 
-    if(!vecPayees.size()) {
+    if(vecPayees.empty()) {
         LogPrint("mnpayments", "CMasternodeBlockPayees::GetBestPayee -- ERROR: couldn't find any payee\n");
         return false;
     }
