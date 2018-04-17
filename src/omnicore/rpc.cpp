@@ -1769,25 +1769,18 @@ UniValue omni_listtransactions(const UniValue& params, bool fHelp)
     // reverse iterate over (now ordered) transactions and populate RPC objects for each one
     UniValue response(UniValue::VARR);
     for (std::map<std::string,uint256>::reverse_iterator it = walletTransactions.rbegin(); it != walletTransactions.rend(); it++) {
-        uint256 txHash = it->second;
-        UniValue txobj(UniValue::VOBJ);
-        int populateResult = populateRPCTransactionObject(txHash, txobj, addressParam);
-        if (0 == populateResult) response.push_back(txobj);
+        if (nFrom <= 0 && nCount > 0) {
+            uint256 txHash = it->second;
+            UniValue txobj(UniValue::VOBJ);
+            int populateResult = populateRPCTransactionObject(txHash, txobj, addressParam);
+            if (0 == populateResult) {
+                response.push_back(txobj);
+                nCount--;
+            }
+        }
+        nFrom--;
     }
 
-    // TODO: reenable cutting!
-/*
-    // cut on nFrom and nCount
-    if (nFrom > (int)response.size()) nFrom = response.size();
-    if ((nFrom + nCount) > (int)response.size()) nCount = response.size() - nFrom;
-    UniValue::iterator first = response.begin();
-    std::advance(first, nFrom);
-    UniValue::iterator last = response.begin();
-    std::advance(last, nFrom+nCount);
-    if (last != response.end()) response.erase(last, response.end());
-    if (first != response.begin()) response.erase(response.begin(), first);
-    std::reverse(response.begin(), response.end());
-*/
     return response;
 }
 
