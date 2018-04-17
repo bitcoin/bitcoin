@@ -503,12 +503,13 @@ bool CMasternodeBlockPayees::GetBestPayee(CScript& payeeRet, int& nStartHeight)
 
 	return (nVotes > -1);
 }
-bool CMasternodeBlockPayees::HasPayeeWithVotes(const CScript& payeeIn, int nVotesReq)
+bool CMasternodeBlockPayees::HasPayeeWithVotes(const CScript& payeeIn, int nVotesReq, CMasternodePayee& payeeOut)
 {
     LOCK(cs_vecPayees);
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
         if (payee.GetVoteCount() >= nVotesReq && payee.GetPayee() == payeeIn) {
+			payeeOut = payee;
             return true;
         }
     }

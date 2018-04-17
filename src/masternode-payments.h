@@ -105,7 +105,7 @@ public:
     void AddPayee(const CMasternodePaymentVote& vote);
     bool GetBestPayee(CScript& payeeRet);
 	bool GetBestPayee(CScript& payeeRet, int &nStartHeight);
-    bool HasPayeeWithVotes(const CScript& payeeIn, int nVotesReq);
+    bool HasPayeeWithVotes(const CScript& payeeIn, int nVotesReq, CMasternodePayee& payee);
 
     bool IsTransactionValid(const CTransaction& txNew, const CAmount &nFee, const int64_t &nHeight, CAmount& nTotalRewardWithMasternodes);
 
