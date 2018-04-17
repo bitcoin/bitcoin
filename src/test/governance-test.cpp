@@ -582,7 +582,7 @@ namespace
             chainActive = CChain{};
         }
 
-        auto CreateProposal(int blockStart, CKey payee, CAmount amount) -> CBudgetProposal
+        auto CreateProposal(int blockStart, int blockEnd, CKey payee, CAmount amount) -> CBudgetProposal
         {
             auto p = CBudgetProposal{
                 "test proposal",
@@ -595,6 +595,11 @@ namespace
             };
             p.nTime = GetTime();
             return p;
+        }
+
+        auto CreateProposal(int blockStart, CKey payee, CAmount amount) -> CBudgetProposal
+        {
+            return CreateProposal(blockStart, blockStart + GetBudgetPaymentCycleBlocks(), payee, amount);
         }
     };
 }
@@ -622,6 +627,22 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
     {
         // Set Up
         const auto proposal = CreateProposal(nextSbStart, keyPair, 42);
+        budget.AddProposal(proposal, false); // false = don't check collateral
+
+        const auto vote = CBudgetVote{mn.vin, proposal.GetHash(), VOTE_YES};
+
+        // Call & Check
+        const auto isSubmitted = budget.SubmitProposalVote(vote, error);
+
+        BOOST_CHECK(!isSubmitted);
+        BOOST_CHECK(!error.empty());
+        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+    }
+
+    BOOST_AUTO_TEST_CASE(SubmitVoteTooCloseSecondPayment)
+    {
+        // Set Up
+        const auto proposal = CreateProposal(nextSbStart - GetBudgetPaymentCycleBlocks(), nextSbStart, keyPair, 42);
         budget.AddProposal(proposal, false); // false = don't check collateral
 
         const auto vote = CBudgetVote{mn.vin, proposal.GetHash(), VOTE_YES};

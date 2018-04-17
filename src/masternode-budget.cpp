@@ -1303,8 +1303,6 @@ bool CBudgetManager::UpdateProposal(const CBudgetVote& vote, CNode* pfrom, std::
     {
         const auto votingThresholdTime = GetVotingThreshold() * Params().TargetSpacing() * 0.75;
         const auto superblockProjectedTime = GetAdjustedTime() + (GetNextSuperblock(height) - height) * Params().TargetSpacing();
-        const auto x = GetNextSuperblock(height) - height;
-        const auto y = GetAdjustedTime();
 
         if (superblockProjectedTime - vote.nTime <= votingThresholdTime)
         {
