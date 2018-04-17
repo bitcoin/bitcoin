@@ -99,7 +99,7 @@ bool CheckStakeKernelHash(const CBlockIndex *pindexPrev,
     {
         LogPrintf("%s: using modifier=%s at height=%d timestamp=%s\n",
             __func__, bnStakeModifier.ToString(), nStakeModifierHeight,
-            DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nStakeModifierTime));
+            FormatISO8601DateTime(nStakeModifierTime));
         LogPrintf("%s: check modifier=%s nTimeKernel=%u nPrevout=%u nTime=%u hashProof=%s\n",
             __func__, bnStakeModifier.ToString(),
             nBlockFromTime, prevout.n, nTime,
@@ -114,7 +114,7 @@ bool CheckStakeKernelHash(const CBlockIndex *pindexPrev,
     {
         LogPrintf("%s: using modifier=%s at height=%d timestamp=%s\n",
             __func__, bnStakeModifier.ToString(), nStakeModifierHeight,
-            DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nStakeModifierTime));
+            FormatISO8601DateTime(nStakeModifierTime));
         LogPrintf("%s: pass modifier=%s nTimeKernel=%u nPrevout=%u nTime=%u hashProof=%s\n",
             __func__, bnStakeModifier.ToString(),
             nBlockFromTime, prevout.n, nTime,
