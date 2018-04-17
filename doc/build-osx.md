@@ -43,14 +43,14 @@ from the root of the repository.
 Build Bitcoin Core
 ------------------------
 
-1. Clone the bitcoin source code and cd into `bitcoin`
+1. Clone the Bitcoin source code and cd into `bitcoin`
 
         git clone https://github.com/bitcoin/bitcoin
         cd bitcoin
 
 2.  Build bitcoin-core:
 
-    Configure and build the headless bitcoin binaries as well as the GUI (if Qt is found).
+    Configure and build the headless Bitcoin binaries as well as the GUI (if Qt is found).
 
     You can disable the GUI build by passing `--without-gui` to configure.
 
@@ -71,7 +71,7 @@ Running
 
 Bitcoin Core is now available at `./src/bitcoind`
 
-Before running, it's recommended you create an RPC configuration file.
+Before running, it's recommended that you create an RPC configuration file.
 
     echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
 
@@ -86,7 +86,7 @@ You can monitor the download process by looking at the debug.log file:
 Other commands:
 -------
 
-    ./src/bitcoind -daemon # Starts the bitcoin daemon.
+    ./src/bitcoind -daemon # Starts the Bitcoin daemon.
     ./src/bitcoin-cli --help # Outputs a list of command-line options.
     ./src/bitcoin-cli help # Outputs a list of RPC commands when the daemon is running.
 

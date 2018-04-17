@@ -7,7 +7,7 @@ Some notes on how to build Bitcoin Core in Unix.
 
 Note
 ---------------------
-Always use absolute paths to configure and compile bitcoin and the dependencies,
+Always use absolute paths to configure and compile Bitcoin Core and the dependencies,
 for example, when specifying the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
@@ -35,7 +35,7 @@ These dependencies are required:
  Library     | Purpose          | Description
  ------------|------------------|----------------------
  libssl      | Crypto           | Random Number Generation, Elliptic Curve Cryptography
- libboost    | Utility          | Library for threading, data structures, etc
+ libboost    | Utility          | Library for threading, data structures, etc.
  libevent    | Networking       | OS independent asynchronous networking
 
 Optional dependencies:
@@ -112,7 +112,7 @@ ZMQ dependencies (provides ZMQ API 4.x):
 
 #### Dependencies for the GUI
 
-If you want to build Bitcoin-Qt, make sure that the required packages for Qt development
+If you want to build bitcoin-qt, make sure that the required packages for Qt development
 are installed. Either Qt 5 or Qt 4 are necessary to build the GUI.
 If both Qt 4 and Qt 5 are installed, Qt 5 will be used. Pass `--with-gui=qt4` to configure to choose Qt4.
 To build without GUI pass `--without-gui`.
@@ -196,7 +196,7 @@ If you need to build Boost yourself:
 
 Security
 --------
-To help make your bitcoin installation more secure by making certain attacks impossible to
+To help make your Bitcoin Core installation more secure by making certain attacks impossible to
 exploit even if a vulnerability is found, binaries are hardened by default.
 This can be disabled with:
 
@@ -212,7 +212,7 @@ Hardening enables the following features:
     Build position independent code to take advantage of Address Space Layout Randomization
     offered by some kernels. Attackers who can cause execution of code at an arbitrary memory
     location are thwarted if they don't know where anything useful is located.
-    The stack and heap are randomly located by default but this allows the code section to be
+    The stack and heap are randomly located by default, but this allows the code section to be
     randomly located as well.
 
     On an AMD64 processor where a library was not compiled with -fPIC, this will cause an error
@@ -228,8 +228,8 @@ Hardening enables the following features:
     ET_DYN
 
 * Non-executable Stack
-    If the stack is executable then trivial stack based buffer overflow exploits are possible if
-    vulnerable buffers are found. By default, bitcoin should be built with a non-executable stack
+    If the stack is executable then trivial stack-based buffer overflow exploits are possible if
+    vulnerable buffers are found. By default, Bitcoin Core should be built with a non-executable stack,
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
     executable without the non-executable stack protection.
@@ -237,7 +237,7 @@ Hardening enables the following features:
     To verify that the stack is non-executable after compiling use:
     `scanelf -e ./bitcoin`
 
-    the output should contain:
+    The output should contain:
 	STK/REL/PTL
 	RW- R-- RW-
 
@@ -245,7 +245,7 @@ Hardening enables the following features:
 
 Disable-wallet mode
 --------------------
-When the intention is to run only a P2P node without a wallet, bitcoin may be compiled in
+When the intention is to run only a P2P node without a wallet, Bitcoin may be compiled in
 disable-wallet mode with:
 
     ./configure --disable-wallet
