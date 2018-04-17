@@ -533,8 +533,6 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
         }
     }
 
-    // if we don't have at least MNPAYMENTS_SIGNATURES_REQUIRED signatures on a payee, approve whichever is the longest chain
-    if(nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) return true;
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
         if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
@@ -566,7 +564,8 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
             }
         }
     }
-
+	// if we don't have at least MNPAYMENTS_SIGNATURES_REQUIRED signatures on a payee, approve whichever is the longest chain
+	if (nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) return true;
     LogPrintf("CMasternodeBlockPayees::IsTransactionValid -- ERROR: Missing required payment, possible payees: '%s'\n", strPayeesPossible);
     return false;
 }
