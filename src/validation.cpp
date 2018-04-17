@@ -292,8 +292,8 @@ enum class FlushStateMode {
 
 // See definition for documentation
 static bool FlushStateToDisk(const CChainParams& chainParams, CValidationState &state, FlushStateMode mode, int nManualPruneHeight=0);
-static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight);
-static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight);
+static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, CValidationState &state);
+static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, CValidationState &state);
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = nullptr);
 static FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 
@@ -2090,9 +2090,9 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
         LOCK(cs_LastBlockFile);
         if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
             if (nManualPruneHeight > 0) {
-                FindFilesToPruneManual(setFilesToPrune, nManualPruneHeight);
+                FindFilesToPruneManual(setFilesToPrune, nManualPruneHeight, state);
             } else {
-                FindFilesToPrune(setFilesToPrune, chainparams.PruneAfterHeight());
+                FindFilesToPrune(setFilesToPrune, chainparams.PruneAfterHeight(), state);
                 fCheckForPruning = false;
             }
             if (!setFilesToPrune.empty()) {
@@ -3549,13 +3549,41 @@ uint64_t CalculateCurrentUsage()
 }
 
 /* Prune a block file (modify associated database entries)*/
-void PruneOneBlockFile(const int fileNumber)
+void PruneOneBlockFile(const int fileNumber, CValidationState &state)
 {
+    AssertLockHeld(cs_main);
     LOCK(cs_LastBlockFile);
 
+    int64_t txindex_migration_totaltime = 0;
     for (const auto& entry : mapBlockIndex) {
         CBlockIndex* pindex = entry.second;
         if (pindex->nFile == fileNumber) {
+            if (fTxIndex && (pindex->nStatus & BLOCK_HAVE_DATA)) {
+                int64_t time_start = GetTimeMicros();
+                // migrate pruned txindex data
+                // txindex entries of pruned blocks will move its CDiskTxPos value to:
+                //        nFile = INT_MAX <-- indicator that this block is no longer available
+                //        nPos = block-height in chainActive (assumed reorg safe since prune min target is 288 blocks)
+                //        nTxOffset = index of transaction position in block (not to confused with data offset)
+                LogPrintf("txindex block pruning: %s migrate txindex data from block %s\n", __func__, pindex->GetBlockHash().GetHex());
+                CBlock block;
+                if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+                    AbortNode(state, "Failed to read block");
+                    return;
+                }
+                std::vector<std::pair<uint256, CDiskTxPos>> vPos;
+                unsigned int txpos = 0;
+                for(const auto& tx : block.vtx)
+                {
+                    CDiskTxPos pos(CDiskBlockPos(std::numeric_limits<int>::max(), pindex->nHeight), GetSizeOfCompactSize(txpos++));
+                    vPos.emplace_back(tx->GetHash(), pos);
+                }
+                if (!pblocktree->WriteTxIndex(vPos)) {
+                    AbortNode(state, "Failed to write transaction index");
+                    return;
+                }
+                txindex_migration_totaltime+=GetTimeMicros()-time_start;
+            }
             pindex->nStatus &= ~BLOCK_HAVE_DATA;
             pindex->nStatus &= ~BLOCK_HAVE_UNDO;
             pindex->nFile = 0;
@@ -3580,6 +3608,7 @@ void PruneOneBlockFile(const int fileNumber)
 
     vinfoBlockFile[fileNumber].SetNull();
     setDirtyFileInfo.insert(fileNumber);
+    if (fTxIndex) LogPrint(BCLog::BENCH, "txindex/prune migration time: %.2fms\n", MILLI * txindex_migration_totaltime);
 }
 
 
@@ -3594,7 +3623,7 @@ void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune)
 }
 
 /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
-static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight)
+static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, CValidationState &state)
 {
     assert(fPruneMode && nManualPruneHeight > 0);
 
@@ -3608,7 +3637,7 @@ static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPr
     for (int fileNumber = 0; fileNumber < nLastBlockFile; fileNumber++) {
         if (vinfoBlockFile[fileNumber].nSize == 0 || vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune)
             continue;
-        PruneOneBlockFile(fileNumber);
+        PruneOneBlockFile(fileNumber, state);
         setFilesToPrune.insert(fileNumber);
         count++;
     }
@@ -3638,7 +3667,7 @@ void PruneBlockFilesManual(int nManualPruneHeight)
  *
  * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
  */
-static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight)
+static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, CValidationState &state)
 {
     LOCK2(cs_main, cs_LastBlockFile);
     if (chainActive.Tip() == nullptr || nPruneTarget == 0) {
@@ -3671,7 +3700,7 @@ static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfte
             if (vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune)
                 continue;
 
-            PruneOneBlockFile(fileNumber);
+            PruneOneBlockFile(fileNumber, state);
             // Queue up the files for removal
             setFilesToPrune.insert(fileNumber);
             nCurrentUsage -= nBytesToPrune;

@@ -299,7 +299,7 @@ uint64_t CalculateCurrentUsage();
 /**
  *  Mark one block file as pruned.
  */
-void PruneOneBlockFile(const int fileNumber);
+void PruneOneBlockFile(const int fileNumber, CValidationState &state);
 
 /**
  *  Actually unlink the specified files
