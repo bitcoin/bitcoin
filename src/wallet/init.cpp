@@ -23,45 +23,44 @@ class WalletInit : public WalletInitInterface {
 public:
 
     //! Return the wallets help message.
-    std::string GetHelpString(bool showDebug) override;
+    std::string GetHelpString(bool showDebug) const override;
 
     //! Wallets parameter interaction
-    bool ParameterInteraction() override;
+    bool ParameterInteraction() const override;
 
     //! Register wallet RPCs.
-    void RegisterRPC(CRPCTable &tableRPC) override;
+    void RegisterRPC(CRPCTable &tableRPC) const override;
 
     //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
     //  This function will perform salvage on the wallet if requested, as long as only one wallet is
     //  being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
-    bool Verify() override;
+    bool Verify() const override;
 
     //! Load wallet databases.
-    bool Open() override;
+    bool Open() const override;
 
     //! Complete startup of wallets.
-    void Start(CScheduler& scheduler) override;
+    void Start(CScheduler& scheduler) const override;
 
     //! Flush all wallets in preparation for shutdown.
-    void Flush() override;
+    void Flush() const override;
 
     //! Stop all wallets. Wallets will be flushed first.
-    void Stop() override;
+    void Stop() const override;
 
     //! Close all wallets.
-    void Close() override;
+    void Close() const override;
 
     // Dash Specific Wallet Init
-    void AutoLockMasternodeCollaterals() override;
-    void InitPrivateSendSettings() override;
-    void InitKeePass() override;
-    bool InitAutoBackup() override;
+    void AutoLockMasternodeCollaterals() const override;
+    void InitPrivateSendSettings() const override;
+    void InitKeePass() const override;
+    bool InitAutoBackup() const override;
 };
 
-static WalletInit g_wallet_init;
-WalletInitInterface* const g_wallet_init_interface = &g_wallet_init;
+const WalletInitInterface& g_wallet_init_interface = WalletInit();
 
-std::string WalletInit::GetHelpString(bool showDebug)
+std::string WalletInit::GetHelpString(bool showDebug) const
 {
     std::string strUsage = HelpMessageGroup(_("Wallet options:"));
     strUsage += HelpMessageOpt("-createwalletbackups=<n>", strprintf(_("Number of automatic wallet backups (default: %u)"), nWalletBackups));
@@ -127,7 +126,7 @@ std::string WalletInit::GetHelpString(bool showDebug)
     return strUsage;
 }
 
-bool WalletInit::ParameterInteraction()
+bool WalletInit::ParameterInteraction() const
 {
     if (gArgs.IsArgSet("-masternodeblsprivkey") && gArgs.SoftSetBoolArg("-disablewallet", true)) {
         LogPrintf("%s: parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1\n", __func__);
@@ -285,7 +284,7 @@ bool WalletInit::ParameterInteraction()
     return true;
 }
 
-void WalletInit::RegisterRPC(CRPCTable &t)
+void WalletInit::RegisterRPC(CRPCTable &t) const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return;
@@ -294,7 +293,7 @@ void WalletInit::RegisterRPC(CRPCTable &t)
     RegisterWalletRPCCommands(t);
 }
 
-bool WalletInit::Verify()
+bool WalletInit::Verify() const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return true;
@@ -343,7 +342,7 @@ bool WalletInit::Verify()
     return true;
 }
 
-bool WalletInit::Open()
+bool WalletInit::Open() const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -359,7 +358,7 @@ bool WalletInit::Open()
     return true;
 }
 
-void WalletInit::Start(CScheduler& scheduler)
+void WalletInit::Start(CScheduler& scheduler) const
 {
     for (CWallet* pwallet : GetWallets()) {
         pwallet->postInitProcess();
@@ -373,7 +372,7 @@ void WalletInit::Start(CScheduler& scheduler)
     }
 }
 
-void WalletInit::Flush()
+void WalletInit::Flush() const
 {
     for (CWallet* pwallet : GetWallets()) {
         if (CPrivateSendClientOptions::IsEnabled()) {
@@ -386,14 +385,14 @@ void WalletInit::Flush()
     }
 }
 
-void WalletInit::Stop()
+void WalletInit::Stop() const
 {
     for (CWallet* pwallet : GetWallets()) {
         pwallet->Flush(true);
     }
 }
 
-void WalletInit::Close()
+void WalletInit::Close() const
 {
     for (CWallet* pwallet : GetWallets()) {
         RemoveWallet(pwallet);
@@ -401,7 +400,7 @@ void WalletInit::Close()
     }
 }
 
-void WalletInit::AutoLockMasternodeCollaterals()
+void WalletInit::AutoLockMasternodeCollaterals() const
 {
     // we can't do this before DIP3 is fully initialized
     for (CWallet* pwallet : GetWallets()) {
@@ -409,7 +408,7 @@ void WalletInit::AutoLockMasternodeCollaterals()
     }
 }
 
-void WalletInit::InitPrivateSendSettings()
+void WalletInit::InitPrivateSendSettings() const
 {
     CPrivateSendClientOptions::SetEnabled(HasWallets() ? gArgs.GetBoolArg("-enableprivatesend", true) : false);
     if (!CPrivateSendClientOptions::IsEnabled()) {
@@ -431,12 +430,12 @@ void WalletInit::InitPrivateSendSettings()
               CPrivateSendClientOptions::GetDenomsHardCap());
 }
 
-void WalletInit::InitKeePass()
+void WalletInit::InitKeePass() const
 {
     keePassInt.init();
 }
 
-bool WalletInit::InitAutoBackup()
+bool WalletInit::InitAutoBackup() const
 {
     return CWallet::InitAutoBackup();
 }
