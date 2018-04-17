@@ -535,24 +535,23 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
+		const CScript& payeeScript = payee.GetPayee();
+		const CAmount &nMasternodePayment = GetBlockSubsidy(nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, payee.nStartHeight);
+		bool bFoundPayment = false;
+		bool bFoundFee = false;
+		BOOST_FOREACH(CTxOut txout, txNew.vout) {
+			if (payeeScript == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
+				LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");
+				bFoundPayment = true;
+			}
+			if (nFee <= 0 || (payeeScript == txout.scriptPubKey && ((nFee / 2) == txout.nValue))) {
+				LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required fee\n");
+				bFoundFee = true;
+			}
+		}
         if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
-			const CScript& payeeScript = payee.GetPayee();
-			const CAmount &nMasternodePayment = GetBlockSubsidy(nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, payee.nStartHeight);
-			bool bFoundPayment = false;
-			bool bFoundFee = false;
-            BOOST_FOREACH(CTxOut txout, txNew.vout) {
-                if (payeeScript == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
-                    LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");
-					bFoundPayment = true;
-                }
-				if (nFee <= 0 || (payeeScript == txout.scriptPubKey && ((nFee / 2) == txout.nValue))) {
-					LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required fee\n");
-					bFoundFee = true;
-				}
-				if (bFoundFee && bFoundPayment)
-					return true;
-            }
-
+			if (bFoundFee && bFoundPayment)
+				return true;
             CTxDestination address1;
             ExtractDestination(payeeScript, address1);
             CSyscoinAddress address2(address1);
