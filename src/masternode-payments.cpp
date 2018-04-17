@@ -221,13 +221,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
 		}
 		// fill payee with locally calculated winner and hope for the best
 		payee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
-		nStartHeight = mnodeman.GetStartHeight(mnInfo);
-		if(nStartHeight <= 0) {
-			// ...and we can't calculate it on our own
-			if (fDebug)
-				LogPrintf("CMasternodePayments::FillBlockPayee -- Failed to detect start height for masternode to pay\n");
-			return;
-		}
+		nStartHeight = 0;
 	}
 
 	// miner takes 25% of the reward and half fees
