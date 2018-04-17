@@ -1022,6 +1022,15 @@ GetTransactionResult GetTransaction(const uint256& hash, CTransactionRef& txOut,
         if (fTxIndex) {
             CDiskTxPos postx;
             if (pblocktree->ReadTxIndex(hash, postx)) {
+                if (postx.nFile == std::numeric_limits<int>::max()) {
+                    // blockfile is not available (pruned), CDiskTxPos.nPos points to the blockheight
+                    // lookup blockindex via height from txindex and set hashBlock
+                    CBlockIndex *p_index_possible = chainActive[postx.nPos];
+                    if (p_index_possible) {
+                        hashBlock = *p_index_possible->phashBlock;
+                    }
+                    return GetTransactionResult::BLOCK_PRUNED;
+                }
                 CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
                 if (file.IsNull()) {
                     error("%s: OpenBlockFile failed", __func__);
