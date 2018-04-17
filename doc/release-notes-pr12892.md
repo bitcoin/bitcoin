@@ -1,8 +1,10 @@
-'label' API for wallet
-----------------------
+'label' and 'account' APIs for wallet
+-------------------------------------
 
 A new 'label' API has been introduced for the wallet. This is intended as a
-replacement for the deprecated 'account' API.
+replacement for the deprecated 'account' API. The 'account' can continue to
+be used in V0.17 by starting bitcoind with the '-deprecatedrpc=accounts'
+argument, and will be fully removed in V0.18.
 
 The label RPC methods mirror the account functionality, with the following functional differences:
 
@@ -27,6 +29,9 @@ Here are the changes to RPC methods:
 
 | Changed Method         | Notes   |
 | :--------------------- | :------ |
-| `addmultisigaddress`   | Renamed `account` named parameter to `label`. Still accepts `account` for backward compatibility. |
-| `getnewaddress`        | Renamed `account` named parameter to `label`. Still accepts `account` for backward compatibility. |
-| `listunspent`          | Returns new `label` fields, along with `account` fields for backward compatibility. |
+| `addmultisigaddress`   | Renamed `account` named parameter to `label`. Still accepts `account` for backward compatibility if running with '-deprecatedrpc=accounts'. |
+| `getnewaddress`        | Renamed `account` named parameter to `label`. Still accepts `account` for backward compatibility. if running with '-deprecatedrpc=accounts' |
+| `listunspent`          | Returns new `label` fields. `account` field will be returned for backward compatibility if running with '-deprecatedrpc=accounts' |
+| `sendmany`             | The `account` named parameter has been renamed to `dummy`. If provided, the `dummy` parameter must be set to the empty string, unless running with the `-deprecatedrpc=accounts` argument (in which case functionality is unchanged). |
+| `listtransactions`     | The `account` named parameter has been renamed to `dummy`. If provided, the `dummy` parameter must be set to the string `*`, unless running with the `-deprecatedrpc=accounts` argument (in which case functionality is unchanged). |
+| `getbalance`           | `account`, `minconf` and `include_watchonly` parameters are deprecated, and can only be used if running with '-deprecatedrpc=accounts' |
