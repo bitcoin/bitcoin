@@ -261,7 +261,7 @@ class NodeImpl : public Node
     {
 #ifdef ENABLE_WALLET
         std::vector<std::unique_ptr<Wallet>> wallets;
-        for (CWalletRef wallet : ::vpwallets) {
+        for (CWallet* wallet : ::vpwallets) {
             wallets.emplace_back(MakeWallet(*wallet));
         }
         return wallets;

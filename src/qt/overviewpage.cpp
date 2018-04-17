@@ -407,7 +407,7 @@ void OverviewPage::updateAdvancedPSUI(bool _fShowAdvancedPSUI) {
 void OverviewPage::privateSendStatus()
 {
     if(!m_node.MNIsBlockchainsynced() || m_node.shutdownRequested()) return;
-    CWalletRef pwallet = vpwallets.empty() ? nullptr : vpwallets[0];
+    CWallet* pwallet = vpwallets.empty() ? nullptr : vpwallets[0];
     static int64_t nLastDSProgressBlockTime = 0;
 
     int nBestHeight = m_node.getNumBlocks();

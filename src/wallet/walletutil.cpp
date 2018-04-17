@@ -29,7 +29,7 @@ fs::path GetWalletDir()
 
 CWallet *GetWalletForPSRequest(std::string requestedWallet)
 {
-    for (CWalletRef pwallet : ::vpwallets) {
+    for (CWallet* pwallet : ::vpwallets) {
         if (pwallet->GetName() == requestedWallet) {
             return pwallet;
         }

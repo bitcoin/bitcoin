@@ -51,7 +51,7 @@ CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
         // wallet endpoint was used
         std::string requestedWallet = urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size()));
-        for (CWalletRef pwallet : ::vpwallets) {
+        for (CWallet* pwallet : ::vpwallets) {
             if (pwallet->GetName() == requestedWallet) {
                 return pwallet;
             }
@@ -2934,7 +2934,7 @@ UniValue listwallets(const JSONRPCRequest& request)
 
     UniValue obj(UniValue::VARR);
 
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : vpwallets) {
 
         if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
             return NullUniValue;
