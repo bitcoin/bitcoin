@@ -1998,7 +1998,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 	fMasterNode = GetBoolArg("-masternode", false);
 
 	// SYSCOIN
-	if ((fMasterNode || masternodeConfig.getCount() > 0) && fTxIndex) {
+	if ((fMasterNode || masternodeConfig.getCount() > 0) && !fTxIndex) {
 		return InitError("Enabling Masternode support requires turning on transaction indexing."
 			"Please txindex=1 to your configuration and start with -reindex");
 	}
