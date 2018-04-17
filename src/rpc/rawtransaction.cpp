@@ -178,7 +178,12 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             }
             errmsg = "No such transaction found in the provided block";
         } else if (res == GetTransactionResult::BLOCK_PRUNED) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
+            //TODO: fetch block via peers, wait for download and return transaction
+            //see https://github.com/bitcoin/bitcoin/pull/10794
+            UniValue result(UniValue::VOBJ);
+            result.pushKV("status", "pruned");
+            result.pushKV("inblock", hash_block.GetHex());
+            return result;
         } else if (res == GetTransactionResult::BLOCK_LOAD_ERROR) {
             throw JSONRPCError(RPC_MISC_ERROR, "Block load error");
         } else {
