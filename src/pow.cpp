@@ -40,7 +40,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 	arith_uint256 PastDifficultyAveragePrev;
 
 	// SYSCOIN 600 needed for snapshot unit test
-	if (BlockLastSolved == NULL || BlockLastSolved->nHeight <= 600 ) {
+	if (BlockLastSolved == NULL || BlockLastSolved->nHeight <= params.DifficultyAdjustmentInterval()-1) {
 		return UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit).GetCompact();
 	}
 
@@ -86,7 +86,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
-	if (chainActive.Height() <= 600)
+	if (chainActive.Height() <= params.DifficultyAdjustmentInterval()-1)
 		return true;
     bool fNegative;
     bool fOverflow;
