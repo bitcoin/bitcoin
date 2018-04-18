@@ -464,6 +464,17 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
             m_override_args[key].push_back(val);
         }
     }
+
+    // we do not allow -includeconf from command line, so we clear it here
+    auto it = m_override_args.find("-includeconf");
+    if (it != m_override_args.end()) {
+        if (it->second.size() > 0) {
+            for (const auto& ic : it->second) {
+                fprintf(stderr, "warning: -includeconf cannot be used from commandline; ignoring -includeconf=%s\n", ic.c_str());
+            }
+            m_override_args.erase(it);
+        }
+    }
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
@@ -733,18 +744,40 @@ void ArgsManager::ReadConfigStream(std::istream& stream)
     }
 }
 
-void ArgsManager::ReadConfigFile(const std::string& confPath)
+void ArgsManager::ReadConfigFiles()
 {
     {
         LOCK(cs_args);
         m_config_args.clear();
     }
 
+    const std::string confPath = GetArg("-conf", CHAINCOIN_CONF_FILENAME);
     fs::ifstream stream(GetConfigFile(confPath));
 
     // ok to not have a config file
     if (stream.good()) {
         ReadConfigStream(stream);
+        // if there is an -includeconf in the override args, but it is empty, that means the user
+        // passed '-noincludeconf' on the command line, in which case we should not include anything
+        if (m_override_args.count("-includeconf") == 0) {
+            std::vector<std::string> includeconf(GetArgs("-includeconf"));
+            {
+                // We haven't set m_network yet (that happens in SelectParams()), so manually check
+                // for network.includeconf args.
+                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + GetChainName() + ".includeconf"));
+                includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
+            }
+
+            for (const std::string& to_include : includeconf) {
+                fs::ifstream include_config(GetConfigFile(to_include));
+                if (include_config.good()) {
+                    ReadConfigStream(include_config);
+                    LogPrintf("Included configuration file %s\n", to_include.c_str());
+                } else {
+                    fprintf(stderr, "Failed to include configuration file %s\n", to_include.c_str());
+                }
+            }
+        }
     }
 
     // If datadir is changed in .conf file:
