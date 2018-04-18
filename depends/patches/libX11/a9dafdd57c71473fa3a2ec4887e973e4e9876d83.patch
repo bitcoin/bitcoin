@@ -1,0 +1,63 @@
+From a9dafdd57c71473fa3a2ec4887e973e4e9876d83 Mon Sep 17 00:00:00 2001
+From: Michal Srb <msrb@suse.com>
+Date: Thu, 15 Mar 2018 09:50:58 +0100
+Subject: [PATCH] Use flexible array member instead of fake size.
+
+The _XimCacheStruct structure is followed in memory by two strings containing
+fname and encoding. The memory was accessed using the last member of the
+structure `char fname[1]`. That is a lie, prohibits us from using sizeof and
+confuses checkers. Lets declare it properly as a flexible array, so compilers
+don't complain about writing past that array. As bonus we can replace the
+XOffsetOf with regular sizeof.
+
+Fixes GCC8 error:
+  In function 'strcpy',
+      inlined from '_XimWriteCachedDefaultTree' at imLcIm.c:479:5,
+      inlined from '_XimCreateDefaultTree' at imLcIm.c:616:2,
+      inlined from '_XimLocalOpenIM' at imLcIm.c:700:5:
+  /usr/include/bits/string_fortified.h:90:10: error: '__builtin_strcpy'
+  forming offset 2 is out of the bounds [0, 1] [-Werror=array-bounds]
+     return __builtin___strcpy_chk (__dest, __src, __bos (__dest));
+
+Caused by this line seemingly writing past the fname[1] array:
+  imLcIm.c:479:  strcpy (m->fname+strlen(name)+1, encoding);
+
+Reviewed-by: Keith Packard <keithp@keithp.com>
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ modules/im/ximcp/imLcIm.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/modules/im/ximcp/imLcIm.c b/modules/im/ximcp/imLcIm.c
+index c19695df..743df77b 100644
+--- a/modules/im/ximcp/imLcIm.c
++++ b/modules/im/ximcp/imLcIm.c
+@@ -82,8 +82,8 @@ struct _XimCacheStruct {
+     DTCharIndex     mbused;
+     DTCharIndex     wcused;
+     DTCharIndex     utf8used;
+-    char            fname[1];
+-    /* char encoding[1] */
++    char            fname[];
++    /* char encoding[] */
+ };
+ 
+ static struct  _XimCacheStruct* _XimCache_mmap = NULL;
+@@ -281,7 +281,7 @@ _XimReadCachedDefaultTree(
+     assert (m->id == XIM_CACHE_MAGIC);
+     assert (m->version == XIM_CACHE_VERSION);
+     if (size != m->size ||
+-	size < XOffsetOf (struct _XimCacheStruct, fname) + namelen + encodinglen) {
++	size < sizeof (struct _XimCacheStruct) + namelen + encodinglen) {
+ 	fprintf (stderr, "Ignoring broken XimCache %s [%s]\n", name, encoding);
+         munmap (m, size);
+         return False;
+@@ -442,7 +442,7 @@ _XimWriteCachedDefaultTree(
+     int   fd;
+     FILE *fp;
+     struct _XimCacheStruct *m;
+-    int   msize = (XOffsetOf(struct _XimCacheStruct, fname)
++    int   msize = (sizeof(struct _XimCacheStruct)
+ 		   + strlen(name) + strlen(encoding) + 2
+ 		   + XIM_CACHE_TREE_ALIGNMENT-1) & -XIM_CACHE_TREE_ALIGNMENT;
+     DefTreeBase *b = &im->private.local.base;
