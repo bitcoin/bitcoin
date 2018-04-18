@@ -1749,71 +1749,68 @@ bool CFinalizedBudget::AutoCheck()
     fAutoChecked = true; //we only need to check this once
 
 
-    if(strBudgetMode == "auto") //only vote for exact matches
+    std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
+
+    auto SortByAmount = [](const auto& a, const auto& b)
     {
-        std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
+        if (a->GetAmount() != b->GetAmount())
+            return a->GetAmount() > b->GetAmount();
+        else if (a->GetHash() != b->GetHash())
+            return a->GetHash() < b->GetHash();
+        else if (a->GetPayee() != b->GetPayee())
+            return a->GetPayee() < b->GetPayee();
+    };
+    boost::sort(vBudgetProposals, SortByAmount);
 
-        auto SortByAmount = [](const auto& a, const auto& b)
-        {
-            if (a->GetAmount() != b->GetAmount())
-                return a->GetAmount() > b->GetAmount();
-            else if (a->GetHash() != b->GetHash())
-                return a->GetHash() < b->GetHash();
-            else if (a->GetPayee() != b->GetPayee())
-                return a->GetPayee() < b->GetPayee();
-        };
-        boost::sort(vBudgetProposals, SortByAmount);
-
-        for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
-            LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vecBudgetPayments[i].nProposalHash.ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vecBudgetPayments[i].payee.ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vecBudgetPayments[i].nAmount);
-        }
-
-        for(unsigned int i = 0; i < vBudgetProposals.size(); i++){
-            LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vBudgetProposals[i]->GetHash().ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vBudgetProposals[i]->GetPayee().ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vBudgetProposals[i]->GetAmount());
-        }
-
-        if(vBudgetProposals.size() == 0) {
-            LogPrintf("CFinalizedBudget::AutoCheck - Can't get Budget, aborting\n");
-            return false;
-        }
-
-        if(vBudgetProposals.size() != vecBudgetPayments.size()) {
-            LogPrintf("CFinalizedBudget::AutoCheck - Budget length doesn't match\n");
-            return false;
-        }
-
-
-        for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
-            if(i > vBudgetProposals.size() - 1) {
-                LogPrintf("CFinalizedBudget::AutoCheck - Vector size mismatch, aborting\n");
-                return false;
-            }
-
-            if(vecBudgetPayments[i].nProposalHash != vBudgetProposals[i]->GetHash()){
-                LogPrintf("CFinalizedBudget::AutoCheck - item #%d doesn't match %s %s\n", i, vecBudgetPayments[i].nProposalHash.ToString(), vBudgetProposals[i]->GetHash().ToString());
-                return false;
-            }
-
-            // if(vecBudgetPayments[i].payee != vBudgetProposals[i]->GetPayee()){ -- triggered with false positive 
-            if(vecBudgetPayments[i].payee.ToString() != vBudgetProposals[i]->GetPayee().ToString()){
-                LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, vecBudgetPayments[i].payee.ToString(), vBudgetProposals[i]->GetPayee().ToString());
-                return false;
-            }
-
-            if(vecBudgetPayments[i].nAmount != vBudgetProposals[i]->GetAmount()){
-                LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %lli %lli\n", i, vecBudgetPayments[i].nAmount, vBudgetProposals[i]->GetAmount());
-                return false;
-            }
-        }
-
-        LogPrintf("CFinalizedBudget::AutoCheck - Finalized Budget Matches! Submitting Vote.\n");
-        SubmitVote();
-        return true;
+    for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
+        LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vecBudgetPayments[i].nProposalHash.ToString());
+        LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vecBudgetPayments[i].payee.ToString());
+        LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vecBudgetPayments[i].nAmount);
     }
+
+    for(unsigned int i = 0; i < vBudgetProposals.size(); i++){
+        LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vBudgetProposals[i]->GetHash().ToString());
+        LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vBudgetProposals[i]->GetPayee().ToString());
+        LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vBudgetProposals[i]->GetAmount());
+    }
+
+    if(vBudgetProposals.size() == 0) {
+        LogPrintf("CFinalizedBudget::AutoCheck - Can't get Budget, aborting\n");
+        return false;
+    }
+
+    if(vBudgetProposals.size() != vecBudgetPayments.size()) {
+        LogPrintf("CFinalizedBudget::AutoCheck - Budget length doesn't match\n");
+        return false;
+    }
+
+
+    for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
+        if(i > vBudgetProposals.size() - 1) {
+            LogPrintf("CFinalizedBudget::AutoCheck - Vector size mismatch, aborting\n");
+            return false;
+        }
+
+        if(vecBudgetPayments[i].nProposalHash != vBudgetProposals[i]->GetHash()){
+            LogPrintf("CFinalizedBudget::AutoCheck - item #%d doesn't match %s %s\n", i, vecBudgetPayments[i].nProposalHash.ToString(), vBudgetProposals[i]->GetHash().ToString());
+            return false;
+        }
+
+        // if(vecBudgetPayments[i].payee != vBudgetProposals[i]->GetPayee()){ -- triggered with false positive
+        if(vecBudgetPayments[i].payee.ToString() != vBudgetProposals[i]->GetPayee().ToString()){
+            LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, vecBudgetPayments[i].payee.ToString(), vBudgetProposals[i]->GetPayee().ToString());
+            return false;
+        }
+
+        if(vecBudgetPayments[i].nAmount != vBudgetProposals[i]->GetAmount()){
+            LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %lli %lli\n", i, vecBudgetPayments[i].nAmount, vBudgetProposals[i]->GetAmount());
+            return false;
+        }
+    }
+
+    LogPrintf("CFinalizedBudget::AutoCheck - Finalized Budget Matches! Submitting Vote.\n");
+    SubmitVote();
+    return true;
 }
 // If masternode voted for a proposal, but is now invalid -- remove the vote
 void CFinalizedBudget::CleanAndRemove(bool fSignatureCheck)

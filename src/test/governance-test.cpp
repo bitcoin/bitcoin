@@ -115,7 +115,6 @@ namespace
             SetMockTime(GetTime());
 
             fMasterNode = true;
-            strBudgetMode = "auto"s;
 
             // Build a main chain 100500 blocks long.
             for (size_t i = 0; i < blocks.size(); ++i)
