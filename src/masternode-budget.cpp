@@ -439,10 +439,11 @@ void DumpBudgets()
     LogPrintf("Budget dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
-bool CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget)
+bool CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget, bool checkCollateral)
 {
     std::string strError = "";
-    if(!finalizedBudget.IsValid(strError)) return false;
+    if(!finalizedBudget.IsValid(strError, checkCollateral))
+        return false;
 
     if(mapFinalizedBudgets.count(finalizedBudget.GetHash())) {
         return false;

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018 The Crown developers
+// Copyright (c) 2014-2018 Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -890,6 +890,92 @@ BOOST_FIXTURE_TEST_SUITE(TestnetBudgetVoting, TestnetBudgetManagerVotingFixture)
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());
         BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+    }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+namespace
+{
+    struct SuperblockPaymentFixture
+    {
+        const int blockHeight;
+
+        const CKey keyPairA;
+        const CKey keyPairB;
+        const CKey keyPairC;
+
+        const CMasternode mn1;
+        const CMasternode mn2;
+        const CMasternode mn3;
+        const CMasternode mn4;
+        const CMasternode mn5;
+
+        std::vector<uint256> hashes;
+        std::vector<CBlockIndex> blocks;
+
+        SuperblockPaymentFixture()
+            : blockHeight(129600)
+            , keyPairA(CreateKeyPair(vchKey0))
+            , keyPairB(CreateKeyPair(vchKey1))
+            , keyPairC(CreateKeyPair(vchKey2))
+            , mn1(CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN))))
+            , mn2(CreateMasternode(CTxIn(COutPoint(ArithToUint256(2), 1 * COIN))))
+            , mn3(CreateMasternode(CTxIn(COutPoint(ArithToUint256(3), 1 * COIN))))
+            , mn4(CreateMasternode(CTxIn(COutPoint(ArithToUint256(4), 1 * COIN))))
+            , mn5(CreateMasternode(CTxIn(COutPoint(ArithToUint256(5), 1 * COIN))))
+            , hashes(static_cast<size_t>(blockHeight + 1))
+            , blocks(static_cast<size_t>(blockHeight + 1))
+        {
+            // Build a main chain 100500 blocks long.
+            for (size_t i = 0; i < blocks.size(); ++i)
+            {
+                FillBlock(blocks[i], hashes[i], &blocks[i - 1], i);
+            }
+            chainActive.SetTip(&blocks.back());
+
+            mnodeman.Add(mn1);
+            mnodeman.Add(mn2);
+            mnodeman.Add(mn3);
+            mnodeman.Add(mn4);
+            mnodeman.Add(mn5);
+        }
+
+        ~SuperblockPaymentFixture()
+        {
+            SetMockTime(0);
+
+            mnodeman.Clear();
+            budget.Clear();
+            chainActive = CChain();
+        }
+
+        CTxBudgetPayment CreatePayment(CKey payee, CAmount amount)
+        {
+            return CTxBudgetPayment(ArithToUint256(std::rand()), PayToPublicKey(payee.GetPubKey()), amount);
+        }
+    };
+}
+
+BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
+
+    BOOST_AUTO_TEST_CASE(FinalizedBudgetIsSuccessfullyAdded)
+    {
+        // Set Up
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(CreatePayment(keyPairA, 42));
+        txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
+        txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
+
+        CFinalizedBudgetBroadcast fb("test", blockHeight, txBudgetPayments, ArithToUint256(1));
+
+        BOOST_REQUIRE(budget.GetFinalizedBudgets().empty());
+        
+        // Call & Check
+        budget.AddFinalizedBudget(fb, false); // false = don't check collateral
+        std::vector<CFinalizedBudget*> actual = budget.GetFinalizedBudgets();
+
+        BOOST_REQUIRE_EQUAL(actual.size(), 1);
+        BOOST_CHECK_EQUAL(fb.GetHash(), actual.front()->GetHash());
     }
 
 BOOST_AUTO_TEST_SUITE_END()

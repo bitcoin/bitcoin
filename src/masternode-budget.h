@@ -129,7 +129,7 @@ public:
     std::vector<CFinalizedBudget*> GetFinalizedBudgets();
     bool IsBudgetPaymentBlock(int nBlockHeight);
     bool AddProposal(const CBudgetProposal& budgetProposal, bool checkCollateral = true);
-    bool AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
+    bool AddFinalizedBudget(CFinalizedBudget& finalizedBudget, bool checkCollateral = true);
     void SubmitFinalBudget();
 
     bool UpdateProposal(const CBudgetVote& vote, CNode* pfrom, std::string& strError);
