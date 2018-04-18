@@ -30,14 +30,8 @@ isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVer
 
 isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion sigversion)
 {
-    bool isInvalid = false;
-    return IsMine(keystore, dest, isInvalid, sigversion);
-}
-
-isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest, bool& isInvalid, SigVersion sigversion)
-{
     CScript script = GetScriptForDestination(dest);
-    return IsMine(keystore, script, isInvalid, sigversion);
+    return IsMine(keystore, script, sigversion);
 }
 
 isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion sigversion)
