@@ -212,12 +212,12 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
     return true;
 };
 
-void ShutdownThreadStakeMiner()
+void StopThreadStakeMiner()
 {
     if (vStakeThreads.size() < 1 // no thread created
         || fStopMinerProc)
         return;
-    LogPrint(BCLog::POS, "ShutdownThreadStakeMiner\n");
+    LogPrint(BCLog::POS, "StopThreadStakeMiner\n");
     fStopMinerProc = true;
 
     for (auto t : vStakeThreads)

@@ -1038,7 +1038,7 @@ BOOST_AUTO_TEST_CASE(script_PushData)
 }
 
 CScript
-sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transaction)
+sign_multisig(const CScript& scriptPubKey, const std::vector<CKey>& keys, const CTransaction& transaction)
 {
     CAmount amount = 0;
     std::vector<uint8_t> vchAmount(8);
@@ -1066,7 +1066,7 @@ sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transac
     return result;
 }
 CScript
-sign_multisig(CScript scriptPubKey, const CKey &key, CTransaction transaction)
+sign_multisig(const CScript& scriptPubKey, const CKey& key, const CTransaction& transaction)
 {
     std::vector<CKey> keys;
     keys.push_back(key);

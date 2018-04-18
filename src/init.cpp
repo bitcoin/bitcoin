@@ -88,19 +88,18 @@ std::unique_ptr<PeerLogicValidation> peerLogic;
 class DummyWalletInit : public WalletInitInterface {
 public:
 
-    std::string GetHelpString(bool showDebug) override {return std::string{};}
-    bool ParameterInteraction() override {return true;}
-    void RegisterRPC(CRPCTable &) override {}
-    bool Verify() override {return true;}
-    bool Open() override {LogPrintf("No wallet support compiled in!\n"); return true;}
-    void Start(CScheduler& scheduler) override {}
-    void Flush() override {}
-    void Stop() override {}
-    void Close() override {}
+    std::string GetHelpString(bool showDebug) const override {return std::string{};}
+    bool ParameterInteraction() const override {return true;}
+    void RegisterRPC(CRPCTable &) const override {}
+    bool Verify() const override {return true;}
+    bool Open() const override {LogPrintf("No wallet support compiled in!\n"); return true;}
+    void Start(CScheduler& scheduler) const override {}
+    void Flush() const override {}
+    void Stop() const override {}
+    void Close() const override {}
 };
 
-static DummyWalletInit g_dummy_wallet_init;
-WalletInitInterface* const g_wallet_init_interface = &g_dummy_wallet_init;
+const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 #endif
 
 #if ENABLE_ZMQ
@@ -219,9 +218,9 @@ void Shutdown()
     StopHTTPServer();
     smsgModule.Shutdown();
 #ifdef ENABLE_WALLET
-    ShutdownThreadStakeMiner();
+    StopThreadStakeMiner();
 #endif
-    g_wallet_init_interface->Flush();
+    g_wallet_init_interface.Flush();
     StopMapPort();
 
     // Because these depend on each-other, we make sure that neither can be
@@ -280,7 +279,7 @@ void Shutdown()
         pcoinsdbview.reset();
         pblocktree.reset();
     }
-    g_wallet_init_interface->Stop();
+    g_wallet_init_interface.Stop();
 
 #if ENABLE_ZMQ
     if (pzmqNotificationInterface) {
@@ -300,7 +299,7 @@ void Shutdown()
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     GetMainSignals().UnregisterWithMempoolSignals(mempool);
-    g_wallet_init_interface->Close();
+    g_wallet_init_interface.Close();
     globalVerifyHandle.reset();
     ECC_Stop();
     ECC_Stop_Stealth();
@@ -472,15 +471,12 @@ std::string HelpMessage(HelpMessageMode mode)
 
     strUsage += smsg::GetHelpString(showDebug);
 
+    strUsage += g_wallet_init_interface.GetHelpString(showDebug);
 #ifdef ENABLE_WALLET
-    if (fParticlMode)
-    {
-        strUsage += g_wallet_init_interface->GetHelpString(showDebug);
+    if (fParticlMode) {
         strUsage += CHDWallet::GetWalletHelpString(showDebug);
     }
 #endif
-    if (!fParticlMode)
-    strUsage += g_wallet_init_interface->GetHelpString(showDebug);
 
 #if ENABLE_ZMQ
     strUsage += HelpMessageGroup(_("ZeroMQ notification options:"));
@@ -887,14 +883,25 @@ static std::string ResolveErrMsg(const char * const optname, const std::string& 
     return strprintf(_("Cannot resolve -%s address: '%s'"), optname, strBind);
 }
 
+/**
+ * Initialize global loggers.
+ *
+ * Note that this is called very early in the process lifetime, so you should be
+ * careful about what global state you rely on here.
+ */
 void InitLogging()
 {
-    fPrintToConsole = gArgs.GetBoolArg("-printtoconsole", false);
+    // Add newlines to the logfile to distinguish this execution from the last
+    // one; called before console logging is set up, so this is only sent to
+    // debug.log.
+    LogPrintf("\n\n\n\n\n");
+
+    fPrintToConsole = gArgs.GetBoolArg("-printtoconsole", !gArgs.GetBoolArg("-daemon", false));
+    fPrintToDebugLog = !gArgs.IsArgNegated("-debuglogfile");
     fLogTimestamps = gArgs.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
     fLogTimeMicros = gArgs.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 
-    LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     std::string version_string = FormatFullVersion();
 #ifdef DEBUG
     version_string += " (debug build)";
@@ -1192,7 +1199,7 @@ bool AppInitParameterInteraction()
         return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
     nBytesPerSigOp = gArgs.GetArg("-bytespersigop", nBytesPerSigOp);
 
-    if (!g_wallet_init_interface->ParameterInteraction()) return false;
+    if (!g_wallet_init_interface.ParameterInteraction()) return false;
 
     fIsBareMultisigStd = gArgs.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
     fAcceptDatacarrier = gArgs.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
@@ -1312,13 +1319,12 @@ bool AppInitMain()
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
 #endif
-    if (gArgs.GetBoolArg("-shrinkdebugfile", logCategories == BCLog::NONE)) {
-        // Do this first since it both loads a bunch of debug.log into memory,
-        // and because this needs to happen before any other debug.log printing
-        ShrinkDebugFile();
-    }
-
     if (fPrintToDebugLog) {
+        if (gArgs.GetBoolArg("-shrinkdebugfile", logCategories == BCLog::NONE)) {
+            // Do this first since it both loads a bunch of debug.log into memory,
+            // and because this needs to happen before any other debug.log printing
+            ShrinkDebugFile();
+        }
         if (!OpenDebugLog()) {
             return InitError(strprintf("Could not open debug log file %s", GetDebugLogPath().string()));
         }
@@ -1367,7 +1373,7 @@ bool AppInitMain()
 #if ENABLE_USBDEVICE
     RegisterUSBDeviceRPC(tableRPC);
 #endif
-    g_wallet_init_interface->RegisterRPC(tableRPC);
+    g_wallet_init_interface.RegisterRPC(tableRPC);
 
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
@@ -1384,7 +1390,7 @@ bool AppInitMain()
     int64_t nStart;
 
     // ********************************************************* Step 5: verify wallet database integrity
-    if (!g_wallet_init_interface->Verify()) return false;
+    if (!g_wallet_init_interface.Verify()) return false;
 
     // ********************************************************* Step 6: network initialization
     // Note that we absolutely cannot open any actual connections
@@ -1763,7 +1769,7 @@ bool AppInitMain()
     LogPrintf("No wallet support compiled in!\n");
 #endif
     if (!fParticlMode)
-    if (!g_wallet_init_interface->Open()) return false;
+    if (!g_wallet_init_interface.Open()) return false;
 
     // ********************************************************* Step 9: data directory maintenance
 
@@ -1948,7 +1954,7 @@ bool AppInitMain()
 
     uiInterface.InitMessage(_("Done loading"));
 
-    g_wallet_init_interface->Start(scheduler);
+    g_wallet_init_interface.Start(scheduler);
 
     return true;
 }
