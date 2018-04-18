@@ -34,6 +34,7 @@
 
 bool AddWallet(CWallet* wallet);
 bool RemoveWallet(CWallet* wallet);
+bool HasWallets();
 std::vector<CWallet*> GetWallets();
 CWallet* GetWallet(const std::string& name);
 
