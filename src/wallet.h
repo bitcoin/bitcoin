@@ -137,6 +137,8 @@ private:
     //! the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
     int nWalletMaxVersion;
 
+    bool nUseIX;
+
     int64_t nNextResend;
     int64_t nLastResend;
 

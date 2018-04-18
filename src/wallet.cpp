@@ -1558,6 +1558,8 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAm
 bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                                 CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX, CAmount nFeePay)
 {
+    nUseIX = useIX;
+    CAmount nFeePayBackup = nFeePay;
     if(useIX && nFeePay < CENT) nFeePay = CENT;
 
     CAmount nValue = 0;
@@ -1612,17 +1614,25 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 
                 if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, useIX))
                 {
-                    if(coin_type == ALL_COINS) {
-                        strFailReason = _("Insufficient funds.");
-                    } else if (coin_type == ONLY_NOT10000IFMN) {
-                        strFailReason = _("Unable to locate enough funds for this transaction that are not equal 10000 CRW.");
+                    if (useIX && nFeePay < CENT)
+                    {
+                        nFeePay = nFeePayBackup;
+                        nFeeRet = nFeeRet - CENT + nFeePay;
+                        nTotalValue = nValue + nFeeRet;
                     }
 
-                    if(useIX){
-                        strFailReason += " " + _("InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.");
+                    if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, false))
+                    {
+                        if(coin_type == ALL_COINS) {
+                            strFailReason = _("Insufficient funds.");
+                        } else if (coin_type == ONLY_NOT10000IFMN) {
+                            strFailReason = _("Unable to locate enough funds for this transaction that are not equal 10000 CRW.");
+                        }
+                        return false;
                     }
 
-                    return false;
+                    // Proceed with ordinary transaction without instant send.
+                    nUseIX = false;
                 }
 
 
@@ -1807,7 +1817,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, std:
             LogPrintf("CommitTransaction() : Error: Transaction not valid\n");
             return false;
         }
-        wtxNew.RelayWalletTransaction(strCommand);
+        wtxNew.RelayWalletTransaction(nUseIX ? "ix" : "tx");
     }
     return true;
 }
