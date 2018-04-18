@@ -10,7 +10,6 @@ from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import *
 from io import BytesIO
-import time
 
 '''
 This test is meant to exercise activation of the first version bits soft fork
@@ -206,12 +205,12 @@ class BIP68_112_113Test(ComparisonTestFramework):
         return txs
 
     def get_tests(self):
-        long_past_time = int(time.time()) - 600 * 1000 # enough to build up to 1000 blocks 10 minutes apart without worrying about getting into the future
-        self.nodes[0].setmocktime(long_past_time - 100) # enough so that the generated blocks will still all be before long_past_time
         self.coinbase_blocks = self.nodes[0].generate(1 + 16 + 2*32 + 1) # 82 blocks generated for inputs
-        self.nodes[0].setmocktime(0) # set time back to present so yielded blocks aren't in the future as we advance last_block_time
+        # set time so that there was enough time to build up to 1000 blocks 10 minutes apart on top of the last one
+        # without worrying about getting into the future
+        self.nodes[0].setmocktime(GENESISTIME + 600 * 1000 + 100)
         self.tipheight = 82 # height of the next block to build
-        self.last_block_time = long_past_time
+        self.last_block_time = GENESISTIME
         self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
 
@@ -273,7 +272,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
         self.nodes[0].setmocktime(self.last_block_time + 600)
         inputblockhash = self.nodes[0].generate(1)[0] # 1 block generated for inputs to be in chain at height 572
-        self.nodes[0].setmocktime(0)
+        self.nodes[0].setmocktime(GENESISTIME + 600 * 1000 + 100)
         self.tip = int("0x" + inputblockhash, 0)
         self.tipheight += 1
         self.last_block_time += 600

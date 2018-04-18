@@ -10,7 +10,6 @@ from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP
 from io import BytesIO
-import time
 
 def cltv_invalidate(tx):
     '''Modify the signature in vin 0 of the tx to fail CLTV
@@ -69,7 +68,7 @@ class BIP65Test(ComparisonTestFramework):
         height = 3  # height of the next block to build
         self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
-        self.last_block_time = int(time.time())
+        self.last_block_time = get_mocktime() + 1
 
         ''' 398 more version 3 blocks '''
         test_blocks = []

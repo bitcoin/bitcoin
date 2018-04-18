@@ -22,11 +22,6 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.setup_clean_chain = False
 
-    def setup_nodes(self):
-        #This test requires mocktime
-        enable_mocktime()
-        return start_nodes(self.num_nodes, self.options.tmpdir)
-
     def run_test(self):
         # Simple send, 0 to 1:
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)

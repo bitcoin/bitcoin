@@ -9,9 +9,10 @@ from test_framework.util import *
 
 class WalletHDTest(BitcoinTestFramework):
 
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 2)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 2
 
     def setup_network(self):
         self.nodes = start_nodes(2, self.options.tmpdir, [['-usehd=0'], ['-usehd=1', '-keypool=0']], redirect_stderr=True)

@@ -262,7 +262,7 @@ class BIP68Test(BitcoinTestFramework):
         # Now mine some blocks, but make sure tx2 doesn't get mined.
         # Use prioritisetransaction to lower the effective feerate to 0
         self.nodes[0].prioritisetransaction(tx2.hash, -1e15, int(-self.relayfee*COIN))
-        cur_time = int(time.time())
+        cur_time = get_mocktime()
         for i in range(10):
             self.nodes[0].setmocktime(cur_time + 600)
             self.nodes[0].generate(1)
@@ -343,7 +343,7 @@ class BIP68Test(BitcoinTestFramework):
         assert(tx2.hash in mempool)
 
         # Reset the chain and get rid of the mocktimed-blocks
-        self.nodes[0].setmocktime(0)
+        self.nodes[0].setmocktime(get_mocktime())
         self.nodes[0].invalidateblock(self.nodes[0].getblockhash(cur_height+1))
         self.nodes[0].generate(10)
 
@@ -389,7 +389,7 @@ class BIP68Test(BitcoinTestFramework):
 
         # make a block that violates bip68; ensure that the tip updates
         tip = int(self.nodes[0].getbestblockhash(), 16)
-        block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1))
+        block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1), get_mocktime() + 600)
         block.nVersion = 3
         block.vtx.extend([tx1, tx2, tx3])
         block.hashMerkleRoot = block.calc_merkle_root()

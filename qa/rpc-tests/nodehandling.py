@@ -54,7 +54,8 @@ class NodeHandlingTest (BitcoinTestFramework):
         self.nodes[2].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000) #ban for 1000 seconds
         listBeforeShutdown = self.nodes[2].listbanned()
         assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address']) #must be here
-        time.sleep(2) #make 100% sure we expired 192.168.0.1 node time
+        set_mocktime(get_mocktime() + 2) #make 100% sure we expired 192.168.0.1 node time
+        set_node_times(self.nodes, get_mocktime()) #make 100% sure we expired 192.168.0.1 node time
 
         #stop node
         stop_node(self.nodes[2], 2)

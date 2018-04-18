@@ -25,6 +25,9 @@ from .util import (
     check_json_precision,
     initialize_chain_clean,
     PortSeed,
+    set_cache_mocktime,
+    set_genesis_mocktime,
+    get_mocktime
 )
 from .authproxy import JSONRPCException
 
@@ -46,8 +49,10 @@ class BitcoinTestFramework(object):
         print("Initializing test directory "+self.options.tmpdir)
         if self.setup_clean_chain:
             initialize_chain_clean(self.options.tmpdir, self.num_nodes)
+            set_genesis_mocktime()
         else:
             initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
+            set_cache_mocktime()
 
     def stop_node(self, num_node):
         stop_node(self.nodes[num_node], num_node)

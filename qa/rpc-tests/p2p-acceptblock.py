@@ -151,9 +151,9 @@ class AcceptBlockTest(BitcoinTestFramework):
         # 2. Send one block that builds on each tip.
         # This should be accepted.
         blocks_h2 = []  # the height 2 blocks on each node's chain
-        block_time = int(time.time()) + 1
+        block_time = get_mocktime() + 1
         for i in range(2):
-            blocks_h2.append(create_block(tips[i], create_coinbase(2), block_time))
+            blocks_h2.append(create_block(tips[i], create_coinbase(2), block_time + 1))
             blocks_h2[i].solve()
             block_time += 1
         test_node.send_message(msg_block(blocks_h2[0]))
@@ -226,7 +226,8 @@ class AcceptBlockTest(BitcoinTestFramework):
                     headers_message.headers.append(CBlockHeader(next_block))
                 tips[j] = next_block
 
-        time.sleep(2)
+        set_mocktime(get_mocktime() + 2)
+        set_node_times(self.nodes, get_mocktime())
         for x in all_blocks:
             try:
                 self.nodes[0].getblock(x.hash)

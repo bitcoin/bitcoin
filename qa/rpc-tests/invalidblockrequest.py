@@ -8,7 +8,6 @@ from test_framework.util import *
 from test_framework.comptool import TestManager, TestInstance, RejectResult
 from test_framework.blocktools import *
 import copy
-import time
 
 
 '''
@@ -40,7 +39,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
     def get_tests(self):
         if self.tip is None:
             self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
-        self.block_time = int(time.time())+1
+        self.block_time = get_mocktime() + 1
 
         '''
         Create a new block with an anyone-can-spend coinbase

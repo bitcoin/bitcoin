@@ -10,6 +10,11 @@ from test_framework.util import *
 
 class KeyPoolTest(BitcoinTestFramework):
 
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 1
+
     def run_test(self):
         nodes = self.nodes
 
@@ -62,10 +67,6 @@ class KeyPoolTest(BitcoinTestFramework):
             raise AssertionError('Keypool should be exhausted after three addesses')
         except JSONRPCException as e:
             assert(e.error['code']==-12)
-
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 1)
 
     def setup_network(self):
         self.nodes = start_nodes(1, self.options.tmpdir, [['-usehd=0']])

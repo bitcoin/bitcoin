@@ -12,6 +12,11 @@ from test_framework.util import *
 
 class KeyPoolTest(BitcoinTestFramework):
 
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 1
+
     def run_test(self):
         nodes = self.nodes
         addr_before_encrypting = nodes[0].getnewaddress()
@@ -97,10 +102,6 @@ class KeyPoolTest(BitcoinTestFramework):
         wi = nodes[0].getwalletinfo()
         assert_equal(wi['keypoolsize_hd_internal'], 100)
         assert_equal(wi['keypoolsize'], 100)
-
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 1)
 
     def setup_network(self):
         self.nodes = start_nodes(1, self.options.tmpdir, [['-usehd=1']], redirect_stderr=True)

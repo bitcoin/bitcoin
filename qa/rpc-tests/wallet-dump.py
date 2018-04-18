@@ -64,6 +64,7 @@ class WalletDumpTest(BitcoinTestFramework):
         # TODO remove this when usehd=1 becomes the default
         # use our own cache and -usehd=1 as extra arg as the default cache is run with -usehd=0
         initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir + "/hd", ["-usehd=1"], redirect_stderr=True)
+        set_cache_mocktime()
 
     def setup_network(self, split=False):
         # Use 1 minute timeout because the initial getnewaddress RPC can take

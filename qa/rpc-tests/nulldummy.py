@@ -9,7 +9,6 @@ from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.script import CScript
 from io import BytesIO
-import time
 
 NULLDUMMY_ERROR = "64: non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
 
@@ -61,7 +60,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.lastblockhash = self.nodes[0].getbestblockhash()
         self.tip = int("0x" + self.lastblockhash, 0)
         self.lastblockheight = 429
-        self.lastblocktime = int(time.time()) + 429
+        self.lastblocktime = get_mocktime() + 429
 
         print ("Test 1: NULLDUMMY compliant base transactions should be accepted to mempool and mined before activation [430]")
         test1txs = [self.create_transaction(self.nodes[0], coinbase_txid[0], self.ms_address, 49)]

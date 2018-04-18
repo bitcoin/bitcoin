@@ -7,7 +7,6 @@ from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
 from test_framework.comptool import TestManager, TestInstance, RejectResult
 from test_framework.blocktools import *
-import time
 from test_framework.key import CECKey
 from test_framework.script import *
 import struct
@@ -101,7 +100,7 @@ class FullBlockTest(ComparisonTestFramework):
     def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), solve=True):
         if self.tip == None:
             base_block_hash = self.genesis_hash
-            block_time = int(time.time())+1
+            block_time = get_mocktime() + 1
         else:
             base_block_hash = self.tip.sha256
             block_time = self.tip.nTime + 1
@@ -671,7 +670,7 @@ class FullBlockTest(ComparisonTestFramework):
         # A block with timestamp > 2 hrs in the future
         tip(44)
         b48 = block(48, solve=False)
-        b48.nTime = int(time.time()) + 60 * 60 * 3
+        b48.nTime = get_mocktime() + 60 * 60 * 3
         b48.solve()
         yield rejected(RejectResult(16, b'time-too-new'))
 

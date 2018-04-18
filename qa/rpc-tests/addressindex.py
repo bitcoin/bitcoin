@@ -7,7 +7,6 @@
 # Test addressindex generation and fetching
 #
 
-import time
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.script import *
@@ -16,9 +15,10 @@ import binascii
 
 class AddressIndexTest(BitcoinTestFramework):
 
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 4)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 4
 
     def setup_network(self):
         self.nodes = []
@@ -202,7 +202,8 @@ class AddressIndexTest(BitcoinTestFramework):
         self.nodes[2].invalidateblock(best_hash)
         self.nodes[3].invalidateblock(best_hash)
         # Allow some time for the reorg to start
-        time.sleep(2)
+        set_mocktime(get_mocktime() + 2)
+        set_node_times(self.nodes, get_mocktime())
         self.sync_all()
 
         balance4 = self.nodes[1].getaddressbalance(address2)
@@ -245,7 +246,8 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
         signed_tx = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
         memtxid1 = self.nodes[2].sendrawtransaction(signed_tx["hex"], True)
-        time.sleep(2)
+        set_mocktime(get_mocktime() + 2)
+        set_node_times(self.nodes, get_mocktime())
 
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(int(unspent[1]["txid"], 16), unspent[1]["vout"]))]
@@ -259,7 +261,8 @@ class AddressIndexTest(BitcoinTestFramework):
         tx2.rehash()
         signed_tx2 = self.nodes[2].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
         memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True)
-        time.sleep(2)
+        set_mocktime(get_mocktime() + 2)
+        set_node_times(self.nodes, get_mocktime())
 
         mempool = self.nodes[2].getaddressmempool({"addresses": [address3]})
         assert_equal(len(mempool), 3)
@@ -286,7 +289,8 @@ class AddressIndexTest(BitcoinTestFramework):
         self.nodes[2].importprivkey(privKey3)
         signed_tx3 = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
         memtxid3 = self.nodes[2].sendrawtransaction(signed_tx3["hex"], True)
-        time.sleep(2)
+        set_mocktime(get_mocktime() + 2)
+        set_node_times(self.nodes, get_mocktime())
 
         mempool3 = self.nodes[2].getaddressmempool({"addresses": [address3]})
         assert_equal(len(mempool3), 2)

@@ -49,20 +49,26 @@ class PortSeed:
 #version of the blockchain is used without MOCKTIME
 #then the mempools will not sync due to IBD.
 MOCKTIME = 0
+GENESISTIME = 1417713337
 
-def enable_mocktime():
-    #For backwared compatibility of the python scripts
-    #with previous versions of the cache, set MOCKTIME 
-    #to regtest genesis time + (201 * 156)
+def set_mocktime(t):
     global MOCKTIME
-    MOCKTIME = 1417713337 + (201 * 156)
+    MOCKTIME = t
 
 def disable_mocktime():
-    global MOCKTIME
-    MOCKTIME = 0
+    set_mocktime(0)
 
 def get_mocktime():
     return MOCKTIME
+
+def set_cache_mocktime():
+    #For backwared compatibility of the python scripts
+    #with previous versions of the cache, set MOCKTIME
+    #to regtest genesis time + (201 * 156)
+    set_mocktime(GENESISTIME + (201 * 156))
+
+def set_genesis_mocktime():
+    set_mocktime(GENESISTIME)
 
 def enable_coverage(dirname):
     """Maintain a log of which RPC calls are made during testing."""
@@ -260,10 +266,11 @@ def initialize_chain(test_dir, num_nodes, cachedir, extra_args=None, redirect_st
             if os.path.isdir(os.path.join(cachedir,"node"+str(i))):
                 shutil.rmtree(os.path.join(cachedir,"node"+str(i)))
 
+        set_genesis_mocktime()
         # Create cache directories, run dashds:
         for i in range(MAX_NODES):
             datadir=initialize_datadir(cachedir, i)
-            args = [ os.getenv("DASHD", "dashd"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
+            args = [ os.getenv("DASHD", "dashd"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0", "-mocktime="+str(GENESISTIME) ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             if extra_args is not None:
@@ -292,9 +299,7 @@ def initialize_chain(test_dir, num_nodes, cachedir, extra_args=None, redirect_st
         # initialize_chain, only 4 nodes will generate coins.
         #
         # blocks are created with timestamps 156 seconds apart
-        # starting from 31356 seconds in the past
-        enable_mocktime()
-        block_time = get_mocktime() - (201 * 156)
+        block_time = GENESISTIME
         for i in range(2):
             for peer in range(4):
                 for j in range(25):
@@ -326,7 +331,6 @@ def initialize_chain_clean(test_dir, num_nodes):
     """
     for i in range(num_nodes):
         datadir=initialize_datadir(test_dir, i)
-
 
 def _rpchost_to_args(rpchost):
     '''Convert optional IP:port spec to rpcconnect/rpcport args'''
