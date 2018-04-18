@@ -123,4 +123,7 @@ CBlock getBlock9tx();
 // define an implicit conversion here so that uint256 may be used directly in BOOST_CHECK_*
 std::ostream& operator<<(std::ostream& os, const uint256& num);
 
+// define an implicit conversion here so that uint256 may be used directly in BOOST_CHECK_*
+std::ostream& operator<<(std::ostream& os, const uint256& num);
+
 #endif
