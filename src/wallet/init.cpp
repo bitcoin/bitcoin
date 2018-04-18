@@ -242,7 +242,12 @@ bool WalletInit::Verify() const
             return InitError(strprintf(_("Error loading wallet %s. Duplicate -wallet filename specified."), wallet_file));
         }
 
-        if (!CWallet::Verify(wallet_file, salvage_wallet)) return false;
+        std::string error_string;
+        std::string warning_string;
+        bool verify_success = CWallet::Verify(wallet_file, salvage_wallet, error_string, warning_string);
+        if (!error_string.empty()) InitError(error_string);
+        if (!warning_string.empty()) InitWarning(warning_string);
+        if (!verify_success) return false;
     }
 
     return true;

@@ -4911,7 +4911,7 @@ void CWallet::MarkPreSplitKeys()
     }
 }
 
-bool CWallet::Verify(std::string wallet_file, bool salvage_wallet)
+bool CWallet::Verify(std::string wallet_file, bool salvage_wallet, std::string& error_string, std::string& warning_string)
 {
     // Do some checking on wallet path. It should be either a:
     //
@@ -4925,23 +4925,24 @@ bool CWallet::Verify(std::string wallet_file, bool salvage_wallet)
     if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
           (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
           (path_type == fs::regular_file && fs::path(wallet_file).filename() == wallet_file))) {
-        return InitError(strprintf(
-            _("Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
+        error_string = strprintf(
+              "Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
               "database/log.?????????? files can be stored, a location where such a directory could be created, "
-              "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)"),
-            wallet_file, GetWalletDir()));
+              "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)",
+              wallet_file, GetWalletDir());
+        return false;
     }
 
     // Make sure that the wallet path doesn't clash with an existing wallet path
     for (auto wallet : GetWallets()) {
         if (fs::absolute(wallet->GetName(), GetWalletDir()) == wallet_path) {
-            return InitError(strprintf(_("Error loading wallet %s. Duplicate -wallet filename specified."), wallet_file));
+            error_string = strprintf("Error loading wallet %s. Duplicate -wallet filename specified.", wallet_file);
+            return false;
         }
     }
 
-    std::string strError;
-    if (!WalletBatch::VerifyEnvironment(wallet_path, strError)) {
-        return InitError(strError);
+    if (!WalletBatch::VerifyEnvironment(wallet_path, error_string)) {
+        return false;
     }
 
     if (salvage_wallet) {
@@ -4953,24 +4954,11 @@ bool CWallet::Verify(std::string wallet_file, bool salvage_wallet)
         }
     }
 
-    std::string strWarning;
-    bool dbV = WalletBatch::VerifyDatabaseFile(wallet_path, strWarning, strError);
-    if (!strWarning.empty()) {
-        InitWarning(strWarning);
-    }
-    if (!dbV) {
-        InitError(strError);
+    if (!WalletBatch::VerifyDatabaseFile(wallet_path, warning_string, error_string)) {
         return false;
     }
 
-    if(!AutoBackupWallet(nullptr, wallet_file, strWarning, strError)) {
-        if (!strWarning.empty())
-            InitWarning(strWarning);
-        if (!strError.empty())
-            return InitError(strError);
-    }
-
-    return true;
+    return AutoBackupWallet(nullptr, wallet_file, warning_string, error_string);
 }
 
 CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& path)
