@@ -61,6 +61,11 @@ bool RemoveWallet(CWallet* wallet)
     return true;
 }
 
+bool HasWallets()
+{
+    return !vpwallets.empty();
+}
+
 std::vector<CWallet*> GetWallets()
 {
     return vpwallets;
