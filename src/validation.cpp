@@ -3489,7 +3489,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         }
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
-            return error("%s: AcceptBlock FAILED (%s)", __func__, state.GetDebugMessage());
+            return error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
         }
     }
 
