@@ -48,7 +48,6 @@ private:
     int64_t nTimeLastFailure;
 
     void Fail();
-    void ClearFulfilledRequests(CConnman& connman);
 
 public:
     CMasternodeSync() { Reset(); }

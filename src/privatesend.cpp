@@ -12,6 +12,7 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
+#include "netfulfilledman.h"
 #include "netmessagemaker.h"
 #include "script/sign.h"
 #include "txmempool.h"
@@ -545,6 +546,7 @@ void ThreadCheckPrivateSend(CConnman& connman)
                 activeMasternode.ManageState(connman);
 
             if(nTick % 60 == 0) {
+                netfulfilledman.CheckAndRemove();
                 mnodeman.ProcessMasternodeConnections(connman);
                 mnodeman.CheckAndRemove(connman);
                 mnodeman.WarnMasternodeDaemonUpdates();
