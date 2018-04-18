@@ -113,6 +113,7 @@ BITCOIN_CORE_H = \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
+  logging.h \
   memusage.h \
   merkleblock.h \
   miner.h \
@@ -364,6 +365,7 @@ libbitcoin_util_a_SOURCES = \
   fs.cpp \
   interfaces/handler.cpp \
   interfaces/node.cpp \
+  logging.cpp \
   random.cpp \
   rpc/protocol.cpp \
   rpc/util.cpp \
