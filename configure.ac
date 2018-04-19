@@ -621,6 +621,7 @@ fi
 
 dnl these are only used when qt is enabled
 if test x$bitcoin_enable_qt != xno; then
+  CPPFLAGS="$CPPFLAGS -DQT_GUI"
   BUILD_QT=qt
   dnl enable dbus support
   AC_MSG_CHECKING([if dbus should be enabled])
