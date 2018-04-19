@@ -14,7 +14,7 @@ conf() {
 			mkdir $_HOME/.peercoin
 		fi
 
-		if [ ! -f $_HOME/.peercoin/ppcoin.conf ]; then
+		if [ ! -f $_HOME/.peercoin/peercoin.conf ]; then
 			echo "Peercoin configuration file not found for user $USER! Creating one now."
 			echo -e "rpcuser=rpcuser\nrpcpassword=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c10)" > $_HOME/.peercoin/peercoin.conf
 		fi
