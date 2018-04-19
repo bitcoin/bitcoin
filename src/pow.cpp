@@ -18,6 +18,9 @@
 #include "validation.h"
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
+	if (pindexLast->nHeight + 1 < 600) {
+		return UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit).GetCompact();
+	}
 	return CalculateNextWorkRequired(pindexLast, 0, params);
 }
 // SYSCOIN DGW diff algo
