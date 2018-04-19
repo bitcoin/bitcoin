@@ -10,7 +10,6 @@ from enum import Enum
 import http.client
 import json
 import logging
-import os
 import re
 import subprocess
 import tempfile
@@ -57,7 +56,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, rpchost, timewait, binary, stderr, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
+    def __init__(self, i, datadir, rpchost, timewait, bitcoind, bitcoin_cli, stderr, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
         self.index = i
         self.datadir = datadir
         self.rpchost = rpchost
@@ -66,10 +65,7 @@ class TestNode():
         else:
             # Wait for up to 60 seconds for the RPC server to respond
             self.rpc_timeout = 60
-        if binary is None:
-            self.binary = os.getenv("BITCOIND", "bitcoind")
-        else:
-            self.binary = binary
+        self.binary = bitcoind
         self.stderr = stderr
         self.coverage_dir = coverage_dir
         if extra_conf != None:
@@ -90,7 +86,7 @@ class TestNode():
             "-noprinttoconsole"
         ]
 
-        self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "bitcoin-cli"), self.datadir)
+        self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
         self.use_cli = use_cli
 
         self.running = False
