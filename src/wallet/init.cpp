@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <init.h>
 #include <net.h>
+#include <scheduler.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
@@ -264,8 +265,11 @@ bool WalletInit::Open() const
 void WalletInit::Start(CScheduler& scheduler) const
 {
     for (CWallet* pwallet : GetWallets()) {
-        pwallet->postInitProcess(scheduler);
+        pwallet->postInitProcess();
     }
+
+    // Run a thread to flush wallet periodically
+    scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
 }
 
 void WalletInit::Flush() const
