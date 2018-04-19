@@ -84,11 +84,11 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
-	static unsigned int regTestBits = UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit).GetCompact();
+	//static unsigned int regTestBits = UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit.GetCompact();
     bool fNegative;
     bool fOverflow;
     arith_uint256 bnTarget;
-	if (ChainNameFromCommandLine() != CBaseChainParams::REGTEST && nBits == regTestBits)
+	if (Params().NetworkIDString() != CBaseChainParams::REGTEST)
 		return true;
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 	arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
