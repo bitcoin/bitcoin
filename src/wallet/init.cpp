@@ -7,6 +7,7 @@
 #include <init.h>
 #include <interfaces/moduleinterface.h>
 #include <net.h>
+#include <scheduler.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
@@ -306,9 +307,12 @@ bool WalletInit::Open() const
 void WalletInit::Start(CScheduler& scheduler, CConnman* connman) const
 {
     for (CWallet* pwallet : GetWallets()) {
-        pwallet->postInitProcess(scheduler, gArgs.GetBoolArg("-mnconflock", true) ? true : false);
+        pwallet->postInitProcess(gArgs.GetBoolArg("-mnconflock", true) ? true : false);
     }
     if(HasWallets()) privateSendClient.Controller(scheduler, connman);
+
+    // Run a thread to flush wallet periodically
+    scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
 }
 
 void WalletInit::Flush() const

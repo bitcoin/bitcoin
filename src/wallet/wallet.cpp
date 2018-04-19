@@ -26,7 +26,6 @@
 #include <primitives/transaction.h>
 #include <reverse_iterator.h>
 #include <script/script.h>
-#include <scheduler.h>
 #include <timedata.h>
 #include <txmempool.h>
 #include <utilmoneystr.h>
@@ -5242,9 +5241,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
     return walletInstance;
 }
 
-std::atomic<bool> CWallet::fFlushScheduled(false);
-
-void CWallet::postInitProcess(CScheduler& scheduler, bool mnconflock)
+void CWallet::postInitProcess(bool mnconflock)
 {
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
@@ -5267,11 +5264,6 @@ void CWallet::postInitProcess(CScheduler& scheduler, bool mnconflock)
             LockCoin(outpoint);
             LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
         }
-    }
-
-    // Run a thread to flush wallet periodically
-    if (!CWallet::fFlushScheduled.exchange(true)) {
-        scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
     }
 }
 
