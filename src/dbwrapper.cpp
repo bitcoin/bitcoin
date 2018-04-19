@@ -82,11 +82,13 @@ constexpr bool LevelDBUsesMmap() {
 }
 
 // Systems with mmap do not use the block cache.
-constexpr bool LevelDBUsesBlockCache() {
+constexpr bool LevelDBUsesBlockCache()
+{
     return !LevelDBUsesMmap();
 }
 
-static void SetMaxOpenFiles(leveldb::Options *options) {
+static void SetMaxOpenFiles(leveldb::Options *options)
+{
     // On most platforms the default setting of max_open_files (which is 1000)
     // is optimal. On Windows using a large file count is OK because the handles
     // do not interfere with select() loops. On 64-bit Unix hosts this value is
