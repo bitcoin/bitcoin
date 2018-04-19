@@ -93,8 +93,8 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 	// SYSCOIN
 	arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
-	//if(chainActive.Height() <= 600)
-	//	nProofOfWorkLimit = UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit);
+	if(chainActive.Height() < 600)
+		nProofOfWorkLimit = UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit);
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > nProofOfWorkLimit)
         return error("CheckProofOfWork(): nBits below minimum work");
