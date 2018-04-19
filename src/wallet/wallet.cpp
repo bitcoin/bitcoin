@@ -28,55 +28,11 @@
 #include <utilmoneystr.h>
 #include <wallet/fees.h>
 
-#include <algorithm>
 #include <assert.h>
 #include <future>
 
 #include <boost/algorithm/string/replace.hpp>
 
-static CCriticalSection cs_wallets;
-static std::vector<CWallet*> vpwallets GUARDED_BY(cs_wallets);
-
-bool AddWallet(CWallet* wallet)
-{
-    LOCK(cs_wallets);
-    assert(wallet);
-    std::vector<CWallet*>::const_iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
-    if (i != vpwallets.end()) return false;
-    vpwallets.push_back(wallet);
-    return true;
-}
-
-bool RemoveWallet(CWallet* wallet)
-{
-    LOCK(cs_wallets);
-    assert(wallet);
-    std::vector<CWallet*>::iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
-    if (i == vpwallets.end()) return false;
-    vpwallets.erase(i);
-    return true;
-}
-
-bool HasWallets()
-{
-    LOCK(cs_wallets);
-    return !vpwallets.empty();
-}
-
-std::vector<CWallet*> GetWallets()
-{
-    LOCK(cs_wallets);
-    return vpwallets;
-}
-
-CWallet* GetWallet(const std::string& name)
-{
-    LOCK(cs_wallets);
-    for (CWallet* wallet : vpwallets) {
-        if (wallet->GetName() == name) return wallet;
-    }
-    return nullptr;
-}
 
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
 

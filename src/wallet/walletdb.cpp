@@ -15,6 +15,7 @@
 #include <util.h>
 #include <utiltime.h>
 #include <wallet/wallet.h>
+#include <wallet/walletmanager.h>
 
 #include <atomic>
 
@@ -756,7 +757,7 @@ void MaybeCompactWalletDB()
         return;
     }
 
-    for (CWallet* pwallet : GetWallets()) {
+    for (CWallet* pwallet : g_wallet_manager.GetWallets()) {
         WalletDatabase& dbh = pwallet->GetDBHandle();
 
         unsigned int nUpdateCounter = dbh.nUpdateCounter;
