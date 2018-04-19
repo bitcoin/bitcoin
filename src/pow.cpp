@@ -87,7 +87,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     bool fNegative;
     bool fOverflow;
     arith_uint256 bnTarget;
-	static const unsigned int regTestBits = UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit).GetCompact();
+	static unsigned int regTestBits = UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit).GetCompact();
 	if (ChainNameFromCommandLine() != CBaseChainParams::REGTEST && nBits == regTestBits)
 		return true;
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
