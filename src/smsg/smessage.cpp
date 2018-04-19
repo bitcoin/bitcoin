@@ -30,9 +30,11 @@ Notes:
 #include <stdexcept>
 #include <errno.h>
 #include <limits>
+#include <compat/byteswap.h>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread/thread.hpp>
+
 
 #include <secp256k1.h>
 #include <secp256k1_ecdh.h>
@@ -2334,9 +2336,10 @@ int CSMSG::ScanMessage(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t
 
         std::string sPrefix("im");
         uint8_t chKey[30];
-        memcpy(&chKey[0],  sPrefix.data(),    2);
-        memcpy(&chKey[2],  &psmsg->timestamp, 8);
-        memcpy(&chKey[10], hash.begin(),      20);
+        int64_t timestamp_be = bswap_64(psmsg->timestamp);
+        memcpy(&chKey[0], sPrefix.data(), 2);
+        memcpy(&chKey[2], &timestamp_be, 8);
+        memcpy(&chKey[10], hash.begin(), 20);
 
         SecMsgStored smsgInbox;
         smsgInbox.timeReceived  = GetTime();
@@ -3471,9 +3474,10 @@ int CSMSG::Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
 
     std::string sPrefix("qm");
     uint8_t chKey[30];
-    memcpy(&chKey[0],  sPrefix.data(),  2);
-    memcpy(&chKey[2],  &smsg.timestamp, 8);
-    memcpy(&chKey[10], msgId.begin(),   20);
+    int64_t timestamp_be = bswap_64(smsg.timestamp);
+    memcpy(&chKey[0], sPrefix.data(), 2);
+    memcpy(&chKey[2], &timestamp_be, 8);
+    memcpy(&chKey[10], msgId.begin(), 20);
 
     SecMsgStored smsgSQ;
     smsgSQ.timeReceived  = GetTime();
@@ -3549,9 +3553,10 @@ int CSMSG::Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
             // Save sent message to db
             std::string sPrefix("sm");
             uint8_t chKey[30];
-            memcpy(&chKey[0],  sPrefix.data(),           2);
-            memcpy(&chKey[2],  &smsgForOutbox.timestamp, 8);
-            memcpy(&chKey[10], msgId.begin(),            20);
+            int64_t timestamp_be = bswap_64(smsgForOutbox.timestamp);
+            memcpy(&chKey[0], sPrefix.data(), 2);
+            memcpy(&chKey[2], &timestamp_be, 8);
+            memcpy(&chKey[10], msgId.begin(), 20);
 
             SecMsgStored smsgOutbox;
 
@@ -3686,7 +3691,8 @@ int CSMSG::FundMsg(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmo
 std::vector<uint8_t> CSMSG::GetMsgID(const SecureMessage &smsg)
 {
     std::vector<uint8_t> rv(28);
-    memcpy(rv.data(), &smsg.timestamp, 8);
+    int64_t timestamp_be = bswap_64(smsg.timestamp);
+    memcpy(rv.data(), &timestamp_be, 8);
 
     HashMsg(smsg, smsg.pPayload, smsg.nPayload-(smsg.IsPaidVersion() ? 32 : 0), *((uint160*)&rv[8]));
 

@@ -11,6 +11,7 @@
 #include <rpc/server.h>
 #include <utilstrencodings.h>
 #include <smsg/smessage.h>
+#include <compat/byteswap.h>
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -246,7 +247,8 @@ bool CZMQPublishSMSGNotifier::NotifySecureMessage(const smsg::SecureMessage *psm
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     ss << psmsg->version[0];
     ss << psmsg->version[1];
-    ss << psmsg->timestamp;
+    int64_t timestamp_be = bswap_64(psmsg->timestamp);
+    ss << timestamp_be;
     ss << hash;
     return SendMessage(MSG_SMSG, &(*ss.begin()), ss.size());
 }

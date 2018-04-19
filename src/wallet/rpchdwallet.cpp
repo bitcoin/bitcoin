@@ -3169,7 +3169,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
 
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "filtertransactions [options]\n"
+            "filtertransactions ( options )\n"
             "List transactions.\n"
             "1. options (json, optional) : A configuration object for the query\n"
             "\n"
@@ -3531,13 +3531,13 @@ UniValue filteraddresses(const JSONRPCRequest &request)
 
     if (request.fHelp || request.params.size() > 6)
         throw std::runtime_error(
-            "filteraddresses ( offset count sort_code match_str match_owned show_path )\n"
+            "filteraddresses ( offset count sort_code \"match_str\" match_owned show_path )\n"
             "List addresses."
-            "filteraddresses [offset] [count] will list 'count' addresses starting from 'offset'\n"
+            "filteraddresses offset count will list 'count' addresses starting from 'offset'\n"
             "filteraddresses -1 will count addresses\n"
-            "[sort_code] 0 sort by label ascending, 1 sort by label descending, default 0\n"
-            "[match_str] filter by label\n"
-            "[match_owned] 0 off, 1 owned, 2 non-owned, default 0\n"
+            "sort_code 0 sort by label ascending, 1 sort by label descending, default 0\n"
+            "\"match_str]\" filter by label\n"
+            "match_owned 0 off, 1 owned, 2 non-owned, default 0\n"
             );
 
     ObserveSafeMode();

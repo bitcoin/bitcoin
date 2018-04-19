@@ -233,13 +233,22 @@ class SmsgPaidTest(ParticlTestFramework):
             time.sleep(1)
         assert(i < 10)
 
+
+        # Test filtering
+        ro = nodes[0].smsginbox('all', "'vAlue':2")
+        assert(len(ro['messages']) == 1)
+
+        ro = nodes[1].smsgoutbox('all', "'vAlue':2")
+        assert(len(ro['messages']) == 1)
+
+
+        # Test clear and rescan
         ro = nodes[0].smsginbox('clear')
         assert('Deleted 5 messages' in ro['result'])
 
         ro = nodes[0].walletpassphrase("qwerty234", 300)
         ro = nodes[0].smsgscanbuckets()
         assert('Scan Buckets Completed' in ro['result'])
-
 
         ro = nodes[0].smsginbox('all')
         # Recover 5 + 1 dropped msg

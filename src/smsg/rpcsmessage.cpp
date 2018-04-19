@@ -747,20 +747,31 @@ UniValue smsgsendanon(const JSONRPCRequest &request)
 
 UniValue smsginbox(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 1) // defaults to read
+    if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "smsginbox ( all|unread|clear )\n"
-            "Decrypt and display all received messages.\n"
-            "Warning: clear will delete all messages.");
+            "smsginbox ( \"mode\" \"filter\" )\n"
+            "Decrypt and display received messages.\n"
+            "Warning: clear will delete all messages.\n"
+            "\nArguments:\n"
+            "1. \"mode\"    (string, optional, default=\"unread\") \"all|unread|clear\" List all messages, unread messages or clear all messages.\n"
+            "2. \"filter\"  (string, optional) Filter messages when in list mode. Applied to from, to and text fields.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"msgid\": \"str\"                    (string) The message identifier\n"
+            "  \"version\": \"str\"                  (string) The message version\n"
+            "  \"received\": \"str\"                 (string) Formatted time the message was received\n"
+            "  \"sent\": \"str\"                     (string) Formatted time the message was sent\n"
+            "  \"from\": \"str\"                     (string) Address the message was sent from\n"
+            "  \"to\": \"str\"                       (string) Address the message was sent to\n"
+            "  \"text\": \"str\"                     (string) Message text\n"
+            "}\n");
 
     EnsureSMSGIsEnabled();
 
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR}, true);
 
-    std::string mode = "unread";
-    if (request.params.size() > 0)
-    {
-        mode = request.params[0].get_str();
-    };
+    std::string mode = request.params[0].isStr() ? request.params[0].get_str() : "unread";
+    std::string filter = request.params[1].isStr() ? request.params[1].get_str() : "";
 
     UniValue result(UniValue::VOBJ);
 
@@ -821,16 +832,28 @@ UniValue smsginbox(const JSONRPCRequest &request)
                 int rv = smsgModule.Decrypt(false, smsgStored.addrTo, pHeader, pHeader + smsg::SMSG_HDR_LEN, nPayload, msg);
                 if (rv == 0)
                 {
+                    std::string sAddrTo = CBitcoinAddress(smsgStored.addrTo).ToString();
+                    std::string sText = std::string((char*)msg.vchMessage.data());
+                    if (filter.size() > 0
+                        && !(part::stringsMatchI(msg.sFromAddress, filter, 3) ||
+                            part::stringsMatchI(sAddrTo, filter, 3) ||
+                            part::stringsMatchI(sText, filter, 3)))
+                        continue;
+
                     objM.pushKV("received", part::GetTimeString(smsgStored.timeReceived, cbuf, sizeof(cbuf)));
                     objM.pushKV("sent", part::GetTimeString(msg.timestamp, cbuf, sizeof(cbuf)));
                     objM.pushKV("from", msg.sFromAddress);
-                    objM.pushKV("to", CBitcoinAddress(smsgStored.addrTo).ToString());
-                    objM.pushKV("text", std::string((char*)&msg.vchMessage[0])); // ugh
+                    objM.pushKV("to", sAddrTo);
+                    objM.pushKV("text", sText);
                 } else
                 {
+                    if (filter.size() > 0)
+                        continue;
+
                     objM.pushKV("status", "Decrypt failed");
                     objM.pushKV("error", smsg::GetString(rv));
                 };
+
                 messageList.push_back(objM);
 
                 // only set 'read' status if the message decrypted succesfully
@@ -849,7 +872,7 @@ UniValue smsginbox(const JSONRPCRequest &request)
         } else
         {
             result.pushKV("result", "Unknown Mode.");
-            result.pushKV("expected", "[all|unread|clear].");
+            result.pushKV("expected", "all|unread|clear.");
         };
     } // cs_smsgDB
 
@@ -858,20 +881,31 @@ UniValue smsginbox(const JSONRPCRequest &request)
 
 UniValue smsgoutbox(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 1) // defaults to read
+    if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "smsgoutbox ( all|clear )\n"
+            "smsgoutbox ( \"mode\" \"filter\" )\n"
             "Decrypt and display all sent messages.\n"
-            "Warning: clear will delete all sent messages.");
+            "Warning: \"mode\"=\"clear\" will delete all sent messages.\n"
+            "\nArguments:\n"
+            "1. \"mode\"    (string, optional, default=\"all\") \"all|clear\" List or clear messages.\n"
+            "2. \"filter\"  (string, optional) Filter messages when in list mode. Applied to from, to and text fields.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"msgid\": \"str\"                    (string) The message identifier\n"
+            "  \"version\": \"str\"                  (string) The message version\n"
+            "  \"sent\": \"str\"                     (string) Formatted time the message was sent\n"
+            "  \"from\": \"str\"                     (string) Address the message was sent from\n"
+            "  \"to\": \"str\"                       (string) Address the message was sent to\n"
+            "  \"text\": \"str\"                     (string) Message text\n"
+            "}\n");
 
     EnsureSMSGIsEnabled();
 
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR}, true);
 
-    std::string mode = "all";
-    if (request.params.size() > 0)
-    {
-        mode = request.params[0].get_str();
-    };
+    std::string mode = request.params[0].isStr() ? request.params[0].get_str() : "all";
+    std::string filter = request.params[1].isStr() ? request.params[1].get_str() : "";
+
 
     UniValue result(UniValue::VOBJ);
 
@@ -922,15 +956,28 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
                 objM.pushKV("version", strprintf("%02x%02x", psmsg->version[0], psmsg->version[1]));
 
                 uint32_t nPayload = smsgStored.vchMessage.size() - smsg::SMSG_HDR_LEN;
-                if (smsgModule.Decrypt(false, smsgStored.addrOutbox, pHeader, pHeader + smsg::SMSG_HDR_LEN, nPayload, msg) == 0)
+                int rv = smsgModule.Decrypt(false, smsgStored.addrOutbox, pHeader, pHeader + smsg::SMSG_HDR_LEN, nPayload, msg);
+                if (rv == 0)
                 {
+                    std::string sAddrTo = CBitcoinAddress(smsgStored.addrTo).ToString();
+                    std::string sText = std::string((char*)msg.vchMessage.data());
+                    if (filter.size() > 0
+                        && !(part::stringsMatchI(msg.sFromAddress, filter, 3) ||
+                            part::stringsMatchI(sAddrTo, filter, 3) ||
+                            part::stringsMatchI(sText, filter, 3)))
+                        continue;
+
                     objM.pushKV("sent", part::GetTimeString(msg.timestamp, cbuf, sizeof(cbuf)));
                     objM.pushKV("from", msg.sFromAddress);
-                    objM.pushKV("to", CBitcoinAddress(smsgStored.addrTo).ToString());
-                    objM.pushKV("text", std::string((char*)&msg.vchMessage[0])); // ugh
+                    objM.pushKV("to", sAddrTo);
+                    objM.pushKV("text", sText);
                 } else
                 {
-                    objM.pushKV("error", "Decrypt failed");
+                    if (filter.size() > 0)
+                        continue;
+
+                    objM.pushKV("status", "Decrypt failed");
+                    objM.pushKV("error", smsg::GetString(rv));
                 };
                 messageList.push_back(objM);
                 nMessages++;
@@ -942,7 +989,7 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
         } else
         {
             result.pushKV("result", "Unknown Mode.");
-            result.pushKV("expected", "[all|clear].");
+            result.pushKV("expected", "all|clear.");
         };
     }
 
@@ -1537,8 +1584,8 @@ static const CRPCCommand commands[] =
     { "smsg",               "smsggetpubkey",          &smsggetpubkey,          {"address"} },
     { "smsg",               "smsgsend",               &smsgsend,               {"address_from","address_to","message","paid_msg","days_retention","testfee","fromfile","decodehex"} },
     { "smsg",               "smsgsendanon",           &smsgsendanon,           {"address_to","message"} },
-    { "smsg",               "smsginbox",              &smsginbox,              {"mode"} },
-    { "smsg",               "smsgoutbox",             &smsgoutbox,             {"mode"} },
+    { "smsg",               "smsginbox",              &smsginbox,              {"mode","filter"} },
+    { "smsg",               "smsgoutbox",             &smsgoutbox,             {"mode","filter"} },
     { "smsg",               "smsgbuckets",            &smsgbuckets,            {"mode"} },
     { "smsg",               "smsgview",               &smsgview,               {}},
     { "smsg",               "smsg",                   &smsgone,                {"msgid","options"}},

@@ -838,6 +838,8 @@ bool stringsMatchI(const std::string &sString, const std::string &sFind, int typ
         case 2: // endswith
             return sString.length() >= sFind.length()
                 && std::equal(sFind.begin(), sFind.end(), sString.begin(), icompare_pred);
+        case 3: // contains
+            return std::search(sString.begin(), sString.end(), sFind.begin(), sFind.end(), icompare_pred) != sString.end();
     };
 
     return 0; // unknown type

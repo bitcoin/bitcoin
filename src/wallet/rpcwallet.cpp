@@ -2986,7 +2986,7 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3) {
         throw std::runtime_error(
-            "walletpassphrase <passphrase> <timeout> [stakingonly]\n"
+            "walletpassphrase \"passphrase\" timeout ( stakingonly )\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
             "This is needed prior to performing transactions related to private keys such as sending " + CURRENCY_UNIT + "\n"
             "\nArguments:\n"
