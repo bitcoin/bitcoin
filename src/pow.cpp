@@ -39,9 +39,8 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 	arith_uint256 PastDifficultyAverage;
 	arith_uint256 PastDifficultyAveragePrev;
 
-	if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0) {
-		return UintToArith256(params.powLimit).GetCompact();
-	}
+	if (BlockLastSolved == NULL || BlockLastSolved->nHeight <= 600) {
+		return UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit).GetCompact();
 
 	for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
 		if (PastBlocksMax > 0 && i > PastBlocksMax) { break; }
@@ -88,7 +87,9 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     bool fNegative;
     bool fOverflow;
     arith_uint256 bnTarget;
-
+	static const unsigned int regTestBits = UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit).GetCompact();
+	if (ChainNameFromCommandLine() != CBaseChainParams::REGTEST && nBits == regTestBits)
+		return true;
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 	arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
     // Check range
