@@ -34,8 +34,6 @@ bench_bench_dash_SOURCES = \
   bench/base58.cpp \
   bench/lockedpool.cpp \
   bench/poly1305.cpp \
-  bench/perf.cpp \
-  bench/perf.h \
   bench/prevector.cpp \
   bench/string_cast.cpp
 
