@@ -24,12 +24,12 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/sign.h>
-#include <scheduler.h>
 #include <timedata.h>
 #include <txmempool.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <wallet/fees.h>
+#include <wallet/walletutil.h>
 
 #include <governance/governance.h>
 #include <keepass.h>
@@ -5020,6 +5020,52 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
+bool CWallet::Verify(std::string wallet_file, bool salvage_wallet, std::string& error_string, std::string& warning_string)
+{
+    // Do some checking on wallet path. It should be either a:
+    //
+    // 1. Path where a directory can be created.
+    // 2. Path to an existing directory.
+    // 3. Path to a symlink to a directory.
+    // 4. For backwards compatibility, the name of a data file in -walletdir.
+    LOCK(cs_wallets);
+    fs::path wallet_path = fs::absolute(wallet_file, GetWalletDir());
+    fs::file_type path_type = fs::symlink_status(wallet_path).type();
+    if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
+          (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
+          (path_type == fs::regular_file && fs::path(wallet_file).filename() == wallet_file))) {
+        error_string =strprintf(
+                "Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
+                  "database/log.?????????? files can be stored, a location where such a directory could be created, "
+                  "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)",
+                wallet_file, GetWalletDir());
+        return false;
+    }
+
+    // Make sure that the wallet path doesn't clash with an existing wallet path
+    for (auto wallet : GetWallets()) {
+        if (fs::absolute(wallet->GetName(), GetWalletDir()) == wallet_path) {
+            error_string = strprintf("Error loading wallet %s. Duplicate -wallet filename specified.", wallet_file);
+            return false;
+        }
+    }
+
+    if (!WalletBatch::VerifyEnvironment(wallet_path, error_string)) {
+        return false;
+    }
+
+    if (salvage_wallet) {
+        // Recover readable keypairs:
+        CWallet dummyWallet("dummy", WalletDatabase::CreateDummy());
+        std::string backup_filename;
+        if (!WalletBatch::Recover(wallet_path, (void *)&dummyWallet, WalletBatch::RecoverKeysOnlyFilter, backup_filename)) {
+            return false;
+        }
+    }
+
+    return WalletBatch::VerifyDatabaseFile(wallet_path, warning_string, error_string);
+}
+
 CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& path)
 {
     const std::string& walletFile = name;
@@ -5042,7 +5088,10 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
-    CWallet *walletInstance = new CWallet(name, CWalletDBWrapper::Create(path));
+    // Make a temporary wallet unique pointer so memory doesn't get leaked if
+    // wallet creation fails.
+    auto temp_wallet = MakeUnique<CWallet>(name, CWalletDBWrapper::Create(path));
+    CWallet *walletInstance = temp_wallet.get();
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DB_LOAD_OK)
     {
@@ -5161,7 +5210,6 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
     }
 
     walletInstance->m_last_block_processed = chainActive.Tip();
-    RegisterValidationInterface(walletInstance);
 
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
@@ -5227,6 +5275,10 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
             }
         }
     }
+
+    // Register with the validation interface. It's ok to do this after rescan since we're still holding cs_main.
+    RegisterValidationInterface(temp_wallet.release());
+
     walletInstance->SetBroadcastTransactions(gArgs.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 
     {
@@ -5240,18 +5292,11 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
     return walletInstance;
 }
 
-std::atomic<bool> CWallet::fFlushScheduled(false);
-
-void CWallet::postInitProcess(CScheduler& scheduler)
+void CWallet::postInitProcess()
 {
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
     ReacceptWalletTransactions();
-
-    // Run a thread to flush wallet periodically
-    if (!CWallet::fFlushScheduled.exchange(true)) {
-        scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
-    }
 }
 
 bool CWallet::InitAutoBackup()

@@ -2884,6 +2884,53 @@ UniValue keepass(const JSONRPCRequest& request)
     return "Invalid command";
 }
 
+UniValue loadwallet(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "loadwallet \"filename\"\n"
+            "\nLoads a wallet from a wallet file or directory."
+            "\nNote that all wallet command-line options used when starting bitcoind will be"
+            "\napplied to the new wallet (eg -zapwallettxes, upgradewallet, rescan, etc).\n"
+            "\nArguments:\n"
+            "1. \"filename\"    (string, required) The wallet directory or .dat file.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"name\" :    <wallet_name>,        (string) The wallet name if loaded successfully.\n"
+            "  \"warning\" : <warning>,            (string) Warning message if wallet was not loaded cleanly.\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("loadwallet", "\"test.dat\"")
+            + HelpExampleRpc("loadwallet", "\"test.dat\"")
+        );
+    std::string wallet_file = request.params[0].get_str();
+    std::string error;
+
+    fs::path wallet_path = fs::absolute(wallet_file, GetWalletDir());
+    if (fs::symlink_status(wallet_path).type() == fs::file_not_found) {
+        throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Wallet " + wallet_file + " not found.");
+    }
+
+    std::string warning;
+    if (!CWallet::Verify(wallet_file, false, error, warning)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet file verification failed: " + error);
+    }
+
+    CWallet * const wallet = CWallet::CreateWalletFromFile(wallet_file, fs::absolute(wallet_file, GetWalletDir()));
+    if (!wallet) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet loading failed.");
+    }
+    AddWallet(wallet);
+
+    wallet->postInitProcess();
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("name", wallet->GetName());
+    obj.pushKV("warning", warning);
+
+    return obj;
+}
+
 UniValue resendwallettransactions(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -3450,6 +3497,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listtransactions",         &listtransactions,         {"account","count","skip","include_watchonly"} },
     { "wallet",             "listunspent",              &listunspent,              {"minconf","maxconf","addresses","include_unsafe","query_options"} },
     { "wallet",             "listwallets",              &listwallets,              {} },
+    { "wallet",             "loadwallet",               &loadwallet,               {"filename"} },
     { "wallet",             "lockunspent",              &lockunspent,              {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  {"fromaccount","toaccount","amount","minconf","comment"} },
     { "wallet",             "sendfrom",                 &sendfrom,                 {"fromaccount","toaddress","amount","minconf","addlocked","comment","comment_to"} },
