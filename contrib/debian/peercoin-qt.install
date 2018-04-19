@@ -1,6 +1,7 @@
 usr/local/bin/peercoin-qt usr/bin
-share/pixmaps/peercoin32.xpm usr/share/pixmaps
-share/pixmaps/peercoin16.xpm usr/share/pixmaps
+share/pixmaps/peercoin16.png usr/share/pixmaps
+share/pixmaps/peercoin32.png usr/share/pixmaps
 share/pixmaps/peercoin128.png usr/share/pixmaps
+share/pixmaps/peercoin256.png usr/share/pixmaps
 debian/peercoin-qt.desktop usr/share/applications
 debian/peercoin-qt.protocol usr/share/kde4/services/
