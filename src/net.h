@@ -38,6 +38,8 @@ namespace boost {
     class thread_group;
 } // namespace boost
 
+int MinPeerProtoVersion();
+
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 2 * 60;
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
@@ -700,7 +702,7 @@ class CTransaction;
 void RelayTransaction(const CTransaction& tx);
 void RelayTransaction(const CTransaction& tx, const CDataStream& ss);
 void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll=false);    
-void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+void RelayInv(CInv &inv, const int minProtoVersion = MinPeerProtoVersion());
 
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB
