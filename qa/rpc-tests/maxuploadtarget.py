@@ -91,7 +91,7 @@ class MaxUploadTest(BitcoinTestFramework):
     def setup_network(self):
         # Start a node with maxuploadtarget of 200 MB (/24h)
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-maxuploadtarget=200", "-blockmaxsize=999000"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-maxuploadtarget=200", "-blockmaxsize=999000", "-maxtipage="+str(2*60*60*24*7)]))
 
     def run_test(self):
         # Advance all nodes 2 weeks in the future
@@ -205,7 +205,7 @@ class MaxUploadTest(BitcoinTestFramework):
         #stop and start node 0 with 1MB maxuploadtarget, whitelist 127.0.0.1
         print("Restarting nodes with -whitelist=127.0.0.1")
         stop_node(self.nodes[0], 0)
-        self.nodes[0] = start_node(0, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000"])
+        self.nodes[0] = start_node(0, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000", "-maxtipage="+str(2*60*60*24*7)])
 
         #recreate/reconnect 3 test nodes
         test_nodes = []

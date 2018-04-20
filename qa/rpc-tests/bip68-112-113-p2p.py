@@ -98,8 +98,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
     def setup_network(self):
         # Must set the blockversion for this test
+        # Must also set '-maxtipage=600100' to allow syncing from very old blocks
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
-                                 extra_args=[['-debug', '-whitelist=127.0.0.1', '-blockversion=4']],
+                                 extra_args=[['-debug', '-whitelist=127.0.0.1', '-blockversion=4', '-maxtipage=600100']],
                                  binary=[self.options.testbinary])
 
     def run_test(self):

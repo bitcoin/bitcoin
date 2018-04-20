@@ -774,9 +774,6 @@ public:
     // Used for headers announcements - unfiltered blocks to relay
     // Also protected by cs_inventory
     std::vector<uint256> vBlockHashesToAnnounce;
-    // Blocks received by INV while headers chain was too far behind. These are used to delay GETHEADERS messages
-    // Also protected by cs_inventory
-    std::vector<uint256> vDelayedGetHeaders;
     // Used for BIP35 mempool sending, also protected by cs_inventory
     bool fSendMempool;
 
@@ -919,12 +916,6 @@ public:
     {
         LOCK(cs_inventory);
         vBlockHashesToAnnounce.push_back(hash);
-    }
-
-    void PushDelayedGetHeaders(const uint256 &hash)
-    {
-        LOCK(cs_inventory);
-        vDelayedGetHeaders.push_back(hash);
     }
 
     void AskFor(const CInv& inv);
