@@ -3,6 +3,9 @@ Unauthenticated REST Interface
 
 The REST API can be enabled with the `-rest` option.
 
+The interface runs on the same port as the JSON-RPC interface, by default port 8332 for mainnet, port 18332 for testnet,
+and port 18443 for regtest.
+
 Supported API
 -------------
 
@@ -38,11 +41,13 @@ Only supports JSON as output format.
 * headers : (numeric) the current number of headers we have validated
 * bestblockhash : (string) the hash of the currently best block
 * difficulty : (numeric) the current difficulty
+* mediantime : (numeric) the median time of the 11 blocks before the most recent block on the blockchain
 * verificationprogress : (numeric) estimate of verification progress [0..1]
 * chainwork : (string) total amount of work in active chain, in hexadecimal
 * pruned : (boolean) if the blocks are subject to pruning
-* pruneheight : (numeric) heighest block available
+* pruneheight : (numeric) highest block available
 * softforks : (array) status of softforks in progress
+* bip9_softforks : (object) status of BIP9 softforks in progress
 
 #### Query UTXO set
 `GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`
@@ -53,27 +58,27 @@ https://github.com/syscoin/bips/blob/master/bip-0064.mediawiki
 
 Example:
 ```
-$ curl localhost:18370/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff7627ff72e5e8b0f71210f92ea7a4000c5d75-0.json 2>/dev/null | json_pp
+$ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff7627ff72e5e8b0f71210f92ea7a4000c5d75-0.json 2>/dev/null | json_pp
 {
-   "chaintipHash" : "00000000fb01a7f3745a717f8caebee056c484e6e0bfe4a9591c235bb70506fb",
    "chainHeight" : 325347,
+   "chaintipHash" : "00000000fb01a7f3745a717f8caebee056c484e6e0bfe4a9591c235bb70506fb",
+   "bitmap": "1",
    "utxos" : [
       {
+         "txvers" : 1
+         "height" : 2147483647,
+         "value" : 8.8687,		 
          "scriptPubKey" : {
-            "addresses" : [
-               "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"
-            ],
-            "type" : "pubkeyhash",
+            "asm" : "OP_DUP OP_HASH160 1c7cebb529b86a04c683dfa87be49de35bcf589e OP_EQUALVERIFY OP_CHECKSIG",
             "hex" : "76a9141c7cebb529b86a04c683dfa87be49de35bcf589e88ac",
             "reqSigs" : 1,
-            "asm" : "OP_DUP OP_HASH160 1c7cebb529b86a04c683dfa87be49de35bcf589e OP_EQUALVERIFY OP_CHECKSIG"
-         },
-         "value" : 8.8687,
-         "height" : 2147483647,
-         "txvers" : 1
+            "type" : "pubkeyhash",
+            "addresses" : [
+               "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"
+            ]
+         }
       }
-   ],
-   "bitmap" : "1"
+   ]
 }
 ```
 
@@ -85,6 +90,8 @@ Only supports JSON as output format.
 * size : (numeric) the number of transactions in the TX mempool
 * bytes : (numeric) size of the TX mempool in bytes
 * usage : (numeric) total TX mempool memory usage
+* maxmempool : (numeric) maximum memory usage for the mempool in bytes
+* mempoolminfee : (numeric) minimum feerate (BTC per KB) for tx to be accepted
 
 `GET /rest/mempool/contents.json`
 
@@ -93,4 +100,4 @@ Only supports JSON as output format.
 
 Risks
 -------------
-Running a web browser on the same node with a REST enabled syscoind can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8370/rest/tx/1234567890.json">` which might break the nodes privacy.
+Running a web browser on the same node with a REST enabled syscoind can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8332/rest/tx/1234567890.json">` which might break the nodes privacy.
