@@ -25,7 +25,8 @@ Build-Depends: debhelper,
  libqrencode-dev,
  libprotobuf-dev, protobuf-compiler,
  python,
- libzmq3-dev
+ libzmq3-dev,
+ dh-systemd
 Standards-Version: 3.9.2
 Homepage: https://bitcoincore.org/
 Vcs-Git: git://github.com/bitcoin/bitcoin.git
@@ -33,7 +34,7 @@ Vcs-Browser: https://github.com/bitcoin/bitcoin
 
 Package: bitcoind
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
 Description: peer-to-peer network based digital currency - daemon
  Bitcoin is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or

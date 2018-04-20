@@ -1,3 +1,9 @@
+bitcoin (0.16.0-trusty2) trusty; urgency=medium
+
+  * Add systemd service to bitcoind
+
+ -- Thomas M Steenholdt <tsteenholdt@cascadetechnologypartners.com>  Wed, 18 Apr 2018 16:40:00 -0200
+
 bitcoin (0.16.0-xenial1) xenial; urgency=medium
 
   * Mark for xenial.
