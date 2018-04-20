@@ -4405,7 +4405,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (pfrom->nVersion < MinPeerProtoVersion())
         {
             // disconnect from peers older than this proto version
-            // Sunday, April 1, 2018 12:00:00 AM
             LogPrintf("peer=%d using obsolete version %i; disconnecting\n", pfrom->id, pfrom->nVersion);
             pfrom->PushMessage("reject", strCommand, REJECT_OBSOLETE,
                                strprintf("Version must be %d or greater", MinPeerProtoVersion()));

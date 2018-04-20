@@ -133,15 +133,24 @@ int64_t GetSporkValue(int nSporkID)
 
 void ExecuteSpork(int nSporkID, int nValue)
 {
-    if(nSporkID == SPORK_11_RESET_BUDGET && nValue == 1){
+    if (nSporkID == SPORK_11_RESET_BUDGET && nValue == 1)
+    {
         budget.Clear();
     }
-
-    //correct fork via spork technology
-    if(nSporkID == SPORK_12_RECONSIDER_BLOCKS && nValue > 0) {
+    else if (nSporkID == SPORK_12_RECONSIDER_BLOCKS && nValue > 0)
+    {
+        //correct fork via spork technology
         LogPrintf("Spork::ExecuteSpork -- Reconsider Last %d Blocks\n", nValue);
-
         ReprocessBlocks(nValue);
+    }
+    else if (nSporkID == SPORK_16_DISCONNECT_OLD_NODES && nValue == 1)
+    {
+        LOCK(cs_vNodes);
+        for (auto node: vNodes)
+        {
+            if (node->nVersion < MinPeerProtoVersion())
+                node->fDisconnect = true;
+        }
     }
 }
 
