@@ -1,4 +1,4 @@
-# Block and Transaction Broadcasting With ZeroMQ
+# Block and Transaction Broadcasting with ZeroMQ
 
 [ZeroMQ](http://zeromq.org/) is a lightweight wrapper around TCP
 connections, inter-process communication, and shared-memory,
@@ -38,7 +38,7 @@ newer. Typically, it is packaged by distributions as something like
 *libzmq3-dev*. The C++ wrapper for ZeroMQ is *not* needed.
 
 In order to run the example Python client scripts in contrib/ one must
-also install *python-zmq*, though this is not necessary for daemon
+also install *python3-zmq*, though this is not necessary for daemon
 operation.
 
 ## Enabling
@@ -50,31 +50,29 @@ during the *configure* step of building syscoind:
     $ ./configure --disable-zmq (other options)
 
 To actually enable operation, one must set the appropriate options on
-the commandline or in the configuration file.
+the command line or in the configuration file.
 
 ## Usage
 
 Currently, the following notifications are supported:
 
     -zmqpubhashtx=address
-    -zmqpubhashtxlock=address
     -zmqpubhashblock=address
     -zmqpubrawblock=address
     -zmqpubrawtx=address
-    -zmqpubrawtxlock=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
 
 For instance:
 
-    $ syscoind -zmqpubhashtx=tcp://127.0.0.1:28370 \
+    $ syscoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
                -zmqpubrawtx=ipc:///tmp/syscoind.tx.raw
 
 Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
-terminator) and the body is the hexadecimal transaction hash (32
+terminator) and the body is the transaction hash (32
 bytes).
 
 These options can also be provided in syscoin.conf.
@@ -103,6 +101,6 @@ and just the tip will be notified. It is up to the subscriber to
 retrieve the chain from the last known block to the new tip.
 
 There are several possibilities that ZMQ notification can get lost
-during transmission depending on the communication type your are
+during transmission depending on the communication type you are
 using. Syscoind appends an up-counting sequence number to each
 notification which allows listeners to detect lost notifications.

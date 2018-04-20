@@ -1,12 +1,12 @@
 Translations
 ============
 
-The Syscoin Core project has been designed to support multiple localisations. This makes adding new phrases, and completely new languages easily achievable. For managing all application translations, Syscoin Core makes use of the Transifex online translation management tool.
+The Syscoin-Core project has been designed to support multiple localisations. This makes adding new phrases, and completely new languages easily achievable. For managing all application translations, Syscoin-Core makes use of the Transifex online translation management tool.
 
 ### Helping to translate (using Transifex)
-Transifex is setup to monitor the Github repo for updates, and when code containing new translations is found, Transifex will process any changes. It may take several hours after a pull-request has been merged, to appear in the Transifex web interface.
+Transifex is setup to monitor the GitHub repo for updates, and when code containing new translations is found, Transifex will process any changes. It may take several hours after a pull-request has been merged, to appear in the Transifex web interface.
 
-Multiple language support is critical in assisting Syscoin’s global adoption, and growth. One of Syscoin’s greatest strengths is cross-boarder money transfers, any help making that easier is greatly appreciated.
+Multiple language support is critical in assisting Syscoin’s global adoption, and growth. One of Syscoin’s greatest strengths is cross-border money transfers, any help making that easier is greatly appreciated.
 
 See the [Transifex Syscoin project](https://www.transifex.com/projects/p/syscoin/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
 
@@ -32,14 +32,13 @@ QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
 ### Creating a pull-request
 For general PRs, you shouldn’t include any updates to the translation source files. They will be updated periodically, primarily around pre-releases, allowing time for any new phrases to be translated before public releases. This is also important in avoiding translation related merge conflicts.
 
-When an updated source file is merged into the Github repo, Transifex will automatically detect it (although it can take several hours). Once processed, the new strings will show up as "Remaining" in the Transifex web interface and are ready for translators.
+When an updated source file is merged into the GitHub repo, Transifex will automatically detect it (although it can take several hours). Once processed, the new strings will show up as "Remaining" in the Transifex web interface and are ready for translators.
 
 To create the pull-request, use the following commands:
 ```
 git add src/qt/syscoinstrings.cpp src/qt/locale/syscoin_en.ts
 git commit
 ```
-
 
 ### Creating a Transifex account
 Visit the [Transifex Signup](https://www.transifex.com/signup/) page to create an account. Take note of your username and password, as they will be required to configure the command-line tool.
@@ -53,7 +52,7 @@ The client it used to fetch updated translations. If you are having problems, or
 
 `pip install transifex-client`
 
-Setup your transifex client config as follows. Please *ignore the token field*.
+Setup your Transifex client config as follows. Please *ignore the token field*.
 
 ```ini
 nano ~/.transifexrc
@@ -95,7 +94,7 @@ When new plurals are added to the source file, it's important to do the followin
 7. Save the source file
 
 ### Translating a new language
-To create a new language template, you will need to edit the languages manifest file `src/qt/syscoin.qrc` and add a new entry. Below is an example of the english language entry.
+To create a new language template, you will need to edit the languages manifest file `src/qt/syscoin_locale.qrc` and add a new entry. Below is an example of the English language entry.
 
 ```xml
 <qresource prefix="/translations">
@@ -107,4 +106,6 @@ To create a new language template, you will need to edit the languages manifest 
 **Note:** that the language translation file **must end in `.qm`** (the compiled extension), and not `.ts`.
 
 ### Questions and general assistance
-Check official forum at [https://syscointalk.org/forums/syscoin-worldwide-collaboration.88/](https://syscointalk.org/forums/syscoin-worldwide-collaboration.88/).
+The Syscoin-Core translation maintainers include *tcatm, seone, Diapolo, wumpus and luke-jr*. You can find them, and others, in the Freenode IRC chatroom - `irc.freenode.net #syscoin-core-dev`.
+
+If you are a translator, you should also subscribe to the mailing list, https://groups.google.com/forum/#!forum/syscoin-translators. Announcements will be posted during application pre-releases to notify translators to check for updates.
