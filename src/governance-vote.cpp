@@ -227,6 +227,16 @@ CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const ui
     UpdateHash();
 }
 
+std::string CGovernanceVote::ToString() const
+{
+    std::ostringstream ostr;
+    ostr << masternodeOutpoint.ToStringShort() << ":"
+         << nTime << ":"
+         << CGovernanceVoting::ConvertOutcomeToString(GetOutcome()) << ":"
+         << CGovernanceVoting::ConvertSignalToString(GetSignal());
+    return ostr.str();
+}
+
 void CGovernanceVote::Relay(CConnman& connman) const
 {
     // Do not relay until fully synced

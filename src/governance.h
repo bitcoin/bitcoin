@@ -39,7 +39,8 @@ typedef std::pair<CGovernanceObject, ExpirationInfo> object_info_pair_t;
 
 static const int RATE_BUFFER_SIZE = 5;
 
-class CRateCheckBuffer {
+class CRateCheckBuffer
+{
 private:
     std::vector<int64_t> vecTimestamps;
 
@@ -301,14 +302,12 @@ public:
 
     CGovernanceObject* FindGovernanceObject(const uint256& nHash);
 
+    // These commands are only used in RPC
     std::vector<CGovernanceVote> GetMatchingVotes(const uint256& nParentHash) const;
     std::vector<CGovernanceVote> GetCurrentVotes(const uint256& nParentHash, const COutPoint& mnCollateralOutpointFilter) const;
     std::vector<const CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime) const;
 
-    bool IsBudgetPaymentBlock(int nBlockHeight);
     void AddGovernanceObject(CGovernanceObject& govobj, CConnman& connman, CNode* pfrom = NULL);
-
-    std::string GetRequiredPaymentsString(int nBlockHeight);
 
     void UpdateCachesAndClean();
 

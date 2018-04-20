@@ -73,7 +73,6 @@ private:
     void UpdateVotedOutpoints(const CTxLockVote& vote, CTxLockCandidate& txLockCandidate);
     bool ProcessOrphanTxLockVote(const CTxLockVote& vote);
     void ProcessOrphanTxLockVotes();
-    bool IsEnoughOrphanVotesForTxAndOutPoint(const uint256& txHash, const COutPoint& outpoint);
     int64_t GetAverageMasternodeOrphanVoteTime();
 
     void TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCandidate);

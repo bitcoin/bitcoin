@@ -249,7 +249,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
         obj.push_back(Pair("height",        nHeight));
         obj.push_back(Pair("IP:port",       mnInfo.addr.ToString()));
-        obj.push_back(Pair("protocol",      (int64_t)mnInfo.nProtocolVersion));
+        obj.push_back(Pair("protocol",      mnInfo.nProtocolVersion));
         obj.push_back(Pair("outpoint",      mnInfo.outpoint.ToStringShort()));
         obj.push_back(Pair("payee",         CBitcoinAddress(mnInfo.pubKeyCollateralAddress.GetID()).ToString()));
         obj.push_back(Pair("lastseen",      mnInfo.nTimeLastPing));
@@ -642,7 +642,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             } else if (strMode == "protocol") {
                 if (strFilter !="" && strFilter != strprintf("%d", mn.nProtocolVersion) &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
-                obj.push_back(Pair(strOutpoint, (int64_t)mn.nProtocolVersion));
+                obj.push_back(Pair(strOutpoint, mn.nProtocolVersion));
             } else if (strMode == "pubkey") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, HexStr(mn.pubKeyMasternode)));

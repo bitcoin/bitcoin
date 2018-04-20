@@ -600,6 +600,11 @@ void CPrivateSendClient::CompletedTransaction(PoolMessage nMessageID)
     strLastMessage = CPrivateSend::GetMessageByID(nMessageID);
 }
 
+bool CPrivateSendClient::IsDenomSkipped(CAmount nDenomValue)
+{
+    return std::find(vecDenominationsSkipped.begin(), vecDenominationsSkipped.end(), nDenomValue) != vecDenominationsSkipped.end();
+}
+
 bool CPrivateSendClient::WaitForAnotherBlock()
 {
     if(!masternodeSync.IsMasternodeListSynced())

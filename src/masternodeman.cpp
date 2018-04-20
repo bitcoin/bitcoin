@@ -805,8 +805,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 {
     if(fLiteMode) return; // disable all Dash specific functionality
 
-    CNetMsgMaker msgMaker(pfrom->GetSendVersion());
-
     if (strCommand == NetMsgType::MNANNOUNCE) { //Masternode Broadcast
 
         CMasternodeBroadcast mnb;

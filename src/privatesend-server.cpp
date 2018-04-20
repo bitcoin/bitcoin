@@ -612,7 +612,7 @@ bool CPrivateSendServer::AddScriptSig(const CTxIn& txinNew)
     LogPrint("privatesend", "CPrivateSendServer::AddScriptSig -- scriptSig=%s new\n", ScriptToAsmStr(txinNew.scriptSig).substr(0,24));
 
     for (auto& txin : finalMutableTransaction.vin) {
-        if(txinNew.prevout == txin.prevout && txin.nSequence == txinNew.nSequence) {
+        if(txin.prevout == txinNew.prevout && txin.nSequence == txinNew.nSequence) {
             txin.scriptSig = txinNew.scriptSig;
             LogPrint("privatesend", "CPrivateSendServer::AddScriptSig -- adding to finalMutableTransaction, scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0,24));
         }

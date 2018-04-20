@@ -22,7 +22,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.num_nodes = 4
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [['-usehd=0'], ['-usehd=0'], ['-usehd=0'], ['-usehd=0']])
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [['-usehd=0']] * self.num_nodes)
 
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
@@ -478,7 +478,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         stop_node(self.nodes[1], 2)
         stop_node(self.nodes[2], 3)
 
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [['-usehd=0'], ['-usehd=0'], ['-usehd=0'], ['-usehd=0']])
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [['-usehd=0']] * self.num_nodes)
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
         for node in self.nodes:

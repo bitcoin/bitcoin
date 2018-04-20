@@ -485,24 +485,6 @@ void CInstantSend::ProcessOrphanTxLockVotes()
     }
 }
 
-bool CInstantSend::IsEnoughOrphanVotesForTxAndOutPoint(const uint256& txHash, const COutPoint& outpoint)
-{
-    // Scan orphan votes to check if this outpoint has enough orphan votes to be locked in some tx.
-    LOCK2(cs_main, cs_instantsend);
-    int nCountVotes = 0;
-    std::map<uint256, CTxLockVote>::iterator it = mapTxLockVotesOrphan.begin();
-    while(it != mapTxLockVotesOrphan.end()) {
-        if(it->second.GetTxHash() == txHash && it->second.GetOutpoint() == outpoint) {
-            nCountVotes++;
-            if(nCountVotes >= COutPointLock::SIGNATURES_REQUIRED) {
-                return true;
-            }
-        }
-        ++it;
-    }
-    return false;
-}
-
 void CInstantSend::TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCandidate)
 {
     if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
