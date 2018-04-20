@@ -6,7 +6,7 @@
 #	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_bitcoin)
 
 %:
-	dh --with bash-completion $@
+	dh --with bash-completion --with systemd $@
 
 override_dh_auto_clean:
 	if [ -f Makefile ]; then $(MAKE) distclean; fi
@@ -32,3 +32,18 @@ ifeq ($(QT), qt4)
 else
 	make check
 endif
+
+# No SysV or Upstart init scripts included
+override_dh_installinit:
+	dh_installinit \
+		--noscripts
+
+# Don’t enable service by default
+override_dh_systemd_enable:
+	dh_systemd_enable \
+		--no-enable
+
+# Restart after upgrade
+override_dh_systemd_start:
+	dh_systemd_start \
+		--restart-after-upgrade
