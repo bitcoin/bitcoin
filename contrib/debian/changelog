@@ -1,3 +1,89 @@
+bitcoin (0.16.0-xenial1) xenial; urgency=medium
+
+  * Mark for xenial.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 05 Mar 2018 11:20:00 -0500
+
+bitcoin (0.16.0-trusty1) trusty; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 05 Mar 2018 11:18:00 -0500
+
+bitcoin (0.15.1-trusty1) trusty; urgency=medium
+
+  * New upstream release.
+  * Remove backported patches (which are now upstream).
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Sat, 11 Nov 2017 16:51:00 -0500
+
+bitcoin (0.15.0-artful9) artful; urgency=medium
+
+  * Mark for artful.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Sat, 21 Oct 2017 20:56:00 -0400
+
+bitcoin (0.15.0-trusty9) trusty; urgency=medium
+
+  * Add missing xvfb dep.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 14 Sep 2017 22:47:00 -0400
+
+bitcoin (0.15.0-trusty8) trusty; urgency=medium
+
+  * Backport #11332 to fix Qt settings upgrade segfault.
+  * Use qt5 on arm to fix Qt test segfault.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 14 Sep 2017 22:03:00 -0400
+
+bitcoin (0.15.0-trusty7) trusty; urgency=medium
+
+  * Backport #11210 to fix build inside launchpad.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 12 Sep 2017 16:13:00 -0400
+
+bitcoin (0.15.0-trusty6) trusty; urgency=medium
+
+  * Make launchpad print more debug information.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 12 Sep 2017 12:50:00 -0400
+
+bitcoin (0.15.0-trusty5) trusty; urgency=medium
+
+  * Use proper makefile comparison to fix Xvfb start.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 12 Sep 2017 12:49:00 -0400
+
+bitcoin (0.15.0-trusty4) trusty; urgency=medium
+
+  * Use full path for start-stop-daemon to fix Xvfb start.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 12 Sep 2017 11:44:00 -0400
+
+bitcoin (0.15.0-trusty3) trusty; urgency=medium
+
+  * Fix DISPLAY setting when using xvfb.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 11 Sep 2017 20:06:00 -0400
+
+bitcoin (0.15.0-trusty2) trusty; urgency=medium
+
+  * Use xvfb to run qt4 tests.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 11 Sep 2017 17:31:00 -0400
+
+bitcoin (0.15.0-trusty1) trusty; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 11 Sep 2017 16:17:00 -0400
+
+bitcoin (0.14.2-trusty1) trusty; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Fri, 23 Jun 2017 18:21:00 -0400
+
 bitcoin (0.14.1-trusty4) trusty; urgency=medium
 
   * Re-enable UPnP support.

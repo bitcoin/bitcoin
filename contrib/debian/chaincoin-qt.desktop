@@ -1,5 +1,5 @@
 [Desktop Entry]
-Version=1.0
+Encoding=UTF-8
 Name=Chaincoin Core
 Comment=Connect to the Chaincoin P2P Network
 Comment[de]=Verbinde mit dem Chaincoin peer-to-peer Netzwerk
@@ -11,4 +11,3 @@ Type=Application
 Icon=chaincoin128
 MimeType=x-scheme-handler/chaincoin;
 Categories=Office;Finance;P2P;Network;Qt;
-StartupWMClass=Bitcoin-qt
