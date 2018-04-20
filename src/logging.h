@@ -77,11 +77,12 @@ namespace BCLog {
 
     public:
         bool m_print_to_console = false;
-        bool m_print_to_file = true;
+        bool m_print_to_file = false;
 
         bool m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
         bool m_log_time_micros = DEFAULT_LOGTIMEMICROS;
 
+        fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
@@ -90,7 +91,6 @@ namespace BCLog {
         /** Returns whether logs will be written to any output */
         bool Enabled() const { return m_print_to_console || m_print_to_file; }
 
-        fs::path GetDebugLogPath() const;
         bool OpenDebugLog();
         void ShrinkDebugFile();
 
