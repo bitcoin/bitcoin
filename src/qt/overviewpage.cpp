@@ -255,7 +255,8 @@ void OverviewPage::setWalletModel(WalletModel *model)
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
-        updateWatchOnlyLabels(wallet.haveWatchOnly());
+        bool fHaveWatchOnly = balances.watch_only_balance || balances.unconfirmed_watch_only_balance || balances.balanceWatchStaked;
+        updateWatchOnlyLabels(wallet.haveWatchOnly() || fHaveWatchOnly);
         connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
     }
 

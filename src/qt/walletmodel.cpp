@@ -118,6 +118,9 @@ void WalletModel::waitingForDevice(bool fComplete)
 void WalletModel::checkBalanceChanged(const interfaces::WalletBalances& new_balances)
 {
     if(new_balances.balanceChanged(m_cached_balances)) {
+        bool fHaveWatchOnlyCheck = new_balances.watch_only_balance || new_balances.unconfirmed_watch_only_balance || new_balances.balanceWatchStaked;
+        if (fHaveWatchOnlyCheck != fHaveWatchOnly)
+            updateWatchOnlyFlag(fHaveWatchOnlyCheck);
         m_cached_balances = new_balances;
         Q_EMIT balanceChanged(new_balances);
     }
