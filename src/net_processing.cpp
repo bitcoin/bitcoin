@@ -2402,15 +2402,28 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator blockInFlightIt = mapBlocksInFlight.find(pindex->GetBlockHash());
         bool fAlreadyInFlight = blockInFlightIt != mapBlocksInFlight.end();
+        bool in_flight_from_same_peer = fAlreadyInFlight && blockInFlightIt->second.first == pfrom->GetId();
 
         if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
             return true;
 
-        if (pindex->nChainWork <= chainActive.Tip()->nChainWork || // We know something better
+        if (pindex->nChainWork <= chainActive.Tip()->nChainWork || // We know same or better
                 pindex->nTx != 0) { // We had this block at some point, but pruned it
-            if (fAlreadyInFlight) {
-                // We requested this block for some reason, but our mempool will probably be useless
+            if (in_flight_from_same_peer
+                    || (!fAlreadyInFlight && pindex->nChainWork == chainActive.Tip()->nChainWork)) {
+                // We requested this block for some reason from the same peer
+                // or just want same height block, but our mempool will probably be useless
                 // so we just grab the block via normal getdata
+                std::list<QueuedBlock>::iterator* queued_block_it = nullptr;
+                if (!MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), pindex, &queued_block_it)) {
+                    if (!(*queued_block_it)->partialBlock) {
+                        (*queued_block_it)->partialBlock.reset();
+                    } else {
+                        // The block was already in flight using compact blocks from the same peer
+                        LogPrint(BCLog::NET, "Peer sent us compact block we were already syncing!\n");
+                        return true;
+                    }
+                }
                 std::vector<CInv> vInv(1);
                 vInv[0] = CInv(MSG_BLOCK | GetFetchFlags(pfrom), cmpctblock.header.GetHash());
                 connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETDATA, vInv));
@@ -2432,7 +2445,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // possibilities in compact block processing...
         if (pindex->nHeight <= chainActive.Height() + 2) {
             if ((!fAlreadyInFlight && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) ||
-                 (fAlreadyInFlight && blockInFlightIt->second.first == pfrom->GetId())) {
+                 (in_flight_from_same_peer)) {
                 std::list<QueuedBlock>::iterator* queuedBlockIt = nullptr;
                 if (!MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), pindex, &queuedBlockIt)) {
                     if (!(*queuedBlockIt)->partialBlock)
