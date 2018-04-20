@@ -46,7 +46,6 @@ main(int argc, char** argv)
     RandomInit();
     ECC_Start();
     SetupEnvironment();
-    g_logger->m_print_to_file = false; // don't want to write to debug.log file
 
     int64_t evaluations = gArgs.GetArg("-evals", DEFAULT_BENCH_EVALUATIONS);
     std::string regex_filter = gArgs.GetArg("-filter", DEFAULT_BENCH_FILTER);
