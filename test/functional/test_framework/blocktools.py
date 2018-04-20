@@ -40,8 +40,11 @@ from .script import (
 )
 from .util import assert_equal
 
-# Create a block (with regtest difficulty)
+# From BIP141
+WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
+
 def create_block(hashprev, coinbase, ntime=None):
+    """Create a block (with regtest difficulty)."""
     block = CBlock()
     if ntime is None:
         import time
@@ -55,19 +58,16 @@ def create_block(hashprev, coinbase, ntime=None):
     block.calc_sha256()
     return block
 
-# From BIP141
-WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
-
-
 def get_witness_script(witness_root, witness_nonce):
     witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce)))
     output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
     return CScript([OP_RETURN, output_data])
 
-
-# According to BIP141, blocks with witness rules active must commit to the
-# hash of all in-block transactions including witness.
 def add_witness_commitment(block, nonce=0):
+    """Add a witness commitment to the block's coinbase transaction.
+
+    According to BIP141, blocks with witness rules active must commit to the
+    hash of all in-block transactions including witness."""
     # First calculate the merkle root of the block's
     # transactions, with witnesses.
     witness_nonce = nonce
@@ -81,7 +81,6 @@ def add_witness_commitment(block, nonce=0):
     block.vtx[0].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     block.rehash()
-
 
 def serialize_script_num(value):
     r = bytearray(0)
@@ -98,10 +97,11 @@ def serialize_script_num(value):
         r[-1] |= 0x80
     return r
 
-# Create a coinbase transaction, assuming no miner fees.
-# If pubkey is passed in, the coinbase output will be a P2PK output;
-# otherwise an anyone-can-spend output.
 def create_coinbase(height, pubkey=None):
+    """Create a coinbase transaction, assuming no miner fees.
+
+    If pubkey is passed in, the coinbase output will be a P2PK output;
+    otherwise an anyone-can-spend output."""
     coinbase = CTransaction()
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff),
                         ser_string(serialize_script_num(height)), 0xffffffff))
@@ -117,9 +117,10 @@ def create_coinbase(height, pubkey=None):
     coinbase.calc_sha256()
     return coinbase
 
-# Create a transaction.
-# If the script_pub_key is not specified, make it anyone-can-spend.
 def create_transaction(prevtx, n, sig, value, script_pub_key=CScript()):
+    """Create a transaction.
+
+    If the script_pub_key is not specified, make it anyone-can-spend."""
     tx = CTransaction()
     assert(n < len(prevtx.vout))
     tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), sig, 0xffffffff))
@@ -142,10 +143,12 @@ def get_legacy_sigopcount_tx(tx, accurate=True):
         count += CScript(j.scriptSig).GetSigOpCount(accurate)
     return count
 
-# Create a scriptPubKey corresponding to either a P2WPKH output for the
-# given pubkey, or a P2WSH output of a 1-of-1 multisig for the given
-# pubkey. Returns the hex encoding of the scriptPubKey.
 def witness_script(use_p2wsh, pubkey):
+    """Create a scriptPubKey for a pay-to-wtiness TxOut.
+
+    This is either a P2WPKH output for the given pubkey, or a P2WSH output of a
+    1-of-1 multisig for the given pubkey. Returns the hex encoding of the
+    scriptPubKey."""
     if not use_p2wsh:
         # P2WPKH instead
         pubkeyhash = hash160(hex_str_to_bytes(pubkey))
@@ -157,9 +160,10 @@ def witness_script(use_p2wsh, pubkey):
         pkscript = CScript([OP_0, scripthash])
     return bytes_to_hex_str(pkscript)
 
-# Return a transaction (in hex) that spends the given utxo to a segwit output,
-# optionally wrapping the segwit output using P2SH.
 def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
+    """Return a transaction (in hex) that spends the given utxo to a segwit output.
+
+    Optionally wrap the segwit output using P2SH."""
     if use_p2wsh:
         program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
         addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
@@ -169,12 +173,13 @@ def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
         assert_equal(node.getaddressinfo(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
     return node.createrawtransaction([utxo], {addr: amount})
 
-# Create a transaction spending a given utxo to a segwit output corresponding
-# to the given pubkey: use_p2wsh determines whether to use P2WPKH or P2WSH;
-# encode_p2sh determines whether to wrap in P2SH.
-# sign=True will have the given node sign the transaction.
-# insert_redeem_script will be added to the scriptSig, if given.
 def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=True, insert_redeem_script=""):
+    """Create a transaction spending a given utxo to a segwit output.
+
+    The output corresponds to the given pubkey: use_p2wsh determines whether to
+    use P2WPKH or P2WSH; encode_p2sh determines whether to wrap in P2SH.
+    sign=True will have the given node sign the transaction.
+    insert_redeem_script will be added to the scriptSig, if given."""
     tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount)
     if (sign):
         signed = node.signrawtransactionwithwallet(tx_to_witness)
