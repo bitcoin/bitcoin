@@ -108,9 +108,7 @@ private:
     void CheckPool();
     void CompletedTransaction(PoolMessage nMessageID);
 
-    bool IsDenomSkipped(CAmount nDenomValue) {
-        return std::find(vecDenominationsSkipped.begin(), vecDenominationsSkipped.end(), nDenomValue) != vecDenominationsSkipped.end();
-    }
+    bool IsDenomSkipped(CAmount nDenomValue);
 
     bool WaitForAnotherBlock();
 

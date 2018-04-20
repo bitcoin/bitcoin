@@ -143,15 +143,7 @@ public:
     uint256 GetHash() const;
     uint256 GetSignatureHash() const;
 
-    std::string ToString() const
-    {
-        std::ostringstream ostr;
-        ostr << masternodeOutpoint.ToStringShort() << ":"
-             << nTime << ":"
-             << CGovernanceVoting::ConvertOutcomeToString(GetOutcome()) << ":"
-             << CGovernanceVoting::ConvertSignalToString(GetSignal());
-        return ostr.str();
-    }
+    std::string ToString() const;
 
     ADD_SERIALIZE_METHODS;
 

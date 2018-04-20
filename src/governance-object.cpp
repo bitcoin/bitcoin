@@ -249,7 +249,7 @@ uint256 CGovernanceObject::GetHash() const
     ss << vchSig;
     // fee_tx is left out on purpose
 
-    DBG( printf("CGovernanceObject::GetHash %i %lli %s\n", nRevision, nTime, GetDataAsHexString().c_str()); );
+    DBG( printf("CGovernanceObject::GetHash %i %li %s\n", nRevision, nTime, GetDataAsHexString().c_str()); );
 
     return ss.GetHash();
 }
