@@ -13,6 +13,8 @@
 
 typedef std::vector<unsigned char> valtype;
 
+namespace {
+
 /**
  * This is an enum that tracks the execution context of a script, similar to
  * SigVersion in script/interpreter. It is separate however because we want to
@@ -26,12 +28,12 @@ enum class IsMineSigVersion
     WITNESS_V0 = 2  //! P2WSH witness script execution
 };
 
-static bool PermitsUncompressed(IsMineSigVersion sigversion)
+bool PermitsUncompressed(IsMineSigVersion sigversion)
 {
     return sigversion == IsMineSigVersion::TOP || sigversion == IsMineSigVersion::P2SH;
 }
 
-static bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore)
+bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore)
 {
     for (const valtype& pubkey : pubkeys) {
         CKeyID keyID = CPubKey(pubkey).GetID();
@@ -40,7 +42,7 @@ static bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keyst
     return true;
 }
 
-static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, IsMineSigVersion sigversion)
+isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, IsMineSigVersion sigversion)
 {
     isInvalid = false;
 
@@ -153,6 +155,8 @@ static isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPu
     }
     return ISMINE_NO;
 }
+
+} // namespace
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid)
 {
