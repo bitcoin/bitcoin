@@ -1898,6 +1898,18 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
                 }
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                     AddToWalletIfInvolvingMe(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
+
+                    // Fix unrecorded spends after rescanblockchain
+                    // gui caches balances
+                    if (fUpdate) {
+                        const CTransactionRef& ptx = block.vtx[posInBlock];
+                        for (const CTxIn& txin : ptx->vin) {
+                            auto it = mapWallet.find(txin.prevout.hash);
+                            if (it != mapWallet.end()) {
+                                it->second.MarkDirty();
+                            }
+                        }
+                    }
                 }
             } else {
                 ret = pindex;

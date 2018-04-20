@@ -2289,7 +2289,6 @@ UniValue scanchain(const JSONRPCRequest &request)
     if (request.params.size() > 0)
         nFromHeight = request.params[0].get_int();
 
-
     pwallet->ScanChainFromHeight(nFromHeight);
 
     result.pushKV("result", "Scan complete.");
