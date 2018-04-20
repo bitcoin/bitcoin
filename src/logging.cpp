@@ -38,21 +38,21 @@ fs::path BCLog::Logger::GetDebugLogPath() const
 
 bool BCLog::Logger::OpenDebugLog()
 {
-    std::lock_guard<std::mutex> scoped_lock(mutexDebugLog);
+    std::lock_guard<std::mutex> scoped_lock(m_file_mutex);
 
-    assert(fileout == nullptr);
+    assert(m_fileout == nullptr);
     fs::path pathDebug = GetDebugLogPath();
 
-    fileout = fsbridge::fopen(pathDebug, "a");
-    if (!fileout) {
+    m_fileout = fsbridge::fopen(pathDebug, "a");
+    if (!m_fileout) {
         return false;
     }
 
-    setbuf(fileout, nullptr); // unbuffered
+    setbuf(m_fileout, nullptr); // unbuffered
     // dump buffered messages from before we opened the log
-    while (!vMsgsBeforeOpenLog.empty()) {
-        FileWriteStr(vMsgsBeforeOpenLog.front(), fileout);
-        vMsgsBeforeOpenLog.pop_front();
+    while (!m_msgs_before_open.empty()) {
+        FileWriteStr(m_msgs_before_open.front(), m_fileout);
+        m_msgs_before_open.pop_front();
     }
 
     return true;
@@ -60,7 +60,7 @@ bool BCLog::Logger::OpenDebugLog()
 
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 {
-    logCategories |= flag;
+    m_categories |= flag;
 }
 
 bool BCLog::Logger::EnableCategory(const std::string& str)
@@ -73,7 +73,7 @@ bool BCLog::Logger::EnableCategory(const std::string& str)
 
 void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
 {
-    logCategories &= ~flag;
+    m_categories &= ~flag;
 }
 
 bool BCLog::Logger::DisableCategory(const std::string& str)
@@ -86,12 +86,12 @@ bool BCLog::Logger::DisableCategory(const std::string& str)
 
 bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
 {
-    return (logCategories.load(std::memory_order_relaxed) & category) != 0;
+    return (m_categories.load(std::memory_order_relaxed) & category) != 0;
 }
 
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
-    return logCategories == BCLog::NONE;
+    return m_categories == BCLog::NONE;
 }
 
 struct CLogCategoryDesc
@@ -178,13 +178,13 @@ std::string BCLog::Logger::LogTimestampStr(const std::string &str)
 {
     std::string strStamped;
 
-    if (!fLogTimestamps)
+    if (!m_log_timestamps)
         return str;
 
-    if (fStartedNewLine) {
+    if (m_started_new_line) {
         int64_t nTimeMicros = GetTimeMicros();
         strStamped = FormatISO8601DateTime(nTimeMicros/1000000);
-        if (fLogTimeMicros) {
+        if (m_log_time_micros) {
             strStamped.pop_back();
             strStamped += strprintf(".%06dZ", nTimeMicros%1000000);
         }
@@ -197,9 +197,9 @@ std::string BCLog::Logger::LogTimestampStr(const std::string &str)
         strStamped = str;
 
     if (!str.empty() && str[str.size()-1] == '\n')
-        fStartedNewLine = true;
+        m_started_new_line = true;
     else
-        fStartedNewLine = false;
+        m_started_new_line = false;
 
     return strStamped;
 }
@@ -210,30 +210,30 @@ int BCLog::Logger::LogPrintStr(const std::string &str)
 
     std::string strTimestamped = LogTimestampStr(str);
 
-    if (fPrintToConsole) {
+    if (m_print_to_console) {
         // print to console
         ret = fwrite(strTimestamped.data(), 1, strTimestamped.size(), stdout);
         fflush(stdout);
     }
-    if (fPrintToDebugLog) {
-        std::lock_guard<std::mutex> scoped_lock(mutexDebugLog);
+    if (m_print_to_file) {
+        std::lock_guard<std::mutex> scoped_lock(m_file_mutex);
 
         // buffer if we haven't opened the log yet
-        if (fileout == nullptr) {
+        if (m_fileout == nullptr) {
             ret = strTimestamped.length();
-            vMsgsBeforeOpenLog.push_back(strTimestamped);
+            m_msgs_before_open.push_back(strTimestamped);
         }
         else
         {
             // reopen the log file, if requested
-            if (fReopenDebugLog) {
-                fReopenDebugLog = false;
+            if (m_reopen_file) {
+                m_reopen_file = false;
                 fs::path pathDebug = GetDebugLogPath();
-                if (fsbridge::freopen(pathDebug,"a",fileout) != nullptr)
-                    setbuf(fileout, nullptr); // unbuffered
+                if (fsbridge::freopen(pathDebug,"a",m_fileout) != nullptr)
+                    setbuf(m_fileout, nullptr); // unbuffered
             }
 
-            ret = FileWriteStr(strTimestamped, fileout);
+            ret = FileWriteStr(strTimestamped, m_fileout);
         }
     }
     return ret;

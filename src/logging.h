@@ -59,42 +59,42 @@ namespace BCLog {
     class Logger
     {
     private:
-        FILE* fileout = nullptr;
-        std::mutex mutexDebugLog;
-        std::list<std::string> vMsgsBeforeOpenLog;
+        FILE* m_fileout = nullptr;
+        std::mutex m_file_mutex;
+        std::list<std::string> m_msgs_before_open;
 
         /**
-         * fStartedNewLine is a state variable that will suppress printing of
+         * m_started_new_line is a state variable that will suppress printing of
          * the timestamp when multiple calls are made that don't end in a
          * newline.
          */
-        std::atomic_bool fStartedNewLine{true};
+        std::atomic_bool m_started_new_line{true};
 
         /** Log categories bitfield. */
-        std::atomic<uint32_t> logCategories{0};
+        std::atomic<uint32_t> m_categories{0};
 
         std::string LogTimestampStr(const std::string& str);
 
     public:
-        bool fPrintToConsole = false;
-        bool fPrintToDebugLog = true;
+        bool m_print_to_console = false;
+        bool m_print_to_file = true;
 
-        bool fLogTimestamps = DEFAULT_LOGTIMESTAMPS;
-        bool fLogTimeMicros = DEFAULT_LOGTIMEMICROS;
+        bool m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
+        bool m_log_time_micros = DEFAULT_LOGTIMEMICROS;
 
-        std::atomic<bool> fReopenDebugLog{false};
+        std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
         int LogPrintStr(const std::string &str);
 
         /** Returns whether logs will be written to any output */
-        bool Enabled() const { return fPrintToConsole || fPrintToDebugLog; }
+        bool Enabled() const { return m_print_to_console || m_print_to_file; }
 
         fs::path GetDebugLogPath() const;
         bool OpenDebugLog();
         void ShrinkDebugFile();
 
-        uint32_t GetCategoryMask() const { return logCategories.load(); }
+        uint32_t GetCategoryMask() const { return m_categories.load(); }
 
         void EnableCategory(LogFlags flag);
         bool EnableCategory(const std::string& str);
