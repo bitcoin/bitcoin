@@ -10,7 +10,24 @@ from .address import (
     script_to_p2sh_p2wsh,
     script_to_p2wsh,
 )
-from .mininode import *
+from .messages import (
+    CBlock,
+    COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxInWitness,
+    CTxOut,
+    FromHex,
+    ToHex,
+    bytes_to_hex_str,
+    hash256,
+    hex_str_to_bytes,
+    ser_string,
+    ser_uint256,
+    sha256,
+    uint256_from_str,
+)
 from .script import (
     CScript,
     OP_0,
@@ -24,15 +41,15 @@ from .script import (
 from .util import assert_equal
 
 # Create a block (with regtest difficulty)
-def create_block(hashprev, coinbase, nTime=None):
+def create_block(hashprev, coinbase, ntime=None):
     block = CBlock()
-    if nTime is None:
+    if ntime is None:
         import time
-        block.nTime = int(time.time()+600)
+        block.nTime = int(time.time() + 600)
     else:
-        block.nTime = nTime
+        block.nTime = ntime
     block.hashPrevBlock = hashprev
-    block.nBits = 0x207fffff # difficulty retargeting is disabled in REGTEST chainparams
+    block.nBits = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams
     block.vtx.append(coinbase)
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
@@ -43,7 +60,7 @@ WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
 
 def get_witness_script(witness_root, witness_nonce):
-    witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(witness_nonce)))
+    witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce)))
     output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
     return CScript([OP_RETURN, output_data])
 
@@ -84,52 +101,52 @@ def serialize_script_num(value):
 # Create a coinbase transaction, assuming no miner fees.
 # If pubkey is passed in, the coinbase output will be a P2PK output;
 # otherwise an anyone-can-spend output.
-def create_coinbase(height, pubkey = None):
+def create_coinbase(height, pubkey=None):
     coinbase = CTransaction()
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff),
-                ser_string(serialize_script_num(height)), 0xffffffff))
+                        ser_string(serialize_script_num(height)), 0xffffffff))
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = 50 * COIN
-    halvings = int(height/150) # regtest
+    halvings = int(height / 150)  # regtest
     coinbaseoutput.nValue >>= halvings
-    if (pubkey != None):
+    if (pubkey is not None):
         coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
-    coinbase.vout = [ coinbaseoutput ]
+    coinbase.vout = [coinbaseoutput]
     coinbase.calc_sha256()
     return coinbase
 
 # Create a transaction.
-# If the scriptPubKey is not specified, make it anyone-can-spend.
-def create_transaction(prevtx, n, sig, value, scriptPubKey=CScript()):
+# If the script_pub_key is not specified, make it anyone-can-spend.
+def create_transaction(prevtx, n, sig, value, script_pub_key=CScript()):
     tx = CTransaction()
     assert(n < len(prevtx.vout))
     tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), sig, 0xffffffff))
-    tx.vout.append(CTxOut(value, scriptPubKey))
+    tx.vout.append(CTxOut(value, script_pub_key))
     tx.calc_sha256()
     return tx
 
-def get_legacy_sigopcount_block(block, fAccurate=True):
+def get_legacy_sigopcount_block(block, accurate=True):
     count = 0
     for tx in block.vtx:
-        count += get_legacy_sigopcount_tx(tx, fAccurate)
+        count += get_legacy_sigopcount_tx(tx, accurate)
     return count
 
-def get_legacy_sigopcount_tx(tx, fAccurate=True):
+def get_legacy_sigopcount_tx(tx, accurate=True):
     count = 0
     for i in tx.vout:
-        count += i.scriptPubKey.GetSigOpCount(fAccurate)
+        count += i.scriptPubKey.GetSigOpCount(accurate)
     for j in tx.vin:
         # scriptSig might be of type bytes, so convert to CScript for the moment
-        count += CScript(j.scriptSig).GetSigOpCount(fAccurate)
+        count += CScript(j.scriptSig).GetSigOpCount(accurate)
     return count
 
 # Create a scriptPubKey corresponding to either a P2WPKH output for the
 # given pubkey, or a P2WSH output of a 1-of-1 multisig for the given
 # pubkey. Returns the hex encoding of the scriptPubKey.
 def witness_script(use_p2wsh, pubkey):
-    if (use_p2wsh == False):
+    if not use_p2wsh:
         # P2WPKH instead
         pubkeyhash = hash160(hex_str_to_bytes(pubkey))
         pkscript = CScript([OP_0, pubkeyhash])
