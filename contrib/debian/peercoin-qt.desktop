@@ -6,6 +6,6 @@ Comment[de]=Offizieller Client für die Kryptowährung Peercoin
 Exec=/usr/bin/peercoin-qt %u
 Terminal=false
 Type=Application
-Icon=/usr/share/pixmaps/peercoin.png
+Icon=/usr/share/pixmaps/peercoin128.png
 MimeType=x-scheme-handler/peercoin;
 Categories=Application;Network;

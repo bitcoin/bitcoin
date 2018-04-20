@@ -62,7 +62,7 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
 
     receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
 
-    multisigPage = new MultisigDialog(this);
+    multisigPage = new MultisigDialog(gui);
 
     sendCoinsPage = new SendCoinsDialog(gui);
 

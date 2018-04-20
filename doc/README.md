@@ -1,4 +1,4 @@
-Peercoin 0.6.2 BETA
+Peercoin 0.6.3 BETA
 
 Copyright (c) 2011-2018 Peercoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
