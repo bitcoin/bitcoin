@@ -1689,21 +1689,26 @@ void static FlushBlockFile(bool fFinalize = false)
     LOCK(cs_LastBlockFile);
 
     CDiskBlockPos posOld(nLastBlockFile, 0);
+    bool status = true;
 
     FILE *fileOld = OpenBlockFile(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nSize);
-        FileCommit(fileOld);
+            status &= TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nSize);
+        status &= FileCommit(fileOld);
         fclose(fileOld);
     }
 
     fileOld = OpenUndoFile(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nUndoSize);
-        FileCommit(fileOld);
+            status &= TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nUndoSize);
+        status &= FileCommit(fileOld);
         fclose(fileOld);
+    }
+
+    if (!status) {
+        AbortNode("Flushing block file to disk failed. This is likely the result of an I/O error.");
     }
 }
 
@@ -4791,7 +4796,8 @@ bool DumpMempool(void)
         }
 
         file << mapDeltas;
-        FileCommit(file.Get());
+        if (!FileCommit(file.Get()))
+            throw std::runtime_error("FileCommit failed");
         file.fclose();
         RenameOver(GetDataDir() / "mempool.dat.new", GetDataDir() / "mempool.dat");
         int64_t last = GetTimeMicros();

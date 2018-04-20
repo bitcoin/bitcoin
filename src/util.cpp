@@ -815,21 +815,37 @@ bool TryCreateDirectories(const fs::path& p)
     return false;
 }
 
-void FileCommit(FILE *file)
+bool FileCommit(FILE *file)
 {
-    fflush(file); // harmless if redundantly called
+    if (fflush(file) != 0) { // harmless if redundantly called
+        LogPrintf("%s: fflush failed: %d\n", __func__, errno);
+        return false;
+    }
 #ifdef WIN32
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
-    FlushFileBuffers(hFile);
+    if (FlushFileBuffers(hFile) == 0) {
+        LogPrintf("%s: FlushFileBuffers failed: %d\n", __func__, GetLastError());
+        return false;
+    }
 #else
     #if defined(__linux__) || defined(__NetBSD__)
-    fdatasync(fileno(file));
+    if (fdatasync(fileno(file)) != 0 && errno != EINVAL) { // Ignore EINVAL for filesystems that don't support sync
+        LogPrintf("%s: fdatasync failed: %d\n", __func__, errno);
+        return false;
+    }
     #elif defined(__APPLE__) && defined(F_FULLFSYNC)
-    fcntl(fileno(file), F_FULLFSYNC, 0);
+    if (fcntl(fileno(file), F_FULLFSYNC, 0) == -1) { // Manpage says "value other than -1" is returned on success
+        LogPrintf("%s: fcntl F_FULLFSYNC failed: %d\n", __func__, errno);
+        return false;
+    }
     #else
-    fsync(fileno(file));
+    if (fsync(fileno(file)) != 0 && errno != EINVAL) {
+        LogPrintf("%s: fsync failed: %d\n", __func__, errno);
+        return false;
+    }
     #endif
 #endif
+    return true;
 }
 
 bool TruncateFile(FILE *file, unsigned int length) {
