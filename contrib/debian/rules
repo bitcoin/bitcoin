@@ -13,6 +13,13 @@ override_dh_auto_clean:
 	rm -rf Makefile.in aclocal.m4 configure src/Makefile.in src/bitcoin-config.h.in src/build-aux src/qt/Makefile.in src/qt/test/Makefile.in src/test/Makefile.in
 
 QT=$(shell dpkg-vendor --derives-from Ubuntu && echo qt4 || echo qt5)
+# qt4 is very broken on arm
+ifeq ($(findstring arm,$(shell uname -m)),arm)
+	QT=qt5
+endif
+ifeq ($(findstring aarch64,$(shell uname -m)),aarch64)
+	QT=qt5
+endif
 
 # Yea, autogen should be run on the source archive, but I like doing git archive
 override_dh_auto_configure:
@@ -20,4 +27,8 @@ override_dh_auto_configure:
 	./configure --with-gui=$(QT)
 
 override_dh_auto_test:
+ifeq ($(QT), qt4)
+	xvfb-run -n 99 -l make check
+else
 	make check
+endif
