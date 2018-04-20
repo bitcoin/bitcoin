@@ -70,7 +70,7 @@ script:
     - if [ -n "$USE_SHELL" ]; then export CONFIG_SHELL="$USE_SHELL"; fi
     - OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
     - SYSCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
-    - depends/$HOST/native/bin/ccache --max-size=$CCACHE_SIZE
+    - ccache --max-size=$CCACHE_SIZE
     - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
     - ./configure --cache-file=config.cache $SYSCOIN_CONFIG_ALL $SYSCOIN_CONFIG || ( cat config.log && false)
     - make distdir PACKAGE=syscoin VERSION=$HOST
@@ -81,5 +81,3 @@ script:
     - if [ "$RUN_TESTS" = "true" -a "$WINE" != "true" ]; then cd src/test && ./test_syscoin; fi
     - if [ "$RUN_TESTS" = "true" -a "$WINE" = "true" ]; then wine  src/test/test_syscoin.exe; fi
       #    - if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.py --coverage; fi
-after_script:
-    - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then (echo "Upload goes here. Something like: scp -r $BASE_OUTDIR server" || echo "upload failed"); fi
