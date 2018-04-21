@@ -4294,6 +4294,11 @@ bool CWallet::NewKeyPool()
         privateSendClient.fEnablePrivateSend = false;
         nKeysLeftSinceAutoBackup = 0;
 
+        for (int64_t nIndex : set_pre_split_keypool) {
+            batch.ErasePool(nIndex);
+        }
+        set_pre_split_keypool.clear();
+
         m_pool_key_to_index.clear();
 
         if (!TopUpKeyPool()) {
@@ -4307,13 +4312,15 @@ bool CWallet::NewKeyPool()
 size_t CWallet::KeypoolCountExternalKeys()
 {
     AssertLockHeld(cs_wallet); // setExternalKeyPool
-    return setExternalKeyPool.size();
+    return setExternalKeyPool.size() + set_pre_split_keypool.size();
 }
 
 void CWallet::LoadKeyPool(int64_t nIndex, const CKeyPool &keypool)
 {
     AssertLockHeld(cs_wallet);
-    if (keypool.fInternal) {
+    if (keypool.m_pre_split) {
+        set_pre_split_keypool.insert(nIndex);
+    } else if (keypool.fInternal) {
         setInternalKeyPool.insert(nIndex);
     } else {
         setExternalKeyPool.insert(nIndex);
@@ -4378,7 +4385,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
             m_pool_key_to_index[pubkey.GetID()] = index;
         }
         if (missingInternal + missingExternal > 0) {
-            LogPrintf("keypool added %d keys (%d internal), size=%u (%u internal)\n", missingInternal + missingExternal, missingInternal, setInternalKeyPool.size() + setExternalKeyPool.size(), setInternalKeyPool.size());
+            LogPrintf("keypool added %d keys (%d internal), size=%u (%u internal)\n", missingInternal + missingExternal, missingInternal, setInternalKeyPool.size() + setExternalKeyPool.size() + set_pre_split_keypool.size(), setInternalKeyPool.size());
         }
     }
     return true;
@@ -4395,7 +4402,7 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fRe
             TopUpKeyPool();
 
         bool fReturningInternal = IsHDEnabled() && CanSupportFeature(FEATURE_HD_SPLIT) && fRequestedInternal;
-        std::set<int64_t>& setKeyPool = fReturningInternal ? setInternalKeyPool : setExternalKeyPool;
+        std::set<int64_t>& setKeyPool = set_pre_split_keypool.empty() ? (fReturningInternal ? setInternalKeyPool : setExternalKeyPool) : set_pre_split_keypool;
 
         // Get the oldest key
         if(setKeyPool.empty())
@@ -4412,7 +4419,8 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fRe
         if (!HaveKey(keypool.vchPubKey.GetID())) {
             throw std::runtime_error(std::string(__func__) + ": unknown key in key pool");
         }
-        if (keypool.fInternal != fReturningInternal) {
+        // If the key was pre-split keypool, we don't care about what type it is
+        if (set_pre_split_keypool.size() == 0 && keypool.fInternal != fReturningInternal) {
             throw std::runtime_error(std::string(__func__) + ": keypool entry misclassified");
         }
 
@@ -4438,6 +4446,8 @@ void CWallet::ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey)
         LOCK(cs_wallet);
         if (fInternal) {
             setInternalKeyPool.insert(nIndex);
+        } else if (!set_pre_split_keypool.empty()) {
+            set_pre_split_keypool.insert(nIndex);
         } else {
             setExternalKeyPool.insert(nIndex);
         }
@@ -4490,6 +4500,9 @@ int64_t CWallet::GetOldestKeyPoolTime()
     int64_t oldestKey = GetOldestKeyTimeInPool(setExternalKeyPool, batch);
     if (IsHDEnabled() && CanSupportFeature(FEATURE_HD_SPLIT)) {
         oldestKey = std::max(GetOldestKeyTimeInPool(setInternalKeyPool, batch), oldestKey);
+        if (!set_pre_split_keypool.empty()) {
+            oldestKey = std::max(GetOldestKeyTimeInPool(set_pre_split_keypool, batch), oldestKey);
+        }
     }
 
     return oldestKey;
@@ -4687,8 +4700,8 @@ void CWallet::MarkReserveKeysAsUsed(int64_t keypool_id)
 {
     AssertLockHeld(cs_wallet);
     bool internal = setInternalKeyPool.count(keypool_id);
-    if (!internal) assert(setExternalKeyPool.count(keypool_id));
-    std::set<int64_t> *setKeyPool = internal ? &setInternalKeyPool : &setExternalKeyPool;
+    if (!internal) assert(setExternalKeyPool.count(keypool_id) || set_pre_split_keypool.count(keypool_id));
+    std::set<int64_t> *setKeyPool = internal ? &setInternalKeyPool : (set_pre_split_keypool.empty() ? &setExternalKeyPool : &set_pre_split_keypool);
     auto it = setKeyPool->begin();
 
     WalletBatch batch(*database);
@@ -4930,6 +4943,24 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
+void CWallet::MarkPreSplitKeys()
+{
+    WalletBatch batch(*database);
+    for (auto it = setExternalKeyPool.begin(); it != setExternalKeyPool.end();) {
+        int64_t index = *it;
+        CKeyPool keypool;
+        if (!batch.ReadPool(index, keypool)) {
+            throw std::runtime_error(std::string(__func__) + ": read keypool entry failed");
+        }
+        keypool.m_pre_split = true;
+        if (!batch.WritePool(index, keypool)) {
+            throw std::runtime_error(std::string(__func__) + ": writing modified keypool entry failed");
+        }
+        set_pre_split_keypool.insert(index);
+        it = setExternalKeyPool.erase(it);
+    }
+}
+
 CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& path)
 {
     const std::string& walletFile = name;
@@ -4981,6 +5012,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         }
     }
 
+    int prev_version = walletInstance->nWalletVersion;
     if (gArgs.GetBoolArg("-upgradewallet", fFirstRun))
     {
         int nMaxVersion = gArgs.GetArg("-upgradewallet", 0);
@@ -5004,6 +5036,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
     if (gArgs.GetBoolArg("-upgradewallet", false)) {
         LOCK(walletInstance->cs_wallet);
         bool hd_upgrade = false;
+        bool split_upgrade = false;
         if (walletInstance->CanSupportFeature(FEATURE_HD) && !walletInstance->IsHDEnabled()) {
             LogPrintf("Upgrading wallet to HD\n");
             walletInstance->SetMinVersion(FEATURE_HD);
@@ -5019,10 +5052,15 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         if (walletInstance->CanSupportFeature(FEATURE_HD_SPLIT)) {
             LogPrintf("Upgrading wallet to use HD chain split\n");
             walletInstance->SetMinVersion(FEATURE_HD_SPLIT);
+            split_upgrade = FEATURE_HD_SPLIT > prev_version;
+        }
+        // Mark all keys currently in the keypool as pre-split
+        if (split_upgrade) {
+            walletInstance->MarkPreSplitKeys();
         }
         // Regenerate the keypool if upgraded to HD
         if (hd_upgrade) {
-            if (!walletInstance->NewKeyPool()) {
+            if (!walletInstance->TopUpKeyPool()) {
                 InitError(_("Unable to generate keys") += "\n");
                 return nullptr;
             }
@@ -5400,6 +5438,7 @@ CKeyPool::CKeyPool()
 {
     nTime = GetTime();
     fInternal = false;
+    m_pre_split = false;
 }
 
 CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn)
@@ -5407,6 +5446,7 @@ CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn)
     nTime = GetTime();
     vchPubKey = vchPubKeyIn;
     fInternal = internalIn;
+    m_pre_split = false;
 }
 
 CWalletKey::CWalletKey(int64_t nExpires)
