@@ -389,10 +389,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
-	balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
-	BOOST_CHECK_EQUAL(balance.write(),"0.00000000");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 50 * COIN);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
 
@@ -409,20 +407,25 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectioncheckreceiver1 false"));
-	balance = find_value(r.get_obj(), "balance");
 	CAmount nBalance2 = AssetAmountFromValue(balance, 8, false);
 	BOOST_CHECK_EQUAL(nBalance2, 3326296782);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
-	balance = find_value(r.get_obj(), "balance");
 	totalsupply = find_value(r.get_obj(), "total_supply");
 	maxsupply = find_value(r.get_obj(), "max_supply");
-	BOOST_CHECK_EQUAL(balance.write(), "0.00000000");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 100 *COIN - (nBalance1 + nBalance2));
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), (nBalance1 + nBalance2) - 100 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
+	CAmount supplyRemaining = 100 * COIN - (nBalance1 + nBalance2);
+	AssetUpdate("node1", guid, "pub12", ValueFromAssetAmount(supplyRemaining, 8, false).write());
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
+	totalsupply = find_value(r.get_obj(), "total_supply");
+	maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 100 * COIN);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
 
-	AssetUpdate("node1", guid, "pub12", "5");
+	// totalsupply > maxsupply
+	BOOST_CHECK_THROW(r = CallRPC("node2", "assetupdate " + guid + " jagassetupdate assets 0.001 0 ''"));
 }
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
 {
