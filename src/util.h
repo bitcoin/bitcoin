@@ -46,6 +46,7 @@
 //Syscoin only features
 
 extern bool fMasterNode;
+extern bool fUnitTest;
 extern bool fLiteMode;
 extern int nWalletBackups;
 

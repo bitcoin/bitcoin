@@ -235,7 +235,7 @@ CAmount GetAssetAllocationInterest(CAssetAllocation & assetAllocation, const int
 		errorMessage = _("Last interest claim block height is invalid");
 		return 0;
 	}
-	const int &nInterestBlockTerm = GetBoolArg("-unittest", false)? ONE_HOUR_IN_BLOCKS: ONE_YEAR_IN_BLOCKS;
+	const int &nInterestBlockTerm = fUnitTest? ONE_HOUR_IN_BLOCKS: ONE_YEAR_IN_BLOCKS;
 	const int &nBlockDifference = nHeight - assetAllocation.nLastInterestClaimHeight;
 	const double &fTerms = (double)nBlockDifference / (double)nInterestBlockTerm;
 	// apply compound annual interest to get total interest since last time interest was collected
@@ -393,7 +393,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1013 - " + _("You cannot collect interest on this asset: ") + errorMessageCollection;
 				return true;
 			}
-			if (!passetdb->WriteAsset(dbAsset, OP_ASSET_UPDATE))
+			if (!bSanityCheck && !passetdb->WriteAsset(dbAsset, OP_ASSET_UPDATE))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2039 - " + _("Failed to write to asset DB");
 				return error(errorMessage.c_str());
@@ -786,7 +786,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	const int64_t & nNow = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	for (auto& arrivalTime : arrivalTimes) {
 		int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS*1000;
-		if (GetBoolArg("-unittest", false))
+		if (fUnitTest)
 			minLatency = 1000;
 		// if this tx arrived within the minimum latency period flag it as potentially conflicting
 		if ((nNow - arrivalTime.second) < minLatency) {
@@ -970,7 +970,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 	CAmount &senderBalance = mapBalances[assetAllocationTupleSender.vchAlias];
 	senderBalance = dbLastAssetAllocation.nBalance;
 	int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS * 1000;
-	if (GetBoolArg("-unittest", false))
+	if (fUnitTest)
 		minLatency = 1000;
 	for (auto& arrivalTime : arrivalTimesSet)
 	{

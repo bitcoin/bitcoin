@@ -110,6 +110,7 @@ using namespace std;
 //Syscoin only features
 bool fMasterNode = false;
 bool fLiteMode = false;
+bool fUnitTest = false;
 /**
     nWalletBackups:
         1..10   - number of automatic backups to keep

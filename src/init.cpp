@@ -1996,7 +1996,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
 	// ********************************************************* Step 11a: setup PrivateSend
 	fMasterNode = GetBoolArg("-masternode", false);
-
+	fUnitTest = GetBoolArg("-unittest", false);
 	// SYSCOIN
 	if ((fMasterNode || masternodeConfig.getCount() > 0) && !fTxIndex) {
 		return InitError("Enabling Masternode support requires turning on transaction indexing."
