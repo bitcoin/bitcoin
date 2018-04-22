@@ -289,6 +289,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Interest must be between 0 and 1");
 				return error(errorMessage.c_str());
 			}
+			if ((theAsset.fInterestRate != 0 || theAsset.bCanAdjustInterestRate) && theAsset.bUseInputRanges)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Interest cannot be set on this type of asset");
+				return error(errorMessage.c_str());
+			}
 			if (!AssetRange(theAsset.nBalance, theAsset.nPrecision, theAsset.bUseInputRanges))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Initial balance out of money range");

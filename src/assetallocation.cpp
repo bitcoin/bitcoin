@@ -244,7 +244,7 @@ CAmount GetAssetAllocationInterest(CAssetAllocation & assetAllocation, const int
 	// get interest only and apply externally to this function, compound to every block to allow people to claim interest at any time per block
 	return ((nBalanceOverTimeDifference*pow((1 + (fInterestOverTimeDifference / nInterestBlockTerm)), (nInterestBlockTerm*fTerms)))) - nBalanceOverTimeDifference;
 }
-bool ApplyAssetAllocationInterest(const CAsset& asset, CAssetAllocation & assetAllocation, const int& nHeight, string& errorMessage) {
+bool ApplyAssetAllocationInterest(CAsset& asset, CAssetAllocation & assetAllocation, const int& nHeight, string& errorMessage) {
 	CAmount nInterest = GetAssetAllocationInterest(assetAllocation, nHeight, errorMessage);
 	if (nInterest <= 0) {
 		return false;
@@ -260,6 +260,7 @@ bool ApplyAssetAllocationInterest(const CAsset& asset, CAssetAllocation & assetA
 		}
 	}
 	assetAllocation.nBalance += nInterest;
+	asset.nTotalSupply += nInterest;
 	assetAllocation.nLastInterestClaimHeight = nHeight;
 	// set accumulators to 0 again since we have claimed
 	assetAllocation.nAccumulatedBalanceSinceLastInterestClaim = 0;
@@ -391,6 +392,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1013 - " + _("You cannot collect interest on this asset: ") + errorMessageCollection;
 				return true;
+			}
+			if (!passetdb->WriteAsset(dbAsset, OP_ASSET_UPDATE))
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2039 - " + _("Failed to write to asset DB");
+				return error(errorMessage.c_str());
 			}
 		}
 		if(bSanityCheck)
