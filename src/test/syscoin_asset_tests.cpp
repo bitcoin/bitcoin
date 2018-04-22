@@ -384,12 +384,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver1 false"));
-	UniValue balance = find_value(r.get_obj(), "balance");
+	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 30 * COIN);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
-	UniValue balance = find_value(r.get_obj(), "balance");
+	balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false),0);
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	AssetClaimInterest("node1", guid, "jagassetcollectionreceiver1");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
-	UniValue balance = find_value(r.get_obj(), "balance");
+	balance = find_value(r.get_obj(), "balance");
 	CAmount nBalance1 = AssetAmountFromValue(balance, 8, false);
 	BOOST_CHECK_EQUAL(nBalance1, 22.10157853 * COIN);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
@@ -415,9 +415,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
-	UniValue balance = find_value(r.get_obj(), "balance");
-	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
-	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
+	balance = find_value(r.get_obj(), "balance");
+	totalsupply = find_value(r.get_obj(), "total_supply");
+	maxsupply = find_value(r.get_obj(), "max_supply");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0 * COIN);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 100 *COIN - (nBalance1 + nBalance2));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
