@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	// calc interest expect 20 (1 + 0.1 / 60) ^ (60(1)) = ~22.13 and 30 (1 + 0.1 / 60) ^ (60(1)) = ~33.26
 	AssetClaimInterest("node1", guid, "jagassetcollectioncheckreceiver");
 	AssetClaimInterest("node1", guid, "jagassetcollectioncheckreceiver1");
-
+	// ensure total supply and individual supplies are correct after interest claims
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectioncheckreceiver false"));
 	balance = find_value(r.get_obj(), "balance");
 	CAmount nBalance1 = AssetAmountFromValue(balance, 8, false);
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), (nBalance1 + nBalance2));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
 	CAmount supplyRemaining = 100 * COIN - (nBalance1 + nBalance2);
-
+	// mint up to the max supply
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetupdate assets " + ValueFromAssetAmount(supplyRemaining, 8, false).write() + " 0 ''"));
 	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 100 * COIN);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
 
-	// totalsupply > maxsupply
+	// totalsupply cannot go > maxsupply
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetupdate assets 0.001 0 ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
