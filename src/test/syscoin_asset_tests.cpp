@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
 
 	// totalsupply cannot go > maxsupply
-	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetupdate assets 0.001 0 ''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetupdate assets 0.001 0.1 ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
 {
