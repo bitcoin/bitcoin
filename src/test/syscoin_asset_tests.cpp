@@ -420,7 +420,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	CAmount supplyRemaining = 100 * COIN - (nBalance1 + nBalance2);
 	// mint up to the max supply
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetupdate assets " + ValueFromAssetAmount(supplyRemaining, 8, false).write() + " 0.1 ''"));
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
+	string hex_str = find_value(r.get_obj(), "hex").get_str();
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	GenerateBlocks(5);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
 	totalsupply = find_value(r.get_obj(), "total_supply");
 	maxsupply = find_value(r.get_obj(), "max_supply");
