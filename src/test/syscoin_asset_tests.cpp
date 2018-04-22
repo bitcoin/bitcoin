@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false),0);
+	BOOST_CHECK_EQUAL(balance.write().c_str(),"0");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 50 * COIN);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
 
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	balance = find_value(r.get_obj(), "balance");
 	totalsupply = find_value(r.get_obj(), "total_supply");
 	maxsupply = find_value(r.get_obj(), "max_supply");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0);
+	BOOST_CHECK_EQUAL(balance.write().c_str(), "0");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 100 *COIN - (nBalance1 + nBalance2));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
 }
