@@ -367,6 +367,61 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837095);
 }
+BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
+{
+	UniValue r;
+	printf("Running generate_asset_collect_interest_checktotalsupply...\n");
+	GenerateBlocks(5);
+	AliasNew("node1", "jagassetcollection", "data");
+	AliasNew("node1", "jagassetcollectionreceiver", "data");
+	AliasNew("node1", "jagassetcollectionreceiver1", "data");
+	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
+	string guid = AssetNew("node1", "cad", "jagassetcollection", "data", "8", "false", "50", "100", "0.1");
+	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionreceiver\\\",\\\"amount\\\":20},{\\\"aliasto\\\":\\\"jagassetcollectionreceiver1\\\",\\\"amount\\\":30}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 20 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver1 false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 30 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false),0);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 50 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
+
+	// 1 hour later
+	GenerateBlocks(60);
+	// calc interest expect 20 (1 + 0.1 / 60) ^ (60(1)) = ~22.10157853 and 30 (1 + 0.1 / 60) ^ (60(1)) = ~33.15236779
+	AssetClaimInterest("node1", guid, "jagassetcollectionreceiver");
+	AssetClaimInterest("node1", guid, "jagassetcollectionreceiver1");
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	CAmount nBalance1 = AssetAmountFromValue(balance, 8, false);
+	BOOST_CHECK_EQUAL(nBalance1, 22.10157853 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver1 false"));
+	balance = find_value(r.get_obj(), "balance");
+	CAmount nBalance2 = AssetAmountFromValue(balance, 8, false);
+	BOOST_CHECK_EQUAL(nBalance2, 33.15236779 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 100 *COIN - (nBalance1 + nBalance2));
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
+}
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
 {
 	UniValue r;
