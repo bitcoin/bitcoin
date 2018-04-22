@@ -1036,7 +1036,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (!GetOffer( vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1534 - " + _("Could not find offer with this guid"));
 
-	if (!GetBoolArg("-unittest", false)) {
+	if (!fUnitTest) {
 		ArrivalTimesMap arrivalTimes;
 		pofferdb->ReadISArrivalTimes(vchOffer, arrivalTimes);
 		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();

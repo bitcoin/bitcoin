@@ -1019,7 +1019,7 @@ UniValue assetsend(const UniValue& params, bool fHelp) {
 	CScript scriptPubKey;
 
 	CAssetAllocationTuple assetAllocationTuple(vchAsset, vchAliasFrom);
-	if (!GetBoolArg("-unittest", false)) {
+	if (!fUnitTest) {
 		// check to see if a transaction for this asset/alias tuple has arrived before minimum latency period
 		ArrivalTimesMap arrivalTimes;
 		passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);

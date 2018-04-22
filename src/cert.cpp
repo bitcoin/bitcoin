@@ -711,7 +711,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     if (!GetCert( vchCert, theCert))
         throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 3504 - " + _("Could not find a certificate with this key"));
 
-	if (!GetBoolArg("-unittest", false)) {
+	if (!fUnitTest) {
 		ArrivalTimesMap arrivalTimes;
 		pcertdb->ReadISArrivalTimes(vchCert, arrivalTimes);
 		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
