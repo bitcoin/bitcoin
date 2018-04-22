@@ -733,6 +733,8 @@ public:
 
     boost::signals2::signal<void (bool fCompleted)> NotifyWaitingForDevice;
 
+    boost::signals2::signal<void (CAmount nReservedBalance)> NotifyReservedBalanceChanged;
+
     int64_t nLastCoinStakeSearchTime = 0;
     uint32_t nStealth, nFoundStealth; // for reporting, zero before use
     int64_t nReserveBalance;

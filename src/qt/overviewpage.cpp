@@ -250,7 +250,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         setBalance(balances);
         connect(model, SIGNAL(balanceChanged(interfaces::WalletBalances)), this, SLOT(setBalance(interfaces::WalletBalances)));
 
-        connect(model, SIGNAL(reserveBalanceChanged(CAmount)), this, SLOT(setReservedBalance(CAmount)));
+        connect(model, SIGNAL(notifyReservedBalanceChanged(CAmount)), this, SLOT(setReservedBalance(CAmount)));
         setReservedBalance(wallet.getReserveBalance());
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));

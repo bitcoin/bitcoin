@@ -602,6 +602,11 @@ public:
         return MakeHandler(m_wallet_part->NotifyWaitingForDevice.connect(fn));
     }
 
+    std::unique_ptr<Handler> handleReservedBalanceChanged(ReservedBalanceChangedFn fn) override
+    {
+        return MakeHandler(m_wallet_part->NotifyReservedBalanceChanged.connect(fn));
+    }
+
     bool IsParticlWallet() override
     {
         return m_wallet_part;

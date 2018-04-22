@@ -422,8 +422,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case ReserveBalance:
             if (settings.value("reservebalance") != value) {
                 settings.setValue("reservebalance", value);
-                //setRestartRequired(true);
-                Q_EMIT reserveBalanceChanged(value.toLongLong());
+                Q_EMIT setReserveBalance(value.toLongLong());
             }
             break;
         case CoinControlFeatures:
@@ -531,3 +530,9 @@ void OptionsModel::checkAndMigrate()
         settings.setValue("addrSeparateProxyTor", GetDefaultProxyAddress());
     }
 }
+
+void OptionsModel::updateReservedBalance(CAmount reservedBalance)
+{
+    QSettings settings;
+    settings.setValue("reservebalance", QString::number(reservedBalance));
+};

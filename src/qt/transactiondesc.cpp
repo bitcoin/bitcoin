@@ -256,6 +256,8 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
                     }
                 }
 
+                if (!txout->IsStandardOutput())
+                    continue;
                 strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -txout->GetValue()) + "<br>";
                 if(toSelf)
                     strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, txout->GetValue()) + "<br>";

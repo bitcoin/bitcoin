@@ -261,6 +261,9 @@ public:
     using WaitingForDeviceFn = std::function<void(bool waiting_for_device)>;
     virtual std::unique_ptr<Handler> handleWaitingForDevice(WaitingForDeviceFn fn) = 0;
 
+    using ReservedBalanceChangedFn = std::function<void(CAmount value)>;
+    virtual std::unique_ptr<Handler> handleReservedBalanceChanged(ReservedBalanceChangedFn fn) = 0;
+
     virtual bool IsParticlWallet() = 0;
     virtual CAmount getReserveBalance() = 0;
     virtual bool ownDestination(const CTxDestination &dest) = 0;

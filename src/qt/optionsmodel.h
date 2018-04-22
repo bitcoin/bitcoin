@@ -76,7 +76,7 @@ public:
     bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
-    
+
     bool getShowIncomingStakeNotifications() { return fShowIncomingStakeNotifications; }
 
     /* Restart flag helper */
@@ -98,7 +98,7 @@ private:
     bool fShowIncomingStakeNotifications;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
-    
+
     CAmount nReserveBalance;
 
     // Add option to list of GUI options overridden through command line/config file
@@ -110,7 +110,10 @@ Q_SIGNALS:
     void displayUnitChanged(int unit);
     void coinControlFeaturesChanged(bool);
     void hideTrayIconChanged(bool);
-    void reserveBalanceChanged(CAmount);
+    void setReserveBalance(CAmount);
+
+public Q_SLOTS:
+    void updateReservedBalance(CAmount reservedBalance);
 };
 
 #endif // BITCOIN_QT_OPTIONSMODEL_H

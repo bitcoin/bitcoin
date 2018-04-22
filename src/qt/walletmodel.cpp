@@ -53,7 +53,8 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
 
 
 
-    connect(getOptionsModel(), SIGNAL(reserveBalanceChanged(CAmount)), this, SLOT(reserveBalanceChanged(CAmount)));
+    connect(getOptionsModel(), SIGNAL(setReserveBalance(CAmount)), this, SLOT(setReserveBalance(CAmount)));
+    connect(this, SIGNAL(notifyReservedBalanceChanged(CAmount)), getOptionsModel(), SLOT(updateReservedBalance(CAmount)));
 
     subscribeToCoreSignals();
 }
@@ -97,7 +98,7 @@ void WalletModel::pollBalanceChanged()
     }
 }
 
-void WalletModel::reserveBalanceChanged(CAmount nReserveBalanceNew)
+void WalletModel::setReserveBalance(CAmount nReserveBalanceNew)
 {
     m_wallet->setReserveBalance(nReserveBalanceNew);
 };
@@ -113,6 +114,11 @@ void WalletModel::waitingForDevice(bool fComplete)
          if (mbDevice.isVisible())
             mbDevice.hide();
     };
+};
+
+void WalletModel::updateReservedBalanceChanged(CAmount nValue)
+{
+    Q_EMIT notifyReservedBalanceChanged(nValue);
 };
 
 void WalletModel::checkBalanceChanged(const interfaces::WalletBalances& new_balances)
@@ -444,6 +450,12 @@ static void NotifyWaitingForDevice(WalletModel *walletmodel, bool fCompleted)
                               Q_ARG(bool, fCompleted));
 }
 
+static void NotifyReservedBalanceChanged(WalletModel *walletmodel, CAmount nValue)
+{
+    QMetaObject::invokeMethod(walletmodel, "updateReservedBalanceChanged", Qt::QueuedConnection,
+                              Q_ARG(CAmount, nValue));
+}
+
 void WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
@@ -454,8 +466,10 @@ void WalletModel::subscribeToCoreSignals()
     m_handler_show_progress = m_wallet->handleShowProgress(boost::bind(ShowProgress, this, _1, _2));
     m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(boost::bind(NotifyWatchonlyChanged, this, _1));
 
-    if (m_wallet->IsParticlWallet())
+    if (m_wallet->IsParticlWallet()) {
         m_handler_waiting_for_device = m_wallet->handleWaitingForDevice(boost::bind(NotifyWaitingForDevice, this, _1));
+        m_handler_reserved_balance_changed = m_wallet->handleReservedBalanceChanged(boost::bind(NotifyReservedBalanceChanged, this, _1));
+    }
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -467,8 +481,10 @@ void WalletModel::unsubscribeFromCoreSignals()
     m_handler_show_progress->disconnect();
     m_handler_watch_only_changed->disconnect();
 
-    if (m_wallet->IsParticlWallet())
+    if (m_wallet->IsParticlWallet()) {
         m_handler_waiting_for_device->disconnect();
+        m_handler_reserved_balance_changed->disconnect();
+    }
 }
 
 // WalletModel::UnlockContext implementation

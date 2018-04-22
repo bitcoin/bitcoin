@@ -227,6 +227,7 @@ private:
     interfaces::Node& m_node;
 
     std::unique_ptr<interfaces::Handler> m_handler_waiting_for_device;
+    std::unique_ptr<interfaces::Handler> m_handler_reserved_balance_changed;
 
     bool fHaveWatchOnly;
     bool fForceCheckBalanceChanged;
@@ -277,6 +278,9 @@ Q_SIGNALS:
     // Watch-only address added
     void notifyWatchonlyChanged(bool fHaveWatchonly);
 
+    // Signal that reserved balance in wallet changed
+    void notifyReservedBalanceChanged(CAmount nValue);
+
 public Q_SLOTS:
     /* Wallet status might have changed */
     void updateStatus();
@@ -290,10 +294,13 @@ public Q_SLOTS:
     void pollBalanceChanged();
 
     // Reserved balance changed
-    void reserveBalanceChanged(CAmount nReserveBalanceNew);
+    void setReserveBalance(CAmount nReserveBalanceNew);
 
     // Waiting for hardware device
     void waitingForDevice(bool fCompleted);
+
+    // Reserved balance in wallet changed
+    void updateReservedBalanceChanged(CAmount nValue);
 
 };
 

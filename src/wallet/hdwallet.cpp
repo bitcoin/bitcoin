@@ -11522,6 +11522,7 @@ bool CHDWallet::SetReserveBalance(CAmount nNewReserveBalance)
     LOCK(cs_wallet);
 
     nReserveBalance = nNewReserveBalance;
+    NotifyReservedBalanceChanged(nReserveBalance);
     return true;
 };
 
