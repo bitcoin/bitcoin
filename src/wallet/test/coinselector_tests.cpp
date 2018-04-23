@@ -252,6 +252,28 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     BOOST_CHECK(testWallet.SelectCoins(vCoins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb, bnb_used));
     BOOST_CHECK(!bnb_used);
     BOOST_CHECK(!coin_selection_params_bnb.use_bnb);
+
+    // Make sure preselected inputs that don't allow additional inputs
+    // returns the right values
+    empty_wallet();
+    add_coin(5 * CENT);
+    add_coin(6 * CENT);
+    add_coin(11 * CENT);
+    add_coin(4 * CENT); //Won't be selected
+    CCoinControl coin_control2;
+    coin_control2.fAllowOtherInputs = false;
+    coin_control2.Select(COutPoint(vCoins.at(0).tx->GetHash(), vCoins.at(0).i));
+    coin_control2.Select(COutPoint(vCoins.at(1).tx->GetHash(), vCoins.at(1).i));
+    coin_control2.Select(COutPoint(vCoins.at(2).tx->GetHash(), vCoins.at(2).i));
+    BOOST_CHECK(testWallet.SelectCoins(vCoins, 4 * CENT, setCoinsRet, nValueRet, coin_control2, coin_selection_params_bnb, bnb_used));
+    BOOST_CHECK(!bnb_used);
+    BOOST_CHECK(!coin_selection_params_bnb.use_bnb);
+    std::vector<COutPoint> coin_list;
+    coin_control2.ListSelected(coin_list);
+    BOOST_CHECK_EQUAL(setCoinsRet.size(), coin_list.size());
+    // "over-selected" since these were mandatory
+    BOOST_CHECK_EQUAL(nValueRet, (5+6+11) * CENT);
+
 }
 
 BOOST_AUTO_TEST_CASE(knapsack_solver_test)

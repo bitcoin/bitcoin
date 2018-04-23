@@ -2474,21 +2474,6 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     std::vector<COutput> vCoins(vAvailableCoins);
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
-    if (coin_control.HasSelected() && !coin_control.fAllowOtherInputs)
-    {
-        // We didn't use BnB here, so set it to false.
-        bnb_used = false;
-
-        for (const COutput& out : vCoins)
-        {
-            if (!out.fSpendable)
-                 continue;
-            nValueRet += out.tx->tx->vout[out.i].nValue;
-            setCoinsRet.insert(out.GetInputCoin());
-        }
-        return (nValueRet >= nTargetValue);
-    }
-
     // calculate value from preset inputs and store them
     std::set<CInputCoin> setPresetCoins;
     CAmount nValueFromPresetInputs = 0;
@@ -2497,7 +2482,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     coin_control.ListSelected(vPresetInputs);
     for (const COutPoint& outpoint : vPresetInputs)
     {
-        // For now, don't use BnB if preset inputs are selected. TODO: Enable this later
+        // For now, don't use BnB if preset inputs are selected.
+        // TODO: Enable this later for cases where additional inputs are possible
         bnb_used = false;
         coin_selection_params.use_bnb = false;
 
@@ -2515,13 +2501,23 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             return false; // TODO: Allow non-wallet inputs
     }
 
+    const CAmount amount_to_select = nTargetValue - nValueFromPresetInputs;
+
+    // Return early if no other inputs can be selected or we selected enough
+    if ((coin_control.HasSelected() && !coin_control.fAllowOtherInputs)
+            || amount_to_select <= 0) {
+        nValueRet = nValueFromPresetInputs;
+        setCoinsRet = setPresetCoins;
+        return (amount_to_select <= 0);
+    }
+
     // remove preset inputs from vCoins
-    for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coin_control.HasSelected();)
-    {
-        if (setPresetCoins.count(it->GetInputCoin()))
+    for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coin_control.HasSelected();) {
+        if (setPresetCoins.count(it->GetInputCoin())) {
             it = vCoins.erase(it);
-        else
+        } else {
             ++it;
+        }
     }
 
     // form groups from remaining coins; note that preset coins will not
@@ -2532,14 +2528,14 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     size_t max_descendants = (size_t)std::max<int64_t>(1, gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
     bool fRejectLongChains = gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
 
-    bool res = nTargetValue <= nValueFromPresetInputs ||
-        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 6, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 1, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, 2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+    bool res = SelectCoinsMinConf(amount_to_select, CoinEligibilityFilter(1, 6, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+        SelectCoinsMinConf(amount_to_select, CoinEligibilityFilter(1, 1, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+        (m_spend_zero_conf_change &&
+            (SelectCoinsMinConf(amount_to_select, CoinEligibilityFilter(0, 1, 2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+            SelectCoinsMinConf(amount_to_select, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+            SelectCoinsMinConf(amount_to_select, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+            SelectCoinsMinConf(amount_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+            (!fRejectLongChains && SelectCoinsMinConf(amount_to_select, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used))));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     util::insert(setCoinsRet, setPresetCoins);
