@@ -55,14 +55,13 @@ CHDWallet *GetHDWalletForJSONRPCRequest(const JSONRPCRequest &request)
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
         // wallet endpoint was used
         std::string requestedWallet = urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size()));
-        for (auto pwallet : ::vpwallets) {
-            if (pwallet->GetName() == requestedWallet) {
-                return GetHDWallet(pwallet);
-            }
-        }
-        throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
+
+        CWallet* pwallet = GetWallet(requestedWallet);
+        if (!pwallet) throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
+        return GetHDWallet(pwallet);
     }
-    return ::vpwallets.size() == 1 || (request.fHelp && ::vpwallets.size() > 0) ? GetHDWallet(::vpwallets[0]) : nullptr;
+    std::vector<CWallet*> wallets = GetWallets();
+    return wallets.size() == 1 || (request.fHelp && wallets.size() > 0) ? GetHDWallet(wallets[0]) : nullptr;
 }
 
 inline uint32_t reversePlace(const uint8_t *p)

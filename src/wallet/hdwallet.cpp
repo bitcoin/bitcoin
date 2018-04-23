@@ -302,7 +302,7 @@ bool CHDWallet::InitLoadWallet()
             LogPrintf("%s\n", sWarning);
         };
 
-        vpwallets.push_back(pwallet);
+        AddWallet(pwallet);
     };
 
     return true;

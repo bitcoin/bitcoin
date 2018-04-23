@@ -15,7 +15,7 @@ HDWalletTestingSetup::HDWalletTestingSetup(const std::string &chainName):
 {
     bool fFirstRun;
     pwalletMain = MakeUnique<CHDWallet>("mock_part", WalletDatabase::CreateMock());
-    vpwallets.push_back(pwalletMain.get());
+    AddWallet(pwalletMain.get());
     fParticlWallet = true;
     pwalletMain->LoadWallet(fFirstRun);
     RegisterValidationInterface(pwalletMain.get());
@@ -27,11 +27,11 @@ HDWalletTestingSetup::HDWalletTestingSetup(const std::string &chainName):
 HDWalletTestingSetup::~HDWalletTestingSetup()
 {
     UnregisterValidationInterface(pwalletMain.get());
+    RemoveWallet(pwalletMain.get());
     pwalletMain.reset();
 
     mapStakeSeen.clear();
     listStakeSeen.clear();
-    vpwallets.clear();
 }
 
 std::string StripQuotes(std::string s)

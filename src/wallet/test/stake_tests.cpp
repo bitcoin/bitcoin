@@ -38,7 +38,7 @@ struct StakeTestingSetup: public TestingSetup {
     {
         bool fFirstRun;
         pwalletMain = MakeUnique<CHDWallet>("mock_part", WalletDatabase::CreateMock());
-        vpwallets.push_back(pwalletMain.get());
+        AddWallet(pwalletMain.get());
         fParticlWallet = true;
         pwalletMain->LoadWallet(fFirstRun);
         RegisterValidationInterface(pwalletMain.get());
@@ -53,11 +53,11 @@ struct StakeTestingSetup: public TestingSetup {
     ~StakeTestingSetup()
     {
         UnregisterValidationInterface(pwalletMain.get());
+        RemoveWallet(pwalletMain.get());
         pwalletMain.reset();
 
         mapStakeSeen.clear();
         listStakeSeen.clear();
-        vpwallets.clear();
         ECC_Stop_Stealth();
         ECC_Stop_Blinding();
     }

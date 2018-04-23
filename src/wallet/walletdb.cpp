@@ -764,7 +764,7 @@ void MaybeCompactWalletDB()
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("particl-wallet");
 
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         WalletDatabase& dbh = pwallet->GetDBHandle();
 
         unsigned int nUpdateCounter = dbh.nUpdateCounter;

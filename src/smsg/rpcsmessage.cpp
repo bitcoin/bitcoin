@@ -42,6 +42,7 @@ UniValue smsgenable(const JSONRPCRequest &request)
 
     CWallet *pwallet = nullptr;
 #ifdef ENABLE_WALLET
+    auto vpwallets = GetWallets();
     assert(vpwallets.size() > 0);
     pwallet = vpwallets[0];
 #endif
