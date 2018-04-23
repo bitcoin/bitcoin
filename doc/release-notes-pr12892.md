@@ -18,7 +18,7 @@ Here are the changes to RPC methods:
 | Deprecated Method       | New Method            | Notes       |
 | :---------------------- | :-------------------- | :-----------|
 | `getaccount`            | `getaddressinfo`      | `getaddressinfo` returns a json object with address information instead of just the name of the account as a string. |
-| `getaccountaddress`     | `getlabeladdress`     | `getlabeladdress` throws an error by default if the label does not already exist, but provides a `force` option for compatibility with existing applications. |
+| `getaccountaddress`     | n/a                   | There is no replacement for `getaccountaddress` since labels do not have an associated receive address. |
 | `getaddressesbyaccount` | `getaddressesbylabel` | `getaddressesbylabel` returns a json object with the addresses as keys, instead of a list of strings. |
 | `getreceivedbyaccount`  | `getreceivedbylabel`  | _no change in behavior_ |
 | `listaccounts`          | `listlabels`          | `listlabels` does not return a balance or accept `minconf` and `watchonly` arguments. |
