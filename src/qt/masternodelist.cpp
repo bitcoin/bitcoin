@@ -469,7 +469,7 @@ void MasternodeList::ShowQRCode(std::string strAlias) {
     CMasternode mn;
     bool fFound = false;
 
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+    for (const auto& mne : masternodeConfig.getEntries()) {
         if (strAlias != mne.getAlias()) {
             continue;
         }
