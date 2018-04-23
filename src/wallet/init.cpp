@@ -315,7 +315,7 @@ bool WalletInit::Open()
         if (!pwallet) {
             return false;
         }
-        vpwallets.push_back(pwallet);
+        AddWallet(pwallet);
     }
 
     return true;
@@ -323,7 +323,7 @@ bool WalletInit::Open()
 
 void WalletInit::Start(CScheduler& scheduler)
 {
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         pwallet->postInitProcess(scheduler);
     }
     if (!fMasternodeMode && privateSendClient.fEnablePrivateSend) {
@@ -339,24 +339,24 @@ void WalletInit::Flush()
         privateSendClient.fPrivateSendRunning = false;
         privateSendClient.ResetPool();
     }
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         pwallet->Flush(false);
     }
 }
 
 void WalletInit::Stop()
 {
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         pwallet->Flush(true);
     }
 }
 
 void WalletInit::Close()
 {
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
+        RemoveWallet(pwallet);
         delete pwallet;
     }
-    vpwallets.clear();
 }
 
 void WalletInit::AutoLockMasternodeCollaterals()
