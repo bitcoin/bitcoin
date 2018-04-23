@@ -460,7 +460,7 @@ public:
         return *this;
     }
 
-    CScript& operator<<(const std::vector<unsigned char>& b) LIFETIMEBOUND
+    CScript& operator<<(const Span<const unsigned char>& b) LIFETIMEBOUND
     {
         if (b.size() < OP_PUSHDATA1)
         {
