@@ -203,6 +203,11 @@ public:
                         //   (the tx=... number in the SetBestChain debug.log lines)
             3.1         // * estimated number of transactions per second after that timestamp
         };
+
+        /** RVN Start **/
+        nIssueAssetBurnAmount = 500 * COIN;
+        strIssueAssetBurnAddress = "RL43MXYUbZ5yk6JJiucZL2trbgKdaS6zjx";
+        /** RVN End **/
     }
 };
 
@@ -246,7 +251,7 @@ public:
         nDefaultPort = 18767;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1517350340, 4791361, 0x0e00ffff, 4, 5000 * COIN); 
+        genesis = CreateGenesisBlock(1517350340, 4791361, 0x1e00ffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         //Test MerkleRoot and GenesisBlock
@@ -287,6 +292,10 @@ public:
             3.1         // * estimated number of transactions per second after that timestamp
         };
 
+        /** RVN Start **/
+        nIssueAssetBurnAmount = 500 * COIN;
+        strIssueAssetBurnAddress = "mssiSaYW18h3vj8LpqdNjjNjYsAPvg7sWB";
+        /** RVN End **/
     }
 };
 
@@ -419,6 +428,11 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
         bech32_hrp = "rcrt";
+
+        /** RVN Start **/
+        nIssueAssetBurnAmount = 500 * COIN;
+        strIssueAssetBurnAddress = "mssiSaYW18h3vj8LpqdNjjNjYsAPvg7sWB";
+        /** RVN End **/
     }
 };
 

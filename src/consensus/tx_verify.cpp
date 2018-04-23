@@ -3,6 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <assets/assets.h>
+#include <script/standard.h>
+#include <util.h>
 #include "tx_verify.h"
 
 #include "consensus.h"
@@ -157,7 +160,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs, bool fMemPoolCheck)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -202,6 +205,19 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
             if (txin.prevout.IsNull())
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
     }
+
+    /** RVN START */
+    if (tx.IsNewAsset()) {
+        CNewAsset asset;
+        std::string strAddress;
+        if (!AssetFromTransaction(tx, asset, strAddress))
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-asset");
+
+        std::string strError = "";
+        if (!asset.IsValid(strError, fMemPoolCheck))
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
+    }
+    /** RVN END */
 
     return true;
 }

@@ -49,6 +49,11 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/thread.hpp>
+#include <script/ismine.h>
+#include <wallet/wallet.h>
+
+#include "assets/assets.h"
+#include "assets/assetdb.h"
 
 #if defined(NDEBUG)
 # error "Raven cannot be compiled without assertions."
@@ -186,6 +191,9 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
 CCoinsViewDB *pcoinsdbview = nullptr;
 CCoinsViewCache *pcoinsTip = nullptr;
 CBlockTreeDB *pblocktree = nullptr;
+
+CAssetsDB *passetsdb = nullptr;
+CAssets *passets = nullptr;
 
 enum FlushStateMode {
     FLUSH_STATE_NONE,
@@ -457,7 +465,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    if (!CheckTransaction(tx, state))
+    if (!CheckTransaction(tx, state, true, true))
         return false; // state filled in by CheckTransaction
 
     // Coinbase is only valid in a block, not as a loose transaction
@@ -906,6 +914,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 {
     const CChainParams& chainparams = Params();
     return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, pfMissingInputs, GetTime(), plTxnReplaced, bypass_limits, nAbsurdFee);
+
 }
 
 /** Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock */
@@ -1467,6 +1476,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
  *  When FAILED is returned, view is left in an indeterminate state. */
 static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
 {
+    LogPrintf("%s\n", __func__);
     bool fClean = true;
 
     CBlockUndo blockUndo;
@@ -1504,6 +1514,20 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
             }
         }
 
+        /** RVN START */
+        if (tx.IsNewAsset()) {
+            CNewAsset asset;
+            std::string strAddress;
+            AssetFromTransaction(tx, asset, strAddress);
+            if (passets->ContainsAsset(asset)) {
+                if (!passets->RemoveAssetAndOutPoints(asset, strAddress)) {
+                    error("%s : Failed to Remove Asset and OutPoints. Asset Name : %s", __func__, asset.strName);
+                    return DISCONNECT_FAILED;
+                }
+            }
+        }
+        /** RVN END */
+
         // restore inputs
         if (i > 0) { // not coinbases
             CTxUndo &txundo = blockUndo.vtxundo[i-1];
@@ -1519,6 +1543,8 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
             }
             // At this point, all of txundo.vprevout should have been moved out.
         }
+
+
     }
 
     // move best block pointer to prevout block
@@ -1824,30 +1850,52 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             control.Add(vChecks);
         }
 
+        /** RVN START */
+        if (tx.IsNewAsset()) {
+            CNewAsset asset;
+            std::string strAddress;
+            AssetFromTransaction(tx, asset, strAddress);
+
+            std::string strError = "";
+            if (!asset.IsValid(strError))
+                return state.DoS(100, error("%s: %s", __func__, strError), REJECT_INVALID, "bad-txns-issue-asset");
+
+            // If we aren't just checking the block, databasethe assets
+            if(!fJustCheck) {
+                if (!passets->AddNewAsset(asset, strAddress))
+                    return error("%s: Failed at adding a new asset to our database. asset: %s", __func__,
+                                 asset.strName);
+
+                // TODO when we are ready. Make sure to only database after we are done validating everything
+                if (vpwallets[0]->IsMine(tx.vout[tx.vout.size() - 1]) == ISMINE_SPENDABLE) {
+                    if (!passets->AddToMyUpspentOutPoints(asset.strName, COutPoint(tx.GetHash(), tx.vout.size() - 1)))
+                        return error("%s: Failed to add an asset I own to my Unspent Asset Database. asset %s",
+                                     __func__, asset.strName);
+                }
+            }
+        }
+        /** RVN END */
+
         CTxUndo undoDummy;
         if (i > 0) {
             blockundo.vtxundo.push_back(CTxUndo());
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
-
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
-
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
     if (block.vtx[0]->GetValueOut() > blockReward)
         return state.DoS(100,
                          error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
                                block.vtx[0]->GetValueOut(), blockReward),
                                REJECT_INVALID, "bad-cb-amount");
-
     if (!control.Wait())
         return state.DoS(100, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint(BCLog::BENCH, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs (%.2fms/blk)]\n", nInputs - 1, MILLI * (nTime4 - nTime2), nInputs <= 1 ? 0 : MILLI * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * MICRO, nTimeVerify * MILLI / nBlocksTotal);
-
     if (fJustCheck)
         return true;
 
@@ -1877,13 +1925,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     assert(pindex->phashBlock);
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
-
     int64_t nTime5 = GetTimeMicros(); nTimeIndex += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5 - nTime4), nTimeIndex * MICRO, nTimeIndex * MILLI / nBlocksTotal);
 
     int64_t nTime6 = GetTimeMicros(); nTimeCallbacks += nTime6 - nTime5;
     LogPrint(BCLog::BENCH, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime6 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
-
     return true;
 }
 
@@ -2801,7 +2847,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
         return false;
-    auto successNonce = block.nNonce;
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
@@ -2983,8 +3028,6 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 
     // Enforce rule that the coinbase starts with serialized block height
     CScript expect = CScript() << nHeight;
-    auto scriptHeight = block.vtx[0]->vin[0].scriptSig.size();
-
 
     if (consensusParams.nBIP34Enabled)
     {
@@ -3221,7 +3264,6 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     CValidationState state; // Only used to report errors, not invalidity - ignore it
     if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
-    auto successNonce = pblock->nNonce;
     return true;
 }
 

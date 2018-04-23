@@ -202,6 +202,10 @@ libraven_server_a_SOURCES = \
   net.cpp \
   net_processing.cpp \
   noui.cpp \
+  assets/assets.cpp \
+  assets/assets.h \
+  assets/assetdb.cpp \
+  assets/assetdb.h \
   policy/fees.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
@@ -336,8 +340,6 @@ libraven_consensus_a_SOURCES = \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \
-  assets/assets.cpp \
-  assets/assets.h \
   script/ravenconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \

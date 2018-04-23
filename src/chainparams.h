@@ -89,6 +89,12 @@ public:
     bool BIP65();
     bool BIP66();
     bool CSVEnabled() const;
+
+    /** RVN Start **/
+    const CAmount& IssueAssetBurnAmount() const { return nIssueAssetBurnAmount; }
+    const std::string& IssueAssetBurnAddress() const { return strIssueAssetBurnAddress; }
+    /** RVN End **/
+
 protected:
     CChainParams() {}
 
@@ -108,6 +114,11 @@ protected:
     bool fMiningRequiresPeers;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
+
+    /** RVN Start **/
+    CAmount nIssueAssetBurnAmount;
+    std::string strIssueAssetBurnAddress;
+    /** RVN End **/
 };
 
 /**
