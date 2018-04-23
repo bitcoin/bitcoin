@@ -1825,6 +1825,44 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
     return true;
 }
 
+/** Consensus-critical analogue of CScript::IsPayToScriptHash. */
+static bool IsPayToScriptHash(Span<const unsigned char> script)
+{
+    return script.size() == 23 &&
+           script[0] == OP_HASH160 &&
+           script[1] == 0x14 &&
+           script[22] == OP_EQUAL;
+}
+
+/** Consensus-critical analogue of CScript::IsWitnessProgram. */
+static bool IsWitnessProgram(Span<const unsigned char> script, int& version, Span<const unsigned char>& program)
+{
+    if (script.size() < 4 || script.size() > 42) return false;
+    if (script[0] != OP_0 && (script[0] < OP_1 || script[0] > OP_16)) return false;
+    if (std::size_t(script[1] + 2) == script.size()) {
+        version = CScript::DecodeOP_N((opcodetype)script[0]);
+        program = script.subspan(2);
+        return true;
+    }
+    return false;
+}
+
+/** Consensus-critical analogue of CScript::IsPushOnly. */
+static bool IsPushOnly(Span<const unsigned char> script)
+{
+    Span<const unsigned char> pc = script;
+    while (pc.size() > 0) {
+        opcodetype opcode;
+        if (!GetScriptOp(pc, opcode, nullptr)) return false;
+        // Note that IsPushOnly() *does* consider OP_RESERVED to be a
+        // push-type opcode, however execution of OP_RESERVED fails, so
+        // it's not relevant to P2SH/BIP62 as the scriptSig would fail prior to
+        // the P2SH special validation code being executed.
+        if (opcode > OP_16) return false;
+    }
+    return true;
+}
+
 uint256 ComputeTapleafHash(uint8_t leaf_version, const CScript& script)
 {
     return (CHashWriter(HASHER_TAPLEAF) << leaf_version << script).GetSHA256();
@@ -1954,7 +1992,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
 
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
 
-    if ((flags & SCRIPT_VERIFY_SIGPUSHONLY) != 0 && !scriptSig.IsPushOnly()) {
+    if ((flags & SCRIPT_VERIFY_SIGPUSHONLY) != 0 && !IsPushOnly(scriptSig)) {
         return set_error(serror, SCRIPT_ERR_SIG_PUSHONLY);
     }
 
@@ -1977,8 +2015,10 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     // Bare witness programs
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
+    Span<const unsigned char> witnessprogram_span;
     if (flags & SCRIPT_VERIFY_WITNESS) {
-        if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+        if (IsWitnessProgram(scriptPubKey, witnessversion, witnessprogram_span)) {
+            witnessprogram.assign(witnessprogram_span.begin(), witnessprogram_span.end());
             hadWitness = true;
             if (scriptSig.size() != 0) {
                 // The scriptSig must be _exactly_ CScript(), otherwise we reintroduce malleability.
@@ -1994,10 +2034,10 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     }
 
     // Additional validation for spend-to-script-hash transactions:
-    if ((flags & SCRIPT_VERIFY_P2SH) && scriptPubKey.IsPayToScriptHash())
+    if ((flags & SCRIPT_VERIFY_P2SH) && IsPayToScriptHash(scriptPubKey))
     {
         // scriptSig must be literals-only or validation fails
-        if (!scriptSig.IsPushOnly())
+        if (!IsPushOnly(scriptSig))
             return set_error(serror, SCRIPT_ERR_SIG_PUSHONLY);
 
         // Restore stack.
@@ -2022,7 +2062,8 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
 
         // P2SH witness program
         if (flags & SCRIPT_VERIFY_WITNESS) {
-            if (pubKey2.IsWitnessProgram(witnessversion, witnessprogram)) {
+            if (IsWitnessProgram(pubKey2, witnessversion, witnessprogram_span)) {
+                witnessprogram.assign(witnessprogram_span.begin(), witnessprogram_span.end());
                 hadWitness = true;
                 if (scriptSig != CScript() << std::vector<unsigned char>(pubKey2.begin(), pubKey2.end())) {
                     // The scriptSig must be _exactly_ a single push of the redeemScript. Otherwise we
@@ -2065,7 +2106,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     return set_success(serror);
 }
 
-size_t static WitnessSigOps(int witversion, const std::vector<unsigned char>& witprogram, const CScriptWitness& witness)
+size_t static WitnessSigOps(int witversion, Span<const unsigned char> witprogram, const CScriptWitness& witness)
 {
     if (witversion == 0) {
         if (witprogram.size() == WITNESS_V0_KEYHASH_SIZE)
@@ -2091,12 +2132,12 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
     assert((flags & SCRIPT_VERIFY_P2SH) != 0);
 
     int witnessversion;
-    std::vector<unsigned char> witnessprogram;
-    if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+    Span<const unsigned char> witnessprogram;
+    if (IsWitnessProgram(scriptPubKey, witnessversion, witnessprogram)) {
         return WitnessSigOps(witnessversion, witnessprogram, witness ? *witness : witnessEmpty);
     }
 
-    if (scriptPubKey.IsPayToScriptHash() && scriptSig.IsPushOnly()) {
+    if (IsPayToScriptHash(scriptPubKey) && IsPushOnly(scriptSig)) {
         CScript::const_iterator pc = scriptSig.begin();
         std::vector<unsigned char> data;
         while (pc < scriptSig.end()) {
@@ -2104,7 +2145,7 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
             scriptSig.GetOp(pc, opcode, data);
         }
         CScript subscript(data.begin(), data.end());
-        if (subscript.IsWitnessProgram(witnessversion, witnessprogram)) {
+        if (IsWitnessProgram(subscript, witnessversion, witnessprogram)) {
             return WitnessSigOps(witnessversion, witnessprogram, witness ? *witness : witnessEmpty);
         }
     }
