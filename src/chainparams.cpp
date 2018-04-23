@@ -246,7 +246,7 @@ public:
         nDefaultPort = 18767;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1517350340, 4791361, 0x0e00ffff, 4, 5000 * COIN); 
+        genesis = CreateGenesisBlock(1517350340, 4791361, 0x1e00ffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         //Test MerkleRoot and GenesisBlock
