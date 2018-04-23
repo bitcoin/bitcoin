@@ -11,6 +11,7 @@ echo "Using verify-commits data from ${DIR}"
 VERIFIED_ROOT=$(cat "${DIR}/trusted-git-root")
 VERIFIED_SHA512_ROOT=$(cat "${DIR}/trusted-sha512-root-commit")
 REVSIG_ALLOWED=$(cat "${DIR}/allow-revsig-commits")
+DIRTY_ALLOWED=$(cat "${DIR}/allow-dirty-commits")
 
 HAVE_GNU_SHA512=1
 [ ! -x "$(which sha512sum)" ] && HAVE_GNU_SHA512=0
@@ -61,6 +62,12 @@ while true; do
 		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=1
 	else
 		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=0
+	fi
+
+	if [ "${DIRTY_ALLOWED#*$CURRENT_COMMIT}" != "$DIRTY_ALLOWED" ]; then
+		ALLOW_DIRTY=1
+	else
+		ALLOW_DIRTY=0
 	fi
 
 	if ! git -c "gpg.program=${DIR}/gpg.sh" verify-commit "$CURRENT_COMMIT" > /dev/null; then
@@ -135,7 +142,7 @@ while true; do
 			exit 1
 		fi
 	fi
-	if [ "x$PARENT2" != "x" ]; then
+	if [ "x$PARENT2" != "x" -a "$ALLOW_DIRTY" = "0" ]; then
 		CURRENT_TREE="$(git show --format="%T" "$CURRENT_COMMIT")"
 		git checkout --force --quiet "$PARENT1"
 		git merge --no-ff --quiet "$PARENT2" >/dev/null
