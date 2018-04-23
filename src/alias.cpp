@@ -1283,27 +1283,29 @@ UniValue syscointxfund_helper(const vector<unsigned char> &vchAlias, const vecto
 			txNew.vin.push_back(CTxIn(aliasOutPointWitness, pcoinW.out.scriptPubKey));
 	}
 	
-
-	COutPoint aliasOutPoint;
-	unsigned int unspentcount = aliasunspent(vchAlias, aliasOutPoint);
-	// for the alias utxo (1 per transaction is used)
-	if (unspentcount <= 1)
-	{
-		for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
-			vecSend.push_back(aliasRecipient);
+	if (!aliasRecipient.scriptPubKey.empty()) {
+		COutPoint aliasOutPoint;
+		unsigned int unspentcount = aliasunspent(vchAlias, aliasOutPoint);
+		// for the alias utxo (1 per transaction is used)
+		if (unspentcount <= 1)
+		{
+			for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+				vecSend.push_back(aliasRecipient);
+		}
+		Coin pcoin;
+		if (GetUTXOCoin(aliasOutPoint, pcoin))
+			txNew.vin.push_back(CTxIn(aliasOutPoint, pcoin.out.scriptPubKey));
 	}
-	Coin pcoin;
-	if (GetUTXOCoin(aliasOutPoint, pcoin))
-		txNew.vin.push_back(CTxIn(aliasOutPoint, pcoin.out.scriptPubKey));
 
 	if(vchWitness == vchAlias || (!aliasOutPointWitness.IsNull() && aliasOutPointWitness == aliasOutPoint))
 		throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Witness to this transaction must be different than the funding alias"));
 	// set an address for syscointxfund so it uses that address to fund (alias passed in)
-
-	CAliasIndex alias;
-	if (!GetAlias(vchAlias, alias))
-		throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Cannot find alias used to fund this transaction: ") + stringFromVch(vchAlias));
-	string strAddress = EncodeBase58(alias.vchAddress);
+	if (!aliasRecipient.scriptPubKey.empty()) {
+		CAliasIndex alias;
+		if (!GetAlias(vchAlias, alias))
+			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Cannot find alias used to fund this transaction: ") + stringFromVch(vchAlias));
+		string strAddress = EncodeBase58(alias.vchAddress);
+	}
 	
 
 	// vouts to the payees
@@ -1317,7 +1319,11 @@ UniValue syscointxfund_helper(const vector<unsigned char> &vchAlias, const vecto
 	}
 	UniValue paramObj(UniValue::VOBJ);
 	UniValue paramArr(UniValue::VARR);
-	paramArr.push_back(strAddress);
+	if (!aliasRecipient.scriptPubKey.empty()) {
+		paramArr.push_back(strAddress);
+	}
+	else
+		paramArr.push_back(stringFromVch(vchAlias));
 	paramObj.push_back(Pair("addresses", paramArr));
 
 
@@ -1442,9 +1448,6 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	if (tx.nVersion == SYSCOIN_TX_VERSION && !DecodeAliasTx(tx, op, vvchAlias))
 	{
 		FindAliasInTx(view, tx, vvchAlias);
-		// it is assumed if no alias output is found, then it is for another service so this would be an alias update
-		op = OP_ALIAS_UPDATE;
-
 	}
 	// # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
 	CAmount nFees = GetFee(10 + 34);

@@ -650,9 +650,9 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 11)
         throw runtime_error(
-			"assetnew [symbol] [alias] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
+			"assetnew [symbol] [alias/address] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
 						"<symbol> symbol of asset in uppercase, 1 characters miniumum, 8 characters max.\n"
-						"<alias> An alias you own.\n"
+						"<alias/address> An alias or address that you own.\n"
                         "<public value> public data, 256 characters max.\n"
 						"<category> category, 256 characters max. Defaults to assets.\n"
 						"<precision> Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion.\n"
@@ -666,7 +666,11 @@ UniValue assetnew(const JSONRPCRequest& request) {
     vector<unsigned char> vchName = vchFromString(params[0].get_str());
 	string strName = stringFromVch(vchName);
 	boost::algorithm::to_upper(strName);
+	vector<unsigned char> vchAddress;
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
+	CSyscoinAddress address(stringFromVch(vchAlias));
+	if (address.IsValid())
+		vchAddress = vchAlias;
 	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
 	string strCategory = "assets";
 	strCategory = params[3].get_str();
@@ -681,19 +685,24 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	float fInterestRate = params[8].get_real();
 	bool bCanAdjustInterestRate = params[9].get_bool();
 	vchWitness = vchFromValue(params[10]);
+	CScript scriptPubKeyOrig;
 	// check for alias existence in DB
-	CAliasIndex theAlias;
-	ToLowerCase(vchAlias);
-	if (!GetAlias(vchAlias, theAlias))
-		throw runtime_error("SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2500 - " + _("failed to read alias from alias DB"));
-
+	if (vchAddress.empty())
+	{
+		CAliasIndex theAlias;
+		ToLowerCase(vchAlias);
+		if (!GetAlias(vchAlias, theAlias))
+			throw runtime_error("SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2500 - " + _("failed to read alias from alias DB"));
+		CSyscoinAddress aliasAddress;
+		GetAddress(theAlias, &aliasAddress, scriptPubKeyOrig);
+	}
+	else
+		scriptPubKeyOrig = GetScriptForDestination(address.Get());
 	
     // this is a syscoin transaction
     CWalletTx wtx;
 
-    CScript scriptPubKeyOrig;
-	CSyscoinAddress aliasAddress;
-	GetAddress(theAlias, &aliasAddress, scriptPubKeyOrig);
+  
 
 
     CScript scriptPubKey,scriptPubKeyAlias;
@@ -705,7 +714,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	newAsset.vchAsset = vchFromString(GenerateSyscoinGuid());
 	newAsset.sCategory = vchFromString(strCategory);
 	newAsset.vchPubData = vchPubData;
-	newAsset.vchAlias = vchAlias;
+	newAsset.vchAlias = vchAddress.empty()? vchAlias: vchFromString("");
+	newAsset.vchAddress = DecodeBase58(stringFromVch(vchAddress));
 	newAsset.nBalance = nBalance;
 	newAsset.nMaxSupply = nMaxSupply;
 	newAsset.bUseInputRanges = bUseInputRanges;
@@ -725,8 +735,10 @@ UniValue assetnew(const JSONRPCRequest& request) {
 
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_ACTIVATE) << vchHashAsset << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-	scriptPubKeyAlias += scriptPubKeyOrig;
+	if (vchAddress.empty()) {
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyOrig;
+	}
 
 	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
 	vector<CRecipient> vecSend;
@@ -734,7 +746,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CRecipient aliasRecipient;
-	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	if(vchAddress.empty())
+		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 		
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -742,7 +755,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
-	UniValue res = syscointxfund_helper(vchAlias, vchWitness, aliasRecipient, vecSend);
+	UniValue res = syscointxfund_helper(vchAddress.empty()? vchAlias: vchAddress, vchWitness, aliasRecipient, vecSend);
 	res.push_back(stringFromVch(newAsset.vchAsset));
 	return res;
 }
@@ -774,22 +787,27 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     CWalletTx wtx;
     CScript scriptPubKeyOrig;
 	CAsset theAsset;
-	
+	string strAddress;
+
     if (!GetAsset( vchAsset, theAsset))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Could not find a asset with this key"));
+	if (!theAsset.vchAddress.empty())
+		DecodeBase58(strAddress, theAsset.vchAddress);
 	UniValue param3 = params[3];
 	CAmount nBalance = 0;
 	if(param3.get_str() != "0")
 		nBalance = AssetAmountFromValue(param3, theAsset.nPrecision, theAsset.bUseInputRanges);
 	CAliasIndex theAlias;
-
-	if (!GetAlias(theAsset.vchAlias, theAlias))
-		throw runtime_error("SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2502 - " + _("Failed to read alias from alias DB"));
-
+	if (theAsset.vchAddress.empty()) {
+		if (!GetAlias(theAsset.vchAlias, theAlias))
+			throw runtime_error("SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2502 - " + _("Failed to read alias from alias DB"));
+		CSyscoinAddress aliasAddress;
+		GetAddress(theAlias, &aliasAddress, scriptPubKeyOrig);
+	}
+	else
+		scriptPubKeyOrig = GetScriptForDestination(CSyscoinAddress(strAddress).Get());
 	CAsset copyAsset = theAsset;
 	theAsset.ClearAsset();
-	CSyscoinAddress aliasAddress;
-	GetAddress(theAlias, &aliasAddress, scriptPubKeyOrig);
 
     // create ASSETUPDATE txn keys
     CScript scriptPubKey;
@@ -823,11 +841,13 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
-	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	if (theAsset.vchAddress.empty()) {
+		CScript scriptPubKeyAlias;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyOrig;
+		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	}
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -836,56 +856,68 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	vecSend.push_back(fee);
 	
 	
-	return syscointxfund_helper(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(theAsset.vchAddress.empty()? theAlias.vchAlias: vchFromString(strAddress), vchWitness, aliasRecipient, vecSend);
 }
 
 UniValue assettransfer(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
  if (request.fHelp || params.size() != 3)
         throw runtime_error(
-			"assettransfer [asset] [alias] [witness]\n"
+			"assettransfer [asset] [alias/address] [witness]\n"
 						"Transfer a asset allocation you own to another alias.\n"
 						"<asset> Asset guid.\n"
-						"<alias> alias to transfer to.\n"
+						"<alias/address> alias or address to transfer to.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 
     // gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	vector<unsigned char> vchAddress;
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
+	CSyscoinAddress addressTo(stringFromVch(vchAlias));
+	if (addressTo.IsValid())
+		vchAddress = vchAlias;
 
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
-	// check for alias existence in DB
-	CAliasIndex toAlias;
-	ToLowerCase(vchAlias);
-	if (!GetAlias(vchAlias, toAlias))
-		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2503 - " + _("Failed to read alias from DB"));
-
     // this is a syscoin txn
     CWalletTx wtx;
     CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
-
+	string strAddress;
 	CAsset theAsset;
     if (!GetAsset( vchAsset, theAsset))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2504 - " + _("Could not find a asset with this key"));
+	if (!theAsset.vchAddress.empty())
+		DecodeBase58(strAddress, theAsset.vchAddress);
 
 	CAliasIndex fromAlias;
-	if(!GetAlias(theAsset.vchAlias, fromAlias))
-	{
-		 throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2505 - " + _("Could not find the asset alias"));
+	if (theAsset.vchAddress.empty()) {
+		if (!GetAlias(theAsset.vchAlias, fromAlias))
+		{
+			throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2505 - " + _("Could not find the asset alias"));
+		}
+		CSyscoinAddress fromAddr;
+		GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
 	}
-
-	CSyscoinAddress sendAddr;
-	GetAddress(toAlias, &sendAddr, scriptPubKeyOrig);
-	CSyscoinAddress fromAddr;
-	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
+	if (vchAddress.empty()) {
+		// check for alias existence in DB
+		CAliasIndex toAlias;
+		ToLowerCase(vchAlias);
+		if (!GetAlias(vchAlias, toAlias))
+			throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2503 - " + _("Failed to read alias from DB"));
+		CSyscoinAddress sendAddr;
+		GetAddress(toAlias, &sendAddr, scriptPubKeyOrig);
+	}
+	else
+		scriptPubKeyOrig = GetScriptForDestination(addressTo.Get());
 
 	CAsset copyAsset = theAsset;
 	theAsset.ClearAsset();
     CScript scriptPubKey;
-	theAsset.vchAlias = toAlias.vchAlias;
-
+	if(vchAddress.empty())
+		theAsset.vchAlias = toAlias.vchAlias;
+	else
+		theAsset.vchAddress = DecodeBase58(stringFromVch(vchAddress));
 
 	vector<unsigned char> data;
 	theAsset.Serialize(data);
@@ -900,11 +932,13 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
-	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-	scriptPubKeyAlias += scriptPubKeyFromOrig;
 	CRecipient aliasRecipient;
-	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	if (theAsset.vchAddress.empty()) {
+		CScript scriptPubKeyAlias;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyFromOrig;
+		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	}
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -912,17 +946,16 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	
-	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(theAsset.vchAddress.empty()? fromAlias.vchAlias: vchFromString(strAddress), vchWitness, aliasRecipient, vecSend);
 }
 UniValue assetsend(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || params.size() != 5)
+	if (request.fHelp || params.size() != 4)
 		throw runtime_error(
-			"assetsend [asset] [aliasfrom] ( [{\"aliasto\":\"aliasname\",\"amount\":amount},...] or [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
-			"Send an asset you own to another alias as an asset allocation. Maximimum recipients is 250.\n"
+			"assetsend [asset] ( [{\"aliasto\":\"aliasname\",\"amount\":amount},...] or [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
+			"Send an asset you own to another alias/address as an asset allocation. Maximimum recipients is 250.\n"
 			"<asset> Asset guid.\n"
-			"<aliasfrom> Alias to transfer from.\n"
-			"<aliasto> Alias to transfer to.\n"
+			"<aliasto> Alias or address to transfer to.\n"
 			"<amount> Quantity of asset to send.\n"
 			"<ranges> Ranges of inputs to send in integers specified in the start and end fields.\n"
 			"<memo> Message to include in this asset allocation transfer.\n"
@@ -932,26 +965,34 @@ UniValue assetsend(const JSONRPCRequest& request) {
 
 	// gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
-	UniValue valueTo = params[2];
-	vector<unsigned char> vchMemo = vchFromValue(params[3]);
-	vector<unsigned char> vchWitness = vchFromValue(params[4]);
+	UniValue valueTo = params[1];
+	vector<unsigned char> vchMemo = vchFromValue(params[2]);
+	vector<unsigned char> vchWitness = vchFromValue(params[3]);
 	if (!valueTo.isArray())
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
-
-	// check for alias existence in DB
-	CAliasIndex fromAlias;
-	ToLowerCase(vchAliasFrom);
-	if (!GetAlias(vchAliasFrom, fromAlias))
-		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2506 - " + _("Failed to read sender alias from DB"));
 
 	// this is a syscoin txn
 	CWalletTx wtx;
 	CScript scriptPubKeyFromOrig;
-
+	vector<unsigned char> vchAliasFrom;
 	CAsset theAsset;
 	if (!GetAsset(vchAsset, theAsset))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2507 - " + _("Could not find a asset with this key"));
+	string strAddress;
+	CAliasIndex fromAlias;
+	if (theAsset.vchAddress.empty()) {
+		vchAliasFrom = theAsset.vchAlias;
+		// check for alias existence in DB
+		ToLowerCase(vchAliasFrom);
+		if (!GetAlias(vchAliasFrom, fromAlias))
+			throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2506 - " + _("Failed to read sender alias from DB"));
+		CSyscoinAddress fromAddr;
+		GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
+	}
+	else {
+		DecodeBase58(strAddress, theAsset.vchAddress);
+		scriptPubKeyFromOrig = GetScriptForDestination(CSyscoinAddress(strAddress).Get());
+	}
 
 	CAliasIndex toAlias;
 	CAssetAllocation theAssetAllocation;
@@ -967,9 +1008,18 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	
 		UniValue receiverObj = receiver.get_obj();
 		vector<unsigned char> vchAliasTo = vchFromValue(find_value(receiverObj, "aliasto"));
-		ToLowerCase(vchAliasTo);
-		if (!GetAlias(vchAliasTo, toAlias))
-			throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2508 - " + _("Failed to read recipient alias from DB"));
+		
+		CSyscoinAddress addressTo(stringFromVch(vchAliasTo));
+		if (addressTo.IsValid())
+		{
+			DecodeBase58(stringFromVch(vchAliasTo), vchAliasTo);
+		}
+		else {
+			ToLowerCase(vchAliasTo);
+			if (!GetAlias(vchAliasTo, toAlias))
+				throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2508 - " + _("Failed to read recipient alias from DB"));
+		}
+			
 
 		UniValue inputRangeObj = find_value(receiverObj, "ranges");
 		UniValue amountObj = find_value(receiverObj, "amount");
@@ -1001,12 +1051,9 @@ UniValue assetsend(const JSONRPCRequest& request) {
 
 	}
 
-	CSyscoinAddress fromAddr;
-	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
-
 	CScript scriptPubKey;
 
-	CAssetAllocationTuple assetAllocationTuple(vchAsset, vchAliasFrom);
+	CAssetAllocationTuple assetAllocationTuple(vchAsset, theAsset.vchAddress.empty()? vchAliasFrom: theAsset.vchAddress);
 	if (!fUnitTest) {
 		// check to see if a transaction for this asset/alias tuple has arrived before minimum latency period
 		ArrivalTimesMap arrivalTimes;
@@ -1038,11 +1085,13 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
-	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-	scriptPubKeyAlias += scriptPubKeyFromOrig;
 	CRecipient aliasRecipient;
-	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	if (fromAlias.vchAddress.empty()) {
+		CScript scriptPubKeyAlias;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyFromOrig;
+		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	}
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1051,7 +1100,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	vecSend.push_back(fee);
 
 
-	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(fromAlias.vchAddress.empty()? fromAlias.vchAlias: vchFromString(strAddress), vchWitness, aliasRecipient, vecSend);
 }
 
 UniValue assetinfo(const JSONRPCRequest& request) {
@@ -1085,18 +1134,11 @@ bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oAsset
 			nTime = pindex->GetMedianTimePast();
 		}
 	}
-	bool expired = false;
 	oAsset.push_back(Pair("time", nTime));
-	int64_t expired_time = GetAssetExpiration(asset);
-	if (expired_time <= chainActive.Tip()->GetMedianTimePast())
-	{
-		expired = true;
-	}
-	oAsset.push_back(Pair("expires_on", expired_time));
-	oAsset.push_back(Pair("expired", expired));
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+	oAsset.push_back(Pair("address", EncodeBase58(asset.vchAddress)));
 	oAsset.push_back(Pair("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision, asset.bUseInputRanges)));
@@ -1133,6 +1175,7 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+	oAsset.push_back(Pair("address", EncodeBase58(asset.vchAddress)));
 	oAsset.push_back(Pair("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
@@ -1145,6 +1188,7 @@ bool BuildAssetIndexerJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("height", (int)asset.nHeight));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+	oAsset.push_back(Pair("address", EncodeBase58(asset.vchAddress)));
 	oAsset.push_back(Pair("use_input_ranges", asset.bUseInputRanges));
 	oAsset.push_back(Pair("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
@@ -1173,6 +1217,9 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 
 	if(!asset.vchAlias.empty() && asset.vchAlias != dbAsset.vchAlias)
 		entry.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+
+	if (!asset.vchAddress.empty() && asset.vchAddress != dbAsset.vchAddress)
+		entry.push_back(Pair("address", EncodeBase58(asset.vchAddress)));
 
 	if (!asset.sCategory.empty() && asset.sCategory != dbAsset.sCategory)
 		entry.push_back(Pair("category", stringFromVch(asset.sCategory)));
@@ -1290,6 +1337,11 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 			vchAlias = vchFromValue(aliasObj);
 		}
 
+		const UniValue &addressObj = find_value(oOptions, "address");
+		if (addressObj.isStr()) {
+			vchAddress = vchFromValue(addressObj);
+		}
+
 		const UniValue &startblock = find_value(oOptions, "startblock");
 		if (startblock.isNum()) {
 			nStartBlock = startblock.get_int();
@@ -1329,6 +1381,11 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 					pcursor->Next();
 					continue;
 				}
+				if (!vchAddress.empty() && vchAddress != EncodeBase58(txPos.vchAddress))
+				{
+					pcursor->Next();
+					continue;
+				}
 				UniValue oAsset(UniValue::VOBJ);
 				if (!BuildAssetJson(txPos, bGetInputs, oAsset))
 				{
@@ -1363,7 +1420,8 @@ UniValue listassets(const JSONRPCRequest& request) {
 			"    {\n"
 			"      \"txid\":txid					(string) Transaction ID to filter results for\n"
 			"	     \"asset\":guid					(string) Asset GUID to filter.\n"
-			"      \"alias\":alias				(string) Owner alias name to filter.\n"
+			"      \"alias\":alias					(string) Owner alias name to filter.\n"
+			"      \"address\":address				(string) Owner address to filter.\n"
 			"      \"startblock\":block 	(number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
 			"    }\n"
 			+ HelpExampleCli("listassets", "0")
@@ -1397,38 +1455,4 @@ UniValue listassets(const JSONRPCRequest& request) {
 	if (!passetdb->ScanAssets(count, from, options, oRes))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Scan failed"));
 	return oRes;
-}
-uint64_t GetAssetExpiration(const CAsset& asset) {
-	// dont prune by default, set nHeight to future time
-	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + 1;
-	CAliasUnprunable aliasUnprunable;
-	// if service alias exists in unprunable db (this should always exist for any alias that ever existed) then get the last expire height set for this alias and check against it for pruning
-	if (paliasdb && paliasdb->ReadAliasUnprunable(asset.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
-		nTime = aliasUnprunable.nExpireTime;
-	return nTime;
-}
-bool CAssetDB::CleanupDatabase(int &servicesCleaned)
-{
-	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-	pcursor->SeekToFirst();
-	CAsset asset;
-	pair<string, vector<unsigned char> > keyTuple;
-	while (pcursor->Valid()) {
-		boost::this_thread::interruption_point();
-		try {
-			if (pcursor->GetKey(keyTuple) && keyTuple.first == "asseti") {
-				if (!GetAsset(keyTuple.second, asset) || chainActive.Tip()->GetMedianTimePast() >= GetAssetExpiration(asset))
-				{
-					servicesCleaned++;
-					EraseAsset(keyTuple.second, true);
-				}
-
-			}
-			pcursor->Next();
-		}
-		catch (std::exception &e) {
-			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
-		}
-	}
-	return true;
 }
