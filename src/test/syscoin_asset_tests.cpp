@@ -22,7 +22,7 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 
 void printRangeVector (vector<CRange> &vecRange, string tag) {
 	printf("Printing vector range %s: ", tag.c_str());
-	for(int index = 0; index < vecRange.size(); index++) {
+	for(size_t index = 0; index < vecRange.size(); index++) {
 		printf("{%i,%i} ", vecRange[index].start, vecRange[index].end);
 	}
 	printf("\n");
@@ -115,20 +115,20 @@ BOOST_AUTO_TEST_CASE(generate_range_complex)
 	ms1 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	CheckRangeMerge(input1, input2, expected_output);
 	ms2 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-	printf("CheckRangeMerge Completed %ldms\n", ms2-ms1);
+	printf("CheckRangeMerge Completed %lldms\n", ms2-ms1);
 
 	/* Test 2: Reverse of Test 1 (expected_output - input = 2) */
  	printf("RangeSubstract Test: ExpectedOutput - input1 = input2\n");	
 	ms1 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	CheckRangeSubtract(expected_output, input1, input2);
 	ms2 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-	printf("CheckRangeSubtract1 Completed %ldms\n", ms2-ms1);
+	printf("CheckRangeSubtract1 Completed %lldms\n", ms2-ms1);
 
  	printf("RangeSubstract Test: ExpectedOutput - input2 = input1\n");	
 	ms1 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	CheckRangeSubtract(expected_output, input2, input1);
 	ms2 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-	printf("CheckRangeSubtract2 Completed %ldms\n", ms2-ms1);
+	printf("CheckRangeSubtract2 Completed %lldms\n", ms2-ms1);
 }
 BOOST_AUTO_TEST_CASE(generate_range_stress_merge1) 
 {
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(generate_range_stress_merge1)
 	mergeRanges(vecRange1_i, vecRange_o);
 	ms2 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 
-	printf("\noutput range 1+2: merge time: %ldms\n", ms2-ms1);
+	printf("\noutput range 1+2: merge time: %lldms\n", ms2-ms1);
 
 	BOOST_CHECK(vecRange_o.size() == vecRange_expected.size());
 	BOOST_CHECK(vecRange_o.back() == vecRange_expected.back());
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(generate_range_stress_subtract1)
 	ms1 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	mergeRanges(vecRange2_i, vecRange2_o);
 	ms2 = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-	printf("\noutput range expected+2: merge time: %ld\n", ms2-ms1);
+	printf("\noutput range expected+2: merge time: %lld\n", ms2-ms1);
 
 	BOOST_CHECK_EQUAL(vecRange2_o.size(), vecRange1_i.size());
 	BOOST_CHECK_EQUAL(vecRange2_o.back().start, 0);
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(generate_range_stress_merge2)
 	BOOST_CHECK_EQUAL(vecRange_o[99998].end, 200001); 
 	BOOST_CHECK_EQUAL(vecRange_o[449991].start, 899999); 
 	BOOST_CHECK_EQUAL(vecRange_o[449991].end, 900001); 
-	printf("CheckRangeSubtract Completed %ldms\n", ms2-ms1);
+	printf("CheckRangeSubtract Completed %lldms\n", ms2-ms1);
 }
 BOOST_AUTO_TEST_CASE(generate_range_stress_subtract2) 
 {
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(generate_range_stress_subtract2)
 
 	//HARDCODED checks
 	BOOST_CHECK_EQUAL(vecRange_o.size(), 499991);
-	printf("CheckRangeSubtract Completed %ldms\n", ms2-ms1);
+	printf("CheckRangeSubtract Completed %lldms\n", ms2-ms1);
 }
 
 BOOST_AUTO_TEST_CASE(generate_big_assetdata)
