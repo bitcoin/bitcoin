@@ -65,7 +65,18 @@ UniValue issue(const JSONRPCRequest& request)
         }
     }
 
+    bool can_reissue = false;
+    if (request.params.size() == 5) {
+        can_reissue = request.params[4].get_bool();
+    }
+
+    uint256 txid = uint256();
+    //TODO: Make call to create asset
+
+
     UniValue result(UniValue::VARR);
+
+    result.push_back(txid.GetHex());
     return result;
 }
 
