@@ -315,7 +315,7 @@ bool WalletInit::Open() const
         if (!pwallet) {
             return false;
         }
-        vpwallets.push_back(pwallet);
+        AddWallet(pwallet);
     }
 
     return true;
@@ -323,29 +323,29 @@ bool WalletInit::Open() const
 
 void WalletInit::Start(CScheduler& scheduler) const
 {
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         pwallet->postInitProcess(scheduler);
     }
 }
 
 void WalletInit::Flush() const
 {
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         pwallet->Flush(false);
     }
 }
 
 void WalletInit::Stop() const
 {
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         pwallet->Flush(true);
     }
 }
 
 void WalletInit::Close() const
 {
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
+        RemoveWallet(pwallet);
         delete pwallet;
     }
-    vpwallets.clear();
 }

@@ -180,9 +180,9 @@ void TestGUI()
     TransactionView transactionView(platformStyle.get());
     auto node = interfaces::MakeNode();
     OptionsModel optionsModel(*node);
-    vpwallets.insert(vpwallets.begin(), &wallet);
-    WalletModel walletModel(std::move(node->getWallets()[0]), *node, platformStyle.get(), &optionsModel);
-    vpwallets.erase(vpwallets.begin());
+    AddWallet(&wallet);
+    WalletModel walletModel(std::move(node->getWallets().back()), *node, platformStyle.get(), &optionsModel);
+    RemoveWallet(&wallet);
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
