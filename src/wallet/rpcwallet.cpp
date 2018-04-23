@@ -3140,21 +3140,22 @@ UniValue loadwallet(const JSONRPCRequest& request)
 
 UniValue createwallet(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
             "createwallet \"wallet_name\"\n"
             "\nCreates and loads a new wallet.\n"
             "\nArguments:\n"
-            "1. \"wallet_name\"    (string, required) The name for the new wallet.\n"
+            "1. \"wallet_name\"    (string, required) The name for the new wallet. If this is a path, the wallet will be created at the path location.\n"
             "\nResult:\n"
             "{\n"
-            "  \"name\" :    <wallet_name>,        (string) The wallet name if created successfully.\n"
+            "  \"name\" :    <wallet_name>,        (string) The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path.\n"
             "  \"warning\" : <warning>,            (string) Warning message if wallet was not loaded cleanly.\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("createwallet", "\"test.dat\"")
-            + HelpExampleRpc("createwallet", "\"test.dat\"")
+            + HelpExampleCli("createwallet", "\"testwallet\"")
+            + HelpExampleRpc("createwallet", "\"testwallet\"")
         );
+    }
     std::string wallet_name = request.params[0].get_str();
     std::string error;
     std::string warning;
@@ -4384,7 +4385,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "addwitnessaddress",                &addwitnessaddress,             {"address","p2sh"} },
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
     { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
-    { "wallet",             "createwallet",                     &createwallet,                  {"filename"} },
+    { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name"} },
     { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
