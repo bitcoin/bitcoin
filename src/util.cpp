@@ -794,14 +794,21 @@ void FileCommit(FILE *file)
 #ifdef WIN32
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     FlushFileBuffers(hFile);
-#else
-    #if defined(__linux__) || defined(__NetBSD__)
-    fdatasync(fileno(file));
-    #elif defined(__APPLE__) && defined(F_FULLFSYNC)
+#elif defined(__APPLE__) && defined(F_FULLFSYNC)
     fcntl(fileno(file), F_FULLFSYNC, 0);
-    #else
+#elif HAVE_FDATASYNC
+    fdatasync(fileno(file));
+#else
     fsync(fileno(file));
-    #endif
+#endif
+}
+
+void DirectoryCommit(const fs::path &dirname)
+{
+#ifndef WIN32
+    FILE* file = fsbridge::fopen(dirname, "r");
+    fsync(fileno(file));
+    fclose(file);
 #endif
 }
 

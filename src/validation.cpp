@@ -1621,6 +1621,7 @@ void static FlushBlockFile(bool fFinalize = false)
         if (fFinalize)
             TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nSize);
         FileCommit(fileOld);
+        DirectoryCommit(GetDataDir() / "blocks");
         fclose(fileOld);
     }
 
