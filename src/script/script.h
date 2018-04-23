@@ -10,6 +10,7 @@
 #include <crypto/common.h>
 #include <prevector.h>
 #include <serialize.h>
+#include <span.h>
 
 #include <assert.h>
 #include <climits>
@@ -404,6 +405,7 @@ private:
  */
 typedef prevector<28, unsigned char> CScriptBase;
 
+bool GetScriptOp(Span<const unsigned char>& script, opcodetype& opcodeRet, Span<const unsigned char>* data_out);
 bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet);
 
 /** Serialized script, used inside transaction inputs and outputs */
