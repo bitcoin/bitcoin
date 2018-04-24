@@ -559,7 +559,7 @@ class P2PDataStore(P2PInterface):
 
          - add all txs to our tx_store
          - send tx messages for all txs
-         - if success is True: assert that the txs are accepted to the mempool
+         - if success is True/False: assert that the txs are/are not accepted to the mempool
          - if expect_disconnect is True: Skip the sync with ping
          - if reject_code and reject_reason are set: assert that the correct reject message is received."""
 
