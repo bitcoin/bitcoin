@@ -557,7 +557,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
-        coin_control.signalRbf = request.params[5].get_bool();
+        coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
     }
 
     if (!request.params[6].isNull()) {
@@ -1201,7 +1201,7 @@ UniValue sendmany(const JSONRPCRequest& request)
 
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
-        coin_control.signalRbf = request.params[5].get_bool();
+        coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
     }
 
     if (!request.params[6].isNull()) {
@@ -2915,10 +2915,10 @@ UniValue settxfee(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1) {
         throw std::runtime_error(
             "settxfee amount\n"
-            "\nSet the transaction fee per kB. Overwrites the paytxfee parameter.\n"
+            "\nSet the transaction fee per kB for this wallet. Overrides the global -paytxfee command line parameter.\n"
             "\nArguments:\n"
             "1. amount         (numeric or string, required) The transaction fee in " + CURRENCY_UNIT + "/kB\n"
             "\nResult\n"
@@ -2927,13 +2927,13 @@ UniValue settxfee(const JSONRPCRequest& request)
             + HelpExampleCli("settxfee", "0.00001")
             + HelpExampleRpc("settxfee", "0.00001")
         );
+    }
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    // Amount
     CAmount nAmount = AmountFromValue(request.params[0]);
 
-    payTxFee = CFeeRate(nAmount, 1000);
+    pwallet->m_pay_tx_fee = CFeeRate(nAmount, 1000);
     return true;
 }
 
@@ -2994,9 +2994,9 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     if (pwallet->IsCrypted()) {
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
     }
-    obj.pushKV("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK()));
+    obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
     if (!masterKeyID.IsNull())
-         obj.pushKV("hdmasterkeyid", masterKeyID.GetHex());
+        obj.pushKV("hdmasterkeyid", masterKeyID.GetHex());
     return obj;
 }
 
@@ -3377,7 +3377,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
             subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
 
         if (options.exists("replaceable")) {
-            coinControl.signalRbf = options["replaceable"].get_bool();
+            coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
         if (options.exists("conf_target")) {
             if (options.exists("feeRate")) {
@@ -3566,7 +3566,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     // optional parameters
     CAmount totalFee = 0;
     CCoinControl coin_control;
-    coin_control.signalRbf = true;
+    coin_control.m_signal_bip125_rbf = true;
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
@@ -3590,7 +3590,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
         }
 
         if (options.exists("replaceable")) {
-            coin_control.signalRbf = options["replaceable"].get_bool();
+            coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
         if (options.exists("estimate_mode")) {
             if (!FeeModeFromString(options["estimate_mode"].get_str(), coin_control.m_fee_mode)) {
