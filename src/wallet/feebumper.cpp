@@ -134,7 +134,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
                                                                 FormatMoney(minTotalFee), FormatMoney(nOldFeeRate.GetFee(maxNewTxSize)), FormatMoney(::incrementalRelayFee.GetFee(maxNewTxSize))));
             return Result::INVALID_PARAMETER;
         }
-        CAmount requiredFee = GetRequiredFee(maxNewTxSize);
+        CAmount requiredFee = GetRequiredFee(*wallet, maxNewTxSize);
         if (total_fee < requiredFee) {
             errors.push_back(strprintf("Insufficient totalFee (cannot be less than required fee %s)",
                                                                 FormatMoney(requiredFee)));
@@ -143,7 +143,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
         new_fee = total_fee;
         nNewFeeRate = CFeeRate(total_fee, maxNewTxSize);
     } else {
-        new_fee = GetMinimumFee(maxNewTxSize, coin_control, mempool, ::feeEstimator, nullptr /* FeeCalculation */);
+        new_fee = GetMinimumFee(*wallet, maxNewTxSize, coin_control, mempool, ::feeEstimator, nullptr /* FeeCalculation */);
         nNewFeeRate = CFeeRate(new_fee, maxNewTxSize);
 
         // New fee rate must be at least old rate + minimum incremental relay rate
@@ -194,14 +194,14 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
 
     // If the output would become dust, discard it (converting the dust to fee)
     poutput->nValue -= nDelta;
-    if (poutput->nValue <= GetDustThreshold(*poutput, GetDiscardRate(::feeEstimator))) {
+    if (poutput->nValue <= GetDustThreshold(*poutput, GetDiscardRate(*wallet, ::feeEstimator))) {
         LogPrint(BCLog::RPC, "Bumping fee and discarding dust output\n");
         new_fee += poutput->nValue;
         mtx.vout.erase(mtx.vout.begin() + nOutput);
     }
 
     // Mark new tx not replaceable, if requested.
-    if (!coin_control.signalRbf) {
+    if (!coin_control.m_signal_bip125_rbf.get_value_or(wallet->m_signal_rbf)) {
         for (auto& input : mtx.vin) {
             if (input.nSequence < 0xfffffffe) input.nSequence = 0xfffffffe;
         }
