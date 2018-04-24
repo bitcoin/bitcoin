@@ -8,6 +8,7 @@
 #include <functional>
 #include <QSplashScreen>
 
+#include <list>
 #include <memory>
 
 class NetworkStyle;
@@ -63,8 +64,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_init_message;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
-    std::list<std::unique_ptr<interfaces::Wallet>> m_connected_wallets;
-    std::list<std::unique_ptr<interfaces::Handler>> m_connected_wallet_handlers;
+    std::list<std::pair<std::unique_ptr<interfaces::Wallet>, std::list<std::unique_ptr<interfaces::Handler>>>> m_connected_wallets;
 };
 
 #endif // BITCOIN_QT_SPLASHSCREEN_H

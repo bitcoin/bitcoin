@@ -179,8 +179,8 @@ static void ShowProgress(SplashScreen *splash, const std::string &title, int nPr
 #ifdef ENABLE_WALLET
 void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
 {
-    m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(boost::bind(ShowProgress, this, _1, _2, false)));
-    m_connected_wallets.emplace_back(std::move(wallet));
+    auto i = m_connected_wallets.emplace(m_connected_wallets.begin(), std::move(wallet), std::list<std::unique_ptr<interfaces::Handler>>());
+    i->second.emplace_back(wallet->handleShowProgress(boost::bind(ShowProgress, this, _1, _2, false)));
 }
 #endif
 
@@ -199,10 +199,11 @@ void SplashScreen::unsubscribeFromCoreSignals()
     // Disconnect signals from client
     m_handler_init_message->disconnect();
     m_handler_show_progress->disconnect();
-    for (auto& handler : m_connected_wallet_handlers) {
-        handler->disconnect();
+    for (auto& i : m_connected_wallets) {
+        for (auto& handler : i.second) {
+            handler->disconnect();
+        }
     }
-    m_connected_wallet_handlers.clear();
     m_connected_wallets.clear();
 }
 
