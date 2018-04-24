@@ -2702,7 +2702,7 @@
     "",
     "0x00 0x20 0x8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
     "P2SH,WITNESS,CLEANSTACK,TAIL_CALL",
-    "EVAL_FALSE",
+    "CLEANSTACK",
     "Tail-call with NOP fails due to empty stack"
 ],
 [
@@ -2891,7 +2891,7 @@
     "",
     "0x00 0x20 0xad370ed99b189921e7fe26057c40aab9f4fee8385e47606f50f348b9a5530af0",
     "P2SH,WITNESS,CLEANSTACK,TAIL_CALL",
-    "EVAL_FALSE",
+    "CLEANSTACK",
     "Tail-call of OP_1 that results in empty stack"
 ],
 [
@@ -2933,7 +2933,7 @@
     "",
     "0x00 0x20 0xad370ed99b189921e7fe26057c40aab9f4fee8385e47606f50f348b9a5530af0",
     "P2SH,WITNESS,CLEANSTACK,TAIL_CALL",
-    "EVAL_FALSE",
+    "CLEANSTACK",
     "Tail-call of OP_1 with too many stack elements"
 ],
 [
@@ -2990,7 +2990,7 @@
     "",
     "0x00 0x20 0xedda83f4bc5d42e0149bb4a0534bb71001b21116748b1088978bfb008149630f",
     "P2SH,WITNESS,CLEANSTACK,TAIL_CALL",
-    "EVAL_FALSE",
+    "CLEANSTACK",
     "Tail-call of OP_16 that results in empty stack"
 ],
 [
@@ -3048,7 +3048,7 @@
     "",
     "0x00 0x20 0xedda83f4bc5d42e0149bb4a0534bb71001b21116748b1088978bfb008149630f",
     "P2SH,WITNESS,CLEANSTACK,TAIL_CALL",
-    "EVAL_FALSE",
+    "CLEANSTACK",
     "Tail-call of OP_16 with cleanstack violation"
 ],
 
