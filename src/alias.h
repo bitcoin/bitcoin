@@ -23,7 +23,7 @@ static const unsigned int MAX_NAME_LENGTH = 256;
 static const unsigned int MAX_VALUE_LENGTH = 512;
 static const unsigned int MAX_SYMBOL_LENGTH = 8;
 static const unsigned int MIN_SYMBOL_LENGTH = 1;
-static const unsigned int MAX_ENCRYPTED_GUID_LENGTH = MAX_GUID_LENGTH + 85;
+static const unsigned int MAX_ENCRYPTED_GUID_LENGTH = MAX_GUID_LENGTH + 105;
 static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
 enum {
 	ALIAS=0,
