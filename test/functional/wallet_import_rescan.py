@@ -120,7 +120,7 @@ class ImportRescanTest(BitcoinTestFramework):
         self.num_nodes = 2 + len(IMPORT_NODES)
 
     def setup_network(self):
-        extra_args = [[] for _ in range(self.num_nodes)]
+        extra_args = [['-deprecatedrpc=accounts'] for _ in range(self.num_nodes)]
         for i, import_node in enumerate(IMPORT_NODES, 2):
             if import_node.prune:
                 # txindex is enabled by default in Dash and needs to be disabled for import-rescan.py

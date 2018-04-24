@@ -72,7 +72,7 @@ BASE_SCRIPTS= [
     'wallet_basic.py',
     'wallet_labels.py',
     'wallet_dump.py',
-    'rpc_listtransactions.py',
+    'wallet_listtransactions.py',
     'feature_multikeysporks.py',
     'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
     'feature_llmq_signing.py --spork21', # NOTE: needs dash_hash to pass

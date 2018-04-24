@@ -12,7 +12,7 @@ class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
-        self.extra_args = [['-usehd={:d}'.format(i%2==0)] for i in range(4)]
+        self.extra_args = [['-usehd={:d}'.format(i%2==0), '-deprecatedrpc=accounts'] for i in range(4)]
 
     def setup_network(self):
         self.add_nodes(4, self.extra_args, stderr=sys.stdout)
@@ -385,9 +385,9 @@ class WalletTest(BitcoinTestFramework):
             self.log.info("check " + m)
             self.stop_nodes()
             # set lower ancestor limit for later
-            self.start_node(0, [m, "-limitancestorcount="+str(chainlimit)])
-            self.start_node(1, [m, "-limitancestorcount="+str(chainlimit)])
-            self.start_node(2, [m, "-limitancestorcount="+str(chainlimit)])
+            self.start_node(0, [m, "-deprecatedrpc=accounts", "-limitancestorcount="+str(chainlimit)])
+            self.start_node(1, [m, "-deprecatedrpc=accounts", "-limitancestorcount="+str(chainlimit)])
+            self.start_node(2, [m, "-deprecatedrpc=accounts", "-limitancestorcount="+str(chainlimit)])
             if m == '-reindex':
                 # reindex will leave rpc warm up "early"; Wait for it to finish
                 wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
@@ -435,7 +435,7 @@ class WalletTest(BitcoinTestFramework):
         # Try with walletrejectlongchains
         # Double chain limit but require combining inputs, so we pass SelectCoinsMinConf
         self.stop_node(0)
-        self.start_node(0, extra_args=["-walletrejectlongchains", "-limitancestorcount="+str(2*chainlimit)])
+        self.start_node(0, extra_args=["-deprecatedrpc=accounts", "-walletrejectlongchains", "-limitancestorcount="+str(2*chainlimit)])
 
         # wait for loadmempool
         timeout = 10
