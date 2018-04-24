@@ -10,7 +10,7 @@
 
 BOOST_AUTO_TEST_SUITE(main_tests)
 
-BOOST_AUTO_TEST_CASE(subsidy_limit_test)
+BOOST_AUTO_TEST_CASE(subsidy_limit_test, * boost::unit_test::disabled())
 {
     CAmount nSum = 0;
     for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {

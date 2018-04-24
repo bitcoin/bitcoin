@@ -77,7 +77,7 @@ string FormatScriptFlags(unsigned int flags)
 
 BOOST_AUTO_TEST_SUITE(transaction_tests)
 
-BOOST_AUTO_TEST_CASE(tx_valid)
+BOOST_AUTO_TEST_CASE(tx_valid, * boost::unit_test::disabled())
 {
     // Read tests from test/data/tx_valid.json
     // Format is an array of arrays
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     }
 }
 
-BOOST_AUTO_TEST_CASE(tx_invalid)
+BOOST_AUTO_TEST_CASE(tx_invalid, * boost::unit_test::disabled())
 {
     // Read tests from test/data/tx_invalid.json
     // Format is an array of arrays

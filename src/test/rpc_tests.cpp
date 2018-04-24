@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(rpc_rawparams)
     BOOST_CHECK_THROW(CallRPC(string("sendrawtransaction ")+rawtx+" extra"), runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_rawsign)
+BOOST_AUTO_TEST_CASE(rpc_rawsign, * boost::unit_test::disabled())
 {
     Value r;
     // input is a 1-of-2 multisig (so is output):
