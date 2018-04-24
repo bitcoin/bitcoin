@@ -118,19 +118,19 @@ bool WalletInit::ParameterInteraction() const
         }
     }
 
-    int zapwallettxes = gArgs.GetArg("-zapwallettxes", 0);
+    bool zapwallettxes = gArgs.GetBoolArg("-zapwallettxes", false);
     // -zapwallettxes implies dropping the mempool on startup
-    if (zapwallettxes != 0 && gArgs.SoftSetBoolArg("-persistmempool", false)) {
-        LogPrintf("%s: parameter interaction: -zapwallettxes=%s -> setting -persistmempool=0\n", __func__, zapwallettxes);
+    if (zapwallettxes && gArgs.SoftSetBoolArg("-persistmempool", false)) {
+        LogPrintf("%s: parameter interaction: -zapwallettxes enabled -> setting -persistmempool=0\n", __func__);
     }
 
     // -zapwallettxes implies a rescan
-    if (zapwallettxes != 0) {
+    if (zapwallettxes) {
         if (is_multiwallet) {
             return InitError(strprintf("%s is only allowed with a single wallet file", "-zapwallettxes"));
         }
         if (gArgs.SoftSetBoolArg("-rescan", true)) {
-            LogPrintf("%s: parameter interaction: -zapwallettxes=%s -> setting -rescan=1\n", __func__, zapwallettxes);
+            LogPrintf("%s: parameter interaction: -zapwallettxes enabled -> setting -rescan=1\n", __func__);
         }
     }
 

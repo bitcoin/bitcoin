@@ -209,12 +209,13 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);
 
+int FindAndDelete(CScript& script, const CScript& b);
+
 bool HasIsCoinstakeOp(const CScript &script);
 bool IsSpendScriptP2PKH(const CScript &script);
 
 bool GetCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut);
 bool GetNonCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut);
 bool SplitConditionalCoinstakeScript(const CScript &scriptIn, CScript &scriptOutA, CScript &scriptOutB);
-
 
 #endif // BITCOIN_SCRIPT_INTERPRETER_H

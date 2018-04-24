@@ -74,13 +74,12 @@ TestingSetup::TestingSetup(const std::string& chainName, bool fParticlModeIn) : 
 
     RegisterAllCoreRPCCommands(tableRPC);
     ClearDatadirCache();
-    pathTemp = fs::temp_directory_path() / strprintf("test_particl_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
+    pathTemp = fs::temp_directory_path() / strprintf("test_particl_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30)));
     fs::create_directories(pathTemp);
     gArgs.ForceSetArg("-datadir", pathTemp.string());
 
-    // Note that because we don't bother running a scheduler thread here,
-    // callbacks via CValidationInterface are unreliable, but that's OK,
-    // our unit tests aren't testing multiple parts of the code at once.
+    // We have to run a scheduler thread to prevent ActivateBestChain
+    // from blocking due to queue overrun.
     threadGroup.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
 
@@ -94,7 +93,7 @@ TestingSetup::TestingSetup(const std::string& chainName, bool fParticlModeIn) : 
     {
         CValidationState state;
         if (!ActivateBestChain(state, chainparams)) {
-            throw std::runtime_error("ActivateBestChain failed.");
+            throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
         }
     }
     nScriptCheckThreads = 3;
