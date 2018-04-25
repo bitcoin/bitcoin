@@ -449,7 +449,7 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
 bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIndex *pindex);
 
 /** Mark a block as invalid. */
-bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main, mempool.cs);
+bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs);
 
 /** Remove invalidity status from a block and its descendants. */
 bool ResetBlockFailureFlags(CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

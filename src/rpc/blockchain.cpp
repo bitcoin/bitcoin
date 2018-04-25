@@ -378,7 +378,7 @@ std::string EntryDescriptionString()
            "       ... ]\n";
 }
 
-static void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs)
+static void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCKS_REQUIRED(::mempool.cs)
 {
     AssertLockHeld(mempool.cs);
 
@@ -1451,7 +1451,7 @@ UniValue preciousblock(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-static UniValue invalidateblock(const JSONRPCRequest& request) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs)
+static UniValue invalidateblock(const JSONRPCRequest& request) EXCLUSIVE_LOCKS_REQUIRED(::mempool.cs)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
