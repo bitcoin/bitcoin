@@ -303,7 +303,6 @@ def main():
         test_list=test_list,
         src_dir=config["environment"]["SRCDIR"],
         build_dir=config["environment"]["BUILDDIR"],
-        exeext=config["environment"]["EXEEXT"],
         tmpdir=tmpdir,
         jobs=args.jobs,
         enable_coverage=args.coverage,
@@ -313,7 +312,7 @@ def main():
         combined_logs_len=args.combinedlogslen,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=None, failfast=False, runs_ci, combined_logs_len=0):
+def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, failfast=False, runs_ci, combined_logs_len=0):
     args = args or []
 
     # Warn if dashd is already running (unix only)
@@ -328,12 +327,6 @@ def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_c
     cache_dir = "%s/test/cache" % build_dir
     if os.path.isdir(cache_dir):
         print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
-
-
-    #Set env vars
-    if "BITCOIND" not in os.environ:
-        os.environ["BITCOIND"] = build_dir + '/src/dashd' + exeext
-        os.environ["BITCOINCLI"] = build_dir + '/src/dash-cli' + exeext
 
     tests_dir = src_dir + '/test/functional/'
 
