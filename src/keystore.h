@@ -54,7 +54,7 @@ protected:
     ScriptMap mapScripts;
     WatchOnlySet setWatchOnly;
 
-    void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey);
+    void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
 public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
