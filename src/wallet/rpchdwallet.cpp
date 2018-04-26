@@ -4772,7 +4772,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         {
             if (!uvCoinControl["replaceable"].isBool())
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Replaceable parameter must be boolean.");
-            coincontrol.signalRbf = uvCoinControl["replaceable"].get_bool();
+            coincontrol.m_signal_bip125_rbf = uvCoinControl["replaceable"].get_bool();
         };
 
         if (uvCoinControl.exists("conf_target"))
@@ -6856,7 +6856,7 @@ UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
 
         if (options.exists("replaceable")) {
-            coinControl.signalRbf = options["replaceable"].get_bool();
+            coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
         if (options.exists("conf_target")) {
             if (options.exists("feeRate")) {

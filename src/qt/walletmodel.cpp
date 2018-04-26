@@ -308,7 +308,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
             {
                 // Check if we have a new address or an updated label
                 std::string name;
-                if (!m_wallet->getAddress(dest, &name))
+                if (!m_wallet->getAddress(
+                     dest, &name, /* is_mine= */ nullptr, /* purpose= */ nullptr))
                 {
                     m_wallet->setAddressBook(dest, strLabel, "send");
                 }
@@ -584,7 +585,7 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
 bool WalletModel::bumpFee(uint256 hash)
 {
     CCoinControl coin_control;
-    coin_control.signalRbf = true;
+    coin_control.m_signal_bip125_rbf = true;
     std::vector<std::string> errors;
     CAmount old_fee;
     CAmount new_fee;

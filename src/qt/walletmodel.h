@@ -215,8 +215,11 @@ public:
 
     bool isMultiwallet();
 
+    AddressTableModel* getAddressTableModel() const { return addressTableModel; }
+
     bool tryCallRpc(const QString &sCommand, UniValue &rv) const;
     void warningBox(QString heading, QString msg) const;
+
 private:
     std::unique_ptr<interfaces::Wallet> m_wallet;
     std::unique_ptr<interfaces::Handler> m_handler_status_changed;

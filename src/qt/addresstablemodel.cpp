@@ -276,7 +276,8 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
             }
             // Check for duplicate addresses to prevent accidental deletion of addresses, if you try
             // to paste an existing address over another address (with a different label)
-            if (walletModel->wallet().getAddress(newAddress))
+            if (walletModel->wallet().getAddress(
+                    newAddress, /* name= */ nullptr, /* is_mine= */ nullptr, /* purpose= */ nullptr))
             {
                 editStatus = DUPLICATE_ADDRESS;
                 return false;
@@ -361,7 +362,8 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         }
         // Check for duplicate addresses
         {
-            if(walletModel->wallet().getAddress(DecodeDestination(strAddress)))
+            if (walletModel->wallet().getAddress(
+                    DecodeDestination(strAddress), /* name= */ nullptr, /* is_mine= */ nullptr, /* purpose= */ nullptr))
             {
                 editStatus = DUPLICATE_ADDRESS;
                 return QString();
@@ -397,10 +399,6 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 break;
         };
 
-        // "account", "bech32", "hardened", "256bit"
-
-
-
         UniValue rv;
         if (!walletModel->tryCallRpc(sCommand, rv))
             return QString();
@@ -431,19 +429,29 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex &parent
     return true;
 }
 
-/* Look up label for address in address book, if not found return empty string.
- */
 QString AddressTableModel::labelForAddress(const QString &address) const
 {
-    {
-        CTxDestination destination = DecodeDestination(address.toStdString());
-        std::string name;
-        if (walletModel->wallet().getAddress(destination, &name))
-        {
-            return QString::fromStdString(name);
-        }
+    std::string name;
+    if (getAddressData(address, &name, /* purpose= */ nullptr)) {
+        return QString::fromStdString(name);
     }
     return QString();
+}
+
+QString AddressTableModel::purposeForAddress(const QString &address) const
+{
+    std::string purpose;
+    if (getAddressData(address, /* name= */ nullptr, &purpose)) {
+        return QString::fromStdString(purpose);
+    }
+    return QString();
+}
+
+bool AddressTableModel::getAddressData(const QString &address,
+        std::string* name,
+        std::string* purpose) const {
+    CTxDestination destination = DecodeDestination(address.toStdString());
+    return walletModel->wallet().getAddress(destination, name, /* is_mine= */ nullptr, purpose);
 }
 
 int AddressTableModel::lookupAddress(const QString &address) const

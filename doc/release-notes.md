@@ -177,6 +177,10 @@ The `validateaddress` RPC output has been extended with a few new fields, and su
   /rest/block/ endpoints when in json mode. This is also included in `getblock`
   (with verbosity=2), `listsinceblock`, `listtransactions`, and
   `getrawtransaction` RPC commands.
+- New `fees` field introduced in `getrawmempool`, `getmempoolancestors`, `getmempooldescendants` and
+   `getmempoolentry` when verbosity is set to `true` with sub-fields `ancestor`, `base`, `modified`
+   and `descendent` denominated in BTC. This new field deprecates previous fee fields, such as
+   `fee`, `modifiedfee`, `ancestorfee` and `descendentfee`.
 
 External wallet files
 ---------------------

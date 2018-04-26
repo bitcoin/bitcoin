@@ -9,6 +9,8 @@
 #include <scheduler.h>
 #include <random.h>
 #include <key.h>
+#include <key/extkey.h>
+#include <key/stealth.h>
 #include <fs.h>
 #include <txmempool.h>
 #include <streams.h>

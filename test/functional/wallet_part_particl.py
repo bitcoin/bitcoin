@@ -606,7 +606,7 @@ class WalletParticlTest(ParticlTestFramework):
         ro = nodes[2].listaddressgroupings()
         assert(len(ro) == 5)
 
-        addr = nodes[2].getaccountaddress('')
+        addr = nodes[2].getlabeladdress('')
         ro = nodes[2].getaddressinfo(addr)
         assert(ro['ismine'] == True)
         assert(ro['isscript'] == False)

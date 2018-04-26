@@ -1,4 +1,5 @@
 #include <qt/test/wallettests.h>
+#include <qt/test/util.h>
 
 #include <interfaces/node.h>
 #include <qt/bitcoinamountfield.h>
@@ -36,21 +37,6 @@
 
 namespace
 {
-//! Press "Ok" button in message box dialog.
-void ConfirmMessage(QString* text = nullptr)
-{
-    QTimer::singleShot(0, makeCallback([text](Callback* callback) {
-        for (QWidget* widget : QApplication::topLevelWidgets()) {
-            if (widget->inherits("QMessageBox")) {
-                QMessageBox* messageBox = qobject_cast<QMessageBox*>(widget);
-                if (text) *text = messageBox->text();
-                messageBox->defaultButton()->click();
-            }
-        }
-        delete callback;
-    }), SLOT(call()));
-}
-
 //! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
 void ConfirmSend(QString* text = nullptr, bool cancel = false)
 {
@@ -268,7 +254,7 @@ void TestGUI()
     QCOMPARE(requestTableModel->rowCount({}), currentRowCount-1);
 }
 
-}
+} // namespace
 
 void WalletTests::walletTests()
 {

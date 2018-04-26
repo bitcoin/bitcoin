@@ -269,7 +269,8 @@ EXTRA_DIST += \
     test/util/data/txcreatescript4.json \
     test/util/data/txcreatesignv1.hex \
     test/util/data/txcreatesignv1.json \
-    test/util/data/txcreatesignv2.hex
+    test/util/data/txcreatesignv2.hex \
+    test/util/rpcauth-test.py
 
 EXTRA_DIST += \
     test/util/data_particl/particl-util-test.json \

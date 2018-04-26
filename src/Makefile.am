@@ -114,6 +114,7 @@ BITCOIN_CORE_H = \
   fs.h \
   httprpc.h \
   httpserver.h \
+  index/txindex.h \
   indirectmap.h \
   init.h \
   anon.h \
@@ -245,6 +246,7 @@ libparticl_server_a_SOURCES = \
   consensus/tx_verify.cpp \
   httprpc.cpp \
   httpserver.cpp \
+  index/txindex.cpp \
   init.cpp \
   dbwrapper.cpp \
   merkleblock.cpp \

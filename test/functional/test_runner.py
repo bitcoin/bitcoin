@@ -70,7 +70,7 @@ BASE_SCRIPTS = [
     #'wallet_labels.py',
     'p2p_segwit.py',
     'wallet_dump.py',
-    #'rpc_listtransactions.py',
+    #'wallet_listtransactions.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py',
     'wallet_zapwallettxes.py',
@@ -334,9 +334,9 @@ def main():
     if not args.keepcache:
         shutil.rmtree("%s/test/cache" % config["environment"]["BUILDDIR"], ignore_errors=True)
 
-    run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], tmpdir, args.jobs, args.coverage, passon_args, args.combinedlogslen, create_cache=(True if args.bitcoin or (not args.particl and not args.insight) else False))
+    run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], tmpdir, args.jobs, args.coverage, passon_args, args.combinedlogslen, create_cache=(True if args.bitcoin or (not args.particl and not args.insight) else False))
 
-def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=[], combined_logs_len=0, create_cache=True):
+def run_tests(test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=[], combined_logs_len=0, create_cache=True):
     # Warn if bitcoind is already running (unix only)
     try:
         if subprocess.check_output(["pidof", "particld"]) is not None:
@@ -348,11 +348,6 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     cache_dir = "%s/test/cache" % build_dir
     if os.path.isdir(cache_dir):
         print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
-
-    #Set env vars
-    if "BITCOIND" not in os.environ:
-        os.environ["BITCOIND"] = build_dir + '/src/particld' + exeext
-        os.environ["BITCOINCLI"] = build_dir + '/src/particl-cli' + exeext
 
     tests_dir = src_dir + '/test/functional/'
 

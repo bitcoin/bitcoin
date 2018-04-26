@@ -2214,7 +2214,7 @@ bool CHDWallet::IsTrusted(const uint256 &txhash, const uint256 &blockhash, int n
         return true;
     if (nDepth < 0)
         return false;
-    //if (!bSpendZeroConfChange || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
+    //if (!m_spend_zero_conf_change || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
     //    return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
@@ -3454,7 +3454,7 @@ static bool InsertChangeAddress(CTempRecipient &r, std::vector<CTempRecipient> &
 };
 
 
-extern CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator);
+extern CFeeRate GetDiscardRate(const CWallet& wallet, const CBlockPolicyEstimator& estimator);
 
 int PreAcceptMempoolTx(CWalletTx &wtx, std::string &sError)
 {
@@ -3528,10 +3528,10 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         AvailableCoins(vAvailableCoins, true, coinControl);
         CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
 
-        CFeeRate discard_rate = GetDiscardRate(::feeEstimator);
+        CFeeRate discard_rate = GetDiscardRate(*this, ::feeEstimator);
 
         // Get the fee rate to use effective values in coin selection
-        CFeeRate nFeeRateNeeded = GetMinimumFeeRate(*coinControl, ::mempool, ::feeEstimator, &feeCalc);
+        CFeeRate nFeeRateNeeded = GetMinimumFeeRate(*this, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
 
         nFeeRet = 0;
         size_t nSubFeeTries = 100;
@@ -3622,7 +3622,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             // to avoid conflicting with other possible uses of nSequence,
             // and in the spirit of "smallest possible change from prior
             // behavior."
-            const uint32_t nSequence = coinControl->signalRbf ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
+            const uint32_t nSequence = coinControl->m_signal_bip125_rbf ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
             for (const auto& coin : setCoins)
                 txNew.vin.push_back(CTxIn(coin.outpoint,CScript(),
                                           nSequence));
@@ -3744,7 +3744,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 vin.scriptWitness.SetNull();
             }
 
-            nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
+            nFeeNeeded = GetMinimumFee(*this, nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
 
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
             // because we must be at the maximum allowed fee.
@@ -3769,7 +3769,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     CTxOut change_prototype_txout(0, scriptChange);
                     size_t change_prototype_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
                     unsigned int tx_size_with_change = nBytes + change_prototype_size + 2; // Add 2 as a buffer in case increasing # of outputs changes compact size
-                    CAmount fee_needed_with_change = GetMinimumFee(tx_size_with_change, *coinControl, ::mempool, ::feeEstimator, nullptr);
+                    CAmount fee_needed_with_change = GetMinimumFee(*this, tx_size_with_change, *coinControl, ::mempool, ::feeEstimator, nullptr);
                     CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, discard_rate);
                     if (nFeeRet >= fee_needed_with_change + minimum_value_for_change) {
                         pick_new_inputs = false;
@@ -4188,8 +4188,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             for (const auto &coin : setCoins)
             {
                 const uint256 &txhash = coin.first->first;
-                txNew.vin.push_back(CTxIn(txhash, coin.second, CScript(),
-                    std::numeric_limits<unsigned int>::max() - (fWalletRbf ? 2 : 1)));
+                const uint32_t nSequence = coinControl->m_signal_bip125_rbf.get_value_or(m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
+                txNew.vin.push_back(CTxIn(txhash, coin.second, CScript(), nSequence));
             };
 
             nValueOutPlain = 0;
@@ -4263,7 +4263,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
             CTransaction txNewConst(txNew);
 
-            nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
+            nFeeNeeded = GetMinimumFee(*this, nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
 
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
             // because we must be at the maximum allowed fee.
@@ -4925,7 +4925,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
             CTransaction txNewConst(txNew);
 
-            nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
+            nFeeNeeded = GetMinimumFee(*this, nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
 
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
             // because we must be at the maximum allowed fee.
@@ -10441,11 +10441,11 @@ bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const C
     bool res = nTargetValue <= nValueFromPresetInputs ||
         CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 6, 0), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
         CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 1, 0), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        (bSpendZeroConfChange && CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, 2), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (bSpendZeroConfChange && CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::min((size_t)4, nMaxChainLength/3)), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (bSpendZeroConfChange && CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength/2), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (bSpendZeroConfChange && CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (bSpendZeroConfChange && !fRejectLongChains && CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+        (m_spend_zero_conf_change && CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, 2), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::min((size_t)4, nMaxChainLength/3)), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength/2), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && !fRejectLongChains && CWallet::SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
@@ -10646,11 +10646,11 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
     bool res = nTargetValue <= nValueFromPresetInputs ||
         SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, 0, vCoins, setCoinsRet, nValueRet) ||
         SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, 0, vCoins, setCoinsRet, nValueRet) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, 2, vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::min((size_t)4, nMaxChainLength/3), vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength/2, vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength, vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::numeric_limits<uint64_t>::max(), vCoins, setCoinsRet, nValueRet));
+        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, 2, vCoins, setCoinsRet, nValueRet)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::min((size_t)4, nMaxChainLength/3), vCoins, setCoinsRet, nValueRet)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength/2, vCoins, setCoinsRet, nValueRet)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength, vCoins, setCoinsRet, nValueRet)) ||
+        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::numeric_limits<uint64_t>::max(), vCoins, setCoinsRet, nValueRet));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     setCoinsRet.insert(setCoinsRet.end(), vPresetCoins.begin(), vPresetCoins.end());

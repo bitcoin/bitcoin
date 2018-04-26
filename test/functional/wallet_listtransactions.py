@@ -18,6 +18,7 @@ def txFromHex(hexstring):
 class ListTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.extra_args = [['-deprecatedrpc=accounts']] * 2
         self.enable_mocktime()
 
     def run_test(self):

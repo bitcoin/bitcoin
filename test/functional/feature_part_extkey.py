@@ -118,7 +118,7 @@ class ExtKeyTest(ParticlTestFramework):
         for txnHash in txnHashes:
             assert(self.wait_for_mempool(node, txnHash))
 
-        ro = node.listtransactions('', 24)
+        ro = node.listtransactions('*', 24)
         assert(len(ro) == 24)
         assert[isclose(ro[0]['amount'], 0.01)]
         assert[isclose(ro[23]['amount'], 0.24)]
