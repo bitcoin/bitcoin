@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity, * boost::unit_test::disabled())
     for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
     {
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
-        /* Initialise the block version.  */
+        // Initialise the block version. 
         const int32_t nChainId = Params().AuxpowChainId();
         pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION, nChainId);
         pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
