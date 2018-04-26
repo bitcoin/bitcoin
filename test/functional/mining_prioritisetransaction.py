@@ -120,7 +120,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         tx_id = self.nodes[0].decoderawtransaction(tx_hex)["txid"]
 
         # This will raise an exception due to min relay fee not being met
-        assert_raises_rpc_error(-26, "min relay fee not met, 0 < 134 (code 66)", self.nodes[0].sendrawtransaction, tx_hex)
+        assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
         assert(tx_id not in self.nodes[0].getrawmempool())
 
         # This is a less than 1000-byte transaction, so just set the fee
