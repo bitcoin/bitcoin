@@ -465,15 +465,13 @@ void BitcoinApplication::initializeResult(bool success)
         window->setClientModel(clientModel);
 
 #ifdef ENABLE_WALLET
-        bool fFirstWallet = true;
         auto wallets = m_node.getWallets();
         for (auto& wallet : wallets) {
             WalletModel * const walletModel = new WalletModel(std::move(wallet), m_node, platformStyle, optionsModel);
 
             window->addWallet(walletModel);
-            if (fFirstWallet) {
+            if (m_wallet_models.empty()) {
                 window->setCurrentWallet(walletModel->getWalletName());
-                fFirstWallet = false;
             }
 
             connect(walletModel, SIGNAL(coinsSent(WalletModel*,SendCoinsRecipient,QByteArray)),
