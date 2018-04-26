@@ -33,9 +33,8 @@ typedef uint8_t isminefilter;
  * different SIGVERSION may have different network rules. Currently there is no use of isInvalid but it could  be
  * used in the future. See https://github.com/bitcoin/bitcoin/pull/8499 (segwit policy limits) as an example.
  */
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, bool& isInvalid, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion = SigVersion::BASE);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
 
 #endif // BITCOIN_SCRIPT_ISMINE_H

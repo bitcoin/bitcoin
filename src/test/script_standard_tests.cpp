@@ -448,7 +448,14 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         keystore.AddKey(keys[1]);
 
         result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+        BOOST_CHECK(!isInvalid);
+
+        // Keystore has 2/2 keys and the script
+        keystore.AddCScript(scriptPubKey);
+
+        result = IsMine(keystore, scriptPubKey, isInvalid);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
         BOOST_CHECK(!isInvalid);
     }
 
