@@ -35,6 +35,7 @@
 #include <script/standard.h>
 #include <script/sigcache.h>
 #include <scheduler.h>
+#include <threadnames.h>
 #include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
@@ -199,7 +200,7 @@ void Shutdown()
     /// for example if the data directory was found to be locked.
     /// Be sure that anything that writes files or flushes caches only does this if the respective
     /// module was initialized.
-    RenameThread("bitcoin-shutoff");
+    g_thread_names->Rename("shutoff");
     mempool.AddTransactionsUpdated(1);
 
     StopHTTPRPC();
@@ -633,7 +634,7 @@ void CleanupBlockRevFiles()
 void ThreadImport(std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
-    RenameThread("bitcoin-loadblk");
+    g_thread_names->Rename("loadblk");
     ScheduleBatchPriority();
 
     {
