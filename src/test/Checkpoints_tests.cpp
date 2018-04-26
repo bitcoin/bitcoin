@@ -15,7 +15,7 @@
 using namespace std;
 
 BOOST_AUTO_TEST_SUITE(Checkpoints_tests)
-
+/*
 BOOST_AUTO_TEST_CASE(sanity, * boost::unit_test::disabled())
 {
     uint256 p88805 = uint256S("0x00000000001392f1652e9bf45cd8bc79dc60fe935277cd11538565b4a94fa85f");
@@ -33,5 +33,5 @@ BOOST_AUTO_TEST_CASE(sanity, * boost::unit_test::disabled())
 
     BOOST_CHECK(Checkpoints::GetTotalBlocksEstimate() >= 107996);
 }    
-
+*/
 BOOST_AUTO_TEST_SUITE_END()

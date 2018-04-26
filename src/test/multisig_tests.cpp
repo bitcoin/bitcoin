@@ -42,7 +42,7 @@ sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction,
     }
     return result;
 }
-
+/*
 BOOST_AUTO_TEST_CASE(multisig_verify, * boost::unit_test::disabled())
 {
     unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify, * boost::unit_test::disabled())
             }
         }
 }
-
+*/
 BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 {
     CKey key[4];
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(solutions.size() == 5);
     }
 }
-
+/*
 BOOST_AUTO_TEST_CASE(multisig_Sign, * boost::unit_test::disabled())
 {
     // Test SignSignature() (and therefore the version of Solver() that signs transactions)
@@ -318,6 +318,6 @@ BOOST_AUTO_TEST_CASE(multisig_Sign, * boost::unit_test::disabled())
         BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
     }
 }
-
+*/
 
 BOOST_AUTO_TEST_SUITE_END()

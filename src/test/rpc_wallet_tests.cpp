@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(rpc_addmultisig)
     string short2(address1Hex + 1, address1Hex + sizeof(address1Hex)); // first byte missing
     BOOST_CHECK_THROW(addmultisig(createArgs(2, short2.c_str()), false), runtime_error);
 }
-
+/*
 BOOST_AUTO_TEST_CASE(rpc_wallet, * boost::unit_test::disabled())
 {
     // Test RPC calls for various wallet statistics
@@ -178,6 +178,6 @@ BOOST_AUTO_TEST_CASE(rpc_wallet, * boost::unit_test::disabled())
     BOOST_CHECK(arr.size() > 0);
     BOOST_CHECK(CBitcoinAddress(arr[0].get_str()).Get() == demoAddress.Get());
 }
-
+*/
 
 BOOST_AUTO_TEST_SUITE_END()
