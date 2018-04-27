@@ -733,8 +733,8 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         if(pfinalBudget == NULL) return "Unknown budget hash";
 
-        const auto fbVotes = pfinalBudget->GetVotes();
-        for (const auto& votePair: fbVotes)
+        const std::map<uint256, CFinalizedBudgetVote>& fbVotes = pfinalBudget->GetVotes();
+        for (const std::pair<uint256, CFinalizedBudgetVote>& votePair: fbVotes)
         {
             Object bObj;
             bObj.push_back(Pair("nHash", votePair.first.ToString().c_str()));

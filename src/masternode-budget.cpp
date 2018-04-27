@@ -457,7 +457,7 @@ void CBudgetManager::CheckAndRemove()
     {
         CFinalizedBudget* pfinalizedBudget = &((*it).second);
 
-        auto isValid = pfinalizedBudget->fValid = pfinalizedBudget->IsValid(strError);
+        bool isValid = pfinalizedBudget->fValid = pfinalizedBudget->IsValid(strError);
         LogPrintf("CBudgetManager::CheckAndRemove - pfinalizedBudget->IsValid - strError: %s\n", strError);
         if(isValid) {
             if(Params().NetworkID() == CBaseChainParams::MAIN && rand() % 4 == 0)
@@ -1817,7 +1817,7 @@ std::string CFinalizedBudget::GetProposals() const
     LOCK(cs);
     std::string ret = "";
 
-    for(const auto& budgetPayment: vecBudgetPayments)
+    for(const CTxBudgetPayment& budgetPayment: vecBudgetPayments)
     {
         CBudgetProposal* pbudgetProposal = budget.FindProposal(budgetPayment.nProposalHash);
 
@@ -1979,10 +1979,10 @@ void CFinalizedBudget::MarkSynced()
     if (!fValid)
         return;
 
-    for (auto& vote: mapVotes)
+    for(std::map<uint256,CFinalizedBudgetVote>::iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
     {
-        if(vote.second.fValid)
-            vote.second.fSynced = true;
+        if(vote->second.fValid)
+            vote->second.fSynced = true;
     }
 }
 
@@ -1996,14 +1996,14 @@ int CFinalizedBudget::Sync(CNode* pfrom, bool fPartial)
     ++invCount;
 
     //send votes
-    for (auto& vote: mapVotes)
+    for(std::map<uint256,CFinalizedBudgetVote>::iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
     {
-        if(!vote.second.fValid)
+        if(!vote->second.fValid)
             continue;
 
-        if((fPartial && !vote.second.fSynced) || !fPartial)
+        if((fPartial && !vote->second.fSynced) || !fPartial)
         {
-            pfrom->PushInventory(CInv(MSG_BUDGET_FINALIZED_VOTE, vote.second.GetHash()));
+            pfrom->PushInventory(CInv(MSG_BUDGET_FINALIZED_VOTE, vote->second.GetHash()));
             ++invCount;
         }
     }
@@ -2016,9 +2016,9 @@ void CFinalizedBudget::ResetSync()
     if (!fValid)
         return;
 
-    for (auto& vote: mapVotes)
+    for(std::map<uint256,CFinalizedBudgetVote>::iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
     {
-        vote.second.fSynced = false;
+        vote->second.fSynced = false;
     }
 }
 

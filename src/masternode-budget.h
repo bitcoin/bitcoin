@@ -246,9 +246,9 @@ public:
     bool IsVoteSubmitted() const { return voteSubmittedTime.is_initialized(); }
     void ResetAutoChecked();
 
-    auto GetName() const { return strBudgetName; }
-    auto GetFeeTxHash() const { return nFeeTXHash; }
-    auto GetVotes() const { return mapVotes; }
+    std::string GetName() const { return strBudgetName; }
+    uint256 GetFeeTxHash() const { return nFeeTXHash; }
+    const std::map<uint256, CFinalizedBudgetVote>& GetVotes() const { return mapVotes; }
     std::string GetProposals() const;
     int GetBlockStart() const {return nBlockStart;}
     int GetBlockEnd() const {return nBlockStart + (int)(vecBudgetPayments.size() - 1);}
