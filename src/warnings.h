@@ -15,7 +15,6 @@ bool GetfLargeWorkForkFound();
 void SetfLargeWorkInvalidChainFound(bool flag);
 /** Format a string that describes several potential problems detected by the core.
  * strFor can have three values:
- * - "rpc": get critical warnings, which should put the client in safe mode if non-empty
  * - "statusbar": get all warnings
  * - "gui": get all warnings, translated (where possible) for GUI
  * This function only returns the highest priority warning of the set selected by strFor.
