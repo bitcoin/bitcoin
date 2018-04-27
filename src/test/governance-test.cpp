@@ -139,7 +139,7 @@ namespace
             chainActive = CChain{};
         }
 
-        CBudgetProposal CreateProposal(std::string name, CKey payee, CAmount amount) -> CBudgetProposal
+        CBudgetProposal CreateProposal(std::string name, CKey payee, CAmount amount)
         {
             CBudgetProposal p(
                 name,
@@ -163,25 +163,25 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
     BOOST_AUTO_TEST_CASE(CompareHash_Equal)
     {
         // Set Up
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA));
-        payments.push_back(GetPayment(proposalB));
-        payments.push_back(GetPayment(proposalC));
+        std::vector<CTxBudgetPayment> payments1;
+        payments1.push_back(GetPayment(proposalA));
+        payments1.push_back(GetPayment(proposalB));
+        payments1.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget1(
             budgetName, 
             blockStart, 
-            payments,
+            payments1,
             ArithToUint256(1)
         );
 
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA));
-        payments.push_back(GetPayment(proposalB));
-        payments.push_back(GetPayment(proposalC));
+        std::vector<CTxBudgetPayment> payments2;
+        payments2.push_back(GetPayment(proposalA));
+        payments2.push_back(GetPayment(proposalB));
+        payments2.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget2(
             budgetName,
             blockStart,
-            payments,
+            payments2,
             ArithToUint256(2)
         );
 
@@ -192,25 +192,25 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
     BOOST_AUTO_TEST_CASE(CompareHash_DifferentName)
     {
         // Set Up
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA));
-        payments.push_back(GetPayment(proposalB));
-        payments.push_back(GetPayment(proposalC));
+        std::vector<CTxBudgetPayment> payments1;
+        payments1.push_back(GetPayment(proposalA));
+        payments1.push_back(GetPayment(proposalB));
+        payments1.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget1(
             budgetName,
             blockStart,
-            payments,
+            payments1,
             ArithToUint256(1)
         );
 
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA)); 
-        payments.push_back(GetPayment(proposalB)); 
-        payments.push_back(GetPayment(proposalC);
+        std::vector<CTxBudgetPayment> payments2;
+        payments2.push_back(GetPayment(proposalA));
+        payments2.push_back(GetPayment(proposalB));
+        payments2.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget2(
             "he-who-must-not-be-named",
             blockStart,
-            payments,
+            payments2,
             ArithToUint256(2)
         );
 
@@ -221,23 +221,23 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
     BOOST_AUTO_TEST_CASE(CompareHash_DifferentSet)
     {
         // Set Up
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA));
-        payments.push_back(GetPayment(proposalC));
+        std::vector<CTxBudgetPayment> payments1;
+        payments1.push_back(GetPayment(proposalA));
+        payments1.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget1(
             budgetName,
             blockStart,
-            payments,
+            payments1,
             ArithToUint256(1)
         );
 
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA)); 
-        payments.push_back(GetPayment(proposalB));
+        std::vector<CTxBudgetPayment> payments2;
+        payments2.push_back(GetPayment(proposalA));
+        payments2.push_back(GetPayment(proposalB));
         CFinalizedBudgetBroadcast budget2(
             budgetName,
             blockStart,
-            payments,
+            payments2,
             ArithToUint256(2)
         );
 
@@ -248,25 +248,25 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
     BOOST_AUTO_TEST_CASE(CompareHash_DifferentOrder)
     {
         // Set Up
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA)); 
-        payments.push_back(GetPayment(proposalB)); 
-        payments.push_back(GetPayment(proposalC));
+        std::vector<CTxBudgetPayment> payments1;
+        payments1.push_back(GetPayment(proposalA));
+        payments1.push_back(GetPayment(proposalB));
+        payments1.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget1(
             budgetName,
             blockStart,
-            payments,
+            payments1,
             ArithToUint256(1)
         );
 
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalB)); 
-        payments.push_back(GetPayment(proposalC)); 
-        payments.push_back(GetPayment(proposalA));
+        std::vector<CTxBudgetPayment> payments2;
+        payments2.push_back(GetPayment(proposalB));
+        payments2.push_back(GetPayment(proposalC));
+        payments2.push_back(GetPayment(proposalA));
         CFinalizedBudgetBroadcast budget2(
             budgetName,
             blockStart,
-            payments,
+            payments2,
             ArithToUint256(2)
         );
 
