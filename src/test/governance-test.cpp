@@ -435,7 +435,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
 
         CMutableTransaction expected;
-        expected.vout.emplace_back(proposalA.GetAmount(), proposalA.GetPayee());
+        expected.vout.push_back(CTxOut(proposalA.GetAmount(), proposalA.GetPayee()));
 
         // Call & Check
         BOOST_CHECK(budget.IsTransactionValid(expected, blockStart));
@@ -451,10 +451,10 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
 
         CMutableTransaction wrong1;
-        wrong1.vout.emplace_back(proposalA.GetAmount(), proposalC.GetPayee());
+        wrong1.vout.push_back(CTxOut(proposalA.GetAmount(), proposalC.GetPayee()));
 
         CMutableTransaction wrong2;
-        wrong2.vout.emplace_back(proposalC.GetAmount(), proposalA.GetPayee());
+        wrong2.vout.push_back(CTxOut(proposalC.GetAmount(), proposalA.GetPayee()));
 
         // Call & Check
         BOOST_CHECK(!budget.IsTransactionValid(wrong1, blockStart));
@@ -471,7 +471,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
 
         CMutableTransaction expected;
-        expected.vout.emplace_back(proposalB.GetAmount(), proposalB.GetPayee());
+        expected.vout.push_back(CTxOut(proposalB.GetAmount(), proposalB.GetPayee()));
 
         // Call & Check
         BOOST_CHECK(budget.IsTransactionValid(expected, blockStart + 1));
@@ -487,7 +487,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
 
         CMutableTransaction expected;
-        expected.vout.emplace_back(proposalB.GetAmount(), proposalB.GetPayee());
+        expected.vout.push_back(CTxOut(proposalB.GetAmount(), proposalB.GetPayee()));
 
         // Call & Check
         BOOST_CHECK(!budget.IsTransactionValid(expected, blockStart + 2));
