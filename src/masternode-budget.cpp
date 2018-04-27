@@ -1729,8 +1729,9 @@ bool CFinalizedBudget::AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::st
 
 class SortByAmount
 {
+public:
     template <class T1, class T2>
-    bool operator()(const T1& a, const T2& b)
+    bool operator()(const T1& a, const T2& b) const
     {
         if (a->GetAmount() != b->GetAmount())
             return a->GetAmount() > b->GetAmount();
