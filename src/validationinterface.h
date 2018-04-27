@@ -106,7 +106,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void SetBestChain(const CBlockLocator &locator) {}
+    virtual void ChainStateFlushed(const CBlockLocator &locator) {}
     /**
      * Notifies listeners about an inventory item being seen on the network.
      *
@@ -168,7 +168,7 @@ public:
     void TransactionAddedToMempool(const CTransactionRef &);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>> &);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &);
-    void SetBestChain(const CBlockLocator &);
+    void ChainStateFlushed(const CBlockLocator &);
     void Inventory(const uint256 &);
     void Broadcast(int64_t nBestBlockTime, CConnman* connman);
     void BlockChecked(const CBlock&, const CValidationState&);
