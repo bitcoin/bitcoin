@@ -1,0 +1,97 @@
+---
+name: "utils-windows"
+sudo: true
+suites:
+- "trusty"
+architectures:
+- "amd64"
+packages:
+- "libtool"
+- "automake"
+- "libfaketime"
+- "mingw-w64"
+- "g++-mingw-w64"
+- "zip"
+- "unzip"
+# Needed for compiling nsis.
+- "scons"
+- "libcppunit-dev"
+- "zlib1g"
+- "zlib1g-dev"
+reference_datetime: "2016-01-01 00:00:00"
+remotes: []
+files: []
+script: |
+  WRAP_DIR="$HOME/wrapped"
+  INSTDIR="$HOME/install"
+
+  NSIS_VER=3.03
+  NSIS_PACKAGE=nsis-${NSIS_VER}-src.tar.bz2
+  NSIS_DEBIAN_PACKAGE=nsis_${NSIS_VER}-2.debian.tar.xz
+  NSIS_HASH=abae7f4488bc6de7a4dd760d5f0e7cd3aad7747d4d7cd85786697c8991695eaa
+  NSIS_DEBIAN_HASH=b12956c561d7ad2e078561684a8a06c95c583c14c4d904ec93d252e2d2c2d75c
+  NSIS_URL=http://downloads.sourceforge.net/nsis/${NSIS_PACKAGE}
+  NSIS_DEBIAN_URL=http://http.debian.net/debian/pool/main/n/nsis/${NSIS_DEBIAN_PACKAGE}
+
+  echo "${REFERENCE_DATETIME}" | sudo tee --append /etc/faketimerc
+  echo "/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1" | sudo tee --append /etc/ld.so.preload
+
+  export GZIP="-9n"
+  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  export TZ="UTC"
+  export BUILD_DIR=`pwd`
+  mkdir -p ${WRAP_DIR}
+
+  get() {
+    local file="$1"; shift
+    local url="$1"; shift
+
+    if ! wget --no-check-certificate -U "" -N "$url"; then
+      echo >&2 "Error: Cannot download $url"
+      mv "${file}" "${file}.DLFAILED"
+      exit 1
+    fi
+  }
+
+  dzip() {
+    export LC_ALL=C
+    
+    ZIPFILE=${1:?}
+    shift
+    
+    if [ -n "$REFERENCE_DATETIME" ]; then
+      find "$@" -exec touch --date="$REFERENCE_DATETIME" -- {} +
+    fi
+    find "$@"   -executable -exec chmod 700 {} +
+    find "$@" ! -executable -exec chmod 600 {} +
+    find "$@" | sort | zip $ZIPOPTS -X -@ "$ZIPFILE"
+  }
+
+  for i in NSIS NSIS_DEBIAN
+  do
+    URL="${i}_URL"
+    PACKAGE="${i}_PACKAGE"
+    get "${!PACKAGE}" "${!URL}"
+
+    HASH="${i}_HASH"
+    if ! echo "${!HASH}  ${!PACKAGE}" | sha256sum -c -; then
+      echo "Package hash for ${!PACKAGE} differs from our locally stored sha256!"
+      exit 1
+    fi
+  done
+  
+  get Zlib-1.2.7-win32-x86.zip http://nsis.sourceforge.net/mediawiki/images/c/ca/Zlib-1.2.7-win32-x86.zip
+  unzip -d Zlib-1.2.7 Zlib-1.2.7-win32-x86.zip
+
+  # Building nsis
+  tar xf $NSIS_PACKAGE
+  cd nsis-${NSIS_VER}-src
+  tar xf ../$NSIS_DEBIAN_PACKAGE
+  scons VERSION=${NSIS_VER} SKIPUTILS='NSIS Menu' XGCC_W32_PREFIX=i686-w64-mingw32- ZLIB_W32=${HOME}/build/Zlib-1.2.7 PREFIX=$INSTDIR/nsis
+  scons VERSION=${NSIS_VER} SKIPUTILS='NSIS Menu' XGCC_W32_PREFIX=i686-w64-mingw32- ZLIB_W32=${HOME}/build/Zlib-1.2.7 PREFIX=$INSTDIR/nsis install
+  cd ..
+
+  # Grabbing the remaining results
+  cd $INSTDIR
+  dzip nsis-$NSIS_VER-win32-utils.zip nsis
+  cp nsis-$NSIS_VER-win32-utils.zip $OUTDIR/

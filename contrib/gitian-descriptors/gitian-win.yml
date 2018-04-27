@@ -17,14 +17,15 @@ packages:
 - "bsdmainutils"
 - "mingw-w64"
 - "g++-mingw-w64"
-- "nsis"
 - "zip"
+- "unzip"
 - "ca-certificates"
 - "python"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
-files: []
+files:
+- "nsis-win32-utils.zip"
 script: |
   WRAP_DIR=$HOME/wrapped
   HOSTS="i686-w64-mingw32 x86_64-w64-mingw32"
@@ -93,6 +94,10 @@ script: |
     done
   done
   }
+
+  # Extract nsis
+  unzip -d $HOME/install ${BUILD_DIR}/nsis-win32-utils.zip
+  export PATH=$HOME/install/nsis/bin:$PATH
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
