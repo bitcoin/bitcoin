@@ -1,15 +1,15 @@
-Raven Core
-=============
+Ravencoin Core
+==============
 
 Setup
 ---------------------
-Raven Core is the original Raven client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Raven transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+Ravencoin Core is the original Ravencoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Ravencoin transactions; depending on the speed of your computer and network connection, the synchronization process is typically complete in under an hour.
 
-To download Raven Core, visit [ravencore.org](https://ravencoin.org/en/releases/).
+To download Ravencion Core code, visit [GitHub](https://github.com/RavenProject/Ravencoin/releases).
 
 Running
 ---------------------
-The following are some helpful notes on how to run Raven on your native platform.
+The following are some helpful notes on how to run Ravencoin on your native platform.
 
 ### Unix
 
@@ -28,14 +28,14 @@ Drag Raven-Core to your applications folder, and then run Raven-Core.
 
 ### Need Help?
 
-* See the documentation at the [Raven Wiki](https://en.raven.it/wiki/Main_Page)
+* See the documentation at the [Ravencoin Wiki](https://raven.wiki/wiki/Ravencoin_Wiki)
 for help and more information.
-* Ask for help on [#raven](http://webchat.freenode.net?channels=raven) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=raven).
-* Ask for help on the [RavenTalk](https://raventalk.org/) forums, in the [Technical Support board](https://raventalk.org/index.php?board=4.0).
+* Ask for help on [Discord](https://discord.gg/DUkcBst) or [Telegram](https://t.me/RavencoinDev).
+* Ask for help on the [RavencoinTalk](https://www.ravencointalk.org/) forums, in the [Development and Technical discussion board](https://www.ravencointalk.org/?forum=661517).
 
 Building
 ---------------------
-The following are developer notes on how to build Raven on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build the Ravencoin core software on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [Dependencies](dependencies.md)
 - [OS X Build Notes](build-osx.md)
@@ -46,7 +46,7 @@ The following are developer notes on how to build Raven on your native platform.
 
 Development
 ---------------------
-The Raven repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+Ravencoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Release Notes](release-notes.md)
@@ -62,9 +62,10 @@ The Raven repo's [root README](/README.md) contains relevant information on the 
 - [Benchmarking](benchmarking.md)
 
 ### Resources
-* Discuss on the [RavenTalk](https://raventalk.org/) forums, in the [Development & Technical Discussion board](https://raventalk.org/index.php?board=6.0).
-* Discuss project-specific development on #raven-core-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=raven-core-dev).
-* Discuss general Raven development on #raven-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=raven-dev).
+* Discuss on the [RavencoinTalk](https://www.ravencointalk.org/) forums, in the [Development & Technical Discussion board](https://raventalk.org/index.php?board=6.0).
+* Discuss on chat [Discord](https://discord.gg/DUkcBst) or [Telegram](https://t.me/RavencoinDev)
+* Find out more on the [Ravencoin Wiki](https://raven.wiki/wiki/Ravencoin_Wiki)
+* Visit the project home [Ravencoin.org](https://ravencoin.org)
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
