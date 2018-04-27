@@ -62,7 +62,7 @@ Ravencoin repo's [root README](/README.md) contains relevant information on the 
 - [Benchmarking](benchmarking.md)
 
 ### Resources
-* Discuss on the [RavencoinTalk](https://www.ravencointalk.org/) forums, in the [Development & Technical Discussion board](https://raventalk.org/index.php?board=6.0).
+* Discuss on the [RavencoinTalk](https://www.ravencointalk.org/) forums, in the [Development & Technical Discussion board](https://www.ravencointalk.org/?forum=661517).
 * Discuss on chat [Discord](https://discord.gg/DUkcBst) or [Telegram](https://t.me/RavencoinDev)
 * Find out more on the [Ravencoin Wiki](https://raven.wiki/wiki/Ravencoin_Wiki)
 * Visit the project home [Ravencoin.org](https://ravencoin.org)
