@@ -15,7 +15,6 @@
 #include <policy/rbf.h>
 #include <rpc/server.h>
 #include <rpc/mining.h>
-#include <rpc/safemode.h>
 #include <rpc/util.h>
 #include <script/sign.h>
 #include <timedata.h>
@@ -805,8 +804,6 @@ UniValue extkey(const JSONRPCRequest &request)
         "extkey options \"key\" ( \"optionName\" \"newValue\" )\n"
         "    Manage keys and accounts\n"
         "\n";
-
-    ObserveSafeMode();
 
     // default mode is list unless 1st parameter is a key - then mode is set to info
 
@@ -1728,8 +1725,6 @@ UniValue extkeyimportmaster(const JSONRPCRequest &request)
         + HelpExampleCli("extkeyimportmaster", "\"word1 ... word24\" \"passphrase\" false \"label_master\" \"label_account\"")
         + HelpExampleRpc("extkeyimportmaster", "\"word1 ... word24\", \"passphrase\", false, \"label_master\", \"label_account\""));
 
-    ObserveSafeMode();
-
     return extkeyimportinternal(request, false);
 };
 
@@ -1760,8 +1755,6 @@ UniValue extkeygenesisimport(const JSONRPCRequest &request)
         + HelpExampleCli("extkeygenesisimport", "\"word1 ... word24\" \"passphrase\" false \"label_master\" \"label_account\"")
         + HelpExampleRpc("extkeygenesisimport", "\"word1 ... word24\", \"passphrase\", false, \"label_master\", \"label_account\""));
 
-    ObserveSafeMode();
-
     return extkeyimportinternal(request, true);
 }
 
@@ -1773,8 +1766,6 @@ UniValue extkeyaltversion(const JSONRPCRequest &request)
             "Returns the provided ext_key encoded with alternate version bytes.\n"
             "If the provided ext_key has a Bitcoin prefix the output will be encoded with a Particl prefix.\n"
             "If the provided ext_key has a Particl prefix the output will be encoded with a Bitcoin prefix.");
-
-    ObserveSafeMode();
 
     std::string sKeyIn = request.params[0].get_str();
     std::string sKeyOut;
@@ -2366,8 +2357,6 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
             + HelpExampleCli("deriverangekeys", "0 1")
             + HelpExampleRpc("deriverangekeys", "0, 1"));
 
-    ObserveSafeMode();
-
     // TODO: manage nGenerated, nHGenerated properly
 
     int nStart = request.params[0].get_int();
@@ -2598,8 +2587,6 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
             "\nExamples:\n"
             + HelpExampleCli("clearwallettransactions", "")
             + HelpExampleRpc("clearwallettransactions", "true"));
-
-    ObserveSafeMode();
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -3228,8 +3215,6 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             + HelpExampleRpc("filtertransactions", "{\\\"category\\\":\\\"stake\\\"}")
         );
 
-    ObserveSafeMode();
-
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -3538,8 +3523,6 @@ UniValue filteraddresses(const JSONRPCRequest &request)
             "match_owned 0 off, 1 owned, 2 non-owned, default 0\n"
             );
 
-    ObserveSafeMode();
-
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -3728,8 +3711,6 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
             "3. \"label\"       (string, optional) Optional label.\n"
             "4. \"purpose\"     (string, optional) Optional purpose label.\n");
 
-    ObserveSafeMode();
-
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -3903,8 +3884,6 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
             + HelpExampleCli("getstakinginfo", "")
             + HelpExampleRpc("getstakinginfo", ""));
 
-    ObserveSafeMode();
-
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -4000,8 +3979,6 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
             "\nExamples:\n"
             + HelpExampleCli("getcoldstakinginfo", "")
             + HelpExampleRpc("getcoldstakinginfo", ""));
-
-    ObserveSafeMode();
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -4161,8 +4138,6 @@ UniValue listunspentanon(const JSONRPCRequest &request)
             + HelpExampleCli("listunspentanon", "6 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
             + HelpExampleRpc("listunspentanon", "6, 9999999, \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
         );
-
-    ObserveSafeMode();
 
     int nMinDepth = 1;
     if (request.params.size() > 0 && !request.params[0].isNull()) {
@@ -4356,8 +4331,6 @@ UniValue listunspentblind(const JSONRPCRequest &request)
             + HelpExampleRpc("listunspentblind", "6, 9999999, \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
         );
 
-    ObserveSafeMode();
-
     int nMinDepth = 1;
     if (request.params.size() > 0 && !request.params[0].isNull()) {
         RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
@@ -4522,8 +4495,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
-
-    ObserveSafeMode();
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -5162,8 +5133,6 @@ UniValue createsignaturewithwallet(const JSONRPCRequest &request)
             + HelpExampleRpc("createsignaturewithwallet", "\"myhex\", 0, \"myaddress\"")
         );
 
-    ObserveSafeMode();
-
     EnsureWalletIsUnlocked(pwallet);
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ, UniValue::VSTR, UniValue::VSTR}, true);
@@ -5309,8 +5278,6 @@ UniValue createsignaturewithkey(const JSONRPCRequest &request)
             + HelpExampleRpc("createsignaturewithkey", "\"myhex\", 0, \"myprivkey\"")
         );
 
-    ObserveSafeMode();
-
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ, UniValue::VSTR, UniValue::VSTR}, true);
 
     CMutableTransaction mtx;
@@ -5426,8 +5393,6 @@ UniValue debugwallet(const JSONRPCRequest &request)
             "debugwallet ( attempt_repair )\n"
             "Detect problems in wallet.\n"
             + HelpRequiringPassphrase(pwallet));
-
-    ObserveSafeMode();
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -5645,7 +5610,6 @@ UniValue rewindchain(const JSONRPCRequest &request)
             + HelpRequiringPassphrase(pwallet) +
             "height default - last known rct index.\n");
 
-    ObserveSafeMode();
     EnsureWalletIsUnlocked(pwallet);
 
     // Make sure the results are valid at least up to the most recent block
@@ -5715,8 +5679,6 @@ UniValue walletsettings(const JSONRPCRequest &request)
             "Clear changeaddress settings\n"
             + HelpExampleCli("walletsettings", "changeaddress \"{}\"") + "\n"
         );
-
-    ObserveSafeMode();
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -5969,8 +5931,6 @@ UniValue transactionblinds(const JSONRPCRequest &request)
             + HelpExampleRpc("transactionblinds", "\"txnid\"")
         );
 
-    ObserveSafeMode();
-
     EnsureWalletIsUnlocked(pwallet);
 
     uint256 hash;
@@ -6022,8 +5982,6 @@ UniValue derivefromstealthaddress(const JSONRPCRequest &request)
             + HelpExampleCli("derivefromstealthaddress", "\"stealthaddress\"")
             + HelpExampleRpc("derivefromstealthaddress", "\"stealthaddress\"")
         );
-
-    ObserveSafeMode();
 
     CBitcoinAddress addr(request.params[0].get_str());
     if (!addr.IsValidStealthAddress())
@@ -6110,7 +6068,6 @@ UniValue setvote(const JSONRPCRequest &request)
             + HelpExampleCli("setvote", "1 1 1000 2000")
             + HelpExampleRpc("setvote", "1, 1, 1000, 2000"));
 
-    ObserveSafeMode();
     EnsureWalletIsUnlocked(pwallet);
 
     // Make sure the results are valid at least up to the most recent block
@@ -6189,8 +6146,6 @@ UniValue votehistory(const JSONRPCRequest &request)
             "\nExamples:\n"
             + HelpExampleCli("votehistory", "true")
             + HelpExampleRpc("votehistory", "true"));
-
-    ObserveSafeMode();
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -6508,8 +6463,6 @@ UniValue createrawparttransaction(const JSONRPCRequest& request)
     UniValue inputs = request.params[0].get_array();
     UniValue outputs = request.params[1].get_array();
 
-    ObserveSafeMode();
-
     CMutableTransaction rawTx;
     rawTx.nVersion = PARTICL_TXN_VERSION;
 
@@ -6781,7 +6734,6 @@ UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
             );
 
-    ObserveSafeMode();
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR, UniValue::VOBJ, UniValue::VOBJ, UniValue::VOBJ}, true);
 
     // Make sure the results are valid at least up to the most recent block

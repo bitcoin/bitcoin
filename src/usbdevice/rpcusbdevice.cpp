@@ -6,7 +6,6 @@
 #include <usbdevice/debugdevice.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
-#include <rpc/safemode.h>
 #include <utilstrencodings.h>
 #include <key_io.h>
 #include <key/extkey.h>
@@ -591,8 +590,6 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
             "\nExamples\n"
             + HelpExampleCli("initaccountfromdevice", "\"new_acc\" \"44h/1h/0h\" false")
             + HelpExampleRpc("initaccountfromdevice", "\"new_acc\""));
-
-    ObserveSafeMode();
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR, UniValue::VBOOL, UniValue::VNUM}, true);
 

@@ -167,7 +167,6 @@ BITCOIN_CORE_H = \
   rpc/client.h \
   rpc/mining.h \
   rpc/protocol.h \
-  rpc/safemode.h \
   rpc/server.h \
   rpc/rpcutil.h \
   rpc/rawtransaction.h \
@@ -267,7 +266,6 @@ libparticl_server_a_SOURCES = \
   rpc/misc.cpp \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
-  rpc/safemode.cpp \
   rpc/server.cpp \
   rpc/client.cpp \
   rpc/rpcutil.cpp \
