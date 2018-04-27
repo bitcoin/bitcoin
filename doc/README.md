@@ -15,8 +15,8 @@ The following are some helpful notes on how to run Ravencoin on your native plat
 
 Unpack the files into a directory and run:
 
-- `bin/raven-qt` (GUI) or
-- `bin/ravend` (headless)
+- `raven-qt` (GUI) or
+- `ravend` (headless)
 
 ### Windows
 
