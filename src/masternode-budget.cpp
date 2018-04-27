@@ -1727,16 +1727,19 @@ bool CFinalizedBudget::AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::st
     return true;
 }
 
-template <class T1, class T2>
-bool SortByAmount(const T1& a, const T2& b)
+class SortByAmount
 {
-    if (a->GetAmount() != b->GetAmount())
-        return a->GetAmount() > b->GetAmount();
-    else if (a->GetHash() != b->GetHash())
-        return a->GetHash() < b->GetHash();
-    else if (a->GetPayee() != b->GetPayee())
-        return a->GetPayee() < b->GetPayee();
-}
+    template <class T1, class T2>
+    bool operator()(const T1& a, const T2& b)
+    {
+        if (a->GetAmount() != b->GetAmount())
+            return a->GetAmount() > b->GetAmount();
+        else if (a->GetHash() != b->GetHash())
+            return a->GetHash() < b->GetHash();
+        else if (a->GetPayee() != b->GetPayee())
+            return a->GetPayee() < b->GetPayee();
+    }    
+};
 
 //evaluate if we should vote for this. Masternode only
 bool CFinalizedBudget::AutoCheck()
