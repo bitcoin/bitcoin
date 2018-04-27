@@ -808,6 +808,7 @@ UniValue decodescript(const JSONRPCRequest& request)
             }
             ScriptPubKeyToUniv(segwitScr, sr, true);
             sr.pushKV("p2sh-segwit", EncodeDestination(CScriptID(segwitScr)));
+            if (!fParticlMode)
             r.pushKV("segwit", sr);
         }
     }
