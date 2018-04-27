@@ -38,9 +38,9 @@ bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore);
  * different SIGVERSION may have different network rules. Currently the only use of isInvalid is indicate uncompressed
  * keys in SigVersion::WITNESS_V0 script, but could also be used in similar cases in the future
  */
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, bool& isInvalid, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion = SigVersion::BASE);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
+isminetype IsMineP2SH(const CKeyStore& keystore, const CScript& scriptPubKey);
 
 #endif // BITCOIN_SCRIPT_ISMINE_H

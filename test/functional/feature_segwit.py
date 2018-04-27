@@ -303,8 +303,10 @@ class SegWitTest(BitcoinTestFramework):
             v = self.nodes[0].getaddressinfo(i)
             if (v['isscript']):
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
-                # bare and p2sh multisig with compressed keys should always be spendable
-                spendable_anytime.extend([bare, p2sh])
+                # p2sh multisig with compressed keys should always be spendable
+                spendable_anytime.extend([p2sh])
+                # bare multisig can be watched and signed, but is not treated as ours
+                solvable_after_importaddress.extend([bare])
                 # P2WSH and P2SH(P2WSH) multisig with compressed keys are spendable after direct importaddress
                 spendable_after_importaddress.extend([p2wsh, p2sh_p2wsh])
             else:
@@ -320,8 +322,10 @@ class SegWitTest(BitcoinTestFramework):
             v = self.nodes[0].getaddressinfo(i)
             if (v['isscript']):
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
-                # bare and p2sh multisig with uncompressed keys should always be spendable
-                spendable_anytime.extend([bare, p2sh])
+                # p2sh multisig with uncompressed keys should always be spendable
+                spendable_anytime.extend([p2sh])
+                # bare multisig can be watched and signed, but is not treated as ours
+                solvable_after_importaddress.extend([bare])
                 # P2WSH and P2SH(P2WSH) multisig with uncompressed keys are never seen
                 unseen_anytime.extend([p2wsh, p2sh_p2wsh])
             else:
