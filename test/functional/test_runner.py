@@ -201,6 +201,7 @@ def main():
     parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
     parser.add_argument('--quiet', '-q', action='store_true', help='only print results summary and failure logs')
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
+    parser.add_argument('--failfast', action='store_true', help='stop execution after the first test failure')
     args, unknown_args = parser.parse_known_args()
 
     # args to be passed on always start with two dashes; tests are the remaining unknown args
@@ -283,9 +284,21 @@ def main():
     if not args.keepcache:
         shutil.rmtree("%s/test/cache" % config["environment"]["BUILDDIR"], ignore_errors=True)
 
-    run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], tmpdir, args.jobs, args.coverage, passon_args, args.combinedlogslen)
+    run_tests(
+        test_list,
+        config["environment"]["SRCDIR"],
+        config["environment"]["BUILDDIR"],
+        tmpdir,
+        jobs=args.jobs,
+        enable_coverage=args.coverage,
+        args=passon_args,
+        combined_logs_len=args.combinedlogslen,
+        failfast=args.failfast,
+    )
 
-def run_tests(test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=[], combined_logs_len=0):
+def run_tests(test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False):
+    args = args or []
+
     # Warn if bitcoind is already running (unix only)
     try:
         if subprocess.check_output(["pidof", "bitcoind"]) is not None:
@@ -346,6 +359,10 @@ def run_tests(test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=Fal
                 combined_logs, _ = subprocess.Popen([sys.executable, os.path.join(tests_dir, 'combine_logs.py'), '-c', testdir], universal_newlines=True, stdout=subprocess.PIPE).communicate()
                 print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
 
+            if failfast:
+                logging.debug("Early exiting after test failure")
+                break
+
     print_results(test_results, max_len_name, (int(time.time() - start_time)))
 
     if coverage:
@@ -359,6 +376,10 @@ def run_tests(test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=Fal
         os.rmdir(tmpdir)
 
     all_passed = all(map(lambda test_result: test_result.was_successful, test_results))
+
+    # This will be a no-op unless failfast is True in which case there may be dangling
+    # processes which need to be killed.
+    job_queue.kill_and_join()
 
     sys.exit(not all_passed)
 
@@ -449,6 +470,17 @@ class TestHandler:
 
                     return TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr
             print('.', end='', flush=True)
+
+    def kill_and_join(self):
+        """Send SIGKILL to all jobs and block until all have ended."""
+        procs = [i[2] for i in self.jobs]
+
+        for proc in procs:
+            proc.kill()
+
+        for proc in procs:
+            proc.wait()
+
 
 class TestResult():
     def __init__(self, name, status, time):
