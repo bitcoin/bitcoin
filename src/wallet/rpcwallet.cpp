@@ -1715,12 +1715,14 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				entry.push_back(Pair("systx", strResponse));
 				entry.push_back(Pair("systype", strResponseEnglish));
 				entry.push_back(Pair("sysguid", strResponseGUID));
-				{
-					LOCK(cs_main);
-					if (!FindAliasInTx(wtx, aliasVvch)) {
-						continue;
+				for (auto& vin : wtx.tx->vin) {
+					if (!pwalletMain || !pwalletMain->mapWallet.count(vin.prevout.hash)) break;
+					if (DecodeAliasScript(pwalletMain->mapWallet[vin.prevout.hash].tx->vout[vin.prevout.n].scriptPubKey, aliasOp, aliasVvch)) {
+						break;
 					}
 				}
+				if (aliasVvch.empty())
+					continue;
 				aliasName = stringFromVch(aliasVvch[0]);
 					
 				entry.push_back(Pair("sysalias", aliasName));
@@ -1807,12 +1809,14 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
 					entry.push_back(Pair("sysguid", strResponseGUID));
-					{
-						LOCK(cs_main);
-						if (!FindAliasInTx(wtx, aliasVvch)) {
-							continue;
+					for(auto& vin: wtx.tx->vin){
+						if (!pwalletMain || !pwalletMain->mapWallet.count(vin.prevout.hash)) break;
+						if (DecodeAliasScript(pwalletMain->mapWallet[vin.prevout.hash].tx->vout[vin.prevout.n].scriptPubKey, aliasOp, aliasVvch)) {
+							break;
 						}
 					}
+					if (aliasVvch.empty())
+						continue;
 					aliasName = stringFromVch(aliasVvch[0]);
 
 					entry.push_back(Pair("sysalias", aliasName));
