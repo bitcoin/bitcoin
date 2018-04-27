@@ -1666,9 +1666,9 @@ CFinalizedBudget::CFinalizedBudget()
 }
 
 CFinalizedBudget::CFinalizedBudget(std::string strBudgetName, int nBlockStart, std::vector<CTxBudgetPayment> vecBudgetPayments, uint256 nFeeTXHash)
-    : strBudgetName(std::move(strBudgetName))
+    : strBudgetName(strBudgetName)
     , nBlockStart(nBlockStart)
-    , vecBudgetPayments(std::move(vecBudgetPayments))
+    , vecBudgetPayments(vecBudgetPayments)
     , nFeeTXHash(nFeeTXHash)
     , fValid(true)
     , fAutoChecked(false)
@@ -2079,7 +2079,7 @@ CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast()
 }
 
 CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecBudgetPaymentsIn, uint256 nFeeTXHashIn)
-    : CFinalizedBudget(std::move(strBudgetNameIn), nBlockStartIn, std::move(vecBudgetPaymentsIn), nFeeTXHashIn)
+    : CFinalizedBudget(strBudgetNameIn, nBlockStartIn, vecBudgetPaymentsIn, nFeeTXHashIn)
 {
     assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
 }
