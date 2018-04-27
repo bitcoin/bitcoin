@@ -63,7 +63,7 @@ class AnonTest(ParticlTestFramework):
             txnHashes.append(txnHash)
 
         for h in txnHashes:
-            print(h) # debug
+            self.log.info(h) # debug
             assert(self.wait_for_mempool(nodes[1], h))
 
 
@@ -116,6 +116,18 @@ class AnonTest(ParticlTestFramework):
 
         txnHash = nodes[1].sendtypeto('anon', 'part', outputs)
         txnHashes = [txnHash,]
+
+
+        # Test lockunspent
+        unspent = nodes[1].listunspentanon()
+        assert(nodes[1].lockunspent(False, [unspent[0]]) == True)
+        unspentCheck = nodes[1].listunspentanon()
+        assert(len(unspentCheck) < len(unspent))
+        assert(nodes[1].lockunspent(True, [unspent[0]]) == True)
+        unspentCheck = nodes[1].listunspentanon()
+        assert(len(unspentCheck) == len(unspent))
+
+
 
 if __name__ == '__main__':
     AnonTest().main()

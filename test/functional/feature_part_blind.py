@@ -157,6 +157,18 @@ class BlindTest(ParticlTestFramework):
         ro = nodes[1].getwalletinfo()
         assert(isclose(ro['blind_balance'], 2.691068))
 
+
+        # Test lockunspent
+        unspent = nodes[1].listunspentblind(minconf=0)
+        assert(nodes[1].lockunspent(False, [unspent[0]]) == True)
+        unspentCheck = nodes[1].listunspentblind(minconf=0)
+        assert(len(unspentCheck) < len(unspent))
+        assert(nodes[1].lockunspent(True, [unspent[0]]) == True)
+        unspentCheck = nodes[1].listunspentblind(minconf=0)
+        assert(len(unspentCheck) == len(unspent))
+
+
+
         outputs = [{'address':sxAddrTo2_3, 'amount':2.691068, 'subfee':True},]
         ro = nodes[1].sendtypeto('blind', 'part', outputs, 'comment_to', 'comment_from', 4, 64, True)
         feePerKB = (1000.0 / ro['bytes']) * float(ro['fee'])
@@ -172,6 +184,7 @@ class BlindTest(ParticlTestFramework):
             ro = nodes[1].sendtypeto('blind', 'blind', outputs)
         except JSONRPCException as e:
             assert('Insufficient blinded funds' in e.error['message'])
+
 
 
 if __name__ == '__main__':

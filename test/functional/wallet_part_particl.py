@@ -612,6 +612,16 @@ class WalletParticlTest(ParticlTestFramework):
         assert(ro['isscript'] == False)
 
 
+        # Test lockunspent
+        unspent = nodes[2].listunspent()
+        assert(nodes[2].lockunspent(False, [unspent[0]]) == True)
+        unspentCheck = nodes[2].listunspent()
+        assert(len(unspentCheck) < len(unspent))
+        assert(nodes[2].lockunspent(True, [unspent[0]]) == True)
+        unspentCheck = nodes[2].listunspent()
+        assert(len(unspentCheck) == len(unspent))
+
+
 
 if __name__ == '__main__':
     WalletParticlTest().main()
