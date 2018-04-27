@@ -1718,7 +1718,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_SEND) {
 					for (auto& vin : wtx.vin) {
 						if (!pwalletMain || !pwalletMain->mapWallet.count(vin.prevout.hash)) break;
-						if (DecodeAliasScript(pwalletMain->mapWallet[vin.prevout.hash].tx->vout[vin.prevout.n].scriptPubKey, aliasOp, aliasVvch)) {
+						if (DecodeAliasScript(pwalletMain->mapWallet[vin.prevout.hash].vout[vin.prevout.n].scriptPubKey, aliasOp, aliasVvch)) {
 							break;
 						}
 					}
@@ -1750,11 +1750,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 						}
 					}
 				}
+				entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
+				entry.push_back(Pair("sysalias", aliasName));
 			}
-			entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
-			entry.push_back(Pair("sysalias", aliasName));
 			ret.push_back(entry);
-            ret.push_back(entry);
         }
     }
 
@@ -1809,9 +1808,9 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 					entry.push_back(Pair("systype", strResponseEnglish));
 					entry.push_back(Pair("sysguid", strResponseGUID));
 					if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_SEND) {
-						for(auto& vin: wtx.vin){
+						for (auto& vin : wtx.vin) {
 							if (!pwalletMain || !pwalletMain->mapWallet.count(vin.prevout.hash)) break;
-							if (DecodeAliasScript(pwalletMain->mapWallet[vin.prevout.hash].tx->vout[vin.prevout.n].scriptPubKey, aliasOp, aliasVvch)) {
+							if (DecodeAliasScript(pwalletMain->mapWallet[vin.prevout.hash].vout[vin.prevout.n].scriptPubKey, aliasOp, aliasVvch)) {
 								break;
 							}
 						}
@@ -1843,9 +1842,9 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 							}
 						}
 					}
+					entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
+					entry.push_back(Pair("sysalias", aliasName));
 				}
-				entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
-				entry.push_back(Pair("sysalias", aliasName));
                 ret.push_back(entry);
             }
         }
