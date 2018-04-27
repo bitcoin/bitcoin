@@ -8,6 +8,7 @@
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
+#include <primitives/tx_types.h>
 #include <pubkey.h>
 #include <random.h>
 #include <scheduler.h>
@@ -73,7 +74,6 @@ struct TestingSetup: public BasicTestingSetup {
     ~TestingSetup();
 };
 
-class CBlock;
 struct CMutableTransaction;
 class CScript;
 

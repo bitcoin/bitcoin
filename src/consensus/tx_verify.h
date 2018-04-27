@@ -6,13 +6,13 @@
 #define BITCOIN_CONSENSUS_TX_VERIFY_H
 
 #include <amount.h>
+#include <primitives/tx_types.h>
 
 #include <stdint.h>
 #include <vector>
 
 class CBlockIndex;
 class CCoinsViewCache;
-class CTransaction;
 class CValidationState;
 
 /** Transaction validation functions */

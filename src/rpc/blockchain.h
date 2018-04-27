@@ -7,9 +7,10 @@
 
 #include <vector>
 #include <stdint.h>
-#include <amount.h>
 
-class CBlock;
+#include <amount.h>
+#include <primitives/tx_types.h>
+
 class CBlockIndex;
 class UniValue;
 

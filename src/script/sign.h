@@ -7,7 +7,9 @@
 #define BITCOIN_SCRIPT_SIGN_H
 
 #include <boost/optional.hpp>
+
 #include <hash.h>
+#include <primitives/tx_types.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <streams.h>
@@ -16,7 +18,6 @@ class CKey;
 class CKeyID;
 class CScript;
 class CScriptID;
-class CTransaction;
 
 struct CMutableTransaction;
 
