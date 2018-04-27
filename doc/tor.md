@@ -1,16 +1,16 @@
 TOR SUPPORT IN BITCOIN
 ======================
 
-It is possible to run Bitcoin as a Tor hidden service, and connect to such services.
+It is possible to run Bitcoin Core as a Tor hidden service, and connect to such services.
 
 The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) for how to properly
 configure Tor.
 
 
-1. Run bitcoin behind a Tor proxy
+1. Run Bitcoin Core behind a Tor proxy
 ---------------------------------
 
-The first step is running Bitcoin behind a Tor proxy. This will already anonymize all
+The first step is running Bitcoin Core behind a Tor proxy. This will already anonymize all
 outgoing connections, but more is possible.
 
 	-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
@@ -34,7 +34,7 @@ In a typical situation, this suffices to run behind a Tor proxy:
 	./bitcoind -proxy=127.0.0.1:9050
 
 
-2. Run a bitcoin hidden server
+2. Run a Bitcoin Core hidden server
 ------------------------------
 
 If you configure your Tor system accordingly, it is possible to make your node also
@@ -118,7 +118,7 @@ Tor configuration.
 4. Privacy recommendations
 ---------------------------
 
-- Do not add anything but Bitcoin ports to the hidden service created in section 2.
+- Do not add anything but Bitcoin Core ports to the hidden service created in section 2.
   If you run a web service too, create a new hidden service for that.
   Otherwise it is trivial to link them, which may reduce privacy. Hidden
   services created automatically (as in section 3) always have only one port
