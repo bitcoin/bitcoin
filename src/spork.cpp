@@ -146,7 +146,8 @@ void ExecuteSpork(int nSporkID, int nValue)
     else if (nSporkID == SPORK_16_DISCONNECT_OLD_NODES && nValue == 1)
     {
         LOCK(cs_vNodes);
-        for (auto node: vNodes)
+
+        for (std::vector<CNode*>::iterator i = vNodes.begin(); i != vNodes.end(); ++i)
         {
             if (node->nVersion < MinPeerProtoVersion())
                 node->fDisconnect = true;
