@@ -19,7 +19,6 @@
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <rpc/rawtransaction.h>
-#include <rpc/safemode.h>
 #include <rpc/server.h>
 #include <script/script.h>
 #include <script/script_error.h>
@@ -1108,8 +1107,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
         );
 
-    ObserveSafeMode();
-
     std::promise<void> promise;
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL});
@@ -1216,8 +1213,6 @@ UniValue testmempoolaccept(const JSONRPCRequest& request)
             // clang-format on
             );
     }
-
-    ObserveSafeMode();
 
     RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VBOOL});
     if (request.params[0].get_array().size() != 1) {
