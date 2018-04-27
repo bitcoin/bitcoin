@@ -155,7 +155,7 @@ configure_conf() {
     sudo mv .crown/crown.conf .crown/crown.bak
     touch .crown/crown.conf
     IP=$(curl http://checkip.amazonaws.com/)
-    PW=$(date +%s | sha256sum | base64 | head -c 32 ;)
+    PW=$(< /dev/urandom tr -dc a-zA-Z0-9 | head -c32;echo;)
     echo "==========================================================="
     pwd
     echo "daemon=1" > .crown/crown.conf 
