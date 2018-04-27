@@ -149,8 +149,8 @@ void ExecuteSpork(int nSporkID, int nValue)
 
         for (std::vector<CNode*>::iterator i = vNodes.begin(); i != vNodes.end(); ++i)
         {
-            if (node->nVersion < MinPeerProtoVersion())
-                node->fDisconnect = true;
+            if ((*i)->nVersion < MinPeerProtoVersion())
+                (*i)->fDisconnect = true;
         }
     }
 }
