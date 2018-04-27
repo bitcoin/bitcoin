@@ -4,7 +4,6 @@
 
 #include <chain.h>
 #include <key_io.h>
-#include <rpc/safemode.h>
 #include <rpc/server.h>
 #include <validation.h>
 #include <script/script.h>
@@ -204,7 +203,6 @@ UniValue abortrescan(const JSONRPCRequest& request)
             + HelpExampleRpc("abortrescan", "")
         );
 
-    ObserveSafeMode();
     if (!pwallet->IsScanning() || pwallet->IsAbortingRescan()) return false;
     pwallet->AbortRescan();
     return true;
