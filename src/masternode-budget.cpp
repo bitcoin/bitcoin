@@ -1817,7 +1817,7 @@ std::string CFinalizedBudget::GetProposals() const
     LOCK(cs);
     std::string ret = "";
 
-    for(const CTxBudgetPayment& budgetPayment: vecBudgetPayments)
+    BOOST_FOREACH(const CTxBudgetPayment& budgetPayment, vecBudgetPayments)
     {
         CBudgetProposal* pbudgetProposal = budget.FindProposal(budgetPayment.nProposalHash);
 
