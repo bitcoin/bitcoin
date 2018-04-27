@@ -1715,18 +1715,17 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				entry.push_back(Pair("systx", strResponse));
 				entry.push_back(Pair("systype", strResponseEnglish));
 				entry.push_back(Pair("sysguid", strResponseGUID));
-				for (auto& vin : wtx.tx->vin) {
-					if (!pwalletMain || !pwalletMain->mapWallet.count(vin.prevout.hash)) break;
-					if (DecodeAliasScript(pwalletMain->mapWallet[vin.prevout.hash].tx->vout[vin.prevout.n].scriptPubKey, aliasOp, aliasVvch)) {
-						break;
-					}
-				}
-				if (aliasVvch.empty())
-					continue;
-				aliasName = stringFromVch(aliasVvch[0]);
-					
-				entry.push_back(Pair("sysalias", aliasName));
 				if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_SEND) {
+					for (auto& vin : wtx.vin) {
+						if (!pwalletMain || !pwalletMain->mapWallet.count(vin.prevout.hash)) break;
+						if (DecodeAliasScript(pwalletMain->mapWallet[vin.prevout.hash].tx->vout[vin.prevout.n].scriptPubKey, aliasOp, aliasVvch)) {
+							break;
+						}
+					}
+					if (aliasVvch.empty())
+						continue;
+					aliasName = stringFromVch(aliasVvch[0]);
+
 					CAssetAllocation assetallocation(wtx);
 					if (!assetallocation.IsNull()) {
 						if (!assetallocation.listSendingAllocationAmounts.empty()) {
@@ -1751,10 +1750,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 						}
 					}
 				}
-				entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
-
-
 			}
+			entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
+			entry.push_back(Pair("sysalias", aliasName));
+			ret.push_back(entry);
             ret.push_back(entry);
         }
     }
@@ -1809,18 +1808,17 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
 					entry.push_back(Pair("sysguid", strResponseGUID));
-					for(auto& vin: wtx.tx->vin){
-						if (!pwalletMain || !pwalletMain->mapWallet.count(vin.prevout.hash)) break;
-						if (DecodeAliasScript(pwalletMain->mapWallet[vin.prevout.hash].tx->vout[vin.prevout.n].scriptPubKey, aliasOp, aliasVvch)) {
-							break;
-						}
-					}
-					if (aliasVvch.empty())
-						continue;
-					aliasName = stringFromVch(aliasVvch[0]);
-
-					entry.push_back(Pair("sysalias", aliasName));
 					if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_SEND) {
+						for(auto& vin: wtx.vin){
+							if (!pwalletMain || !pwalletMain->mapWallet.count(vin.prevout.hash)) break;
+							if (DecodeAliasScript(pwalletMain->mapWallet[vin.prevout.hash].tx->vout[vin.prevout.n].scriptPubKey, aliasOp, aliasVvch)) {
+								break;
+							}
+						}
+						if (aliasVvch.empty())
+							continue;
+						aliasName = stringFromVch(aliasVvch[0]);
+
 						CAssetAllocation assetallocation(wtx);
 						if (!assetallocation.IsNull()) {
 							if (!assetallocation.listSendingAllocationAmounts.empty()) {
@@ -1845,8 +1843,9 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 							}
 						}
 					}
-					entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
 				}
+				entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
+				entry.push_back(Pair("sysalias", aliasName));
                 ret.push_back(entry);
             }
         }
