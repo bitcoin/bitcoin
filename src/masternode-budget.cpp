@@ -1698,9 +1698,9 @@ CFinalizedBudget::CFinalizedBudget()
 }
 
 CFinalizedBudget::CFinalizedBudget(std::string strBudgetName, int nBlockStart, std::vector<CTxBudgetPayment> vecBudgetPayments, uint256 nFeeTXHash)
-    : strBudgetName(std::move(strBudgetName))
+    : strBudgetName(strBudgetName)
     , nBlockStart(nBlockStart)
-    , vecBudgetPayments(std::move(vecBudgetPayments))
+    , vecBudgetPayments(vecBudgetPayments)
     , nFeeTXHash(nFeeTXHash)
     , fValid(true)
     , fAutoChecked(false)
@@ -1759,6 +1759,21 @@ bool CFinalizedBudget::AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::st
     return true;
 }
 
+class SortByAmount
+{
+public:
+    template <class T1, class T2>
+    bool operator()(const T1& a, const T2& b) const
+    {
+        if (a->GetAmount() != b->GetAmount())
+            return a->GetAmount() > b->GetAmount();
+        else if (a->GetHash() != b->GetHash())
+            return a->GetHash() < b->GetHash();
+        else if (a->GetPayee() != b->GetPayee())
+            return a->GetPayee() < b->GetPayee();
+    }    
+};
+
 //evaluate if we should vote for this. Masternode only
 bool CFinalizedBudget::AutoCheck()
 {
@@ -1783,16 +1798,8 @@ bool CFinalizedBudget::AutoCheck()
 
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
 
-    auto SortByAmount = [](const auto& a, const auto& b)
-    {
-        if (a->GetAmount() != b->GetAmount())
-            return a->GetAmount() > b->GetAmount();
-        else if (a->GetHash() != b->GetHash())
-            return a->GetHash() < b->GetHash();
-        else if (a->GetPayee() != b->GetPayee())
-            return a->GetPayee() < b->GetPayee();
-    };
-    boost::sort(vBudgetProposals, SortByAmount);
+    
+    boost::sort(vBudgetProposals, SortByAmount());
 
     for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
         LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vecBudgetPayments[i].nProposalHash.ToString());
@@ -2111,7 +2118,7 @@ CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast()
 }
 
 CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecBudgetPaymentsIn, uint256 nFeeTXHashIn)
-    : CFinalizedBudget(std::move(strBudgetNameIn), nBlockStartIn, std::move(vecBudgetPaymentsIn), nFeeTXHashIn)
+    : CFinalizedBudget(strBudgetNameIn, nBlockStartIn, vecBudgetPaymentsIn, nFeeTXHashIn)
 {
     assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
 }

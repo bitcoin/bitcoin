@@ -223,7 +223,7 @@ protected:
     map<uint256, CFinalizedBudgetVote> mapVotes;
     uint256 nFeeTXHash;
 
-    static auto ComparePayments(const CTxBudgetPayment& a, const CTxBudgetPayment& b)
+    static bool ComparePayments(const CTxBudgetPayment& a, const CTxBudgetPayment& b)
     {
         if (a.nAmount != b.nAmount)
             return a.nAmount > b.nAmount;
