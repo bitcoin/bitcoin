@@ -36,7 +36,10 @@ class MemTable {
   }
 
   // Returns an estimate of the number of bytes of data in use by this
-  // data structure. It is safe to call when MemTable is being modified.
+  // data structure.
+  //
+  // REQUIRES: external synchronization to prevent simultaneous
+  // operations on the same MemTable.
   size_t ApproximateMemoryUsage();
 
   // Return an iterator that yields the contents of the memtable.

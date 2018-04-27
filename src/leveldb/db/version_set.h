@@ -179,7 +179,7 @@ class VersionSet {
       EXCLUSIVE_LOCKS_REQUIRED(mu);
 
   // Recover the last saved descriptor from persistent storage.
-  Status Recover(bool *save_manifest);
+  Status Recover();
 
   // Return the current version.
   Version* current() const { return current_; }
@@ -274,8 +274,6 @@ class VersionSet {
   friend class Compaction;
   friend class Version;
 
-  bool ReuseManifest(const std::string& dscname, const std::string& dscbase);
-
   void Finalize(Version* v);
 
   void GetRange(const std::vector<FileMetaData*>& inputs,
@@ -366,7 +364,7 @@ class Compaction {
   friend class Version;
   friend class VersionSet;
 
-  Compaction(const Options* options, int level);
+  explicit Compaction(int level);
 
   int level_;
   uint64_t max_output_file_size_;
@@ -376,7 +374,7 @@ class Compaction {
   // Each compaction reads inputs from "level_" and "level_+1"
   std::vector<FileMetaData*> inputs_[2];      // The two sets of inputs
 
-  // State used to check for number of overlapping grandparent files
+  // State used to check for number of of overlapping grandparent files
   // (parent == level_ + 1, grandparent == level_ + 2)
   std::vector<FileMetaData*> grandparents_;
   size_t grandparent_index_;  // Index in grandparent_starts_

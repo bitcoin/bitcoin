@@ -60,12 +60,6 @@ class Status {
   // Returns true iff the status indicates an IOError.
   bool IsIOError() const { return code() == kIOError; }
 
-  // Returns true iff the status indicates a NotSupportedError.
-  bool IsNotSupportedError() const { return code() == kNotSupported; }
-
-  // Returns true iff the status indicates an InvalidArgument.
-  bool IsInvalidArgument() const { return code() == kInvalidArgument; }
-
   // Return a string representation of this status suitable for printing.
   // Returns the string "OK" for success.
   std::string ToString() const;

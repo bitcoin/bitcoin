@@ -1,0 +1,38 @@
+---
+name: "boost"
+suites:
+- "lucid"
+architectures:
+- "i386"
+packages: 
+- "mingw32"
+- "faketime"
+- "zip"
+reference_datetime: "2011-01-30 00:00:00"
+remotes: []
+files:
+- "boost_1_47_0.tar.bz2"
+script: |
+  TMPDIR="$HOME/tmpdir"
+  mkdir -p $TMPDIR/bin/$GBUILD_BITS $TMPDIR/include
+  tar xjf boost_1_47_0.tar.bz2
+  cd boost_1_47_0
+  echo "using gcc : 4.4 : i586-mingw32msvc-g++
+        :
+        <rc>i586-mingw32msvc-windres
+        <archiver>i586-mingw32msvc-ar
+        <cxxflags>-frandom-seed=boost1
+  ;" > user-config.jam
+  ./bootstrap.sh --without-icu
+  ./bjam toolset=gcc target-os=windows threadapi=win32 threading=multi variant=release link=static --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 -sNO_ZLIB=1 --layout=tagged --build-type=complete $MAKEOPTS stage
+  for lib in chrono date_time exception filesystem graph iostreams math_c99f math_c99l math_c99 math_tr1f math_tr1l math_tr1 prg_exec_monitor program_options random regex serialization signals system test_exec_monitor thread_win32 unit_test_framework wave wserialization; do
+      mkdir $lib
+      (cd $lib ; ar xf ../stage/lib/libboost_${lib}-mt-s.a)
+      mv $lib $TMPDIR/bin/$GBUILD_BITS
+  done
+  cp -a boost $TMPDIR/include
+  cd $TMPDIR
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  zip -r boost-win32-1.47.0-gitian.zip *
+  cp boost-win32-1.47.0-gitian.zip $OUTDIR

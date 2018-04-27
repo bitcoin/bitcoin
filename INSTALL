@@ -1,0 +1,9 @@
+Building Aithercoin
+
+See doc/readme-qt.rst for instructions on building Aithercoin QT,
+the intended-for-end-users, nice-graphical-interface, reference
+implementation of Aithercoin.
+
+See doc/build-*.txt for instructions on building aithercoind,
+the intended-for-services, no-graphical-interface, reference
+implementation of Aithercoin.

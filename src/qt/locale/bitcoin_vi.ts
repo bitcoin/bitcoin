@@ -1,4001 +1,3275 @@
-<TS language="vi" version="2.1">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="vi" version="2.1">
+<context>
+    <name>AboutDialog</name>
+    <message>
+        <location filename="../forms/aboutdialog.ui" line="+14"/>
+        <source>About Aithercoin</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>&lt;b&gt;Aithercoin&lt;/b&gt; version</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Copyright © 2009-2014 The Bitcoin developers
+Copyright © 2012-2014 The NovaCoin developers
+Copyright © 2014 The Aithercoin developers</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>
+This is experimental software.
+
+Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation>Phải chuột để edit address hoặc label</translation>
+        <location filename="../forms/addressbookpage.ui" line="+14"/>
+        <source>Address Book</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+22"/>
+        <source>Double-click to edit address or label</source>
+        <translation>Click đúp chuột để chỉnh sửa địa chỉ hoặc nhãn dữ liệu</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>Create a new address</source>
-        <translation>Create một address mới</translation>
+        <translation>Tạo một địa chỉ mới</translation>
     </message>
     <message>
-        <source>&amp;New</source>
-        <translation>&amp;Tạo mới</translation>
-    </message>
-    <message>
+        <location line="+14"/>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Sao chép các địa chỉ đã được chọn vào bộ nhớ tạm thời của hệ thống</translation>
     </message>
     <message>
-        <source>&amp;Copy</source>
-        <translation>&amp;Sao chép</translation>
+        <location line="-11"/>
+        <source>&amp;New Address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>C&amp;lose</source>
-        <translation>Đ&amp;óng lại</translation>
+        <location line="-46"/>
+        <source>These are your Aithercoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+60"/>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Show &amp;QR Code</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Sign a message to prove you own a Aithercoin address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Sign &amp;Message</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>Delete the currently selected address from the list</source>
-        <translation>Xóa địa chỉ đang chọn từ danh sách</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Xuất dữ liệu trong thẻ hiện tại ra file</translation>
+        <location line="-14"/>
+        <source>Verify a message to ensure it was signed with a specified Aithercoin address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Xuất</translation>
+        <location line="+3"/>
+        <source>&amp;Verify Message</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+14"/>
         <source>&amp;Delete</source>
         <translation>&amp;Xóa</translation>
     </message>
     <message>
-        <source>Choose the address to send coins to</source>
-        <translation>Chọn địa chỉ để gửi coins đến</translation>
-    </message>
-    <message>
-        <source>Choose the address to receive coins with</source>
-        <translation>Chọn địa chỉ để nhận coins với</translation>
-    </message>
-    <message>
-        <source>C&amp;hoose</source>
-        <translation>C&amp;họn</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation>Địa chỉ đang gửi</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation>Địa chỉ đang nhận</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Đây là những địa chỉ đang thực hiện thanh toán. Luôn kiểm tra số lượng và địa chỉ nhận trước khi gửi coins.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Đây là địa chỉ Bitcoin của bạn để nhận thanh toán. Khuyến cáo nên sử dụng địa chỉ mới cho mỗi giao dịch.</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Copy Địa Chỉ</translation>
-    </message>
-    <message>
+        <location filename="../addressbookpage.cpp" line="+65"/>
         <source>Copy &amp;Label</source>
-        <translation>Copy &amp;Nhãn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>&amp;Edit</source>
-        <translation>&amp;Edit</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Export Address List</source>
-        <translation>Xuất List Địa Chỉ</translation>
+        <location line="+250"/>
+        <source>Export Address Book Data</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Comma separated file (*.csv)</translation>
+        <translation>Tập tin tách biệt bởi dấu phẩy (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Xuất Thất Bại</translation>
+        <location line="+13"/>
+        <source>Error exporting</source>
+        <translation type="unfinished"/>
     </message>
-    </context>
+    <message>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
+        <location filename="../addresstablemodel.cpp" line="+144"/>
         <source>Label</source>
-        <translation>Nhãn</translation>
+        <translation>Nhãn dữ liệu</translation>
     </message>
     <message>
+        <location line="+0"/>
         <source>Address</source>
         <translation>Địa chỉ</translation>
     </message>
     <message>
+        <location line="+36"/>
         <source>(no label)</source>
-        <translation>(không nhãn)</translation>
+        <translation>(chưa có nhãn)</translation>
     </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
+        <location filename="../forms/askpassphrasedialog.ui" line="+26"/>
         <source>Passphrase Dialog</source>
-        <translation>Log Cụm Mật Khẩu</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation>Nhập cụm mật khẩu</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+14"/>
         <source>New passphrase</source>
-        <translation>Cụm mật khẩu mới</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation>Lặp lại cụm mật khẩu mới</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Gõ cụm mật khẩu mới cho ví.&lt;br/&gt;Vui lòng dùng cụm mật khẩu của&lt;b&gt;mười hoặc hơn ký tự ngẫu nhiên&lt;/b&gt;, hoặc &lt;b&gt;tám hoặc nhiều từ hơn&lt;/b&gt;.</translation>
+        <location line="+33"/>
+        <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
+        <source>For staking only</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="+35"/>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Encrypt wallet</source>
-        <translation>Ví mã hóa</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+7"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Quá trình này cần cụm mật khẩu của bạn để mở khóa ví.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
         <source>Unlock wallet</source>
-        <translation>Mở khóa ví</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Quá trình này cần cụm mật khẩu của bạn để giải mã ví.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
         <source>Decrypt wallet</source>
-        <translation>Giải mã ví</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>Change passphrase</source>
-        <translation>Đổi cụm mật khẩu</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Nhập cụm mật khẩu cũ và cụm mật khẩu mới cho ví.</translation>
+        <location line="+1"/>
+        <source>Enter the old and new passphrase to the wallet.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation>Xác nhận mã hóa ví</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Cảnh báo: Nếu bạn mã hóa ví và mất cụm mật khẩu, bạn sẽ &lt;b&gt;MẤT TẤT CẢ BITCOIN&lt;/b&gt;!</translation>
+        <location line="+1"/>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR COINS&lt;/b&gt;!</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Bạn có chắc bạn muốn mã hóa ví của mình?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Wallet encrypted</source>
-        <translation>Ví đã được mã hóa</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 sẽ đóng lúc này để kết thúc quá trình mã hóa. Nhớ rằng việc mã hóa ví không thể bảo vệ hoàn toàn số bitcoins khỏi việc Malware lây nhiễm đến computer của bạn.</translation>
-    </message>
-    <message>
+        <location line="+15"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>QUAN TRỌNG: Bất cứ backup nào bạn từng làm trước đây từ ví của bạn nên được thay thế tạo mới, file mã hóa ví. Vì lý do bảo mật, các backup trước đây của các ví chưa mã hóa sẽ bị vô tác dụng ngay khi bạn bắt đầu sử dụng mới, ví đã được mã hóa.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Wallet encryption failed</source>
-        <translation>Quá trình mã hóa ví thất bại</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Quá trình mã hóa ví thất bại do một lỗi nội tại. Ví của bạn vẫn chưa được mã hóa.</translation>
-    </message>
-    <message>
-        <source>The supplied passphrases do not match.</source>
-        <translation>Cụm mật khẩu được cung cấp không đúng.</translation>
-    </message>
-    <message>
-        <source>Wallet unlock failed</source>
-        <translation>Mở khóa ví thất bại</translation>
-    </message>
-    <message>
-        <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Cụm mật khẩu đã nhập để giải mã ví không đúng.</translation>
-    </message>
-    <message>
-        <source>Wallet decryption failed</source>
-        <translation>Giải mã ví thất bại</translation>
-    </message>
-    <message>
-        <source>Wallet passphrase was successfully changed.</source>
-        <translation>Cụm mật khẩu thay đổi thành công.</translation>
-    </message>
-    <message>
+        <location line="+103"/>
+        <location line="+24"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Cảnh báo: chữ Viết Hoa đang bật!</translation>
-    </message>
-</context>
-<context>
-    <name>BanTableModel</name>
-    <message>
-        <source>IP/Netmask</source>
-        <translation>IP/Netmask</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Banned Until</source>
-        <translation>Cấm Đến</translation>
+        <location line="-133"/>
+        <location line="+60"/>
+        <source>Wallet encrypted</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-58"/>
+        <source>Aithercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+7"/>
+        <location line="+44"/>
+        <location line="+6"/>
+        <source>Wallet encryption failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-56"/>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+50"/>
+        <source>The supplied passphrases do not match.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-38"/>
+        <source>Wallet unlock failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+12"/>
+        <location line="+19"/>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-20"/>
+        <source>Wallet decryption failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
+        <location filename="../bitcoingui.cpp" line="+280"/>
         <source>Sign &amp;message...</source>
-        <translation>Chữ ký &amp;lời nhắn...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+242"/>
         <source>Synchronizing with network...</source>
-        <translation>Đồng bộ hóa với network...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-308"/>
         <source>&amp;Overview</source>
-        <translation>&amp;Tổng quan</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Node</translation>
-    </message>
-    <message>
+        <location line="+1"/>
         <source>Show general overview of wallet</source>
-        <translation>Hiển thị tổng quan ví</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+17"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;Các Giao Dịch</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation>Trình duyệt lịch sử giao dịch</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
+        <source>&amp;Address Book</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Edit the list of stored addresses and labels</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>&amp;Receive coins</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the list of addresses for receiving payments</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-7"/>
+        <source>&amp;Send coins</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+35"/>
         <source>E&amp;xit</source>
-        <translation>T&amp;hoát</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Quit application</source>
-        <translation>Đóng ứng dụng</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;Khoảng %1</translation>
+        <location line="+4"/>
+        <source>Show information about Aithercoin</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Show information about %1</source>
-        <translation>Hiện thông tin khoảng %1</translation>
-    </message>
-    <message>
+        <location line="+2"/>
         <source>About &amp;Qt</source>
-        <translation>Về &amp;Qt</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Show information about Qt</source>
-        <translation>Hiện thông tin về Qt</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation>&amp;Tùy chọn...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Modify configuration options for %1</source>
-        <translation>Sửa đổi tùy chỉnh cấu hình cho %1</translation>
-    </message>
-    <message>
+        <location line="+4"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Mã Hóa Ví...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Backup Ví...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Thay Đổi Cụm Mật Khẩu...</translation>
+        <translation type="unfinished"/>
+    </message>
+    <message numerus="yes">
+        <location line="+250"/>
+        <source>~%n block(s) remaining</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Địa chỉ đang gửi...</translation>
+        <location line="+6"/>
+        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Địa chỉ đang nhận...</translation>
+        <location line="-247"/>
+        <source>&amp;Export...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Mở &amp;URI...</translation>
+        <location line="-62"/>
+        <source>Send coins to a Aithercoin address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Click to disable network activity.</source>
-        <translation>Click để vô hiệu hoạt động mạng.</translation>
+        <location line="+45"/>
+        <source>Modify configuration options for Aithercoin</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Network activity disabled.</source>
-        <translation>Hoạt động mạng được vô hiệu.</translation>
+        <location line="+18"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Click to enable network activity again.</source>
-        <translation>Click để mở hoạt động mạng trở lại.</translation>
+        <location line="-14"/>
+        <source>Encrypt or decrypt wallet</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Syncing Headers (%1%)...</source>
-        <translation>Đồng bộ hóa tiêu đề (%1%)...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Khôi phục các khối trên ổ đĩa...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Gửi coin đến một địa chỉ Bitcoin</translation>
-    </message>
-    <message>
+        <location line="+3"/>
         <source>Backup wallet to another location</source>
-        <translation>Backup ví đến một địa chỉ khác</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Thay đổi cụm mật khẩu cho ví đã mã hóa</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+10"/>
         <source>&amp;Debug window</source>
-        <translation>&amp;Debug window</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Open debugging and diagnostic console</source>
-        <translation>Mở trình gỡ lỗi và giao diện điều chỉnh chẩn đoán</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-5"/>
         <source>&amp;Verify message...</source>
-        <translation>&amp;Lời nhắn xác nhận...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <location line="-200"/>
+        <source>Aithercoin</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
         <source>Wallet</source>
-        <translation>Ví</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Gửi</translation>
+        <location line="+178"/>
+        <source>&amp;About Aithercoin</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Nhận</translation>
-    </message>
-    <message>
+        <location line="+9"/>
         <source>&amp;Show / Hide</source>
-        <translation>&amp;Hiển thị / Ẩn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Show or hide the main Window</source>
-        <translation>Hiện hoặc ẩn cửa sổ chính</translation>
+        <location line="+9"/>
+        <source>Unlock wallet</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Mã hóa private key thuộc về ví của bạn</translation>
+        <location line="+1"/>
+        <source>&amp;Lock Wallet</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Đăng ký lời nhắn với địa chỉ Bitcoin của bạn để chứng minh quyền sở hữu chúng</translation>
+        <location line="+1"/>
+        <source>Lock wallet</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Xác minh lời nhắn để chắc chắn đã được đăng ký với địa chỉ Bitcoin xác định</translation>
-    </message>
-    <message>
+        <location line="+34"/>
         <source>&amp;File</source>
-        <translation>&amp;File</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+8"/>
         <source>&amp;Settings</source>
-        <translation>&amp;Settings</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+8"/>
         <source>&amp;Help</source>
-        <translation>&amp;Help</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+9"/>
         <source>Tabs toolbar</source>
-        <translation>Các thanh công cụ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Yêu cầu thanh toán (tạo QR code và bitcoin: URIs)</translation>
+        <location line="+8"/>
+        <source>Actions toolbar</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation>Hiển thị danh sách các địa chỉ và nhãn đã dùng để gửi</translation>
+        <location line="+13"/>
+        <location line="+9"/>
+        <source>[testnet]</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation>Hiển thị danh sách các địa chỉ và nhãn đã dùng để nhận</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Mở một bitcoin: URI hoặc yêu cầu thanh toán</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>&amp;Tùy chỉnh Command-line </translation>
+        <location line="+0"/>
+        <location line="+60"/>
+        <source>Aithercoin client</source>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n kết nối đến Bitcoin network</numerusform></translation>
+        <location line="+70"/>
+        <source>%n active connection(s) to Aithercoin network</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>Indexing blocks on disk...</source>
-        <translation>Khối đang được ghi nhận trên đĩa...</translation>
+        <location line="+40"/>
+        <source>Downloaded %1 blocks of transaction history.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Processing blocks on disk...</source>
-        <translation>Khối đang được xử lý trên đĩa...</translation>
+        <location line="+413"/>
+        <source>Staking.&lt;br&gt;Your weight is %1&lt;br&gt;Network weight is %2&lt;br&gt;Expected time to earn reward is %3</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Not staking because wallet is locked</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Not staking because wallet is offline</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Not staking because wallet is syncing</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Not staking because you don&apos;t have mature coins</source>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>Hoàn thành %n khối của lịch sử giao dịch.</numerusform></translation>
+        <location line="-403"/>
+        <source>%n second(s) ago</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>%1 behind</source>
-        <translation>%1 phia sau</translation>
+        <location line="-284"/>
+        <source>&amp;Unlock Wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message numerus="yes">
+        <location line="+288"/>
+        <source>%n minute(s) ago</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n hour(s) ago</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n day(s) ago</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>Khối nhận cuối cùng đã được tạo %1.</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>Các giao dịch sau giao dịch này sẽ không được hiển thị.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Lỗi</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Cảnh báo</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Thông tin</translation>
-    </message>
-    <message>
+        <location line="+6"/>
         <source>Up to date</source>
-        <translation>Đã cập nhật</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Hiển thị %1 tin nhắn hỗ trợ để nhận được danh sách Bitcoin command-line khả dụng</translation>
-    </message>
-    <message>
-        <source>%1 client</source>
-        <translation>%1 khách</translation>
-    </message>
-    <message>
-        <source>Connecting to peers...</source>
-        <translation>Đang kết nối đến peers...</translation>
-    </message>
-    <message>
+        <location line="+7"/>
         <source>Catching up...</source>
-        <translation>Đang bắt kịp...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Date: %1
-</source>
-        <translation>Ngày %1
-</translation>
+        <location line="+10"/>
+        <source>Last received block was generated %1.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Amount: %1
-</source>
-        <translation>Số lượng: %1
-</translation>
+        <location line="+59"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Type: %1
-</source>
-        <translation>Loại: %1
-</translation>
+        <location line="+5"/>
+        <source>Confirm transaction fee</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Label: %1
-</source>
-        <translation>Nhãn: %1
-</translation>
-    </message>
-    <message>
-        <source>Address: %1
-</source>
-        <translation>Địa chỉ: %1
-</translation>
-    </message>
-    <message>
+        <location line="+27"/>
         <source>Sent transaction</source>
-        <translation>Giao dịch đã gửi</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Incoming transaction</source>
-        <translation>Giao dịch đang nhận</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation>Khởi tạo HD key &lt;b&gt;enabled&lt;/b&gt;</translation>
+        <location line="+1"/>
+        <source>Date: %1
+Amount: %2
+Type: %3
+Address: %4
+</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>Khởi tạo HD key &lt;b&gt;disabled&lt;/b&gt;</translation>
+        <location line="+100"/>
+        <location line="+15"/>
+        <source>URI handling</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-15"/>
+        <location line="+15"/>
+        <source>URI can not be parsed! This can be caused by an invalid Aithercoin address or malformed URI parameters.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Ví thì &lt;b&gt;encrypted&lt;/b&gt; và hiện tại &lt;b&gt;unlocked&lt;/b&gt;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+10"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Ví thì &lt;b&gt;encrypted&lt;/b&gt; và hiện tại &lt;b&gt;locked&lt;/b&gt;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Một lỗi nghiêm trọng vừa xảy ra. Bitcoin có thể không còn tiếp tục an toàn và sẽ bị bỏ.</translation>
+        <location line="+25"/>
+        <source>Backup Wallet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Wallet Data (*.dat)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Backup Failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message numerus="yes">
+        <location line="+76"/>
+        <source>%n second(s)</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n minute(s)</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n hour(s)</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n day(s)</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Not staking</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoin.cpp" line="+109"/>
+        <source>A fatal error occurred. Aithercoin can no longer continue safely and will quit.</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
+    <name>ClientModel</name>
+    <message>
+        <location filename="../clientmodel.cpp" line="+90"/>
+        <source>Network Alert</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Selection</source>
-        <translation>Lựa chọn Coin</translation>
+        <location filename="../forms/coincontroldialog.ui" line="+14"/>
+        <source>Coin Control</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+31"/>
         <source>Quantity:</source>
-        <translation>Số lượng:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+32"/>
         <source>Bytes:</source>
-        <translation>Bytes:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+48"/>
         <source>Amount:</source>
-        <translation>Số lượng:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+32"/>
+        <source>Priority:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+48"/>
         <source>Fee:</source>
-        <translation>Phí:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation>Rác:</translation>
+        <location line="+35"/>
+        <source>Low Output:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location filename="../coincontroldialog.cpp" line="+551"/>
+        <source>no</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="+51"/>
         <source>After Fee:</source>
-        <translation>Sau Phí:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+35"/>
         <source>Change:</source>
-        <translation>Thay đổi:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+69"/>
         <source>(un)select all</source>
-        <translation>(không)chọn tất cả</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+13"/>
         <source>Tree mode</source>
-        <translation>Tree mode</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+16"/>
         <source>List mode</source>
-        <translation>List mode</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+45"/>
         <source>Amount</source>
         <translation>Số lượng</translation>
     </message>
     <message>
-        <source>Received with label</source>
-        <translation>Đã nhận với nhãn</translation>
+        <location line="+5"/>
+        <source>Label</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Received with address</source>
-        <translation>Đã nhận với địa chỉ</translation>
+        <location line="+5"/>
+        <source>Address</source>
+        <translation>Địa chỉ</translation>
     </message>
     <message>
+        <location line="+5"/>
         <source>Date</source>
-        <translation>Ngày</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
         <source>Confirmations</source>
-        <translation>Xác nhận</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>Confirmed</source>
-        <translation>Đã xác nhận</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
+        <source>Priority</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../coincontroldialog.cpp" line="-515"/>
         <source>Copy address</source>
-        <translation>Sao chép địa chỉ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy label</source>
-        <translation>Sao chép nhãn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
+        <location line="+26"/>
         <source>Copy amount</source>
-        <translation>Sao chép số lượng</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-25"/>
         <source>Copy transaction ID</source>
-        <translation>Sao chép ID giao dịch</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Lock unspent</source>
-        <translation>Khóa unspent</translation>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation>Mở khóa unspent</translation>
-    </message>
-    <message>
+        <location line="+24"/>
         <source>Copy quantity</source>
-        <translation>Sao chép số lượng</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>Copy fee</source>
-        <translation>Sao chép phí</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy after fee</source>
-        <translation>Sao chép sau phí</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy bytes</source>
-        <translation>Sao chép bytes</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation>Sao chép rác</translation>
+        <location line="+1"/>
+        <source>Copy priority</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Copy low output</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copy change</source>
-        <translation>Sao chép thay đổi</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>(%1 locked)</source>
-        <translation>(%1 đã khóa)</translation>
+        <location line="+317"/>
+        <source>highest</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
+        <source>high</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>medium-high</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>medium</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>low-medium</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>low</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lowest</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+155"/>
+        <source>DUST</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
         <source>yes</source>
-        <translation>có</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>no</source>
-        <translation>không</translation>
+        <location line="+10"/>
+        <source>This label turns red, if the transaction size is bigger than 10000 bytes.
+
+ This means a fee of at least %1 per kb is required.
+
+ Can vary +/- 1 Byte per input.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation>Label này chuyển sang đỏ nếu bất cứ giao dịch nhận nào có số lượng nhỏ hơn ngưỡng dust.</translation>
+        <location line="+1"/>
+        <source>Transactions with higher priority get more likely into a block.
+
+This label turns red, if the priority is smaller than &quot;medium&quot;.
+
+ This means a fee of at least %1 per kb is required.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Có thể thay đổi +/-%1 satoshi(s) trên input.</translation>
+        <location line="+1"/>
+        <source>This label turns red, if any recipient receives an amount smaller than %1.
+
+ This means a fee of at least %2 is required. 
+
+ Amounts below 0.546 times the minimum relay fee are shown as DUST.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
+        <source>This label turns red, if the change is smaller than %1.
+
+ This means a fee of at least %2 is required.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+37"/>
+        <location line="+66"/>
         <source>(no label)</source>
-        <translation>(không nhãn)</translation>
+        <translation>(chưa có nhãn)</translation>
     </message>
     <message>
+        <location line="-9"/>
         <source>change from %1 (%2)</source>
-        <translation>change từ %1 (%2)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>(change)</source>
-        <translation>(change)</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
+        <location filename="../forms/editaddressdialog.ui" line="+14"/>
         <source>Edit Address</source>
-        <translation>Edit Address</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+11"/>
         <source>&amp;Label</source>
-        <translation>Nhãn dữ liệu</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The label associated with this address list entry</source>
-        <translation>Label liên kết với list address ban đầu này</translation>
+        <location line="+10"/>
+        <source>The label associated with this address book entry</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Label liên kết với list address ban đầu này. Điều này chỉ được điều chỉnh cho địa chỉ gửi.</translation>
-    </message>
-    <message>
+        <location line="+7"/>
         <source>&amp;Address</source>
-        <translation>Địa chỉ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+10"/>
+        <source>The address associated with this address book entry. This can only be modified for sending addresses.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../editaddressdialog.cpp" line="+20"/>
         <source>New receiving address</source>
-        <translation>Address đang nhận mới</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+4"/>
         <source>New sending address</source>
-        <translation>Address đang gửi mới</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>Edit receiving address</source>
-        <translation>Edit address đang nhận</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+4"/>
         <source>Edit sending address</source>
-        <translation>Edit address đang gửi</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Address đã nhập "%1" không valid Bitcoin address.</translation>
+        <location line="+76"/>
+        <source>The entered address &quot;%1&quot; is already in the address book.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Address đã nhập "%1" đã có trong address book.</translation>
+        <location line="-5"/>
+        <source>The entered address &quot;%1&quot; is not a valid Aithercoin address.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+10"/>
         <source>Could not unlock wallet.</source>
-        <translation>Không thể unlock wallet.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
         <source>New key generation failed.</source>
-        <translation>Khởi tạo key mới thất bại.</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
-    <name>FreespaceChecker</name>
+    <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <source>A new data directory will be created.</source>
-        <translation>Một danh mục dữ liệu mới sẽ được tạo.</translation>
+        <location filename="../guiutil.cpp" line="+420"/>
+        <location line="+12"/>
+        <source>Aithercoin-Qt</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>name</source>
-        <translation>tên</translation>
-    </message>
-    <message>
-        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>Danh mục đã tồn tại. Thêm %1 nếu bạn dự định creat một danh mục mới ở đây.</translation>
-    </message>
-    <message>
-        <source>Path already exists, and is not a directory.</source>
-        <translation>Path đã tồn tại, và không là danh mục.</translation>
-    </message>
-    <message>
-        <source>Cannot create data directory here.</source>
-        <translation>Không thể create dữ liệu danh mục tại đây.</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
+        <location line="-12"/>
         <source>version</source>
-        <translation>phiên bản</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation>About %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation>Command-line options</translation>
-    </message>
-    <message>
+        <location line="+2"/>
         <source>Usage:</source>
-        <translation>Usage:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>command-line options</source>
-        <translation>command-line options</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Tùy chỉnh UI:</translation>
+        <location line="+4"/>
+        <source>UI options</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation>Chọn dữ liệu danh mục trên startup (default: %u)</translation>
+        <location line="+1"/>
+        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Cài đặt ngôn ngữ, ví dụ "de_DE" (default: system locale)</translation>
-    </message>
-    <message>
+        <location line="+1"/>
         <source>Start minimized</source>
-        <translation>Khởi tạo tối thiểu</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Đặt chứng chỉ SSL root certificates cho payment request (default: -system-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>Hiển thị splash screen trên startup (default: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changed in the GUI</source>
-        <translation>Reset tất cả cài đặt thay đổi trong GUI</translation>
-    </message>
-</context>
-<context>
-    <name>Intro</name>
-    <message>
-        <source>Welcome</source>
-        <translation>Welcome</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation>Welcome to %1.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation>Đây là lần đầu chương trình khởi chạy, bạn có thể chọn nơi %1 sẽ lưu trữ data.</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>Khi bạn click OK, %1 sẽ bắt đầu download và process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation>Đồng bộ hóa ban đầu này rất đòi hỏi, và có thể phơi bày các sự cố về phần cứng với máy tính của bạn trước đó đã không được chú ý. Mỗi khi bạn chạy %1, nó sẽ tiếp tục tải về nơi nó dừng lại.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation>Nếu bạn đã chọn giới hạn block chain lưu trữ (pruning),dữ liệu lịch sử vẫn phải được tải xuống và xử lý, nhưng sẽ bị xóa sau đó để giữ cho việc sử dụng đĩa của bạn ở mức usage thấp.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation>Sử dụng default danh mục đa ta</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation>Sử dụng custom danh mục data:</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation>Ít nhất %1 GB data sẽ được trữ tại danh mục này, và nó sẽ lớn theo thời gian.</translation>
-    </message>
-    <message>
-        <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation>Gần đúng %1 GB of data sẽ được lưu giữ trong danh mục này.</translation>
-    </message>
-    <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation>%1 sẽ download và lưu trữ một bản copy của Bitcoin block chain.</translation>
-    </message>
-    <message>
-        <source>The wallet will also be stored in this directory.</source>
-        <translation>Wallet sẽ cùng được lưu giữ trong danh mục này.</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation>Error: Danh mục data xác định "%1" không thể được tạo.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Lỗi</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n GB of free space available</source>
-        <translation><numerusform>%n GB of free space available</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>(of %n GB needed)</source>
-        <translation><numerusform>(of %n GB cần thiết)</numerusform></translation>
-    </message>
-</context>
-<context>
-    <name>ModalOverlay</name>
-    <message>
-        <source>Form</source>
-        <translation>Form</translation>
-    </message>
-    <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>Giao dịch gần đây có thể chưa được hiển thị, và vì vậy số dư wallet của bạn có thể không dúng. Thông tin này sẽ được làm đúng khi wallet hoàn thành đồng bộ với bitcoin network, như chi tiết bên dưới.</translation>
-    </message>
-    <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Cố gắng spend các bitcoins bị ảnh hưởng bởi các giao dịch chưa được hiển thị sẽ không được chấp nhận bởi mạng.</translation>
-    </message>
-    <message>
-        <source>Number of blocks left</source>
-        <translation>Số của blocks còn lại</translation>
-    </message>
-    <message>
-        <source>Unknown...</source>
-        <translation>Unknown...</translation>
-    </message>
-    <message>
-        <source>Last block time</source>
-        <translation>Thời gian block cuối cùng</translation>
-    </message>
-    <message>
-        <source>Progress</source>
-        <translation>Tiến độ</translation>
-    </message>
-    <message>
-        <source>Progress increase per hour</source>
-        <translation>Tiến độ tăng mỗi giờ</translation>
-    </message>
-    <message>
-        <source>calculating...</source>
-        <translation>Đang tính...</translation>
-    </message>
-    <message>
-        <source>Estimated time left until synced</source>
-        <translation>Ước tính thời gian còn lại đến khi đồng bộ</translation>
-    </message>
-    <message>
-        <source>Hide</source>
-        <translation>Ẩn</translation>
-    </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Unknown. Đang đồng bộ Headers (%1)...</translation>
-    </message>
-</context>
-<context>
-    <name>OpenURIDialog</name>
-    <message>
-        <source>Open URI</source>
-        <translation>Mở URI</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Mở payment request từ URI hoặc file</translation>
-    </message>
-    <message>
-        <source>URI:</source>
-        <translation>URI:</translation>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Chọn payment request file</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Chọn file payment request để mở</translation>
+        <location line="+1"/>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>OptionsDialog</name>
     <message>
+        <location filename="../forms/optionsdialog.ui" line="+14"/>
         <source>Options</source>
-        <translation>Tùy chỉnh</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+16"/>
         <source>&amp;Main</source>
-        <translation>&amp;Chính</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Automatically start %1 after logging in to the system.</source>
-        <translation>Tự động bắt đầu %1 sau khi đăng nhập vào system.</translation>
+        <location line="+6"/>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Start %1 on system login</source>
-        <translation>&amp;Bắt đầu %1 trên đăng nhập system</translation>
+        <location line="+15"/>
+        <source>Pay transaction &amp;fee</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Size of &amp;database cache</source>
-        <translation>Size of &amp;database cache</translation>
+        <location line="+31"/>
+        <source>Reserved amount does not participate in staking and is therefore spendable at any time.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
+        <location line="+15"/>
+        <source>Reserve</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Number of script &amp;verification threads</source>
-        <translation>Number of script &amp;verification threads</translation>
+        <location line="+31"/>
+        <source>Automatically start Aithercoin after logging in to the system.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <location line="+3"/>
+        <source>&amp;Start Aithercoin on system login</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation>Hiển thị nếu cung cấp default SOCKS5 proxy is used to reach peers via this network type.</translation>
+        <location line="+7"/>
+        <source>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation>Minimize thay vì thoát khỏi ứng dụng khi cửa sổ đóng lại. Khi bật tùy chọn này, ứng dụng sẽ chỉ được đóng sau khi chọn Exit trong menu.</translation>
+        <location line="+3"/>
+        <source>&amp;Detach databases at shutdown</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Bên thứ ba URLs (e.g. a block explorer) xuất hiện trong thẻ giao dịch như context menu items. %s in the URL thì được thay thế bởi transaction hash. Multiple URLs are separated by vertical bar |.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Bật tùy chọn command-line ghi đè các tùy chọn ở trên:</translation>
-    </message>
-    <message>
-        <source>Open the %1 configuration file from the working directory.</source>
-        <translation>Mở %1 configuration file từ danh mục làm việc working directory.</translation>
-    </message>
-    <message>
-        <source>Open Configuration File</source>
-        <translation>Mở File cấu hình</translation>
-    </message>
-    <message>
-        <source>Reset all client options to default.</source>
-        <translation>Reset tất cả client options to default.</translation>
-    </message>
-    <message>
-        <source>&amp;Reset Options</source>
-        <translation>&amp;Reset Tùy chọn</translation>
-    </message>
-    <message>
+        <location line="+21"/>
         <source>&amp;Network</source>
-        <translation>&amp;Network</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = auto, &lt;0 = leave that many cores free)</translation>
+        <location line="+6"/>
+        <source>Automatically open the Aithercoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>W&amp;allet</source>
-        <translation>W&amp;allet</translation>
-    </message>
-    <message>
-        <source>Expert</source>
-        <translation>Expert</translation>
-    </message>
-    <message>
-        <source>Enable coin &amp;control features</source>
-        <translation>Enable coin &amp;control features</translation>
-    </message>
-    <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</translation>
-    </message>
-    <message>
-        <source>&amp;Spend unconfirmed change</source>
-        <translation>&amp;Spend unconfirmed change</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</translation>
-    </message>
-    <message>
+        <location line="+3"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>Map port using &amp;UPnP</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Kết nối đến Bitcoin network qua một SOCKS5 proxy.</translation>
+        <location line="+7"/>
+        <source>Connect to the Aithercoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
-        <translation>&amp;Connect qua SOCKS5 proxy (default proxy):</translation>
+        <location line="+3"/>
+        <source>&amp;Connect through SOCKS proxy:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+9"/>
         <source>Proxy &amp;IP:</source>
-        <translation>Proxy &amp;IP:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+19"/>
+        <source>IP address of the proxy (e.g. 127.0.0.1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>&amp;Port:</source>
-        <translation>&amp;Port:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+19"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Port of the proxy (e.g. 9050)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Used for reaching peers via:</source>
-        <translation>Sử dụng reaching peers via:</translation>
+        <location line="+7"/>
+        <source>SOCKS &amp;Version:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>IPv4</source>
-        <translation>IPv4</translation>
+        <location line="+13"/>
+        <source>SOCKS version of the proxy (e.g. 5)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>IPv6</source>
-        <translation>IPv6</translation>
-    </message>
-    <message>
-        <source>Tor</source>
-        <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Kết nối đến Bitcoin network qua một nhánh rời SOCKS5 proxy của Tor hidden services.</translation>
-    </message>
-    <message>
+        <location line="+36"/>
         <source>&amp;Window</source>
-        <translation>&amp;Window</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+6"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Hiển thị chỉ thẻ icon sau khi thu nhỏ cửa sổ.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimize đến thẻ thay vì taskbar</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimize on close</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+21"/>
         <source>&amp;Display</source>
-        <translation>&amp;Display</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+8"/>
         <source>User Interface &amp;language:</source>
-        <translation>Giao diện người dùng &amp;language:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation>Giao diện ngôn ngữ người dùng có thể được thiết lập tại đây. Tùy chọn này sẽ có hiệu lực sau khi khởi động lại %1.</translation>
+        <location line="+13"/>
+        <source>The user interface language can be set here. This setting will take effect after restarting Aithercoin.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+11"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Unit để hiện số lượng tại đây:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+13"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Chọn default đơn vị phân chia để hiện giao diện và đang gửi coins.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+9"/>
+        <source>Whether to show Aithercoin addresses in the transaction list or not.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Display addresses in transaction list</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Whether to show coin control features or not.</source>
-        <translation>Cho hiển thị tính năng coin control hoặc không.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Display coin &amp;control features (experts only!)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+71"/>
         <source>&amp;OK</source>
-        <translation>&amp;OK</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+7"/>
         <source>&amp;Cancel</source>
-        <translation>&amp;Hủy</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+10"/>
+        <source>&amp;Apply</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="+55"/>
         <source>default</source>
-        <translation>default</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>none</source>
-        <translation>không có gì</translation>
+        <location line="+149"/>
+        <location line="+9"/>
+        <source>Warning</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Confirm options reset</source>
-        <translation>Confirm tùy chọn reset</translation>
+        <location line="-9"/>
+        <location line="+9"/>
+        <source>This setting will take effect after restarting Aithercoin.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Client restart required to activate changes.</source>
-        <translation>Client yêu cầu khởi động lại để thay đổi có hiệu lực.</translation>
-    </message>
-    <message>
-        <source>Client will be shut down. Do you want to proceed?</source>
-        <translation>Client sẽ đóng lại. Tiếp tục chứ?</translation>
-    </message>
-    <message>
-        <source>Configuration options</source>
-        <translation>Tùy chọn cấu hình</translation>
-    </message>
-    <message>
-        <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
-        <translation>File cấu hình được sử dụng để chỉ định các tùy chọn nâng cao của người dùng mà ghi đè GUI settings. Ngoài ra, bất kỳ tùy chọn dòng lệnh sẽ ghi đè lên tập tin cấu hình này.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Lỗi</translation>
-    </message>
-    <message>
-        <source>The configuration file could not be opened.</source>
-        <translation>Không thẻ mở tệp cấu hình.</translation>
-    </message>
-    <message>
-        <source>This change would require a client restart.</source>
-        <translation>Việc change này sẽ cần một client restart.</translation>
-    </message>
-    <message>
+        <location line="+29"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Cung cấp proxy address thì invalid.</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>OverviewPage</name>
     <message>
+        <location filename="../forms/overviewpage.ui" line="+14"/>
         <source>Form</source>
-        <translation>Form</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Thông tin được hiển thị có thể đã lỗi thời. Cái wallet tự động đồng bộ với Bitcoin network sau một connection được thiết lập, nhưng quá trình này vẫn chưa completed yet.</translation>
+        <location line="+33"/>
+        <location line="+231"/>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Aithercoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation>Chỉ-xem:</translation>
+        <location line="-160"/>
+        <source>Stake:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Available:</source>
-        <translation>Có hiệu lực:</translation>
+        <location line="+29"/>
+        <source>Unconfirmed:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Your current spendable balance</source>
-        <translation>Số dư khả dụng:</translation>
+        <location line="-107"/>
+        <source>Wallet</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Pending:</source>
-        <translation>Đang xử lý:</translation>
-    </message>
-    <message>
-        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Tất cả giao dịch vẫn chưa được confirmed, và chưa tính vào số dư có thể chi tiêu</translation>
-    </message>
-    <message>
-        <source>Immature:</source>
-        <translation>Chưa hoàn thiện:</translation>
-    </message>
-    <message>
-        <source>Mined balance that has not yet matured</source>
-        <translation>Mined balance chưa matured hẳn</translation>
-    </message>
-    <message>
-        <source>Balances</source>
-        <translation>Số dư</translation>
-    </message>
-    <message>
-        <source>Total:</source>
-        <translation>Tổng cộng:</translation>
-    </message>
-    <message>
-        <source>Your current total balance</source>
-        <translation>Tổng số dư hiện tại</translation>
-    </message>
-    <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation>Số dư hiện tại trong địa chỉ watch-only</translation>
-    </message>
-    <message>
+        <location line="+49"/>
         <source>Spendable:</source>
-        <translation>Có thể sử dụng</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Recent transactions</source>
-        <translation>Giao dịch gần đây</translation>
+        <location line="+16"/>
+        <source>Your current spendable balance</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation>Giao dịch chưa được xác nhận đến watch-only addresses</translation>
+        <location line="+71"/>
+        <source>Immature:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation>Mined số dư trong watch-only address chưa matured hẳn</translation>
+        <location line="+13"/>
+        <source>Mined balance that has not yet matured</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation>Tổng số dư hiện tại trong watch-only addresses</translation>
+        <location line="+20"/>
+        <source>Total:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Your current total balance</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-108"/>
+        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-29"/>
+        <source>Total of coins that was staked, and do not yet count toward the current balance</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="+113"/>
+        <location line="+1"/>
+        <source>out of sync</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
-    <name>PaymentServer</name>
+    <name>QRCodeDialog</name>
     <message>
-        <source>Payment request error</source>
-        <translation>Payment request error</translation>
-    </message>
-    <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Không thể khởi tạo bitcoin: click-to-pay handler</translation>
+        <location filename="../forms/qrcodedialog.ui" line="+14"/>
+        <source>QR Code Dialog</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>URI handling</source>
-        <translation>URI handling</translation>
+        <location line="+59"/>
+        <source>Request Payment</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>Payment request dẫn đến URL thì invalid: %1</translation>
+        <location line="+56"/>
+        <source>Amount:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Invalid payment address %1</source>
-        <translation>Invalid payment address %1</translation>
+        <location line="-44"/>
+        <source>Label:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>URI không thể phân tích cú pháp! Đây có thể gây nên bởi invalid Bitcoin address hoặc URI không đúng định dạng tham số.</translation>
+        <location line="+19"/>
+        <source>Message:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request file handling</source>
-        <translation>Payment request file đang xử lý</translation>
+        <location line="+71"/>
+        <source>&amp;Save As...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Payment request file không thể đọc! Đây có thể gây ra bởi một invalid payment request file.</translation>
+        <location filename="../qrcodedialog.cpp" line="+62"/>
+        <source>Error encoding URI into QR Code.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request rejected</source>
-        <translation>Payment request bị từ chối</translation>
+        <location line="+40"/>
+        <source>The entered amount is invalid, please check.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Payment request network chưa đúng với client network.</translation>
+        <location line="+23"/>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request expired.</source>
-        <translation>Payment request hết hạn.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Payment request đã không được khởi tạo.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Chưa xác nhận payment request đến custom payment scripts không được hỗ trợ.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Invalid payment request.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Yêu cầu payment với lượng của %1 thì quá nhỏ (xem như dust).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Refund từ %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Payment request %1 thì quá lớn (%2 bytes, cho phép %3 bytes).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Error giao thức với %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Payment request không thể giải!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Phản hồi xấu từ server %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Mạng request error</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Payment được thừa nhận</translation>
-    </message>
-</context>
-<context>
-    <name>PeerTableModel</name>
-    <message>
-        <source>User Agent</source>
-        <translation>User Đặc Vụ</translation>
-    </message>
-    <message>
-        <source>Node/Service</source>
-        <translation>Node/Dịch vụ</translation>
-    </message>
-    <message>
-        <source>NodeId</source>
-        <translation>NodeID</translation>
-    </message>
-    <message>
-        <source>Ping</source>
-        <translation>Ping</translation>
-    </message>
-    <message>
-        <source>Sent</source>
-        <translation>Gửi</translation>
-    </message>
-    <message>
-        <source>Received</source>
-        <translation>Nhận</translation>
-    </message>
-</context>
-<context>
-    <name>QObject</name>
-    <message>
-        <source>Amount</source>
-        <translation>Số lượng</translation>
-    </message>
-    <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Nhập một Bitcoin address (e.g. %1)</translation>
-    </message>
-    <message>
-        <source>%1 d</source>
-        <translation>%1 d</translation>
-    </message>
-    <message>
-        <source>%1 h</source>
-        <translation>%1 giờ</translation>
-    </message>
-    <message>
-        <source>%1 m</source>
-        <translation>%1 phút</translation>
-    </message>
-    <message>
-        <source>%1 s</source>
-        <translation>%1 giây</translation>
-    </message>
-    <message>
-        <source>None</source>
-        <translation>None</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>N/A</translation>
-    </message>
-    <message>
-        <source>%1 ms</source>
-        <translation>%1 ms</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n second(s)</source>
-        <translation><numerusform>%n giây</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n minute(s)</source>
-        <translation><numerusform>%n phút</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n giờ</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n ngày</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n tuần</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 và %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n năm</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
-    </message>
-    <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 vẫn chưa thoát an toàn...</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>unknown</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Error: Xác định data directory "%1" không tồn tại.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Error: Không thể parse configuration file: %1. Chỉ dùng key=value syntax.</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>Error: %1</translation>
-    </message>
-</context>
-<context>
-    <name>QRImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Image</source>
-        <translation>&amp;Sao chép ảnh</translation>
-    </message>
-    <message>
+        <location line="+25"/>
         <source>Save QR Code</source>
-        <translation>Lưu QR Code</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>PNG Image (*.png)</source>
-        <translation>PNG Image (*.png)</translation>
+        <location line="+0"/>
+        <source>PNG Images (*.png)</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>RPCConsole</name>
     <message>
+        <location filename="../forms/rpcconsole.ui" line="+46"/>
+        <source>Client name</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location line="+23"/>
+        <location line="+26"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+36"/>
+        <location line="+53"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location filename="../rpcconsole.cpp" line="+348"/>
         <source>N/A</source>
-        <translation>N/A</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-217"/>
         <source>Client version</source>
-        <translation>Client version</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-45"/>
         <source>&amp;Information</source>
-        <translation>&amp;Thông tin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Debug window</source>
-        <translation>Debug window</translation>
+        <location line="+68"/>
+        <source>Using OpenSSL version</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>General</source>
-        <translation>Tổng thể</translation>
-    </message>
-    <message>
-        <source>Using BerkeleyDB version</source>
-        <translation>Sử dụng phiên bản BerkeleyDB</translation>
-    </message>
-    <message>
-        <source>Datadir</source>
-        <translation>Datadir</translation>
-    </message>
-    <message>
+        <location line="+49"/>
         <source>Startup time</source>
-        <translation>Startup lúc</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+29"/>
         <source>Network</source>
-        <translation>Mạng</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Name</source>
-        <translation>Tên</translation>
-    </message>
-    <message>
+        <location line="+7"/>
         <source>Number of connections</source>
-        <translation>Số lượng connections</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+23"/>
+        <source>On testnet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>Block chain</source>
-        <translation>Block chain</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+7"/>
         <source>Current number of blocks</source>
-        <translation>Số blocks hiện tại</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Memory Pool</source>
-        <translation>Pool Bộ Nhớ</translation>
+        <location line="+23"/>
+        <source>Estimated total blocks</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Current number of transactions</source>
-        <translation>Số giao dịch hiện tại</translation>
-    </message>
-    <message>
-        <source>Memory usage</source>
-        <translation>Bộ nhớ usage</translation>
-    </message>
-    <message>
-        <source>&amp;Reset</source>
-        <translation>&amp;Reset</translation>
-    </message>
-    <message>
-        <source>Received</source>
-        <translation>Nhận</translation>
-    </message>
-    <message>
-        <source>Sent</source>
-        <translation>Gửi</translation>
-    </message>
-    <message>
-        <source>&amp;Peers</source>
-        <translation>&amp;Peers</translation>
-    </message>
-    <message>
-        <source>Banned peers</source>
-        <translation>Bị khóa peers</translation>
-    </message>
-    <message>
-        <source>Select a peer to view detailed information.</source>
-        <translation>Chọn một peer để xem thông tin chi tiết.</translation>
-    </message>
-    <message>
-        <source>Whitelisted</source>
-        <translation>Whitelisted</translation>
-    </message>
-    <message>
-        <source>Direction</source>
-        <translation>Direction</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>Phiên bản</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation>Block Bắt Đầu</translation>
-    </message>
-    <message>
-        <source>Synced Headers</source>
-        <translation>Headers đã được đồng bộ</translation>
-    </message>
-    <message>
-        <source>Synced Blocks</source>
-        <translation>Blocks đã được đồng bộ</translation>
-    </message>
-    <message>
-        <source>User Agent</source>
-        <translation>User đặc vụ</translation>
-    </message>
-    <message>
-        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Mở cái %1 debug log file từ danh mục dữ liệu hiện tại. Điều này cần vài giây cho large log files.</translation>
-    </message>
-    <message>
-        <source>Decrease font size</source>
-        <translation>Giảm font size</translation>
-    </message>
-    <message>
-        <source>Increase font size</source>
-        <translation>Tăng font size</translation>
-    </message>
-    <message>
-        <source>Services</source>
-        <translation>Dịch vụ</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Cấm Score</translation>
-    </message>
-    <message>
-        <source>Connection Time</source>
-        <translation>Connection Thời Gian</translation>
-    </message>
-    <message>
-        <source>Last Send</source>
-        <translation>Gửi Sau Cùng</translation>
-    </message>
-    <message>
-        <source>Last Receive</source>
-        <translation>Nhận Sau Cùng</translation>
-    </message>
-    <message>
-        <source>Ping Time</source>
-        <translation>Ping Time</translation>
-    </message>
-    <message>
-        <source>The duration of a currently outstanding ping.</source>
-        <translation>Thời hạn của một ping hiện đang nổi trội.</translation>
-    </message>
-    <message>
-        <source>Ping Wait</source>
-        <translation>Ping Chờ</translation>
-    </message>
-    <message>
-        <source>Min Ping</source>
-        <translation>Ping Nhỏ Nhất</translation>
-    </message>
-    <message>
-        <source>Time Offset</source>
-        <translation>Thời gian Offset</translation>
-    </message>
-    <message>
+        <location line="+23"/>
         <source>Last block time</source>
-        <translation>Thời gian block cuối cùng</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+52"/>
         <source>&amp;Open</source>
-        <translation>&amp;Open</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+16"/>
+        <source>Command-line options</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Show the Aithercoin-Qt help message to get a list with possible Aithercoin command-line options.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Show</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+24"/>
         <source>&amp;Console</source>
-        <translation>&amp;BangDieuKhien</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Network Traffic</source>
-        <translation>&amp;Network Traffic</translation>
+        <location line="-260"/>
+        <source>Build date</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Totals</source>
-        <translation>Totals</translation>
+        <location line="-104"/>
+        <source>Aithercoin - Debug window</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>In:</source>
-        <translation>In:</translation>
+        <location line="+25"/>
+        <source>Aithercoin Core</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Out:</source>
-        <translation>Out:</translation>
-    </message>
-    <message>
+        <location line="+279"/>
         <source>Debug log file</source>
-        <translation>Debug file log</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Open the Aithercoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+102"/>
         <source>Clear console</source>
-        <translation>Xóa console</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>1 &amp;hour</source>
-        <translation>1 &amp;hour</translation>
+        <location filename="../rpcconsole.cpp" line="-33"/>
+        <source>Welcome to the Aithercoin RPC console.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>1 &amp;day</source>
-        <translation>1 &amp;day</translation>
+        <location line="+1"/>
+        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>1 &amp;week</source>
-        <translation>1 &amp;week</translation>
-    </message>
-    <message>
-        <source>1 &amp;year</source>
-        <translation>1 &amp;year</translation>
-    </message>
-    <message>
-        <source>&amp;Disconnect</source>
-        <translation>&amp;Disconnect</translation>
-    </message>
-    <message>
-        <source>Ban for</source>
-        <translation>Ban for</translation>
-    </message>
-    <message>
-        <source>&amp;Unban</source>
-        <translation>&amp;Unban</translation>
-    </message>
-    <message>
-        <source>Welcome to the %1 RPC console.</source>
-        <translation>Welcome to the %1 RPC console.</translation>
-    </message>
-    <message>
-        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>Use up and down arrows to navigate history, and %1 to clear screen.</translation>
-    </message>
-    <message>
-        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</translation>
-    </message>
-    <message>
-        <source>Network activity disabled</source>
-        <translation>Network activity disabled</translation>
-    </message>
-    <message>
-        <source>(node id: %1)</source>
-        <translation>(node id: %1)</translation>
-    </message>
-    <message>
-        <source>via %1</source>
-        <translation>via %1</translation>
-    </message>
-    <message>
-        <source>never</source>
-        <translation>không bao giờ</translation>
-    </message>
-    <message>
-        <source>Inbound</source>
-        <translation>Inbound</translation>
-    </message>
-    <message>
-        <source>Outbound</source>
-        <translation>Outbound</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Yes</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>No</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>Không biết</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveCoinsDialog</name>
-    <message>
-        <source>&amp;Amount:</source>
-        <translation>&amp;Amount:</translation>
-    </message>
-    <message>
-        <source>&amp;Label:</source>
-        <translation>&amp;Label:</translation>
-    </message>
-    <message>
-        <source>&amp;Message:</source>
-        <translation>&amp;Message:</translation>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation>Một optional lời nhắn để đính kèm đến payment request, cái mà sẽ được hiển thị khi mà request đang mở. Lưu ý: Tin nhắn này sẽ không được gửi với payment over the Bitcoin network.</translation>
-    </message>
-    <message>
-        <source>An optional label to associate with the new receiving address.</source>
-        <translation>Một optional label để liên kết với address đang nhận mới.</translation>
-    </message>
-    <message>
-        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>Sử dụng form cho request thanh toán. Tất cả chỗ trống là &lt;b&gt;optional&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation>Một optional giá trị để request. Để lại đây khoảng trống hoặc zero để không request một giá trị xác định.</translation>
-    </message>
-    <message>
-        <source>Clear all fields of the form.</source>
-        <translation>Xóa hết các khoảng trống của form.</translation>
-    </message>
-    <message>
-        <source>Clear</source>
-        <translation>Xóa</translation>
-    </message>
-    <message>
-        <source>Requested payments history</source>
-        <translation>Yêu cầu lịch sử giao dịch</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Request payment</translation>
-    </message>
-    <message>
-        <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation>Hiển thị request đã chọn (does the same as double clicking an entry)</translation>
-    </message>
-    <message>
-        <source>Show</source>
-        <translation>Hiển thị</translation>
-    </message>
-    <message>
-        <source>Remove the selected entries from the list</source>
-        <translation>Xóa bỏ mục đang chọn từ danh sách</translation>
-    </message>
-    <message>
-        <source>Remove</source>
-        <translation>Gỡ bỏ</translation>
-    </message>
-    <message>
-        <source>Copy URI</source>
-        <translation>Sao chép URI</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Sao chép nhãn</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation>Sao chép tin nhắn</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Sao chép số lượng</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveRequestDialog</name>
-    <message>
-        <source>QR Code</source>
-        <translation>QR Code</translation>
-    </message>
-    <message>
-        <source>Copy &amp;URI</source>
-        <translation>Sao chép &amp;URI</translation>
-    </message>
-    <message>
-        <source>Copy &amp;Address</source>
-        <translation>Sao chép địa chỉ</translation>
-    </message>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
-    </message>
-    <message>
-        <source>Request payment to %1</source>
-        <translation>Request payment đến %1</translation>
-    </message>
-    <message>
-        <source>Payment information</source>
-        <translation>Payment thông tin</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Địa chỉ</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Số lượng</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Nhãn</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Tin nhắn</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Đang tính toán URI quá dài, cố gắng giảm text cho label / message.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Error đang mã hóa URI đến QR Code.</translation>
-    </message>
-</context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Ngày</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Nhãn</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Tin nhắn</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(không nhãn)</translation>
-    </message>
-    <message>
-        <source>(no message)</source>
-        <translation>(no tin nhắn)</translation>
-    </message>
-    <message>
-        <source>(no amount requested)</source>
-        <translation>(không amount yêu cầu)</translation>
-    </message>
-    <message>
-        <source>Requested</source>
-        <translation>Đã yêu cầu</translation>
+        <location line="+1"/>
+        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
+        <location filename="../sendcoinsdialog.cpp" line="+182"/>
+        <location line="+5"/>
+        <location line="+5"/>
+        <location line="+5"/>
+        <location line="+6"/>
+        <location line="+5"/>
+        <location line="+5"/>
         <source>Send Coins</source>
-        <translation>Gửi Coins</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+76"/>
         <source>Coin Control Features</source>
-        <translation>Coin Control Tính-năng</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+20"/>
         <source>Inputs...</source>
-        <translation>Đang nhập...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+7"/>
         <source>automatically selected</source>
-        <translation>được chọn một cách hoàn toàn tự động</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+19"/>
         <source>Insufficient funds!</source>
-        <translation>Không đủ tiền kìa!</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+77"/>
         <source>Quantity:</source>
-        <translation>Số lượng:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+22"/>
+        <location line="+35"/>
+        <source>0</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-19"/>
         <source>Bytes:</source>
-        <translation>Bytes:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+51"/>
         <source>Amount:</source>
-        <translation>Số lượng:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+22"/>
+        <location line="+86"/>
+        <location line="+86"/>
+        <location line="+32"/>
+        <source>0.00 BC</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-191"/>
+        <source>Priority:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>medium</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>Fee:</source>
-        <translation>Phí:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+35"/>
+        <source>Low Output:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>no</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>After Fee:</source>
-        <translation>Sau Phí:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Change:</source>
-        <translation>Thay đổi:</translation>
+        <location line="+35"/>
+        <source>Change</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Nếu cái này được bật, nhưng việc change address thì trống hoặc invalid, change sẽ được gửi cho một address vừa được tạo mới.</translation>
+        <location line="+50"/>
+        <source>custom change address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Custom change address</source>
-        <translation>Custom change address</translation>
-    </message>
-    <message>
-        <source>Transaction Fee:</source>
-        <translation>Transaction Fee:</translation>
-    </message>
-    <message>
-        <source>Choose...</source>
-        <translation>Chọn...</translation>
-    </message>
-    <message>
-        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation>Sử dụng fallbackfee có thể dẫn đến hết quả đang gửi một transaction mà nó sẽ mất hàng giờ hoặc ngày (hoặc chẳng bao giờ) được confirm. Suy nghĩ chọn fee của bạn bình thường hoặc chờ cho đến khi validated hoàn thành chain.</translation>
-    </message>
-    <message>
-        <source>Warning: Fee estimation is currently not possible.</source>
-        <translation>Warning: Fee ước tính hiện tại không khả thi.</translation>
-    </message>
-    <message>
-        <source>collapse fee-settings</source>
-        <translation>gộp fee-settings</translation>
-    </message>
-    <message>
-        <source>per kilobyte</source>
-        <translation>trên mỗi kilobyte</translation>
-    </message>
-    <message>
-        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Nếu the custom fee được đặt 1000 satoshis và the transaction chỉ 250 bytes, nên "per kilobyte" chỉ trả 250 satoshis trong fee, trong khi "total at least" trả 1000 satoshis. Để các giao dịch lớn hơn a kilobyte both pay by kilobyte.</translation>
-    </message>
-    <message>
-        <source>Hide</source>
-        <translation>Ẩn</translation>
-    </message>
-    <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Chi trả chỉ số nhỏ nhất fee thì ổn cho tới khi có ít transaction volume hơn khoảng trống trong blocks. Nhưng nhận ra rằng điều này kết thúc trong việc chẳng bao giờ xác nhận transaction trừ khi có nhiều nhu cầu cho giao dịch bitcoin hơn so với mạng có thể xử lý.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(đọc cái tooltip)</translation>
-    </message>
-    <message>
-        <source>Recommended:</source>
-        <translation>Khuyên dùng:</translation>
-    </message>
-    <message>
-        <source>Custom:</source>
-        <translation>Custom:</translation>
-    </message>
-    <message>
-        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Thông minh fee vẫn chưa được khởi tạo. Điều này thường mất vài blocks...)</translation>
-    </message>
-    <message>
+        <location line="+106"/>
         <source>Send to multiple recipients at once</source>
-        <translation>Gửi đến tập thể người nhận một lần</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>Add &amp;Recipient</source>
-        <translation>Add &amp;Recipient</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Clear all fields of the form.</source>
-        <translation>Xóa hết các khoảng trống của form.</translation>
+        <location line="+20"/>
+        <source>Remove all transaction fields</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation>Rác:</translation>
-    </message>
-    <message>
-        <source>Confirmation time target:</source>
-        <translation>Thời gian xác nhận đối tượng:</translation>
-    </message>
-    <message>
+        <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation>Clear &amp;All</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+28"/>
         <source>Balance:</source>
-        <translation>Số dư:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+16"/>
+        <source>123.456 BC</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+31"/>
         <source>Confirm the send action</source>
-        <translation>Confirm hành động gửi</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>S&amp;end</source>
-        <translation>S&amp;end</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location filename="../sendcoinsdialog.cpp" line="-173"/>
+        <source>Enter a Aithercoin address (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Copy quantity</source>
-        <translation>Sao chép số lượng</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy amount</source>
-        <translation>Sao chép số lượng</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy fee</source>
-        <translation>Sao chép phí</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy after fee</source>
-        <translation>Sao chép sau phí</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy bytes</source>
-        <translation>Sao chép bytes</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation>Sao chép rác</translation>
+        <location line="+1"/>
+        <source>Copy priority</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Copy low output</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copy change</source>
-        <translation>Sao chép thay đổi</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>%1 (%2 blocks)</source>
-        <translation>%1 (%2 blocks)</translation>
+        <location line="+86"/>
+        <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>%1 to %2</source>
-        <translation>%1 đến%2</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation>Bạn chắc chắn muốn gửi chứ?</translation>
-    </message>
-    <message>
-        <source>added as transaction fee</source>
-        <translation>đã thêm transaction fee</translation>
-    </message>
-    <message>
-        <source>Total Amount %1</source>
-        <translation>Tổng Số lượng %1</translation>
-    </message>
-    <message>
-        <source>or</source>
-        <translation>hoặc</translation>
-    </message>
-    <message>
+        <location line="+5"/>
         <source>Confirm send coins</source>
-        <translation>Confirm gửi coins</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The recipient address is not valid. Please recheck.</source>
-        <translation>Địa chỉ người nhận address thì không valid. Kiểm tra lại đi.</translation>
+        <location line="+1"/>
+        <source>Are you sure you want to send %1?</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
+        <source> and </source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>The recipient address is not valid, please recheck.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Giả trị để pay cần phải lớn hơn 0.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
         <source>The amount exceeds your balance.</source>
-        <translation>Số tiền vượt quá số dư của bạn.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Tổng số lớn hơn số dư của bạn khi %1 transaction fee được tính vào.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Trùng address được tìm thấy: địa chỉ chỉ nên được dùng một lần.</translation>
+        <location line="+6"/>
+        <source>Duplicate address found, can only send to each address once per send operation.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Transaction creation failed!</source>
-        <translation>Transaction khởi tạo thất bại!</translation>
+        <location line="+5"/>
+        <source>Error: Transaction creation failed.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>The transaction đã bị từ chối với lý do sau: %1</translation>
+        <location line="+5"/>
+        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation>Một fee lớn hơn %1 được coi là ngớ ngẩn cao fee.</translation>
+        <location line="+251"/>
+        <source>WARNING: Invalid Aithercoin address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request expired.</source>
-        <translation>Payment request hết hạn.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Pay chỉ yêu cầu fee of %1</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Dự kiến bắt đầu xác nhận trong vòng %n blocks.</numerusform></translation>
-    </message>
-    <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Warning: Invalid Bitcoin address</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown change address</source>
-        <translation>Warning: Không biết change address</translation>
-    </message>
-    <message>
-        <source>Confirm custom change address</source>
-        <translation>Confirm custom change address</translation>
-    </message>
-    <message>
-        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation>The address bạn đã chọn dành cho change thì không phải part of this wallet. Bất kỳ hay tất cả funds in your wallet có thể được gửi đến address này. Bạn chắc chứ?</translation>
-    </message>
-    <message>
+        <location line="+13"/>
         <source>(no label)</source>
-        <translation>(không nhãn)</translation>
+        <translation>(chưa có nhãn)</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>WARNING: unknown change address</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="+14"/>
+        <source>Form</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>A&amp;mount:</source>
-        <translation>A&amp;mount:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+13"/>
         <source>Pay &amp;To:</source>
-        <translation>Pay &amp;To:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Label:</source>
-        <translation>&amp;Label:</translation>
-    </message>
-    <message>
-        <source>Choose previously used address</source>
-        <translation>Chọn mới thì address</translation>
-    </message>
-    <message>
-        <source>This is a normal payment.</source>
-        <translation>Đây là một thông thường payment.</translation>
-    </message>
-    <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation>The Bitcoin address để gửi the payment đến</translation>
-    </message>
-    <message>
-        <source>Alt+A</source>
-        <translation>Alt+A</translation>
-    </message>
-    <message>
-        <source>Paste address from clipboard</source>
-        <translation>Paste address từ clipboard</translation>
-    </message>
-    <message>
-        <source>Alt+P</source>
-        <translation>Alt+P</translation>
-    </message>
-    <message>
-        <source>Remove this entry</source>
-        <translation>Xóa bỏ entry này</translation>
-    </message>
-    <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>The fee sẽ được khấu trừ từ số tiền đang gửi. Người nhận sẽ receive ít bitcoins hơn bạn gõ vào khoảng trống. Nếu nhiều người gửi được chọn, fee sẽ được chia đều.</translation>
-    </message>
-    <message>
-        <source>S&amp;ubtract fee from amount</source>
-        <translation>S&amp;ubtract fee từ amount</translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation>Tin nhắn:</translation>
-    </message>
-    <message>
-        <source>This is an unauthenticated payment request.</source>
-        <translation>Đây là một chưa được chứng thực payment request.</translation>
-    </message>
-    <message>
-        <source>This is an authenticated payment request.</source>
-        <translation>Đây là một chưa được chứng thực payment request.</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Nhập một label cho cái address này để thêm vào danh sách địa chỉ đã sử dụng</translation>
-    </message>
-    <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>Một tin nhắn được đính kèm với số bitcoin: URI mà sẽ được lưu giữ với transaction dành cho tài liệu tham khảo. Lưu ý: Tin nhắn này sẽ không được gửi thông qua Bitcoin network.</translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation>Pay Đến:</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation>Bản ghi nhớ:</translation>
-    </message>
-    <message>
+        <location line="+24"/>
+        <location filename="../sendcoinsentry.cpp" line="+25"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>Nhập một label cho address này để thêm vào address book</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Yes</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down...</source>
-        <translation>%1 đang shutting down...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation>Đừng tắt máy tính đến khi cửa sổ này đóng.</translation>
+        <location line="+9"/>
+        <source>&amp;Label:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>The address to send the payment to  (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Choose address from address book</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Alt+A</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Paste address from clipboard</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Alt+P</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove this recipient</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../sendcoinsentry.cpp" line="+1"/>
+        <source>Enter a Aithercoin address (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
+        <location filename="../forms/signverifymessagedialog.ui" line="+14"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Chữ ký - Sign / Verify a Message</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+13"/>
+        <location line="+124"/>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Sign Tin nhắn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Bạn có thể ký/đồng ý với địa chỉ chứng minh bạn có thể receive bitcoins đã gửi đến chúng. Cẩn thận không ký bất cứ không rõ hay random, như các cuộc tấn công lừa đảo có thể cố lừa bạn ký tên vào danh tính của bạn.. Chỉ ký các bản tuyên bố hoàn chỉnh mà bạn đồng ý.</translation>
+        <location line="-118"/>
+        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation>The Bitcoin address để ký với tin nhắn</translation>
+        <location line="+18"/>
+        <source>The address to sign the message with (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Choose previously used address</source>
-        <translation>Chọn mới thì address</translation>
+        <location line="+10"/>
+        <location line="+203"/>
+        <source>Choose an address from the address book</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-193"/>
+        <location line="+203"/>
         <source>Alt+A</source>
-        <translation>Alt+A</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-193"/>
         <source>Paste address from clipboard</source>
-        <translation>Paste address từ clipboard</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+10"/>
         <source>Alt+P</source>
-        <translation>Alt+P</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+12"/>
         <source>Enter the message you want to sign here</source>
-        <translation>Nhập tin nhắn bạn muốn ký tại đây</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Signature</source>
-        <translation>Signature</translation>
-    </message>
-    <message>
+        <location line="+24"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Copy hiện tại signature tới system clipboard</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Ký tin nhắn để chứng minh bạn sở hữu Bitcoin address này</translation>
+        <location line="+21"/>
+        <source>Sign the message to prove you own this Aithercoin address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Sign &amp;Message</source>
-        <translation>Sign &amp;Message</translation>
-    </message>
-    <message>
+        <location line="+17"/>
         <source>Reset all sign message fields</source>
-        <translation>Reset tất cả khoảng chữ ký nhắn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
+        <location line="+146"/>
         <source>Clear &amp;All</source>
-        <translation>Clear &amp;All</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-87"/>
+        <location line="+70"/>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Verify Tin nhắn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation>Nhập vào address người nhận, tin nhắn (chắc rằng bạn copy line breaks, khoảng trống, tabs, etc. chính xác) và signature bên dưới verify tin nhắn. Cẩn thận không đọc nhiều hơn từ signature so với cái được ký trong bản thân tin nhắn, để tránh bị lừa bới man-in-the-middle tấn công. Lưu ý rằng điều này chỉ chứng nhận nhóm những người nhân với address, nó không thể chứng minh bên gửi có bất kỳ transaction!</translation>
+        <location line="-64"/>
+        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation>The Bitcoin address tin nhắn đã ký với</translation>
+        <location line="+21"/>
+        <source>The address the message was signed with (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Verify tin nhắn để chắc rằng nó đã được ký với xác định Bitcoin address</translation>
+        <location line="+40"/>
+        <source>Verify the message to ensure it was signed with the specified Aithercoin address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Verify &amp;Message</source>
-        <translation>Verify &amp;Message</translation>
-    </message>
-    <message>
+        <location line="+17"/>
         <source>Reset all verify message fields</source>
-        <translation>Reset tất cả verify khoảng trống nhắn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Click "Sign Message" to generate signature</source>
-        <translation>Click "Sign Message" để generate signature</translation>
+        <location filename="../signverifymessagedialog.cpp" line="+27"/>
+        <location line="+3"/>
+        <source>Enter a Aithercoin address (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-2"/>
+        <source>Click &quot;Sign Message&quot; to generate signature</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Enter Aithercoin signature</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+82"/>
+        <location line="+81"/>
         <source>The entered address is invalid.</source>
-        <translation>Đã nhập address thì invalid.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-81"/>
+        <location line="+8"/>
+        <location line="+73"/>
+        <location line="+8"/>
         <source>Please check the address and try again.</source>
-        <translation>Vui lòng kiểm tra address và thử lại.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-81"/>
+        <location line="+81"/>
         <source>The entered address does not refer to a key.</source>
-        <translation>Đã nhập address không refer to a key.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-73"/>
         <source>Wallet unlock was cancelled.</source>
-        <translation>Wallet unlock đã được hủy.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+8"/>
         <source>Private key for the entered address is not available.</source>
-        <translation>Private key cho address đã nhập thì không có sẵn.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+12"/>
         <source>Message signing failed.</source>
-        <translation>Message signing failed.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
         <source>Message signed.</source>
-        <translation>Message signed.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+59"/>
         <source>The signature could not be decoded.</source>
-        <translation>The signature could not be decoded.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
+        <location line="+13"/>
         <source>Please check the signature and try again.</source>
-        <translation>Please check the signature and try again.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
         <source>The signature did not match the message digest.</source>
-        <translation>The signature did not match the message digest.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+7"/>
         <source>Message verification failed.</source>
-        <translation>Message verification failed.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
         <source>Message verified.</source>
-        <translation>Message verified.</translation>
-    </message>
-</context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
-<context>
-    <name>TrafficGraphWidget</name>
-    <message>
-        <source>KB/s</source>
-        <translation>KB/s</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Mở cho %n nhiều hơn blocks</numerusform></translation>
-    </message>
     <message>
+        <location filename="../transactiondesc.cpp" line="+19"/>
         <source>Open until %1</source>
-        <translation>Open until %1</translation>
+        <translation type="unfinished"/>
+    </message>
+    <message numerus="yes">
+        <location line="-2"/>
+        <source>Open for %n block(s)</source>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>conflicted with a transaction with %1 confirmations</source>
-        <translation>conflicted with a transaction with %1 confirmations</translation>
+        <location line="+8"/>
+        <source>conflicted</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>%1/offline</source>
-        <translation>%1/offline</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>0/unconfirmed, %1</source>
-        <translation>0/unconfirmed, %1</translation>
-    </message>
-    <message>
-        <source>in memory pool</source>
-        <translation>in memory pool</translation>
-    </message>
-    <message>
-        <source>not in memory pool</source>
-        <translation>not in memory pool</translation>
-    </message>
-    <message>
-        <source>abandoned</source>
-        <translation>abandoned</translation>
-    </message>
-    <message>
+        <location line="+2"/>
         <source>%1/unconfirmed</source>
-        <translation>%1/unconfirmed</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>%1 confirmations</source>
-        <translation>%1 confirmations</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+18"/>
         <source>Status</source>
-        <translation>Status</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, has not been successfully broadcast yet</translation>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
+        <location line="+7"/>
         <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, broadcast qua %n nodes</numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
+        <location line="+4"/>
         <source>Date</source>
-        <translation>Ngày</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+7"/>
         <source>Source</source>
-        <translation>Source</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
         <source>Generated</source>
-        <translation>Generated</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
+        <location line="+17"/>
         <source>From</source>
-        <translation>From</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>unknown</source>
-        <translation>unknown</translation>
-    </message>
-    <message>
+        <location line="+1"/>
+        <location line="+22"/>
+        <location line="+58"/>
         <source>To</source>
-        <translation>To</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-77"/>
+        <location line="+2"/>
         <source>own address</source>
-        <translation>own address</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation>watch-only</translation>
-    </message>
-    <message>
+        <location line="-2"/>
         <source>label</source>
-        <translation>label</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+37"/>
+        <location line="+12"/>
+        <location line="+45"/>
+        <location line="+17"/>
+        <location line="+30"/>
         <source>Credit</source>
-        <translation>Credit</translation>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
+        <location line="-102"/>
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>Hoàn thiện trong %n nhiều hơn blocks</numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
+        <location line="+2"/>
         <source>not accepted</source>
-        <translation>not accepted</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+44"/>
+        <location line="+8"/>
+        <location line="+15"/>
+        <location line="+30"/>
         <source>Debit</source>
-        <translation>Debit</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Total debit</source>
-        <translation>Total debit</translation>
-    </message>
-    <message>
-        <source>Total credit</source>
-        <translation>Total credit</translation>
-    </message>
-    <message>
+        <location line="-39"/>
         <source>Transaction fee</source>
-        <translation>Transaction fee</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+16"/>
         <source>Net amount</source>
-        <translation>Net amount</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+6"/>
         <source>Message</source>
-        <translation>Tin nhắn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>Comment</source>
-        <translation>Comment</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>Transaction ID</source>
-        <translation>Transaction ID</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Transaction total size</source>
-        <translation>Transaction total size</translation>
+        <location line="+3"/>
+        <source>Generated coins must mature 20 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Output index</source>
-        <translation>Output index</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>Merchant</translation>
-    </message>
-    <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</translation>
-    </message>
-    <message>
+        <location line="+7"/>
         <source>Debug information</source>
-        <translation>Debug information</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+8"/>
         <source>Transaction</source>
-        <translation>Transaction</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
         <source>Inputs</source>
-        <translation>Inputs</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+23"/>
         <source>Amount</source>
-        <translation>Giá trị</translation>
+        <translation>Số lượng</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>true</source>
-        <translation>true</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
         <source>false</source>
-        <translation>false</translation>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-211"/>
+        <source>, has not been successfully broadcast yet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>unknown</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>This pane shows a detailed description of the transaction</translation>
+        <location filename="../forms/transactiondescdialog.ui" line="+14"/>
+        <source>Transaction details</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Details for %1</source>
-        <translation>Details for %1</translation>
+        <location line="+6"/>
+        <source>This pane shows a detailed description of the transaction</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
+        <location filename="../transactiontablemodel.cpp" line="+226"/>
         <source>Date</source>
-        <translation>Ngày</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
         <source>Type</source>
-        <translation>Type</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Label</source>
-        <translation>Nhãn</translation>
+        <location line="+0"/>
+        <source>Address</source>
+        <translation>Địa chỉ</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Amount</source>
+        <translation>Số lượng</translation>
+    </message>
+    <message>
+        <location line="+60"/>
+        <source>Open until %1</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
+        <location line="-15"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Mở cho %n nhiều hơn blocks</numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>Open until %1</source>
-        <translation>Open until %1</translation>
-    </message>
-    <message>
+        <location line="+6"/>
         <source>Offline</source>
-        <translation>Offline</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>Unconfirmed</source>
-        <translation>Unconfirmed</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Abandoned</source>
-        <translation>Abandoned</translation>
-    </message>
-    <message>
+        <location line="+3"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>Confirming (%1 of %2 recommended confirmations)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>Confirmed (%1 confirmations)</translation>
-    </message>
-    <message>
+        <location line="+6"/>
         <source>Conflicted</source>
-        <translation>Xung đột</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Immature (%1 confirmations, will be available after %2)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>This block was not received by any other nodes and will probably not be accepted!</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>Generated but not accepted</source>
-        <translation>Generated but not accepted</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+42"/>
         <source>Received with</source>
-        <translation>Received with</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>Received from</source>
-        <translation>Received from</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
         <source>Sent to</source>
-        <translation>Sent to</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>Payment to yourself</source>
-        <translation>Payment to yourself</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>Mined</source>
-        <translation>Mined</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation>watch-only</translation>
-    </message>
-    <message>
+        <location line="+38"/>
         <source>(n/a)</source>
-        <translation>(n/a)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>(no label)</source>
-        <translation>(không nhãn)</translation>
-    </message>
-    <message>
+        <location line="+190"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Transaction status. Hover over this field to show number of confirmations.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>Date and time that the transaction was received.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation>Type of transaction.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation>Whether or not a watch-only address is involved in this transaction.</translation>
+        <location line="+2"/>
+        <source>Destination address of transaction.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>User-defined intent/purpose of the transaction.</source>
-        <translation>User-defined intent/purpose of the transaction.</translation>
-    </message>
-    <message>
+        <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Amount removed from or added to balance.</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
+        <location filename="../transactionview.cpp" line="+55"/>
+        <location line="+16"/>
         <source>All</source>
-        <translation>Tất cả</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-15"/>
         <source>Today</source>
-        <translation>Hôm nay</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>This week</source>
-        <translation>Tuần này</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>This month</source>
-        <translation>Tháng này</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Last month</source>
-        <translation>Tháng trước</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>This year</source>
-        <translation>Năm nay</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Range...</source>
-        <translation>Range...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+11"/>
         <source>Received with</source>
-        <translation>Received with</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>Sent to</source>
-        <translation>Sent to</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
         <source>To yourself</source>
-        <translation>To yourself</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Mined</source>
-        <translation>Mined</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Other</source>
-        <translation>Other</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Min amount</source>
-        <translation>Min amount</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Abandon transaction</source>
-        <translation>Abandon transaction</translation>
-    </message>
-    <message>
-        <source>Increase transaction fee</source>
-        <translation>Increase transaction fee</translation>
-    </message>
-    <message>
+        <location line="+34"/>
         <source>Copy address</source>
-        <translation>Copy address</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy label</source>
-        <translation>Sao chép nhãn</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy amount</source>
-        <translation>Sao chép số lượng</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy transaction ID</source>
-        <translation>Sao chép ID giao dịch</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Copy raw transaction</source>
-        <translation>Copy raw transaction</translation>
-    </message>
-    <message>
-        <source>Copy full transaction details</source>
-        <translation>Copy full transaction details</translation>
-    </message>
-    <message>
+        <location line="+1"/>
         <source>Edit label</source>
-        <translation>Edit label</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Show transaction details</source>
-        <translation>Show transaction details</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Export Transaction History</source>
-        <translation>Export Transaction History</translation>
+        <location line="+144"/>
+        <source>Export Transaction Data</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Comma separated file (*.csv)</translation>
+        <translation>Tập tin tách biệt bởi dấu phẩy (*.csv)</translation>
     </message>
     <message>
+        <location line="+8"/>
         <source>Confirmed</source>
-        <translation>Đã xác nhận</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Watch-only</source>
-        <translation>Watch-only</translation>
-    </message>
-    <message>
+        <location line="+1"/>
         <source>Date</source>
-        <translation>Ngày</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Type</source>
-        <translation>Type</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Label</source>
-        <translation>Nhãn</translation>
+        <translation>Nhãn dữ liệu</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Address</source>
         <translation>Địa chỉ</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Amount</source>
+        <translation>Số lượng</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>ID</source>
-        <translation>ID</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Xuất Thất Bại</translation>
+        <location line="+4"/>
+        <source>Error exporting</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>There was an error trying to save the transaction history to %1.</translation>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Exporting Successful</source>
-        <translation>Exporting Successful</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>The transaction history was successfully saved to %1.</translation>
-    </message>
-    <message>
+        <location line="+100"/>
         <source>Range:</source>
-        <translation>Range:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+8"/>
         <source>to</source>
-        <translation>to</translation>
-    </message>
-</context>
-<context>
-    <name>UnitDisplayStatusBarControl</name>
-    <message>
-        <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation>Unit to show amounts in. Click to select another unit.</translation>
-    </message>
-</context>
-<context>
-    <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation>No wallet has been loaded.</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>WalletModel</name>
     <message>
-        <source>Send Coins</source>
-        <translation>Gửi Coins</translation>
-    </message>
-    <message>
-        <source>Fee bump error</source>
-        <translation>Fee bơm error</translation>
-    </message>
-    <message>
-        <source>Increasing transaction fee failed</source>
-        <translation>Increasing transaction fee failed</translation>
-    </message>
-    <message>
-        <source>Do you want to increase the fee?</source>
-        <translation>Do you want to increase the fee?</translation>
-    </message>
-    <message>
-        <source>Current fee:</source>
-        <translation>Current fee:</translation>
-    </message>
-    <message>
-        <source>Increase:</source>
-        <translation>Increase:</translation>
-    </message>
-    <message>
-        <source>New fee:</source>
-        <translation>New fee:</translation>
-    </message>
-    <message>
-        <source>Confirm fee bump</source>
-        <translation>Confirm fee bump</translation>
-    </message>
-    <message>
-        <source>Can't sign transaction.</source>
-        <translation>Can't sign transaction.</translation>
-    </message>
-    <message>
-        <source>Could not commit transaction</source>
-        <translation>Could not commit transaction</translation>
-    </message>
-</context>
-<context>
-    <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Xuất</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Xuất dữ liệu trong thẻ hiện tại ra file</translation>
-    </message>
-    <message>
-        <source>Backup Wallet</source>
-        <translation>Backup Wallet</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Wallet Data (*.dat)</translation>
-    </message>
-    <message>
-        <source>Backup Failed</source>
-        <translation>Backup Failed</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>There was an error trying to save the wallet data to %1.</translation>
-    </message>
-    <message>
-        <source>Backup Successful</source>
-        <translation>Backup Successful</translation>
-    </message>
-    <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation>The wallet data was successfully saved to %1.</translation>
+        <location filename="../walletmodel.cpp" line="+206"/>
+        <source>Sending...</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>bitcoin-core</name>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="+33"/>
+        <source>Aithercoin version</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Usage:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Send command to -server or aithercoind</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>List commands</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Get help for a command</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Options:</source>
-        <translation>Options:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Specify data directory</source>
-        <translation>Specify data directory</translation>
+        <location line="+2"/>
+        <source>Specify configuration file (default: aithercoin.conf)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Connect to a node to retrieve peer addresses, and disconnect</translation>
+        <location line="+1"/>
+        <source>Specify pid file (default: aithercoind.pid)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Specify your own public address</source>
-        <translation>Specify your own public address</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Accept command line and JSON-RPC commands</translation>
-    </message>
-    <message>
-        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation>Distributed under the MIT software license, see the accompanying file %s or %s</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</translation>
-    </message>
-    <message>
-        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation>Prune configured below the minimum of %d MiB.  Please use a higher number.</translation>
-    </message>
-    <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</translation>
-    </message>
-    <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Error: A fatal internal error occurred, see debug.log for details</translation>
-    </message>
-    <message>
-        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>Fee (in %s/kB) to add to transactions you send (default: %s)</translation>
-    </message>
-    <message>
-        <source>Pruning blockstore...</source>
-        <translation>Pruning blockstore...</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Run in the background as a daemon and accept commands</translation>
-    </message>
-    <message>
-        <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation>Unable to start HTTP server. See debug log for details.</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>The %s developers</source>
-        <translation>The %s developers</translation>
-    </message>
-    <message>
-        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</translation>
-    </message>
-    <message>
-        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</translation>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Bind to given address and always listen on it. Use [host]:port notation for IPv6</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation>Cannot obtain a lock on data directory %s. %s is probably already running.</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</translation>
-    </message>
-    <message>
-        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
-        <translation>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</translation>
-    </message>
-    <message>
-        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
-        <translation>Extra transactions to keep in memory for compact block reconstructions (default: %u)</translation>
-    </message>
-    <message>
-        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</translation>
-    </message>
-    <message>
-        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</translation>
-    </message>
-    <message>
-        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation>Please contribute if you find %s useful. Visit %s for further information about the software.</translation>
-    </message>
-    <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
-        <translation>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</translation>
-    </message>
-    <message>
-        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</translation>
-    </message>
-    <message>
-        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
-        <translation>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</translation>
-    </message>
-    <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation>This is the transaction fee you may discard if change is smaller than dust at this level</translation>
-    </message>
-    <message>
-        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
-        <translation>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</translation>
-    </message>
-    <message>
-        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
-        <translation>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</translation>
-    </message>
-    <message>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
-        <translation>Wallet will not create transactions that violate mempool chain limits (default: %u)</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
-    </message>
-    <message>
-        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
-        <translation>Whether to save the mempool on shutdown and load on restart (default: %u)</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d of last 100 blocks have unexpected version</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s corrupt, salvage failed</translation>
-    </message>
-    <message>
-        <source>-maxmempool must be at least %d MB</source>
-        <translation>-maxmempool must be at least %d MB</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; can be:</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
-    </message>
-    <message>
-        <source>Append comment to the user agent string</source>
-        <translation>Append comment to the user agent string</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
-        <translation>Attempt to recover private keys from a corrupt wallet on startup</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Block creation options:</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -%s address: '%s'</source>
-        <translation>Cannot resolve -%s address: '%s'</translation>
-    </message>
-    <message>
-        <source>Chain selection options:</source>
-        <translation>Chain selection options:</translation>
-    </message>
-    <message>
-        <source>Change index out of range</source>
-        <translation>Change index out of range</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Connection options:</translation>
-    </message>
-    <message>
-        <source>Copyright (C) %i-%i</source>
-        <translation>Copyright (C) %i-%i</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>Corrupted block database detected</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>Debugging/Testing options:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>Do not load the wallet and disable wallet RPC calls</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>Do you want to rebuild the block database now?</translation>
-    </message>
-    <message>
-        <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation>Enable publish hash block in &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>Enable publish hash transaction in &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>Enable publish raw block in &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>Enable publish raw transaction in &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable transaction replacement in the memory pool (default: %u)</source>
-        <translation>Enable transaction replacement in the memory pool (default: %u)</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>Error initializing block database</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>Error initializing wallet database environment %s!</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation>Error loading %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet corrupted</source>
-        <translation>Error loading %s: Wallet corrupted</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation>Error loading %s: Wallet requires newer version of %s</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>Error loading block database</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>Error opening block database</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Error: Disk space is low!</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Failed to listen on any port. Use -listen=0 if you want this.</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>Importing...</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Incorrect or no genesis block found. Wrong datadir for network?</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation>Initialization sanity check failed. %s is shutting down.</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation>Invalid amount for -%s=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
-        <translation>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</translation>
-    </message>
-    <message>
-        <source>Loading P2P addresses...</source>
-        <translation>Loading P2P addresses...</translation>
-    </message>
-    <message>
-        <source>Loading banlist...</source>
-        <translation>Loading banlist...</translation>
-    </message>
-    <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>Location of the auth cookie (default: data dir)</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>Not enough file descriptors available.</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</translation>
-    </message>
-    <message>
-        <source>Print this help message and exit</source>
-        <translation>Print this help message and exit</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>Print version and exit</translation>
-    </message>
-    <message>
-        <source>Prune cannot be configured with a negative value.</source>
-        <translation>Prune cannot be configured with a negative value.</translation>
-    </message>
-    <message>
-        <source>Prune mode is incompatible with -txindex.</source>
-        <translation>Prune mode is incompatible with -txindex.</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation>Rebuild chain state and block index from the blk*.dat files on disk</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation>Rebuild chain state from the currently indexed blocks</translation>
-    </message>
-    <message>
-        <source>Replaying blocks...</source>
-        <translation>Replaying blocks...</translation>
-    </message>
-    <message>
-        <source>Rewinding blocks...</source>
-        <translation>Rewinding blocks...</translation>
-    </message>
-    <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>Set database cache size in megabytes (%d to %d, default: %d)</translation>
-    </message>
-    <message>
+        <location line="+2"/>
         <source>Specify wallet file (within data directory)</source>
-        <translation>Specify wallet file (within data directory)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The source code is available from %s.</source>
-        <translation>The source code is available from %s.</translation>
+        <location line="-1"/>
+        <source>Specify data directory</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Transaction fee and change calculation failed</source>
-        <translation>Transaction fee and change calculation failed</translation>
+        <location line="+2"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation>Unable to bind to %s on this computer. %s is probably already running.</translation>
+        <location line="+1"/>
+        <source>Set database disk log size in megabytes (default: 100)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Unsupported argument -benchmark ignored, use -debug=bench.</translation>
+        <location line="+6"/>
+        <source>Listen for connections on &lt;port&gt; (default: 36939 or testnet: 46939)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Unsupported argument -debugnet ignored, use -debug=net.</translation>
+        <location line="+1"/>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Unsupported argument -tor found, use -onion.</translation>
+        <location line="+3"/>
+        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Unsupported logging category %s=%s.</source>
-        <translation>Unsupported logging category %s=%s.</translation>
+        <location line="+1"/>
+        <source>Specify your own public address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Upgrading UTXO database</source>
-        <translation>Upgrading UTXO database</translation>
+        <location line="+5"/>
+        <source>Bind to given address. Use [host]:port notation for IPv6</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>Use UPnP to map the listening port (default: %u)</translation>
+        <location line="+2"/>
+        <source>Stake your coins to support network and gain reward (default: 1)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Use the test chain</source>
-        <translation>Use the test chain</translation>
+        <location line="+5"/>
+        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation>User Agent comment (%s) contains unsafe characters.</translation>
+        <location line="+1"/>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Verifying blocks...</source>
-        <translation>Verifying blocks...</translation>
+        <location line="-44"/>
+        <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>Wallet debugging/testing options:</translation>
+        <location line="+51"/>
+        <source>Detach block and address databases. Increases shutdown time (default: 0)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation>Wallet needed to be rewritten: restart %s to complete</translation>
+        <location line="+109"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>Wallet options:</translation>
+        <location line="-5"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</translation>
+        <location line="-87"/>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 36940 or testnet: 46940)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</translation>
+        <location line="-11"/>
+        <source>Accept command line and JSON-RPC commands</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</translation>
+        <location line="+101"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</translation>
+        <location line="-5"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Error: Listening for incoming connections failed (listen returned error %s)</translation>
+        <location line="-8"/>
+        <source>Importing blockchain data file.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</translation>
+        <location line="+1"/>
+        <source>Importing bootstrap blockchain data file.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</translation>
+        <location line="-88"/>
+        <source>Run in the background as a daemon and accept commands</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</translation>
+        <location line="+1"/>
+        <source>Use the test network</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</translation>
+        <location line="-24"/>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>Maximum size of data in data carrier transactions we relay and mine (default: %u)</translation>
+        <location line="-38"/>
+        <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</translation>
+        <location line="+117"/>
+        <source>Error initializing database environment %s! To recover, BACKUP THAT DIRECTORY, then remove everything from it except for wallet.dat.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>The transaction amount is too small to send after the fee has been deducted</translation>
+        <location line="-20"/>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</translation>
+        <location line="+11"/>
+        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</translation>
+        <location line="+61"/>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Aithercoin will not work properly.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>(default: %u)</source>
-        <translation>(default: %u)</translation>
+        <location line="-31"/>
+        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Accept public REST requests (default: %u)</source>
-        <translation>Accept public REST requests (default: %u)</translation>
+        <location line="-18"/>
+        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>Automatically create Tor hidden service (default: %d)</translation>
+        <location line="-30"/>
+        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>Connect through SOCKS5 proxy</translation>
+        <location line="+4"/>
+        <source>Block creation options:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Error loading %s: You can't disable HD on an already existing HD wallet</translation>
+        <location line="-62"/>
+        <source>Connect only to the specified node(s)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Error reading from database, shutting down.</source>
-        <translation>Error reading from database, shutting down.</translation>
+        <location line="+4"/>
+        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Error upgrading chainstate database</source>
-        <translation>Error upgrading chainstate database</translation>
+        <location line="+94"/>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation>Imports blocks from external blk000??.dat file on startup</translation>
+        <location line="-90"/>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Information</source>
-        <translation>Thông tin</translation>
+        <location line="+5"/>
+        <source>Sync checkpoints policy (default: strict)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Invalid -onion address or hostname: '%s'</source>
-        <translation>Invalid -onion address or hostname: '%s'</translation>
+        <location line="+83"/>
+        <source>Invalid -tor address: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation>Invalid -proxy address or hostname: '%s'</translation>
+        <location line="+4"/>
+        <source>Invalid amount for -reservebalance=&lt;amount&gt;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</translation>
+        <location line="-82"/>
+        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation>Invalid netmask specified in -whitelist: '%s'</translation>
+        <location line="+1"/>
+        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</translation>
+        <location line="-16"/>
+        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation>Need to specify a port with -whitebind: '%s'</translation>
+        <location line="+28"/>
+        <source>Output extra debugging information. Implies all other -debug* options</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Node relay options:</source>
-        <translation>Node relay options:</translation>
+        <location line="+1"/>
+        <source>Output extra network debugging information</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>RPC server options:</source>
-        <translation>RPC server options:</translation>
+        <location line="+1"/>
+        <source>Prepend debug output with timestamp</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation>Reducing -maxconnections from %d to %d, because of system limitations.</translation>
+        <location line="+35"/>
+        <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Rescan the block chain for missing wallet transactions on startup</source>
-        <translation>Rescan the block chain for missing wallet transactions on startup</translation>
+        <location line="-74"/>
+        <source>Select the version of socks proxy to use (4-5, default: 5)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+41"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Send trace/debug info to console instead of debug.log file</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>Show all debugging options (usage: --help -help-debug)</translation>
+        <location line="+1"/>
+        <source>Send trace/debug info to debugger</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+28"/>
+        <source>Set maximum block size in bytes (default: 250000)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Set minimum block size in bytes (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-29"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Shrink debug.log file on client startup (default: 1 when no -debug)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Signing transaction failed</source>
-        <translation>Signing transaction failed</translation>
+        <location line="-42"/>
+        <source>Specify connection timeout in milliseconds (default: 5000)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation>The transaction amount is too small to pay the fee</translation>
+        <location line="+109"/>
+        <source>Unable to sign checkpoint, wrong checkpointkey?
+</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>This is experimental software.</source>
-        <translation>This is experimental software.</translation>
+        <location line="-80"/>
+        <source>Use UPnP to map the listening port (default: 0)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Tor control port password (default: empty)</source>
-        <translation>Tor control port password (default: empty)</translation>
+        <location line="-1"/>
+        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>Tor control port to use if onion listening enabled (default: %s)</translation>
+        <location line="-25"/>
+        <source>Use proxy to reach tor hidden services (default: same as -proxy)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Transaction amount too small</source>
-        <translation>Transaction amount too small</translation>
-    </message>
-    <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Transaction too large for fee policy</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Transaction too large</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation>Unable to bind to %s on this computer (bind returned error %s)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>Upgrade wallet to latest format on startup</translation>
-    </message>
-    <message>
+        <location line="+42"/>
         <source>Username for JSON-RPC connections</source>
-        <translation>Username for JSON-RPC connections</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Verifying wallet(s)...</source>
-        <translation>Verifying wallet(s)...</translation>
+        <location line="+47"/>
+        <source>Verifying database integrity...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Warning</source>
-        <translation>Cảnh báo</translation>
+        <location line="+57"/>
+        <source>WARNING: syncronized checkpoint violation detected, but skipped!</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation>Warning: unknown new rules activated (versionbit %i)</translation>
+        <location line="+1"/>
+        <source>Warning: Disk space is low!</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation>Whether to operate in a blocks only mode (default: %u)</translation>
+        <location line="-2"/>
+        <source>Warning: This version is obsolete, upgrade required!</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>You need to rebuild the database using -reindex to change -txindex</translation>
+        <location line="-48"/>
+        <source>wallet.dat corrupt, salvage failed</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Zapping all transactions from wallet...</translation>
-    </message>
-    <message>
-        <source>ZeroMQ notification options:</source>
-        <translation>ZeroMQ notification options:</translation>
-    </message>
-    <message>
+        <location line="-54"/>
         <source>Password for JSON-RPC connections</source>
-        <translation>Password for JSON-RPC connections</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-84"/>
+        <source>%s, you must set a rpcpassword in the configuration file:
+ %s
+It is recommended you use the following random password:
+rpcuser=aithercoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s &quot;Aithercoin Alert&quot; admin@foo.com
+</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>Find peers using internet relay chat (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sync time with other nodes. Disable if time on your system is precise e.g. syncing with NTP (default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>When creating transactions, ignore inputs with value less than this (default: 0.01)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Allow JSON-RPC connections from specified IP address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Require a confirmations for change (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Execute command when a relevant alert is received (%s in cmd is replaced by message)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Upgrade wallet to latest format</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Rescan the block chain for missing wallet transactions</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How thorough the block verification is (0-6, default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Imports blocks from external blk000?.dat file</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Use OpenSSL (https) for JSON-RPC connections</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Server certificate file (default: server.cert)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Server private key (default: server.pem)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>Error: Wallet unlocked for staking only, unable to create transaction.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>WARNING: Invalid checkpoint found! Displayed transactions may not be correct! You may need to upgrade, or notify developers.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-158"/>
+        <source>This help message</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+95"/>
+        <source>Wallet %s resides outside data directory %s.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cannot obtain a lock on data directory %s.  Aithercoin is probably already running.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-98"/>
+        <source>Aithercoin</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+140"/>
+        <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-130"/>
+        <source>Connect through socks proxy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</translation>
+        <location line="+122"/>
+        <source>Loading addresses...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</translation>
+        <location line="-15"/>
+        <source>Error loading blkindex.dat</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</translation>
+        <location line="+2"/>
+        <source>Error loading wallet.dat: Wallet corrupted</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</translation>
+        <location line="+4"/>
+        <source>Error loading wallet.dat: Wallet requires newer version of Aithercoin</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
-        <translation>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</translation>
+        <location line="+1"/>
+        <source>Wallet needed to be rewritten: restart Aithercoin to complete</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Error loading %s: You can't enable HD on an already existing non-HD wallet</translation>
+        <location line="+1"/>
+        <source>Error loading wallet.dat</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</translation>
+        <location line="-16"/>
+        <source>Invalid -proxy address: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</translation>
+        <location line="-1"/>
+        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</translation>
+        <location line="-1"/>
+        <source>Unknown -socks proxy version requested: %i</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation>How thorough the block verification of -checkblocks is (0-4, default: %u)</translation>
+        <location line="+4"/>
+        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</translation>
+        <location line="+2"/>
+        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</translation>
+        <location line="-24"/>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
-        <translation>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</translation>
+        <location line="+44"/>
+        <source>Error: could not start node</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
-        <translation>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</translation>
+        <location line="+11"/>
+        <source>Sending...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation>Support filtering of blocks and transaction with bloom filters (default: %u)</translation>
+        <location line="+5"/>
+        <source>Invalid amount</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
-        <translation>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation>This is the transaction fee you may pay when fee estimates are not available.</translation>
-    </message>
-    <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</translation>
-    </message>
-    <message>
-        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</translation>
-    </message>
-    <message>
-        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
-        <translation>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
-        <translation>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</translation>
-    </message>
-    <message>
-        <source>%s is set very high!</source>
-        <translation>%s is set very high!</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(default: %s)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>Always query for peer addresses via DNS lookup (default: %u)</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation>Error loading wallet %s. -wallet filename must be a regular file.</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Error loading wallet %s. Duplicate -wallet filename specified.</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
-        <translation>Error loading wallet %s. Invalid characters in -wallet filename.</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>How many blocks to check at startup (default: %u, 0 = all)</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>Include IP addresses in debug output (default: %u)</translation>
-    </message>
-    <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Keypool ran out, please call keypoolrefill first</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
-        <translation>Maintain at most &lt;n&gt; connections to peers (default: %u)</translation>
-    </message>
-    <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>Make the wallet broadcast transactions</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</translation>
-    </message>
-    <message>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>Prepend debug output with timestamp (default: %u)</translation>
-    </message>
-    <message>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation>Relay and mine data carrier transactions (default: %u)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>Relay non-P2SH multisig (default: %u)</translation>
-    </message>
-    <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>Set key pool size to &lt;n&gt; (default: %u)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight (default: %d)</source>
-        <translation>Set maximum BIP141 block weight (default: %d)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>Set the number of threads to service RPC calls (default: %d)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>Specify configuration file (default: %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>Specify connection timeout in milliseconds (minimum: 1, default: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>Specify pid file (default: %s)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>Spend unconfirmed change khi đang gửi transactions (default: %u)</translation>
-    </message>
-    <message>
-        <source>Starting network threads...</source>
-        <translation>Starting network threads...</translation>
-    </message>
-    <message>
-        <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation>Wallet sẽ hủy thanh toán nhỏ hơn phí relay.</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>Đây là minimum transaction fee bạn pay cho mỗi transaction.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Đây là transaction fee bạn sẽ pay nếu gửi transaction.</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>Ngường ngắt kết nối không hoạt động peers (default: %u)</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation>Transaction amounts phải không âm</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation>Transaction có chuỗi mempool chain quá dài</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation>Transaction phải có ít nhất một người nhận</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Unknown network được xác định trong -onlynet: '%s'</translation>
-    </message>
-    <message>
+        <location line="+1"/>
         <source>Insufficient funds</source>
-        <translation>Không đủ tiền</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-34"/>
         <source>Loading block index...</source>
-        <translation>Đang tải block index...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-103"/>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+122"/>
+        <source>Unable to bind to %s on this computer. Aithercoin is probably already running.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-97"/>
+        <source>Fee per KB to add to transactions you send</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+55"/>
+        <source>Invalid amount for -mininput=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>Loading wallet...</source>
-        <translation>Loading wallet...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+8"/>
         <source>Cannot downgrade wallet</source>
-        <translation>Không thể downgrade wallet</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Cannot initialize keypool</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cannot write default address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Rescanning...</source>
-        <translation>Rescanning...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+5"/>
         <source>Done loading</source>
-        <translation>Done loading</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-167"/>
+        <source>To use the %s option</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
+%s
+If the file does not exist, create it with owner-readable-only file permissions.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 </TS>

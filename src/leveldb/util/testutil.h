@@ -45,16 +45,6 @@ class ErrorEnv : public EnvWrapper {
     }
     return target()->NewWritableFile(fname, result);
   }
-
-  virtual Status NewAppendableFile(const std::string& fname,
-                                   WritableFile** result) {
-    if (writable_file_error_) {
-      ++num_writable_file_errors_;
-      *result = NULL;
-      return Status::IOError(fname, "fake error");
-    }
-    return target()->NewAppendableFile(fname, result);
-  }
 };
 
 }  // namespace test

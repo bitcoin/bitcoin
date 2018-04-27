@@ -1,114 +1,156 @@
-<TS language="he" version="2.1">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="he" version="2.1">
+<context>
+    <name>AboutDialog</name>
+    <message>
+        <location filename="../forms/aboutdialog.ui" line="+14"/>
+        <source>About Aithercoin</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>&lt;b&gt;Aithercoin&lt;/b&gt; version</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Copyright © 2009-2014 The Bitcoin developers
+Copyright © 2012-2014 The NovaCoin developers
+Copyright © 2014 The Aithercoin developers</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>
+This is experimental software.
+
+Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
+        <translation>
+זוהי תוכנה ניסיונית.
+
+מופצת תחת רישיון התוכנה MIT/X11, ראה את הקובץ המצורף COPYING או http://www.opensource.org/licenses/mit-license.php.
+
+המוצר הזה כולל תוכנה שפותחה ע&quot;י פרויקט OpenSSL לשימוש בתיבת הכלים OpenSSL (http://www.openssl.org/) ותוכנה קריפטוגרפית שנכתבה ע&quot;י אריק יאנג (eay@cryptsoft.com) ותוכנת UPnP שנכתבה ע&quot;י תומס ברנרד.</translation>
+    </message>
+</context>
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation>לחץ מקש ימני כדי לערוך כתובת או תווית</translation>
+        <location filename="../forms/addressbookpage.ui" line="+14"/>
+        <source>Address Book</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+22"/>
+        <source>Double-click to edit address or label</source>
+        <translation>לחץ לחיצה כפולה לערוך כתובת או תוית</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>Create a new address</source>
         <translation>יצירת כתובת חדשה</translation>
     </message>
     <message>
-        <source>&amp;New</source>
-        <translation>&amp;חדש</translation>
-    </message>
-    <message>
+        <location line="+14"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>העתקת הכתובת המסומנת ללוח הגזירים</translation>
+        <translation>העתק את הכתובת המסומנת ללוח העריכה</translation>
     </message>
     <message>
-        <source>&amp;Copy</source>
-        <translation>ה&amp;עתקה</translation>
+        <location line="-11"/>
+        <source>&amp;New Address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>C&amp;lose</source>
-        <translation>סגירה</translation>
+        <location line="-46"/>
+        <source>These are your Aithercoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Delete the currently selected address from the list</source>
-        <translation>מחיקת הכתובת שנבחרה מהרשימה</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>יצוא הנתונים מהלשונית הנוכחית לקובץ</translation>
-    </message>
-    <message>
-        <source>&amp;Export</source>
-        <translation>י&amp;צוא</translation>
-    </message>
-    <message>
-        <source>&amp;Delete</source>
-        <translation>מ&amp;חיקה</translation>
-    </message>
-    <message>
-        <source>Choose the address to send coins to</source>
-        <translation>נא לבחור את הכתובת אליה ברצונך לשלוח את המטבעות</translation>
-    </message>
-    <message>
-        <source>Choose the address to receive coins with</source>
-        <translation>נא לבחור את הכתובת לקבלת המטבעות</translation>
-    </message>
-    <message>
-        <source>C&amp;hoose</source>
-        <translation>&amp;בחירה</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation>כתובת לשליחה</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation>כתובות לקבלה</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>אלו הן כתובות הביטקוין שלך לשליחת תשלומים. חשוב לבדוק את הסכום ואת הכתובת המקבלת לפני שליחת מטבעות.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>אלו הן כתובות הביטקוין שלך לקבלת תשלומים. מומלץ להשתמש בכתובת חדשה לכל העברה.</translation>
-    </message>
-    <message>
+        <location line="+60"/>
         <source>&amp;Copy Address</source>
-        <translation>ה&amp;עתקת כתובת</translation>
+        <translation>העתק כתובת</translation>
     </message>
     <message>
+        <location line="+11"/>
+        <source>Show &amp;QR Code</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Sign a message to prove you own a Aithercoin address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Sign &amp;Message</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Delete the currently selected address from the list</source>
+        <translation>מחק את הכתובת שנבחרה מהרשימה</translation>
+    </message>
+    <message>
+        <location line="-14"/>
+        <source>Verify a message to ensure it was signed with a specified Aithercoin address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Verify Message</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>&amp;Delete</source>
+        <translation>&amp;מחק</translation>
+    </message>
+    <message>
+        <location filename="../addressbookpage.cpp" line="+65"/>
         <source>Copy &amp;Label</source>
-        <translation>העתקת &amp;תוית</translation>
+        <translation>העתק תוית</translation>
     </message>
     <message>
+        <location line="+2"/>
         <source>&amp;Edit</source>
-        <translation>&amp;עריכה</translation>
+        <translation>עריכה</translation>
     </message>
     <message>
-        <source>Export Address List</source>
-        <translation>יצוא רשימת הכתובות</translation>
+        <location line="+250"/>
+        <source>Export Address Book Data</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>קובץ מופרד בפסיקים (‎*.csv)</translation>
+        <translation>קובץ מופרד בפסיקים (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>יצוא נכשל</translation>
+        <location line="+13"/>
+        <source>Error exporting</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>אירעה שגיאה בעת הניסיון לשמור את רשימת הכתובת אל %1. נא לנסות שוב.</translation>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
+        <location filename="../addresstablemodel.cpp" line="+144"/>
         <source>Label</source>
-        <translation>תווית</translation>
+        <translation>תוית</translation>
     </message>
     <message>
+        <location line="+0"/>
         <source>Address</source>
         <translation>כתובת</translation>
     </message>
     <message>
+        <location line="+36"/>
         <source>(no label)</source>
         <translation>(ללא תוית)</translation>
     </message>
@@ -116,585 +158,826 @@
 <context>
     <name>AskPassphraseDialog</name>
     <message>
+        <location filename="../forms/askpassphrasedialog.ui" line="+26"/>
         <source>Passphrase Dialog</source>
-        <translation>דו־שיח מילת צופן</translation>
+        <translation>שיח סיסמא</translation>
     </message>
     <message>
+        <location line="+21"/>
         <source>Enter passphrase</source>
-        <translation>נא להזין מילת צופן</translation>
+        <translation>הכנס סיסמה</translation>
     </message>
     <message>
+        <location line="+14"/>
         <source>New passphrase</source>
-        <translation>מילת צופן חדשה</translation>
+        <translation>סיסמה חדשה</translation>
     </message>
     <message>
+        <location line="+14"/>
         <source>Repeat new passphrase</source>
-        <translation>נא לחזור על מילת הצופן החדשה</translation>
+        <translation>חזור על הסיסמה החדשה</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>נא להזין את מילת הצופן לארנק.&lt;br/&gt;נא להשתמש במילת צופן המורכבת מ&lt;b&gt;עשרה או יותר תווים אקראיים&lt;/b&gt;, או &lt;b&gt;שמונה מילים ומעלה&lt;/b&gt;.</translation>
+        <location line="+33"/>
+        <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
+        <source>For staking only</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="+35"/>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>הכנס את הסיסמה החדשה לארנק. &lt;br/&gt;אנא השתמש בסיסמה המכילה &lt;b&gt;10 תוים אקראיים או יותר&lt;/b&gt;, או &lt;b&gt;שמונה מילים או יותר&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Encrypt wallet</source>
-        <translation>הצפנת הארנק</translation>
+        <translation>הצפן ארנק</translation>
     </message>
     <message>
+        <location line="+7"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>פעולה זו דורשת את מילת הצופן של הארנק שלך כדי לשחרר את הארנק.</translation>
+        <translation>הפעולה הזו דורשת את סיסמת הארנק שלך בשביל לפתוח את הארנק.</translation>
     </message>
     <message>
+        <location line="+5"/>
         <source>Unlock wallet</source>
-        <translation>שחרור הארנק</translation>
+        <translation>פתיחת ארנק</translation>
     </message>
     <message>
+        <location line="+3"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>פעולה זו דורשת את מילת הצופן של הארנק שלך כדי לפענח את הארנק.</translation>
+        <translation>הפעולה הזו דורשת את סיסמת הארנק שלך בשביל לפענח את הארנק.</translation>
     </message>
     <message>
+        <location line="+5"/>
         <source>Decrypt wallet</source>
-        <translation>פענוח הארנק</translation>
+        <translation>פענוח ארנק</translation>
     </message>
     <message>
+        <location line="+3"/>
         <source>Change passphrase</source>
-        <translation>החלפת מילת הצופן</translation>
+        <translation>שינוי סיסמה</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>נא להזין את מילת הצופן הישנה וחדשה לארנק</translation>
+        <location line="+1"/>
+        <source>Enter the old and new passphrase to the wallet.</source>
+        <translation>הכנס את הסיסמות הישנה והחדשה לארנק.</translation>
     </message>
     <message>
+        <location line="+46"/>
         <source>Confirm wallet encryption</source>
-        <translation>אימות הצפנת הארנק</translation>
+        <translation>אשר הצפנת ארנק</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>אזהרה: איבוד מילת הצופן לאחר הצפנת הארנק עשויה לגרום לכך &lt;b&gt;שכל הביטקוינים שלך יאבדו&lt;/b&gt;!</translation>
+        <location line="+1"/>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR COINS&lt;/b&gt;!</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>להצפין את הארנק?</translation>
+        <translation>האם אתה בטוח שברצונך להצפין את הארנק?</translation>
     </message>
     <message>
-        <source>Wallet encrypted</source>
-        <translation>הארנק מוצפן</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 ייסגר כעת כדי לסיים את תהליך ההצפנה. נא לשים לב כי הצפנת הארנק שלך לא יכול להגן על הביטקוינים שלך מפני גניבה או נוזקה שתוקפת את מחשבך.</translation>
-    </message>
-    <message>
+        <location line="+15"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>חשוב: כל הגיבויים הקודמים שערכת לארנק שלך אמורים להתחלף עם קובץ הארנק המוצפן שנוצר כרגע. מטעמי אבטחה, הגיבויים הקודמים של קובץ הארנק שאינו מוגן הופכים לחסרי תועלת ברגע התחלת השימוש בארנק החדש והמוצפן.</translation>
+        <translation>חשוב! כל גיבוי קודם שעשית לארנק שלך יש להחליף עם קובץ הארנק המוצפן שזה עתה נוצר. מסיבות אבטחה, גיבויים קודמים של קובץ הארנק הלא-מוצפן יהפכו לחסרי שימוש ברגע שתתחיל להשתמש בארנק החדש המוצפן.</translation>
     </message>
     <message>
+        <location line="+103"/>
+        <location line="+24"/>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>זהירות: מקש Caps Lock מופעל!</translation>
+    </message>
+    <message>
+        <location line="-133"/>
+        <location line="+60"/>
+        <source>Wallet encrypted</source>
+        <translation>הארנק הוצפן</translation>
+    </message>
+    <message>
+        <location line="-58"/>
+        <source>Aithercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+7"/>
+        <location line="+44"/>
+        <location line="+6"/>
         <source>Wallet encryption failed</source>
         <translation>הצפנת הארנק נכשלה</translation>
     </message>
     <message>
+        <location line="-56"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>הצפנת הארנק נכשלה עקב תקלה פנימית. הארנק שלך לא הוצפן.</translation>
+        <translation>הצפנת הארנק נכשלה עקב שגיאה פנימית. הארנק שלך לא הוצפן.</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <location line="+50"/>
         <source>The supplied passphrases do not match.</source>
-        <translation>מילות הצופן שסופקו אינן תואמות.</translation>
+        <translation>הסיסמות שניתנו אינן תואמות.</translation>
     </message>
     <message>
+        <location line="-38"/>
         <source>Wallet unlock failed</source>
-        <translation>שחרור האנרק נכשל</translation>
+        <translation>פתיחת הארנק נכשלה</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <location line="+12"/>
+        <location line="+19"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>מילת הצופן שהוזנה לצורך פענוח הארנק שגויה.</translation>
+        <translation>הסיסמה שהוכנסה לפענוח הארנק שגויה.</translation>
     </message>
     <message>
+        <location line="-20"/>
         <source>Wallet decryption failed</source>
         <translation>פענוח הארנק נכשל</translation>
     </message>
     <message>
+        <location line="+14"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>מילת הצופן של הארנק הוחלפה בהצלחה.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>אזהרה: מקש ה־Caps Lock פעיל!</translation>
-    </message>
-</context>
-<context>
-    <name>BanTableModel</name>
-    <message>
-        <source>IP/Netmask</source>
-        <translation>IP/מסכת רשת</translation>
-    </message>
-    <message>
-        <source>Banned Until</source>
-        <translation>חסום עד</translation>
+        <translation>סיסמת הארנק שונתה בהצלחה.</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
+        <location filename="../bitcoingui.cpp" line="+280"/>
         <source>Sign &amp;message...</source>
-        <translation>&amp;חתימה על הודעה…</translation>
+        <translation>חתום על הודעה</translation>
     </message>
     <message>
+        <location line="+242"/>
         <source>Synchronizing with network...</source>
-        <translation>בסנכרון עם הרשת…</translation>
+        <translation>מסתנכרן עם הרשת...</translation>
     </message>
     <message>
+        <location line="-308"/>
         <source>&amp;Overview</source>
         <translation>&amp;סקירה</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>מפרק</translation>
-    </message>
-    <message>
+        <location line="+1"/>
         <source>Show general overview of wallet</source>
-        <translation>הצגת סקירה כללית של הארנק</translation>
+        <translation>הצג סקירה כללית של הארנק</translation>
     </message>
     <message>
+        <location line="+17"/>
         <source>&amp;Transactions</source>
-        <translation>ה&amp;עברות</translation>
+        <translation>&amp;פעולות</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation>עיון בהיסטוריית ההעברות</translation>
+        <translation>דפדף בהיסטוריית הפעולות</translation>
     </message>
     <message>
+        <location line="+5"/>
+        <source>&amp;Address Book</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Edit the list of stored addresses and labels</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>&amp;Receive coins</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the list of addresses for receiving payments</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-7"/>
+        <source>&amp;Send coins</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+35"/>
         <source>E&amp;xit</source>
         <translation>י&amp;ציאה</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Quit application</source>
-        <translation>יציאה מהתכנית</translation>
+        <translation>סגור תוכנה</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>על &amp;אודות %1</translation>
+        <location line="+4"/>
+        <source>Show information about Aithercoin</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Show information about %1</source>
-        <translation>הצגת מידע על %1</translation>
-    </message>
-    <message>
+        <location line="+2"/>
         <source>About &amp;Qt</source>
-        <translation>על אודות Qt</translation>
+        <translation>אודות Qt</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Show information about Qt</source>
-        <translation>הצגת מידע על Qt</translation>
+        <translation>הצג מידע על Qt</translation>
     </message>
     <message>
+        <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation>&amp;אפשרויות…</translation>
+        <translation>&amp;אפשרויות</translation>
     </message>
     <message>
-        <source>Modify configuration options for %1</source>
-        <translation>שינוי אפשרויות התצורה עבור %1</translation>
-    </message>
-    <message>
+        <location line="+4"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>ה&amp;צפנת הארנק…</translation>
+        <translation>הצפן ארנק</translation>
     </message>
     <message>
+        <location line="+3"/>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;גיבוי הארנק…</translation>
+        <translation>גיבוי ארנק</translation>
     </message>
     <message>
+        <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>ה&amp;חלפת מילת הצופן…</translation>
+        <translation>שנה סיסמא</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+250"/>
+        <source>~%n block(s) remaining</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>כתובת ה&amp;שליחה…</translation>
+        <location line="+6"/>
+        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>כתובות ה&amp;קבלה…</translation>
+        <location line="-247"/>
+        <source>&amp;Export...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>פתיחת &amp;כתובת משאב…</translation>
+        <location line="-62"/>
+        <source>Send coins to a Aithercoin address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Click to disable network activity.</source>
-        <translation>יש ללחוץ כדי לנטרל פעילות רשת.</translation>
+        <location line="+45"/>
+        <source>Modify configuration options for Aithercoin</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Network activity disabled.</source>
-        <translation>פעילות הרשת נוטרלה.</translation>
+        <location line="+18"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Click to enable network activity again.</source>
-        <translation>יש ללחוץ כדי להפעיל את פעילות הרשת מחדש.</translation>
+        <location line="-14"/>
+        <source>Encrypt or decrypt wallet</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Syncing Headers (%1%)...</source>
-        <translation>הכותרות מתעדכנות (%1%)...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>המקטעים נוספים למפתח בכונן…</translation>
-    </message>
-    <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>שליחת מטבעות לכתובת ביטקוין</translation>
-    </message>
-    <message>
+        <location line="+3"/>
         <source>Backup wallet to another location</source>
-        <translation>גיבוי הארנק למיקום אחר</translation>
+        <translation>גיבוי הארנק למקום אחר</translation>
     </message>
     <message>
+        <location line="+2"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>החלפת מילת הצופן להצפנת הארנק</translation>
+        <translation>שנה את הסיסמה להצפנת הארנק</translation>
     </message>
     <message>
+        <location line="+10"/>
         <source>&amp;Debug window</source>
-        <translation>חלון &amp;ניפוי</translation>
+        <translation>חלון ניפוי</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Open debugging and diagnostic console</source>
-        <translation>פתיחת לוח הבקרה לאבחון ולניפוי</translation>
+        <translation>פתח את לוח הבקרה לאבחון וניפוי</translation>
     </message>
     <message>
+        <location line="-5"/>
         <source>&amp;Verify message...</source>
-        <translation>&amp;אימות הודעה…</translation>
+        <translation>אמת הודעה...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
+        <location line="-200"/>
+        <source>Aithercoin</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
         <source>Wallet</source>
         <translation>ארנק</translation>
     </message>
     <message>
-        <source>&amp;Send</source>
-        <translation>&amp;שליחה</translation>
+        <location line="+178"/>
+        <source>&amp;About Aithercoin</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;קבלה</translation>
-    </message>
-    <message>
+        <location line="+9"/>
         <source>&amp;Show / Hide</source>
-        <translation>ה&amp;צגה / הסתרה</translation>
+        <translation>הצג / הסתר</translation>
     </message>
     <message>
-        <source>Show or hide the main Window</source>
-        <translation>הצגה או הסתרה של החלון הראשי</translation>
+        <location line="+9"/>
+        <source>Unlock wallet</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>הצפנת המפתחות הפרטיים ששייכים לארנק שלך</translation>
+        <location line="+1"/>
+        <source>&amp;Lock Wallet</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>חתום על הודעות עם כתובות הביטקוין שלך כדי להוכיח שהן בבעלותך</translation>
+        <location line="+1"/>
+        <source>Lock wallet</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>אמת הודעות כדי להבטיח שהן נחתמו עם כתובת ביטקוין מסוימות</translation>
-    </message>
-    <message>
+        <location line="+34"/>
         <source>&amp;File</source>
         <translation>&amp;קובץ</translation>
     </message>
     <message>
+        <location line="+8"/>
         <source>&amp;Settings</source>
         <translation>ה&amp;גדרות</translation>
     </message>
     <message>
+        <location line="+8"/>
         <source>&amp;Help</source>
-        <translation>ע&amp;זרה</translation>
+        <translation>&amp;עזרה</translation>
     </message>
     <message>
+        <location line="+9"/>
         <source>Tabs toolbar</source>
-        <translation>סרגל כלים לשוניות</translation>
+        <translation>סרגל כלים טאבים</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>בקשת תשלומים (יצירה של קודים מסוג QR וסכימות כתובות משאב של :bitcoin)</translation>
+        <location line="+8"/>
+        <source>Actions toolbar</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation>הצג את רשימת הכתובות לשליחה שהיו בשימוש לרבות התוויות</translation>
+        <location line="+13"/>
+        <location line="+9"/>
+        <source>[testnet]</source>
+        <translation>[רשת-בדיקה]</translation>
     </message>
     <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation>הצגת רשימת הכתובות והתוויות הנמצאות בשימוש</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>פתיחת ביטקוין: כתובת משאב או בקשת תשלום</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>אפשרויות &amp;שורת הפקודה</translation>
+        <location line="+0"/>
+        <location line="+60"/>
+        <source>Aithercoin client</source>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>חיבור אחד פעיל לרשת ביטקוין</numerusform><numerusform>%n חיבורים פעילים לרשת ביטקוין</numerusform></translation>
+        <location line="+70"/>
+        <source>%n active connection(s) to Aithercoin network</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>Indexing blocks on disk...</source>
-        <translation>מאנדקס את הבלוקים על הכונן...</translation>
+        <location line="+40"/>
+        <source>Downloaded %1 blocks of transaction history.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Processing blocks on disk...</source>
-        <translation>מעבד בלוקים על הדיסק...</translation>
+        <location line="+413"/>
+        <source>Staking.&lt;br&gt;Your weight is %1&lt;br&gt;Network weight is %2&lt;br&gt;Expected time to earn reward is %3</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>%1 behind</source>
-        <translation>%1 מאחור</translation>
+        <location line="+6"/>
+        <source>Not staking because wallet is locked</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>המקטע האחרון שהתקבל נוצר לפני %1.</translation>
+        <location line="+2"/>
+        <source>Not staking because wallet is offline</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>ההעברות שבוצעו לאחר העברה זו לא יופיעו.</translation>
+        <location line="+2"/>
+        <source>Not staking because wallet is syncing</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Error</source>
-        <translation>שגיאה</translation>
+        <location line="+2"/>
+        <source>Not staking because you don&apos;t have mature coins</source>
+        <translation type="unfinished"/>
+    </message>
+    <message numerus="yes">
+        <location line="-403"/>
+        <source>%n second(s) ago</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>Warning</source>
-        <translation>אזהרה</translation>
+        <location line="-284"/>
+        <source>&amp;Unlock Wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message numerus="yes">
+        <location line="+288"/>
+        <source>%n minute(s) ago</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n hour(s) ago</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n day(s) ago</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>מידע</translation>
-    </message>
-    <message>
+        <location line="+6"/>
         <source>Up to date</source>
         <translation>עדכני</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>יש להציג את הודעת העזרה של %1 כדי להציג רשימה עם אפשרויות שורת פקודה לביטקוין</translation>
-    </message>
-    <message>
-        <source>%1 client</source>
-        <translation>לקוח %1</translation>
-    </message>
-    <message>
-        <source>Connecting to peers...</source>
-        <translation>מתבצעת התחברות לעמיתים…</translation>
-    </message>
-    <message>
+        <location line="+7"/>
         <source>Catching up...</source>
-        <translation>מתבצע עדכון…</translation>
+        <translation>מתעדכן...</translation>
     </message>
     <message>
+        <location line="+10"/>
+        <source>Last received block was generated %1.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirm transaction fee</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Sent transaction</source>
+        <translation>פעולה שנשלחה</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Incoming transaction</source>
+        <translation>פעולה שהתקבלה</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Date: %1
+Amount: %2
+Type: %3
+Address: %4
 </source>
         <translation>תאריך: %1
-</translation>
+כמות: %2
+סוג: %3
+כתובת: %4</translation>
     </message>
     <message>
-        <source>Amount: %1
-</source>
-        <translation>כמות: %1
-</translation>
+        <location line="+100"/>
+        <location line="+15"/>
+        <source>URI handling</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Type: %1
-</source>
-        <translation>סוג: %1
-</translation>
+        <location line="-15"/>
+        <location line="+15"/>
+        <source>URI can not be parsed! This can be caused by an invalid Aithercoin address or malformed URI parameters.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Label: %1
-</source>
-        <translation>תווית: %1
-</translation>
-    </message>
-    <message>
-        <source>Address: %1
-</source>
-        <translation>כתובת: %1
-</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>העברת שליחה</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>העברת קבלה</translation>
-    </message>
-    <message>
-        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation>ייצור מפתחות HD &lt;b&gt;מופעל&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>ייצור מפתחות HD &lt;b&gt;כבוי&lt;/b&gt;</translation>
-    </message>
-    <message>
+        <location line="+18"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; ו&lt;b&gt;פתוח&lt;/b&gt; כרגע</translation>
+        <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; וכרגע &lt;b&gt;פתוח&lt;/b&gt;</translation>
     </message>
     <message>
+        <location line="+10"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; ו&lt;b&gt;נעול&lt;/b&gt; כרגע</translation>
+        <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; וכרגע &lt;b&gt;נעול&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>אירעה שגיאה חמורה. אין אפשרות להשתמש עוד בביטקוין באופן מאובטח והיישום ייסגר.</translation>
+        <location line="+25"/>
+        <source>Backup Wallet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Wallet Data (*.dat)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Backup Failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message numerus="yes">
+        <location line="+76"/>
+        <source>%n second(s)</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n minute(s)</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n שעה</numerusform><numerusform>%n שעות</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n day(s)</source>
+        <translation><numerusform>%n יום</numerusform><numerusform>%n ימים</numerusform></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Not staking</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoin.cpp" line="+109"/>
+        <source>A fatal error occurred. Aithercoin can no longer continue safely and will quit.</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
+    <name>ClientModel</name>
+    <message>
+        <location filename="../clientmodel.cpp" line="+90"/>
+        <source>Network Alert</source>
+        <translation>אזעקת רשת</translation>
     </message>
 </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Selection</source>
-        <translation>בחירת מטבע</translation>
+        <location filename="../forms/coincontroldialog.ui" line="+14"/>
+        <source>Coin Control</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+31"/>
         <source>Quantity:</source>
         <translation>כמות:</translation>
     </message>
     <message>
+        <location line="+32"/>
         <source>Bytes:</source>
-        <translation>בתים:</translation>
+        <translation>בייטים:</translation>
     </message>
     <message>
+        <location line="+48"/>
         <source>Amount:</source>
-        <translation>סכום:</translation>
+        <translation>כמות:</translation>
     </message>
     <message>
+        <location line="+32"/>
+        <source>Priority:</source>
+        <translation>קדימות:</translation>
+    </message>
+    <message>
+        <location line="+48"/>
         <source>Fee:</source>
-        <translation>עמלה:</translation>
+        <translation>תשלום:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation>אבק:</translation>
+        <location line="+35"/>
+        <source>Low Output:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>After Fee:</source>
-        <translation>לאחר עמלה:</translation>
-    </message>
-    <message>
-        <source>Change:</source>
-        <translation>עודף:</translation>
-    </message>
-    <message>
-        <source>(un)select all</source>
-        <translation>ביטול/אישור הבחירה</translation>
-    </message>
-    <message>
-        <source>Tree mode</source>
-        <translation>מצב עץ</translation>
-    </message>
-    <message>
-        <source>List mode</source>
-        <translation>מצב רשימה</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>כמות</translation>
-    </message>
-    <message>
-        <source>Received with label</source>
-        <translation>התקבל עם תווית</translation>
-    </message>
-    <message>
-        <source>Received with address</source>
-        <translation>התקבל עם כתובת</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>תאריך</translation>
-    </message>
-    <message>
-        <source>Confirmations</source>
-        <translation>אישורים</translation>
-    </message>
-    <message>
-        <source>Confirmed</source>
-        <translation>מאושר</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>העתקת הכתובת</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>העתקת התווית</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>העתקת הסכום</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>העתקת מזהה ההעברה</translation>
-    </message>
-    <message>
-        <source>Lock unspent</source>
-        <translation>נעילת יתרה</translation>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation>פתיחת יתרה</translation>
-    </message>
-    <message>
-        <source>Copy quantity</source>
-        <translation>העתקת הכמות</translation>
-    </message>
-    <message>
-        <source>Copy fee</source>
-        <translation>העתקת העמלה</translation>
-    </message>
-    <message>
-        <source>Copy after fee</source>
-        <translation>העתקה אחרי העמלה</translation>
-    </message>
-    <message>
-        <source>Copy bytes</source>
-        <translation>העתקת בתים</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation>העתקת אבק</translation>
-    </message>
-    <message>
-        <source>Copy change</source>
-        <translation>העתקת השינוי</translation>
-    </message>
-    <message>
-        <source>(%1 locked)</source>
-        <translation>(%1 נעולים)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation>כן</translation>
-    </message>
-    <message>
+        <location filename="../coincontroldialog.cpp" line="+551"/>
         <source>no</source>
         <translation>לא</translation>
     </message>
     <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation>תווית זו הופכת לאדומה אם מישהו מהנמענים מקבל סכום נמוך יותר מסף האבק הנוכחי.</translation>
+        <location filename="../forms/coincontroldialog.ui" line="+51"/>
+        <source>After Fee:</source>
+        <translation>לאחר עמלה:</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>יכול להשתנות במגמה של +/- %1 סנטושי לקלט.</translation>
+        <location line="+35"/>
+        <source>Change:</source>
+        <translation>שינוי:</translation>
     </message>
     <message>
+        <location line="+69"/>
+        <source>(un)select all</source>
+        <translation>(מחק)(בחר) הכל</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Tree mode</source>
+        <translation>מצב עץ</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>List mode</source>
+        <translation>מצר רשימה</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Amount</source>
+        <translation>כמות</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Label</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Address</source>
+        <translation>כתובת</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Date</source>
+        <translation>תאריך</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirmations</source>
+        <translation>אישורים</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed</source>
+        <translation>מאושר</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Priority</source>
+        <translation>קדימות</translation>
+    </message>
+    <message>
+        <location filename="../coincontroldialog.cpp" line="-515"/>
+        <source>Copy address</source>
+        <translation>העתק כתובת</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy label</source>
+        <translation>העתק תוית</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+26"/>
+        <source>Copy amount</source>
+        <translation>העתק כמות</translation>
+    </message>
+    <message>
+        <location line="-25"/>
+        <source>Copy transaction ID</source>
+        <translation>העתק מזהה פעולה</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Copy quantity</source>
+        <translation>העתק כמות</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Copy fee</source>
+        <translation>העתק מחיר</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy after fee</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy bytes</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy priority</source>
+        <translation>העתק קדימות</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy low output</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy change</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+317"/>
+        <source>highest</source>
+        <translation>הכי גבוה</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>high</source>
+        <translation>גבוה</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>medium-high</source>
+        <translation>בנוני גבוה</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>medium</source>
+        <translation>בינוני</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>low-medium</source>
+        <translation>בינוני - נמוך</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>low</source>
+        <translation>נמוך</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lowest</source>
+        <translation>הכי נמוך</translation>
+    </message>
+    <message>
+        <location line="+155"/>
+        <source>DUST</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>yes</source>
+        <translation>כן</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>This label turns red, if the transaction size is bigger than 10000 bytes.
+
+ This means a fee of at least %1 per kb is required.
+
+ Can vary +/- 1 Byte per input.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transactions with higher priority get more likely into a block.
+
+This label turns red, if the priority is smaller than &quot;medium&quot;.
+
+ This means a fee of at least %1 per kb is required.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This label turns red, if any recipient receives an amount smaller than %1.
+
+ This means a fee of at least %2 is required. 
+
+ Amounts below 0.546 times the minimum relay fee are shown as DUST.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This label turns red, if the change is smaller than %1.
+
+ This means a fee of at least %2 is required.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+37"/>
+        <location line="+66"/>
         <source>(no label)</source>
-        <translation>(ללא תווית)</translation>
+        <translation>(ללא תוית)</translation>
     </message>
     <message>
+        <location line="-9"/>
         <source>change from %1 (%2)</source>
         <translation>עודף מ־%1 (%2)</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>(change)</source>
         <translation>(עודף)</translation>
     </message>
@@ -702,2608 +985,2301 @@
 <context>
     <name>EditAddressDialog</name>
     <message>
+        <location filename="../forms/editaddressdialog.ui" line="+14"/>
         <source>Edit Address</source>
-        <translation>עריכת כתובת</translation>
+        <translation>ערוך כתובת</translation>
     </message>
     <message>
+        <location line="+11"/>
         <source>&amp;Label</source>
-        <translation>ת&amp;ווית</translation>
+        <translation>ת&amp;וית</translation>
     </message>
     <message>
-        <source>The label associated with this address list entry</source>
-        <translation>התווית המשויכת לרשומה הזו ברשימת הכתובות</translation>
+        <location line="+10"/>
+        <source>The label associated with this address book entry</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>הכתובת המשויכת עם רשומה זו ברשימת הכתובות. ניתן לשנות זאת רק עבור כתובות לשליחה.</translation>
-    </message>
-    <message>
+        <location line="+7"/>
         <source>&amp;Address</source>
         <translation>&amp;כתובת</translation>
     </message>
     <message>
+        <location line="+10"/>
+        <source>The address associated with this address book entry. This can only be modified for sending addresses.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../editaddressdialog.cpp" line="+20"/>
         <source>New receiving address</source>
-        <translation>כתובת קבלה חדשה</translation>
+        <translation>כתובת חדשה לקבלה</translation>
     </message>
     <message>
+        <location line="+4"/>
         <source>New sending address</source>
-        <translation>כתובת שליחה חדשה</translation>
+        <translation>כתובת חדשה לשליחה</translation>
     </message>
     <message>
+        <location line="+3"/>
         <source>Edit receiving address</source>
-        <translation>עריכת כתובת הקבלה</translation>
+        <translation>ערוך כתובת לקבלה</translation>
     </message>
     <message>
+        <location line="+4"/>
         <source>Edit sending address</source>
-        <translation>עריכת כתובת השליחה</translation>
+        <translation>ערוך כתובת לשליחה</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>הכתובת שהוקלדה „%1” היא אינה כתובת ביטקוין תקנית.</translation>
+        <location line="+76"/>
+        <source>The entered address &quot;%1&quot; is already in the address book.</source>
+        <translation>הכתובת שהכנסת &quot;%1&quot; כבר נמצאת בפנקס הכתובות.</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>הכתובת שהוקלדה „%1” כבר נמצאת בספר הכתובות.</translation>
+        <location line="-5"/>
+        <source>The entered address &quot;%1&quot; is not a valid Aithercoin address.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+10"/>
         <source>Could not unlock wallet.</source>
-        <translation>לא ניתן לשחרר את הארנק.</translation>
+        <translation>פתיחת הארנק נכשלה.</translation>
     </message>
     <message>
+        <location line="+5"/>
         <source>New key generation failed.</source>
-        <translation>יצירת המפתח החדש נכשלה.</translation>
+        <translation>יצירת מפתח חדש נכשלה.</translation>
     </message>
 </context>
 <context>
-    <name>FreespaceChecker</name>
+    <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <source>A new data directory will be created.</source>
-        <translation>תיקיית נתונים חדשה תיווצר.</translation>
+        <location filename="../guiutil.cpp" line="+420"/>
+        <location line="+12"/>
+        <source>Aithercoin-Qt</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>name</source>
-        <translation>שם</translation>
-    </message>
-    <message>
-        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>התיקייה כבר קיימת. ניתן להוסיף %1 אם יש ליצור תיקייה חדשה כאן.</translation>
-    </message>
-    <message>
-        <source>Path already exists, and is not a directory.</source>
-        <translation>הנתיב כבר קיים ואינו מצביע על תיקייה.</translation>
-    </message>
-    <message>
-        <source>Cannot create data directory here.</source>
-        <translation>לא ניתן ליצור כאן תיקיית נתונים.</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
+        <location line="-12"/>
         <source>version</source>
-        <translation>גרסה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-סיביות)</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation>על אודות %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation>אפשרויות שורת פקודה</translation>
-    </message>
-    <message>
+        <location line="+2"/>
         <source>Usage:</source>
-        <translation>שימוש:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>command-line options</source>
-        <translation>אפשרויות שורת פקודה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>אפשרויות ממשק</translation>
+        <location line="+4"/>
+        <source>UI options</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation>נא לבחור תיקיית נתונים עם הפתיחה (בררת מחדל: %u)</translation>
+        <location line="+1"/>
+        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>הגדרת השפה, לדוגמה „he_IL” (בררת מחדל: שפת העמרכת)</translation>
-    </message>
-    <message>
+        <location line="+1"/>
         <source>Start minimized</source>
-        <translation>התחלה במצב ממוזער</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>הגדרת אישורי בסיס SSL לבקשות תשלומים (בררת מחדל: -מערכת-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>הצגת מסך פתיחה בעת הפעלה (בררת מחדל: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changed in the GUI</source>
-        <translation>איפוס כל שינויי הגדרות התצוגה</translation>
-    </message>
-</context>
-<context>
-    <name>Intro</name>
-    <message>
-        <source>Welcome</source>
-        <translation>ברוך בואך</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation>ברוך בואך אל %1.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation>כיוון שזו ההפעלה הראשונה של התכנית, ניתן לבחור היכן יאוחסן המידע של %1.</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>בעת לחיצה על אישור, %1 יחל בהורדה ועיבוד מלאים של שרשרת המקטעים %4 (%2 ג״ב) החל מההעברות הראשונות ב־%3 עם ההשקה הראשונית של %4.</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation>הסינכרון הראשוני הוא תובעני ועלול לחשוף בעיות חומרה במחשב שהיו חבויות עד כה. כל פעם שתריץ %1 התהליך ימשיך בהורדה מהנקודה שבה הוא עצר לאחרונה.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation>אם בחרת להגביל את שטח האחרון לשרשרת, עדיין נדרש מידע היסטורי להורדה ועיבוד אך המידע ההיסטורי יימחק לאחר מכן כדי לשמור על צריכת שטח האחסון בדיסק נמוכה.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation>שימוש בבררת המחדל של תיקיית הנתונים.</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation>שימוש בתיקיית נתונים מותאמת אישית:</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
-    </message>
-    <message>
-        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation>מידע בנפח של לפחות %1 ג׳יגה-בייט יאוחסן בתיקייה זו, והוא יגדל עם הזמן.</translation>
-    </message>
-    <message>
-        <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation>מידע בנפח של כ-%1 ג׳יגה-בייט יאוחסן בתיקייה זו.</translation>
-    </message>
-    <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation>%1 תוריד ותאחסן עותק של שרשרת הבלוקים של ביטקוין.</translation>
-    </message>
-    <message>
-        <source>The wallet will also be stored in this directory.</source>
-        <translation>הארנק גם מאוחסן בתיקייה הזו.</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation>שגיאה: לא ניתן ליצור את תיקיית הנתונים שצוינה „%1“.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>שגיאה</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n GB of free space available</source>
-        <translation><numerusform>ג״ב של מקום פנוי זמין</numerusform><numerusform>%n ג״ב של מקום פנוי זמינים</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>(of %n GB needed)</source>
-        <translation><numerusform>(מתוך %n ג״ב נדרשים)</numerusform><numerusform>(מתוך %n ג״ב נדרשים)</numerusform></translation>
-    </message>
-</context>
-<context>
-    <name>ModalOverlay</name>
-    <message>
-        <source>Form</source>
-        <translation>טופס</translation>
-    </message>
-    <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>ייתכן שהעברות שבוצעו לאחרונה לא יופיעו עדיין, ולכן המאזן בארנק שלך יהיה שגוי. המידע הנכון יוצג במלואו כאשר הארנק שלך יסיים להסתנכרן עם רשת הביטקוין, כמפורט למטה.</translation>
-    </message>
-    <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>הרשת תסרב לקבל הוצאת ביטקוינים במידה והם כבר נמצאים בהעברות אשר לא מוצגות עדיין.</translation>
-    </message>
-    <message>
-        <source>Number of blocks left</source>
-        <translation>מספר מקטעים שנותרו</translation>
-    </message>
-    <message>
-        <source>Unknown...</source>
-        <translation>לא ידוע...</translation>
-    </message>
-    <message>
-        <source>Last block time</source>
-        <translation>זמן המקטע האחרון</translation>
-    </message>
-    <message>
-        <source>Progress</source>
-        <translation>התקדמות</translation>
-    </message>
-    <message>
-        <source>Progress increase per hour</source>
-        <translation>התקדמות לפי שעה</translation>
-    </message>
-    <message>
-        <source>calculating...</source>
-        <translation>נערך חישוב…</translation>
-    </message>
-    <message>
-        <source>Estimated time left until synced</source>
-        <translation>הזמן המוערך שנותר עד הסנכרון</translation>
-    </message>
-    <message>
-        <source>Hide</source>
-        <translation>הסתר</translation>
-    </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>לא ידוע. הכותרות מתעדכנות (%1)…</translation>
-    </message>
-</context>
-<context>
-    <name>OpenURIDialog</name>
-    <message>
-        <source>Open URI</source>
-        <translation>פתיחת כתובת משאב</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>פתיחת בקשת תשלום מכתובת משאב או מקובץ</translation>
-    </message>
-    <message>
-        <source>URI:</source>
-        <translation>כתובת משאב:</translation>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>בחירת קובץ בקשת תשלום</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>בחירת קובץ בקשת תשלום לפתיחה</translation>
+        <location line="+1"/>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>OptionsDialog</name>
     <message>
+        <location filename="../forms/optionsdialog.ui" line="+14"/>
         <source>Options</source>
         <translation>אפשרויות</translation>
     </message>
     <message>
+        <location line="+16"/>
         <source>&amp;Main</source>
-        <translation>&amp;ראשי</translation>
+        <translation>ראשי</translation>
     </message>
     <message>
-        <source>Automatically start %1 after logging in to the system.</source>
-        <translation>להפעיל את %1 אוטומטית לאחר הכניסה למערכת.</translation>
+        <location line="+6"/>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>&amp;Start %1 on system login</source>
-        <translation>ה&amp;פעלת %1 עם הכניסה למערכת</translation>
+        <location line="+15"/>
+        <source>Pay transaction &amp;fee</source>
+        <translation>שלם &amp;עמלת פעולה</translation>
     </message>
     <message>
-        <source>Size of &amp;database cache</source>
-        <translation>גודל מ&amp;טמון מסד הנתונים</translation>
+        <location line="+31"/>
+        <source>Reserved amount does not participate in staking and is therefore spendable at any time.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>MB</source>
-        <translation>מ״ב</translation>
+        <location line="+15"/>
+        <source>Reserve</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Number of script &amp;verification threads</source>
-        <translation>מספר תהליכי ה&amp;אימות של הסקריפט</translation>
+        <location line="+31"/>
+        <source>Automatically start Aithercoin after logging in to the system.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>כתובת ה־IP של המתווך (לדוגמה IPv4: 127.0.0.1‏ / IPv6: ::1)</translation>
+        <location line="+3"/>
+        <source>&amp;Start Aithercoin on system login</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation>מזער ואל תצא מהאפליקציה עם סגירת החלון. כאשר אפשרות זו דלוקה, האפליקציה תיסגר רק בבחירת ״יציאה״ בתפריט.</translation>
+        <location line="+7"/>
+        <source>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>כתובות צד־שלישי (כגון: סייר מקטעים) שמופיעים בלשונית ההעברות בתור פריטים בתפריט ההקשר. %s בכתובת מוחלף בגיבוב ההעברה. מספר כתובות יופרדו בפס אנכי |.</translation>
+        <location line="+3"/>
+        <source>&amp;Detach databases at shutdown</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>אפשרויות פעילות בשורת הפקודה שדורסות את האפשרויות שלהלן:</translation>
-    </message>
-    <message>
-        <source>Open the %1 configuration file from the working directory.</source>
-        <translation>פתיחת קובץ התצורה של %1 מתיקיית העבודה.</translation>
-    </message>
-    <message>
-        <source>Open Configuration File</source>
-        <translation>פתיחת קובץ ההגדרות</translation>
-    </message>
-    <message>
-        <source>Reset all client options to default.</source>
-        <translation>איפוס כל אפשרויות התכנית לבררת המחדל.</translation>
-    </message>
-    <message>
-        <source>&amp;Reset Options</source>
-        <translation>&amp;איפוס אפשרויות</translation>
-    </message>
-    <message>
+        <location line="+21"/>
         <source>&amp;Network</source>
-        <translation>&amp;רשת</translation>
+        <translation>רשת</translation>
     </message>
     <message>
-        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = אוטומטי, &lt;0 = להשאיר כזאת כמות של ליבות חופשיות)</translation>
+        <location line="+6"/>
+        <source>Automatically open the Aithercoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>W&amp;allet</source>
-        <translation>&amp;ארנק</translation>
-    </message>
-    <message>
-        <source>Expert</source>
-        <translation>מומחה</translation>
-    </message>
-    <message>
-        <source>Enable coin &amp;control features</source>
-        <translation>הפעלת תכונות &amp;בקרת מטבעות</translation>
-    </message>
-    <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>אם אפשרות ההשקעה של עודף בלתי מאושר תנוטרל, לא ניתן יהיה להשתמש בעודף מההעברה עד שלהעברה יהיה לפחות אישור אחד. פעולה זו גם משפיעה על חישוב המאזן שלך.</translation>
-    </message>
-    <message>
-        <source>&amp;Spend unconfirmed change</source>
-        <translation>עודף &amp;בלתי מאושר מההשקעה</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>פתיחת הפתחה של ביטקוין בנתב באופן אוטומטי. עובד רק אם UPnP מופעל ונתמך בנתב.</translation>
-    </message>
-    <message>
+        <location line="+3"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>מיפוי פתחה באמצעות UPnP</translation>
+        <translation>מיפוי פורט באמצעות UPnP</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>התחבר לרשת הביטקוין דרך פרוקסי SOCKS5.</translation>
+        <location line="+7"/>
+        <source>Connect to the Aithercoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
+        <source>&amp;Connect through SOCKS proxy:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Proxy &amp;IP:</source>
-        <translation>כתובת ה־IP של המ&amp;תווך:</translation>
+        <translation>כתובת IP של פרוקסי:</translation>
     </message>
     <message>
+        <location line="+19"/>
+        <source>IP address of the proxy (e.g. 127.0.0.1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>&amp;Port:</source>
-        <translation>&amp;פתחה:</translation>
+        <translation>פורט:</translation>
     </message>
     <message>
+        <location line="+19"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>הפתחה של המתווך (למשל 9050)</translation>
+        <translation>הפורט של הפרוקסי (למשל 9050)</translation>
     </message>
     <message>
-        <source>Used for reaching peers via:</source>
-        <translation>עבור הגעה לעמיתים דרך:</translation>
+        <location line="+7"/>
+        <source>SOCKS &amp;Version:</source>
+        <translation>גרסת SOCKS:</translation>
     </message>
     <message>
-        <source>IPv4</source>
-        <translation>IPv4</translation>
+        <location line="+13"/>
+        <source>SOCKS version of the proxy (e.g. 5)</source>
+        <translation>גרסת SOCKS של הפרוקסי (למשל 5)</translation>
     </message>
     <message>
-        <source>IPv6</source>
-        <translation>IPv6</translation>
-    </message>
-    <message>
-        <source>Tor</source>
-        <translation>Tor</translation>
-    </message>
-    <message>
+        <location line="+36"/>
         <source>&amp;Window</source>
-        <translation>&amp;חלון</translation>
+        <translation>חלון</translation>
     </message>
     <message>
+        <location line="+6"/>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>הצג סמל מגש בלבד לאחר מזעור החלון.</translation>
     </message>
     <message>
+        <location line="+3"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>מ&amp;זעור למגש במקום לשורת המשימות</translation>
+        <translation>מ&amp;זער למגש במקום לשורת המשימות</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
+        <translation>מזער את התוכנה במקום לצאת ממנה כשהחלון נסגר. כשאפשרות זו פעילה, התוכנה תיסגר רק לאחר בחירת יציאה מהתפריט.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>M&amp;inimize on close</source>
-        <translation>מ&amp;זעור עם סגירה</translation>
+        <translation>מזער בעת סגירה</translation>
     </message>
     <message>
+        <location line="+21"/>
         <source>&amp;Display</source>
-        <translation>ת&amp;צוגה</translation>
+        <translation>תצוגה</translation>
     </message>
     <message>
+        <location line="+8"/>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;שפת מנשק המשתמש:</translation>
+        <translation>שפת ממשק המשתמש:</translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation>ניתן להגדיר כאן את שפת מנשק המשתמש. הגדרה זו תיכנס לתוקף לאחר הפעלה של %1 מחדש.</translation>
+        <location line="+13"/>
+        <source>The user interface language can be set here. This setting will take effect after restarting Aithercoin.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+11"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>י&amp;חידת מידה להצגת כמויות:</translation>
+        <translation>יחידת מדידה להצגת כמויות:</translation>
     </message>
     <message>
+        <location line="+13"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>ניתן לבחור את בררת המחדל ליחידת החלוקה שתוצג במנשק ובעת שליחת מטבעות.</translation>
+        <translation>בחר את ברירת המחדל ליחידת החלוקה אשר תוצג בממשק ובעת שליחת מטבעות.</translation>
     </message>
     <message>
+        <location line="+9"/>
+        <source>Whether to show Aithercoin addresses in the transaction list or not.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Display addresses in transaction list</source>
+        <translation>הצג כתובות ברשימת הפעולות</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Whether to show coin control features or not.</source>
-        <translation>האם להציג תכונות שליטת מטבע או לא.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Display coin &amp;control features (experts only!)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+71"/>
         <source>&amp;OK</source>
-        <translation>&amp;אישור</translation>
+        <translation>אישור</translation>
     </message>
     <message>
+        <location line="+7"/>
         <source>&amp;Cancel</source>
-        <translation>&amp;ביטול</translation>
+        <translation>ביטול</translation>
     </message>
     <message>
+        <location line="+10"/>
+        <source>&amp;Apply</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="+55"/>
         <source>default</source>
-        <translation>בררת מחדל</translation>
+        <translation>ברירת מחדל</translation>
     </message>
     <message>
-        <source>none</source>
-        <translation>ללא</translation>
+        <location line="+149"/>
+        <location line="+9"/>
+        <source>Warning</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Confirm options reset</source>
-        <translation>אישור איפוס האפשרויות</translation>
+        <location line="-9"/>
+        <location line="+9"/>
+        <source>This setting will take effect after restarting Aithercoin.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Client restart required to activate changes.</source>
-        <translation>נדרשת הפעלה מחדש של הלקוח כדי להפעיל את השינויים.</translation>
-    </message>
-    <message>
-        <source>Client will be shut down. Do you want to proceed?</source>
-        <translation>הלקוח יכבה. להמשיך?</translation>
-    </message>
-    <message>
-        <source>Configuration options</source>
-        <translation>אפשרויות להגדרה</translation>
-    </message>
-    <message>
-        <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
-        <translation>בקובץ ההגדרות ניתן לציין אפשרויות מתקדמות אשר יקבלו עדיפות על ההגדרות בממשק הגרפי. כמו כן, אפשרויות בשורת הפקודה יקבלו עדיפות על קובץ ההגדרות.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>שגיאה</translation>
-    </message>
-    <message>
-        <source>The configuration file could not be opened.</source>
-        <translation>לא ניתן לפתוח את קובץ ההגדרות</translation>
-    </message>
-    <message>
-        <source>This change would require a client restart.</source>
-        <translation>שינוי זה ידרוש הפעלה מחדש של תכנית הלקוח.</translation>
-    </message>
-    <message>
+        <location line="+29"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation>כתובת המתווך שסופקה אינה תקינה.</translation>
+        <translation>כתובת הפרוקסי שסופקה אינה תקינה.</translation>
     </message>
 </context>
 <context>
     <name>OverviewPage</name>
     <message>
+        <location filename="../forms/overviewpage.ui" line="+14"/>
         <source>Form</source>
         <translation>טופס</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>המידע המוצג עשוי להיות מיושן. הארנק שלך מסתנכרן באופן אוטומטי עם רשת הביטקוין לאחר יצירת החיבור, אך התהליך טרם הסתיים.</translation>
+        <location line="+33"/>
+        <location line="+231"/>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Aithercoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation>צפייה בלבד:</translation>
+        <location line="-160"/>
+        <source>Stake:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Available:</source>
-        <translation>זמין:</translation>
+        <location line="+29"/>
+        <source>Unconfirmed:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-107"/>
+        <source>Wallet</source>
+        <translation>ארנק</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <source>Spendable:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Your current spendable balance</source>
         <translation>היתרה הזמינה הנוכחית</translation>
     </message>
     <message>
-        <source>Pending:</source>
-        <translation>בהמתנה:</translation>
-    </message>
-    <message>
-        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>הסכום הכולל של העברות שטרם אושרו ועדיין אינן נספרות בחישוב היתרה הזמינה</translation>
-    </message>
-    <message>
+        <location line="+71"/>
         <source>Immature:</source>
         <translation>לא בשל:</translation>
     </message>
     <message>
+        <location line="+13"/>
         <source>Mined balance that has not yet matured</source>
         <translation>מאזן שנכרה וטרם הבשיל</translation>
     </message>
     <message>
-        <source>Balances</source>
-        <translation>מאזנים</translation>
-    </message>
-    <message>
+        <location line="+20"/>
         <source>Total:</source>
         <translation>סך הכול:</translation>
     </message>
     <message>
+        <location line="+16"/>
         <source>Your current total balance</source>
         <translation>סך כל היתרה הנוכחית שלך</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation>המאזן הנוכחי שלך בכתובות לקריאה בלבד</translation>
+        <location line="+46"/>
+        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
+        <translation>&lt;b&gt;פעולות אחרונות&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Spendable:</source>
-        <translation>ניתנים לבזבוז</translation>
+        <location line="-108"/>
+        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Recent transactions</source>
-        <translation>העברות אחרונות</translation>
+        <location line="-29"/>
+        <source>Total of coins that was staked, and do not yet count toward the current balance</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation>העברות בלתי מאושרות לכתובות לצפייה בלבד</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation>מאזן לאחר כרייה בכתובות לצפייה בלבד שעדיין לא הבשילו</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation>המאזן הכולל הנוכחי בכתובות לצפייה בלבד</translation>
+        <location filename="../overviewpage.cpp" line="+113"/>
+        <location line="+1"/>
+        <source>out of sync</source>
+        <translation>לא מסונכרן</translation>
     </message>
 </context>
 <context>
-    <name>PaymentServer</name>
+    <name>QRCodeDialog</name>
     <message>
-        <source>Payment request error</source>
-        <translation>שגיאת בקשת תשלום</translation>
-    </message>
-    <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>לא ניתן להפעיל את המקשר bitcoin: click-to-pay</translation>
+        <location filename="../forms/qrcodedialog.ui" line="+14"/>
+        <source>QR Code Dialog</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>URI handling</source>
-        <translation>טיפול בכתובות</translation>
+        <location line="+59"/>
+        <source>Request Payment</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Invalid payment address %1</source>
-        <translation>כתובת תשלום שגויה %1</translation>
+        <location line="+56"/>
+        <source>Amount:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>לא ניתן לנתח את כתובת המשאב! מצב זה יכול לקרות עקב כתובת ביטקוין שגויה או פרמטרים שגויים בכתובת המשאב.</translation>
+        <location line="-44"/>
+        <source>Label:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request file handling</source>
-        <translation>טיפול בקבצי בקשות תשלום</translation>
+        <location line="+19"/>
+        <source>Message:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>לא ניתן לקרוא את קובץ בקשת התשלום! מצב כזה יכול לקרות בעקבות קובץ בקשת תשלום פגום.</translation>
+        <location line="+71"/>
+        <source>&amp;Save As...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request rejected</source>
-        <translation>בקשת התשלום נדחתה</translation>
+        <location filename="../qrcodedialog.cpp" line="+62"/>
+        <source>Error encoding URI into QR Code.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>רשת בקשת התשלום אינה תואמת לרשת הלקוח.</translation>
+        <location line="+40"/>
+        <source>The entered amount is invalid, please check.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request expired.</source>
-        <translation>בקשת התשלום פגה.</translation>
+        <location line="+23"/>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request is not initialized.</source>
-        <translation>בקשת התשלום לא הופעלה.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>בקשות תשלום לתסריטי תשלום מותאמים אישית שלא עברו וידוא אינן נתמכות.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>בקשת תשלום שגויה.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>הסכום על סך %1 הנדרש לתשלום קטן מדי (נחשב לאבק)</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>זיכוי מאת %1</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>שגיאה בעת יצירת קשר עם %1:‏ %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>לא ניתן לפענח את בקשת התשלום!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>תגובה שגויה מהשרת %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>שגיאת בקשת רשת</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>התשלום אושר</translation>
-    </message>
-</context>
-<context>
-    <name>PeerTableModel</name>
-    <message>
-        <source>User Agent</source>
-        <translation>סוכן משתמש</translation>
-    </message>
-    <message>
-        <source>Node/Service</source>
-        <translation>צומת/שירות</translation>
-    </message>
-    <message>
-        <source>NodeId</source>
-        <translation>מזהה צומת</translation>
-    </message>
-    <message>
-        <source>Ping</source>
-        <translation>פינג</translation>
-    </message>
-    <message>
-        <source>Sent</source>
-        <translation>נשלחו</translation>
-    </message>
-    <message>
-        <source>Received</source>
-        <translation>התקבלו</translation>
-    </message>
-</context>
-<context>
-    <name>QObject</name>
-    <message>
-        <source>Amount</source>
-        <translation>כמות</translation>
-    </message>
-    <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>נא להזין כתובת ביטקוין (למשל: %1)</translation>
-    </message>
-    <message>
-        <source>%1 d</source>
-        <translation>%1 ימים</translation>
-    </message>
-    <message>
-        <source>%1 h</source>
-        <translation>%1 שעות</translation>
-    </message>
-    <message>
-        <source>%1 m</source>
-        <translation>%1 דקות</translation>
-    </message>
-    <message>
-        <source>%1 s</source>
-        <translation>%1 שניות</translation>
-    </message>
-    <message>
-        <source>None</source>
-        <translation>ללא</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>לא זמין</translation>
-    </message>
-    <message>
-        <source>%1 ms</source>
-        <translation>%1 מילישניות</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n second(s)</source>
-        <translation><numerusform>שנייה אחת</numerusform><numerusform>%n שניות</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n minute(s)</source>
-        <translation><numerusform>דקה אחת</numerusform><numerusform>%n דקות</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>שעה אחת</numerusform><numerusform>%n שעות</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>יום אחד</numerusform><numerusform>%n ימים</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>שבוע אחד</numerusform><numerusform>%n שבועות</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 ו%2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>שנה אחת</numerusform><numerusform>%n שנים</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 ב׳</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 ק״ב</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 מ״ב</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 ג״ב</translation>
-    </message>
-    <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>הסגירה של %1 לא הושלמה בהצלחה עדיין…</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>לא ידוע</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>שגיאה: תיקיית הנתונים שצוינה „%1” אינה קיימת.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>שגיאה: לא ניתן לפענח את התצורה: %1. יש להשתמש אך ורק בתחביר מפתח=ערך.</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>שגיאה: %1</translation>
-    </message>
-</context>
-<context>
-    <name>QRImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;שמירת תמונה…</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Image</source>
-        <translation>העתקת ת&amp;מונה</translation>
-    </message>
-    <message>
+        <location line="+25"/>
         <source>Save QR Code</source>
-        <translation>שמירת קוד QR</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>PNG Image (*.png)</source>
-        <translation>תמונת PNG (‏‎*.png)</translation>
+        <location line="+0"/>
+        <source>PNG Images (*.png)</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>RPCConsole</name>
     <message>
+        <location filename="../forms/rpcconsole.ui" line="+46"/>
+        <source>Client name</source>
+        <translation>שם ממשק</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location line="+23"/>
+        <location line="+26"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+36"/>
+        <location line="+53"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location filename="../rpcconsole.cpp" line="+348"/>
         <source>N/A</source>
-        <translation>לא זמין</translation>
+        <translation>N/A</translation>
     </message>
     <message>
+        <location line="-217"/>
         <source>Client version</source>
-        <translation>גרסת מנשק</translation>
+        <translation>גרסת ממשק</translation>
     </message>
     <message>
+        <location line="-45"/>
         <source>&amp;Information</source>
-        <translation>מי&amp;דע</translation>
+        <translation>מידע</translation>
     </message>
     <message>
-        <source>Debug window</source>
-        <translation>חלון ניפוי</translation>
+        <location line="+68"/>
+        <source>Using OpenSSL version</source>
+        <translation>משתמש ב-OpenSSL גרסה</translation>
     </message>
     <message>
-        <source>General</source>
-        <translation>כללי</translation>
-    </message>
-    <message>
-        <source>Using BerkeleyDB version</source>
-        <translation>שימוש ב־BerkeleyDB גרסה</translation>
-    </message>
-    <message>
-        <source>Datadir</source>
-        <translation>Datadir</translation>
-    </message>
-    <message>
+        <location line="+49"/>
         <source>Startup time</source>
-        <translation>זמן עלייה</translation>
+        <translation>זמן אתחול</translation>
     </message>
     <message>
+        <location line="+29"/>
         <source>Network</source>
         <translation>רשת</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>שם</translation>
-    </message>
-    <message>
+        <location line="+7"/>
         <source>Number of connections</source>
         <translation>מספר חיבורים</translation>
     </message>
     <message>
+        <location line="+23"/>
+        <source>On testnet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>Block chain</source>
-        <translation>שרשרת מקטעים</translation>
+        <translation>שרשרת הבלוקים</translation>
     </message>
     <message>
+        <location line="+7"/>
         <source>Current number of blocks</source>
-        <translation>מספר המקטעים הנוכחי</translation>
+        <translation>מספר הבלוקים הנוכחי</translation>
     </message>
     <message>
-        <source>Memory Pool</source>
-        <translation>מאגר זכרון</translation>
+        <location line="+23"/>
+        <source>Estimated total blocks</source>
+        <translation>מספר כולל משוער של בלוקים</translation>
     </message>
     <message>
-        <source>Current number of transactions</source>
-        <translation>מספר הפעולה הנוכחי</translation>
-    </message>
-    <message>
-        <source>Memory usage</source>
-        <translation>שימוש בזכרון</translation>
-    </message>
-    <message>
-        <source>&amp;Reset</source>
-        <translation>&amp;איפוס</translation>
-    </message>
-    <message>
-        <source>Received</source>
-        <translation>התקבלו</translation>
-    </message>
-    <message>
-        <source>Sent</source>
-        <translation>נשלחו</translation>
-    </message>
-    <message>
-        <source>&amp;Peers</source>
-        <translation>&amp;עמיתים</translation>
-    </message>
-    <message>
-        <source>Banned peers</source>
-        <translation>משתמשים חסומים</translation>
-    </message>
-    <message>
-        <source>Select a peer to view detailed information.</source>
-        <translation>נא לבחור בעמית כדי להציג מידע מפורט.</translation>
-    </message>
-    <message>
-        <source>Whitelisted</source>
-        <translation>ברשימה הלבנה</translation>
-    </message>
-    <message>
-        <source>Direction</source>
-        <translation>כיוון</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>גרסה</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation>בלוק התחלה</translation>
-    </message>
-    <message>
-        <source>Synced Headers</source>
-        <translation>כותרות עדכניות</translation>
-    </message>
-    <message>
-        <source>Synced Blocks</source>
-        <translation>בלוקים מסונכרנים</translation>
-    </message>
-    <message>
-        <source>User Agent</source>
-        <translation>סוכן משתמש</translation>
-    </message>
-    <message>
-        <source>Decrease font size</source>
-        <translation>הקטן גודל גופן</translation>
-    </message>
-    <message>
-        <source>Increase font size</source>
-        <translation>הגדל גודל גופן</translation>
-    </message>
-    <message>
-        <source>Services</source>
-        <translation>שירותים</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>דירוג חסימה</translation>
-    </message>
-    <message>
-        <source>Connection Time</source>
-        <translation>זמן החיבור</translation>
-    </message>
-    <message>
-        <source>Last Send</source>
-        <translation>שליחה אחרונה</translation>
-    </message>
-    <message>
-        <source>Last Receive</source>
-        <translation>קבלה אחרונה</translation>
-    </message>
-    <message>
-        <source>Ping Time</source>
-        <translation>זמן המענה</translation>
-    </message>
-    <message>
-        <source>Ping Wait</source>
-        <translation>פינג</translation>
-    </message>
-    <message>
-        <source>Time Offset</source>
-        <translation>הפרש זמן</translation>
-    </message>
-    <message>
+        <location line="+23"/>
         <source>Last block time</source>
-        <translation>זמן המקטע האחרון</translation>
+        <translation>זמן הבלוק האחרון</translation>
     </message>
     <message>
+        <location line="+52"/>
         <source>&amp;Open</source>
-        <translation>&amp;פתיחה</translation>
+        <translation>פתח</translation>
     </message>
     <message>
+        <location line="+16"/>
+        <source>Command-line options</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Show the Aithercoin-Qt help message to get a list with possible Aithercoin command-line options.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Show</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+24"/>
         <source>&amp;Console</source>
-        <translation>מ&amp;סוף בקרה</translation>
+        <translation>לוח בקרה</translation>
     </message>
     <message>
-        <source>&amp;Network Traffic</source>
-        <translation>&amp;תעבורת רשת</translation>
+        <location line="-260"/>
+        <source>Build date</source>
+        <translation>תאריך בניה</translation>
     </message>
     <message>
-        <source>Totals</source>
-        <translation>סכומים</translation>
+        <location line="-104"/>
+        <source>Aithercoin - Debug window</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>In:</source>
-        <translation>נכנס:</translation>
+        <location line="+25"/>
+        <source>Aithercoin Core</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Out:</source>
-        <translation>יוצא:</translation>
-    </message>
-    <message>
+        <location line="+279"/>
         <source>Debug log file</source>
         <translation>קובץ יומן ניפוי</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Open the Aithercoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+102"/>
         <source>Clear console</source>
-        <translation>ניקוי מסוף הבקרה</translation>
+        <translation>נקה לוח בקרה</translation>
     </message>
     <message>
-        <source>1 &amp;hour</source>
-        <translation>&amp;שעה אחת</translation>
+        <location filename="../rpcconsole.cpp" line="-33"/>
+        <source>Welcome to the Aithercoin RPC console.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>1 &amp;day</source>
-        <translation>&amp;יום אחד</translation>
+        <location line="+1"/>
+        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
+        <translation>השתמש בחיצים למעלה ולמטה כדי לנווט בהיסטוריה, ו- &lt;b&gt;Ctrl-L&lt;/b&gt; כדי לנקות את המסך.</translation>
     </message>
     <message>
-        <source>1 &amp;week</source>
-        <translation>ש&amp;בוע אחד</translation>
-    </message>
-    <message>
-        <source>1 &amp;year</source>
-        <translation>ש&amp;נה אחת</translation>
-    </message>
-    <message>
-        <source>&amp;Disconnect</source>
-        <translation>&amp;ניתוק</translation>
-    </message>
-    <message>
-        <source>Ban for</source>
-        <translation>חסימה למשך</translation>
-    </message>
-    <message>
-        <source>&amp;Unban</source>
-        <translation>&amp;שחרור חסימה</translation>
-    </message>
-    <message>
-        <source>Welcome to the %1 RPC console.</source>
-        <translation>ברוך בואך למסוף ה־RPC של %1.</translation>
-    </message>
-    <message>
-        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>יש להשתמש בחצים למעלה ומלטה כדי לנווט בהסיטוריה וב־%1 כדי לנקות את המסך.</translation>
-    </message>
-    <message>
-        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>אזהרה! ישנם רמאים הנוהגים לשכנע משתמשים להקליד פקודות כאן ועל ידי כך לגנוב את תכולת הארנק שלהם. אל תשתמש במסוף הבקרה מבלי שאתה מבין באופן מלא את המשמעות של הפקודה!</translation>
-    </message>
-    <message>
-        <source>Network activity disabled</source>
-        <translation>פעילות הרשת נוטרלה</translation>
-    </message>
-    <message>
-        <source>via %1</source>
-        <translation>דרך %1</translation>
-    </message>
-    <message>
-        <source>never</source>
-        <translation>לעולם לא</translation>
-    </message>
-    <message>
-        <source>Inbound</source>
-        <translation>תעבורה נכנסת</translation>
-    </message>
-    <message>
-        <source>Outbound</source>
-        <translation>תעבורה יוצאת</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>כן</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>לא</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>לא ידוע</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveCoinsDialog</name>
-    <message>
-        <source>&amp;Amount:</source>
-        <translation>&amp;סכום:</translation>
-    </message>
-    <message>
-        <source>&amp;Label:</source>
-        <translation>ת&amp;ווית:</translation>
-    </message>
-    <message>
-        <source>&amp;Message:</source>
-        <translation>הו&amp;דעה:</translation>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation>הודעת רשות לצירוף לבקשת התשלום שתוצג בעת פתיחת הבקשה. לתשומת לבך: ההודעה לא תישלח עם התשלום ברשת ביטקוין.</translation>
-    </message>
-    <message>
-        <source>An optional label to associate with the new receiving address.</source>
-        <translation>תווית רשות לשיוך עם כתובת הקבלה החדשה.</translation>
-    </message>
-    <message>
-        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>יש להשתמש בטופס זה כדי לבקש תשלומים. כל השדות הם בגדר &lt;b&gt;רשות&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation>סכום כרשות לבקשה. ניתן להשאיר זאת ריק כדי לא לבקש סכום מסוים.</translation>
-    </message>
-    <message>
-        <source>Clear all fields of the form.</source>
-        <translation>ניקוי של כל השדות בטופס.</translation>
-    </message>
-    <message>
-        <source>Clear</source>
-        <translation>ניקוי</translation>
-    </message>
-    <message>
-        <source>Requested payments history</source>
-        <translation>היסטוריית בקשות תשלום</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;בקשת תשלום</translation>
-    </message>
-    <message>
-        <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation>הצגת בקשות נבחרות (דומה ללחיצה כפולה על רשומה)</translation>
-    </message>
-    <message>
-        <source>Show</source>
-        <translation>הצגה</translation>
-    </message>
-    <message>
-        <source>Remove the selected entries from the list</source>
-        <translation>הסרת הרשומות הנבחרות מהרשימה</translation>
-    </message>
-    <message>
-        <source>Remove</source>
-        <translation>הסרה</translation>
-    </message>
-    <message>
-        <source>Copy URI</source>
-        <translation>העתקת כתובת</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>העתקת התווית</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation>העתקת הודעה</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>העתקת הסכום</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveRequestDialog</name>
-    <message>
-        <source>QR Code</source>
-        <translation>קוד QR</translation>
-    </message>
-    <message>
-        <source>Copy &amp;URI</source>
-        <translation>העתקת &amp;כתובת משאב</translation>
-    </message>
-    <message>
-        <source>Copy &amp;Address</source>
-        <translation>העתקת &amp;כתובת</translation>
-    </message>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;שמירת תמונה…</translation>
-    </message>
-    <message>
-        <source>Request payment to %1</source>
-        <translation>בקשת תשלום אל %1</translation>
-    </message>
-    <message>
-        <source>Payment information</source>
-        <translation>פרטי תשלום</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>כתובת</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>כתובת</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>סכום</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>תוית</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>הודעה</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>הכתובת שנוצרה ארוכה מדי, כדאי לנסות לקצר את הטקסט של התווית / הודעה.</translation>
-    </message>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>תאריך</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>תוית</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>הודעה</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(ללא תוית)</translation>
-    </message>
-    <message>
-        <source>(no message)</source>
-        <translation>(אין הודעה)</translation>
-    </message>
-    <message>
-        <source>(no amount requested)</source>
-        <translation>(לא התבקש סכום)</translation>
-    </message>
-    <message>
-        <source>Requested</source>
-        <translation>בקשה</translation>
+        <location line="+1"/>
+        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
+        <translation>הקלד &lt;b&gt;help&lt;/b&gt; בשביל סקירה של הפקודות הזמינות.</translation>
     </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
+        <location filename="../sendcoinsdialog.cpp" line="+182"/>
+        <location line="+5"/>
+        <location line="+5"/>
+        <location line="+5"/>
+        <location line="+6"/>
+        <location line="+5"/>
+        <location line="+5"/>
         <source>Send Coins</source>
-        <translation>שליחת מטבעות</translation>
+        <translation>שלח מטבעות</translation>
     </message>
     <message>
+        <location line="+76"/>
         <source>Coin Control Features</source>
-        <translation>תכונות בקרת מטבעות</translation>
+        <translation>ה</translation>
     </message>
     <message>
+        <location line="+20"/>
         <source>Inputs...</source>
-        <translation>קלטים…</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+7"/>
         <source>automatically selected</source>
-        <translation>בבחירה אוטומטית</translation>
+        <translation>נבחר אוטומאטית</translation>
     </message>
     <message>
+        <location line="+19"/>
         <source>Insufficient funds!</source>
         <translation>אין מספיק כספים!</translation>
     </message>
     <message>
+        <location line="+77"/>
         <source>Quantity:</source>
         <translation>כמות:</translation>
     </message>
     <message>
+        <location line="+22"/>
+        <location line="+35"/>
+        <source>0</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-19"/>
         <source>Bytes:</source>
-        <translation>בתים:</translation>
+        <translation>בייטים:</translation>
     </message>
     <message>
+        <location line="+51"/>
         <source>Amount:</source>
-        <translation>סכום:</translation>
+        <translation>כמות:</translation>
     </message>
     <message>
+        <location line="+22"/>
+        <location line="+86"/>
+        <location line="+86"/>
+        <location line="+32"/>
+        <source>0.00 BC</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-191"/>
+        <source>Priority:</source>
+        <translation>קדימות:</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>medium</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>Fee:</source>
-        <translation>עמלה:</translation>
+        <translation>תשלום:</translation>
     </message>
     <message>
+        <location line="+35"/>
+        <source>Low Output:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>no</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>After Fee:</source>
         <translation>לאחר עמלה:</translation>
     </message>
     <message>
-        <source>Change:</source>
-        <translation>עודף:</translation>
+        <location line="+35"/>
+        <source>Change</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>אם אפשרות זו מופעלת אך כתובת העודף ריקה או שגויה, העודף יישלח לכתובת חדשה שתיווצר.</translation>
+        <location line="+50"/>
+        <source>custom change address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Custom change address</source>
-        <translation>כתובת לעודף מותאמת אישית</translation>
-    </message>
-    <message>
-        <source>Transaction Fee:</source>
-        <translation>עמלת העברה:</translation>
-    </message>
-    <message>
-        <source>Choose...</source>
-        <translation>בחר...</translation>
-    </message>
-    <message>
-        <source>Warning: Fee estimation is currently not possible.</source>
-        <translation>אזהרה</translation>
-    </message>
-    <message>
-        <source>collapse fee-settings</source>
-        <translation>צמצום הגדרות עמלה</translation>
-    </message>
-    <message>
-        <source>per kilobyte</source>
-        <translation>עבור קילו-בית</translation>
-    </message>
-    <message>
-        <source>Hide</source>
-        <translation>הסתר</translation>
-    </message>
-    <message>
-        <source>Recommended:</source>
-        <translation>מומלץ:</translation>
-    </message>
-    <message>
-        <source>Custom:</source>
-        <translation>מותאם אישית:</translation>
-    </message>
-    <message>
+        <location line="+106"/>
         <source>Send to multiple recipients at once</source>
-        <translation>שליחה למספר מוטבים בו־זמנית</translation>
+        <translation>שלח למספר מקבלים בו-זמנית</translation>
     </message>
     <message>
+        <location line="+3"/>
         <source>Add &amp;Recipient</source>
-        <translation>הוספת &amp;מוטב</translation>
+        <translation>הוסף מקבל</translation>
     </message>
     <message>
-        <source>Clear all fields of the form.</source>
-        <translation>ניקוי של כל השדות בטופס.</translation>
+        <location line="+20"/>
+        <source>Remove all transaction fields</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation>אבק:</translation>
-    </message>
-    <message>
+        <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;ניקוי הכול</translation>
+        <translation>נקה הכל</translation>
     </message>
     <message>
+        <location line="+28"/>
         <source>Balance:</source>
-        <translation>מאזן:</translation>
+        <translation>יתרה:</translation>
     </message>
     <message>
+        <location line="+16"/>
+        <source>123.456 BC</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+31"/>
         <source>Confirm the send action</source>
-        <translation>אישור פעולת השליחה</translation>
+        <translation>אשר את פעולת השליחה</translation>
     </message>
     <message>
+        <location line="+3"/>
         <source>S&amp;end</source>
-        <translation>&amp;שליחה</translation>
+        <translation>שלח</translation>
     </message>
     <message>
+        <location filename="../sendcoinsdialog.cpp" line="-173"/>
+        <source>Enter a Aithercoin address (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Copy quantity</source>
-        <translation>העתקת הכמות</translation>
+        <translation>העתק כמות</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy amount</source>
-        <translation>העתקת הסכום</translation>
+        <translation>העתק כמות</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy fee</source>
-        <translation>העתקת העמלה</translation>
+        <translation>העתק מחיר</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy after fee</source>
-        <translation>העתקה אחרי העמלה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
         <source>Copy bytes</source>
-        <translation>העתקת בתים</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation>העתקת אבק</translation>
+        <location line="+1"/>
+        <source>Copy priority</source>
+        <translation>העתק קדימות</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Copy low output</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copy change</source>
-        <translation>העתקת השינוי</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Are you sure you want to send?</source>
-        <translation>לשלוח?</translation>
+        <location line="+86"/>
+        <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>added as transaction fee</source>
-        <translation>נוספה עמלת העברה</translation>
-    </message>
-    <message>
-        <source>Total Amount %1</source>
-        <translation>סכום כולל %1</translation>
-    </message>
-    <message>
-        <source>or</source>
-        <translation>או</translation>
-    </message>
-    <message>
+        <location line="+5"/>
         <source>Confirm send coins</source>
-        <translation>אימות שליחת מטבעות</translation>
+        <translation>אשר שליחת מטבעות</translation>
     </message>
     <message>
-        <source>The recipient address is not valid. Please recheck.</source>
-        <translation>כתובת הנמען שגויה. נא לבדוק שוב.</translation>
+        <location line="+1"/>
+        <source>Are you sure you want to send %1?</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+0"/>
+        <source> and </source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>The recipient address is not valid, please recheck.</source>
+        <translation>כתובת המקבל אינה תקינה, אנא בדוק שנית.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>הסכום לתשלום צריך להיות גדול מ־0.</translation>
+        <translation>הכמות לשלם חייבת להיות גדולה מ-0.</translation>
     </message>
     <message>
+        <location line="+5"/>
         <source>The amount exceeds your balance.</source>
-        <translation>הסכום חורג מהמאזן שלך.</translation>
+        <translation>הכמות עולה על המאזן שלך.</translation>
     </message>
     <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>נמצאה כתובת כפולה: יש להשתמש בכל כתובת פעם אחת בלבד.</translation>
+        <location line="+5"/>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation>הכמות הכוללת, ובכללה עמלת פעולה בסך %1, עולה על המאזן שלך.</translation>
     </message>
     <message>
-        <source>Transaction creation failed!</source>
-        <translation>יצירת ההעברה נכשלה!</translation>
+        <location line="+6"/>
+        <source>Duplicate address found, can only send to each address once per send operation.</source>
+        <translation>כתובת כפולה נמצאה, ניתן לשלוח לכל כתובת רק פעם אחת בכל פעולת שליחה.</translation>
     </message>
     <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>ההעברה נדחתה מהסיבות הבאות: %1</translation>
+        <location line="+5"/>
+        <source>Error: Transaction creation failed.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation>עמלה מעל לסכום של %1 נחשבת לעמלה גבוהה באופן מוגזם.</translation>
+        <location line="+5"/>
+        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Payment request expired.</source>
-        <translation>בקשת התשלום פגה.</translation>
+        <location line="+251"/>
+        <source>WARNING: Invalid Aithercoin address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>תשלום של העמלה הנדרשת בלבד על סך %1</translation>
-    </message>
-    <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>אזהרה: כתובת ביטקיון שגויה</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown change address</source>
-        <translation>אזהרה: כתובת החלפה בלתי ידועה</translation>
-    </message>
-    <message>
-        <source>Confirm custom change address</source>
-        <translation>אימות כתובת החלפה בהתאמה אישית</translation>
-    </message>
-    <message>
-        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation>הכתובת שבחרת עבור ההחלפה אינה חלק מארנק זה. כל ההסכום שבארנק שלך עשוי להישלח לכתובת זו. מקובל עליך?</translation>
-    </message>
-    <message>
+        <location line="+13"/>
         <source>(no label)</source>
-        <translation>(ללא תווית)</translation>
+        <translation>(ללא תוית)</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>WARNING: unknown change address</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="+14"/>
+        <source>Form</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>A&amp;mount:</source>
-        <translation>&amp;כמות:</translation>
+        <translation>כ&amp;מות:</translation>
     </message>
     <message>
+        <location line="+13"/>
         <source>Pay &amp;To:</source>
-        <translation>לשלם ל&amp;טובת:</translation>
+        <translation>שלם &amp;ל:</translation>
     </message>
     <message>
+        <location line="+24"/>
+        <location filename="../sendcoinsentry.cpp" line="+25"/>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>הכנס תוית לכתובת הזאת כדי להכניס לפנקס הכתובות</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>&amp;Label:</source>
-        <translation>ת&amp;ווית:</translation>
+        <translation>ת&amp;וית:</translation>
     </message>
     <message>
-        <source>Choose previously used address</source>
-        <translation>בחירת כתובת שהייתה בשימוש</translation>
+        <location line="+18"/>
+        <source>The address to send the payment to  (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>This is a normal payment.</source>
-        <translation>זהו תשלום רגיל.</translation>
+        <location line="+10"/>
+        <source>Choose address from address book</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation>כתובת הביטקוין של המוטב</translation>
-    </message>
-    <message>
+        <location line="+10"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
+        <location line="+7"/>
         <source>Paste address from clipboard</source>
-        <translation>הדבקת כתובת מלוח הגזירים</translation>
+        <translation>הדבר כתובת מהלוח</translation>
     </message>
     <message>
+        <location line="+10"/>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
     <message>
-        <source>Remove this entry</source>
-        <translation>הסרת רשומה זו</translation>
+        <location line="+7"/>
+        <source>Remove this recipient</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>העמלה תנוכה מהסכום שנשלח. הנמען יקבל פחות ביטקוינים ממה שהזנת בשדה הסכום. אם נבחרו מספר נמענים, העמלה תחולק באופן שווה.</translation>
-    </message>
-    <message>
-        <source>S&amp;ubtract fee from amount</source>
-        <translation>ה&amp;חסרת העמלה מהסכום</translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation>הודעה:</translation>
-    </message>
-    <message>
-        <source>This is an unauthenticated payment request.</source>
-        <translation>זוהי בקשת תשלום לא מאומתת.</translation>
-    </message>
-    <message>
-        <source>This is an authenticated payment request.</source>
-        <translation>זוהי בקשה מאומתת לתשלום.</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>יש להזין תווית עבור כתובת זו כדי להוסיף אותה לרשימת הכתובות בשימוש</translation>
-    </message>
-    <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>הודעה שצורפה לביטקוין: כתובת שתאוחסן בהעברה לצורך מעקב מצדך. לתשומת לבך: הודעה זו לא תישלח ברשת הביטקוין.</translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation>תשלום לטובת:</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation>תזכורת:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>נא להזין תווית לכתובת זו כדי להוסיף אותה לספר הכתובות שלך</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>כן</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down...</source>
-        <translation>%1 בתהליך כיבוי...</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation>אין לכבות את המחשב עד שחלון זה נעלם.</translation>
+        <location filename="../sendcoinsentry.cpp" line="+1"/>
+        <source>Enter a Aithercoin address (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
+        <location filename="../forms/signverifymessagedialog.ui" line="+14"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>חתימות - חתימה או אימות של הודעה</translation>
+        <translation>חתימות - חתום או אמת הודעה</translation>
     </message>
     <message>
+        <location line="+13"/>
+        <location line="+124"/>
         <source>&amp;Sign Message</source>
-        <translation>חתימה על הו&amp;דעה</translation>
+        <translation>חתום על הו&amp;דעה</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>באפשרותך לחתום על הודעות/הסכמים באמצעות הכתובות שלך, כדי להוכיח שאתה יכול לקבל את הביטקוינים הנשלחים אליהן. היזהר לא לחתום על תוכן עמום או אקראי, מכיוון שתקיפות פישינג עשויות לנסות לגנוב את הזהות שלך. חתום רק על הצהרות מפורטות שאתה מסכים להן.</translation>
+        <location line="-118"/>
+        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>אתה יכול לחתום על הודעות עם הכתובות שלך כדי להוכיח שהן בבעלותך. היזהר לא לחתום על משהו מעורפל, שכן התקפות פישינג עשויות לגרום לך בעורמה למסור את זהותך. חתום רק על אמרות מפורטות לחלוטין שאתה מסכים עימן.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation>כתובת הביטקוין אתה לחתום אתה את ההודעה</translation>
+        <location line="+18"/>
+        <source>The address to sign the message with (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Choose previously used address</source>
-        <translation>בחירת כתובת שהייתה בשימוש</translation>
+        <location line="+10"/>
+        <location line="+203"/>
+        <source>Choose an address from the address book</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-193"/>
+        <location line="+203"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
+        <location line="-193"/>
         <source>Paste address from clipboard</source>
-        <translation>הדבקת כתובת מלוח הגזירים</translation>
+        <translation>הדבק כתובת מהלוח</translation>
     </message>
     <message>
+        <location line="+10"/>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
     <message>
+        <location line="+12"/>
         <source>Enter the message you want to sign here</source>
-        <translation>יש להוסיף כאן את ההודעה עליה לחתום</translation>
+        <translation>הכנס כאן את ההודעה שעליך ברצונך לחתום</translation>
     </message>
     <message>
-        <source>Signature</source>
-        <translation>חתימה</translation>
-    </message>
-    <message>
+        <location line="+24"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>העתקת החתימה הנוכחית ללוח הגזירים</translation>
+        <translation>העתק את החתימה הנוכחית ללוח המערכת</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>ניתן לחתום על ההודעה כדי להוכיח שכתובת הביטקוין הזו בבעלותך.</translation>
+        <location line="+21"/>
+        <source>Sign the message to prove you own this Aithercoin address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Sign &amp;Message</source>
-        <translation>&amp;חתימה על הודעה</translation>
-    </message>
-    <message>
+        <location line="+17"/>
         <source>Reset all sign message fields</source>
-        <translation>איפוס כל שדות החתימה על הודעה</translation>
+        <translation>אפס את כל שדות החתימה על הודעה</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <location line="+146"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;ניקוי הכול</translation>
+        <translation>נקה הכל</translation>
     </message>
     <message>
+        <location line="-87"/>
+        <location line="+70"/>
         <source>&amp;Verify Message</source>
-        <translation>&amp;אימות הודעה</translation>
+        <translation>אמת הודעה</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation>כתובת הביטקוין שאתה נחתמה ההודעה</translation>
+        <location line="-64"/>
+        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
+        <translation>הכנס למטה את הכתובת החותמת, ההודעה (ודא שאתה מעתיק מעברי שורה, רווחים, טאבים וכו&apos; באופן מדויק) והחתימה כדי לאמת את ההודעה. היזהר לא לפרש את החתימה כיותר ממה שמופיע בהודעה החתומה בעצמה, כדי להימנע מליפול קורבן למתקפת איש-באמצע.</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>ניתן לאמת את ההודעה כדי להבטיח שהיא נחתמה עם כתובת הביטקוין הנתונה</translation>
+        <location line="+21"/>
+        <source>The address the message was signed with (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Verify &amp;Message</source>
-        <translation>&amp;אימות הודעה</translation>
+        <location line="+40"/>
+        <source>Verify the message to ensure it was signed with the specified Aithercoin address</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+17"/>
         <source>Reset all verify message fields</source>
-        <translation>איפוס כל שדות אימות ההודעה</translation>
+        <translation>אפס את כל שדות אימות הודעה</translation>
     </message>
     <message>
-        <source>Click "Sign Message" to generate signature</source>
-        <translation>יש ללחוץ על „חתימת ההודעה“ כדי לייצר חתימה</translation>
+        <location filename="../signverifymessagedialog.cpp" line="+27"/>
+        <location line="+3"/>
+        <source>Enter a Aithercoin address (e.g. A8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-2"/>
+        <source>Click &quot;Sign Message&quot; to generate signature</source>
+        <translation>לחץ &quot;חתום על ההודעה&quot; כדי לחולל חתימה</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Enter Aithercoin signature</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+82"/>
+        <location line="+81"/>
         <source>The entered address is invalid.</source>
-        <translation>הכתובת שהוזנה שגויה.</translation>
+        <translation>הכתובת שהוכנסה אינה תקינה.</translation>
     </message>
     <message>
+        <location line="-81"/>
+        <location line="+8"/>
+        <location line="+73"/>
+        <location line="+8"/>
         <source>Please check the address and try again.</source>
-        <translation>נא לבדוק את הכתובת ולנסות שוב.</translation>
+        <translation>אנא בדוק את הכתובת ונסה שנית.</translation>
     </message>
     <message>
+        <location line="-81"/>
+        <location line="+81"/>
         <source>The entered address does not refer to a key.</source>
-        <translation>הכתובת שהוזנה לא מתייחסת למפתח.</translation>
+        <translation>הכתובת שהוכנסה אינה מתייחסת למפתח.</translation>
     </message>
     <message>
+        <location line="-73"/>
         <source>Wallet unlock was cancelled.</source>
-        <translation>שחרור הארנק בוטל.</translation>
+        <translation>פתיחת הארנק בוטלה.</translation>
     </message>
     <message>
+        <location line="+8"/>
         <source>Private key for the entered address is not available.</source>
-        <translation>המפתח הפרטי לכתובת שהוכנסה אינו זמין.</translation>
+        <translation>המפתח הפרטי עבור הכתובת שהוכנסה אינו זמין.</translation>
     </message>
     <message>
+        <location line="+12"/>
         <source>Message signing failed.</source>
-        <translation>חתימת ההודעה נכשלה.</translation>
+        <translation>החתימה על ההודעה נכשלה.</translation>
     </message>
     <message>
+        <location line="+5"/>
         <source>Message signed.</source>
         <translation>ההודעה נחתמה.</translation>
     </message>
     <message>
+        <location line="+59"/>
         <source>The signature could not be decoded.</source>
         <translation>לא ניתן לפענח את החתימה.</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <location line="+13"/>
         <source>Please check the signature and try again.</source>
-        <translation>נא לבדוק את החתימה ולנסות שוב.</translation>
+        <translation>אנא בדוק את החתימה ונסה שנית.</translation>
     </message>
     <message>
+        <location line="+0"/>
         <source>The signature did not match the message digest.</source>
         <translation>החתימה לא תואמת את תקציר ההודעה.</translation>
     </message>
     <message>
+        <location line="+7"/>
         <source>Message verification failed.</source>
-        <translation>וידוא ההודעה נכשל.</translation>
+        <translation>אימות ההודעה נכשל.</translation>
     </message>
     <message>
+        <location line="+5"/>
         <source>Message verified.</source>
-        <translation>ההודעה עברה וידוא.</translation>
-    </message>
-</context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[רשת-בדיקה]</translation>
-    </message>
-</context>
-<context>
-    <name>TrafficGraphWidget</name>
-    <message>
-        <source>KB/s</source>
-        <translation>ק״ב/ש׳</translation>
+        <translation>ההודעה אומתה.</translation>
     </message>
 </context>
 <context>
     <name>TransactionDesc</name>
     <message>
+        <location filename="../transactiondesc.cpp" line="+19"/>
         <source>Open until %1</source>
-        <translation>פתוחה עד %1</translation>
+        <translation>פתוח עד %1</translation>
+    </message>
+    <message numerus="yes">
+        <location line="-2"/>
+        <source>Open for %n block(s)</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <source>in memory pool</source>
-        <translation>במאגר הזיכרון</translation>
+        <location line="+8"/>
+        <source>conflicted</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>not in memory pool</source>
-        <translation>לא במאגר הזיכרון</translation>
+        <location line="+2"/>
+        <source>%1/offline</source>
+        <translation>%1/מנותק</translation>
     </message>
     <message>
-        <source>abandoned</source>
-        <translation>ננטש</translation>
+        <location line="+2"/>
+        <source>%1/unconfirmed</source>
+        <translation>%1/ממתין לאישור</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>%1 confirmations</source>
+        <translation>%1 אישורים</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>Status</source>
         <translation>מצב</translation>
     </message>
+    <message numerus="yes">
+        <location line="+7"/>
+        <source>, broadcast through %n node(s)</source>
+        <translation><numerusform>, הופץ דרך צומת אחד</numerusform><numerusform>, הופץ דרך %n צמתים</numerusform></translation>
+    </message>
     <message>
+        <location line="+4"/>
         <source>Date</source>
         <translation>תאריך</translation>
     </message>
     <message>
+        <location line="+7"/>
         <source>Source</source>
         <translation>מקור</translation>
     </message>
     <message>
+        <location line="+0"/>
         <source>Generated</source>
         <translation>נוצר</translation>
     </message>
     <message>
+        <location line="+5"/>
+        <location line="+17"/>
         <source>From</source>
         <translation>מאת</translation>
     </message>
     <message>
-        <source>unknown</source>
-        <translation>לא ידוע</translation>
-    </message>
-    <message>
+        <location line="+1"/>
+        <location line="+22"/>
+        <location line="+58"/>
         <source>To</source>
         <translation>אל</translation>
     </message>
     <message>
+        <location line="-77"/>
+        <location line="+2"/>
         <source>own address</source>
         <translation>כתובת עצמית</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation>צפייה בלבד</translation>
-    </message>
-    <message>
+        <location line="-2"/>
         <source>label</source>
-        <translation>תווית</translation>
+        <translation>תוית</translation>
     </message>
     <message>
+        <location line="+37"/>
+        <location line="+12"/>
+        <location line="+45"/>
+        <location line="+17"/>
+        <location line="+30"/>
         <source>Credit</source>
-        <translation>אשראי</translation>
+        <translation>זיכוי</translation>
+    </message>
+    <message numerus="yes">
+        <location line="-102"/>
+        <source>matures in %n more block(s)</source>
+        <translation><numerusform>מבשיל בעוד בלוק אחד</numerusform><numerusform>מבשיל בעוד %n בלוקים</numerusform></translation>
     </message>
     <message>
+        <location line="+2"/>
         <source>not accepted</source>
         <translation>לא התקבל</translation>
     </message>
     <message>
+        <location line="+44"/>
+        <location line="+8"/>
+        <location line="+15"/>
+        <location line="+30"/>
         <source>Debit</source>
         <translation>חיוב</translation>
     </message>
     <message>
-        <source>Total debit</source>
-        <translation>חיוב כולל</translation>
-    </message>
-    <message>
-        <source>Total credit</source>
-        <translation>אשראי כול</translation>
-    </message>
-    <message>
+        <location line="-39"/>
         <source>Transaction fee</source>
-        <translation>עמלת העברה</translation>
+        <translation>עמלת פעולה</translation>
     </message>
     <message>
+        <location line="+16"/>
         <source>Net amount</source>
-        <translation>סכום נטו</translation>
+        <translation>כמות נקיה</translation>
     </message>
     <message>
+        <location line="+6"/>
         <source>Message</source>
         <translation>הודעה</translation>
     </message>
     <message>
+        <location line="+2"/>
         <source>Comment</source>
         <translation>הערה</translation>
     </message>
     <message>
+        <location line="+2"/>
         <source>Transaction ID</source>
-        <translation>מזהה העברה</translation>
+        <translation>זיהוי פעולה</translation>
     </message>
     <message>
-        <source>Transaction total size</source>
-        <translation>גודל ההעברה הכללי</translation>
+        <location line="+3"/>
+        <source>Generated coins must mature 20 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Output index</source>
-        <translation>מפתח פלט</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>סוחר</translation>
-    </message>
-    <message>
+        <location line="+7"/>
         <source>Debug information</source>
-        <translation>פרטי ניפוי שגיאות</translation>
+        <translation>מידע ניפוי</translation>
     </message>
     <message>
+        <location line="+8"/>
         <source>Transaction</source>
-        <translation>העברה</translation>
+        <translation>פעולה</translation>
     </message>
     <message>
+        <location line="+5"/>
         <source>Inputs</source>
-        <translation>אמצעי קלט</translation>
+        <translation>קלטים</translation>
     </message>
     <message>
+        <location line="+23"/>
         <source>Amount</source>
-        <translation>סכום</translation>
+        <translation>כמות</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>true</source>
         <translation>אמת</translation>
     </message>
     <message>
+        <location line="+0"/>
         <source>false</source>
         <translation>שקר</translation>
+    </message>
+    <message>
+        <location line="-211"/>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, טרם שודר בהצלחה</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>unknown</source>
+        <translation>לא ידוע</translation>
     </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>חלונית זו מציגה תיאור מפורט של ההעברה</translation>
+        <location filename="../forms/transactiondescdialog.ui" line="+14"/>
+        <source>Transaction details</source>
+        <translation>פרטי הפעולה</translation>
     </message>
     <message>
-        <source>Details for %1</source>
-        <translation>פרטים עבור %1</translation>
+        <location line="+6"/>
+        <source>This pane shows a detailed description of the transaction</source>
+        <translation>חלונית זו מציגה תיאור מפורט של הפעולה</translation>
     </message>
 </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
+        <location filename="../transactiontablemodel.cpp" line="+226"/>
         <source>Date</source>
         <translation>תאריך</translation>
     </message>
     <message>
+        <location line="+0"/>
         <source>Type</source>
         <translation>סוג</translation>
     </message>
     <message>
-        <source>Label</source>
-        <translation>תוית</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>פתוחה למשך בלוק אחד נוסף</numerusform><numerusform>פתוחה למשך %n בלוקים נוספים</numerusform></translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation>פתוחה עד %1</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>לא מקוונת</translation>
-    </message>
-    <message>
-        <source>Unconfirmed</source>
-        <translation>לא מאושרת</translation>
-    </message>
-    <message>
-        <source>Abandoned</source>
-        <translation>ננטש</translation>
-    </message>
-    <message>
-        <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>באישור (%1 מתוך %2 אישורים מומלצים)</translation>
-    </message>
-    <message>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>מאושרת (%1 אישורים)</translation>
-    </message>
-    <message>
-        <source>Conflicted</source>
-        <translation>מתנגשת</translation>
-    </message>
-    <message>
-        <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>צעירה (%1 אישורים, תהיה זמינה לאחר %2)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>בלוק זה לא התקבל על ידי אף צומת אחר וככל הנראה לא יאושר!</translation>
-    </message>
-    <message>
-        <source>Generated but not accepted</source>
-        <translation>הבלוק יוצר אך לא אושר</translation>
-    </message>
-    <message>
-        <source>Received with</source>
-        <translation>התקבל עם</translation>
-    </message>
-    <message>
-        <source>Received from</source>
-        <translation>התקבל מאת</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>נשלח אל</translation>
-    </message>
-    <message>
-        <source>Payment to yourself</source>
-        <translation>תשלום לעצמך</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>נכרו</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation>צפייה בלבד</translation>
-    </message>
-    <message>
-        <source>(n/a)</source>
-        <translation>(לא זמין)</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(ללא תוית)</translation>
-    </message>
-    <message>
-        <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>מצב ההעברה. יש להמתין עם הסמן מעל שדה זה כדי לראות את מספר האישורים.</translation>
-    </message>
-    <message>
-        <source>Date and time that the transaction was received.</source>
-        <translation>התאריך והשעה בהם העברה זו התקבלה.</translation>
-    </message>
-    <message>
-        <source>Type of transaction.</source>
-        <translation>סוג ההעברה.</translation>
-    </message>
-    </context>
-<context>
-    <name>TransactionView</name>
-    <message>
-        <source>All</source>
-        <translation>הכול</translation>
-    </message>
-    <message>
-        <source>Today</source>
-        <translation>היום</translation>
-    </message>
-    <message>
-        <source>This week</source>
-        <translation>השבוע</translation>
-    </message>
-    <message>
-        <source>This month</source>
-        <translation>החודש</translation>
-    </message>
-    <message>
-        <source>Last month</source>
-        <translation>חודש שעבר</translation>
-    </message>
-    <message>
-        <source>This year</source>
-        <translation>השנה הזאת</translation>
-    </message>
-    <message>
-        <source>Range...</source>
-        <translation>טווח…</translation>
-    </message>
-    <message>
-        <source>Received with</source>
-        <translation>התקבל עם</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>נשלח אל</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation>לעצמך</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>נכרו</translation>
-    </message>
-    <message>
-        <source>Other</source>
-        <translation>אחר</translation>
-    </message>
-    <message>
-        <source>Min amount</source>
-        <translation>סכום מזערי</translation>
-    </message>
-    <message>
-        <source>Abandon transaction</source>
-        <translation>נטישת העברה</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>העתקת הכתובת</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>העתקת התווית</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>העתקת הסכום</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>העתקת מזהה ההעברה</translation>
-    </message>
-    <message>
-        <source>Copy raw transaction</source>
-        <translation>העתקת העברה גולמית</translation>
-    </message>
-    <message>
-        <source>Copy full transaction details</source>
-        <translation>העתקת פרטי ההעברה המלאים</translation>
-    </message>
-    <message>
-        <source>Edit label</source>
-        <translation>עריכת תווית</translation>
-    </message>
-    <message>
-        <source>Show transaction details</source>
-        <translation>הצגת פרטי העברה</translation>
-    </message>
-    <message>
-        <source>Export Transaction History</source>
-        <translation>יצוא היסטוריית העברה</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>קובץ מופרד בפסיקים (‎*.csv)</translation>
-    </message>
-    <message>
-        <source>Confirmed</source>
-        <translation>מאושרת</translation>
-    </message>
-    <message>
-        <source>Watch-only</source>
-        <translation>צפייה בלבד</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>תאריך</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>סוג</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>תוית</translation>
-    </message>
-    <message>
+        <location line="+0"/>
         <source>Address</source>
         <translation>כתובת</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>Amount</source>
+        <translation>כמות</translation>
+    </message>
+    <message>
+        <location line="+60"/>
+        <source>Open until %1</source>
+        <translation>פתוח עד %1</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>מאושר (%1 אישורים)</translation>
+    </message>
+    <message numerus="yes">
+        <location line="-15"/>
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>פתח למשך בלוק %n יותר</numerusform><numerusform>פתח למשך %n בלוקים נוספים</numerusform></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Offline</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Conflicted</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>הבלוק הזה לא נקלט על ידי אף צומת אחר, וכנראה לא יתקבל!</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Generated but not accepted</source>
+        <translation>נוצר אך לא התקבל</translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>Received with</source>
+        <translation>התקבל עם</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Received from</source>
+        <translation>התקבל מאת</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Sent to</source>
+        <translation>נשלח ל</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Payment to yourself</source>
+        <translation>תשלום לעצמך</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Mined</source>
+        <translation>נכרה</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>(n/a)</source>
+        <translation>(n/a)</translation>
+    </message>
+    <message>
+        <location line="+190"/>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation>מצב הפעולה. השהה את הסמן מעל שדה זה כדי לראות את מספר האישורים.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Date and time that the transaction was received.</source>
+        <translation>התאריך והשעה בה הפעולה הזאת התקבלה.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Type of transaction.</source>
+        <translation>סוג הפעולה.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Destination address of transaction.</source>
+        <translation>כתובת היעד של הפעולה.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Amount removed from or added to balance.</source>
+        <translation>הכמות שהתווספה או הוסרה מהיתרה.</translation>
+    </message>
+</context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <location filename="../transactionview.cpp" line="+55"/>
+        <location line="+16"/>
+        <source>All</source>
+        <translation>הכל</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Today</source>
+        <translation>היום</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This week</source>
+        <translation>השבוע</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This month</source>
+        <translation>החודש</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last month</source>
+        <translation>החודש שעבר</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This year</source>
+        <translation>השנה</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Range...</source>
+        <translation>טווח...</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Received with</source>
+        <translation>התקבל עם</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sent to</source>
+        <translation>נשלח ל</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>To yourself</source>
+        <translation>לעצמך</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mined</source>
+        <translation>נכרה</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Other</source>
+        <translation>אחר</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Enter address or label to search</source>
+        <translation>הכנס כתובת או תוית לחפש</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Min amount</source>
+        <translation>כמות מזערית</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Copy address</source>
+        <translation>העתק כתובת</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy label</source>
+        <translation>העתק תוית</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>העתק כמות</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy transaction ID</source>
+        <translation>העתק מזהה פעולה</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Edit label</source>
+        <translation>ערוך תוית</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show transaction details</source>
+        <translation>הצג פרטי פעולה</translation>
+    </message>
+    <message>
+        <location line="+144"/>
+        <source>Export Transaction Data</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation>קובץ מופרד בפסיקים (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Confirmed</source>
+        <translation>מאושר</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date</source>
+        <translation>תאריך</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type</source>
+        <translation>סוג</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Label</source>
+        <translation>תוית</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Address</source>
+        <translation>כתובת</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Amount</source>
+        <translation>כמות</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>ID</source>
         <translation>מזהה</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>יצוא נכשל</translation>
+        <location line="+4"/>
+        <source>Error exporting</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>אירעה שגיאה בעת ניסיון שמירת היסטוריית ההעברות אל %1.</translation>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Exporting Successful</source>
-        <translation>הייצוא נכשל</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>היסטוריית ההעברות נשמרה בהצלחה אל %1.</translation>
-    </message>
-    <message>
+        <location line="+100"/>
         <source>Range:</source>
         <translation>טווח:</translation>
     </message>
     <message>
+        <location line="+8"/>
         <source>to</source>
-        <translation>עד</translation>
-    </message>
-</context>
-<context>
-    <name>UnitDisplayStatusBarControl</name>
-    <message>
-        <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation>יחידת המידה להצגת הסכומים. יש ללחוץ כדי לבחור ביחידת מידה אחרת.</translation>
-    </message>
-</context>
-<context>
-    <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation>לא נטען ארנק.</translation>
+        <translation>אל</translation>
     </message>
 </context>
 <context>
     <name>WalletModel</name>
     <message>
-        <source>Send Coins</source>
-        <translation>שליחת מטבעות</translation>
-    </message>
-    <message>
-        <source>Do you want to increase the fee?</source>
-        <translation>להגדיל את העמלה?</translation>
-    </message>
-    <message>
-        <source>Current fee:</source>
-        <translation>העמלה הנוכחית:</translation>
-    </message>
-    <message>
-        <source>Increase:</source>
-        <translation>הגדלה:</translation>
-    </message>
-    <message>
-        <source>New fee:</source>
-        <translation>עמלה חדשה:</translation>
-    </message>
-    <message>
-        <source>Confirm fee bump</source>
-        <translation>אישור הקפצת עמלה</translation>
-    </message>
-    <message>
-        <source>Can't sign transaction.</source>
-        <translation>אי אפשר לחתום על ההעברה.</translation>
-    </message>
-    </context>
-<context>
-    <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;יצוא</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>יצוא הנתונים בלשונית הנוכחית לקובץ</translation>
-    </message>
-    <message>
-        <source>Backup Wallet</source>
-        <translation>גיבוי הארנק</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>נתוני ארנק (‎*.dat)</translation>
-    </message>
-    <message>
-        <source>Backup Failed</source>
-        <translation>הגיבוי נכשל</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>אירעה שגיאה בעת הניסיון לשמור את נתוני הארנק אל %1.</translation>
-    </message>
-    <message>
-        <source>Backup Successful</source>
-        <translation>הגיבוי הצליח</translation>
-    </message>
-    <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation>נתוני הארנק נשמרו בהצלחה אל %1.</translation>
+        <location filename="../walletmodel.cpp" line="+206"/>
+        <source>Sending...</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
     <name>bitcoin-core</name>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="+33"/>
+        <source>Aithercoin version</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Usage:</source>
+        <translation>שימוש:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Send command to -server or aithercoind</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>List commands</source>
+        <translation>רשימת פקודות</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Get help for a command</source>
+        <translation>קבל עזרה עבור פקודה</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Options:</source>
         <translation>אפשרויות:</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Specify configuration file (default: aithercoin.conf)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Specify pid file (default: aithercoind.pid)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Specify wallet file (within data directory)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-1"/>
         <source>Specify data directory</source>
-        <translation>ציון תיקיית נתונים</translation>
+        <translation>ציין תיקיית נתונים</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation>קבע את גודל המטמון של מסד הנתונים במגהבייט (ברירת מחדל: 25)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set database disk log size in megabytes (default: 100)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Listen for connections on &lt;port&gt; (default: 36939 or testnet: 46939)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
+        <translation>החזק לכל היותר &lt;n&gt; חיבורים לעמיתים (ברירת מחדל: 125)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>יש להתחבר למפרק כדי לדלות כתובות עמיתים ואז להתנתק</translation>
+        <translation>התחבר לצומת כדי לדלות כתובות עמיתים, ואז התנתק</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Specify your own public address</source>
-        <translation>נא לציין את הכתובת הפומבית שלך</translation>
+        <translation>ציין את הכתובת הפומבית שלך</translation>
     </message>
     <message>
+        <location line="+5"/>
+        <source>Bind to given address. Use [host]:port notation for IPv6</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Stake your coins to support network and gain reward (default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
+        <translation>סף להתנתקות מעמיתים הנוהגים שלא כהלכה (ברירת מחדל: 100)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
+        <translation>מספר שניות למנוע מעמיתים הנוהגים שלא כהלכה מלהתחבר מחדש (ברירת מחדל: 86400)</translation>
+    </message>
+    <message>
+        <location line="-44"/>
+        <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
+        <translation>אירעה שגיאה בעת הגדרת פורט RPC %u להאזנה ב-IPv4: %s</translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>Detach block and address databases. Increases shutdown time (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+109"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-5"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-87"/>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 36940 or testnet: 46940)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-11"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation>קבלת פקודות משורת הפקודה ומ־JSON-RPC</translation>
+        <translation>קבל פקודות משורת הפקודה ו- JSON-RPC</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>שגיאה: סניה קלמה קריטית פנימית קרטה, פנה ל debug.log לפרטים</translation>
+        <location line="+101"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-5"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-8"/>
+        <source>Importing blockchain data file.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Importing bootstrap blockchain data file.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-88"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation>ריצה כסוכן ברקע וקבלת פקודות</translation>
+        <translation>רוץ ברקע כדימון וקבל פקודות</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>ליבת ביטקוין</translation>
+        <location line="+1"/>
+        <source>Use the test network</source>
+        <translation>השתמש ברשת הבדיקה</translation>
     </message>
     <message>
-        <source>The %s developers</source>
-        <translation>ה %s מפתחים</translation>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>להתאגד לכתובת נתונה להאזין לה תמיד. יש להשתמש בצורה ‎[host]:port עבור IPv6.</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>מחיקת כל העברות הארנק ולשחזר רק את החלקים המסוימים בשרשרת המקטעים באמצעות ‎-rescan עם ההפעלה</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>ביצוע פקודה כאשר העברה בארנק משתנה (%s ב־cmd יוחלף ב־TxID)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>שימוש ב־UPnP כדי למפות את הפתחה להאזנה (בררת מחדל: 1 בעת האזנה ובלי ‎-proxy)</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>אזהרה: נראה כי הרשת אינה מסכימה באופן מלא! חלק מהכורים חווים תקלות.</translation>
-    </message>
-    <message>
-        <source>-maxmempool must be at least %d MB</source>
-        <translation>‎-maxmempool חייב להיות לפחות %d מ״ב</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;קטגוריה&gt; יכולה להיות:</translation>
-    </message>
-    <message>
+        <location line="-24"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>קבלת חיבורים מבחוץ (בררת מחדל: 1 ללא ‎-proxy או ‎-connect)</translation>
+        <translation>קבל חיבורים מבחוץ (ברירת מחדל: 1 ללא -proxy או -connect)</translation>
     </message>
     <message>
-        <source>Append comment to the user agent string</source>
-        <translation>הוספת הערה למחרוזת סוכן המשתמש</translation>
+        <location line="-38"/>
+        <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
+        <translation>אירעה שגיאה בעת הגדרת פורט RPC %u להאזנה ב-IPv6, נסוג ל-IPv4: %s</translation>
     </message>
     <message>
+        <location line="+117"/>
+        <source>Error initializing database environment %s! To recover, BACKUP THAT DIRECTORY, then remove everything from it except for wallet.dat.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-20"/>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>אזהרה: -paytxfee נקבע לערך מאד גבוה! זוהי עמלת הפעולה שתשלם אם אתה שולח פעולה.</translation>
+    </message>
+    <message>
+        <location line="+61"/>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Aithercoin will not work properly.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-31"/>
+        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>אזהרה: שגיאה בקריאת wallet.dat! כל המתפחות נקראו באופן תקין, אך נתוני הפעולות או ספר הכתובות עלולים להיות חסרים או שגויים.</translation>
+    </message>
+    <message>
+        <location line="-18"/>
+        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>אזהרה: קובץ wallet.dat מושחת, המידע חולץ! קובץ wallet.dat המקורח נשמר כ - wallet.{timestamp}.bak ב - %s; אם המאזן או הפעולות שגויים עליך לשחזר גיבוי.</translation>
+    </message>
+    <message>
+        <location line="-30"/>
+        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
+        <translation>נסה לשחזר מפתחות פרטיים מקובץ wallet.dat מושחת.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Block creation options:</source>
-        <translation>אפשרויות יצירת מקטע:</translation>
+        <translation>אפשרויות יצירת בלוק:</translation>
     </message>
     <message>
-        <source>Chain selection options:</source>
-        <translation>אפשרויות בחירת שרשרת:</translation>
+        <location line="-62"/>
+        <source>Connect only to the specified node(s)</source>
+        <translation>התחבר רק לצמתים המצוינים</translation>
     </message>
     <message>
-        <source>Change index out of range</source>
-        <translation>אינדקס העודף מחוץ לתחום</translation>
+        <location line="+4"/>
+        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
+        <translation>גלה את כתובת ה-IP העצמית (ברירת מחדל: 1 כשמאזינים וללא -externalip)</translation>
     </message>
     <message>
-        <source>Connection options:</source>
-        <translation>הגדרות חיבור:</translation>
-    </message>
-    <message>
-        <source>Copyright (C) %i-%i</source>
-        <translation>כל הזכויות שמורות (C) %i-‏%i</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>התגלה מסד נתוני מקטעים לא תקין</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>אפשרויות ניפוי/בדיקה:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>לא לטעון את הארנק ולנטרל קריאות RPC</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>האם לבנות מחדש את מסד נתוני המקטעים?</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>שגיאה באתחול מסד נתוני המקטעים</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>שגיאה באתחול סביבת מסד נתוני הארנקים %s!</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation>שגיאה בטעינת %s</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>שגיאה בטעינת מסד נתוני המקטעים</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>שגיאה בטעינת מסד נתוני המקטעים</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>שגיאה: מעט מקום פנוי בכונן!</translation>
-    </message>
-    <message>
+        <location line="+94"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>האזנה נכשלה בכל פורט. השתמש ב- -listen=0 אם ברצונך בכך.</translation>
     </message>
     <message>
-        <source>Importing...</source>
-        <translation>מתבצע יבוא…</translation>
+        <location line="-90"/>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>מקטע הפתיח הוא שגוי או לא נמצא. תיקיית נתונים שגויה עבור הרשת?</translation>
+        <location line="+5"/>
+        <source>Sync checkpoints policy (default: strict)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation>סכום שגוי עבור ‎-%s=&lt;amount&gt;:‏ '%s'</translation>
+        <location line="+83"/>
+        <source>Invalid -tor address: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation>סכום שגוי עבור ‎-fallbackfee=&lt;amount&gt;:‏ '%s'</translation>
+        <location line="+4"/>
+        <source>Invalid amount for -reservebalance=&lt;amount&gt;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Loading banlist...</source>
-        <translation>טוען רשימת חסומים...</translation>
+        <location line="-82"/>
+        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
+        <translation>חוצץ קבלה מירבי לכל חיבור, &lt;n&gt;*1000 בתים (ברירת מחדל: 5000)</translation>
     </message>
     <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>אין מספיק מידע על הקובץ</translation>
+        <location line="+1"/>
+        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
+        <translation>חוצץ שליחה מירבי לכל חיבור, &lt;n&gt;*1000 בתים (ברירת מחדל: 1000)</translation>
     </message>
     <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>תמיד להתחבר למפרקים ברשת &lt;net&gt;‏ (ipv4,‏ ipv6 או onion)</translation>
+        <location line="-16"/>
+        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
+        <translation>התחבר רק לצמתים ברשת &lt;net&gt; (IPv4, IPv6 או Tor)</translation>
     </message>
     <message>
-        <source>Print this help message and exit</source>
-        <translation>להדפיס הודעת עזרה זו ולצאת</translation>
+        <location line="+28"/>
+        <source>Output extra debugging information. Implies all other -debug* options</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Print version and exit</source>
-        <translation>הדפס גירסא וצא</translation>
+        <location line="+1"/>
+        <source>Output extra network debugging information</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>הגדרת גודל מטמון מסדי הנתונים במגה בתים (%d עד %d, בררת מחדל: %d)</translation>
+        <location line="+1"/>
+        <source>Prepend debug output with timestamp</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>ציון קובץ ארנק (בתוך תיקיית הנתונים)</translation>
+        <location line="+35"/>
+        <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>אפשרויות SSL: (ראה את הויקי של ביטקוין עבור הוראות הגדרת SSL)</translation>
     </message>
     <message>
-        <source>Verifying blocks...</source>
-        <translation>המקטעים מאומתים…</translation>
+        <location line="-74"/>
+        <source>Select the version of socks proxy to use (4-5, default: 5)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>אפשרות דיבוג/בדיקת ארנק:</translation>
-    </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation>יש לכתוב את הארנק מחדש: יש להפעיל את %s כדי להמשיך</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>אפשרויות הארנק:</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>הרץ פקודה כאשר ההתראה הרלוונטית מתקבלת או כשאנחנו עדים לפיצול ארוך מאוד (%s בשורת הפקודה יוחלף ע"י ההודעה)</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>סכום העברה נמוך מדי לשליחה אחרי גביית העמלה</translation>
-    </message>
-    <message>
-        <source>(default: %u)</source>
-        <translation>(בררת מחדל: %u)</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>התחברות דרך מתווך SOCKS5</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>מידע</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation>כמות לא תקינה עבור ‎-paytxfee=&lt;amount&gt;‎:‏ '%s' (חייבת להיות לפחות %s)</translation>
-    </message>
-    <message>
-        <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation>מסכת הרשת שצוינה עם ‎-whitelist שגויה: '%s'</translation>
-    </message>
-    <message>
-        <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation>עליך לציין פתחה עם ‎-whitebind:‏ '%s'</translation>
-    </message>
-    <message>
-        <source>Node relay options:</source>
-        <translation>אפשרויות ממסר מפרק:</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>הגדרות שרת RPC</translation>
-    </message>
-    <message>
+        <location line="+41"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>שלח מידע דיבאג ועקבה לקונסולה במקום לקובץ debug.log</translation>
     </message>
     <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>הצגת כל אפשרויות הניפוי (שימוש: ‎--help -help-debug)</translation>
+        <location line="+1"/>
+        <source>Send trace/debug info to debugger</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+28"/>
+        <source>Set maximum block size in bytes (default: 250000)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Set minimum block size in bytes (default: 0)</source>
+        <translation>קבע את גודל הבלוק המינימלי בבתים (ברירת מחדל: 0)</translation>
+    </message>
+    <message>
+        <location line="-29"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>כיווץ הקובץ debug.log בהפעלת הלקוח (בררת מחדל: 1 ללא ‎-debug)</translation>
+        <translation>כווץ את קובץ debug.log בהפעלת הקליינט (ברירת מחדל: 1 ללא -debug)</translation>
     </message>
     <message>
-        <source>Signing transaction failed</source>
-        <translation>החתימה על ההעברה נכשלה</translation>
+        <location line="-42"/>
+        <source>Specify connection timeout in milliseconds (default: 5000)</source>
+        <translation>ציין הגבלת זמן לחיבור במילישניות (ברירת מחדל: 5000)</translation>
     </message>
     <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation>סכום ההעברה נמוך מכדי לשלם את העמלה</translation>
+        <location line="+109"/>
+        <source>Unable to sign checkpoint, wrong checkpointkey?
+</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>This is experimental software.</source>
-        <translation>זוהי תכנית נסיונית.</translation>
+        <location line="-80"/>
+        <source>Use UPnP to map the listening port (default: 0)</source>
+        <translation>השתמש ב-UPnP כדי למפות את הפורט להאזנה (ברירת מחדל: 0)</translation>
     </message>
     <message>
-        <source>Transaction amount too small</source>
-        <translation>סכום ההעברה קטן מדי</translation>
+        <location line="-1"/>
+        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
+        <translation>השתמש ב-UPnP כדי למפות את הפורט להאזנה (ברירת מחדל: 1 בעת האזנה)</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>ההעברה גבוהה מדי עבור מדיניות העמלות</translation>
+        <location line="-25"/>
+        <source>Use proxy to reach tor hidden services (default: same as -proxy)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Transaction too large</source>
-        <translation>סכום ההעברה גדול מדי</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation>לא ניתן להתאגד עם הפתחה %s במחשב זה (פעולת האיגוד החזירה את השגיאה %s)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>עדכן ארק לפורמט העדכני בהפעלה</translation>
-    </message>
-    <message>
+        <location line="+42"/>
         <source>Username for JSON-RPC connections</source>
         <translation>שם משתמש לחיבורי JSON-RPC</translation>
     </message>
     <message>
-        <source>Warning</source>
-        <translation>אזהרה</translation>
+        <location line="+47"/>
+        <source>Verifying database integrity...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+57"/>
+        <source>WARNING: syncronized checkpoint violation detected, but skipped!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Warning: Disk space is low!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Warning: This version is obsolete, upgrade required!</source>
+        <translation>אזהרה: הגרסה הזאת מיושנת, יש צורך בשדרוג!</translation>
+    </message>
+    <message>
+        <location line="-48"/>
+        <source>wallet.dat corrupt, salvage failed</source>
+        <translation>קובץ wallet.dat מושחת, החילוץ נכשל</translation>
+    </message>
+    <message>
+        <location line="-54"/>
         <source>Password for JSON-RPC connections</source>
-        <translation>ססמה לחיבורי JSON-RPC</translation>
+        <translation>סיסמה לחיבורי JSON-RPC</translation>
     </message>
     <message>
+        <location line="-84"/>
+        <source>%s, you must set a rpcpassword in the configuration file:
+ %s
+It is recommended you use the following random password:
+rpcuser=aithercoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s &quot;Aithercoin Alert&quot; admin@foo.com
+</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>Find peers using internet relay chat (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sync time with other nodes. Disable if time on your system is precise e.g. syncing with NTP (default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>When creating transactions, ignore inputs with value less than this (default: 0.01)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Allow JSON-RPC connections from specified IP address</source>
+        <translation>אפשר חיבורי JSON-RPC מכתובת האינטרנט המצוינת</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
+        <translation>שלח פקודות לצומת ב-&lt;ip&gt; (ברירת מחדל: 127.0.0.1)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>יש לבצע פקודה זו כשהמקטע הטוב ביותר משתנה (%s בפקודה יוחלף בגיבוב המקטע)</translation>
+        <translation>בצע פקודה זו כשהבלוק הטוב ביותר משתנה (%s בפקודה יוחלף בגיבוב הבלוק)</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>בצע פקודה כאשר פעולת ארנק משתנה (%s ב cmd יוחלף ב TxID)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Require a confirmations for change (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Execute command when a relevant alert is received (%s in cmd is replaced by message)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Upgrade wallet to latest format</source>
+        <translation>שדרג את הארנק לפורמט העדכני</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
+        <translation>קבע את גודל המאגר ל -&lt;n&gt; (ברירת מחדל: 100)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Rescan the block chain for missing wallet transactions</source>
+        <translation>סרוק מחדש את שרשרת הבלוקים למציאת פעולות חסרות בארנק</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How thorough the block verification is (0-6, default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Imports blocks from external blk000?.dat file</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Use OpenSSL (https) for JSON-RPC connections</source>
+        <translation>השתמש ב-OpenSSL (https( עבור חיבורי JSON-RPC</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Server certificate file (default: server.cert)</source>
+        <translation>קובץ תעודת שרת (ברירת מחדל: server.cert)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Server private key (default: server.pem)</source>
+        <translation>מפתח פרטי של השרת (ברירת מחדל: server.pem)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>Error: Wallet unlocked for staking only, unable to create transaction.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>WARNING: Invalid checkpoint found! Displayed transactions may not be correct! You may need to upgrade, or notify developers.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-158"/>
+        <source>This help message</source>
+        <translation>הודעת העזרה הזו</translation>
+    </message>
+    <message>
+        <location line="+95"/>
+        <source>Wallet %s resides outside data directory %s.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cannot obtain a lock on data directory %s.  Aithercoin is probably already running.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-98"/>
+        <source>Aithercoin</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+140"/>
+        <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
+        <translation>לא מסוגל לקשור ל-%s במחשב זה (הקשירה החזירה שגיאה %d, %s)</translation>
+    </message>
+    <message>
+        <location line="-130"/>
+        <source>Connect through socks proxy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>הפעלת בדיקת DNS עבור ‎-addnode,‏ ‎-seednode ו־‎-connect</translation>
+        <translation>אפשר בדיקת DNS עבור -addnode, -seednode ו- -connect</translation>
     </message>
     <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>המשתנה ‎-socks נמצא אך אין בו תמיכה עוד. הגדרת גרסת SOCKS אינה אפשרית עוד, קיימת תמיכה רק ב־SOCKS5.</translation>
+        <location line="+122"/>
+        <source>Loading addresses...</source>
+        <translation>טוען כתובות...</translation>
     </message>
     <message>
-        <source>(default: %s)</source>
-        <translation>(ברירת מחדל: %s)</translation>
+        <location line="-15"/>
+        <source>Error loading blkindex.dat</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>תמיד לתשאל את כתובת העמיתים באמצעות חיפוש DNS (בררת מחדל: %u)</translation>
+        <location line="+2"/>
+        <source>Error loading wallet.dat: Wallet corrupted</source>
+        <translation>שגיאה בטעינת הקובץ wallet.dat: הארנק מושחת</translation>
     </message>
     <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>כמה מקטעים לבדוק עם ההפעלה (בררת מחדל: %u,‏ 0 = הכול)</translation>
+        <location line="+4"/>
+        <source>Error loading wallet.dat: Wallet requires newer version of Aithercoin</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>לכלול את כתובת ה־IP בפלט ניפוי השגיאות (בררת מחדל: %u)</translation>
+        <location line="+1"/>
+        <source>Wallet needed to be rewritten: restart Aithercoin to complete</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>האזנה לחיבורי JSON-RPC דרך &lt;port&gt; (בררת מחדל: %u או ברשת הבדיקה: %u)</translation>
+        <location line="+1"/>
+        <source>Error loading wallet.dat</source>
+        <translation>שגיאה בטעינת הקובץ wallet.dat</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>האזנה לחיבורים על גבי &lt;port&gt; (בררת מחדל: %u או לרשת הבדיקה: %u)</translation>
+        <location line="-16"/>
+        <source>Invalid -proxy address: &apos;%s&apos;</source>
+        <translation>כתובת -proxy לא תקינה: &apos;%s&apos;</translation>
     </message>
     <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
-        <translation>לשמור על &lt;n&gt; חיבורים לעמיתים לכל היותר (בררת מחדל: %u)</translation>
+        <location line="-1"/>
+        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation>רשת לא ידועה צוינה ב- -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>להגדיר את הארנק להפצת העברות</translation>
+        <location line="-1"/>
+        <source>Unknown -socks proxy version requested: %i</source>
+        <translation>התבקשה גרסת פרוקסי -socks לא ידועה: %i</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>הגדרת גודל מאגר המפתחות לכדי &lt;n&gt; (בררת מחדל: %u)</translation>
+        <location line="+4"/>
+        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
+        <translation>לא מסוגל לפתור כתובת -bind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <source>Set maximum BIP141 block weight (default: %d)</source>
-        <translation>הגדרת משקל מרבי למקטע BIP141 (בררת מחדל: %d)</translation>
+        <location line="+2"/>
+        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
+        <translation>לא מסוגל לפתור כתובת -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>הגדרת קובץ תצורה (בררת מחדל: %s)</translation>
+        <location line="-24"/>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>כמות לא תקינה עבור -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>ציון תפוגת זמן ההמתנה לחיבור במילישניות (מינימום: 1, בררת מחדל: %d)</translation>
+        <location line="+44"/>
+        <source>Error: could not start node</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>ציון קובץ pid (בררת מחדל: %s)</translation>
+        <location line="+11"/>
+        <source>Sending...</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <source>Starting network threads...</source>
-        <translation>תהליכי הרשת מופעלים…</translation>
+        <location line="+5"/>
+        <source>Invalid amount</source>
+        <translation>כמות לא תקינה</translation>
     </message>
     <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>זו עמלת ההעברה המזערית שתיגבה מכל העברה שלך.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>זו עמלת ההעברה שתיגבה ממך במידה של שליחת העברה.</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>סף לניתוק עמיתים סוררים (בררת מחדל: %u)</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation>סכומי ההעברה לא יכולים להיות שליליים</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation>להעברה חייב להיות לפחות נמען אחד</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>רשת לא ידועה צוינה דרך ‎-onlynet:‏ '%s'</translation>
-    </message>
-    <message>
+        <location line="+1"/>
         <source>Insufficient funds</source>
         <translation>אין מספיק כספים</translation>
     </message>
     <message>
+        <location line="-34"/>
         <source>Loading block index...</source>
-        <translation>מפתח המקטעים נטען…</translation>
+        <translation>טוען את אינדקס הבלוקים...</translation>
     </message>
     <message>
+        <location line="-103"/>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation>הוסף צומת להתחברות ונסה לשמור את החיבור פתוח</translation>
+    </message>
+    <message>
+        <location line="+122"/>
+        <source>Unable to bind to %s on this computer. Aithercoin is probably already running.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-97"/>
+        <source>Fee per KB to add to transactions you send</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+55"/>
+        <source>Invalid amount for -mininput=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>Loading wallet...</source>
-        <translation>הארנק בטעינה…</translation>
+        <translation>טוען ארנק...</translation>
     </message>
     <message>
+        <location line="+8"/>
         <source>Cannot downgrade wallet</source>
-        <translation>לא ניתן להחזיר את גרסת הארנק</translation>
+        <translation>לא יכול להוריד דרגת הארנק</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Cannot initialize keypool</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cannot write default address</source>
+        <translation>לא יכול לכתוב את כתובת ברירת המחדל</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Rescanning...</source>
-        <translation>סריקה מחדש…</translation>
+        <translation>סורק מחדש...</translation>
     </message>
     <message>
+        <location line="+5"/>
         <source>Done loading</source>
         <translation>טעינה הושלמה</translation>
     </message>
     <message>
+        <location line="-167"/>
+        <source>To use the %s option</source>
+        <translation>להשתמש באפשרות %s</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Error</source>
         <translation>שגיאה</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
+%s
+If the file does not exist, create it with owner-readable-only file permissions.</source>
+        <translation>עליך לקבוע rpcpassword=yourpassword בקובץ ההגדרות:
+%s
+אם הקובץ אינו קיים, צור אותו עם הרשאות קריאה לבעלים בלבד.</translation>
     </message>
 </context>
 </TS>

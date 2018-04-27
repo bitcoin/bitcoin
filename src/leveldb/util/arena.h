@@ -9,7 +9,6 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "port/port.h"
 
 namespace leveldb {
 
@@ -25,9 +24,10 @@ class Arena {
   char* AllocateAligned(size_t bytes);
 
   // Returns an estimate of the total memory usage of data allocated
-  // by the arena.
+  // by the arena (including space allocated but not yet used for user
+  // allocations).
   size_t MemoryUsage() const {
-    return reinterpret_cast<uintptr_t>(memory_usage_.NoBarrier_Load());
+    return blocks_memory_ + blocks_.capacity() * sizeof(char*);
   }
 
  private:
@@ -41,8 +41,8 @@ class Arena {
   // Array of new[] allocated memory blocks
   std::vector<char*> blocks_;
 
-  // Total memory usage of the arena.
-  port::AtomicPointer memory_usage_;
+  // Bytes of memory in blocks allocated so far
+  size_t blocks_memory_;
 
   // No copying allowed
   Arena(const Arena&);

@@ -7,10 +7,7 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <string.h>
-
-#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-#include <cpuid.h>
-#endif
+#include "util/logging.h"
 
 namespace leveldb {
 namespace port {
@@ -51,16 +48,6 @@ void CondVar::SignalAll() {
 
 void InitOnce(OnceType* once, void (*initializer)()) {
   PthreadCall("once", pthread_once(once, initializer));
-}
-
-bool HasAcceleratedCRC32C() {
-#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-  unsigned int eax, ebx, ecx, edx;
-  __get_cpuid(1, &eax, &ebx, &ecx, &edx);
-  return (ecx & (1 << 20)) != 0;
-#else
-  return false;
-#endif
 }
 
 }  // namespace port

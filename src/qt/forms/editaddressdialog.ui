@@ -32,7 +32,7 @@
      <item row="0" column="1">
       <widget class="QLineEdit" name="labelEdit">
        <property name="toolTip">
-        <string>The label associated with this address list entry</string>
+        <string>The label associated with this address book entry</string>
        </property>
       </widget>
      </item>
@@ -47,9 +47,9 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QValidatedLineEdit" name="addressEdit">
+      <widget class="QLineEdit" name="addressEdit">
        <property name="toolTip">
-        <string>The address associated with this address list entry. This can only be modified for sending addresses.</string>
+        <string>The address associated with this address book entry. This can only be modified for sending addresses.</string>
        </property>
       </widget>
      </item>
@@ -67,13 +67,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QValidatedLineEdit</class>
-   <extends>QLineEdit</extends>
-   <header>qt/qvalidatedlineedit.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections>
   <connection>
@@ -83,12 +76,12 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>248</x>
+     <y>254</y>
     </hint>
     <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
+     <x>157</x>
+     <y>274</y>
     </hint>
    </hints>
   </connection>
@@ -99,12 +92,12 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>316</x>
+     <y>260</y>
     </hint>
     <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
+     <x>286</x>
+     <y>274</y>
     </hint>
    </hints>
   </connection>

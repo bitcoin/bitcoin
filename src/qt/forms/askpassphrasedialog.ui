@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>598</width>
-    <height>222</height>
+    <height>198</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -26,14 +26,8 @@
    <string>Passphrase Dialog</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="sizeConstraint">
-    <enum>QLayout::SetMinimumSize</enum>
-   </property>
    <item>
     <widget class="QLabel" name="warningLabel">
-     <property name="text">
-      <string notr="true">Placeholder text</string>
-     </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>
      </property>
@@ -44,9 +38,6 @@
    </item>
    <item>
     <layout class="QFormLayout" name="formLayout">
-     <property name="sizeConstraint">
-      <enum>QLayout::SetMinimumSize</enum>
-     </property>
      <property name="fieldGrowthPolicy">
       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
      </property>
@@ -93,13 +84,6 @@
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QCheckBox" name="toggleShowPasswordButton">
-       <property name="text">
-        <string>Show password</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
       <widget class="QLabel" name="capsLabel">
        <property name="font">
         <font>
@@ -112,6 +96,22 @@
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QCheckBox" name="stakingCheckBox">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="toolTip">
+        <string>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</string>
+       </property>
+       <property name="text">
+        <string>For staking only</string>
+       </property>
+       <property name="visible">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -138,12 +138,12 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>248</x>
+     <y>254</y>
     </hint>
     <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
+     <x>157</x>
+     <y>274</y>
     </hint>
    </hints>
   </connection>
@@ -154,12 +154,12 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>316</x>
+     <y>260</y>
     </hint>
     <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
+     <x>286</x>
+     <y>274</y>
     </hint>
    </hints>
   </connection>

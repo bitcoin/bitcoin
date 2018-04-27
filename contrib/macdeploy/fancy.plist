@@ -10,7 +10,7 @@
 		<integer>620</integer>
 	</array>
 	<key>background_picture</key>
-	<string>background.tiff</string>
+	<string>background.png</string>
 	<key>icon_size</key>
 	<integer>96</integer>
 	<key>applications_symlink</key>
@@ -22,7 +22,7 @@
 			<integer>370</integer>
 			<integer>156</integer>
 		</array>
-		<key>Bitcoin-Qt.app</key>
+		<key>NovaCoin-Qt.app</key>
 		<array>
 			<integer>128</integer>
 			<integer>156</integer>
