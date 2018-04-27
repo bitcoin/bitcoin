@@ -43,14 +43,14 @@ from the root of the repository.
 Build Bitcoin Core
 ------------------------
 
-1. Clone the Bitcoin source code and cd into `bitcoin`
+1. Clone the Bitcoin Core source code and cd into `bitcoin`
 
         git clone https://github.com/bitcoin/bitcoin
         cd bitcoin
 
-2.  Build bitcoin-core:
+2.  Build Bitcoin Core:
 
-    Configure and build the headless Bitcoin binaries as well as the GUI (if Qt is found).
+    Configure and build the headless Bitcoin Core binaries as well as the GUI (if Qt is found).
 
     You can disable the GUI build by passing `--without-gui` to configure.
 
