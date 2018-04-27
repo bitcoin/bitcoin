@@ -1,3 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 !.gitignore
-*
+!zerocoin/.gitignore
+*.o
+*.P
+*.h
+*.d
