@@ -734,14 +734,14 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         if(pfinalBudget == NULL) return "Unknown budget hash";
 
         const std::map<uint256, CFinalizedBudgetVote>& fbVotes = pfinalBudget->GetVotes();
-        for (const std::pair<uint256, CFinalizedBudgetVote>& votePair: fbVotes)
+        for (std::map<uint256, CFinalizedBudgetVote>::const_iterator i = fbVotes.begin(); i != fbVotes.end(); ++i)
         {
             Object bObj;
-            bObj.push_back(Pair("nHash", votePair.first.ToString().c_str()));
-            bObj.push_back(Pair("nTime", static_cast<int64_t>(votePair.second.nTime)));
-            bObj.push_back(Pair("fValid", votePair.second.fValid));
+            bObj.push_back(Pair("nHash", i->first.ToString().c_str()));
+            bObj.push_back(Pair("nTime", static_cast<int64_t>(i->second.nTime)));
+            bObj.push_back(Pair("fValid", i->second.fValid));
 
-            obj.push_back(Pair(votePair.second.vin.prevout.ToStringShort(), bObj));
+            obj.push_back(Pair(i->second.vin.prevout.ToStringShort(), bObj));
         }
 
         return obj;
