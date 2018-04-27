@@ -1766,7 +1766,7 @@ bool CFinalizedBudget::AutoCheck()
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
 
     
-    boost::sort(vBudgetProposals, SortByAmount);
+    boost::sort(vBudgetProposals, SortByAmount());
 
     for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
         LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vecBudgetPayments[i].nProposalHash.ToString());
