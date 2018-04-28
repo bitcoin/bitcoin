@@ -1097,6 +1097,9 @@ public:
     //! Flush wallet (bitdb flush)
     void Flush(bool shutdown=false);
 
+    /** Wallet is about to be unloaded */
+    boost::signals2::signal<void ()> NotifyUnload;
+
     /**
      * Address book entry changed.
      * @note called with lock cs_wallet held.
