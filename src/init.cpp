@@ -554,6 +554,23 @@ void SetupServerArgs()
     gArgs.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", false, OptionsCategory::RPC);
     gArgs.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), true, OptionsCategory::RPC);
     gArgs.AddArg("-server", "Accept command line and JSON-RPC commands", false, OptionsCategory::RPC);
+
+    // Hidden options
+    gArgs.AddArg("-rpcssl", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-benchmark", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-h", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-socks", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-tor", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-debugnet", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-whitelistalwaysrelay", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-prematurewitness", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-walletprematurewitness", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-promiscuousmempoolflags", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-blockminsize", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-dbcrashratio", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-forcecompactdb", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-usehd", "", false, OptionsCategory::HIDDEN);
 }
 
 std::string LicenseInfo()

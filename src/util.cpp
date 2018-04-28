@@ -431,7 +431,7 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
-void ArgsManager::ParseParameters(int argc, const char* const argv[])
+bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
 {
     LOCK(cs_args);
     m_override_args.clear();
@@ -463,6 +463,14 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
         } else {
             m_override_args[key].push_back(val);
         }
+
+        // Check that the arg is known
+        if (!(IsSwitchChar(key[0]) && key.size() == 1)) {
+            if (!IsArgKnown(key, error)) {
+                error = strprintf("Invalid parameter %s", key.c_str());
+                return false;
+            }
+        }
     }
 
     // we do not allow -includeconf from command line, so we clear it here
@@ -475,6 +483,23 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
             m_override_args.erase(it);
         }
     }
+    return true;
+}
+
+bool ArgsManager::IsArgKnown(const std::string& key, std::string& error)
+{
+    size_t option_index = key.find('.');
+    std::string arg_no_net;
+    if (option_index == std::string::npos) {
+        arg_no_net = key;
+    } else {
+        arg_no_net = std::string("-") + key.substr(option_index + 1, std::string::npos);
+    }
+
+    for (const auto& arg_map : m_available_args) {
+        if (arg_map.second.count(arg_no_net)) return true;
+    }
+    return false;
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
@@ -806,7 +831,7 @@ fs::path GetConfigFile(const std::string& confPath)
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
 
-void ArgsManager::ReadConfigStream(std::istream& stream)
+bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys)
 {
     LOCK(cs_args);
 
@@ -817,15 +842,23 @@ void ArgsManager::ReadConfigStream(std::istream& stream)
     {
         std::string strKey = std::string("-") + it->string_key;
         std::string strValue = it->value[0];
+
         if (InterpretNegatedOption(strKey, strValue)) {
             m_config_args[strKey].clear();
         } else {
             m_config_args[strKey].push_back(strValue);
         }
+
+        // Check that the arg is known
+        if (!IsArgKnown(strKey, error) && !ignore_invalid_keys) {
+            error = strprintf("Invalid configuration value %s", it->string_key.c_str());
+            return false;
+        }
     }
+    return true;
 }
 
-void ArgsManager::ReadConfigFiles()
+bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 {
     {
         LOCK(cs_args);
@@ -837,7 +870,9 @@ void ArgsManager::ReadConfigFiles()
 
     // ok to not have a config file
     if (stream.good()) {
-        ReadConfigStream(stream);
+        if (!ReadConfigStream(stream, error, ignore_invalid_keys)) {
+            return false;
+        }
         // if there is an -includeconf in the override args, but it is empty, that means the user
         // passed '-noincludeconf' on the command line, in which case we should not include anything
         if (m_override_args.count("-includeconf") == 0) {
@@ -860,7 +895,9 @@ void ArgsManager::ReadConfigFiles()
             for (const std::string& to_include : includeconf) {
                 fs::ifstream include_config(GetConfigFile(to_include));
                 if (include_config.good()) {
-                    ReadConfigStream(include_config);
+                    if (!ReadConfigStream(include_config, error, ignore_invalid_keys)) {
+                        return false;
+                    }
                     LogPrintf("Included configuration file %s\n", to_include.c_str());
                 } else {
                     fprintf(stderr, "Failed to include configuration file %s\n", to_include.c_str());
@@ -882,8 +919,10 @@ void ArgsManager::ReadConfigFiles()
     // If datadir is changed in .conf file:
     ClearDatadirCache();
     if (!fs::is_directory(GetDataDir(false))) {
-        throw std::runtime_error(strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str()));
+        error = strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str());
+        return false;
     }
+    return true;
 }
 
 std::string ArgsManager::GetChainName() const

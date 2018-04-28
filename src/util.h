@@ -138,8 +138,7 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
-enum class OptionsCategory
-{
+enum class OptionsCategory {
     OPTIONS,
     CONNECTION,
     WALLET,
@@ -152,7 +151,9 @@ enum class OptionsCategory
     RPC,
     GUI,
     COMMANDS,
-    REGISTER_COMMANDS
+    REGISTER_COMMANDS,
+
+    HIDDEN // Always the last option to avoid printing these in the help
 };
 
 class ArgsManager
@@ -176,7 +177,7 @@ protected:
     std::set<std::string> m_network_only_args;
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args;
 
-    void ReadConfigStream(std::istream& stream);
+    bool ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys = false);
 
 public:
     ArgsManager();
@@ -186,8 +187,8 @@ public:
      */
     void SelectConfigNetwork(const std::string& network);
 
-    void ParseParameters(int argc, const char*const argv[]);
-    void ReadConfigFiles();
+    bool ParseParameters(int argc, const char* const argv[], std::string& error);
+    bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     /**
      * Log warnings for options in m_section_only_args when
@@ -283,9 +284,19 @@ public:
     void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
 
     /**
+     * Clear available arguments
+     */
+    void ClearArgs() { m_available_args.clear(); }
+
+    /**
      * Get the help string
      */
     std::string GetHelpMessage();
+
+    /**
+     * Check whether we know of this arg
+     */
+    bool IsArgKnown(const std::string& key, std::string& error);
 };
 
 extern ArgsManager gArgs;
