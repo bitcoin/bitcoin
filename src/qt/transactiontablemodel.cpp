@@ -148,7 +148,7 @@ public:
             {
                 // Find transaction in wallet
                 interfaces::WalletTx wtx = wallet.getWalletTx(hash);
-                if(!wtx.tx)
+                if(!wtx.tx && !wtx.is_record)
                 {
                     qWarning() << "TransactionTablePriv::updateWallet: Warning: Got CT_NEW, but transaction is not in wallet";
                     break;
