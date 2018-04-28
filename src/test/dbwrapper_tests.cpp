@@ -1,5 +1,4 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2012-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,13 +10,9 @@
 #include <boost/assign/std/vector.hpp> // for 'operator+=()'
 #include <boost/assert.hpp>
 #include <boost/test/unit_test.hpp>
-                    
-using namespace std;
-using namespace boost::assign; // bring 'operator+=()' into scope
-using namespace boost::filesystem;
-         
+
 // Test if a string consists entirely of null characters
-bool is_null_key(const vector<unsigned char>& key) {
+bool is_null_key(const std::vector<unsigned char>& key) {
     bool isnull = true;
 
     for (unsigned int i = 0; i < key.size(); i++)
@@ -33,14 +28,14 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
     // Perform tests both obfuscated and non-obfuscated.
     for (int i = 0; i < 2; i++) {
         bool obfuscate = (bool)i;
-        path ph = temp_directory_path() / unique_path();
+        boost::filesystem::path ph = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
         char key = 'k';
         uint256 in = GetRandHash();
         uint256 res;
 
         // Ensure that we're doing real obfuscation when obfuscate=true
-        BOOST_CHECK(obfuscate != is_null_key(dbw.GetObfuscateKey()));
+        BOOST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
 
         BOOST_CHECK(dbw.Write(key, in));
         BOOST_CHECK(dbw.Read(key, res));
@@ -54,7 +49,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
     // Perform tests both obfuscated and non-obfuscated.
     for (int i = 0; i < 2; i++) {
         bool obfuscate = (bool)i;
-        path ph = temp_directory_path() / unique_path();
+        boost::filesystem::path ph = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
         char key = 'i';
@@ -65,7 +60,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
         uint256 in3 = GetRandHash();
 
         uint256 res;
-        CDBBatch batch(&dbw.GetObfuscateKey());
+        CDBBatch batch(dbw);
 
         batch.Write(key, in);
         batch.Write(key2, in2);
@@ -81,7 +76,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
         BOOST_CHECK(dbw.Read(key2, res));
         BOOST_CHECK_EQUAL(res.ToString(), in2.ToString());
 
-        // key3 never should've been written
+        // key3 should've never been written
         BOOST_CHECK(dbw.Read(key3, res) == false);
     }
 }
@@ -91,7 +86,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
     // Perform tests both obfuscated and non-obfuscated.
     for (int i = 0; i < 2; i++) {
         bool obfuscate = (bool)i;
-        path ph = temp_directory_path() / unique_path();
+        boost::filesystem::path ph = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
         // The two keys are intentionally chosen for ordering
@@ -102,7 +97,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         uint256 in2 = GetRandHash();
         BOOST_CHECK(dbw.Write(key2, in2));
 
-        boost::scoped_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
+        std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
 
         // Be sure to seek past the obfuscation key (if it exists)
         it->Seek(key);
@@ -130,8 +125,8 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 // Test that we do not obfuscation if there is existing data.
 BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 {
-    // We're going to share this path between two wrappers
-    path ph = temp_directory_path() / unique_path();
+    // We're going to share this boost::filesystem::path between two wrappers
+    boost::filesystem::path ph = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
@@ -157,7 +152,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     BOOST_CHECK_EQUAL(res2.ToString(), in.ToString());
 
     BOOST_CHECK(!odbw.IsEmpty()); // There should be existing data
-    BOOST_CHECK(is_null_key(odbw.GetObfuscateKey())); // The key should be an empty string
+    BOOST_CHECK(is_null_key(dbwrapper_private::GetObfuscateKey(odbw))); // The key should be an empty string
 
     uint256 in2 = GetRandHash();
     uint256 res3;
@@ -171,8 +166,8 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 // Ensure that we start obfuscating during a reindex.
 BOOST_AUTO_TEST_CASE(existing_data_reindex)
 {
-    // We're going to share this path between two wrappers
-    path ph = temp_directory_path() / unique_path();
+    // We're going to share this boost::filesystem::path between two wrappers
+    boost::filesystem::path ph = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
@@ -194,7 +189,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     // Check that the key/val we wrote with unobfuscated wrapper doesn't exist
     uint256 res2;
     BOOST_CHECK(!odbw.Read(key, res2));
-    BOOST_CHECK(!is_null_key(odbw.GetObfuscateKey()));
+    BOOST_CHECK(!is_null_key(dbwrapper_private::GetObfuscateKey(odbw)));
 
     uint256 in2 = GetRandHash();
     uint256 res3;
@@ -207,7 +202,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
 
 BOOST_AUTO_TEST_CASE(iterator_ordering)
 {
-    path ph = temp_directory_path() / unique_path();
+    boost::filesystem::path ph = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
     for (int x=0x00; x<256; ++x) {
         uint8_t key = x;
@@ -215,7 +210,7 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
         BOOST_CHECK(dbw.Write(key, value));
     }
 
-    boost::scoped_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
+    std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
     for (int c=0; c<2; ++c) {
         int seek_start;
         if (c == 0)
@@ -242,11 +237,11 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
 struct StringContentsSerializer {
     // Used to make two serialized objects the same while letting them have a different lengths
     // This is a terrible idea
-    string str;
+    std::string str;
     StringContentsSerializer() {}
-    StringContentsSerializer(const string& inp) : str(inp) {}
+    StringContentsSerializer(const std::string& inp) : str(inp) {}
 
-    StringContentsSerializer& operator+=(const string& s) {
+    StringContentsSerializer& operator+=(const std::string& s) {
         str += s;
         return *this;
     }
@@ -255,7 +250,7 @@ struct StringContentsSerializer {
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         if (ser_action.ForRead()) {
             str.clear();
             char c = 0;
@@ -278,7 +273,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
 {
     char buf[10];
 
-    path ph = temp_directory_path() / unique_path();
+    boost::filesystem::path ph = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
     for (int x=0x00; x<10; ++x) {
         for (int y = 0; y < 10; y++) {
@@ -291,7 +286,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
         }
     }
 
-    boost::scoped_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
+    std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
     for (int c=0; c<2; ++c) {
         int seek_start;
         if (c == 0)
@@ -304,7 +299,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
         for (int x=seek_start; x<10; ++x) {
             for (int y = 0; y < 10; y++) {
                 sprintf(buf, "%d", x);
-                string exp_key(buf);
+                std::string exp_key(buf);
                 for (int z = 0; z < y; z++)
                     exp_key += exp_key;
                 StringContentsSerializer key;

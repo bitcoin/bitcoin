@@ -73,9 +73,9 @@ Syscoin Core is now available at `./src/syscoind`
 
 Before running, it's recommended you create an RPC configuration file.
 
-    echo -e "rpcuser=syscoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Syscoin/syscoin.conf"
+    echo -e "rpcuser=syscoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/SyscoinCore/syscoin.conf"
 
-    chmod 600 "/Users/${USER}/Library/Application Support/Syscoin/syscoin.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/SyscoinCore/syscoin.conf"
 
 The first time you run syscoind, it will start downloading the blockchain. This process could take several hours.
 

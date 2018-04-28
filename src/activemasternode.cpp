@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +6,8 @@
 #include "masternode.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "netbase.h"
 #include "protocol.h"
-
-extern CWallet* pwalletMain;
 
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
@@ -17,7 +15,7 @@ CActiveMasternode activeMasternode;
 void CActiveMasternode::ManageState(CConnman& connman)
 {
     LogPrint("masternode", "CActiveMasternode::ManageState -- Start\n");
-    if(!fMasterNode) {
+    if(!fMasternodeMode) {
         LogPrint("masternode", "CActiveMasternode::ManageState -- Not a masternode, returning\n");
         return;
     }
@@ -40,11 +38,6 @@ void CActiveMasternode::ManageState(CConnman& connman)
 
     if(eType == MASTERNODE_REMOTE) {
         ManageStateRemote();
-    } else if(eType == MASTERNODE_LOCAL) {
-        // Try Remote Start first so the started local masternode can be restarted without recreate masternode broadcast.
-        ManageStateRemote();
-        if(nState != ACTIVE_MASTERNODE_STARTED)
-            ManageStateLocal(connman);
     }
 
     SendMasternodePing(connman);
@@ -78,14 +71,8 @@ std::string CActiveMasternode::GetTypeString() const
 {
     std::string strType;
     switch(eType) {
-    case MASTERNODE_UNKNOWN:
-        strType = "UNKNOWN";
-        break;
     case MASTERNODE_REMOTE:
         strType = "REMOTE";
-        break;
-    case MASTERNODE_LOCAL:
-        strType = "LOCAL";
         break;
     default:
         strType = "UNKNOWN";
@@ -111,7 +98,7 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
     CMasternodePing mnp(outpoint);
     mnp.nSentinelVersion = nSentinelVersion;
     mnp.fSentinelIsCurrent =
-            (abs(GetAdjustedTime() - nSentinelPingTime) < MASTERNODE_WATCHDOG_MAX_SECONDS);
+            (abs(GetAdjustedTime() - nSentinelPingTime) < MASTERNODE_SENTINEL_PING_MAX_SECONDS);
     if(!mnp.Sign(keyMasternode, pubKeyMasternode)) {
         LogPrintf("CActiveMasternode::SendMasternodePing -- ERROR: Couldn't sign Masternode Ping\n");
         return false;
@@ -194,9 +181,13 @@ void CActiveMasternode::ManageStateInitial(CConnman& connman)
         return;
     }
 
+    // Check socket connectivity
     LogPrintf("CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
+    SOCKET hSocket;
+    bool fConnected = ConnectSocket(service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
+    CloseSocket(hSocket);
 
-    if(!connman.ConnectNode(CAddress(service, NODE_NETWORK), NULL, true)) {
+    if (!fConnected) {
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
         strNotCapableReason = "Could not connect to " + service.ToString();
         LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
@@ -205,31 +196,6 @@ void CActiveMasternode::ManageStateInitial(CConnman& connman)
 
     // Default to REMOTE
     eType = MASTERNODE_REMOTE;
-
-    // Check if wallet funds are available
-    if(!pwalletMain) {
-        LogPrintf("CActiveMasternode::ManageStateInitial -- %s: Wallet not available\n", GetStateString());
-        return;
-    }
-
-    if(pwalletMain->IsLocked()) {
-        LogPrintf("CActiveMasternode::ManageStateInitial -- %s: Wallet is locked\n", GetStateString());
-        return;
-    }
-
-    if(pwalletMain->GetBalance() < 100000*COIN) {
-        LogPrintf("CActiveMasternode::ManageStateInitial -- %s: Wallet balance is < 100000 SYS\n", GetStateString());
-        return;
-    }
-
-    // Choose coins to use
-    CPubKey pubKeyCollateral;
-    CKey keyCollateral;
-
-    // If collateral is found switch to LOCAL mode
-    if(pwalletMain->GetMasternodeOutpointAndKeys(outpoint, pubKeyCollateral, keyCollateral)) {
-        eType = MASTERNODE_LOCAL;
-    }
 
     LogPrint("masternode", "CActiveMasternode::ManageStateInitial -- End status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
 }
@@ -262,7 +228,7 @@ void CActiveMasternode::ManageStateRemote()
         }
         if(nState != ACTIVE_MASTERNODE_STARTED) {
             LogPrintf("CActiveMasternode::ManageStateRemote -- STARTED!\n");
-            outpoint = infoMn.vin.prevout;
+            outpoint = infoMn.outpoint;
             service = infoMn.addr;
             fPingerEnabled = true;
             nState = ACTIVE_MASTERNODE_STARTED;
@@ -272,59 +238,5 @@ void CActiveMasternode::ManageStateRemote()
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
         strNotCapableReason = "Masternode not in masternode list";
         LogPrintf("CActiveMasternode::ManageStateRemote -- %s: %s\n", GetStateString(), strNotCapableReason);
-    }
-}
-
-void CActiveMasternode::ManageStateLocal(CConnman& connman)
-{
-    LogPrint("masternode", "CActiveMasternode::ManageStateLocal -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
-    if(nState == ACTIVE_MASTERNODE_STARTED) {
-        return;
-    }
-
-    // Choose coins to use
-    CPubKey pubKeyCollateral;
-    CKey keyCollateral;
-
-    if(pwalletMain->GetMasternodeOutpointAndKeys(outpoint, pubKeyCollateral, keyCollateral)) {
-        int nPrevoutAge = GetUTXOConfirmations(outpoint);
-        if(nPrevoutAge < Params().GetConsensus().nMasternodeMinimumConfirmations){
-            nState = ACTIVE_MASTERNODE_INPUT_TOO_NEW;
-            strNotCapableReason = strprintf(_("%s - %d confirmations"), GetStatus(), nPrevoutAge);
-            LogPrintf("CActiveMasternode::ManageStateLocal -- %s: %s\n", GetStateString(), strNotCapableReason);
-            return;
-        }
-
-        {
-            LOCK(pwalletMain->cs_wallet);
-            pwalletMain->LockCoin(outpoint);
-        }
-
-        CMasternodeBroadcast mnb;
-        std::string strError;
-        if(!CMasternodeBroadcast::Create(outpoint, service, keyCollateral, pubKeyCollateral, keyMasternode, pubKeyMasternode, strError, mnb)) {
-            nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
-            strNotCapableReason = "Error creating mastenode broadcast: " + strError;
-            LogPrintf("CActiveMasternode::ManageStateLocal -- %s: %s\n", GetStateString(), strNotCapableReason);
-            return;
-        }
-
-        {
-            LOCK(cs_main);
-            // remember the hash of the block where masternode collateral had minimum required confirmations
-            mnb.nCollateralMinConfBlockHash = chainActive[GetUTXOHeight(outpoint) + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]->GetBlockHash();
-        }
-
-        fPingerEnabled = true;
-        nState = ACTIVE_MASTERNODE_STARTED;
-
-        //update to masternode list
-        LogPrintf("CActiveMasternode::ManageStateLocal -- Update Masternode List\n");
-        mnodeman.UpdateMasternodeList(mnb, connman);
-        mnodeman.NotifyMasternodeUpdates(connman);
-
-        //send to all peers
-        LogPrintf("CActiveMasternode::ManageStateLocal -- Relay broadcast, collateral=%s\n", outpoint.ToStringShort());
-        mnb.Relay(connman);
     }
 }

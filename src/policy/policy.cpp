@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2016 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +15,6 @@
 #include <boost/foreach.hpp>
 // SYSCOIN need constant SYSCOIN_TX_VERSION
 #include "alias.h"
-
     /**
      * Check transaction inputs to mitigate two
      * potential denial-of-service attacks:
@@ -26,9 +24,6 @@
      * 2. P2SH scripts with a crazy number of expensive
      *    CHECKSIG/CHECKMULTISIG operations
      *
-     * Check transaction inputs, and make sure any
-     * pay-to-script-hash transactions are evaluating IsStandard scripts
-     * 
      * Why bother? To avoid denial-of-service attacks; an attacker
      * can submit a standard HASH... OP_EQUAL transaction,
      * which will get accepted into blocks. The redemption
@@ -52,8 +47,9 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
             return false;
         if (m < 1 || m > n)
             return false;
+	}
 	// SYSCOIN check for size of sys tx, normal tx size is checked in isstandardtx now
-    } else if (whichType == TX_NULL_DATA &&
+	else if (whichType == TX_NULL_DATA &&
 		(!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes * 20))
           return false;
 
@@ -72,7 +68,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     // almost as much to process as they cost the sender in fees, because
     // computing signature hashes is O(ninputs*txsize). Limiting transactions
     // to MAX_STANDARD_TX_SIZE mitigates CPU exhaustion attacks.
-    unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    unsigned int sz = GetSerializeSize(tx, SER_NETWORK, CTransaction::CURRENT_VERSION);
     if (sz >= MAX_STANDARD_TX_SIZE) {
         reason = "tx-size";
         return false;
@@ -81,12 +77,12 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
         // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
-        // keys. (remember the 520 byte limit on redeemScript size) That works
+        // keys (remember the 520 byte limit on redeemScript size). That works
         // out to a (15*(33+1))+3=513 byte redeemScript, 513+1+15*(73+1)+3=1627
         // bytes of scriptSig, which we round off to 1650 bytes for some minor
         // future-proofing. That's also enough to spend a 20-of-20
         // CHECKMULTISIG scriptPubKey, though such a scriptPubKey is not
-        // considered standard)
+        // considered standard.
         if (txin.scriptSig.size() > 1650) {
             reason = "scriptsig-size";
             return false;
@@ -120,7 +116,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (txout.IsDust(::minRelayTxFee)) {
+        } else if (txout.IsDust(dustRelayFee)) {
             reason = "dust";
             return false;
         }
@@ -142,7 +138,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
-        const CTxOut& prev = mapInputs.GetOutputFor(tx.vin[i]);
+        const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
         std::vector<std::vector<unsigned char> > vSolutions;
         txnouttype whichType;
@@ -168,3 +164,6 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
     return true;
 }
+
+CFeeRate incrementalRelayFee = CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE);
+CFeeRate dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);

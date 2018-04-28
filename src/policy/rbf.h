@@ -1,5 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Core developers
-// Copyright (c) 2016-2017 The Syscoin Core developers
+// Copyright (c) 2016 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +6,12 @@
 #define SYSCOIN_POLICY_RBF_H
 
 #include "txmempool.h"
+
+enum RBFTransactionState {
+    RBF_TRANSACTIONSTATE_UNKNOWN,
+    RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125,
+    RBF_TRANSACTIONSTATE_FINAL
+};
 
 // Check whether the sequence numbers on this transaction are signaling
 // opt-in to replace-by-fee, according to BIP 125
@@ -16,6 +21,6 @@ bool SignalsOptInRBF(const CTransaction &tx);
 // according to BIP 125
 // This involves checking sequence numbers of the transaction, as well
 // as the sequence numbers of all in-mempool ancestors.
-bool IsRBFOptIn(const CTxMemPoolEntry &entry, CTxMemPool &pool);
+RBFTransactionState IsRBFOptIn(const CTransaction &tx, CTxMemPool &pool);
 
 #endif // SYSCOIN_POLICY_RBF_H

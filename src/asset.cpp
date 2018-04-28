@@ -14,7 +14,7 @@
 #include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
-#include "coincontrol.h"
+#include "wallet/coincontrol.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 #include <boost/foreach.hpp>
@@ -25,7 +25,6 @@
 #include <chrono>
 using namespace std::chrono;
 using namespace std;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend=false, bool transferAlias=false);
 bool IsAssetOp(int op) {
     return op == OP_ASSET_ACTIVATE
         || op == OP_ASSET_UPDATE
@@ -539,11 +538,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						}
 
 						receiverAllocation.txHash = tx.GetHash();
-						if (theAsset.fInterestRate > 0) {
-							if (receiverAllocation.nHeight > 0) {
-								AccumulateInterestSinceLastClaim(receiverAllocation, nHeight);
-							}
-						}
 						receiverAllocation.fInterestRate = theAsset.fInterestRate;
 						receiverAllocation.nHeight = nHeight;
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
@@ -645,8 +639,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
     return true;
 }
 
-UniValue assetnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 11)
+UniValue assetnew(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || params.size() != 11)
         throw runtime_error(
 			"assetnew [symbol] [alias] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
 						"<symbol> symbol of asset in uppercase, 1 characters miniumum, 8 characters max.\n"
@@ -740,20 +735,14 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
-	
-	
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
+	UniValue res = syscointxfund_helper(vchAlias, vchWitness, aliasRecipient, vecSend);
 	res.push_back(stringFromVch(newAsset.vchAsset));
 	return res;
 }
 
-UniValue assetupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 6)
+UniValue assetupdate(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || params.size() != 6)
         throw runtime_error(
 			"assetupdate [asset] [public value] [category=assets] [supply] [interest_rate] [witness]\n"
 						"Perform an update on an asset you control.\n"
@@ -840,17 +829,12 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	
 	
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
- 	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
 
-UniValue assettransfer(const UniValue& params, bool fHelp) {
- if (fHelp || params.size() != 3)
+UniValue assettransfer(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+ if (request.fHelp || params.size() != 3)
         throw runtime_error(
 			"assettransfer [asset] [alias] [witness]\n"
 						"Transfer a asset allocation you own to another alias.\n"
@@ -920,17 +904,11 @@ UniValue assettransfer(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	
-	
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
-UniValue assetsend(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 5)
+UniValue assetsend(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 5)
 		throw runtime_error(
 			"assetsend [asset] [aliasfrom] ( [{\"aliasto\":\"aliasname\",\"amount\":amount},...] or [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
 			"Send an asset you own to another alias as an asset allocation. Maximimum recipients is 250.\n"
@@ -1061,17 +1039,12 @@ UniValue assetsend(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
 
-UniValue assetinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 2 != params.size())
+UniValue assetinfo(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || 2 != params.size())
         throw runtime_error("assetinfo <asset> <getinputs>\n"
                 "Show stored values of a single asset and its. Set getinputs to true if you want to get the allocation inputs, if applicable.\n");
 

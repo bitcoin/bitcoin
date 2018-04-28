@@ -1,10 +1,9 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_COINCONTROL_H
-#define SYSCOIN_COINCONTROL_H
+#ifndef SYSCOIN_WALLET_COINCONTROL_H
+#define SYSCOIN_WALLET_COINCONTROL_H
 
 #include "primitives/transaction.h"
 
@@ -21,6 +20,12 @@ public:
     bool fAllowWatchOnly;
     //! Minimum absolute fee (not per kilobyte)
     CAmount nMinimumTotalFee;
+    //! Override estimated feerate
+    bool fOverrideFeeRate;
+    //! Feerate to use if overrideFeeRate is true
+    CFeeRate nFeeRate;
+    //! Override the default confirmation target, 0 = use default
+    int nConfirmTarget;
 
     CCoinControl()
     {
@@ -36,6 +41,9 @@ public:
         fUseInstantSend = false;
         fUsePrivateSend = true;
         nMinimumTotalFee = 0;
+        nFeeRate = CFeeRate(0);
+        fOverrideFeeRate = false;
+        nConfirmTarget = 0;
     }
 
     bool HasSelected() const
@@ -72,4 +80,4 @@ private:
     std::set<COutPoint> setSelected;
 };
 
-#endif // SYSCOIN_COINCONTROL_H
+#endif // SYSCOIN_WALLET_COINCONTROL_H

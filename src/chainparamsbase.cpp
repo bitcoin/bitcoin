@@ -1,6 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,12 +12,14 @@
 
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
+const std::string CBaseChainParams::DEVNET = "dev";
 const std::string CBaseChainParams::REGTEST = "regtest";
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
     strUsage += HelpMessageGroup(_("Chain selection options:"));
     strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
+    strUsage += HelpMessageOpt("-devnet=<name>", _("Use devnet chain with provided name"));
     if (debugHelp) {
         strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
                                    "This is intended for regression testing tools and app development.");
@@ -52,6 +53,20 @@ public:
 };
 static CBaseTestNetParams testNetParams;
 
+/**
+ * Devnet
+ */
+class CBaseDevNetParams : public CBaseChainParams
+{
+public:
+    CBaseDevNetParams(const std::string &dataDir)
+    {
+        nRPCPort = 19998;
+        strDataDir = dataDir;
+    }
+};
+static CBaseDevNetParams *devNetParams;
+
 /*
  * Regression test
  */
@@ -80,7 +95,10 @@ CBaseChainParams& BaseParams(const std::string& chain)
         return mainParams;
     else if (chain == CBaseChainParams::TESTNET)
         return testNetParams;
-    else if (chain == CBaseChainParams::REGTEST)
+    else if (chain == CBaseChainParams::DEVNET) {
+        assert(devNetParams);
+        return *devNetParams;
+    } else if (chain == CBaseChainParams::REGTEST)
         return regTestParams;
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
@@ -88,21 +106,40 @@ CBaseChainParams& BaseParams(const std::string& chain)
 
 void SelectBaseParams(const std::string& chain)
 {
+    if (chain == CBaseChainParams::DEVNET) {
+        std::string devNetName = GetDevNetName();
+        assert(!devNetName.empty());
+        devNetParams = new CBaseDevNetParams(devNetName);
+    }
+
     pCurrentBaseParams = &BaseParams(chain);
 }
 
 std::string ChainNameFromCommandLine()
 {
     bool fRegTest = GetBoolArg("-regtest", false);
+    bool fDevNet = IsArgSet("-devnet");
     bool fTestNet = GetBoolArg("-testnet", false);
 
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
+    int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
+    if (nameParamsCount > 1)
+        throw std::runtime_error("Only one of -regtest, -testnet or -devnet can be used.");
+
+    if (fDevNet)
+        return CBaseChainParams::DEVNET;
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
+}
+
+std::string GetDevNetName()
+{
+    // This function should never be called for non-devnets
+    assert(IsArgSet("-devnet"));
+    std::string devNetName = GetArg("-devnet", "");
+    return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
 }
 
 bool AreBaseParamsConfigured()

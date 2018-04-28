@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,14 +7,13 @@
 #define SYSCOIN_CONSENSUS_CONSENSUS_H
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
-// static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_LEGACY_BLOCK_SIZE = (10 * 1000 * 1000);
+static const unsigned int MAX_DIP0001_BLOCK_SIZE = (10 * 1000 * 1000);
 inline unsigned int MaxBlockSize(bool fDIP0001Active /*= false */)
 {
-    return MAX_LEGACY_BLOCK_SIZE;
+    return fDIP0001Active ? MAX_DIP0001_BLOCK_SIZE : MAX_LEGACY_BLOCK_SIZE;
 }
 /** The maximum allowed number of signature check operations in a block (network rule) */
-// static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 inline unsigned int MaxBlockSigOps(bool fDIP0001Active /*= false */)
 {
     return MaxBlockSize(fDIP0001Active) / 50;

@@ -1,8 +1,11 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#if defined(HAVE_CONFIG_H)
+#include "config/syscoin-config.h"
+#endif
 
 #include "intro.h"
 #include "ui_intro.h"
@@ -61,9 +64,9 @@ private:
 
 #include "intro.moc"
 
-FreespaceChecker::FreespaceChecker(Intro *intro)
+FreespaceChecker::FreespaceChecker(Intro *_intro)
 {
-    this->intro = intro;
+    this->intro = _intro;
 }
 
 void FreespaceChecker::check()
@@ -120,11 +123,18 @@ Intro::Intro(QWidget *parent) :
     signalled(false)
 {
     ui->setupUi(this);
+    ui->welcomeLabel->setText(ui->welcomeLabel->text().arg(tr(PACKAGE_NAME)));
+    ui->storageLabel->setText(ui->storageLabel->text().arg(tr(PACKAGE_NAME)));
     uint64_t pruneTarget = std::max<int64_t>(0, GetArg("-prune", 0));
     requiredSpace = BLOCK_CHAIN_SIZE;
-    if (pruneTarget)
-        requiredSpace = CHAIN_STATE_SIZE + std::ceil(pruneTarget * 1024 * 1024.0 / GB_BYTES);
-    ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(requiredSpace));
+    if (pruneTarget) {
+        uint64_t prunedGBs = std::ceil(pruneTarget * 1024 * 1024.0 / GB_BYTES);
+        if (prunedGBs <= requiredSpace) {
+            requiredSpace = prunedGBs;
+        }
+    }
+    requiredSpace += CHAIN_STATE_SIZE;
+    ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(tr(PACKAGE_NAME)).arg(requiredSpace));
     startThread();
 }
 
@@ -161,14 +171,14 @@ QString Intro::getDefaultDataDirectory()
     return GUIUtil::boostPathToQString(GetDefaultDataDir());
 }
 
-void Intro::pickDataDirectory()
+bool Intro::pickDataDirectory()
 {
     namespace fs = boost::filesystem;
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
        or show a picking dialog */
     if(!GetArg("-datadir", "").empty())
-        return;
+        return true;
     /* 1) Default data directory for operating system */
     QString dataDirDefaultCurrent = getDefaultDataDirectory();
     /* 2) Allow QSettings to override default dir */
@@ -188,14 +198,14 @@ void Intro::pickDataDirectory()
             if(!intro.exec())
             {
                 /* Cancel clicked */
-                exit(EXIT_SUCCESS);
+                return false;
             }
             dataDir = intro.getDataDirectory();
             try {
                 TryCreateDirectory(GUIUtil::qstringToBoostPath(dataDir));
                 break;
             } catch (const fs::filesystem_error&) {
-                QMessageBox::critical(0, tr("Syscoin Core"),
+                QMessageBox::critical(0, tr(PACKAGE_NAME),
                     tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
                 /* fall through, back to choosing screen */
             }
@@ -210,6 +220,7 @@ void Intro::pickDataDirectory()
      */
     if(dataDir != dataDirDefaultCurrent)
         SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
+    return true;
 }
 
 void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable)

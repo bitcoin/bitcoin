@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -34,6 +33,7 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "warnings.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -191,9 +191,6 @@ private:
     boost::thread_group threadGroup;
     CScheduler scheduler;
 
-    /// Flag indicating a restart
-    bool execute_restart;
-
     /// Pass fatal exception message to UI thread
     void handleRunawayException(const std::exception *e);
 };
@@ -270,17 +267,30 @@ SyscoinCore::SyscoinCore():
 void SyscoinCore::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
-    Q_EMIT runawayException(QString::fromStdString(strMiscWarning));
+    Q_EMIT runawayException(QString::fromStdString(GetWarnings("gui")));
 }
 
 void SyscoinCore::initialize()
 {
-    execute_restart = true;
-
     try
     {
         qDebug() << __func__ << ": Running AppInit2 in thread";
-        int rv = AppInit2(threadGroup, scheduler);
+        if (!AppInitBasicSetup())
+        {
+            Q_EMIT initializeResult(false);
+            return;
+        }
+        if (!AppInitParameterInteraction())
+        {
+            Q_EMIT initializeResult(false);
+            return;
+        }
+        if (!AppInitSanityChecks())
+        {
+            Q_EMIT initializeResult(false);
+            return;
+        }
+        int rv = AppInitMain(threadGroup, scheduler);
         Q_EMIT initializeResult(rv);
     } catch (const std::exception& e) {
         handleRunawayException(&e);
@@ -291,13 +301,16 @@ void SyscoinCore::initialize()
 
 void SyscoinCore::restart(QStringList args)
 {
-    if(execute_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
-        execute_restart = false;
+    static bool executing_restart{false};
+
+    if(!executing_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
+        executing_restart = true;
         try
         {
             qDebug() << __func__ << ": Running Restart in thread";
-            threadGroup.interrupt_all();
+            Interrupt(threadGroup);
             threadGroup.join_all();
+            StartRestart();
             PrepareShutdown();
             qDebug() << __func__ << ": Shutdown finished";
             Q_EMIT shutdownResult(1);
@@ -471,6 +484,8 @@ void SyscoinApplication::requestShutdown()
     delete clientModel;
     clientModel = 0;
 
+    StartShutdown();
+
     // Request shutdown from core thread
     Q_EMIT requestedShutdown();
 }
@@ -578,6 +593,9 @@ int main(int argc, char *argv[])
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 #endif
+#if QT_VERSION >= 0x050600
+    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
 #ifdef Q_OS_MAC
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
@@ -594,6 +612,7 @@ int main(int argc, char *argv[])
     //   Need to pass name here as CAmount is a typedef (see http://qt-project.org/doc/qt-5/qmetatype.html#qRegisterMetaType)
     //   IMPORTANT if it is no longer a typedef use the normal variant above
     qRegisterMetaType< CAmount >("CAmount");
+    qRegisterMetaType< std::function<void(void)> >("std::function<void(void)>");
 
     /// 3. Application identification
     // must be set before OptionsModel is initialized or translations are loaded,
@@ -611,29 +630,30 @@ int main(int argc, char *argv[])
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
-    if (mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help") || mapArgs.count("-version"))
+    if (IsArgSet("-?") || IsArgSet("-h") || IsArgSet("-help") || IsArgSet("-version"))
     {
-        HelpMessageDialog help(NULL, mapArgs.count("-version") ? HelpMessageDialog::about : HelpMessageDialog::cmdline);
+        HelpMessageDialog help(NULL, IsArgSet("-version") ? HelpMessageDialog::about : HelpMessageDialog::cmdline);
         help.showOrPrint();
         return EXIT_SUCCESS;
     }
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
-    Intro::pickDataDirectory();
+    if (!Intro::pickDataDirectory())
+        return EXIT_SUCCESS;
 
     /// 6. Determine availability of data directory and parse syscoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
-        QMessageBox::critical(0, QObject::tr("Syscoin Core"),
-                              QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+                              QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(GetArg("-datadir", ""))));
         return EXIT_FAILURE;
     }
     try {
-        ReadConfigFile(mapArgs, mapMultiArgs);
+        ReadConfigFile(GetArg("-conf", SYSCOIN_CONF_FILENAME));
     } catch (const std::exception& e) {
-        QMessageBox::critical(0, QObject::tr("Syscoin Core"),
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return EXIT_FAILURE;
     }
@@ -648,7 +668,7 @@ int main(int argc, char *argv[])
     try {
         SelectParams(ChainNameFromCommandLine());
     } catch(std::exception &e) {
-        QMessageBox::critical(0, QObject::tr("Syscoin Core"), QObject::tr("Error: %1").arg(e.what()));
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: %1").arg(e.what()));
         return EXIT_FAILURE;
     }
 #ifdef ENABLE_WALLET
@@ -703,7 +723,7 @@ int main(int argc, char *argv[])
     // Allow parameter interaction before we create the options model
     app.parameterSetup();
     // Load GUI settings from QSettings
-    app.createOptionsModel(mapArgs.count("-resetguisettings") != 0);
+    app.createOptionsModel(IsArgSet("-resetguisettings"));
 
     // Subscribe to global signals from core
     uiInterface.InitMessage.connect(InitMessage);
@@ -716,17 +736,17 @@ int main(int argc, char *argv[])
         app.createWindow(networkStyle.data());
         app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
-        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Syscoin Core didn't yet exit safely..."), (HWND)app.getMainWinId());
+        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());
 #endif
         app.exec();
         app.requestShutdown();
         app.exec();
     } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(strMiscWarning));
+        app.handleRunawayException(QString::fromStdString(GetWarnings("gui")));
     } catch (...) {
         PrintExceptionContinue(NULL, "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(strMiscWarning));
+        app.handleRunawayException(QString::fromStdString(GetWarnings("gui")));
     }
     return app.getReturnValue();
 }

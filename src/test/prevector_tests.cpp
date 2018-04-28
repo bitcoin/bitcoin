@@ -1,16 +1,15 @@
-// Copyright (c) 2015 The Bitcoin Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <vector>
 #include "prevector.h"
-#include "random.h"
 
 #include "serialize.h"
 #include "streams.h"
 
 #include "test/test_syscoin.h"
+#include "test/test_random.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -28,8 +27,7 @@ class prevector_tester {
 
     typedef typename pretype::size_type Size;
     bool passed = true;
-    uint32_t insecure_rand_Rz_cache;
-    uint32_t insecure_rand_Rw_cache;
+    FastRandomContext rand_cache;
 
 
     template <typename A, typename B>
@@ -171,16 +169,28 @@ public:
         pre_vector.swap(pre_vector_alt);
         test();
     }
+
+    void move() {
+        real_vector = std::move(real_vector_alt);
+        real_vector_alt.clear();
+        pre_vector = std::move(pre_vector_alt);
+        pre_vector_alt.clear();
+    }
+
+    void copy() {
+        real_vector = real_vector_alt;
+        pre_vector = pre_vector_alt;
+    }
+
     ~prevector_tester() {
-        BOOST_CHECK_MESSAGE(passed, "insecure_rand_Rz: " 
-                << insecure_rand_Rz_cache 
+        BOOST_CHECK_MESSAGE(passed, "insecure_rand_Rz: "
+                << rand_cache.Rz
                 << ", insecure_rand_Rw: "
-                << insecure_rand_Rw_cache);
+                << rand_cache.Rw);
     }
     prevector_tester() {
         seed_insecure_rand();
-        insecure_rand_Rz_cache = insecure_rand_Rz;
-        insecure_rand_Rw_cache = insecure_rand_Rw;
+        rand_cache = insecure_rand_ctx;
     }
 };
 
@@ -217,8 +227,8 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             if (((r >> 21) % 32) == 7) {
                 int values[4];
                 int num = 1 + (insecure_rand() % 4);
-                for (int i = 0; i < num; i++) {
-                    values[i] = insecure_rand();
+                for (int k = 0; k < num; k++) {
+                    values[k] = insecure_rand();
                 }
                 test.insert_range(insecure_rand() % (test.size() + 1), values, values + num);
             }
@@ -243,8 +253,14 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             if (((r >> 21) % 512) == 12) {
                 test.assign(insecure_rand() % 32, insecure_rand());
             }
-            if (((r >> 15) % 64) == 3) {
+            if (((r >> 15) % 8) == 3) {
                 test.swap();
+            }
+            if (((r >> 15) % 16) == 8) {
+                test.copy();
+            }
+            if (((r >> 15) % 32) == 18) {
+                test.move();
             }
         }
     }

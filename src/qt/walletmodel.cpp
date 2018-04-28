@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -7,6 +6,7 @@
 #include "walletmodel.h"
 
 #include "addresstablemodel.h"
+#include "consensus/validation.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "paymentserver.h"
@@ -34,14 +34,9 @@
 #include <QTimer>
 
 #include <boost/foreach.hpp>
-// SYSCOIN
-#include "rpc/server.h"
-using namespace std;
-#include <univalue.h>
-#include "guiutil.h"
-#include "core_io.h"
-WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
-    QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
+
+WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
+    QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
     cachedBalance(0),
@@ -82,10 +77,11 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
     {
         CAmount nBalance = 0;
         std::vector<COutput> vCoins;
-        wallet->AvailableCoins(vCoins, true, coinControl);
+		// SYSCOIN include sys outputs
+        wallet->AvailableCoins(vCoins, true, coinControl, false, ALL_COINS, false, true);
         BOOST_FOREACH(const COutput& out, vCoins)
             if(out.fSpendable)
-                nBalance += out.tx->vout[out.i].nValue;
+                nBalance += out.tx->tx->vout[out.i].nValue;
 
         return nBalance;
     }
@@ -295,12 +291,10 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
     CAmount nBalance = getBalance(coinControl);
 
-	// SYSCOIN
-	/*
-	if(total > nBalance)
-	{
-	return AmountExceedsBalance;
-	}*/
+    if(total > nBalance)
+    {
+        return AmountExceedsBalance;
+    }
 
     {
         LOCK2(cs_main, wallet->cs_wallet);
@@ -320,20 +314,18 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             return TransactionCreationFailed;
         }
 
-		// SYSCOIN pass in false to not sign
-		bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, false, false, recipients[0].inputType, recipients[0].fUseInstantSend);
-
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, true, recipients[0].inputType, recipients[0].fUseInstantSend);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)
             transaction.reassignAmounts(nChangePosRet);
 
         if(recipients[0].fUseInstantSend) {
-            if(newTx->GetValueOut() > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN) {
+            if(newTx->tx->GetValueOut() > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN) {
                 Q_EMIT message(tr("Send Coins"), tr("InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 SYS.").arg(sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)),
                              CClientUIInterface::MSG_ERROR);
                 return TransactionCreationFailed;
             }
-            if(newTx->vin.size() > CTxLockRequest::WARN_MANY_INPUTS) {
+            if(newTx->tx->vin.size() > CTxLockRequest::WARN_MANY_INPUTS) {
                 Q_EMIT message(tr("Send Coins"), tr("Used way too many inputs (>%1) for this InstantSend transaction, fees could be huge.").arg(CTxLockRequest::WARN_MANY_INPUTS),
                              CClientUIInterface::MSG_WARNING);
             }
@@ -355,55 +347,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         // belt-and-suspenders check)
         if (nFeeRequired > maxTxFee)
             return AbsurdFee;
-		// SYSCOIN
-		UniValue resSign;
-		UniValue signParams(UniValue::VARR);
-		signParams.push_back(EncodeHexTx(*newTx));
-		try
-		{
-			resSign = tableRPC.execute("signrawtransaction", signParams);
-		}
-		catch (UniValue& objError)
-		{
-			Q_EMIT message(tr("Send Coins"), QString("%1").arg(QString::fromStdString(find_value(objError, "message").get_str())),
-				CClientUIInterface::MSG_ERROR);
-			return InvalidMultisig;
-		}
-		catch (const std::exception& e) {
-			Q_EMIT message(tr("Send Coins"), QString("%1").arg(QString::fromStdString(e.what())),
-				CClientUIInterface::MSG_ERROR);
-			return InvalidMultisig;
-		}
-		if (!resSign.isObject())
-		{
-			Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: Invalid response from signrawtransaction"),
-				CClientUIInterface::MSG_ERROR);
-			return InvalidMultisig;
-		}
-
-		const UniValue& so = resSign.get_obj();
-		string hex_str = "";
-
-		const UniValue& hex_value = find_value(so, "hex");
-		if (hex_value.isStr())
-			hex_str = hex_value.get_str();
-		const UniValue& complete_value = find_value(so, "complete");
-		bool bComplete = false;
-		if (complete_value.isBool())
-			bComplete = complete_value.get_bool();
-		if (!bComplete)
-		{
-			GUIUtil::setClipboard(QString::fromStdString(hex_str));
-			Q_EMIT message(tr("Send Coins"), tr("This transaction requires more signatures. Transaction hex has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed."),
-				CClientUIInterface::MSG_INFORMATION);
-			return InvalidMultisig;
-		}
-		if (!DecodeHexTx(*newTx, hex_str))
-		{
-			Q_EMIT message(tr("Send Coins"), tr("Could not decode signed transaction!"),
-				CClientUIInterface::MSG_ERROR);
-			return InvalidMultisig;
-		}
     }
 
     return SendCoinsReturn(OK);
@@ -440,13 +383,12 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         }
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        CValidationState state;
+        if(!wallet->CommitTransaction(*newTx, *keyChange, g_connman.get(), state, recipients[0].fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX))
+            return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(state.GetRejectReason()));
 
-        if(!wallet->CommitTransaction(*newTx, *keyChange, g_connman.get(), recipients[0].fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX))
-            return TransactionCommitFailed;
-
-        CTransaction* t = (CTransaction*)newTx;
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << *t;
+        ssTx << *newTx->tx;
         transaction_array.append(&(ssTx[0]), ssTx.size());
     }
 
@@ -564,7 +506,7 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
 
 bool WalletModel::backupWallet(const QString &filename)
 {
-    return BackupWallet(*wallet, filename.toLocal8Bit().data());
+    return wallet->BackupWallet(filename.toLocal8Bit().data());
 }
 
 // Handlers for core signals
@@ -664,11 +606,11 @@ WalletModel::UnlockContext WalletModel::requestUnlock(bool fForMixingOnly)
     return UnlockContext(this, !fInvalid, !fKeepUnlocked, was_mixing);
 }
 
-WalletModel::UnlockContext::UnlockContext(WalletModel *wallet, bool valid, bool was_locked, bool was_mixing):
-        wallet(wallet),
-        valid(valid),
-        was_locked(was_locked),
-        was_mixing(was_mixing)
+WalletModel::UnlockContext::UnlockContext(WalletModel *_wallet, bool _valid, bool _was_locked, bool _was_mixing):
+        wallet(_wallet),
+        valid(_valid),
+        was_locked(_was_locked),
+        was_mixing(_was_mixing)
 {
 }
 
@@ -698,6 +640,11 @@ bool WalletModel::havePrivKey(const CKeyID &address) const
     return wallet->HaveKey(address);
 }
 
+bool WalletModel::getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const
+{
+    return wallet->GetKey(address, vchPrivKeyOut);
+}
+
 // returns a list of COutputs from COutPoints
 void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs)
 {
@@ -722,7 +669,8 @@ bool WalletModel::isSpent(const COutPoint& outpoint) const
 void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const
 {
     std::vector<COutput> vCoins;
-    wallet->AvailableCoins(vCoins);
+	// SYSCOIN include sys outputs
+    wallet->AvailableCoins(vCoins, true, NULL, false, ALL_COINS, true);
 
     LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
     std::vector<COutPoint> vLockedCoins;
@@ -735,7 +683,7 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
         int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
         if (nDepth < 0) continue;
         COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth, true, true);
-        if (outpoint.n < out.tx->vout.size() && wallet->IsMine(out.tx->vout[outpoint.n]) == ISMINE_SPENDABLE)
+        if (outpoint.n < out.tx->tx->vout.size() && wallet->IsMine(out.tx->tx->vout[outpoint.n]) == ISMINE_SPENDABLE)
             vCoins.push_back(out);
     }
 
@@ -743,14 +691,14 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
     {
         COutput cout = out;
 
-        while (wallet->IsChange(cout.tx->vout[cout.i]) && cout.tx->vin.size() > 0 && wallet->IsMine(cout.tx->vin[0]))
+        while (wallet->IsChange(cout.tx->tx->vout[cout.i]) && cout.tx->tx->vin.size() > 0 && wallet->IsMine(cout.tx->tx->vin[0]))
         {
-            if (!wallet->mapWallet.count(cout.tx->vin[0].prevout.hash)) break;
-            cout = COutput(&wallet->mapWallet[cout.tx->vin[0].prevout.hash], cout.tx->vin[0].prevout.n, 0, true, true);
+            if (!wallet->mapWallet.count(cout.tx->tx->vin[0].prevout.hash)) break;
+            cout = COutput(&wallet->mapWallet[cout.tx->tx->vin[0].prevout.hash], cout.tx->tx->vin[0].prevout.n, 0, true, true);
         }
 
         CTxDestination address;
-        if(!out.fSpendable || !ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address))
+        if(!out.fSpendable || !ExtractDestination(cout.tx->tx->vout[cout.i].scriptPubKey, address))
             continue;
         mapCoins[QString::fromStdString(CSyscoinAddress(address).ToString())].push_back(out);
     }
@@ -819,7 +767,17 @@ bool WalletModel::abandonTransaction(uint256 hash) const
     return wallet->AbandonTransaction(hash);
 }
 
+bool WalletModel::isWalletEnabled()
+{
+   return !GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET);
+}
+
 bool WalletModel::hdEnabled() const
 {
     return wallet->IsHDEnabled();
+}
+
+int WalletModel::getDefaultConfirmTarget() const
+{
+    return nTxConfirmTarget;
 }

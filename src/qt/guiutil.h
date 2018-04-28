@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -150,7 +149,7 @@ namespace GUIUtil
      * Also makes sure the column widths are never larger than the table's viewport.
      * In Qt, all columns are resizable from the right, but it's not intuitive resizing the last column from the right.
      * Usually our second to last columns behave as if stretched, and when on strech mode, columns aren't resizable
-     * interactively or programatically.
+     * interactively or programmatically.
      *
      * This helper object takes care of this issue.
      *

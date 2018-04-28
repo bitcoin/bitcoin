@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 
 #include "governance.h"
 
@@ -14,13 +13,13 @@ BOOST_AUTO_TEST_CASE(ratecheck_test)
     CRateCheckBuffer buffer;
 
     BOOST_CHECK(buffer.GetCount() == 0);
-    BOOST_CHECK(buffer.GetMinTimestamp() == numeric_limits<int64_t>::max());
+    BOOST_CHECK(buffer.GetMinTimestamp() == std::numeric_limits<int64_t>::max());
     BOOST_CHECK(buffer.GetMaxTimestamp() == 0);
     BOOST_CHECK(buffer.GetRate() == 0.0);
 
     buffer.AddTimestamp(1);
 
-    std::cout << "buffer.GetMinTimestamp() = " << buffer.GetMinTimestamp() << std::endl;
+    BOOST_TEST_MESSAGE("buffer.GetMinTimestamp() = " << buffer.GetMinTimestamp());
 
     BOOST_CHECK(buffer.GetCount() == 1);
     BOOST_CHECK(buffer.GetMinTimestamp() == 1);
@@ -43,10 +42,10 @@ BOOST_AUTO_TEST_CASE(ratecheck_test)
     int64_t nMax = buffer.GetMaxTimestamp();
     double dRate = buffer.GetRate();
 
-    std::cout << "buffer.GetCount() = " << buffer.GetCount() << std::endl;
-    std::cout << "nMin = " << nMin << std::endl;
-    std::cout << "nMax = " << nMax << std::endl;
-    std::cout << "buffer.GetRate() = " << dRate << std::endl;
+    BOOST_TEST_MESSAGE("buffer.GetCount() = " << buffer.GetCount());
+    BOOST_TEST_MESSAGE("nMin = " << nMin);
+    BOOST_TEST_MESSAGE("nMax = " << nMax);
+    BOOST_TEST_MESSAGE("buffer.GetRate() = " << dRate);
 
     //BOOST_CHECK(fabs(buffer.GetRate() - (3.0/2.0)) < 1.0e-9);
     BOOST_CHECK(buffer.GetRate() == 0.0);
@@ -72,12 +71,12 @@ BOOST_AUTO_TEST_CASE(ratecheck_test)
 
     CRateCheckBuffer buffer2;
 
-    std::cout << "Before loop tests" << std::endl;
+    BOOST_TEST_MESSAGE("Before loop tests");
     for(int64_t i = 1; i < 11; ++i)  {
-        std::cout << "In loop: i = " << i << std::endl;
+        BOOST_TEST_MESSAGE("In loop: i = " << i);
         buffer2.AddTimestamp(i);
         BOOST_CHECK(buffer2.GetCount() == (i <= 5 ? i : 5));
-        BOOST_CHECK(buffer2.GetMinTimestamp() == max(int64_t(1), i - 4));
+        BOOST_CHECK(buffer2.GetMinTimestamp() == std::max(int64_t(1), i - 4));
         BOOST_CHECK(buffer2.GetMaxTimestamp() == i);
     }
 }

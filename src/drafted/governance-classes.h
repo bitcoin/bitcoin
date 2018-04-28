@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Copyright (c) 2015-2017 The Syscoin Core developers
 
 /*
@@ -95,7 +95,7 @@
  *          -> DAO
  *              -> COMPANY, COMMITTEE, FOUNDATION, ..
  *              -> GROUP1 (CORE)
- *                  - USER : EVAN DUFFIELD
+ *                  - USER : EVAN satoshiIELD
  *                      -> CONTRACT1 (INTERNAL CONTRACT)
  *                      -> PROJECT1
  *              -> PROJECT1
@@ -162,7 +162,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         // TODO : For testnet version bump
         READWRITE(nGovernanceType);
 

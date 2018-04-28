@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +10,7 @@
 #include <QDialog>
 #include <QImage>
 #include <QLabel>
+#include <QPainter>
 
 class OptionsModel;
 
@@ -38,8 +38,8 @@ public Q_SLOTS:
     void copyImage();
 
 protected:
-    virtual void mousePressEvent(QMouseEvent *event);
-    virtual void contextMenuEvent(QContextMenuEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event) override;
+    virtual void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
     QMenu *contextMenu;

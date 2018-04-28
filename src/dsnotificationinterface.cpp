@@ -1,16 +1,18 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
 #include "dsnotificationinterface.h"
 #include "instantx.h"
 #include "governance.h"
 #include "masternodeman.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
+#include "privatesend.h"
+#ifdef ENABLE_WALLET
 #include "privatesend-client.h"
-#include "txmempool.h"
+#endif // ENABLE_WALLET
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
@@ -35,39 +37,27 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
 
-    // DIP0001 updates
-
-    bool fDIP0001ActiveAtTipTmp = fDIP0001ActiveAtTip;
-    // Update global flags
-    fDIP0001ActiveAtTip = (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_ACTIVE);
-    fDIP0001WasLockedIn = fDIP0001ActiveAtTip || (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_LOCKED_IN);
-
-    // Update min fees only if activation changed and we are using default fees
-    if (fDIP0001ActiveAtTipTmp != fDIP0001ActiveAtTip) {
-        if (!mapArgs.count("-minrelaytxfee")) {
-            ::minRelayTxFee = CFeeRate(fDIP0001ActiveAtTip ? DEFAULT_DIP0001_MIN_RELAY_TX_FEE : DEFAULT_LEGACY_MIN_RELAY_TX_FEE);
-            mempool.UpdateMinFee(::minRelayTxFee);
-        }
-        if (!mapArgs.count("-mintxfee")) {
-            CWallet::minTxFee = CFeeRate(fDIP0001ActiveAtTip ? DEFAULT_DIP0001_TRANSACTION_MINFEE : DEFAULT_LEGACY_TRANSACTION_MINFEE);
-        }
-        if (!mapArgs.count("-fallbackfee")) {
-            CWallet::fallbackFee = CFeeRate(fDIP0001ActiveAtTip ? DEFAULT_DIP0001_FALLBACK_FEE : DEFAULT_LEGACY_FALLBACK_FEE);
-        }
-    }
+    // Update global DIP0001 activation status
+    fDIP0001ActiveAtTip = pindexNew->nHeight >= Params().GetConsensus().DIP0001Height;
 
     if (fInitialDownload)
         return;
 
+    if (fLiteMode)
+        return;
+
     mnodeman.UpdatedBlockTip(pindexNew);
+    CPrivateSend::UpdatedBlockTip(pindexNew);
+#ifdef ENABLE_WALLET
     privateSendClient.UpdatedBlockTip(pindexNew);
+#endif // ENABLE_WALLET
     instantsend.UpdatedBlockTip(pindexNew);
     mnpayments.UpdatedBlockTip(pindexNew, connman);
     governance.UpdatedBlockTip(pindexNew, connman);
 }
 
-void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlock *pblock)
+void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)
 {
-    instantsend.SyncTransaction(tx, pblock);
-    CPrivateSend::SyncTransaction(tx, pblock);
+    instantsend.SyncTransaction(tx, pindex, posInBlock);
+    CPrivateSend::SyncTransaction(tx, pindex, posInBlock);
 }

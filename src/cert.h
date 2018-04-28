@@ -14,7 +14,6 @@ class CWalletTx;
 class CTransaction;
 class CReserveKey;
 class CCoinsViewCache;
-class CCoins;
 class CBlock;
 class CAliasIndex;
 bool CheckCertInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedCerts, std::string &errorMessage, bool bSanityCheck=false);
@@ -52,7 +51,7 @@ public:
 	}
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {		
+	inline void SerializationOp(Stream& s, Operation ser_action) {		
 		READWRITE(vchTitle);
 		READWRITE(vchPubData);
 		READWRITE(txHash);

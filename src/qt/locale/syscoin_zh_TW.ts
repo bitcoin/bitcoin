@@ -1,4 +1,3 @@
-<!DOCTYPE TS>
 <TS language="zh_TW" version="2.0">
 <context>
     <name>AddressBookPage</name>
@@ -64,11 +63,11 @@
     </message>
     <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>這些是你要付款過去的系統幣位址。在付錢之前，務必要檢查金額和收款位址是否正確。</translation>
+        <translation>這些是你要付款過去的達世幣位址。在付錢之前，務必要檢查金額和收款位址是否正確。</translation>
     </message>
     <message>
         <source>These are your Syscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>這些是你用來收款的系統幣位址。建議在每次交易時，都使用一個新的收款位址。</translation>
+        <translation>這些是你用來收款的達世幣位址。建議在每次交易時，都使用一個新的收款位址。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -178,7 +177,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR SYS&lt;/b&gt;!</source>
-        <translation>警告: 如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去其中所有的系統幣了&lt;/b&gt;！</translation>
+        <translation>警告: 如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去其中所有的達世幣了&lt;/b&gt;！</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -190,7 +189,7 @@
     </message>
     <message>
         <source>Syscoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>系統幣核心現在要關閉，以便完成加密程序。請注意，加密錢包不能完全防止入侵你的電腦的惡意程式偷取系統幣。</translation>
+        <translation>達世幣核心現在要關閉，以便完成加密程序。請注意，加密錢包不能完全防止入侵你的電腦的惡意程式偷取達世幣。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -244,11 +243,11 @@
     <name>SyscoinGUI</name>
     <message>
         <source>A fatal error occurred. Syscoin Core can no longer continue safely and will quit.</source>
-        <translation>發生致命錯誤。系統幣核心軟體不再能安全地繼續運行下去，程式將會關閉。</translation>
+        <translation>發生致命錯誤。達世幣核心軟體不再能安全地繼續運行下去，程式將會關閉。</translation>
     </message>
     <message>
         <source>Syscoin Core</source>
-        <translation>系統幣核心</translation>
+        <translation>達世幣核心</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -272,7 +271,7 @@
     </message>
     <message>
         <source>Send coins to a Syscoin address</source>
-        <translation>付錢給一個系統幣位址</translation>
+        <translation>付錢給一個達世幣位址</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
@@ -280,7 +279,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and syscoin: URIs)</source>
-        <translation>要求付款(產生 QR Code 和系統幣付款協議的 URI)</translation>
+        <translation>要求付款(產生 QR Code 和達世幣付款協議的 URI)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -308,11 +307,11 @@
     </message>
     <message>
         <source>&amp;About Syscoin Core</source>
-        <translation>關於系統幣核心(&amp;A)</translation>
+        <translation>關於達世幣核心(&amp;A)</translation>
     </message>
     <message>
         <source>Show information about Syscoin Core</source>
-        <translation>顯示系統幣核心的相關資訊</translation>
+        <translation>顯示達世幣核心的相關資訊</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -328,7 +327,7 @@
     </message>
     <message>
         <source>Modify configuration options for Syscoin Core</source>
-        <translation>修改系統幣核心的設定選項</translation>
+        <translation>修改達世幣核心的設定選項</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -380,7 +379,7 @@
     </message>
     <message>
         <source>Sign messages with your Syscoin addresses to prove you own them</source>
-        <translation>用系統幣位址簽署訊息來證明位址是你的</translation>
+        <translation>用達世幣位址簽署訊息來證明位址是你的</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -388,7 +387,7 @@
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
-        <translation>驗證訊息是用來確定訊息是用指定的系統幣位址簽署的</translation>
+        <translation>驗證訊息是用來確定訊息是用指定的達世幣位址簽署的</translation>
     </message>
     <message>
         <source>&amp;Information</source>
@@ -476,7 +475,7 @@
     </message>
     <message>
         <source>Open a syscoin: URI or payment request</source>
-        <translation>開啓一個系統幣協議的 URI 或付款要求</translation>
+        <translation>開啓一個達世幣協議的 URI 或付款要求</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -484,7 +483,7 @@
     </message>
     <message>
         <source>Show the Syscoin Core help message to get a list with possible Syscoin Core command-line options</source>
-        <translation>顯示系統幣核心的說明訊息，來取得可用命令列選項的列表</translation>
+        <translation>顯示達世幣核心的說明訊息，來取得可用命令列選項的列表</translation>
     </message>
     <message>
         <source>&amp;PrivateSend information</source>
@@ -516,11 +515,11 @@
     </message>
     <message>
         <source>Syscoin Core client</source>
-        <translation>系統幣核心客戶端軟體</translation>
+        <translation>達世幣核心客戶端軟體</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Syscoin network</source>
-        <translation><numerusform>%n 個運作中的系統幣網路連線</numerusform></translation>
+        <translation><numerusform>%n 個運作中的達世幣網路連線</numerusform></translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -851,11 +850,11 @@
     </message>
     <message>
         <source>Use 2 separate masternodes to mix funds up to 100000 SYS</source>
-        <translation>使用2個獨立的主節點來混合最高達1000系統幣的資金</translation>
+        <translation>使用2個獨立的主節點來混合最高達1000達世幣的資金</translation>
     </message>
     <message>
         <source>Use 8 separate masternodes to mix funds up to 100000 SYS</source>
-        <translation>使用8個獨立的主節點來混合最高達1000系統幣的資金</translation>
+        <translation>使用8個獨立的主節點來混合最高達1000達世幣的資金</translation>
     </message>
     <message>
         <source>Use 16 separate masternodes</source>
@@ -863,15 +862,15 @@
     </message>
     <message>
         <source>This option is the quickest and will cost about ~0.025 SYS to anonymize 100000 SYS</source>
-        <translation>這個是最快的選項，將耗費約~0.025系統幣作為匿名處理1000系統幣的費用</translation>
+        <translation>這個是最快的選項，將耗費約~0.025達世幣作為匿名處理1000達世幣的費用</translation>
     </message>
     <message>
         <source>This option is moderately fast and will cost about 0.05 SYS to anonymize 100000 SYS</source>
-        <translation>這個是一般的選項，將耗費約0.05系統幣作為匿名處理1000系統幣的費用</translation>
+        <translation>這個是一般的選項，將耗費約0.05達世幣作為匿名處理1000達世幣的費用</translation>
     </message>
     <message>
         <source>0.1 SYS per 100000 SYS you anonymize.</source>
-        <translation>每1000系統幣耗費0.1系統幣作為匿名處理費用</translation>
+        <translation>每1000達世幣耗費0.1達世幣作為匿名處理費用</translation>
     </message>
     <message>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
@@ -883,15 +882,15 @@
     </message>
     <message>
         <source>PrivateSend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Syscoin's configuration screen.</source>
-        <translation>匿名發送已成功設置為一般(%1 到2次循環)。你可以隨時打開系統幣配置窗口來修改。</translation>
+        <translation>匿名發送已成功設置為一般(%1 到2次循環)。你可以隨時打開達世幣配置窗口來修改。</translation>
     </message>
     <message>
         <source>PrivateSend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Syscoin's configuration screen.</source>
-        <translation>匿名發送已成功設置為高(%1 到8次循環)。你可以隨時打開系統幣配置窗口來修改。</translation>
+        <translation>匿名發送已成功設置為高(%1 到8次循環)。你可以隨時打開達世幣配置窗口來修改。</translation>
     </message>
     <message>
         <source>PrivateSend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Syscoin's configuration screen.</source>
-        <translation>匿名發送已成功設置為最高(%1 到16次循環)。你可以隨時打開系統幣配置窗口來修改。</translation>
+        <translation>匿名發送已成功設置為最高(%1 到16次循環)。你可以隨時打開達世幣配置窗口來修改。</translation>
     </message>
 </context>
 <context>
@@ -934,7 +933,7 @@
     </message>
     <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
-        <translation>輸入的位址 %1 並不是有效的系統幣位址。</translation>
+        <translation>輸入的位址 %1 並不是有效的達世幣位址。</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -976,7 +975,7 @@
     <name>HelpMessageDialog</name>
     <message>
         <source>Syscoin Core</source>
-        <translation>系統幣核心</translation>
+        <translation>達世幣核心</translation>
     </message>
     <message>
         <source>version</source>
@@ -988,7 +987,7 @@
     </message>
     <message>
         <source>About Syscoin Core</source>
-        <translation>關於系統幣核心</translation>
+        <translation>關於達世幣核心</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -1035,8 +1034,8 @@
         <translation>匿名發送資訊</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Syscoin in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times..&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 SYS, 0.1 SYS, 1 SYS and 10 SYS -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more info see &lt;a href="https://syscoin.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://syscoin.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </source>
-        <translation>&lt;h3&gt;匿名發送基礎知識&lt;/h3&gt; 匿名發送通過隱藏您的資金來源為您提供真正的財務隱私。您的錢包中所有的系統幣都由不同的“輸入”組成，您可以將其視為分開的離散硬幣。&lt;br&gt; 匿名發送使用創新的方法將您的輸入與其他兩個人的輸入相結合，而過程中不會讓您的系統幣離開您的錢包。每時每刻，您仍然控制著您的錢。&lt;hr&gt; &lt;b&gt;匿名發送的運作原理如下:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;匿名發送首先將您的交易分柝成多個標準面額的交易。這些標準面額分別為0.01 SYS, 0.1 SYS, 1 SYS 和10 SYS --有點像您每天使用的紙幣。&lt;/li&gt; &lt;li&gt;您的錢包然後發送請求到網絡上有專門配置的軟件節點，稱為“主節點”。這些主節點會收到您希望混合一些資金的通知。沒有可識別的信息發送到主節點，所以他們永遠不會知道你是"誰"。&lt;/li&gt; &lt;li&gt;當另外兩個人發送類似的消息時，表示希望混合相同的面額的話，混合會話就會開始。相關的主節點會混合這些輸入，並指示所有三個用戶的錢包將已經轉換了輸入的交易支付給自己。你的錢包直接支付給自己，但是付給不同的位址 (稱之為找零位址)。&lt;/li&gt; &lt;li&gt;為了完全掩蓋您的資金來源，您的錢包必須以每個面額來重複此過程數次。每次這個過程完成後，都稱之為一個 "循環"。每個循環的匿名發送都會令確定您的資金來源的工作倍加困難。&lt;/li&gt; &lt;li&gt;這種混合過程發生在後台，而不需要您進行任何操作。當您想進行交易時，您的資金將已被匿名處理。不需再花額外的時間等待。&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;重要:&lt;/b&gt;您的錢包只能擁有1000個"找零位址。" 每次混合事件發生時，最多會使用9個找零位址。這意味著這1000個位址可以容許100次的混合事件。當其的中900個已經被使用後，您的錢包必須創建更多的位址。如果您啟用了自動備份，則只能夠這樣做。&lt;br&gt;因此，禁用備份的用戶也將禁用匿名發送。&lt;hr&gt;如欲了解更多信息請參閱&lt;a href="https://syscoin.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://syscoin.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;</translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Syscoin in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times..&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 SYS, 0.1 SYS, 1 SYS and 10 SYS -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more info see &lt;a href="https://syscoinpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://syscoinpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </source>
+        <translation>&lt;h3&gt;匿名發送基礎知識&lt;/h3&gt; 匿名發送通過隱藏您的資金來源為您提供真正的財務隱私。您的錢包中所有的達世幣都由不同的“輸入”組成，您可以將其視為分開的離散硬幣。&lt;br&gt; 匿名發送使用創新的方法將您的輸入與其他兩個人的輸入相結合，而過程中不會讓您的達世幣離開您的錢包。每時每刻，您仍然控制著您的錢。&lt;hr&gt; &lt;b&gt;匿名發送的運作原理如下:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;匿名發送首先將您的交易分柝成多個標準面額的交易。這些標準面額分別為0.01 SYS, 0.1 SYS, 1 SYS 和10 SYS --有點像您每天使用的紙幣。&lt;/li&gt; &lt;li&gt;您的錢包然後發送請求到網絡上有專門配置的軟件節點，稱為“主節點”。這些主節點會收到您希望混合一些資金的通知。沒有可識別的信息發送到主節點，所以他們永遠不會知道你是"誰"。&lt;/li&gt; &lt;li&gt;當另外兩個人發送類似的消息時，表示希望混合相同的面額的話，混合會話就會開始。相關的主節點會混合這些輸入，並指示所有三個用戶的錢包將已經轉換了輸入的交易支付給自己。你的錢包直接支付給自己，但是付給不同的位址 (稱之為找零位址)。&lt;/li&gt; &lt;li&gt;為了完全掩蓋您的資金來源，您的錢包必須以每個面額來重複此過程數次。每次這個過程完成後，都稱之為一個 "循環"。每個循環的匿名發送都會令確定您的資金來源的工作倍加困難。&lt;/li&gt; &lt;li&gt;這種混合過程發生在後台，而不需要您進行任何操作。當您想進行交易時，您的資金將已被匿名處理。不需再花額外的時間等待。&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;重要:&lt;/b&gt;您的錢包只能擁有1000個"找零位址。" 每次混合事件發生時，最多會使用9個找零位址。這意味著這1000個位址可以容許100次的混合事件。當其的中900個已經被使用後，您的錢包必須創建更多的位址。如果您啟用了自動備份，則只能夠這樣做。&lt;br&gt;因此，禁用備份的用戶也將禁用匿名發送。&lt;hr&gt;如欲了解更多信息請參閱&lt;a href="https://syscoinpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://syscoinpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;</translation>
     </message>
 </context>
 <context>
@@ -1047,15 +1046,15 @@
     </message>
     <message>
         <source>Welcome to Syscoin Core.</source>
-        <translation>歡迎使用系統幣核心</translation>
+        <translation>歡迎使用達世幣核心</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Syscoin Core will store its data.</source>
-        <translation>因為這是程式第一次啓動，你可以選擇系統幣核心儲存資料的地方。</translation>
+        <translation>因為這是程式第一次啓動，你可以選擇達世幣核心儲存資料的地方。</translation>
     </message>
     <message>
         <source>Syscoin Core will download and store a copy of the Syscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>系統幣核心會下載並儲存一份系統幣區塊鏈的副本。至少有 %1GB 的資料會儲存到這個目錄中，並且還會持續增長。另外錢包資料也會儲存在這個目錄。</translation>
+        <translation>達世幣核心會下載並儲存一份達世幣區塊鏈的副本。至少有 %1GB 的資料會儲存到這個目錄中，並且還會持續增長。另外錢包資料也會儲存在這個目錄。</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1067,7 +1066,7 @@
     </message>
     <message>
         <source>Syscoin Core</source>
-        <translation>系統幣核心</translation>
+        <translation>達世幣核心</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1213,7 +1212,7 @@
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Syscoin network, as detailed below.</source>
-        <translation>最近的交易可能尚未顯示，因此您的錢包的餘額可能不正確。 一旦你的錢包完成與系統幣網絡的同步，這個信息將是正確的，如下所述。</translation>
+        <translation>最近的交易可能尚未顯示，因此您的錢包的餘額可能不正確。 一旦你的錢包完成與達世幣網絡的同步，這個信息將是正確的，如下所述。</translation>
     </message>
     <message>
         <source>Attempting to spend Syscoin that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -1311,7 +1310,7 @@
     </message>
     <message>
         <source>Amount of Syscoin to keep anonymized</source>
-        <translation>保持匿名的系統幣數量</translation>
+        <translation>保持匿名的達世幣數量</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -1319,11 +1318,11 @@
     </message>
     <message>
         <source>Automatically start Syscoin Core after logging in to the system.</source>
-        <translation>在登入系統後自動啓動系統幣核心。</translation>
+        <translation>在登入系統後自動啓動達世幣核心。</translation>
     </message>
     <message>
         <source>&amp;Start Syscoin Core on system login</source>
-        <translation>系統登入時啟動系統幣核心(&amp;S)</translation>
+        <translation>系統登入時啟動達世幣核心(&amp;S)</translation>
     </message>
     <message>
         <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
@@ -1367,7 +1366,7 @@
     </message>
     <message>
         <source>Automatically open the Syscoin Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>自動在路由器上開放系統幣核心客戶端的通訊埠。只有在你的路由器支援且開啓「通用即插即用」協定(UPnP)時才有作用。</translation>
+        <translation>自動在路由器上開放達世幣核心客戶端的通訊埠。只有在你的路由器支援且開啓「通用即插即用」協定(UPnP)時才有作用。</translation>
     </message>
     <message>
         <source>Accept connections from outside</source>
@@ -1379,7 +1378,7 @@
     </message>
     <message>
         <source>Connect to the Syscoin network through a SOCKS5 proxy.</source>
-        <translation>透過 SOCKS5 代理伺服器來連線到系統幣網路。</translation>
+        <translation>透過 SOCKS5 代理伺服器來連線到達世幣網路。</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1391,7 +1390,7 @@
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Syscoin Core.</source>
-        <translation>可以在這裡設定用戶介面的語言。這個設定在重啓系統幣核心後才會生效。</translation>
+        <translation>可以在這裡設定用戶介面的語言。這個設定在重啓達世幣核心後才會生效。</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
@@ -1459,7 +1458,7 @@
     </message>
     <message>
         <source>Connect to the Syscoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>透過另一個SOCKS5 代理伺服器作為Tor隱藏服務來連線到系統幣網路。</translation>
+        <translation>透過另一個SOCKS5 代理伺服器作為Tor隱藏服務來連線到達世幣網路。</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1572,7 +1571,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Syscoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>顯示的資訊可能是過期的。跟系統幣網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
+        <translation>顯示的資訊可能是過期的。跟達世幣網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1672,7 +1671,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>0 SYS / 0 Rounds</source>
-        <translation>0 系統幣 / 0 循環次數</translation>
+        <translation>0 達世幣 / 0 循環次數</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
@@ -1841,7 +1840,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Cannot start syscoin: click-to-pay handler</source>
-        <translation>無法啟動系統幣 : 點擊支付處理程序</translation>
+        <translation>無法啟動達世幣 : 點擊支付處理程序</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1857,7 +1856,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
-        <translation>沒辦法解析 URI 位址！可能是因為系統幣位址無效，或是 URI 參數格式錯誤。</translation>
+        <translation>沒辦法解析 URI 位址！可能是因為達世幣位址無效，或是 URI 參數格式錯誤。</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1947,7 +1946,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     <name>QObject</name>
     <message>
         <source>Syscoin Core</source>
-        <translation>系統幣核心</translation>
+        <translation>達世幣核心</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
@@ -1967,7 +1966,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Syscoin Core didn't yet exit safely...</source>
-        <translation>系統幣核心程序還沒有安全退出...</translation>
+        <translation>達世幣核心程序還沒有安全退出...</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -1975,7 +1974,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Enter a Syscoin address (e.g. %1)</source>
-        <translation>輸入系統幣位址 (例如 %1)</translation>
+        <translation>輸入達世幣位址 (例如 %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -2141,7 +2140,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Open the Syscoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>從目前的資料目錄下開啓系統幣核心的除錯紀錄檔。當紀錄檔很大時，可能會花好幾秒的時間。</translation>
+        <translation>從目前的資料目錄下開啓達世幣核心的除錯紀錄檔。當紀錄檔很大時，可能會花好幾秒的時間。</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -2357,7 +2356,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Welcome to the Syscoin Core RPC console.</source>
-        <translation>歡迎使用系統幣核心 RPC 主控台。</translation>
+        <translation>歡迎使用達世幣核心 RPC 主控台。</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -2440,7 +2439,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Syscoin network.</source>
-        <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。注意: 這個訊息不會隨著付款送到系統幣網路上。</translation>
+        <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。注意: 這個訊息不會隨著付款送到達世幣網路上。</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -2452,7 +2451,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Syscoin network.</source>
-        <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。&lt;br&gt;注意: 這個訊息不會隨著付款送到系統幣網路上。</translation>
+        <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。&lt;br&gt;注意: 這個訊息不會隨著付款送到達世幣網路上。</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2700,12 +2699,12 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>即時到帳</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 satoshi and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshi in fee,&lt;br /&gt;while "at least" pays 1000 satoshi. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>如果自訂手續費設定為 1000 satoshi ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 satoshi 的手續費，&lt;br /&gt;而「至少」會支付 1000 satoshi。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee,&lt;br /&gt;while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>如果自訂手續費設定為 1000 satoshis ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 satoshis 的手續費，&lt;br /&gt;而「至少」會支付 1000 satoshis。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 satoshi and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshi in fee,&lt;br /&gt;while "total at least" pays 1000 satoshi. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>如果自訂手續費設定為 1000 satoshi ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 satoshi 的手續費，&lt;br /&gt;而「總共至少」會支付 1000 satoshi。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee,&lt;br /&gt;while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>如果自訂手續費設定為 1000 satoshis ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 satoshis 的手續費，&lt;br /&gt;而「總共至少」會支付 1000 satoshis。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</source>
@@ -2905,7 +2904,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Warning: Invalid Syscoin address</source>
-        <translation>警告: 無效的系統幣位址</translation>
+        <translation>警告: 無效的達世幣位址</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2928,7 +2927,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>The Syscoin address to send the payment to</source>
-        <translation>接收付款的系統幣位址</translation>
+        <translation>接收付款的達世幣位址</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2964,7 +2963,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Syscoin than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>手續費將從發送金額中扣除。接收者將收到的系統幣金額將會比您在金額字段中輸入的金額為少。 如果選擇了多個收款人，該費用將會被平均攤分。</translation>
+        <translation>手續費將從發送金額中扣除。接收者將收到的達世幣金額將會比您在金額字段中輸入的金額為少。 如果選擇了多個收款人，該費用將會被平均攤分。</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2976,7 +2975,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>A message that was attached to the syscoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Syscoin network.</source>
-        <translation>附加在系統幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到系統幣網路上。</translation>
+        <translation>附加在達世幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到達世幣網路上。</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -3003,7 +3002,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     <name>ShutdownWindow</name>
     <message>
         <source>Syscoin Core is shutting down...</source>
-        <translation>系統幣核心正在關閉中...</translation>
+        <translation>達世幣核心正在關閉中...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -3026,7 +3025,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>The Syscoin address to sign the message with</source>
-        <translation>用來簽署訊息的系統幣位址</translation>
+        <translation>用來簽署訊息的達世幣位址</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3058,7 +3057,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Syscoin address</source>
-        <translation>簽署這個訊息來證明這個系統幣位址是你的</translation>
+        <translation>簽署這個訊息來證明這個達世幣位址是你的</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -3082,11 +3081,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>The Syscoin address the message was signed with</source>
-        <translation>簽署這個訊息的系統幣位址</translation>
+        <translation>簽署這個訊息的達世幣位址</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Syscoin address</source>
-        <translation>驗證這個訊息來確定是用指定的系統幣位址簽署的</translation>
+        <translation>驗證這個訊息來確定是用指定的達世幣位址簽署的</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3157,7 +3156,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Syscoin Core</source>
-        <translation>系統幣核心</translation>
+        <translation>達世幣核心</translation>
     </message>
     <message>
         <source>Version %1</source>
@@ -3169,7 +3168,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>The Syscoin Core developers</source>
-        <translation>系統幣核心開發人員</translation>
+        <translation>達世幣核心開發人員</translation>
     </message>
 </context>
 <context>
@@ -3767,7 +3766,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Syscoin Core is probably already running.</source>
-        <translation>沒辦法鎖定資料目錄 %s。系統幣核心可能已經在執行了。</translation>
+        <translation>沒辦法鎖定資料目錄 %s。達世幣核心可能已經在執行了。</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
@@ -3807,11 +3806,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Syscoin Core is probably already running.</source>
-        <translation>沒辦法繫結在這台電腦上的 %s 。系統幣核心可能已經在執行了。</translation>
+        <translation>沒辦法繫結在這台電腦上的 %s 。達世幣核心可能已經在執行了。</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>警告: 系統幣網路對於區塊鏈結的決定目前有分歧！看來有些礦工會有問題。</translation>
+        <translation>警告: 達世幣網路對於區塊鏈結的決定目前有分歧！看來有些礦工會有問題。</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
@@ -4079,7 +4078,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Copyright (C) 2014-%i The Syscoin Core Developers</source>
-        <translation>版權為系統幣核心開發人員自西元 2014 至 %i 年起所有</translation>
+        <translation>版權為達世幣核心開發人員自西元 2014 至 %i 年起所有</translation>
     </message>
     <message>
         <source>Enable the client to act as a masternode (0-1, default: %u)</source>
@@ -4095,7 +4094,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Syscoin Core</source>
-        <translation>載入 wallet.dat 檔案時發生錯誤: 這個錢包需要新版的系統幣核心</translation>
+        <translation>載入 wallet.dat 檔案時發生錯誤: 這個錢包需要新版的達世幣核心</translation>
     </message>
     <message>
         <source>Failed to load governance cache from</source>
@@ -4119,7 +4118,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
-        <translation>生產系統幣(預設值: %u)</translation>
+        <translation>生產達世幣(預設值: %u)</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
@@ -4151,7 +4150,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. Syscoin Core is shutting down.</source>
-        <translation>初始化時的基本檢查失敗了。系統幣核心即將關閉。</translation>
+        <translation>初始化時的基本檢查失敗了。達世幣核心即將關閉。</translation>
     </message>
     <message>
         <source>Input is not valid.</source>
@@ -4395,7 +4394,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart Syscoin Core to complete</source>
-        <translation>錢包需要重寫: 請重新啓動系統幣核心來完成</translation>
+        <translation>錢包需要重寫: 請重新啓動達世幣核心來完成</translation>
     </message>
     <message>
         <source>Will retry...</source>
@@ -4439,7 +4438,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Keep N SYS anonymized (default: %u)</source>
-        <translation>保留 N 個已經匿名處理的系統幣 (預設值: %u)</translation>
+        <translation>保留 N 個已經匿名處理的達世幣 (預設值: %u)</translation>
     </message>
     <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
@@ -4447,7 +4446,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Disable all Syscoin specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>禁止所有系統幣的附加功能 (主節點，匿名發送，即時到帳，預算案) (0-1，預設值: %u)</translation>
+        <translation>禁止所有達世幣的附加功能 (主節點，匿名發送，即時到帳，預算案) (0-1，預設值: %u)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4507,7 +4506,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong Syscoin Core will not work properly.</source>
-        <translation>請檢查電腦日期和時間是否正確！系統幣核心沒辦法在時鐘不準的情況下正常運作。</translation>
+        <translation>請檢查電腦日期和時間是否正確！達世幣核心沒辦法在時鐘不準的情況下正常運作。</translation>
     </message>
     <message>
         <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>

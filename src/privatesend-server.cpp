@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "privatesend-server.h"
@@ -10,22 +9,26 @@
 #include "init.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "netmessagemaker.h"
+#include "script/interpreter.h"
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
 
 CPrivateSendServer privateSendServer;
 
-void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if(!fMasterNode) return;
+    if(!fMasternodeMode) return;
     if(fLiteMode) return; // ignore all Syscoin related functionality
     if(!masternodeSync.IsBlockchainSynced()) return;
 
     if(strCommand == NetMsgType::DSACCEPT) {
 
         if(pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
-            LogPrintf("DSACCEPT -- incompatible version! nVersion: %d\n", pfrom->nVersion);
+            LogPrint("privatesend", "DSACCEPT -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
             PushStatus(pfrom, STATUS_REJECTED, ERR_VERSION, connman);
             return;
         }
@@ -37,11 +40,10 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
             return;
         }
 
-        int nDenom;
-        CTransaction txCollateral;
-        vRecv >> nDenom >> txCollateral;
+        CDarksendAccept dsa;
+        vRecv >> dsa;
 
-        LogPrint("privatesend", "DSACCEPT -- nDenom %d (%s)  txCollateral %s", nDenom, CPrivateSend::GetDenominationsToString(nDenom), txCollateral.ToString());
+        LogPrint("privatesend", "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), dsa.txCollateral.ToString());
 
         masternode_info_t mnInfo;
         if(!mnodeman.GetMasternodeInfo(activeMasternode.outpoint, mnInfo)) {
@@ -59,8 +61,8 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         PoolMessage nMessageID = MSG_NOERR;
 
-        bool fResult = nSessionID == 0  ? CreateNewSession(nDenom, txCollateral, nMessageID, connman)
-                                        : AddUserToExistingSession(nDenom, txCollateral, nMessageID);
+        bool fResult = nSessionID == 0  ? CreateNewSession(dsa, nMessageID, connman)
+                                        : AddUserToExistingSession(dsa, nMessageID);
         if(fResult) {
             LogPrintf("DSACCEPT -- is compatible, please submit!\n");
             PushStatus(pfrom, STATUS_ACCEPTED, nMessageID, connman);
@@ -76,7 +78,9 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         if(!lockRecv) return;
 
         if(pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
-            LogPrint("privatesend", "DSQUEUE -- incompatible version! nVersion: %d\n", pfrom->nVersion);
+            LogPrint("privatesend", "DSQUEUE -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
             return;
         }
 
@@ -84,7 +88,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         vRecv >> dsq;
 
         // process every dsq only once
-        BOOST_FOREACH(CDarksendQueue q, vecDarksendQueue) {
+        for (const auto& q : vecDarksendQueue) {
             if(q == dsq) {
                 // LogPrint("privatesend", "DSQUEUE -- %s seen\n", dsq.ToString());
                 return;
@@ -96,17 +100,17 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         if(dsq.IsExpired()) return;
 
         masternode_info_t mnInfo;
-        if(!mnodeman.GetMasternodeInfo(dsq.vin.prevout, mnInfo)) return;
+        if(!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, mnInfo)) return;
 
         if(!dsq.CheckSignature(mnInfo.pubKeyMasternode)) {
             // we probably have outdated info
-            mnodeman.AskForMN(pfrom, dsq.vin.prevout, connman);
+            mnodeman.AskForMN(pfrom, dsq.masternodeOutpoint, connman);
             return;
         }
 
         if(!dsq.fReady) {
-            BOOST_FOREACH(CDarksendQueue q, vecDarksendQueue) {
-                if(q.vin == dsq.vin) {
+            for (const auto& q : vecDarksendQueue) {
+                if(q.masternodeOutpoint == dsq.masternodeOutpoint) {
                     // no way same mn can send another "not yet ready" dsq this soon
                     LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending WAY too many dsq messages\n", mnInfo.addr.ToString());
                     return;
@@ -120,7 +124,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
                 LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending too many dsq messages\n", mnInfo.addr.ToString());
                 return;
             }
-            mnodeman.AllowMixing(dsq.vin.prevout);
+            mnodeman.AllowMixing(dsq.masternodeOutpoint);
 
             LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), mnInfo.addr.ToString());
             vecDarksendQueue.push_back(dsq);
@@ -130,7 +134,9 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     } else if(strCommand == NetMsgType::DSVIN) {
 
         if(pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
-            LogPrintf("DSVIN -- incompatible version! nVersion: %d\n", pfrom->nVersion);
+            LogPrint("privatesend", "DSVIN -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
             PushStatus(pfrom, STATUS_REJECTED, ERR_VERSION, connman);
             return;
         }
@@ -145,7 +151,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         CDarkSendEntry entry;
         vRecv >> entry;
 
-        LogPrint("privatesend", "DSVIN -- txCollateral %s", entry.txCollateral.ToString());
+        LogPrint("privatesend", "DSVIN -- txCollateral %s", entry.txCollateral->ToString());
 
         if(entry.vecTxDSIn.size() > PRIVATESEND_ENTRY_MAX_SIZE) {
             LogPrintf("DSVIN -- ERROR: too many inputs! %d/%d\n", entry.vecTxDSIn.size(), PRIVATESEND_ENTRY_MAX_SIZE);
@@ -153,14 +159,14 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
             return;
         }
 
-        if(entry.vecTxDSOut.size() > PRIVATESEND_ENTRY_MAX_SIZE) {
-            LogPrintf("DSVIN -- ERROR: too many outputs! %d/%d\n", entry.vecTxDSOut.size(), PRIVATESEND_ENTRY_MAX_SIZE);
+        if(entry.vecTxOut.size() > PRIVATESEND_ENTRY_MAX_SIZE) {
+            LogPrintf("DSVIN -- ERROR: too many outputs! %d/%d\n", entry.vecTxOut.size(), PRIVATESEND_ENTRY_MAX_SIZE);
             PushStatus(pfrom, STATUS_REJECTED, ERR_MAXIMUM, connman);
             return;
         }
 
         //do we have the same denominations as the current session?
-        if(!IsOutputsCompatibleWithSessionDenom(entry.vecTxDSOut)) {
+        if(!IsOutputsCompatibleWithSessionDenom(entry.vecTxOut)) {
             LogPrintf("DSVIN -- not compatible with existing transactions!\n");
             PushStatus(pfrom, STATUS_REJECTED, ERR_EXISTING_TX, connman);
             return;
@@ -173,7 +179,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
             CMutableTransaction tx;
 
-            BOOST_FOREACH(const CTxOut txout, entry.vecTxDSOut) {
+            for (const auto& txout : entry.vecTxOut) {
                 nValueOut += txout.nValue;
                 tx.vout.push_back(txout);
 
@@ -182,23 +188,23 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
                     PushStatus(pfrom, STATUS_REJECTED, ERR_NON_STANDARD_PUBKEY, connman);
                     return;
                 }
-                if(!txout.scriptPubKey.IsNormalPaymentScript()) {
+                if(!txout.scriptPubKey.IsPayToPublicKeyHash()) {
                     LogPrintf("DSVIN -- invalid script! scriptPubKey=%s\n", ScriptToAsmStr(txout.scriptPubKey));
                     PushStatus(pfrom, STATUS_REJECTED, ERR_INVALID_SCRIPT, connman);
                     return;
                 }
             }
 
-            BOOST_FOREACH(const CTxIn txin, entry.vecTxDSIn) {
+            for (const auto& txin : entry.vecTxDSIn) {
                 tx.vin.push_back(txin);
 
                 LogPrint("privatesend", "DSVIN -- txin=%s\n", txin.ToString());
 
-                const CCoins *coins = GetUTXOCoins(txin.prevout);
-                if(coins) {
-                    nValueIn += coins->vout[txin.prevout.n].nValue;
+                Coin coin;
+                if(GetUTXOCoin(txin.prevout, coin)) {
+                    nValueIn += coin.out.nValue;
                 } else {
-                    LogPrintf("DSVIN -- missing input! tx=%s", tx.ToString());
+                    LogPrintf("DSVIN -- missing input! txin=%s\n", txin.ToString());
                     PushStatus(pfrom, STATUS_REJECTED, ERR_MISSING_TX, connman);
                     return;
                 }
@@ -210,17 +216,6 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
                 LogPrintf("DSVIN -- there should be no fee in mixing tx! fees: %lld, tx=%s", nFee, tx.ToString());
                 PushStatus(pfrom, STATUS_REJECTED, ERR_FEES, connman);
                 return;
-            }
-
-            {
-                LOCK(cs_main);
-                CValidationState validationState;
-                mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
-                if(!AcceptToMemoryPool(mempool, false, validationState, CTransaction(tx), false, NULL, false, true, true)) {
-                    LogPrintf("DSVIN -- transaction not valid! tx=%s", tx.ToString());
-                    PushStatus(pfrom, STATUS_REJECTED, ERR_INVALID_TX, connman);
-                    return;
-                }
             }
         }
 
@@ -239,7 +234,9 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     } else if(strCommand == NetMsgType::DSSIGNFINALTX) {
 
         if(pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
-            LogPrintf("DSSIGNFINALTX -- incompatible version! nVersion: %d\n", pfrom->nVersion);
+            LogPrint("privatesend", "DSSIGNFINALTX -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
             return;
         }
 
@@ -251,7 +248,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         int nTxInIndex = 0;
         int nTxInsCount = (int)vecTxIn.size();
 
-        BOOST_FOREACH(const CTxIn txin, vecTxIn) {
+        for (const auto& txin : vecTxIn) {
             nTxInIndex++;
             if(!AddScriptSig(txin)) {
                 LogPrint("privatesend", "DSSIGNFINALTX -- AddScriptSig() failed at %d/%d, session: %d\n", nTxInIndex, nTxInsCount, nSessionID);
@@ -278,28 +275,22 @@ void CPrivateSendServer::SetNull()
 //
 void CPrivateSendServer::CheckPool(CConnman& connman)
 {
-    if(fMasterNode) {
-        LogPrint("privatesend", "CPrivateSendServer::CheckPool -- entries count %lu\n", GetEntriesCount());
+    if (!fMasternodeMode) return;
 
-        // If entries are full, create finalized transaction
-        if(nState == POOL_STATE_ACCEPTING_ENTRIES && GetEntriesCount() >= CPrivateSend::GetMaxPoolTransactions()) {
-            LogPrint("privatesend", "CPrivateSendServer::CheckPool -- FINALIZE TRANSACTIONS\n");
-            CreateFinalTransaction(connman);
-            return;
-        }
+    LogPrint("privatesend", "CPrivateSendServer::CheckPool -- entries count %lu\n", GetEntriesCount());
 
-        // If we have all of the signatures, try to compile the transaction
-        if(nState == POOL_STATE_SIGNING && IsSignaturesComplete()) {
-            LogPrint("privatesend", "CPrivateSendServer::CheckPool -- SIGNING\n");
-            CommitFinalTransaction(connman);
-            return;
-        }
+    // If entries are full, create finalized transaction
+    if (nState == POOL_STATE_ACCEPTING_ENTRIES && GetEntriesCount() >= CPrivateSend::GetMaxPoolTransactions()) {
+        LogPrint("privatesend", "CPrivateSendServer::CheckPool -- FINALIZE TRANSACTIONS\n");
+        CreateFinalTransaction(connman);
+        return;
     }
 
-    // reset if we're here for 10 seconds
-    if((nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) && GetTimeMillis() - nTimeLastSuccessfulStep >= 10000) {
-        LogPrint("privatesend", "CPrivateSendServer::CheckPool -- timeout, RESETTING\n");
-        SetNull();
+    // If we have all of the signatures, try to compile the transaction
+    if (nState == POOL_STATE_SIGNING && IsSignaturesComplete()) {
+        LogPrint("privatesend", "CPrivateSendServer::CheckPool -- SIGNING\n");
+        CommitFinalTransaction(connman);
+        return;
     }
 }
 
@@ -311,10 +302,10 @@ void CPrivateSendServer::CreateFinalTransaction(CConnman& connman)
 
     // make our new transaction
     for(int i = 0; i < GetEntriesCount(); i++) {
-        BOOST_FOREACH(const CTxDSOut& txdsout, vecEntries[i].vecTxDSOut)
-            txNew.vout.push_back(txdsout);
+        for (const auto& txout : vecEntries[i].vecTxOut)
+            txNew.vout.push_back(txout);
 
-        BOOST_FOREACH(const CTxDSIn& txdsin, vecEntries[i].vecTxDSIn)
+        for (const auto& txdsin : vecEntries[i].vecTxDSIn)
             txNew.vin.push_back(txdsin);
     }
 
@@ -331,19 +322,19 @@ void CPrivateSendServer::CreateFinalTransaction(CConnman& connman)
 
 void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 {
-    if(!fMasterNode) return; // check and relay final tx only on masternode
+    if(!fMasternodeMode) return; // check and relay final tx only on masternode
 
-    CTransaction finalTransaction = CTransaction(finalMutableTransaction);
-    uint256 hashTx = finalTransaction.GetHash();
+    CTransactionRef finalTransaction = MakeTransactionRef(finalMutableTransaction);
+    uint256 hashTx = finalTransaction->GetHash();
 
-    LogPrint("privatesend", "CPrivateSendServer::CommitFinalTransaction -- finalTransaction=%s", finalTransaction.ToString());
+    LogPrint("privatesend", "CPrivateSendServer::CommitFinalTransaction -- finalTransaction=%s", finalTransaction->ToString());
 
     {
         // See if the transaction is valid
         TRY_LOCK(cs_main, lockMain);
         CValidationState validationState;
         mempool.PrioritiseTransaction(hashTx, hashTx.ToString(), 1000, 0.1*COIN);
-        if(!lockMain || !AcceptToMemoryPool(mempool, false, validationState, finalTransaction, false, NULL, false, true, true))
+        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, finalTransaction, false, NULL, NULL, false, maxTxFee, true))
         {
             LogPrintf("CPrivateSendServer::CommitFinalTransaction -- AcceptToMemoryPool() error: Transaction not valid\n");
             SetNull();
@@ -384,7 +375,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 // Why bother? PrivateSend uses collateral to ensure abuse to the process is kept to a minimum.
 // The submission and signing stages are completely separate. In the cases where
 // a client submits a transaction then refused to sign, there must be a cost. Otherwise they
-// would be able to do this over and over again and bring the mixing to a hault.
+// would be able to do this over and over again and bring the mixing to a halt.
 //
 // How does this work? Messages to Masternodes come in via NetMsgType::DSVIN, these require a valid collateral
 // transaction for the client to be able to enter the pool. This transaction is kept by the Masternode
@@ -392,18 +383,18 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 //
 void CPrivateSendServer::ChargeFees(CConnman& connman)
 {
-    if(!fMasterNode) return;
+    if(!fMasternodeMode) return;
 
     //we don't need to charge collateral for every offence.
     if(GetRandInt(100) > 33) return;
 
-    std::vector<CTransaction> vecOffendersCollaterals;
+    std::vector<CTransactionRef> vecOffendersCollaterals;
 
     if(nState == POOL_STATE_ACCEPTING_ENTRIES) {
-        BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollaterals) {
+        for (const auto& txCollateral : vecSessionCollaterals) {
             bool fFound = false;
-            BOOST_FOREACH(const CDarkSendEntry& entry, vecEntries)
-                if(entry.txCollateral == txCollateral)
+            for (const auto& entry : vecEntries)
+                if(*entry.txCollateral == *txCollateral)
                     fFound = true;
 
             // This queue entry didn't send us the promised transaction
@@ -416,8 +407,8 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
 
     if(nState == POOL_STATE_SIGNING) {
         // who didn't sign?
-        BOOST_FOREACH(const CDarkSendEntry entry, vecEntries) {
-            BOOST_FOREACH(const CTxDSIn txdsin, entry.vecTxDSIn) {
+        for (const auto& entry : vecEntries) {
+            for (const auto& txdsin : entry.vecTxDSIn) {
                 if(!txdsin.fHasSig) {
                     LogPrintf("CPrivateSendServer::ChargeFees -- found uncooperative node (didn't sign), found offence\n");
                     vecOffendersCollaterals.push_back(entry.txCollateral);
@@ -440,18 +431,9 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
 
     if(nState == POOL_STATE_ACCEPTING_ENTRIES || nState == POOL_STATE_SIGNING) {
         LogPrintf("CPrivateSendServer::ChargeFees -- found uncooperative node (didn't %s transaction), charging fees: %s\n",
-                (nState == POOL_STATE_SIGNING) ? "sign" : "send", vecOffendersCollaterals[0].ToString());
+                (nState == POOL_STATE_SIGNING) ? "sign" : "send", vecOffendersCollaterals[0]->ToString());
 
-        LOCK(cs_main);
-
-        CValidationState state;
-        bool fMissingInputs;
-        if(!AcceptToMemoryPool(mempool, false, state, vecOffendersCollaterals[0], false, &fMissingInputs, false, true)) {
-            // should never really happen
-            LogPrintf("CPrivateSendServer::ChargeFees -- ERROR: AcceptToMemoryPool failed!\n");
-        } else {
-            connman.RelayTransaction(vecOffendersCollaterals[0]);
-        }
+        connman.RelayTransaction(*vecOffendersCollaterals[0]);
     }
 }
 
@@ -469,24 +451,12 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
 */
 void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 {
-    if(!fMasterNode) return;
+    if(!fMasternodeMode) return;
 
-    LOCK(cs_main);
-
-    BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollaterals) {
-
+    for (const auto& txCollateral : vecSessionCollaterals) {
         if(GetRandInt(100) > 10) return;
-
-        LogPrintf("CPrivateSendServer::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral.ToString());
-
-        CValidationState state;
-        bool fMissingInputs;
-        if(!AcceptToMemoryPool(mempool, false, state, txCollateral, false, &fMissingInputs, false, true)) {
-            // should never really happen
-            LogPrintf("CPrivateSendServer::ChargeRandomFees -- ERROR: AcceptToMemoryPool failed!\n");
-        } else {
-            connman.RelayTransaction(txCollateral);
-        }
+        LogPrintf("CPrivateSendServer::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral->ToString());
+        connman.RelayTransaction(*txCollateral);
     }
 }
 
@@ -495,32 +465,18 @@ void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 //
 void CPrivateSendServer::CheckTimeout(CConnman& connman)
 {
-    {
-        TRY_LOCK(cs_darksend, lockDS);
-        if(!lockDS) return; // it's ok to fail here, we run this quite frequently
+    if(!fMasternodeMode) return;
 
-        // check mixing queue objects for timeouts
-        std::vector<CDarksendQueue>::iterator it = vecDarksendQueue.begin();
-        while(it != vecDarksendQueue.end()) {
-            if((*it).IsExpired()) {
-                LogPrint("privatesend", "CPrivateSendServer::CheckTimeout -- Removing expired queue (%s)\n", (*it).ToString());
-                it = vecDarksendQueue.erase(it);
-            } else ++it;
-        }
-    }
+    CheckQueue();
 
-    if(!fMasterNode) return;
-
-    int nLagTime = fMasterNode ? 0 : 10000; // if we're the client, give the server a few extra seconds before resetting.
     int nTimeout = (nState == POOL_STATE_SIGNING) ? PRIVATESEND_SIGNING_TIMEOUT : PRIVATESEND_QUEUE_TIMEOUT;
-    bool fTimeout = GetTimeMillis() - nTimeLastSuccessfulStep >= nTimeout*1000 + nLagTime;
+    bool fTimeout = GetTime() - nTimeLastSuccessfulStep >= nTimeout;
 
     if(nState != POOL_STATE_IDLE && fTimeout) {
-        LogPrint("privatesend", "CPrivateSendServer::CheckTimeout -- %s timed out (%ds) -- restting\n",
+        LogPrint("privatesend", "CPrivateSendServer::CheckTimeout -- %s timed out (%ds) -- resetting\n",
                 (nState == POOL_STATE_SIGNING) ? "Signing" : "Session", nTimeout);
         ChargeFees(connman);
         SetNull();
-        SetState(POOL_STATE_ERROR);
     }
 }
 
@@ -531,7 +487,7 @@ void CPrivateSendServer::CheckTimeout(CConnman& connman)
 */
 void CPrivateSendServer::CheckForCompleteQueue(CConnman& connman)
 {
-    if(!fMasterNode) return;
+    if(!fMasternodeMode) return;
 
     if(nState == POOL_STATE_QUEUE && IsSessionReady()) {
         SetState(POOL_STATE_ACCEPTING_ENTRIES);
@@ -554,12 +510,12 @@ bool CPrivateSendServer::IsInputScriptSigValid(const CTxIn& txin)
     int nTxInIndex = -1;
     CScript sigPubKey = CScript();
 
-    BOOST_FOREACH(CDarkSendEntry& entry, vecEntries) {
+    for (const auto& entry : vecEntries) {
 
-        BOOST_FOREACH(const CTxDSOut& txdsout, entry.vecTxDSOut)
-            txNew.vout.push_back(txdsout);
+        for (const auto& txout : entry.vecTxOut)
+            txNew.vout.push_back(txout);
 
-        BOOST_FOREACH(const CTxDSIn& txdsin, entry.vecTxDSIn) {
+        for (const auto& txdsin : entry.vecTxDSIn) {
             txNew.vin.push_back(txdsin);
 
             if(txdsin.prevout == txin.prevout) {
@@ -591,9 +547,9 @@ bool CPrivateSendServer::IsInputScriptSigValid(const CTxIn& txin)
 //
 bool CPrivateSendServer::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessageIDRet)
 {
-    if(!fMasterNode) return false;
+    if(!fMasternodeMode) return false;
 
-    BOOST_FOREACH(CTxIn txin, entryNew.vecTxDSIn) {
+    for (const auto& txin : entryNew.vecTxDSIn) {
         if(txin.prevout.IsNull()) {
             LogPrint("privatesend", "CPrivateSendServer::AddEntry -- input not valid!\n");
             nMessageIDRet = ERR_INVALID_INPUT;
@@ -601,7 +557,7 @@ bool CPrivateSendServer::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& n
         }
     }
 
-    if(!CPrivateSend::IsCollateralValid(entryNew.txCollateral)) {
+    if(!CPrivateSend::IsCollateralValid(*entryNew.txCollateral)) {
         LogPrint("privatesend", "CPrivateSendServer::AddEntry -- collateral not valid!\n");
         nMessageIDRet = ERR_INVALID_COLLATERAL;
         return false;
@@ -613,10 +569,10 @@ bool CPrivateSendServer::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& n
         return false;
     }
 
-    BOOST_FOREACH(CTxIn txin, entryNew.vecTxDSIn) {
+    for (const auto& txin : entryNew.vecTxDSIn) {
         LogPrint("privatesend", "looking for txin -- %s\n", txin.ToString());
-        BOOST_FOREACH(const CDarkSendEntry& entry, vecEntries) {
-            BOOST_FOREACH(const CTxDSIn& txdsin, entry.vecTxDSIn) {
+        for (const auto& entry : vecEntries) {
+            for (const auto& txdsin : entry.vecTxDSIn) {
                 if(txdsin.prevout == txin.prevout) {
                     LogPrint("privatesend", "CPrivateSendServer::AddEntry -- found in txin\n");
                     nMessageIDRet = ERR_ALREADY_HAVE;
@@ -630,7 +586,7 @@ bool CPrivateSendServer::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& n
 
     LogPrint("privatesend", "CPrivateSendServer::AddEntry -- adding entry\n");
     nMessageIDRet = MSG_ENTRIES_ADDED;
-    nTimeLastSuccessfulStep = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTime();
 
     return true;
 }
@@ -639,8 +595,8 @@ bool CPrivateSendServer::AddScriptSig(const CTxIn& txinNew)
 {
     LogPrint("privatesend", "CPrivateSendServer::AddScriptSig -- scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0,24));
 
-    BOOST_FOREACH(const CDarkSendEntry& entry, vecEntries) {
-        BOOST_FOREACH(const CTxDSIn& txdsin, entry.vecTxDSIn) {
+    for (const auto& entry : vecEntries) {
+        for (const auto& txdsin : entry.vecTxDSIn) {
             if(txdsin.scriptSig == txinNew.scriptSig) {
                 LogPrint("privatesend", "CPrivateSendServer::AddScriptSig -- already exists\n");
                 return false;
@@ -655,10 +611,9 @@ bool CPrivateSendServer::AddScriptSig(const CTxIn& txinNew)
 
     LogPrint("privatesend", "CPrivateSendServer::AddScriptSig -- scriptSig=%s new\n", ScriptToAsmStr(txinNew.scriptSig).substr(0,24));
 
-    BOOST_FOREACH(CTxIn& txin, finalMutableTransaction.vin) {
-        if(txinNew.prevout == txin.prevout && txin.nSequence == txinNew.nSequence) {
+    for (auto& txin : finalMutableTransaction.vin) {
+        if(txin.prevout == txinNew.prevout && txin.nSequence == txinNew.nSequence) {
             txin.scriptSig = txinNew.scriptSig;
-            txin.prevPubKey = txinNew.prevPubKey;
             LogPrint("privatesend", "CPrivateSendServer::AddScriptSig -- adding to finalMutableTransaction, scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0,24));
         }
     }
@@ -676,41 +631,41 @@ bool CPrivateSendServer::AddScriptSig(const CTxIn& txinNew)
 // Check to make sure everything is signed
 bool CPrivateSendServer::IsSignaturesComplete()
 {
-    BOOST_FOREACH(const CDarkSendEntry& entry, vecEntries)
-        BOOST_FOREACH(const CTxDSIn& txdsin, entry.vecTxDSIn)
+    for (const auto& entry : vecEntries)
+        for (const auto& txdsin : entry.vecTxDSIn)
             if(!txdsin.fHasSig) return false;
 
     return true;
 }
 
-bool CPrivateSendServer::IsOutputsCompatibleWithSessionDenom(const std::vector<CTxDSOut>& vecTxDSOut)
+bool CPrivateSendServer::IsOutputsCompatibleWithSessionDenom(const std::vector<CTxOut>& vecTxOut)
 {
-    if(CPrivateSend::GetDenominations(vecTxDSOut) == 0) return false;
+    if(CPrivateSend::GetDenominations(vecTxOut) == 0) return false;
 
-    BOOST_FOREACH(const CDarkSendEntry entry, vecEntries) {
-        LogPrintf("CPrivateSendServer::IsOutputsCompatibleWithSessionDenom -- vecTxDSOut denom %d, entry.vecTxDSOut denom %d\n",
-                CPrivateSend::GetDenominations(vecTxDSOut), CPrivateSend::GetDenominations(entry.vecTxDSOut));
-        if(CPrivateSend::GetDenominations(vecTxDSOut) != CPrivateSend::GetDenominations(entry.vecTxDSOut)) return false;
+    for (const auto& entry : vecEntries) {
+        LogPrintf("CPrivateSendServer::IsOutputsCompatibleWithSessionDenom -- vecTxOut denom %d, entry.vecTxOut denom %d\n",
+                CPrivateSend::GetDenominations(vecTxOut), CPrivateSend::GetDenominations(entry.vecTxOut));
+        if(CPrivateSend::GetDenominations(vecTxOut) != CPrivateSend::GetDenominations(entry.vecTxOut)) return false;
     }
 
     return true;
 }
 
-bool CPrivateSendServer::IsAcceptableDenomAndCollateral(int nDenom, CTransaction txCollateral, PoolMessage& nMessageIDRet)
+bool CPrivateSendServer::IsAcceptableDSA(const CDarksendAccept& dsa, PoolMessage& nMessageIDRet)
 {
-    if(!fMasterNode) return false;
+    if(!fMasternodeMode) return false;
 
     // is denom even smth legit?
     std::vector<int> vecBits;
-    if(!CPrivateSend::GetDenominationsBits(nDenom, vecBits)) {
-        LogPrint("privatesend", "CPrivateSendServer::IsAcceptableDenomAndCollateral -- denom not valid!\n");
+    if(!CPrivateSend::GetDenominationsBits(dsa.nDenom, vecBits)) {
+        LogPrint("privatesend", "CPrivateSendServer::%s -- denom not valid!\n", __func__);
         nMessageIDRet = ERR_DENOM;
         return false;
     }
 
     // check collateral
-    if(!fUnitTest && !CPrivateSend::IsCollateralValid(txCollateral)) {
-        LogPrint("privatesend", "CPrivateSendServer::IsAcceptableDenomAndCollateral -- collateral not valid!\n");
+    if(!fUnitTest && !CPrivateSend::IsCollateralValid(dsa.txCollateral)) {
+        LogPrint("privatesend", "CPrivateSendServer::%s -- collateral not valid!\n", __func__);
         nMessageIDRet = ERR_INVALID_COLLATERAL;
         return false;
     }
@@ -718,9 +673,9 @@ bool CPrivateSendServer::IsAcceptableDenomAndCollateral(int nDenom, CTransaction
     return true;
 }
 
-bool CPrivateSendServer::CreateNewSession(int nDenom, CTransaction txCollateral, PoolMessage& nMessageIDRet, CConnman& connman)
+bool CPrivateSendServer::CreateNewSession(const CDarksendAccept& dsa, PoolMessage& nMessageIDRet, CConnman& connman)
 {
-    if(!fMasterNode || nSessionID != 0) return false;
+    if(!fMasternodeMode || nSessionID != 0) return false;
 
     // new session can only be started in idle mode
     if(nState != POOL_STATE_IDLE) {
@@ -729,39 +684,39 @@ bool CPrivateSendServer::CreateNewSession(int nDenom, CTransaction txCollateral,
         return false;
     }
 
-    if(!IsAcceptableDenomAndCollateral(nDenom, txCollateral, nMessageIDRet)) {
+    if(!IsAcceptableDSA(dsa, nMessageIDRet)) {
         return false;
     }
 
     // start new session
     nMessageIDRet = MSG_NOERR;
     nSessionID = GetRandInt(999999)+1;
-    nSessionDenom = nDenom;
+    nSessionDenom = dsa.nDenom;
 
     SetState(POOL_STATE_QUEUE);
-    nTimeLastSuccessfulStep = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTime();
 
     if(!fUnitTest) {
         //broadcast that I'm accepting entries, only if it's the first entry through
-        CDarksendQueue dsq(nDenom, activeMasternode.outpoint, GetAdjustedTime(), false);
+        CDarksendQueue dsq(dsa.nDenom, activeMasternode.outpoint, GetAdjustedTime(), false);
         LogPrint("privatesend", "CPrivateSendServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
         vecDarksendQueue.push_back(dsq);
     }
 
-    vecSessionCollaterals.push_back(txCollateral);
+    vecSessionCollaterals.push_back(MakeTransactionRef(dsa.txCollateral));
     LogPrintf("CPrivateSendServer::CreateNewSession -- new session created, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",
             nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
 
     return true;
 }
 
-bool CPrivateSendServer::AddUserToExistingSession(int nDenom, CTransaction txCollateral, PoolMessage& nMessageIDRet)
+bool CPrivateSendServer::AddUserToExistingSession(const CDarksendAccept& dsa, PoolMessage& nMessageIDRet)
 {
-    if(!fMasterNode || nSessionID == 0 || IsSessionReady()) return false;
+    if(!fMasternodeMode || nSessionID == 0 || IsSessionReady()) return false;
 
-    if(!IsAcceptableDenomAndCollateral(nDenom, txCollateral, nMessageIDRet)) {
+    if(!IsAcceptableDSA(dsa, nMessageIDRet)) {
         return false;
     }
 
@@ -772,9 +727,9 @@ bool CPrivateSendServer::AddUserToExistingSession(int nDenom, CTransaction txCol
         return false;
     }
 
-    if(nDenom != nSessionDenom) {
+    if(dsa.nDenom != nSessionDenom) {
         LogPrintf("CPrivateSendServer::AddUserToExistingSession -- incompatible denom %d (%s) != nSessionDenom %d (%s)\n",
-                    nDenom, CPrivateSend::GetDenominationsToString(nDenom), nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
+                    dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
         nMessageIDRet = ERR_DENOM;
         return false;
     }
@@ -782,8 +737,8 @@ bool CPrivateSendServer::AddUserToExistingSession(int nDenom, CTransaction txCol
     // count new user as accepted to an existing session
 
     nMessageIDRet = MSG_NOERR;
-    nTimeLastSuccessfulStep = GetTimeMillis();
-    vecSessionCollaterals.push_back(txCollateral);
+    nTimeLastSuccessfulStep = GetTime();
+    vecSessionCollaterals.push_back(MakeTransactionRef(dsa.txCollateral));
 
     LogPrintf("CPrivateSendServer::AddUserToExistingSession -- new user accepted, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",
             nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
@@ -799,7 +754,8 @@ void CPrivateSendServer::RelayFinalTransaction(const CTransaction& txFinal, CCon
     // final mixing tx with empty signatures should be relayed to mixing participants only
     for (const auto entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&txFinal, &connman, this](CNode* pnode) {
-            connman.PushMessage(pnode, NetMsgType::DSFINALTX, nSessionID, txFinal);
+            CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSFINALTX, nSessionID, txFinal));
             return true;
         });
         if(!fOk) {
@@ -813,7 +769,8 @@ void CPrivateSendServer::RelayFinalTransaction(const CTransaction& txFinal, CCon
 void CPrivateSendServer::PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, CConnman& connman)
 {
     if(!pnode) return;
-    connman.PushMessage(pnode, NetMsgType::DSSTATUSUPDATE, nSessionID, (int)nState, (int)vecEntries.size(), (int)nStatusUpdate, (int)nMessageID);
+    CNetMsgMaker msgMaker(pnode->GetSendVersion());
+    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSSTATUSUPDATE, nSessionID, (int)nState, (int)vecEntries.size(), (int)nStatusUpdate, (int)nMessageID));
 }
 
 void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& connman, PoolMessage nMessageID)
@@ -838,7 +795,7 @@ void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& c
             __func__, nDisconnected, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
 
     // notify everyone else that this session should be terminated
-    for (const auto entry : vecEntries) {
+    for (const auto& entry : vecEntries) {
         connman.ForNode(entry.addr, [&connman, this](CNode* pnode) {
             PushStatus(pnode, STATUS_REJECTED, MSG_NOERR, connman);
             return true;
@@ -858,9 +815,10 @@ void CPrivateSendServer::RelayCompletedTransaction(PoolMessage nMessageID, CConn
             __func__, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
 
     // final mixing tx with empty signatures should be relayed to mixing participants only
-    for (const auto entry : vecEntries) {
+    for (const auto& entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&nMessageID, &connman, this](CNode* pnode) {
-            connman.PushMessage(pnode, NetMsgType::DSCOMPLETE, nSessionID, (int)nMessageID);
+            CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSCOMPLETE, nSessionID, (int)nMessageID));
             return true;
         });
         if(!fOk) {
@@ -873,7 +831,9 @@ void CPrivateSendServer::RelayCompletedTransaction(PoolMessage nMessageID, CConn
 
 void CPrivateSendServer::SetState(PoolState nStateNew)
 {
-    if(fMasterNode && (nStateNew == POOL_STATE_ERROR || nStateNew == POOL_STATE_SUCCESS)) {
+    if(!fMasternodeMode) return;
+
+    if(nStateNew == POOL_STATE_ERROR || nStateNew == POOL_STATE_SUCCESS) {
         LogPrint("privatesend", "CPrivateSendServer::SetState -- Can't set state to ERROR or SUCCESS as a Masternode. \n");
         return;
     }
@@ -886,6 +846,7 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
 void ThreadCheckPrivateSendServer(CConnman& connman)
 {
     if(fLiteMode) return; // disable all Syscoin specific functionality
+    if(!fMasternodeMode) return; // only run on masternodes
 
     static bool fOneThread;
     if(fOneThread) return;

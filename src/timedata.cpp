@@ -1,7 +1,10 @@
-// Copyright (c) 2014-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#if defined(HAVE_CONFIG_H)
+#include "config/syscoin-config.h"
+#endif
 
 #include "timedata.h"
 
@@ -10,10 +13,9 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "warnings.h"
 
 #include <boost/foreach.hpp>
-
-using namespace std;
 
 static CCriticalSection cs_nTimeOffset;
 static int64_t nTimeOffset = 0;
@@ -47,7 +49,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 {
     LOCK(cs_nTimeOffset);
     // Ignore duplicates
-    static set<CNetAddr> setKnown;
+    static std::set<CNetAddr> setKnown;
     if (setKnown.size() == SYSCOIN_TIMEDATA_MAX_SAMPLES)
         return;
     if (!setKnown.insert(ip).second)
@@ -80,7 +82,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
         int64_t nMedian = vTimeOffsets.median();
         std::vector<int64_t> vSorted = vTimeOffsets.sorted();
         // Only let other nodes change our time by so much
-        if (abs64(nMedian) < 70 * 60)
+        if (abs64(nMedian) <= std::max<int64_t>(0, GetArg("-maxtimeadjustment", DEFAULT_MAX_TIME_ADJUSTMENT)))
         {
             nTimeOffset = nMedian;
         }
@@ -100,8 +102,8 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
                 if (!fMatch)
                 {
                     fDone = true;
-                    string strMessage = _("Please check that your computer's date and time are correct! If your clock is wrong Syscoin Core will not work properly.");
-                    strMiscWarning = strMessage;
+                    std::string strMessage = strprintf(_("Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly."), _(PACKAGE_NAME));
+                    SetMiscWarning(strMessage);
                     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
                 }
             }

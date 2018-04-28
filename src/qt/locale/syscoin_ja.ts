@@ -1,4 +1,3 @@
-<!DOCTYPE TS>
 <TS language="ja" version="2.0">
 <context>
     <name>AddressBookPage</name>

@@ -1,5 +1,5 @@
 
-// // Copyright (c) 2014-2017 The Dash Core developers
+// // Copyright (c) 2014-2017 The Syscoin Core developers
 // Copyright (c) 2015-2017 The Syscoin Core developers
 // // Distributed under the MIT/X11 software license, see the accompanying
 // // file COPYING or http://www.opensource.org/licenses/mit-license.php.

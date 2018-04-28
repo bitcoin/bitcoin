@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +8,9 @@
 #include "walletmodel.h"
 
 #include <QDialog>
+#include <QMessageBox>
 #include <QString>
+#include <QTimer>
 
 static const int MAX_SEND_POPUP_ENTRIES = 10;
 
@@ -26,8 +27,6 @@ namespace Ui {
 QT_BEGIN_NAMESPACE
 class QUrl;
 QT_END_NAMESPACE
-
-const int defaultConfirmTarget = 25;
 
 /** Dialog for sending syscoins */
 class SendCoinsDialog : public QDialog
@@ -102,6 +101,26 @@ private Q_SLOTS:
 Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
+};
+
+
+
+class SendConfirmationDialog : public QMessageBox
+{
+    Q_OBJECT
+
+public:
+    SendConfirmationDialog(const QString &title, const QString &text, int secDelay = 0, QWidget *parent = 0);
+    int exec();
+
+private Q_SLOTS:
+    void countDown();
+    void updateYesButton();
+
+private:
+    QAbstractButton *yesButton;
+    QTimer countDownTimer;
+    int secDelay;
 };
 
 #endif // SYSCOIN_QT_SENDCOINSDIALOG_H

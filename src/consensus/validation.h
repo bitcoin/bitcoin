@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,9 +22,9 @@ static const unsigned char REJECT_CHECKPOINT = 0x43;
 class CValidationState {
 private:
     enum mode_state {
-        MODE_VALID,   //! everything ok
-        MODE_INVALID, //! network rule violation (DoS value may be set)
-        MODE_ERROR,   //! run-time error
+        MODE_VALID,   //!< everything ok
+        MODE_INVALID, //!< network rule violation (DoS value may be set)
+        MODE_ERROR,   //!< run-time error
     } mode;
     int nDoS;
     std::string strRejectReason;

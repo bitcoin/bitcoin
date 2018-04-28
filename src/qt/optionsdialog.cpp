@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,9 +19,9 @@
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h" // for CWallet::GetRequiredFee()
-#endif
 
 #include "privatesend-client.h"
+#endif // ENABLE_WALLET
 
 #include <boost/thread.hpp>
 
@@ -33,7 +32,9 @@
 #include <QMessageBox>
 #include <QTimer>
 
+#ifdef ENABLE_WALLET
 extern CWallet* pwalletMain;
+#endif // ENABLE_WALLET
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
@@ -94,11 +95,16 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->theme->addItem(QString("SYS-light"), QVariant("light"));
     ui->theme->addItem(QString("SYS-light-hires"), QVariant("light-hires"));
     ui->theme->addItem(QString("SYS-blue"), QVariant("drkblue"));
-	ui->theme->addItem(QString("SYS-crownium"), QVariant("crownium"));
+    ui->theme->addItem(QString("SYS-Crownium"), QVariant("crownium"));
     ui->theme->addItem(QString("SYS-traditional"), QVariant("trad"));
     
     /* Language selector */
     QDir translations(":translations");
+
+    ui->syscoinAtStartup->setToolTip(ui->syscoinAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->syscoinAtStartup->setText(ui->syscoinAtStartup->text().arg(tr(PACKAGE_NAME)));
+
+    ui->lang->setToolTip(ui->lang->toolTip().arg(tr(PACKAGE_NAME)));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     Q_FOREACH(const QString &langStr, translations.entryList())
     {
@@ -151,22 +157,22 @@ OptionsDialog::~OptionsDialog()
     delete ui;
 }
 
-void OptionsDialog::setModel(OptionsModel *model)
+void OptionsDialog::setModel(OptionsModel *_model)
 {
-    this->model = model;
+    this->model = _model;
 
-    if(model)
+    if(_model)
     {
         /* check if client restart is needed and show persistent message */
-        if (model->isRestartRequired())
+        if (_model->isRestartRequired())
             showRestartWarning(true);
 
-        QString strLabel = model->getOverriddenByCommandLine();
+        QString strLabel = _model->getOverriddenByCommandLine();
         if (strLabel.isEmpty())
             strLabel = tr("none");
         ui->overriddenByCommandLineLabel->setText(strLabel);
 
-        mapper->setModel(model);
+        mapper->setModel(_model);
         setMapper();
         mapper->toFirst();
 
@@ -263,8 +269,11 @@ void OptionsDialog::on_resetButton_clicked()
 void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
+#ifdef ENABLE_WALLET
     privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
-    pwalletMain->MarkDirty();
+    if(pwalletMain)
+        pwalletMain->MarkDirty();
+#endif // ENABLE_WALLET
     accept();
     updateDefaultProxyNets();
 }
@@ -307,6 +316,9 @@ void OptionsDialog::showRestartWarning(bool fPersistent)
 void OptionsDialog::clearStatusLabel()
 {
     ui->statusLabel->clear();
+    if (model && model->isRestartRequired()) {
+        showRestartWarning(true);
+    }
 }
 
 void OptionsDialog::updateProxyValidationState()
@@ -316,7 +328,7 @@ void OptionsDialog::updateProxyValidationState()
     if (pUiProxyIp->isValid() && (!ui->proxyPort->isEnabled() || ui->proxyPort->text().toInt() > 0) && (!ui->proxyPortTor->isEnabled() || ui->proxyPortTor->text().toInt() > 0))
     {
         setOkButtonState(otherProxyWidget->isValid()); //only enable ok button if both proxys are valid
-        ui->statusLabel->clear();
+        clearStatusLabel();
     }
     else
     {

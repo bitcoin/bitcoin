@@ -1,5 +1,4 @@
-// Copyright (c) 2013-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2013-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,15 +11,14 @@
 #include "data/alertTests.raw.h"
 #include "serialize.h"
 #include "streams.h"
-#include "util.h"
 #include "utilstrencodings.h"
 
+#include "test/testutil.h"
 #include "test/test_syscoin.h"
 
 #include <fstream>
 
 #include <boost/filesystem/operations.hpp>
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 //
@@ -111,7 +109,7 @@ struct ReadAlerts : public TestingSetup
 {
     ReadAlerts()
     {
-        std::vector<unsigned char> vch(alert_tests::alertTests, alert_tests::alertTests + sizeof(alert_tests::alertTests));
+        std::vector<unsigned char> vch(raw_tests::alertTests, raw_tests::alertTests + sizeof(raw_tests::alertTests));
         CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
         try {
             while (!stream.eof())
@@ -163,7 +161,7 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
     SetMockTime(11);
     const std::vector<unsigned char>& alertKey = Params(CBaseChainParams::MAIN).AlertKey();
 
-    BOOST_FOREACH(const CAlert& alert, alerts)
+    for (const auto& alert : alerts)
     {
         BOOST_CHECK(alert.CheckSignature(alertKey));
     }
@@ -207,9 +205,9 @@ BOOST_AUTO_TEST_CASE(AlertNotify)
     boost::filesystem::path temp = GetTempPath() /
         boost::filesystem::unique_path("alertnotify-%%%%.txt");
 
-    mapArgs["-alertnotify"] = std::string("echo %s >> ") + temp.string();
+    ForceSetArg("-alertnotify", std::string("echo %s >> ") + temp.string());
 
-    BOOST_FOREACH(CAlert alert, alerts)
+    for (const auto& alert : alerts)
         alert.ProcessAlert(alertKey, false);
 
     std::vector<std::string> r = read_lines(temp);

@@ -16,7 +16,7 @@
 #include "wallet/wallet.h"
 #include "consensus/validation.h"
 #include "chainparams.h"
-#include "coincontrol.h"
+#include "wallet/coincontrol.h"
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
@@ -32,7 +32,7 @@
 
 using namespace std::chrono;
 using namespace std;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend=false, bool transferAlias=false);
+
 bool IsOfferOp(int op) {
 	return op == OP_OFFER_ACTIVATE
         || op == OP_OFFER_UPDATE;
@@ -701,8 +701,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	}
 	return true;
 }
-UniValue offernew(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 17)
+UniValue offernew(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 17)
 		throw runtime_error(
 			"offernew [alias] [category] [title] [quantity] [price] [description] [currency] [cert. guid] [payment options=SYS] [private=false] [units=1] [offertype=BUYNOW] [auction_expires=0] [auction_reserve=0] [auction_require_witness=false] [auction_deposit=0] [witness]\n"
 						"<alias> An alias you own.\n"
@@ -867,18 +868,14 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
+	UniValue res = syscointxfund_helper(vchAlias, vchWitness, aliasRecipient, vecSend);
 	res.push_back(stringFromVch(vchOffer));
 	return res;
 }
 
-UniValue offerlink(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 5)
+UniValue offerlink(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 5)
 		throw runtime_error(
 			"offerlink [alias] [guid] [commission] [description] [witness]\n"
 						"<alias> An alias you own.\n"
@@ -961,18 +958,13 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
+	UniValue res = syscointxfund_helper(vchAlias, vchWitness, aliasRecipient, vecSend);
 	res.push_back(stringFromVch(vchOffer));
 	return res;
 }
-UniValue offerupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 18)
+UniValue offerupdate(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 18)
 		throw runtime_error(
 			"offerupdate [alias] [guid] [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
 						"Perform an update on an offer you control.\n"
@@ -1164,10 +1156,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = false;
 
 
-	SendMoneySyscoin(offerAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(offerAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
 
 void COfferDB::WriteOfferIndex(const COffer& offer, const int &op) {
@@ -1190,8 +1179,9 @@ void COfferDB::WriteOfferIndexHistory(const COffer& offer, const int &op) {
 		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerhistory");
 	}
 }
-UniValue offerinfo(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size())
+UniValue offerinfo(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 1 > params.size())
 		throw runtime_error("offerinfo <guid>\n"
 				"Show offer details\n");
 

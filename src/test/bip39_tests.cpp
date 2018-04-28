@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,8 +48,8 @@ BOOST_AUTO_TEST_CASE(bip39_vectors)
         SecureVector seed;
         SecureString passphrase("TREZOR");
         CMnemonic::ToSeed(mnemonic, passphrase, seed);
-        // printf("seed: %s\n", HexStr(std::string(seed.begin(), seed.end())).c_str());
-        BOOST_CHECK(HexStr(std::string(seed.begin(), seed.end())) == test[2].get_str());
+        // printf("seed: %s\n", HexStr(seed).c_str());
+        BOOST_CHECK(HexStr(seed) == test[2].get_str());
 
         CExtKey key;
         CExtPubKey pubkey;

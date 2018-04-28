@@ -1,4 +1,3 @@
-<!DOCTYPE TS>
 <TS language="pt" version="2.0">
 <context>
     <name>AddressBookPage</name>
@@ -862,11 +861,11 @@ Endereço: %4
     </message>
     <message>
         <source>Use 2 separate masternodes to mix funds up to 100000 SYS</source>
-        <translation>Usar 2 masternodes distintos para misturar os fundos até 100000 SYS</translation>
+        <translation>Usar 2 masternodes distintos para misturar os fundos até 100000SYS</translation>
     </message>
     <message>
         <source>Use 8 separate masternodes to mix funds up to 100000 SYS</source>
-        <translation>Usar 8 masternodes distintos para misturar os fundos até 100000 SYS</translation>
+        <translation>Usar 8 masternodes distintos para misturar os fundos até 100000SYS</translation>
     </message>
     <message>
         <source>Use 16 separate masternodes</source>
@@ -3376,7 +3375,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 100000 SYS.</source>
-        <translation>Não foi possível localizar fundos Darksend não denominados suficientes para esta transacção que não sejam igual a 100000 SYS.</translation>
+        <translation>Não foi possível localizar fundos Darksend não denominados suficientes para esta transacção que não sejam igual a 100000SYS.</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -3640,7 +3639,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Unable to locate enough funds for this transaction that are not equal 100000 SYS.</source>
-        <translation>Não foi possível localizar fundos suficientes para esta transacção que não sejam igual a 100000 SYS.</translation>
+        <translation>Não foi possível localizar fundos suficientes para esta transacção que não sejam igual a 100000SYS.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>

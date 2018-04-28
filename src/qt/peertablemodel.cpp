@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -167,7 +166,7 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
         case NetNodeId:
-            return rec->nodeStats.nodeid;
+            return (qint64)rec->nodeStats.nodeid;
         case Address:
             return QString::fromStdString(rec->nodeStats.addrName);
         case Subversion:

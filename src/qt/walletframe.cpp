@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,10 +12,10 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-WalletFrame::WalletFrame(const PlatformStyle *platformStyle, SyscoinGUI *_gui) :
+WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, SyscoinGUI *_gui) :
     QFrame(_gui),
     gui(_gui),
-    platformStyle(platformStyle)
+    platformStyle(_platformStyle)
 {
     // Leave HBox hook for adding a list view later
     QHBoxLayout *walletFrameLayout = new QHBoxLayout(this);
@@ -34,9 +33,9 @@ WalletFrame::~WalletFrame()
 {
 }
 
-void WalletFrame::setClientModel(ClientModel *clientModel)
+void WalletFrame::setClientModel(ClientModel *_clientModel)
 {
-    this->clientModel = clientModel;
+    this->clientModel = _clientModel;
 }
 
 bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)

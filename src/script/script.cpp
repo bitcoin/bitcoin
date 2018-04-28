@@ -1,14 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "script.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
-
-using namespace std;
 extern bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
 const char* GetOpName(opcodetype opcode)
 {
@@ -129,7 +126,7 @@ const char* GetOpName(opcodetype opcode)
     case OP_CHECKMULTISIG          : return "OP_CHECKMULTISIG";
     case OP_CHECKMULTISIGVERIFY    : return "OP_CHECKMULTISIGVERIFY";
 
-    // expanson
+    // expansion
     case OP_NOP1                   : return "OP_NOP1";
     case OP_CHECKLOCKTIMEVERIFY    : return "OP_CHECKLOCKTIMEVERIFY";
     case OP_CHECKSEQUENCEVERIFY    : return "OP_CHECKSEQUENCEVERIFY";
@@ -186,7 +183,7 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     // get the last item that the scriptSig
     // pushes onto the stack:
     const_iterator pc = scriptSig.begin();
-    vector<unsigned char> data;
+    std::vector<unsigned char> data;
     while (pc < scriptSig.end())
     {
         opcodetype opcode;
@@ -201,38 +198,6 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
-bool CScript::IsNormalPaymentScript() const
-{
-	// SYSCOIN
-	CScript scriptOut;
-	CScript scriptPubKeyOut;
-	if (RemoveSyscoinScript(*this, scriptPubKeyOut))
-		scriptOut = scriptPubKeyOut;
-	else
-		scriptOut = *this;
-
-    if(scriptOut.size() != 25) return false;
-
-    std::string str;
-    opcodetype opcode;
-    const_iterator pc = scriptOut.begin();
-    int i = 0;
-    while (pc < scriptOut.end())
-    {
-		scriptOut.GetOp(pc, opcode);
-
-        if(     i == 0 && opcode != OP_DUP) return false;
-        else if(i == 1 && opcode != OP_HASH160) return false;
-        else if(i == 3 && opcode != OP_EQUALVERIFY) return false;
-        else if(i == 4 && opcode != OP_CHECKSIG) return false;
-        else if(i == 5) return false;
-
-        i++;
-    }
-
-    return true;
-}
-
 bool CScript::IsPayToPublicKeyHash() const
 {
 	// SYSCOIN
@@ -242,13 +207,13 @@ bool CScript::IsPayToPublicKeyHash() const
 		scriptOut = scriptPubKeyOut;
 	else
 		scriptOut = *this;
-    // Extra-fast test for pay-to-pubkey-hash CScripts:
-    return (scriptOut.size() == 25 &&
-	    scriptOut[0] == OP_DUP &&
-	    scriptOut[1] == OP_HASH160 &&
-	    scriptOut[2] == 0x14 &&
-	    scriptOut[23] == OP_EQUALVERIFY &&
-	    scriptOut[24] == OP_CHECKSIG);
+	// Extra-fast test for pay-to-pubkey-hash CScripts:
+	return (scriptOut.size() == 25 &&
+		scriptOut[0] == OP_DUP &&
+		scriptOut[1] == OP_HASH160 &&
+		scriptOut[2] == 0x14 &&
+		scriptOut[23] == OP_EQUALVERIFY &&
+		scriptOut[24] == OP_CHECKSIG);
 }
 
 bool CScript::IsPayToScriptHash() const
@@ -260,11 +225,33 @@ bool CScript::IsPayToScriptHash() const
 		scriptOut = scriptPubKeyOut;
 	else
 		scriptOut = *this;
-    // Extra-fast test for pay-to-script-hash CScripts:
-    return (scriptOut.size() == 23 &&
-            scriptOut[0] == OP_HASH160 &&
-            scriptOut[1] == 0x14 &&
-            scriptOut[22] == OP_EQUAL);
+	// Extra-fast test for pay-to-script-hash CScripts:
+	return (scriptOut.size() == 23 &&
+		scriptOut[0] == OP_HASH160 &&
+		scriptOut[1] == 0x14 &&
+		scriptOut[22] == OP_EQUAL);
+}
+
+bool CScript::IsPayToPublicKey() const
+{
+	// SYSCOIN
+	CScript scriptOut;
+	CScript scriptPubKeyOut;
+	if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+		scriptOut = scriptPubKeyOut;
+	else
+		scriptOut = *this;
+    // Test for pay-to-pubkey CScript with both
+    // compressed or uncompressed pubkey
+    if (scriptOut.size() == 35) {
+        return (scriptOut[1] == 0x02 || scriptOut[1] == 0x03) &&
+			scriptOut[34] == OP_CHECKSIG;
+    }
+    if (scriptOut.size() == 67) {
+        return scriptOut[1] == 0x04 &&
+			scriptOut[66] == OP_CHECKSIG;
+    }
+    return false;
 }
 
 bool CScript::IsPushOnly(const_iterator pc) const

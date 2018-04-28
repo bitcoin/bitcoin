@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -39,7 +38,7 @@ class TxViewDelegate : public QAbstractItemDelegate
     Q_OBJECT
 public:
     TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
-        QAbstractItemDelegate(parent), unit(SyscoinUnits::SYS),
+        QAbstractItemDelegate(), unit(SyscoinUnits::SYS),
         platformStyle(_platformStyle)
     {
 
@@ -124,6 +123,7 @@ public:
 
 OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
+    timer(nullptr),
     ui(new Ui::OverviewPage),
     clientModel(0),
     walletModel(0),
@@ -133,8 +133,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     currentWatchOnlyBalance(-1),
     currentWatchUnconfBalance(-1),
     currentWatchImmatureBalance(-1),
-	txdelegate(new TxViewDelegate(platformStyle, this)),
-	timer(nullptr)
+    txdelegate(new TxViewDelegate(platformStyle, this))
 {
     ui->setupUi(this);
     QString theme = GUIUtil::getThemeName();
@@ -163,7 +162,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     if(fLiteMode) return;
 
     // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
-    if(fMasterNode || nWalletBackups <= 0){
+    if(fMasternodeMode || nWalletBackups <= 0){
         DisablePrivateSendCompletely();
         if (nWalletBackups <= 0) {
             ui->labelPrivateSendEnabled->setToolTip(tr("Automatic backups are disabled, no mixing available!"));
@@ -197,7 +196,7 @@ void OverviewPage::handleOutOfSyncWarningClicks()
 
 OverviewPage::~OverviewPage()
 {
-	if (timer) disconnect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
+    if(timer) disconnect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
     delete ui;
 }
 
@@ -285,18 +284,22 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        updateWatchOnlyLabels(model->haveWatchOnly());
+        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
+
+        // explicitly update PS frame and transaction list to reflect actual settings
+        updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
+
+        // that's it for litemode
+        if(fLiteMode) return;
         connect(model->getOptionsModel(), SIGNAL(privateSendRoundsChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(privateSentAmountChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(advancedPSUIChanged(bool)), this, SLOT(updateAdvancedPSUI(bool)));
-        // explicitly update PS frame and transaction list to reflect actual settings
-        updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
 
         connect(ui->privateSendAuto, SIGNAL(clicked()), this, SLOT(privateSendAuto()));
         connect(ui->privateSendReset, SIGNAL(clicked()), this, SLOT(privateSendReset()));
         connect(ui->privateSendInfo, SIGNAL(clicked()), this, SLOT(privateSendInfo()));
         connect(ui->togglePrivateSend, SIGNAL(clicked()), this, SLOT(togglePrivateSend()));
-        updateWatchOnlyLabels(model->haveWatchOnly());
-        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
     }
 }
 
@@ -660,7 +663,7 @@ void OverviewPage::SetupTransactionList(int nNumItems) {
         filter->setDynamicSortFilter(true);
         filter->setSortRole(Qt::EditRole);
         filter->setShowInactive(false);
-        filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
+        filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
 
         ui->listTransactions->setModel(filter.get());
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);

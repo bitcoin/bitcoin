@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,6 +26,9 @@ static const int MAX_OPS_PER_SCRIPT = 201;
 
 // Maximum number of public keys per multisig
 static const int MAX_PUBKEYS_PER_MULTISIG = 20;
+
+// Maximum script length in bytes
+static const int MAX_SCRIPT_SIZE = 10000;
 
 // Threshold for nLockTime: below this value it is interpreted as block number,
 // otherwise as UNIX timestamp.
@@ -432,7 +434,6 @@ protected:
     }
 public:
     CScript() { }
-    CScript(const CScript& b) : CScriptBase(b.begin(), b.end()) { }
     CScript(const_iterator pbegin, const_iterator pend) : CScriptBase(pbegin, pend) { }
     CScript(std::vector<unsigned char>::const_iterator pbegin, std::vector<unsigned char>::const_iterator pend) : CScriptBase(pbegin, pend) { }
     CScript(const unsigned char* pbegin, const unsigned char* pend) : CScriptBase(pbegin, pend) { }
@@ -658,10 +659,12 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
-    bool IsNormalPaymentScript() const;
     bool IsPayToPublicKeyHash() const;
 
     bool IsPayToScriptHash() const;
+
+    /** Used for obsolete pay-to-pubkey addresses indexing. */
+    bool IsPayToPublicKey() const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
@@ -674,7 +677,7 @@ public:
      */
     bool IsUnspendable() const
     {
-        return (size() > 0 && *begin() == OP_RETURN);
+        return (size() > 0 && *begin() == OP_RETURN) || (size() > MAX_SCRIPT_SIZE);
     }
 
     void clear()

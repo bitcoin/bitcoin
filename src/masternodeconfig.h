@@ -1,6 +1,5 @@
 
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,7 +24,7 @@ public:
         std::string outputIndex;
     public:
 
-        CMasternodeEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex) {
+        CMasternodeEntry(const std::string& alias, const std::string& ip, const std::string& privKey, const std::string& txHash, const std::string& outputIndex) {
             this->alias = alias;
             this->ip = ip;
             this->privKey = privKey;
@@ -79,8 +78,8 @@ public:
     }
 
     void clear();
-    bool read(std::string& strErr);
-    void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
+    bool read(std::string& strErrRet);
+    void add(const std::string& alias, const std::string& ip, const std::string& privKey, const std::string& txHash, const std::string& outputIndex);
 
     std::vector<CMasternodeEntry>& getEntries() {
         return entries;

@@ -1,5 +1,4 @@
-// Copyright (c) 2013-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2013-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -121,11 +120,11 @@ void RunTest(const TestVector &test) {
 
         CDataStream ssPub(SER_DISK, CLIENT_VERSION);
         ssPub << pubkeyNew;
-        BOOST_CHECK(ssPub.size() == 74+1);
+        BOOST_CHECK(ssPub.size() == 75);
 
         CDataStream ssPriv(SER_DISK, CLIENT_VERSION);
         ssPriv << keyNew;
-        BOOST_CHECK(ssPriv.size() == 74+1);
+        BOOST_CHECK(ssPriv.size() == 75);
 
         CExtPubKey pubCheck;
         CExtKey privCheck;

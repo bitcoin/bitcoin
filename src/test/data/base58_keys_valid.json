@@ -433,12 +433,12 @@
     ], 
     [
         "13p1ijLwsnrcuyqcTvJXkq2ASdXqcnEBLE", 
-        "1ed467017f043e91ed4c44b4e8dd674db211c4e6", 
-        {
-            "addrType": "pubkey", 
-            "isPrivkey": false, 
-            "isTestnet": false
-        }
+        "1ed467017f043e91ed4c44b4e8dd674db211c4e6",
+      {
+        "addrType": "pubkey",
+        "isPrivkey": false,
+        "isTestnet": false
+      }
     ], 
     [
         "3ALJH9Y951VCGcVZYAdpA3KchoP9McEj1G", 

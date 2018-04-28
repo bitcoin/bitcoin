@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -113,7 +112,7 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK( (R1L & arith_uint256("0xffffffffffffffff")) == arith_uint256(R1LLow64));
     BOOST_CHECK(ZeroL == arith_uint256(0));
     BOOST_CHECK(OneL == arith_uint256(1));
-    BOOST_CHECK(arith_uint256("0xffffffffffffffff") = arith_uint256(0xffffffffffffffffULL));
+    BOOST_CHECK(arith_uint256("0xffffffffffffffff") == arith_uint256(0xffffffffffffffffULL));
 
     // Assignment (from base_uint)
     arith_uint256 tmpL = ~ZeroL; BOOST_CHECK(tmpL == ~ZeroL);

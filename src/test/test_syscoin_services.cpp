@@ -101,7 +101,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
     boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
 	string nodePath = fpath.string() + string(" -datadir=") + dataDir;
 	if(regTest)
-		nodePath += string(" -regtest -debug=0 -addressindex -unittest");
+		nodePath += string(" -regtest -addressindex -unittest");
 	if(!extraArgs.empty())
 		nodePath += string(" ") + extraArgs;
 
@@ -403,16 +403,31 @@ void GenerateBlocks(int nBlocks, const string& node)
   height = 0;
   timeoutCounter = 0;
 }
-void GenerateSpendableCoins(const string& node) {
+void GenerateSpendableCoins() {
 	UniValue r;
-	GenerateBlocks(101, node);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getnewaddress", false, false));
+	
+	const string &sBlocks = strprintf("%d", 101);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate " + sBlocks));
+	MilliSleep(1000);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "generate " + sBlocks));
+	MilliSleep(1000);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate " + sBlocks));
+	MilliSleep(1000);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getinfo"));
-	GenerateBlocks(10, node);
-	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + newaddress + " " + find_value(r.get_obj(), "balance").write()), runtime_error);
-	GenerateBlocks(91, node);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + newaddress + " " + find_value(r.get_obj(), "balance").write()), runtime_error);
+	GenerateBlocks(10, "node1");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getnewaddress", false, false));
+	newaddress = r.get_str();
+	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + newaddress + " 100000"), runtime_error);
+	GenerateBlocks(10, "node1");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getnewaddress", false, false));
+	newaddress = r.get_str();
+	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + newaddress + " 100000"), runtime_error);
+	GenerateBlocks(10, "node1");
 }
 void SetSysMocktime(const int64_t& expiryTime) {
 	BOOST_CHECK(expiryTime > 0);
@@ -687,7 +702,7 @@ bool DoesRangeContain(const string& parentRange, const string& childRange) {
 
 	return doesRangeContain(vecParentRanges, vecChildRanges);
 }
-string AliasNew(const string& node, const string& aliasname, const string& pubdata, string witness)
+string AliasNew(const string& node, const string& aliasname, const string& pubdata, string witness, string newaddress)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -716,20 +731,23 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	string strEncryptionPrivateKeyHex = HexStr(vchPrivEncryptionKey);
 	string acceptTransfers = "3";
 	string expireTime = "0";
-
+	string strAddress = aliasAddress.ToString();
+		
+	if(newaddress != "''")
+		strAddress = newaddress;
 	UniValue r;
 	// registration
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnew " + aliasname + " " + pubdata + " " + acceptTransfers +  " " + expireTime + " " + aliasAddress.ToString() + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnew " + aliasname + " " + pubdata + " " + acceptTransfers +  " " + expireTime + " " + strAddress + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
 	UniValue varray = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnewfund " + varray[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + varray[0].get_str()));
 	varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, node);
 	// activation
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnew " + aliasname + " " + pubdata + " " + acceptTransfers + " " + expireTime + " " + aliasAddress.ToString() + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnew " + aliasname + " " + pubdata + " " + acceptTransfers + " " + expireTime + " " + strAddress + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
 	UniValue varray1 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnewfund " + varray1[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + varray1[0].get_str()));
 	varray1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray1[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -749,7 +767,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , strAddress);
 
 	}
 	if(!otherNode2.empty())
@@ -758,7 +776,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , strAddress);
 		
 	}
 	return aliasAddress.ToString();
@@ -769,6 +787,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 
 	string oldvalue = find_value(r.get_obj(), "publicvalue").get_str();
+	string oldaddress = find_value(r.get_obj(), "address").get_str();
 	int nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
 	string expires = "0";
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
@@ -817,8 +836,14 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	// new balance is 0
+	BOOST_CHECK_EQUAL(balanceAfter , 0);
+	// balance stays with old address
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressbalance \"{\\\"addresses\\\": [\\\"" + oldaddress + "\\\"]}\""));
+	CAmount newBalanceFrom = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK(abs(newBalanceFrom - balanceBefore) < COIN);
 
-	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
+	BOOST_CHECK_EQUAL(balanceAfter, 0);
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasinfo " + aliasname));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
@@ -828,12 +853,21 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	// check xferred right person and data changed
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasbalance " + aliasname));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	
+	BOOST_CHECK_EQUAL(balanceAfter, 0);
+
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "getaddressbalance \"{\\\"addresses\\\": [\\\"" + oldaddress + "\\\"]}\""));
+	newBalanceFrom = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK(abs(newBalanceFrom - balanceBefore) < COIN);
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasinfo " + aliasname));
-	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
+	// fund new alias with some money
+	BOOST_CHECK_THROW(CallRPC(tonode, "sendtoaddress " + aliasname + " 10"), runtime_error);
+	GenerateBlocks(5, tonode);
 	return "";
 }
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, string addressStr, string witness)
@@ -2172,7 +2206,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj, "txid").get_str();
 		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
-		CAmount satoshis = AmountFromValue(find_value(utxoObj, "satoshis"));
+		CAmount satoshis = find_value(utxoObj, "satoshis").get_int64();
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";
@@ -2243,7 +2277,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj, "txid").get_str();
 		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
-		CAmount satoshis = AmountFromValue(find_value(utxoObj, "satoshis"));
+		CAmount satoshis = find_value(utxoObj, "satoshis").get_int64();
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";
@@ -2320,7 +2354,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj, "txid").get_str();
 		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
-		CAmount satoshis = AmountFromValue(find_value(utxoObj, "satoshis"));
+		CAmount satoshis = find_value(utxoObj, "satoshis").get_int64();
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";
@@ -2489,7 +2523,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj, "txid").get_str();
 		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
-		CAmount satoshis = AmountFromValue(find_value(utxoObj, "satoshis"));
+		CAmount satoshis = find_value(utxoObj, "satoshis").get_int64();
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";

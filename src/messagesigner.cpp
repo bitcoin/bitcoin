@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +9,7 @@
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 
-bool CMessageSigner::GetKeysFromSecret(const std::string &strSecret, CKey& keyRet, CPubKey& pubkeyRet)
+bool CMessageSigner::GetKeysFromSecret(const std::string& strSecret, CKey& keyRet, CPubKey& pubkeyRet)
 {
     CSyscoinSecret vchSecret;
 
@@ -22,7 +21,7 @@ bool CMessageSigner::GetKeysFromSecret(const std::string &strSecret, CKey& keyRe
     return true;
 }
 
-bool CMessageSigner::SignMessage(const std::string &strMessage, std::vector<unsigned char>& vchSigRet, const CKey &key)
+bool CMessageSigner::SignMessage(const std::string& strMessage, std::vector<unsigned char>& vchSigRet, const CKey& key)
 {
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;
@@ -31,21 +30,31 @@ bool CMessageSigner::SignMessage(const std::string &strMessage, std::vector<unsi
     return CHashSigner::SignHash(ss.GetHash(), key, vchSigRet);
 }
 
-bool CMessageSigner::VerifyMessage(const CPubKey &pubkey, const std::vector<unsigned char>& vchSig, const std::string &strMessage, std::string& strErrorRet)
+bool CMessageSigner::VerifyMessage(const CPubKey& pubkey, const std::vector<unsigned char>& vchSig, const std::string& strMessage, std::string& strErrorRet)
+{
+    return VerifyMessage(pubkey.GetID(), vchSig, strMessage, strErrorRet);
+}
+
+bool CMessageSigner::VerifyMessage(const CKeyID& keyID, const std::vector<unsigned char>& vchSig, const std::string& strMessage, std::string& strErrorRet)
 {
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;
     ss << strMessage;
 
-    return CHashSigner::VerifyHash(ss.GetHash(), pubkey, vchSig, strErrorRet);
+    return CHashSigner::VerifyHash(ss.GetHash(), keyID, vchSig, strErrorRet);
 }
 
-bool CHashSigner::SignHash(const uint256& hash, const CKey &key, std::vector<unsigned char>& vchSigRet)
+bool CHashSigner::SignHash(const uint256& hash, const CKey& key, std::vector<unsigned char>& vchSigRet)
 {
     return key.SignCompact(hash, vchSigRet);
 }
 
-bool CHashSigner::VerifyHash(const uint256& hash, const CPubKey &pubkey, const std::vector<unsigned char>& vchSig, std::string& strErrorRet)
+bool CHashSigner::VerifyHash(const uint256& hash, const CPubKey& pubkey, const std::vector<unsigned char>& vchSig, std::string& strErrorRet)
+{
+    return VerifyHash(hash, pubkey.GetID(), vchSig, strErrorRet);
+}
+
+bool CHashSigner::VerifyHash(const uint256& hash, const CKeyID& keyID, const std::vector<unsigned char>& vchSig, std::string& strErrorRet)
 {
     CPubKey pubkeyFromSig;
     if(!pubkeyFromSig.RecoverCompact(hash, vchSig)) {
@@ -53,9 +62,9 @@ bool CHashSigner::VerifyHash(const uint256& hash, const CPubKey &pubkey, const s
         return false;
     }
 
-    if(pubkeyFromSig.GetID() != pubkey.GetID()) {
+    if(pubkeyFromSig.GetID() != keyID) {
         strErrorRet = strprintf("Keys don't match: pubkey=%s, pubkeyFromSig=%s, hash=%s, vchSig=%s",
-                    pubkey.GetID().ToString(), pubkeyFromSig.GetID().ToString(), hash.ToString(),
+                    keyID.ToString(), pubkeyFromSig.GetID().ToString(), hash.ToString(),
                     EncodeBase64(&vchSig[0], vchSig.size()));
         return false;
     }

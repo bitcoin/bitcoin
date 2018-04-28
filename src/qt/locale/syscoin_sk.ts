@@ -1,4 +1,3 @@
-<!DOCTYPE TS>
 <TS language="sk" version="2.0">
 <context>
     <name>AddressBookPage</name>
@@ -2509,11 +2508,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>InstantSend</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 satoshi and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshi in fee,&lt;br /&gt;while "at least" pays 1000 satoshi. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee,&lt;br /&gt;while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Ak je vlastný poplatok nastavený na 1000 satoshiov a transakcia je len 250 bytov, v tom prípade "za kilobajt" zaplatí iba 250 satoshiov na poplatkoch, &lt;br /&gt;zatiaľ čo "pri najmenšom" zaplatí 1000 satoshiov. Pre transakcie väčšie ako jeden kilobajt, obe zaplatia rovnako za kilobajt. </translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 satoshi and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshi in fee,&lt;br /&gt;while "total at least" pays 1000 satoshi. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee,&lt;br /&gt;while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Ak je vlastný poplatok nastavený na 1000 satoshiov a transakcia je len 250 bytov, v tom prípade "za kilobajt" zaplatí iba 250 satoshiov na poplatkoch, &lt;br /&gt;zatiaľ čo "celkovo pri najmenšom" zaplatí 1000 satoshiov. Pre transakcie väčšie ako jeden kilobajt, obe zaplatia rovnako za kilobajt. </translation>
     </message>
     <message>

@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -65,7 +64,7 @@ public:
         }
 
         if (sortColumn >= 0)
-            // sort cachedBanlist (use stable sort to prevent rows jumping around unneceesarily)
+            // sort cachedBanlist (use stable sort to prevent rows jumping around unnecessarily)
             qStableSort(cachedBanlist.begin(), cachedBanlist.end(), BannedNodeLessThan(sortColumn, sortOrder));
     }
 

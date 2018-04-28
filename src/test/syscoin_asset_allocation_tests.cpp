@@ -35,19 +35,19 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 1 * COIN);
 
-	string txid0 = AssetAllocationTransfer(false, "node1", guid, "jagassetallocationsend1", "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.1}]\"", "allocationsendmemo");
+	string txid0 = AssetAllocationTransfer(false, "node1", guid, "jagassetallocationsend1", "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.11}]\"", "allocationsendmemo");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetallocationsend2 false"));
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false),0.1 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false),0.11 * COIN);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " jagassetallocationsend1 " + txid0));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 
 	// send using zdag
-	string txid1 = AssetAllocationTransfer(true, "node1", guid, "jagassetallocationsend1", "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.1}]\"", "allocationsendmemo");
+	string txid1 = AssetAllocationTransfer(true, "node1", guid, "jagassetallocationsend1", "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.12}]\"", "allocationsendmemo");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetallocationsend2 false"));
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0.2 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0.23 * COIN);
 
 	// non zdag cannot be found since it was already mined, but ends up briefly in conflict state because sender is conflicted
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " jagassetallocationsend1 " + txid0));
@@ -65,10 +65,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	MilliSleep(1000);
 
 	// second send
-	string txid2 = AssetAllocationTransfer(true, "node1", guid, "jagassetallocationsend1", "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.1}]\"", "allocationsendmemo");
+	string txid2 = AssetAllocationTransfer(true, "node1", guid, "jagassetallocationsend1", "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.13}]\"", "allocationsendmemo");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetallocationsend2 false"));
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0.3 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0.36 * COIN);
 	
 	// sender is conflicted so txid0 is conflicted by extension even if its not found
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " jagassetallocationsend1 " + txid0));

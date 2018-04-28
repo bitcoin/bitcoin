@@ -16,7 +16,6 @@ class CWalletTx;
 class CTransaction;
 class CReserveKey;
 class CCoinsViewCache;
-class CCoins;
 class CBlockIndex;
 class CBlock;
 class CAliasIndex;
@@ -66,7 +65,7 @@ public:
 
 	ADD_SERIALIZE_METHODS;
 	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+	inline void SerializationOp(Stream& s, Operation ser_action) {
 		READWRITE(VARINT(nExpireTime));
 		READWRITE(fReservePrice);
 		READWRITE(bRequireWitness);
@@ -143,7 +142,7 @@ public:
 
  	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+	inline void SerializationOp(Stream& s, Operation ser_action) {
 			READWRITE(sCategory);
 			READWRITE(sTitle);
 			READWRITE(sDescription);

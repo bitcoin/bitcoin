@@ -1,5 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Core developers
-// Copyright (c) 2016-2017 The Syscoin Core developers
+// Copyright (c) 2016 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -54,8 +53,9 @@ protected:
     virtual int Threshold(const Consensus::Params& params) const =0;
 
 public:
-    // Note that the function below takes a pindexPrev as input: they compute information for block B based on its parent.
+    // Note that the functions below take a pindexPrev as input: they compute information for block B based on its parent.
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
+    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
 };
 
 struct VersionBitsCache
@@ -66,6 +66,7 @@ struct VersionBitsCache
 };
 
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
+int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
 #endif

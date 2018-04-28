@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -23,12 +22,10 @@
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
-#endif
 
-#ifdef ENABLE_WALLET
 #include "masternodeconfig.h"
-#endif
 #include "privatesend-client.h"
+#endif
 
 #include <QNetworkProxy>
 #include <QSettings>
@@ -42,7 +39,7 @@ OptionsModel::OptionsModel(QObject *parent, bool resetSettings) :
 
 void OptionsModel::addOverriddenOption(const std::string &option)
 {
-    strOverriddenByCommandLine += QString::fromStdString(option) + "=" + QString::fromStdString(mapArgs[option]) + " ";
+    strOverriddenByCommandLine += QString::fromStdString(option) + "=" + QString::fromStdString(GetArg(option, "")) + " ";
 }
 
 // Writes all missing QSettings with their default values
@@ -50,6 +47,8 @@ void OptionsModel::Init(bool resetSettings)
 {
     if (resetSettings)
         Reset();
+
+    checkAndMigrate();
 
     this->resetSettings = resetSettings;
 
@@ -83,24 +82,28 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("strThirdPartyTxUrls", "");
     strThirdPartyTxUrls = settings.value("strThirdPartyTxUrls", "").toString();
 
+    if (!settings.contains("theme"))
+        settings.setValue("theme", "");
+
+#ifdef ENABLE_WALLET
     if (!settings.contains("fCoinControlFeatures"))
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
     if (!settings.contains("digits"))
         settings.setValue("digits", "2");
-    if (!settings.contains("theme"))
-        settings.setValue("theme", "");
 
     if (!settings.contains("fShowMasternodesTab"))
         settings.setValue("fShowMasternodesTab", masternodeConfig.getCount());
 
+    // PrivateSend
     if (!settings.contains("fShowAdvancedPSUI"))
         settings.setValue("fShowAdvancedPSUI", false);
     fShowAdvancedPSUI = settings.value("fShowAdvancedPSUI", false).toBool();
 
     if (!settings.contains("fLowKeysWarning"))
         settings.setValue("fLowKeysWarning", true);
+#endif // ENABLE_WALLET
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
@@ -282,14 +285,18 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return nDisplayUnit;
         case ThirdPartyTxUrls:
             return strThirdPartyTxUrls;
+#ifdef ENABLE_WALLET
         case Digits:
             return settings.value("digits");
+#endif // ENABLE_WALLET
         case Theme:
             return settings.value("theme");
         case Language:
             return settings.value("language");
+#ifdef ENABLE_WALLET
         case CoinControlFeatures:
             return fCoinControlFeatures;
+#endif // ENABLE_WALLET
         case DatabaseCache:
             return settings.value("nDatabaseCache");
         case ThreadsScriptVerif:
@@ -452,12 +459,14 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+#ifdef ENABLE_WALLET
         case Digits:
             if (settings.value("digits") != value) {
                 settings.setValue("digits", value);
                 setRestartRequired(true);
             }
             break;            
+#endif // ENABLE_WALLET
         case Theme:
             if (settings.value("theme") != value) {
                 settings.setValue("theme", value);
@@ -470,11 +479,13 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+#ifdef ENABLE_WALLET
         case CoinControlFeatures:
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
             Q_EMIT coinControlFeaturesChanged(fCoinControlFeatures);
             break;
+#endif // ENABLE_WALLET
         case DatabaseCache:
             if (settings.value("nDatabaseCache") != value) {
                 settings.setValue("nDatabaseCache", value);
@@ -543,4 +554,23 @@ bool OptionsModel::isRestartRequired()
 {
     QSettings settings;
     return settings.value("fRestartRequired", false).toBool();
+}
+
+void OptionsModel::checkAndMigrate()
+{
+    // Migration of default values
+    // Check if the QSettings container was already loaded with this client version
+    QSettings settings;
+    static const char strSettingsVersionKey[] = "nSettingsVersion";
+    int settingsVersion = settings.contains(strSettingsVersionKey) ? settings.value(strSettingsVersionKey).toInt() : 0;
+    if (settingsVersion < CLIENT_VERSION)
+    {
+        // -dbcache was bumped from 100 to 300 in 0.13
+        // see https://github.com/syscoin/syscoin/pull/8273
+        // force people to upgrade to the new value if they are using 100MB
+        if (settingsVersion < 130000 && settings.contains("nDatabaseCache") && settings.value("nDatabaseCache").toLongLong() == 100)
+            settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
+
+        settings.setValue(strSettingsVersionKey, CLIENT_VERSION);
+    }
 }

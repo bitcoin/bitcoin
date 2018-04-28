@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -23,6 +22,7 @@ QList<SyscoinUnits::Unit> SyscoinUnits::availableUnits()
     unitlist.append(SYS);
     unitlist.append(mSYS);
     unitlist.append(uSYS);
+    unitlist.append(satoshis);
     return unitlist;
 }
 
@@ -33,6 +33,7 @@ bool SyscoinUnits::valid(int unit)
     case SYS:
     case mSYS:
     case uSYS:
+    case satoshis:
         return true;
     default:
         return false;
@@ -48,6 +49,7 @@ QString SyscoinUnits::name(int unit)
             case SYS: return QString("SYS");
             case mSYS: return QString("mSYS");
             case uSYS: return QString::fromUtf8("μSYS");
+            case satoshis: return QString("satoshis");
             default: return QString("???");
         }
     }
@@ -58,6 +60,7 @@ QString SyscoinUnits::name(int unit)
             case SYS: return QString("tSYS");
             case mSYS: return QString("mtSYS");
             case uSYS: return QString::fromUtf8("μtSYS");
+            case satoshis: return QString("tsatoshis");
             default: return QString("???");
         }
     }
@@ -72,6 +75,7 @@ QString SyscoinUnits::description(int unit)
             case SYS: return QString("Syscoin");
             case mSYS: return QString("Milli-Syscoin (1 / 1" THIN_SP_UTF8 "000)");
             case uSYS: return QString("Micro-Syscoin (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case satoshis: return QString("Ten Nano-Syscoin (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             default: return QString("???");
         }
     }
@@ -82,6 +86,7 @@ QString SyscoinUnits::description(int unit)
             case SYS: return QString("TestSyscoins");
             case mSYS: return QString("Milli-TestSyscoin (1 / 1" THIN_SP_UTF8 "000)");
             case uSYS: return QString("Micro-TestSyscoin (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case satoshis: return QString("Ten Nano-TestSyscoin (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             default: return QString("???");
         }
     }
@@ -94,6 +99,7 @@ qint64 SyscoinUnits::factor(int unit)
     case SYS:  return 100000000;
     case mSYS: return 100000;
     case uSYS: return 100;
+    case satoshis: return 1;
     default:   return 100000000;
     }
 }
@@ -105,6 +111,7 @@ int SyscoinUnits::decimals(int unit)
     case SYS: return 8;
     case mSYS: return 5;
     case uSYS: return 2;
+    case satoshis: return 0;
     default: return 0;
     }
 }

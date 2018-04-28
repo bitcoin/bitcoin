@@ -1,5 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -50,8 +49,8 @@ static inline size_t RecursiveDynamicUsage(const CMutableTransaction& tx) {
 
 static inline size_t RecursiveDynamicUsage(const CBlock& block) {
     size_t mem = memusage::DynamicUsage(block.vtx);
-    for (std::vector<CTransaction>::const_iterator it = block.vtx.begin(); it != block.vtx.end(); it++) {
-        mem += RecursiveDynamicUsage(*it);
+    for (const auto& tx : block.vtx) {
+        mem += memusage::DynamicUsage(tx) + RecursiveDynamicUsage(*tx);
     }
     return mem;
 }

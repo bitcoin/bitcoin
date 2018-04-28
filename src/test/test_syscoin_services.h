@@ -20,7 +20,7 @@ void StartMainNetNodes();
 void StopMainNetNodes();
 void StopNodes();
 void GenerateBlocks(int nBlocks, const string& node="node1");
-void GenerateSpendableCoins(const string& node);
+void GenerateSpendableCoins();
 void GenerateMainNetBlocks(int nBlocks, const string& node);
 string CallExternal(string &cmd);
 void SetSysMocktime(const int64_t& expiryTime);
@@ -29,7 +29,7 @@ void CheckRangeSubtract(const string& originalRanges, const string& subtractRang
 void CheckRangeMerge(const string& originalRanges, const string& newRanges, const string& expectedOutputRanges);
 bool DoesRangeContain(const string& parentRange, const string& childRange);
 void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2);
-string AliasNew(const string& node, const string& aliasname, const string& pubdata, string witness="''");
+string AliasNew(const string& node, const string& aliasname, const string& pubdata, string witness="''", string newaddress = "''");
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata="''", string addressStr = "''", string witness="''");
 string AliasTransfer(const string& node, const string& aliasname, const string& tonode, const string& pubdata="''", const string& witness="''");
 void AliasAddWhitelist(const string& node, const string& aliasowner, const string& aliasname, const string& discount, const string& witness = "''");

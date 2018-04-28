@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +10,7 @@
 
 #include "governance-vote.h"
 #include "serialize.h"
+#include "streams.h"
 #include "uint256.h"
 
 /**
@@ -63,7 +63,7 @@ public:
     /**
      * Retrieve a vote cached in memory
      */
-    bool GetVote(const uint256& nHash, CGovernanceVote& vote) const;
+    bool SerializeVoteToStream(const uint256& nHash, CDataStream& ss) const;
 
     int GetVoteCount() {
         return nMemoryVotes;
@@ -71,14 +71,12 @@ public:
 
     std::vector<CGovernanceVote> GetVotes() const;
 
-    CGovernanceObjectVoteFile& operator=(const CGovernanceObjectVoteFile& other);
-
     void RemoveVotesFromMasternode(const COutPoint& outpointMasternode);
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(nMemoryVotes);
         READWRITE(listVotes);

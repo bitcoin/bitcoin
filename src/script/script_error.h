@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,6 +48,7 @@ typedef enum ScriptError_t
     SCRIPT_ERR_SIG_NULLDUMMY,
     SCRIPT_ERR_PUBKEYTYPE,
     SCRIPT_ERR_CLEANSTACK,
+    SCRIPT_ERR_SIG_NULLFAIL,
 
     /* softfork safeness */
     SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS,

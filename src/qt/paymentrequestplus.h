@@ -1,12 +1,14 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_QT_PAYMENTREQUESTPLUS_H
 #define SYSCOIN_QT_PAYMENTREQUESTPLUS_H
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "paymentrequest.pb.h"
+#pragma GCC diagnostic pop
 
 #include "base58.h"
 

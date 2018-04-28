@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,9 +20,9 @@ void QValueComboBox::setValue(const QVariant &value)
     setCurrentIndex(findData(value, role));
 }
 
-void QValueComboBox::setRole(int role)
+void QValueComboBox::setRole(int _role)
 {
-    this->role = role;
+    this->role = _role;
 }
 
 void QValueComboBox::handleSelectionChanged(int idx)

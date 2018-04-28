@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -22,11 +21,11 @@
 
 #include <QClipboard>
 
-SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *platformStyle, QWidget *parent) :
+SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SignVerifyMessageDialog),
     model(0),
-    platformStyle(platformStyle)
+    platformStyle(_platformStyle)
 {
     ui->setupUi(this);
 
@@ -74,9 +73,9 @@ SignVerifyMessageDialog::~SignVerifyMessageDialog()
     delete ui;
 }
 
-void SignVerifyMessageDialog::setModel(WalletModel *model)
+void SignVerifyMessageDialog::setModel(WalletModel *_model)
 {
-    this->model = model;
+    this->model = _model;
 }
 
 void SignVerifyMessageDialog::setAddress_SM(const QString &address)
@@ -156,7 +155,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     }
 
     CKey key;
-    if (!pwalletMain->GetKey(keyID, key))
+    if (!model->getPrivKey(keyID, key))
     {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel_SM->setText(tr("Private key for the entered address is not available."));

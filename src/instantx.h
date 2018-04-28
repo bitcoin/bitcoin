@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef INSTANTX_H
@@ -19,17 +18,19 @@ extern CInstantSend instantsend;
 
 /*
     At 15 signatures, 1/2 of the masternode network can be owned by
-    one party without comprimising the security of InstantSend
+    one party without compromising the security of InstantSend
     (1000/2150.0)**10 = 0.00047382219560689856
     (1000/2900.0)**10 = 2.3769498616783657e-05
 
     ### getting 5 of 10 signatures w/ 1000 nodes of 2900
     (1000/2900.0)**5 = 0.004875397277841433
 */
-static const int INSTANTSEND_CONFIRMATIONS_REQUIRED = 6;
+
+static const int MIN_INSTANTSEND_DEPTH              = 0;
+static const int MAX_INSTANTSEND_DEPTH              = 60;
 static const int DEFAULT_INSTANTSEND_DEPTH          = 5;
 
-static const int MIN_INSTANTSEND_PROTO_VERSION      = 70217;
+static const int MIN_INSTANTSEND_PROTO_VERSION      = MIN_PEER_PROTO_VERSION;
 
 // For how long we are going to accept votes/locks
 // after we saw the first one for a specific transaction
@@ -67,10 +68,11 @@ private:
     void Vote(CTxLockCandidate& txLockCandidate, CConnman& connman);
 
     //process consensus vote message
-    bool ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman& connman);
-    void ProcessOrphanTxLockVotes(CConnman& connman);
-    bool IsEnoughOrphanVotesForTx(const CTxLockRequest& txLockRequest);
-    bool IsEnoughOrphanVotesForTxAndOutPoint(const uint256& txHash, const COutPoint& outpoint);
+    bool ProcessNewTxLockVote(CNode* pfrom, const CTxLockVote& vote, CConnman& connman);
+
+    void UpdateVotedOutpoints(const CTxLockVote& vote, CTxLockCandidate& txLockCandidate);
+    bool ProcessOrphanTxLockVote(const CTxLockVote& vote);
+    void ProcessOrphanTxLockVotes();
     int64_t GetAverageMasternodeOrphanVoteTime();
 
     void TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCandidate);
@@ -84,10 +86,10 @@ private:
 public:
     CCriticalSection cs_instantsend;
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
     bool ProcessTxLockRequest(const CTxLockRequest& txLockRequest, CConnman& connman);
-	void Vote(const uint256& txHash, CConnman& connman);
+    void Vote(const uint256& txHash, CConnman& connman);
 
     bool AlreadyHave(const uint256& hash);
 
@@ -115,25 +117,51 @@ public:
     void Relay(const uint256& txHash, CConnman& connman);
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
-    void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
+    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock);
 
     std::string ToString();
 };
 
-class CTxLockRequest : public CTransaction
+class CTxLockRequest
 {
-private:
-    static const CAmount MIN_FEE            = 0.0001 * COIN;
 
 public:
+	static const CAmount MIN_FEE = 0.001 * COIN;
     static const int WARN_MANY_INPUTS       = 100;
 
-    CTxLockRequest() = default;
-    CTxLockRequest(const CTransaction& tx) : CTransaction(tx) {};
+    CTransactionRef tx;
+
+    CTxLockRequest() : tx(MakeTransactionRef()) {}
+    CTxLockRequest(const CTransaction& _tx) : tx(MakeTransactionRef(_tx)) {};
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(tx);
+    }
 
     bool IsValid() const;
     CAmount GetMinFee() const;
     int GetMaxSignatures() const;
+
+    const uint256 &GetHash() const {
+        return tx->GetHash();
+    }
+
+    std::string ToString() const {
+        return tx->ToString();
+    }
+
+    friend bool operator==(const CTxLockRequest& a, const CTxLockRequest& b)
+    {
+        return *a.tx == *b.tx;
+    }
+
+    friend bool operator!=(const CTxLockRequest& a, const CTxLockRequest& b)
+    {
+        return *a.tx != *b.tx;
+    }
 
     explicit operator bool() const
     {
@@ -174,14 +202,17 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(txHash);
         READWRITE(outpoint);
         READWRITE(outpointMasternode);
-        READWRITE(vchMasternodeSignature);
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(vchMasternodeSignature);
+        }
     }
 
     uint256 GetHash() const;
+    uint256 GetSignatureHash() const;
 
     uint256 GetTxHash() const { return txHash; }
     COutPoint GetOutpoint() const { return outpoint; }

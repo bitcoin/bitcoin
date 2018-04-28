@@ -1,4 +1,3 @@
-<!DOCTYPE TS>
 <TS language="es" version="2.0">
 <context>
     <name>AddressBookPage</name>
@@ -2285,12 +2284,12 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Minimizar</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 satoshi and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshi in fee,&lt;br /&gt;while "at least" pays 1000 satoshi. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Si la comisión personalizada se establece en 1000 satoshi y la transacción sólo ocupa 250 bytes, entonces "por kilobyte" sólo se pagan 250 satoshi de comisión,&lt;br /&gt;mientras que "como mínimo" paga 1000 satoshi. Para transacciones mayores de un kilobyte ambas pagan por kilobyte.</translation>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee,&lt;br /&gt;while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Si la comisión personalizada se establece en 1000 satoshis y la transacción sólo ocupa 250 bytes, entonces "por kilobyte" sólo se pagan 250 satoshis de comisión,&lt;br /&gt;mientras que "como mínimo" paga 1000 satoshis. Para transacciones mayores de un kilobyte ambas pagan por kilobyte.</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 satoshi and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshi in fee,&lt;br /&gt;while "total at least" pays 1000 satoshi. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Si la comisión personalizada se establece en 1000 satoshi y la transacción sólo ocupa 250 bytes, entonces "por kilobyte" sólo se pagan 250 satoshi de comisión,&lt;br /&gt;mientras que "total como mínimo" paga 1000 satoshi. Para transacciones mayores de un kilobyte ambas pagan por kilobyte.</translation>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee,&lt;br /&gt;while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Si la comisión personalizada se establece en 1000 satoshis y la transacción sólo ocupa 250 bytes, entonces "por kilobyte" sólo se pagan 250 satoshis de comisión,&lt;br /&gt;mientras que "total como mínimo" paga 1000 satoshis. Para transacciones mayores de un kilobyte ambas pagan por kilobyte.</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</source>

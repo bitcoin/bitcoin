@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 " + baddata + " 3 0 " + newaddress + " '' '' ''"));
 	UniValue varray = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray[0].get_str()));
 	varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	// activation should fail
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 " + baddata + " 3 0 " + newaddress + " '' '' ''"));
 	varray = r.get_array();
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasnewfund " + varray[0].get_str()), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "syscointxfund " + varray[0].get_str()), runtime_error);
 
 	// override registration with different address
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 " + newaddress + " '' '' ''"));
 	UniValue varray1 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray1[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray1[0].get_str()));
 	UniValue varray2 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray2[0].get_str()));
 	BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool());
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 " + newaddress + " '' '' ''"));
 	UniValue varray3 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray3[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray3[0].get_str()));
 	UniValue varray4 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray4[0].get_str()));
 	BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool());
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	// activate
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 pub 3 0 " + newaddress + " '' '' ''"));
 	UniValue varray5 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnewfund " + varray5[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray5[0].get_str()));
 	UniValue varray6 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray6[0].get_str()));
 	BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool());
@@ -175,6 +175,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	hex_str = AliasTransfer("node1", "jagmultiupdate", "node2", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
 
+
+	// get 10 more utxo's because on transfer it sends only 1 to receiver
+	AliasUpdate("node2", "jagmultiupdate", "changedata3");
+
 	// after transfer it can't update alias even though there are utxo's available from old owner
 	hex_str = AliasUpdate("node1", "jagmultiupdate", "changedata3");
 	BOOST_CHECK(!hex_str.empty());
@@ -182,6 +186,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	// new owner can update
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
 	{
+		
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 '' 3 0 '' '' ''"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
@@ -203,9 +208,14 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
-	// transfer sends utxo's to new owner
+	// transfer sends 2 utxo's to new owner
 	hex_str = AliasTransfer("node2", "jagmultiupdate", "node1", "changeddata7");
 	BOOST_CHECK(hex_str.empty());
+
+	// get 10 more utxo's because on transfer
+	AliasUpdate("node1", "jagmultiupdate", "changedata3");
+
+
 	// ensure can't update after transfer
 	hex_str = AliasTransfer("node2", "jagmultiupdate", "node1", "changedata8");
 	BOOST_CHECK(!hex_str.empty());
@@ -238,7 +248,7 @@ BOOST_AUTO_TEST_CASE (generate_sendmoneytoalias)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo sendnode2"));
 	string node2address = find_value(r.get_obj(), "address").get_str();
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress sendnode2 1.335"), runtime_error);
-	GenerateBlocks(1);
+	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo sendnode3"));
 	string node3address = find_value(r.get_obj(), "address").get_str();
 
@@ -249,7 +259,7 @@ BOOST_AUTO_TEST_CASE (generate_sendmoneytoalias)
 	// after expiry can still send money to it
 	GenerateBlocks(101);	
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress sendnode2 1.335"), runtime_error);
-	GenerateBlocks(1);
+	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasbalance sendnode2"));
 	balanceBefore += 1.335*COIN;
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
@@ -327,7 +337,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	}
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 '' 3 0 '' '' ''"), runtime_error);
 
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 '' 3 0 '' '' ''"));
 		UniValue varray = r.get_array();
@@ -336,7 +346,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	}
 	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 '' 3 0 '' '' ''"), runtime_error);
 
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 '' 3 0 '' '' ''"));
 		UniValue varray = r.get_array();
@@ -437,11 +447,16 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 BOOST_AUTO_TEST_CASE (generate_aliastransfer)
 {
 	printf("Running generate_aliastransfer...\n");
+	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	UniValue r;
 	AliasNew("node1", "jagnode1", "changeddata1");
 	AliasNew("node2", "jagnode2", "changeddata2");
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnode1"));
+	// used to set a new alias to an old address after transfer
+	string oldAddressStr = find_value(r, "address").get_str();
 
 	string hex_str = AliasTransfer("node1", "jagnode1", "node2", "changeddata1");
 	BOOST_CHECK(hex_str.empty());
@@ -457,11 +472,17 @@ BOOST_AUTO_TEST_CASE (generate_aliastransfer)
 	hex_str = AliasUpdate("node2", "jagnode1", "changeddata5");
 	BOOST_CHECK(hex_str.empty());
 	// rexfer alias
+
+
 	hex_str = AliasTransfer("node2", "jagnode1", "node3", "changeddata5");
 	BOOST_CHECK(hex_str.empty());
 	// xfer an alias to another alias is prohibited
 	hex_str = AliasTransfer("node2", "jagnode1", "node1", "changeddata5");
 	BOOST_CHECK(!hex_str.empty());
+
+	// can create an alias on old address
+	AliasNew("node1", "newaliasname", "changeddata1", "''", oldAddressStr);
+
 }
 BOOST_AUTO_TEST_CASE (generate_aliasbalance)
 {
@@ -531,34 +552,56 @@ BOOST_AUTO_TEST_CASE (generate_aliasbalancewithtransfer)
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_EQUAL(balanceBefore, balanceAfter);
 
-	// transfer alias to someone else and balance should be same
+	// get sender address to use later
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodebalance2"));
+	string senderaddress = find_value(r.get_obj(), "address").get_str();
+
+	// transfer alias to someone else and balance should be same on sender and receiver does not get your balance
 	string hex_str = AliasTransfer("node2", "jagnodebalance2", "node3", "changeddata4");
 	BOOST_CHECK(hex_str.empty());
+	// check receiver
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasbalance jagnodebalance2"));
 	CAmount balanceAfterTransfer = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK(balanceAfterTransfer >= (balanceBefore-COIN));
+	// aliastransfer sends 10 coins to new address after xfer
+	BOOST_CHECK_EQUAL(balanceAfterTransfer , 10*COIN);
+	// check sender
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressbalance \"{\\\"addresses\\\": [\\\"" + senderaddress + "\\\"]}\""));
+	balanceAfterTransfer = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK(abs(balanceBefore - balanceAfterTransfer) < COIN);
 
 	// send money to alias and balance updates
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodebalance2 12.1"), runtime_error);
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasbalance jagnodebalance2"));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_EQUAL(balanceAfter, 12.1*COIN+balanceAfterTransfer);
+	BOOST_CHECK(abs(balanceAfter - 22.1*COIN) < COIN);
 
 	// edit and balance should remain the same
 	hex_str = AliasUpdate("node3", "jagnodebalance2", "pubdata1");
 	BOOST_CHECK(hex_str.empty());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasbalance jagnodebalance2"));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK(abs((12.1*COIN+balanceAfterTransfer) -  balanceAfter) < COIN);
+	BOOST_CHECK(abs(balanceAfter - 22.1*COIN) < COIN);
+
+
+	// get sender address to use later
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodebalance2"));
+	senderaddress = find_value(r.get_obj(), "address").get_str();
 
 	// transfer again and balance is same
 	hex_str = AliasTransfer("node3", "jagnodebalance2", "node2", "changeddata4");
 	BOOST_CHECK(hex_str.empty());
+
+	// check receiver
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasbalance jagnodebalance2"));
-	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK(balanceAfter >= (12.1*COIN+balanceAfterTransfer)-COIN);
+	balanceAfterTransfer = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK_EQUAL(balanceAfterTransfer, 10*COIN);
+	// check sender
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressbalance \"{\\\"addresses\\\": [\\\"" + senderaddress + "\\\"]}\""));
+	balanceAfterTransfer = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK(abs(22.1*COIN - balanceAfterTransfer) < COIN);
 
 }
 BOOST_AUTO_TEST_CASE (generate_multisigalias)
@@ -592,6 +635,10 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	// change the multisigs pw and public data
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
 	
+
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodemultisig1 1"), runtime_error);
+	GenerateBlocks(5);
+
 	string hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata1", addressStr);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
@@ -611,7 +658,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasbalance jagnodemultisig1"));
-	CAmount balanceBefore = 19*COIN;
+	CAmount balanceBefore = 9*COIN;
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
@@ -634,6 +681,11 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
+
+
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodemultisig1 1"), runtime_error);
+	GenerateBlocks(5);
+
 	// ensure only one signature is needed
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
 	hex_str = AliasUpdate("node1", "jagnodemultisig1");
@@ -642,7 +694,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodemultisig1 8"), runtime_error);
 	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasbalance jagnodemultisig1"));
-	balanceBefore += 8*COIN;
+	balanceBefore = 8*COIN;
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
 	// create 2 of 3
@@ -657,6 +709,10 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK_EQUAL(tmp, "");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
+
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodemultisig1 1"), runtime_error);
+	GenerateBlocks(5);
+
 	// 2 sigs needed, remove redeemScript to make it a normal alias
 	BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasaddscript " + redeemScript));
 	hex_str = AliasUpdate("node3", "jagnodemultisig1", "''", oldAddressStr);
@@ -671,7 +727,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodemultisig1 7"), runtime_error);
 	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasbalance jagnodemultisig1"));
-	balanceBefore += 7*COIN;
+	balanceBefore = 17*COIN;
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
 

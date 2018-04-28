@@ -17,7 +17,7 @@
 #include "policy/policy.h"
 #include "script/script.h"
 #include "chainparams.h"
-#include "coincontrol.h"
+#include "wallet/coincontrol.h"
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/hex.hpp>
@@ -27,7 +27,6 @@
 #include <boost/range/adaptor/reversed.hpp>
 using namespace std;
 extern CScript _createmultisig_redeemScript(const UniValue& params);
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend=false, bool transferAlias=false);
 void PutToEscrowList(std::vector<CEscrow> &escrowList, CEscrow& index) {
 	int i = escrowList.size() - 1;
 	BOOST_REVERSE_FOREACH(CEscrow &o, escrowList) {
@@ -58,8 +57,8 @@ int64_t GetEscrowArbiterFee(const int64_t &escrowValue, const float &fEscrowFee)
 		fFee = 0.005;
 	int fee = 1 / fFee;
 	int64_t nFee = escrowValue / fee;
-	if (nFee < DEFAULT_LEGACY_MIN_RELAY_TX_FEE)
-		nFee = DEFAULT_LEGACY_MIN_RELAY_TX_FEE;
+	if (nFee < DEFAULT_MIN_RELAY_TX_FEE)
+		nFee = DEFAULT_MIN_RELAY_TX_FEE;
 	return nFee;
 }
 
@@ -717,7 +716,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 			}
 			else if (op == OP_ESCROW_REFUND)
 			{
-				if (theEscrow.op != OP_ESCROW_ACTIVATE && theEscrow.op != OP_ESCROW_RELEASE)
+				if (theEscrow.op != OP_ESCROW_ACTIVATE && theEscrow.op != OP_ESCROW_REFUND && theEscrow.op != OP_ESCROW_RELEASE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4047 - " + _("Can only refund an active escrow");
 					return true;
@@ -1034,8 +1033,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 	}
     return true;
 }
-UniValue escrowbid(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 5)
+UniValue escrowbid(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 5)
 		throw runtime_error(
 			"escrowbid [alias] [escrow] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
 			"<alias> An alias you own.\n"
@@ -1102,16 +1102,11 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 
 
 
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(vchAlias, vchWitness, aliasRecipient, vecSend);
 }
-UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 3)
+UniValue escrowaddshipping(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
 			"escrowaddshipping [escrow] [shipping amount] [witness]\n"
 			"<escrow> Escrow GUID to add shipping to.\n"
@@ -1177,19 +1172,13 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(bidderalias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(bidderalias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
-UniValue escrownew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 16)
+UniValue escrownew(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || params.size() != 16)
         throw runtime_error(
-			"escrownew [getamountandaddress] [alias] [arbiter alias] [offer] [quantity] [buynow] [total_in_payment_option] [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
+			"escrownew [getamountandaddress] [alias] [arbiter alias] [offer] [quantity] [buynow] [total_in_payment_option] [shipping_amount] [network_fee] [arbiter_fee] [witness_fee] [extTx] [payment_option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
 				"<getamountandaddress> True or false. Get deposit and total escrow amount aswell as escrow address for funding. If buynow is false pass bid amount in bid_in_payment_option to get total needed to complete escrow. If buynow is true amount is calculated based on offer price and quantity.\n"
 				"<alias> An alias you own.\n"
 				"<arbiter alias> Alias of Arbiter.\n"
@@ -1342,7 +1331,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CScript redeemScript;
 	try
 	{
-		resCreate = createmultisig(arrayParams, false);
+		JSONRPCRequest request1;
+		request1.params = arrayParams;
+		resCreate = createmultisig(request1);
 	}
 	catch (UniValue& objError)
 	{
@@ -1448,18 +1439,13 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(buyeralias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
+	UniValue res = syscointxfund_helper(buyeralias.vchAlias, vchWitness, aliasRecipient, vecSend);
 	res.push_back(stringFromVch(vchEscrow));
 	return res;
 }
-UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 2)
+UniValue escrowacknowledge(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 2)
 		throw runtime_error(
 			"escrowacknowledge [escrow guid] [witness]\n"
 			"Acknowledge escrow payment as seller of offer.\n"
@@ -1531,18 +1517,12 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(sellerAliasLatest.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(sellerAliasLatest.vchAlias, vchWitness, aliasRecipient, vecSend);
 
 }
-UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 4)
+UniValue escrowcreaterawtransaction(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 4)
 		throw runtime_error(
 			"escrowcreaterawtransaction [type] [escrow guid] [{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...] [user role]\n"
 			"Creates raw transaction for escrow refund or release, sign the output raw transaction and pass it via the rawtx parameter to escrowrelease. Type is 'refund' or 'release'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund escrow payment. User role represents either 'seller', 'buyer' or 'arbiter', represents who signed for the payment of the escrow. 'seller' or 'arbiter' is valid for type 'refund' (if you are the buyer during refund leave this empty), while 'buyer' or 'arbiter' is valid for type 'release' (if you are the seller during release leave this empty). You only need to provide this parameter when calling escrowrelease or escrowrefund. \n"
@@ -1601,7 +1581,7 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		CScript script;
 		GetAddress(witnessAliasLatest, &witnessAddressPayment, script, escrow.nPaymentOption);
 	}
-	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
+	CScript scriptPubKeyAlias;
 	CAmount nEscrowFees = escrow.nDeposit + escrow.nArbiterFee + escrow.nWitnessFee + escrow.nNetworkFee + escrow.nShipping;
 	CAmount nBalance = 0;
 	for (unsigned int i = 0; i < inputs.size(); i++)
@@ -1669,7 +1649,9 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	UniValue resCreate;
 	try
 	{
-		resCreate = createrawtransaction(arrayCreateParams, false);
+		JSONRPCRequest request1;
+		request1.params = arrayCreateParams;
+		resCreate = createrawtransaction(request1);
 	}
 	catch (UniValue& objError)
 	{
@@ -1683,13 +1665,13 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	// if this is called prior to escrowcompleterelease, then it probably has been signed already, so apply the existing inputs signatures to the escrow creation transaction
 	// and pass the new raw transaction to the next person to sign and call the escrowcompleterelease with the final raw tx.
 	if (!escrow.scriptSigs.empty()) {
-		CTransaction rawTx;
-		DecodeHexTx(rawTx, createEscrowSpendingTx);
-		CMutableTransaction rawTxm(rawTx);
+		CMutableTransaction rawTxm;
+		DecodeHexTx(rawTxm, createEscrowSpendingTx);
 		for (int i = 0; i < escrow.scriptSigs.size(); i++) {
 			if (rawTxm.vin.size() >= i)
 				rawTxm.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 		}
+		CTransaction rawTx(rawTxm);
 		strRawTx = EncodeHexTx(rawTxm);
 	}
 
@@ -1698,8 +1680,9 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	res.push_back(ValueFromAmount(nBalance));
 	return res;
 }
-UniValue escrowrelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 4)
+UniValue escrowrelease(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || params.size() != 4)
         throw runtime_error(
 			"escrowrelease [escrow guid] [user role] [rawtx] [witness]\n"
 			"Releases escrow funds to seller. User role represents either 'buyer' or 'arbiter'. Third parameter (rawtx) is the signed response from escrowcreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
@@ -1733,28 +1716,26 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		GetAddress(buyerAliasLatest, &buyerAddressPayment, buyerScript, escrow.nPaymentOption);
 	}
 
-	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
+	CScript scriptPubKeyAlias;
 	CAliasIndex theAlias;
 
 	// who is initiating release arbiter or buyer?
 	if(role == "arbiter")
 	{
-		scriptPubKeyAliasOrig = arbiterScript;
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-		scriptPubKeyAlias += scriptPubKeyAliasOrig;
+		scriptPubKeyAlias += arbiterScript;
 		theAlias = arbiterAliasLatest;
 	}
 	else if(role == "buyer")
 	{
-		scriptPubKeyAliasOrig = buyerScript;
 		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-		scriptPubKeyAlias += scriptPubKeyAliasOrig;
+		scriptPubKeyAlias += buyerScript;
 		theAlias = buyerAliasLatest;
 	}
 	else
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Invalid role"));
 
-	CTransaction signedTx;
+	CMutableTransaction signedTx;
 	DecodeHexTx(signedTx, rawtx);
 	escrow.ClearEscrow();
 	for (int i = 0; i < signedTx.vin.size(); i++) {
@@ -1794,18 +1775,12 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
 
-UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 3)
+UniValue escrowcompleterelease(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || params.size() != 3)
         throw runtime_error(
 			"escrowcompleterelease [escrow guid] [rawtx] [witness]\n"
                          "Completes an escrow release by creating the escrow complete release transaction on syscoin blockchain.\n"
@@ -1815,7 +1790,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
 	string rawTx = params[1].get_str();
-	CTransaction myRawTx;
+	CMutableTransaction myRawTx;
 	DecodeHexTx(myRawTx,rawTx);
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
@@ -1873,29 +1848,29 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(sellerAliasLatest.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
+
+	const UniValue res = syscointxfund_helper(sellerAliasLatest.vchAlias, vchWitness, aliasRecipient, vecSend);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);
 	try
 	{
 		// broadcast the payment transaction to syscoin network if not external transaction
-		if (!extPayment)
-			returnRes = sendrawtransaction(sendParams, false);
+		if (!extPayment) {
+			JSONRPCRequest request1;
+			request1.params = sendParams;
+			returnRes = sendrawtransaction(request1);
+		}
 	}
 	catch (UniValue& objError)
 	{
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
-UniValue escrowrefund(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 4)
+UniValue escrowrefund(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 4)
 		throw runtime_error(
 			"escrowrefund [escrow guid] [user role] [rawtx] [witness]\n"
 			"Refunds escrow funds to buyer. User role represents either 'seller' or 'arbiter'. Third parameter (rawtx) is the signed response from escrowcreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
@@ -1929,28 +1904,26 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
 	}
 
-	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
+	CScript scriptPubKeyAlias;
 	CAliasIndex theAlias;
 
 	// who is initiating refund arbiter or seller?
 	if (role == "arbiter")
 	{
-		scriptPubKeyAliasOrig = arbiterScript;
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-		scriptPubKeyAlias += scriptPubKeyAliasOrig;
+		scriptPubKeyAlias += arbiterScript;
 		theAlias = arbiterAliasLatest;
 	}
 	else if (role == "seller")
 	{
-		scriptPubKeyAliasOrig = sellerScript;
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-		scriptPubKeyAlias += scriptPubKeyAliasOrig;
+		scriptPubKeyAlias += sellerScript;
 		theAlias = sellerAliasLatest;
 	}
 	else
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4533 - " + _("Invalid role"));
 
-	CTransaction signedTx;
+	CMutableTransaction signedTx;
 	DecodeHexTx(signedTx, rawtx);
 	escrow.ClearEscrow();
 	for (int i = 0; i < signedTx.vin.size(); i++) {
@@ -1990,18 +1963,12 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
 
-UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 3)
+UniValue escrowcompleterefund(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
 			"escrowcompleterefund [escrow guid] [rawtx] [witness]\n"
 			"Completes an escrow refund by creating the escrow complete refund transaction on syscoin blockchain.\n"
@@ -2011,7 +1978,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	// gather & validate inputs
 	vector<unsigned char> vchEscrow = vchFromValue(params[0]);
 	string rawTx = params[1].get_str();
-	CTransaction myRawTx;
+	CMutableTransaction myRawTx;
 	DecodeHexTx(myRawTx, rawTx);
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
@@ -2072,29 +2039,28 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(buyerAliasLatest.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
+	const UniValue& res = syscointxfund_helper(buyerAliasLatest.vchAlias, vchWitness, aliasRecipient, vecSend);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);
 	try
 	{
 		// broadcast the payment transaction to syscoin network if not external transaction
-		if (!extPayment)
-			returnRes = sendrawtransaction(sendParams, false);
+		if (!extPayment) {
+			JSONRPCRequest request1;
+			request1.params = sendParams;
+			returnRes = sendrawtransaction(request1);
+		}
 	}
 	catch (UniValue& objError)
 	{
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
-UniValue escrowfeedback(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 6)
+UniValue escrowfeedback(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || params.size() != 6)
         throw runtime_error(
 			"escrowfeedback [escrow guid] [userfrom] [feedback] [rating] [userto] [witness]\n"
                         "Send feedback for primary and secondary users in escrow, depending on who you are. Ratings are numbers from 1 to 5. User From and User To is either 'buyer', 'seller', 'reseller', or 'arbiter'.\n"
@@ -2141,35 +2107,31 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 
 	CAliasIndex theAlias;
-	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
+	CScript scriptPubKeyAlias;
 
 	if(userfrom == "buyer")
 	{
 			
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += buyerScript;
-		scriptPubKeyAliasOrig = buyerScript;
 		theAlias = buyerAliasLatest;
 	}
 	else if(userfrom == "seller")
 	{	
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += sellerScript;
-		scriptPubKeyAliasOrig = sellerScript;
 		theAlias = sellerAliasLatest;
 	}
 	else if(userfrom == "reseller")
 	{
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << resellerAliasLatest.vchAlias << resellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += resellerScript;
-		scriptPubKeyAliasOrig = resellerScript;
 		theAlias = resellerAliasLatest;
 	}
 	else if(userfrom == "arbiter")
 	{		
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += arbiterScript;
-		scriptPubKeyAliasOrig = arbiterScript;
 		theAlias = arbiterAliasLatest;
 	}
 	escrow.ClearEscrow();
@@ -2264,17 +2226,11 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
-UniValue escrowinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 != params.size())
+UniValue escrowinfo(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || 1 != params.size())
         throw runtime_error("escrowinfo <guid>\n"
                 "Show stored values of a single escrow\n");
 

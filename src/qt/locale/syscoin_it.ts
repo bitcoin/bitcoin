@@ -1,4 +1,3 @@
-<!DOCTYPE TS>
 <TS language="it" version="2.0">
 <context>
     <name>AddressBookPage</name>
@@ -847,15 +846,15 @@ Indirizzo: %4
     </message>
     <message>
         <source>This option is the quickest and will cost about ~0.025 SYS to anonymize 100000 SYS</source>
-        <translation>Questa opzione è la più veloce e ti costerà ~0.025SYS circa per anonimizzare 100000 SYS</translation>
+        <translation>Questa opzione è la più veloce e ti costerà ~0.025SYS circa per anonimizzare 100000SYS</translation>
     </message>
     <message>
         <source>This option is moderately fast and will cost about 0.05 SYS to anonymize 100000 SYS</source>
-        <translation>Questa opzione è moderatamente veloce e costerà 0.05SYS circa per anonimizzare 100000 SYS</translation>
+        <translation>Questa opzione è moderatamente veloce e costerà 0.05SYS circa per anonimizzare 100000SYS</translation>
     </message>
     <message>
         <source>0.1 SYS per 100000 SYS you anonymize.</source>
-        <translation>0.1SYS ogni 100000 SYS anonimizzati.</translation>
+        <translation>0.1SYS ogni 100000SYS anonimizzati.</translation>
     </message>
     <message>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>

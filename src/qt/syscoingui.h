@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -86,7 +85,7 @@ private:
     WalletFrame *walletFrame;
 
     UnitDisplayStatusBarControl *unitDisplayControl;
-    QLabel *labelEncryptionIcon;
+    QLabel *labelWalletEncryptionIcon;
     QLabel *labelWalletHDStatusIcon;
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocksIcon;

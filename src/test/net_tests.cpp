@@ -1,5 +1,4 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2012-2016 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "addrman.h"
@@ -13,34 +12,32 @@
 #include "netbase.h"
 #include "chainparams.h"
 
-using namespace std;
-
 class CAddrManSerializationMock : public CAddrMan
 {
 public:
-    virtual void Serialize(CDataStream& s, int nType, int nVersionDummy) const = 0;
+    virtual void Serialize(CDataStream& s) const = 0;
 
     //! Ensure that bucket placement is always the same for testing purposes.
     void MakeDeterministic()
     {
         nKey.SetNull();
-        seed_insecure_rand(true);
+        insecure_rand = FastRandomContext(true);
     }
 };
 
 class CAddrManUncorrupted : public CAddrManSerializationMock
 {
 public:
-    void Serialize(CDataStream& s, int nType, int nVersionDummy) const
+    void Serialize(CDataStream& s) const override
     {
-        CAddrMan::Serialize(s, nType, nVersionDummy);
+        CAddrMan::Serialize(s);
     }
 };
 
 class CAddrManCorrupted : public CAddrManSerializationMock
 {
 public:
-    void Serialize(CDataStream& s, int nType, int nVersionDummy) const
+    void Serialize(CDataStream& s) const override
     {
         // Produces corrupt output that claims addrman has 20 addrs when it only has one addr.
         unsigned char nVersion = 1;
@@ -63,13 +60,13 @@ public:
     }
 };
 
-CDataStream AddrmanToStream(CAddrManSerializationMock& addrman)
+CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
 {
     CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
     ssPeersIn << FLATDATA(Params().MessageStart());
-    ssPeersIn << addrman;
+    ssPeersIn << _addrman;
     std::string str = ssPeersIn.str();
-    vector<unsigned char> vchData(str.begin(), str.end());
+    std::vector<unsigned char> vchData(str.begin(), str.end());
     return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
 }
 
@@ -81,13 +78,13 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     addrmanUncorrupted.MakeDeterministic();
 
     CService addr1, addr2, addr3;
-    Lookup("250.7.1.1", addr1, 8369, false);
+    Lookup("250.7.1.1", addr1, 8333, false);
     Lookup("250.7.2.2", addr2, 9999, false);
     Lookup("250.7.3.3", addr3, 9999, false);
 
     // Add three addresses to new table.
     CService source;
-    Lookup("252.5.1.1", source, 8369, false);
+    Lookup("252.5.1.1", source, 8333, false);
     addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source);
     addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source);
     addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source);
@@ -137,7 +134,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     } catch (const std::exception& e) {
         exceptionThrown = true;
     }
-    // Even through de-serialization failed adddrman is not left in a clean state.
+    // Even through de-serialization failed addrman is not left in a clean state.
     BOOST_CHECK(addrman1.size() == 1);
     BOOST_CHECK(exceptionThrown);
 
@@ -165,12 +162,12 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    CNode* pnode1 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, pszDest, fInboundIn);
+    std::unique_ptr<CNode> pnode1(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, pszDest, fInboundIn));
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    CNode* pnode2 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, pszDest, fInboundIn);
+    std::unique_ptr<CNode> pnode2(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, pszDest, fInboundIn));
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
 }

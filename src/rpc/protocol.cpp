@@ -1,6 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -17,8 +16,6 @@
 #include <stdint.h>
 #include <fstream>
 
-using namespace std;
-
 /**
  * JSON-RPC protocol.  Syscoin speaks version 1.0 for maximum compatibility,
  * but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
@@ -28,13 +25,13 @@ using namespace std;
  * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
  */
 
-string JSONRPCRequest(const string& strMethod, const UniValue& params, const UniValue& id)
+UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id)
 {
     UniValue request(UniValue::VOBJ);
     request.push_back(Pair("method", strMethod));
     request.push_back(Pair("params", params));
     request.push_back(Pair("id", id));
-    return request.write() + "\n";
+    return request;
 }
 
 UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id)
@@ -49,13 +46,13 @@ UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const Un
     return reply;
 }
 
-string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id)
+std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id)
 {
     UniValue reply = JSONRPCReplyObj(result, error, id);
     return reply.write() + "\n";
 }
 
-UniValue JSONRPCError(int code, const string& message)
+UniValue JSONRPCError(int code, const std::string& message)
 {
     UniValue error(UniValue::VOBJ);
     error.push_back(Pair("code", code));

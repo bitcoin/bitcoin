@@ -1,5 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,7 +29,7 @@ CZMQNotificationInterface::~CZMQNotificationInterface()
     }
 }
 
-CZMQNotificationInterface* CZMQNotificationInterface::CreateWithArguments(const std::map<std::string, std::string> &args)
+CZMQNotificationInterface* CZMQNotificationInterface::Create()
 {
     CZMQNotificationInterface* notificationInterface = NULL;
     std::map<std::string, CZMQNotifierFactory> factories;
@@ -57,11 +56,11 @@ CZMQNotificationInterface* CZMQNotificationInterface::CreateWithArguments(const 
 
     for (std::map<std::string, CZMQNotifierFactory>::const_iterator i=factories.begin(); i!=factories.end(); ++i)
     {
-        std::map<std::string, std::string>::const_iterator j = args.find("-zmq" + i->first);
-        if (j!=args.end())
+        std::string arg("-zmq" + i->first);
+        if (IsArgSet(arg))
         {
             CZMQNotifierFactory factory = i->second;
-            std::string address = j->second;
+            std::string address = GetArg(arg, "");
             CZMQAbstractNotifier *notifier = factory();
             notifier->SetType(i->first);
             notifier->SetAddress(address);
@@ -159,7 +158,7 @@ void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, co
     }
 }
 
-void CZMQNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlock *pblock)
+void CZMQNotificationInterface::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock)
 {
     for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); )
     {

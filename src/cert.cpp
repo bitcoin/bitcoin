@@ -13,7 +13,7 @@
 #include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
-#include "coincontrol.h"
+#include "wallet/coincontrol.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/foreach.hpp>
@@ -25,7 +25,7 @@
 
 using namespace std::chrono;
 using namespace std;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend=false, bool transferAlias=false);
+
 bool IsCertOp(int op) {
     return op == OP_CERT_ACTIVATE
         || op == OP_CERT_UPDATE
@@ -495,8 +495,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 
 
 
-UniValue certnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 5)
+UniValue certnew(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || params.size() != 5)
         throw runtime_error(
 			"certnew [alias] [title] [public value] [category=certificates] [witness]\n"
 						"<alias> An alias you own.\n"
@@ -566,20 +567,14 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
-	
-	
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
+	UniValue res = syscointxfund_helper(vchAlias, vchWitness, aliasRecipient, vecSend);
 	res.push_back(stringFromVch(vchCert));
 	return res;
 }
 
-UniValue certupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 5)
+UniValue certupdate(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || params.size() != 5)
         throw runtime_error(
 			"certupdate [guid] [title] [public value] [category=certificates] [witness]\n"
 						"Perform an update on an certificate you control.\n"
@@ -664,19 +659,13 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	
-	
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
- 	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
 
 
-UniValue certtransfer(const UniValue& params, bool fHelp) {
- if (fHelp || params.size() != 5)
+UniValue certtransfer(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+ if (request.fHelp || params.size() != 5)
         throw runtime_error(
 			"certtransfer [guid] [alias] [public value] [accessflags=2] [witness]\n"
 						"Transfer a certificate you own to another alias.\n"
@@ -770,18 +759,13 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	
 	
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
 
 
-UniValue certinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 > params.size())
+UniValue certinfo(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || 1 > params.size())
         throw runtime_error("certinfo <guid>\n"
                 "Show stored values of a single certificate and its .\n");
 

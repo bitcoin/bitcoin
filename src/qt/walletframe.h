@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +19,13 @@ QT_BEGIN_NAMESPACE
 class QStackedWidget;
 QT_END_NAMESPACE
 
+/**
+ * A container for embedding all wallet-related
+ * controls into SyscoinGUI. The purpose of this class is to allow future
+ * refinements of the wallet controls with minimal need for further
+ * modifications to SyscoinGUI, thus greatly simplifying merges while
+ * reducing the risk of breaking top-level stuff.
+ */
 class WalletFrame : public QFrame
 {
     Q_OBJECT

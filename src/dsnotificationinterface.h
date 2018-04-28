@@ -1,5 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,7 +21,7 @@ protected:
     void AcceptedBlockHeader(const CBlockIndex *pindexNew) override;
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
-    void SyncTransaction(const CTransaction &tx, const CBlock *pblock) override;
+    void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock) override;
 
 private:
     CConnman& connman;

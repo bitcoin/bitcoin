@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2014 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,9 +66,9 @@ void TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
+void TransactionFilterProxy::setAddressPrefix(const QString &_addrPrefix)
 {
-    this->addrPrefix = addrPrefix;
+    this->addrPrefix = _addrPrefix;
     invalidateFilter();
 }
 
@@ -96,9 +95,9 @@ void TransactionFilterProxy::setLimit(int limit)
     this->limitRows = limit;
 }
 
-void TransactionFilterProxy::setShowInactive(bool showInactive)
+void TransactionFilterProxy::setShowInactive(bool _showInactive)
 {
-    this->showInactive = showInactive;
+    this->showInactive = _showInactive;
     invalidateFilter();
 }
 

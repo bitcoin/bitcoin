@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,11 +41,11 @@ private:
         void init();
 
     public:
-        void addStrParameter(std::string strName, std::string strValue); // Regular
-        void addStrParameter(std::string strName, SecureString sValue); // Encrypt
+        void addStrParameter(const std::string& strName, const std::string& strValue); // Regular
+        void addStrParameter(const std::string& strName, const SecureString& sValue); // Encrypt
         std::string getJson();
 
-        CKeePassRequest(SecureString sKey, std::string strType)
+        CKeePassRequest(const SecureString& sKey, const std::string& strType)
         {
             this->sKey = sKey;
             this->strType = strType;
@@ -63,7 +62,7 @@ private:
         SecureString sPassword;
 
     public:
-        CKeePassEntry(SecureString sUuid, SecureString sName, SecureString sLogin, SecureString sPassword) :
+        CKeePassEntry(const SecureString& sUuid, const SecureString& sName, const SecureString& sLogin, const SecureString& sPassword) :
             sUuid(sUuid), sName(sName), sLogin(sLogin), sPassword(sPassword) {
         }
 
@@ -93,11 +92,11 @@ private:
         std::string strIV;
         SecureString sKey;
 
-        void parseResponse(std::string strResponse);
+        void parseResponse(const std::string& strResponse);
 
     public:
         UniValue responseObj;
-        CKeePassResponse(SecureString sKey, std::string strResponse) {
+        CKeePassResponse(const SecureString& sKey, const std::string& strResponse) {
             this->sKey = sKey;
             parseResponse(strResponse);
         }
@@ -106,17 +105,17 @@ private:
             return bSuccess;
         }
 
-        SecureString getSecureStr(std::string strName);
-        std::string getStr(std::string strName);
+        SecureString getSecureStr(const std::string& strName);
+        std::string getStr(const std::string& strName);
         std::vector<CKeePassEntry> getEntries();
 
-        SecureString decrypt(std::string strValue); // DecodeBase64 and decrypt arbitrary string value
+        SecureString decrypt(const std::string& strValue); // DecodeBase64 and decrypt arbitrary string value
 
     };
 
     static SecureString generateRandomKey(size_t nSize);
     static std::string constructHTTPPost(const std::string& strMsg, const std::map<std::string,std::string>& mapRequestHeaders);
-    void doHTTPPost(const std::string& strRequest, int& nStatus, std::string& strResponse);
+    void doHTTPPost(const std::string& strRequest, int& nStatusRet, std::string& strResponseRet);
     void rpcTestAssociation(bool bTriggerUnlock);
     std::vector<CKeePassEntry> rpcGetLogins();
     void rpcSetLogin(const SecureString& sWalletPass, const SecureString& sEntryId);
@@ -125,7 +124,7 @@ public:
     CKeePassIntegrator();
     void init();
     static SecureString generateKeePassKey();
-    void rpcAssociate(std::string& strId, SecureString& sKeyBase64);
+    void rpcAssociate(std::string& strIdRet, SecureString& sKeyBase64Ret);
     SecureString retrievePassphrase();
     void updatePassphrase(const SecureString& sWalletPassphrase);
 

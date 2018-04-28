@@ -15,7 +15,7 @@
 #include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
-#include "coincontrol.h"
+#include "wallet/coincontrol.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/foreach.hpp>
@@ -27,8 +27,6 @@
 
 using namespace std::chrono;
 using namespace std;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend = false, bool transferAlias = false);
-
 bool IsAssetAllocationOp(int op) {
 	return op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_COLLECT_INTEREST;
 }
@@ -231,8 +229,9 @@ CAmount GetAssetAllocationInterest(CAssetAllocation & assetAllocation, const int
 		errorMessage = _("Not enough blocks in-between interest claims");
 		return 0;
 	}
-	if (assetAllocation.nLastInterestClaimHeight >= nHeight || assetAllocation.nLastInterestClaimHeight == 0) {
-		errorMessage = _("Last interest claim block height is invalid");
+	const int &nInterestClaimBlockThreshold = fUnitTest ? 1 : ONE_MONTH_IN_BLOCKS;
+	if ((nHeight - assetAllocation.nLastInterestClaimHeight) < nInterestClaimBlockThreshold || assetAllocation.nLastInterestClaimHeight == 0) {
+		errorMessage = _("Not enough blocks have passed since the last claim, please wait some more time...");
 		return 0;
 	}
 	const int &nInterestBlockTerm = fUnitTest? ONE_HOUR_IN_BLOCKS: ONE_YEAR_IN_BLOCKS;
@@ -619,13 +618,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 					}
 					if (!bBalanceOverrun) {
 						receiverAllocation.txHash = tx.GetHash();
-						if (dbAsset.fInterestRate > 0) {
-							// accumulate balances as sender/receiver allocations balances are adjusted
-							if (receiverAllocation.nHeight > 0) {
-								AccumulateInterestSinceLastClaim(receiverAllocation, nHeight);
-							}
-							AccumulateInterestSinceLastClaim(theAssetAllocation, nHeight);
-						}
 						receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 						receiverAllocation.nHeight = nHeight;
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
@@ -691,8 +683,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 	}
     return true;
 }
-UniValue assetallocationsend(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 5)
+UniValue assetallocationsend(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 5)
 		throw runtime_error(
 			"assetallocationsend [asset] [aliasfrom] ( [{\"aliasto\":\"aliasname\",\"amount\":amount},...] or [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
 			"Send an asset allocation you own to another alias. Maximimum recipients is 250.\n"
@@ -823,16 +816,11 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
-UniValue assetallocationcollectinterest(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 3)
+UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
 			"assetallocationcollectinterest [asset] [alias] [witness]\n"
 			"Collect interest on this asset allocation if an interest rate is set on this asset.\n"
@@ -895,16 +883,11 @@ UniValue assetallocationcollectinterest(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 
 
-	CCoinControl coinControl;
-	coinControl.fAllowOtherInputs = false;
-	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend, wtx, &coinControl);
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(wtx));
-	return res;
+	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
-UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 3 != params.size())
+UniValue assetallocationinfo(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+    if (request.fHelp || 3 != params.size())
         throw runtime_error("assetallocationinfo <asset> <alias> <getinputs>\n"
                 "Show stored values of a single asset allocation. Set getinputs to true if you want to get the allocation inputs, if applicable.\n");
 
@@ -959,7 +942,6 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 	std::set<std::pair<uint256, int64_t>, Comparator> arrivalTimesSet(
 		arrivalTimes.begin(), arrivalTimes.end(), compFunctor);
 
-	LOCK(cs_main);
 	// go through arrival times and check that balances don't overrun the POW balance
 	CAmount nRealtimeBalanceRequired = 0;
 	pair<uint256, int64_t> lastArrivalTime;
@@ -974,10 +956,12 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 		minLatency = 1000;
 	for (auto& arrivalTime : arrivalTimesSet)
 	{
-		CTransaction tx;
 		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
-		if (!mempool.lookup(arrivalTime.first, tx))
+		const CTransactionRef txRef = mempool.get(arrivalTime.first);
+		if (!txRef)
 			continue;
+		const CTransaction &tx = *txRef;
+
 		// if this tx arrived within the minimum latency period flag it as potentially conflicting
 		if (abs(arrivalTime.second - lastArrivalTime.second) < minLatency) {
 			return ZDAG_MINOR_CONFLICT_OK;
@@ -1025,8 +1009,9 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 		return ZDAG_NOT_FOUND;
 	return lookForTxHash.IsNull()? ZDAG_STATUS_OK: ZDAG_NOT_FOUND;
 }
-UniValue assetallocationsenderstatus(const UniValue& params, bool fHelp) {
-	if (fHelp || 3 != params.size())
+UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 3 != params.size())
 		throw runtime_error("assetallocationsenderstatus <asset> <sender> <txid>\n"
 			"Show status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
 			"Return value is in the status field and can represent 3 levels(0, 1 or 2)\n"

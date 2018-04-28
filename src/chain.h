@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +14,60 @@
 
 #include <vector>
 
+class CBlockFileInfo
+{
+public:
+    unsigned int nBlocks;      //!< number of blocks stored in file
+    unsigned int nSize;        //!< number of used bytes of block file
+    unsigned int nUndoSize;    //!< number of used bytes in the undo file
+    unsigned int nHeightFirst; //!< lowest height of block in file
+    unsigned int nHeightLast;  //!< highest height of block in file
+    uint64_t nTimeFirst;       //!< earliest time of block in file
+    uint64_t nTimeLast;        //!< latest time of block in file
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(VARINT(nBlocks));
+        READWRITE(VARINT(nSize));
+        READWRITE(VARINT(nUndoSize));
+        READWRITE(VARINT(nHeightFirst));
+        READWRITE(VARINT(nHeightLast));
+        READWRITE(VARINT(nTimeFirst));
+        READWRITE(VARINT(nTimeLast));
+    }
+
+     void SetNull() {
+         nBlocks = 0;
+         nSize = 0;
+         nUndoSize = 0;
+         nHeightFirst = 0;
+         nHeightLast = 0;
+         nTimeFirst = 0;
+         nTimeLast = 0;
+     }
+
+     CBlockFileInfo() {
+         SetNull();
+     }
+
+     std::string ToString() const;
+
+     /** update statistics (does not update nSize) */
+     void AddBlock(unsigned int nHeightIn, uint64_t nTimeIn) {
+         if (nBlocks==0 || nHeightFirst > nHeightIn)
+             nHeightFirst = nHeightIn;
+         if (nBlocks==0 || nTimeFirst > nTimeIn)
+             nTimeFirst = nTimeIn;
+         nBlocks++;
+         if (nHeightIn > nHeightLast)
+             nHeightLast = nHeightIn;
+         if (nTimeIn > nTimeLast)
+             nTimeLast = nTimeIn;
+     }
+};
+
 struct CDiskBlockPos
 {
     int nFile;
@@ -23,7 +76,7 @@ struct CDiskBlockPos
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(VARINT(nFile));
         READWRITE(VARINT(nPos));
     }
@@ -55,7 +108,7 @@ struct CDiskBlockPos
 
 };
 
-enum BlockStatus {
+enum BlockStatus: uint32_t {
     //! Unused.
     BLOCK_VALID_UNKNOWN      =    0,
 
@@ -84,12 +137,12 @@ enum BlockStatus {
     BLOCK_VALID_MASK         =   BLOCK_VALID_HEADER | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
                                  BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
 
-    BLOCK_HAVE_DATA          =    8, //! full block available in blk*.dat
-    BLOCK_HAVE_UNDO          =   16, //! undo data available in rev*.dat
+    BLOCK_HAVE_DATA          =    8, //!< full block available in blk*.dat
+    BLOCK_HAVE_UNDO          =   16, //!< undo data available in rev*.dat
     BLOCK_HAVE_MASK          =   BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
 
-    BLOCK_FAILED_VALID       =   32, //! stage after last reached validness failed
-    BLOCK_FAILED_CHILD       =   64, //! descends from failed block
+    BLOCK_FAILED_VALID       =   32, //!< stage after last reached validness failed
+    BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 };
 
@@ -145,7 +198,10 @@ public:
     unsigned int nNonce;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
-    uint32_t nSequenceId;
+    int32_t nSequenceId;
+
+    //! (memory only) Maximum nTime in the chain upto and including this block.
+    unsigned int nTimeMax;
 
     void SetNull()
     {
@@ -161,6 +217,7 @@ public:
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
+        nTimeMax = 0;
 
         nVersion       = 0;
         hashMerkleRoot = uint256();
@@ -214,6 +271,11 @@ public:
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
+    }
+
+    int64_t GetBlockTimeMax() const
+    {
+        return (int64_t)nTimeMax;
     }
 
     enum { nMedianTimeSpan=11 };
@@ -276,6 +338,10 @@ public:
 	}
 };
 
+arith_uint256 GetBlockProof(const CBlockIndex& block);
+/** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */
+int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params&);
+
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
 {
@@ -296,8 +362,9 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH))
             READWRITE(VARINT(nVersion));
 
         READWRITE(VARINT(nHeight));
@@ -402,6 +469,9 @@ public:
 
     /** Find the last common block between this chain and a block index entry. */
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
+
+    /** Find the earliest block with timestamp equal or greater than the given. */
+    CBlockIndex* FindEarliestAtLeast(int64_t nTime) const;
 };
 
 #endif // SYSCOIN_CHAIN_H

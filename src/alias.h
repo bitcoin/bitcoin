@@ -49,7 +49,7 @@ class CAliasUnprunable
 
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
 		READWRITE(vchGUID);
 		READWRITE(VARINT(nExpireTime));
 	}
@@ -84,7 +84,7 @@ public:
 
 	ADD_SERIALIZE_METHODS;
 	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+	inline void SerializationOp(Stream& s, Operation ser_action) {
 		READWRITE(aliasLinkVchRand);
 		READWRITE(VARINT(nDiscountPct));
 	}
@@ -123,7 +123,7 @@ public:
 
 	ADD_SERIALIZE_METHODS;
 	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+	inline void SerializationOp(Stream& s, Operation ser_action) {
 		READWRITE(entries);
 	}
 	bool GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) const;
@@ -189,9 +189,10 @@ public:
 		vchAddress.clear();
 		offerWhitelist.SetNull();
 	}
+
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {        
+	inline void SerializationOp(Stream& s, Operation ser_action) {        
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
 		READWRITE(vchPublicValue);
@@ -289,12 +290,11 @@ std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
 const int SYSCOIN_TX_VERSION = 0x7400;
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
-bool CheckAliasInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool & bDestCheckFailed,bool bSanityCheck=false);
+bool CheckAliasInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage,bool bSanityCheck=false);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
-void aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, const unsigned int aliasInputCount, const COutPoint& aliasOutPoint, CAmount &nRequiredAmount, bool bSelectAll=false);
 CAmount GetDataFee(const CScript& scriptPubKey);
 bool IsAliasOp(int op);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
@@ -320,8 +320,6 @@ bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData,
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData, std::vector<unsigned char> &vchHash);
 bool IsSysServiceExpired(const uint64_t &nTime);
 bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime);
-bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams);
-bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, uint256& hashBlock, const Consensus::Params& consensusParams);
 bool IsSyscoinScript(const CScript& scriptPubKey, int &op, std::vector<std::vector<unsigned char> > &vvchArgs);
 bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
 void SysTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry, const char& type);
@@ -332,4 +330,6 @@ void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& scr
 std::string GetSyscoinTransactionDescription(const CTransaction& tx, const int op, std::string& responseEnglish, const char &type, std::string& responseGUID);
 bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName);
 bool DoesAliasExist(const std::string &strAddress);
+bool IsOutpointMature(const COutPoint& outpoint, bool fUseInstantSend = false);
+UniValue syscointxfund_helper(const std::vector<unsigned char> &vchAlias, const std::vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, std::vector<CRecipient> &vecSend);
 #endif // ALIAS_H

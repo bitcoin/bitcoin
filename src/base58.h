@@ -167,7 +167,7 @@ public:
     CSyscoinExtKeyBase() {}
 };
 
-typedef CSyscoinExtKeyBase<CExtKey, 74, CChainParams::EXT_SECRET_KEY> CSyscoinExtKey;
-typedef CSyscoinExtKeyBase<CExtPubKey, 74, CChainParams::EXT_PUBLIC_KEY> CSyscoinExtPubKey;
+typedef CSyscoinExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CSyscoinExtKey;
+typedef CSyscoinExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CSyscoinExtPubKey;
 
 #endif // SYSCOIN_BASE58_H

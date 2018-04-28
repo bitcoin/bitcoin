@@ -1,12 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include "config/syscoin-config.h"
+#endif
+
 #include "chainparams.h"
 #include "clientversion.h"
+#include "compat.h"
 #include "rpc/server.h"
 #include "init.h"
 #include "noui.h"
@@ -15,6 +19,7 @@
 #include "masternodeconfig.h"
 #include "httpserver.h"
 #include "httprpc.h"
+#include "utilstrencodings.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -37,8 +42,6 @@
  * \section Navigation
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
  */
-
-static bool fDaemon;
 
 void WaitForShutdown(boost::thread_group* threadGroup)
 {
@@ -74,18 +77,18 @@ bool AppInit(int argc, char* argv[])
     ParseParameters(argc, argv);
 
     // Process help and version before taking care about datadir
-    if (mapArgs.count("-?") || mapArgs.count("-h") ||  mapArgs.count("-help") || mapArgs.count("-version"))
+    if (IsArgSet("-?") || IsArgSet("-h") ||  IsArgSet("-help") || IsArgSet("-version"))
     {
-        std::string strUsage = _("Syscoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n";
+        std::string strUsage = strprintf(_("%s Daemon"), _(PACKAGE_NAME)) + " " + _("version") + " " + FormatFullVersion() + "\n";
 
-        if (mapArgs.count("-version"))
+        if (IsArgSet("-version"))
         {
-            strUsage += LicenseInfo();
+            strUsage += FormatParagraph(LicenseInfo());
         }
         else
         {
             strUsage += "\n" + _("Usage:") + "\n" +
-                  "  syscoind [options]                     " + _("Start Syscoin Core Daemon") + "\n";
+                  "  syscoind [options]                     " + strprintf(_("Start %s Daemon"), _(PACKAGE_NAME)) + "\n";
 
             strUsage += "\n" + HelpMessage(HMM_SYSCOIND);
         }
@@ -96,22 +99,22 @@ bool AppInit(int argc, char* argv[])
 
     try
     {
-        bool datadirFromCmdLine = mapArgs.count("-datadir") != 0;
+        bool datadirFromCmdLine = IsArgSet("-datadir");
         if (datadirFromCmdLine && !boost::filesystem::is_directory(GetDataDir(false)))
         {
-            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
+            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", GetArg("-datadir", "").c_str());
             return false;
         }
         try
         {
-            ReadConfigFile(mapArgs, mapMultiArgs);
+            ReadConfigFile(GetArg("-conf", SYSCOIN_CONF_FILENAME));
         } catch (const std::exception& e) {
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;
         }
         if (!datadirFromCmdLine && !boost::filesystem::is_directory(GetDataDir(false)))
         {
-            fprintf(stderr, "Error: Specified data directory \"%s\" from config file does not exist.\n", mapArgs["-datadir"].c_str());
+            fprintf(stderr, "Error: Specified data directory \"%s\" from config file does not exist.\n", GetArg("-datadir", "").c_str());
             return EXIT_FAILURE;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
@@ -140,36 +143,43 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: There is no RPC client functionality in syscoind anymore. Use the syscoin-cli utility instead.\n");
             exit(EXIT_FAILURE);
         }
-#ifndef WIN32
-        fDaemon = GetBoolArg("-daemon", false);
-        if (fDaemon)
-        {
-            fprintf(stdout, "Syscoin Core server starting\n");
-
-            // Daemonize
-            pid_t pid = fork();
-            if (pid < 0)
-            {
-                fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
-                return false;
-            }
-            if (pid > 0) // Parent process, pid is child process id
-            {
-                return true;
-            }
-            // Child process falls through to rest of initialization
-
-            pid_t sid = setsid();
-            if (sid < 0)
-                fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
-        }
-#endif
+        // -server defaults to true for syscoind but not for the GUI so do this here
         SoftSetBoolArg("-server", true);
-
         // Set this early so that parameter interactions go to console
         InitLogging();
         InitParameterInteraction();
-        fRet = AppInit2(threadGroup, scheduler);
+        if (!AppInitBasicSetup())
+        {
+            // InitError will have been called with detailed error, which ends up on console
+            exit(EXIT_FAILURE);
+        }
+        if (!AppInitParameterInteraction())
+        {
+            // InitError will have been called with detailed error, which ends up on console
+            exit(EXIT_FAILURE);
+        }
+        if (!AppInitSanityChecks())
+        {
+            // InitError will have been called with detailed error, which ends up on console
+            exit(EXIT_FAILURE);
+        }
+        if (GetBoolArg("-daemon", false))
+        {
+#if HAVE_DECL_DAEMON
+            fprintf(stdout, "Syscoin Core server starting\n");
+
+            // Daemonize
+            if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
+                fprintf(stderr, "Error: daemon() failed: %s\n", strerror(errno));
+                return false;
+            }
+#else
+            fprintf(stderr, "Error: -daemon is not supported on this operating system\n");
+            return false;
+#endif // HAVE_DECL_DAEMON
+        }
+
+        fRet = AppInitMain(threadGroup, scheduler);
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");

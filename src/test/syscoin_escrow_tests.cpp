@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowrefund_invalid)
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj, "txid").get_str();
 		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
-		CAmount satoshis = AmountFromValue(find_value(utxoObj, "satoshis"));
+		CAmount satoshis = find_value(utxoObj, "satoshis").get_int64();
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowrelease_invalid)
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj, "txid").get_str();
 		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
-		CAmount satoshis = AmountFromValue(find_value(utxoObj, "satoshis"));
+		CAmount satoshis = find_value(utxoObj, "satoshis").get_int64();
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";

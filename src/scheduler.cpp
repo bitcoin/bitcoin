@@ -1,5 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -55,9 +54,10 @@ void CScheduler::serviceQueue()
 #else
             // Some boost versions have a conflicting overload of wait_until that returns void.
             // Explicitly use a template here to avoid hitting that overload.
-            while (!shouldStop() && !taskQueue.empty() &&
-                   newTaskScheduled.wait_until<>(lock, taskQueue.begin()->first) != boost::cv_status::timeout) {
-                // Keep waiting until timeout
+            while (!shouldStop() && !taskQueue.empty()) {
+                boost::chrono::system_clock::time_point timeToWaitFor = taskQueue.begin()->first;
+                if (newTaskScheduled.wait_until<>(lock, timeToWaitFor) == boost::cv_status::timeout)
+                    break; // Exit loop after timeout, it means we reached the time of the event
             }
 #endif
             // If there are multiple threads, the queue can empty while we're waiting (another

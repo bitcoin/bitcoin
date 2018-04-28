@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -64,6 +63,8 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Non-canonical signature: S value is unnecessarily high";
         case SCRIPT_ERR_SIG_NULLDUMMY:
             return "Dummy CHECKMULTISIG argument must be zero";
+        case SCRIPT_ERR_SIG_NULLFAIL:
+            return "Signature must be zero for failed CHECK(MULTI)SIG operation";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS:
             return "NOPx reserved for soft-fork upgrades";
         case SCRIPT_ERR_PUBKEYTYPE:

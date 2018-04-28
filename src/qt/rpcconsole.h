@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,6 +36,11 @@ class RPCConsole: public QWidget
 public:
     explicit RPCConsole(const PlatformStyle *platformStyle, QWidget *parent);
     ~RPCConsole();
+
+    static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = NULL);
+    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = NULL) {
+        return RPCParseCommandLine(strResult, strCommand, true, pstrFilteredOut);
+    }
 
     void setClientModel(ClientModel *model);
 
@@ -156,6 +160,7 @@ private:
     ClientModel *clientModel;
     QStringList history;
     int historyPtr;
+    QString cmdBeforeBrowsing;
     QList<NodeId> cachedNodeids;
     const PlatformStyle *platformStyle;
     RPCTimerInterface *rpcTimerInterface;

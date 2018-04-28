@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef MASTERNODE_SYNC_H
@@ -49,7 +48,6 @@ private:
     int64_t nTimeLastFailure;
 
     void Fail();
-    void ClearFulfilledRequests(CConnman& connman);
 
 public:
     CMasternodeSync() { Reset(); }
@@ -65,7 +63,7 @@ public:
 
     int GetAssetID() { return nRequestedMasternodeAssets; }
     int GetAttempt() { return nRequestedMasternodeAttempt; }
-    void BumpAssetLastTime(std::string strFuncName);
+    void BumpAssetLastTime(const std::string& strFuncName);
     int64_t GetAssetStartTime() { return nTimeAssetSyncStarted; }
     std::string GetAssetName();
     std::string GetSyncStatus();
@@ -73,7 +71,7 @@ public:
     void Reset();
     void SwitchToNextAsset(CConnman& connman);
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessTick(CConnman& connman);
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
