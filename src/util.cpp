@@ -161,7 +161,7 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
     if (file) fclose(file);
 
     try {
-        auto lock = MakeUnique<boost::interprocess::file_lock>(pathLockFile.string().c_str());
+        auto lock = MakeUnique<boost::interprocess::file_lock>(Utf8ToLocal(pathLockFile.string()).c_str());
         if (!lock->try_lock()) {
             return false;
         }
@@ -419,6 +419,7 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
 
     for (int i = 1; i < argc; i++) {
         std::string key(argv[i]);
+        key = LocalToUtf8(key);
         std::string val;
         size_t is_index = key.find('=');
         if (is_index != std::string::npos) {
@@ -861,8 +862,8 @@ void CreatePidFile(const fs::path &path, pid_t pid)
 bool RenameOver(fs::path src, fs::path dest)
 {
 #ifdef WIN32
-    return MoveFileExA(src.string().c_str(), dest.string().c_str(),
-                       MOVEFILE_REPLACE_EXISTING) != 0;
+    return MoveFileExA(Utf8ToLocal(src.string()).c_str(), Utf8ToLocal(dest.string()).c_str(),
+               MOVEFILE_REPLACE_EXISTING) != 0;
 #else
     int rc = std::rename(src.string().c_str(), dest.string().c_str());
     return (rc == 0);
