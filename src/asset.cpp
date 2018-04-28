@@ -1130,6 +1130,7 @@ bool BuildAssetIndexerJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
+	oAsset.push_back(Pair("precision", (int)asset.nPrecision));
 	return true;
 }
 void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
