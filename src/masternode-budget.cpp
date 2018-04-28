@@ -47,7 +47,7 @@ int GetBudgetPaymentCycleBlocks()
         return 50; //for testing purposes
 }
 
-auto GetVotingThreshold()
+CAmount GetVotingThreshold()
 {
     if (Params().NetworkID() == CBaseChainParams::MAIN)
         return BlocksBeforeSuperblockToSubmitFinalBudget();
@@ -55,12 +55,12 @@ auto GetVotingThreshold()
         return BlocksBeforeSuperblockToSubmitFinalBudget() / 4; // 10 blocks for 50-block cycle
 }
 
-auto GetNextSuperblock(int height)
+int GetNextSuperblock(int height)
 {
     return height - height % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
 }
 
-auto GetBlockHeight()
+int GetBlockHeight()
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if (!pindexPrev)
@@ -1250,15 +1250,15 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
 bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& strError)
 {
-    auto found = mapProposals.find(vote.nProposalHash);
+    map<uint256, CBudgetProposal>::const_iterator found = mapProposals.find(vote.nProposalHash);
     if (found == std::end(mapProposals))
     {
         strError = "Proposal not found!";
         return false;
     }
 
-    auto& proposal = found->second;
-    auto height = GetBlockHeight();
+    CBudgetProposal& proposal = found->second;
+    int height = GetBlockHeight();
 
     if (proposal.nBlockStart <= GetNextSuperblock(height) &&
         proposal.nBlockEnd > GetNextSuperblock(height) &&
@@ -1298,11 +1298,11 @@ bool CBudgetManager::UpdateProposal(const CBudgetVote& vote, CNode* pfrom, std::
 
 
     CBudgetProposal& proposal = mapProposals[vote.nProposalHash];
-    auto height = GetBlockHeight();
+    int height = GetBlockHeight();
     if (proposal.nBlockStart <= GetNextSuperblock(height) && proposal.nBlockEnd > GetNextSuperblock(height))
     {
-        const auto votingThresholdTime = GetVotingThreshold() * Params().TargetSpacing() * 0.75;
-        const auto superblockProjectedTime = GetAdjustedTime() + (GetNextSuperblock(height) - height) * Params().TargetSpacing();
+        const int votingThresholdTime = GetVotingThreshold() * Params().TargetSpacing() * 0.75;
+        const int superblockProjectedTime = GetAdjustedTime() + (GetNextSuperblock(height) - height) * Params().TargetSpacing();
 
         if (superblockProjectedTime - vote.nTime <= votingThresholdTime)
         {
