@@ -1129,7 +1129,7 @@ void BitcoinGUI::setHDStatus(int hdEnabled)
 
 void BitcoinGUI::setEncryptionStatus(int status)
 {
-    labelWalletEncryptionIcon->setStyleSheet("background-color: rgba(255, 165, 0, 0);");
+    labelWalletEncryptionIcon->setStyleSheet("background-color: none;");
     switch(status)
     {
     case WalletModel::Unencrypted:
