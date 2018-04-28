@@ -37,7 +37,7 @@ namespace
     CKey CreateKeyPair(std::vector<unsigned char> privKey)
     {
         CKey keyPair;
-        keyPair.Set(std::begin(privKey), std::end(privKey), true);
+        keyPair.Set(privKey.begin(), privKey.end(), true);
 
         return keyPair;
     }

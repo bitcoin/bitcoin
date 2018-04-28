@@ -1250,7 +1250,7 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
 bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& strError)
 {
-    map<uint256, CBudgetProposal>::const_iterator found = mapProposals.find(vote.nProposalHash);
+    map<uint256, CBudgetProposal>::iterator found = mapProposals.find(vote.nProposalHash);
     if (found == std::end(mapProposals))
     {
         strError = "Proposal not found!";
