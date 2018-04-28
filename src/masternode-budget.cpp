@@ -2113,7 +2113,7 @@ void CFinalizedBudget::ResetSync()
 }
 
 CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast()
-    : CFinalizedBudget("", 0, {}, uint256())
+    : CFinalizedBudget("", 0, std::vector<CTxBudgetPayment>(), uint256())
 {
 }
 
