@@ -2238,6 +2238,14 @@ void BuildFeedbackJson(const COffer& offer, const CEscrow& escrow, UniValue& oFe
 	}
 	const string &id = stringFromVch(escrow.vchEscrow) + CFeedback::FeedbackUserToString(escrow.feedback.nFeedbackUserFrom) + CFeedback::FeedbackUserToString(escrow.feedback.nFeedbackUserTo);
 	oFeedback.push_back(Pair("_id", id));
+	int64_t nTime = 0;
+	if (chainActive.Height() >= escrow.nHeight) {
+		CBlockIndex *pindex = chainActive[escrow.nHeight];
+		if (pindex) {
+			nTime = pindex->GetMedianTimePast();
+		}
+	}
+	oEscrow.push_back(Pair("time", nTime));
 	oFeedback.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oFeedback.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
 	oFeedback.push_back(Pair("txid", escrow.txHash.GetHex()));
@@ -2249,6 +2257,14 @@ void BuildFeedbackJson(const COffer& offer, const CEscrow& escrow, UniValue& oFe
 }
 void BuildEscrowBidJson(const COffer& offer, const CEscrow& escrow, const string& status, UniValue& oBid) {
 	oBid.push_back(Pair("_id", escrow.txHash.GetHex()));
+	int64_t nTime = 0;
+	if (chainActive.Height() >= escrow.nHeight) {
+		CBlockIndex *pindex = chainActive[escrow.nHeight];
+		if (pindex) {
+			nTime = pindex->GetMedianTimePast();
+		}
+	}
+	oBid.push_back(Pair("time", nTime));
 	oBid.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oBid.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
 	oBid.push_back(Pair("height", (int)escrow.nHeight));
@@ -2323,6 +2339,14 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 bool BuildEscrowIndexerJson(const COffer& theOffer, const CEscrow &escrow, UniValue& oEscrow)
 {
 	oEscrow.push_back(Pair("_id", stringFromVch(escrow.vchEscrow)));
+	int64_t nTime = 0;
+	if (chainActive.Height() >= escrow.nHeight) {
+		CBlockIndex *pindex = chainActive[escrow.nHeight];
+		if (pindex) {
+			nTime = pindex->GetMedianTimePast();
+		}
+	}
+	oEscrow.push_back(Pair("time", nTime));
 	oEscrow.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oEscrow.push_back(Pair("height", (int)escrow.nHeight));
 	oEscrow.push_back(Pair("seller", stringFromVch(escrow.vchSellerAlias)));
