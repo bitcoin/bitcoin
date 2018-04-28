@@ -65,7 +65,11 @@ static bool AppInit(int argc, char* argv[])
 #if HAVE_DECL_DAEMON
     gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", false, OptionsCategory::OPTIONS);
 #endif
-    gArgs.ParseParameters(argc, argv);
+    std::string error;
+    if (!gArgs.ParseParameters(argc, argv, error)) {
+        fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
+        return false;
+    }
 
     // Process help and version before taking care about datadir
     if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
@@ -94,11 +98,8 @@ static bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return false;
         }
-        try
-        {
-            gArgs.ReadConfigFiles();
-        } catch (const std::exception& e) {
-            fprintf(stderr,"Error reading configuration file: %s\n", e.what());
+        if (!gArgs.ReadConfigFiles(error)) {
+            fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
             return false;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
