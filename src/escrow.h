@@ -168,13 +168,13 @@ class CEscrowDB : public CDBWrapper {
 public:
     CEscrowDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "escrow", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow) {
+    bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const COffer &offer, const CEscrow& escrow) {
 		bool writeState = Write(make_pair(std::string("escrowi"), escrow.vchEscrow), escrow);
-		WriteEscrowIndex(escrow, vvchArgs);
+		WriteEscrowIndex(offer, escrow, vvchArgs);
         return writeState;
     }
-	void WriteEscrowBid(const CEscrow& escrow, const std::string& status) {
-		WriteEscrowBidIndex(escrow, status);
+	void WriteEscrowBid(const COffer& offer, const CEscrow& escrow, const std::string& status) {
+		WriteEscrowBidIndex(offer, escrow, status);
 	}
     bool EraseEscrow(const std::vector<unsigned char>& vchEscrow, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("escrowi"), vchEscrow));
@@ -187,17 +187,17 @@ public:
 		return Read(make_pair(std::string("escrowlt"), escrow), txid);
 	}
 	bool CleanupDatabase(int &servicesCleaned);
-	void WriteEscrowIndex(const CEscrow& escrow, const std::vector<std::vector<unsigned char> > &vvchArgs);
-	void WriteEscrowFeedbackIndex(const CEscrow& escrow);
-	void WriteEscrowBidIndex(const CEscrow& escrow, const std::string& status);
+	void WriteEscrowIndex(const COffer& offer, const CEscrow& escrow, const std::vector<std::vector<unsigned char> > &vvchArgs);
+	void WriteEscrowFeedbackIndex(const COffer& offer, const CEscrow& escrow);
+	void WriteEscrowBidIndex(const COffer& offer, const CEscrow& escrow, const std::string& status);
 	void RefundEscrowBidIndex(const std::vector<unsigned char>& vchEscrow, const std::string& status);
 };
 
 bool GetEscrow(const std::vector<unsigned char> &vchEscrow, CEscrow& txPos);
 bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow);
-bool BuildEscrowIndexerJson(const CEscrow &escrow, UniValue& oEscrow);
-void BuildEscrowBidJson(const CEscrow& escrow, const std::string& status, UniValue& oBid);
-void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback);
+bool BuildEscrowIndexerJson(const COffer& offer, const CEscrow &escrow, UniValue& oEscrow);
+void BuildEscrowBidJson(const COffer& offer, const CEscrow& escrow, const std::string& status, UniValue& oBid);
+void BuildFeedbackJson(const COffer& offer, const CEscrow& escrow, UniValue& oFeedback);
 int64_t GetEscrowArbiterFee(const int64_t &escrowValue, const float &fEscrowFee);
 int64_t GetEscrowWitnessFee(const int64_t &escrowValue, const float &fWitnessFee);
 int64_t GetEscrowDepositFee(const int64_t &escrowValue, const float &fDepositPercentage);

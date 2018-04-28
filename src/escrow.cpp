@@ -204,22 +204,22 @@ void CEscrow::Serialize(vector<unsigned char>& vchData) {
 	vchData = vector<unsigned char>(dsEscrow.begin(), dsEscrow.end());
 
 }
-void CEscrowDB::WriteEscrowIndex(const CEscrow& escrow, const std::vector<std::vector<unsigned char> > &vvchArgs) {
+void CEscrowDB::WriteEscrowIndex(const COffer& offer, const CEscrow& escrow, const std::vector<std::vector<unsigned char> > &vvchArgs) {
 	UniValue oName(UniValue::VOBJ);
-	if (BuildEscrowIndexerJson(escrow, oName)) {
+	if (BuildEscrowIndexerJson(offer, escrow, oName)) {
 		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "escrow");
 	}
 }
-void CEscrowDB::WriteEscrowFeedbackIndex(const CEscrow& escrow) {
+void CEscrowDB::WriteEscrowFeedbackIndex(const COffer &offer, const CEscrow& escrow) {
 	UniValue oName(UniValue::VOBJ);
-	BuildFeedbackJson(escrow, oName);
+	BuildFeedbackJson(offer, escrow, oName);
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "feedback");
 }
-void CEscrowDB::WriteEscrowBidIndex(const CEscrow& escrow, const string& status) {
+void CEscrowDB::WriteEscrowBidIndex(const COffer& offer, const CEscrow& escrow, const string& status) {
 	if (escrow.op != OP_ESCROW_ACTIVATE)
 		return;
 	UniValue oName(UniValue::VOBJ);
-	BuildEscrowBidJson(escrow, status, oName);
+	BuildEscrowBidJson(offer, escrow, status, oName);
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "escrowbid");
 }
 bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
@@ -569,6 +569,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				return true;
 			}
 		}
+		if (!GetOffer(theEscrow.vchOffer, dbOffer))
+		{
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4048 - " + _("Cannot find escrow offer. It may be expired");
+			return true;
+		}
 		// make sure escrow settings don't change (besides scriptSigs/nTotal's) outside of activation
 		if (op != OP_ESCROW_ACTIVATE)
 		{
@@ -595,11 +600,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				if (serializedEscrow.nAmountOrBidPerUnit <= theEscrow.nAmountOrBidPerUnit || serializedEscrow.fBidPerUnit <= theEscrow.fBidPerUnit)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4029 - " + _("Bid must be higher than the previous bid, please enter a higher amount");
-					return true;
-				}
-				if (!GetOffer(theEscrow.vchOffer, dbOffer))
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4030 - " + _("Cannot find escrow offer. It may be expired");
 					return true;
 				}
 				if (theEscrow.bBuyNow)
@@ -662,7 +662,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				// write escrow bid
 				if (!bSanityCheck)
 				{
-					pescrowdb->WriteEscrowBid(theEscrow, "valid");
+					pescrowdb->WriteEscrowBid(dbOffer, theEscrow, "valid");
 				}
 			}
 			else if (op == OP_ESCROW_ADD_SHIPPING) {
@@ -697,20 +697,18 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				}
 				theEscrow.bPaymentAck = true;
 
-				if (GetOffer(theEscrow.vchOffer, dbOffer)) {
-					int nQty = dbOffer.nQty;
-					// if this is a linked offer we must update the linked offer qty
-					if (GetOffer(dbOffer.vchOffer, myLinkOffer))
+				int nQty = dbOffer.nQty;
+				// if this is a linked offer we must update the linked offer qty
+				if (GetOffer(dbOffer.vchOffer, myLinkOffer))
+				{
+					nQty = myLinkOffer.nQty;
+				}
+				if (nQty != -1)
+				{
+					if (theEscrow.nQty > nQty)
 					{
-						nQty = myLinkOffer.nQty;
-					}
-					if (nQty != -1)
-					{
-						if (theEscrow.nQty > nQty)
-						{
-							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4046 - " + _("Not enough quantity left in this offer for this purchase");
-							return true;
-						}
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4046 - " + _("Not enough quantity left in this offer for this purchase");
+						return true;
 					}
 				}
 			}
@@ -719,11 +717,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				if (theEscrow.op != OP_ESCROW_ACTIVATE && theEscrow.op != OP_ESCROW_REFUND && theEscrow.op != OP_ESCROW_RELEASE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4047 - " + _("Can only refund an active escrow");
-					return true;
-				}
-				if (!GetOffer(theEscrow.vchOffer, dbOffer))
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4048 - " + _("Cannot find escrow offer. It may be expired");
 					return true;
 				}
 				if (!dbOffer.vchLinkOffer.empty())
@@ -772,7 +765,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				theEscrow.op = op;
 				// if this escrow was actually a series of bids, set the bid status to 'refunded' in escrow bid collection
 				if (!bSanityCheck && !theEscrow.bBuyNow) {
-					pescrowdb->WriteEscrowBid(theEscrow, "refunded");
+					pescrowdb->WriteEscrowBid(dbOffer, theEscrow, "refunded");
 				}
 			}
 			else if (op == OP_ESCROW_REFUND_COMPLETE)
@@ -796,11 +789,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				if (theEscrow.op != OP_ESCROW_ACTIVATE && theEscrow.op != OP_ESCROW_REFUND && theEscrow.op != OP_ESCROW_RELEASE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4057 - " + _("Can only release an active escrow");
-					return true;
-				}
-				if (!GetOffer(theEscrow.vchOffer, dbOffer))
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058 - " + _("Cannot find escrow offer. It may be expired");
 					return true;
 				}
 				if (!dbOffer.vchLinkOffer.empty())
@@ -908,7 +896,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 				serializedEscrow.nHeight = nHeight;
 				serializedEscrow.vchOffer = theEscrow.vchOffer;
 				if (!bSanityCheck) {
-					pescrowdb->WriteEscrowFeedbackIndex(serializedEscrow);
+					pescrowdb->WriteEscrowFeedbackIndex(dbOffer, serializedEscrow);
 				}
 			}
 
@@ -924,46 +912,39 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 			if (theEscrow.nQty <= 0)
 				theEscrow.nQty = 1;
 
-			if (GetOffer(theEscrow.vchOffer, dbOffer))
+			if (dbOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(dbOffer.sCategory), "wanted"))
 			{
-				if (dbOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(dbOffer.sCategory), "wanted"))
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4075 - " + _("Cannot purchase a wanted offer");
+			}
+			if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
+			{
+				if (dbOffer.auctionOffer.fReservePrice > theEscrow.fBidPerUnit)
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4075 - " + _("Cannot purchase a wanted offer");
-				}
-				if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
-				{
-					if (dbOffer.auctionOffer.fReservePrice > theEscrow.fBidPerUnit)
-					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4076 - " + _("Cannot purchase below offer reserve price of: ") + boost::lexical_cast<string>(dbOffer.auctionOffer.fReservePrice) + " " + stringFromVch(dbOffer.sCurrencyCode);
-						return true;
-					}
-					if (dbOffer.auctionOffer.nExpireTime > 0 && dbOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast() && !theEscrow.bBuyNow)
-					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4077 - " + _("This auction has expired, cannot place bid");
-						return true;
-					}
-				}
-				if (!IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_BUYNOW) && theEscrow.bBuyNow)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Offer does not support the Buy It Now feature");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4076 - " + _("Cannot purchase below offer reserve price of: ") + boost::lexical_cast<string>(dbOffer.auctionOffer.fReservePrice) + " " + stringFromVch(dbOffer.sCurrencyCode);
 					return true;
 				}
-				if (dbOffer.nQty != -1)
+				if (dbOffer.auctionOffer.nExpireTime > 0 && dbOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast() && !theEscrow.bBuyNow)
 				{
-					if (theEscrow.nQty > dbOffer.nQty)
-					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4079 - " + _("Not enough quantity left in this offer for this purchase");
-						return true;
-					}
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4077 - " + _("This auction has expired, cannot place bid");
+					return true;
 				}
-				theEscrow.vchOffer = dbOffer.vchOffer;
-				theEscrow.op = op;
 			}
-			else
+			if (!IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_BUYNOW) && theEscrow.bBuyNow)
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4080 - " + _("Cannot find offer for this escrow. It may be expired");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Offer does not support the Buy It Now feature");
 				return true;
 			}
+			if (dbOffer.nQty != -1)
+			{
+				if (theEscrow.nQty > dbOffer.nQty)
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4079 - " + _("Not enough quantity left in this offer for this purchase");
+					return true;
+				}
+			}
+			theEscrow.vchOffer = dbOffer.vchOffer;
+			theEscrow.op = op;
+
 			if (!dbOffer.vchLinkOffer.empty())
 			{
 				if (!GetOffer(dbOffer.vchLinkOffer, myLinkOffer))
@@ -1017,7 +998,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 		theEscrow.nHeight = nHeight;
 		// write escrow
 		if (!bSanityCheck) {
-			if (!pescrowdb->WriteEscrow(vvchArgs, theEscrow))
+			if (!pescrowdb->WriteEscrow(vvchArgs, dbOffer, theEscrow))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4086 - " + _("Failed to write to escrow DB");
 				return error(errorMessage.c_str());
@@ -2245,7 +2226,7 @@ UniValue escrowinfo(const JSONRPCRequest& request) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4538 - " + _("Could not find this escrow"));
     return oEscrow;
 }
-void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
+void BuildFeedbackJson(const COffer& offer, const CEscrow& escrow, UniValue& oFeedback) {
 	string sFeedbackTime;
 	if (escrow.feedback.IsNull())
 		return;
@@ -2266,7 +2247,7 @@ void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
 	oFeedback.push_back(Pair("feedbackuserto", escrow.feedback.nFeedbackUserTo));
 	oFeedback.push_back(Pair("feedback", stringFromVch(escrow.feedback.vchFeedback)));
 }
-void BuildEscrowBidJson(const CEscrow& escrow, const string& status, UniValue& oBid) {
+void BuildEscrowBidJson(const COffer& offer, const CEscrow& escrow, const string& status, UniValue& oBid) {
 	oBid.push_back(Pair("_id", escrow.txHash.GetHex()));
 	oBid.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oBid.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
@@ -2339,7 +2320,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 	oEscrow.push_back(Pair("status", escrowEnumFromOp(escrow.op)));
 	return true;
 }
-bool BuildEscrowIndexerJson(const CEscrow &escrow, UniValue& oEscrow)
+bool BuildEscrowIndexerJson(const COffer& theOffer, const CEscrow &escrow, UniValue& oEscrow)
 {
 	oEscrow.push_back(Pair("_id", stringFromVch(escrow.vchEscrow)));
 	oEscrow.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
@@ -2347,6 +2328,18 @@ bool BuildEscrowIndexerJson(const CEscrow &escrow, UniValue& oEscrow)
 	oEscrow.push_back(Pair("seller", stringFromVch(escrow.vchSellerAlias)));
 	oEscrow.push_back(Pair("arbiter", stringFromVch(escrow.vchArbiterAlias)));
 	oEscrow.push_back(Pair("buyer", stringFromVch(escrow.vchBuyerAlias)));
+	oEscrow.push_back(Pair("currency", IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_COIN) ? GetPaymentOptionsString(escrow.nPaymentOption) : stringFromVch(theOffer.sCurrencyCode)));
+	oEscrow.push_back(Pair("offer_price", theOffer.GetPrice()));
+	const CAmount &nEscrowFees = escrow.nDeposit + escrow.nArbiterFee + escrow.nWitnessFee + escrow.nNetworkFee + escrow.nShipping;
+	const CAmount &nTotalWithoutFee = escrow.nAmountOrBidPerUnit*escrow.nQty;
+	const CAmount &nTotalWithFee = nTotalWithoutFee + nEscrowFees;
+	oEscrow.push_back(Pair("total_with_fee", ValueFromAmount(nTotalWithFee)));
+	oEscrow.push_back(Pair("total_without_fee", ValueFromAmount(nTotalWithoutFee)));
+	oEscrow.push_back(Pair("exttxid", escrow.extTxId.IsNull() ? "" : escrow.extTxId.GetHex()));
+	CScriptID innerID(CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end()));
+	CSyscoinAddress address(innerID, PaymentOptionToAddressType(escrow.nPaymentOption));
+	oEscrow.push_back(Pair("escrowaddress", address.ToString()));
+	oEscrow.push_back(Pair("paymentoption", GetPaymentOptionsString(escrow.nPaymentOption)));
 	oEscrow.push_back(Pair("status", escrowEnumFromOp(escrow.op)));
 	return true;
 }
