@@ -7,7 +7,6 @@
 
 #include <cachedb.h>     // For banmap_t
 #include <amount.h>     // For CAmount
-#include <init.h>       // For HelpMessageMode
 #include <masternodeconfig.h> // For CMasternodeConfig::CMasternodeEntry
 #include <net.h>        // For CConnman::NumConnections
 #include <netaddress.h> // For Network
@@ -86,8 +85,8 @@ public:
     //! Return whether shutdown was requested.
     virtual bool shutdownRequested() = 0;
 
-    //! Get help message string.
-    virtual std::string helpMessage(HelpMessageMode mode) = 0;
+    //! Setup arguments
+    virtual void setupServerArgs() = 0;
 
     //! Map port.
     virtual void mapPort(bool use_upnp) = 0;

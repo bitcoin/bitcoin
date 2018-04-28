@@ -22,22 +22,27 @@ static const char* DEFAULT_PLOT_PLOTLYURL = "https://cdn.plot.ly/plotly-latest.m
 static const int64_t DEFAULT_PLOT_WIDTH = 1024;
 static const int64_t DEFAULT_PLOT_HEIGHT = 768;
 
+static void SetupBenchArgs()
+{
+    gArgs.AddArg("-?", _("Print this help message and exit"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-list", _("List benchmarks without executing them. Can be combined with -scaling and -filter"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-evals=<n>", strprintf(_("Number of measurement evaluations to perform. (default: %u)"), DEFAULT_BENCH_EVALUATIONS), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-filter=<regex>", strprintf(_("Regular expression filter to select benchmark by name (default: %s)"), DEFAULT_BENCH_FILTER), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-scaling=<n>", strprintf(_("Scaling factor for benchmark's runtime (default: %u)"), DEFAULT_BENCH_SCALING), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-printer=(console|plot)", strprintf(_("Choose printer format. console: print data to console. plot: Print results as HTML graph (default: %s)"), DEFAULT_BENCH_PRINTER), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-plotlyurl=<uri>", strprintf(_("URL to use for plotly.js (default: %s)"), DEFAULT_PLOT_PLOTLYURL), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-width=<x>", strprintf(_("Plot width in pixel (default: %u)"), DEFAULT_PLOT_WIDTH), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-height=<x>", strprintf(_("Plot height in pixel (default: %u)"), DEFAULT_PLOT_HEIGHT), false, OptionsCategory::OPTIONS);
+}
+
 int
 main(int argc, char** argv)
 {
+    SetupBenchArgs();
     gArgs.ParseParameters(argc, argv);
 
     if (HelpRequested(gArgs)) {
-        std::cout << HelpMessageGroup(_("Options:"))
-                  << HelpMessageOpt("-?", _("Print this help message and exit"))
-                  << HelpMessageOpt("-list", _("List benchmarks without executing them. Can be combined with -scaling and -filter"))
-                  << HelpMessageOpt("-evals=<n>", strprintf(_("Number of measurement evaluations to perform. (default: %u)"), DEFAULT_BENCH_EVALUATIONS))
-                  << HelpMessageOpt("-filter=<regex>", strprintf(_("Regular expression filter to select benchmark by name (default: %s)"), DEFAULT_BENCH_FILTER))
-                  << HelpMessageOpt("-scaling=<n>", strprintf(_("Scaling factor for benchmark's runtime (default: %u)"), DEFAULT_BENCH_SCALING))
-                  << HelpMessageOpt("-printer=(console|plot)", strprintf(_("Choose printer format. console: print data to console. plot: Print results as HTML graph (default: %s)"), DEFAULT_BENCH_PRINTER))
-                  << HelpMessageOpt("-plot-plotlyurl=<uri>", strprintf(_("URL to use for plotly.js (default: %s)"), DEFAULT_PLOT_PLOTLYURL))
-                  << HelpMessageOpt("-plot-width=<x>", strprintf(_("Plot width in pixel (default: %u)"), DEFAULT_PLOT_WIDTH))
-                  << HelpMessageOpt("-plot-height=<x>", strprintf(_("Plot height in pixel (default: %u)"), DEFAULT_PLOT_HEIGHT));
+        std::cout << gArgs.GetHelpMessage();
 
         return 0;
     }
