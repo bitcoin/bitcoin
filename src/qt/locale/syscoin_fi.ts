@@ -4070,8 +4070,8 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Aseta prosessorin ytimien määrä louhintaan, jos päällä (-1 = kaikki ytimet, oletus: %d)</translation>
     </message>
     <message>
-        <source>Show N confirmations for a successfully locked transaction (0-9999, default: %u)</source>
-        <translation>Näytä N vahvistusta onnistuneesti lukitulle siirtotapahtumalle (0-9999, oletus: %u)</translation>
+        <source>Show N confirmations for a successfully locked transaction (0-8369, default: %u)</source>
+        <translation>Näytä N vahvistusta onnistuneesti lukitulle siirtotapahtumalle (0-8369, oletus: %u)</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>

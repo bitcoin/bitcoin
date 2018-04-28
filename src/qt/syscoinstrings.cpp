@@ -197,7 +197,7 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 "Set the number of threads for coin generation if enabled (-1 = all cores, "
 "default: %d)"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
-"Show N confirmations for a successfully locked transaction (0-9999, default: "
+"Show N confirmations for a successfully locked transaction (0-8369, default: "
 "%u)"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Specify full path to directory for automatic wallet backups (must exist)"),

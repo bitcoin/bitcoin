@@ -3703,8 +3703,8 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Establecer el número de hilos para la generación de syscoin cuando ésta se encuentra activada (-1 = todos los núcleos, predeterminado: %d)</translation>
     </message>
     <message>
-        <source>Show N confirmations for a successfully locked transaction (0-9999, default: %u)</source>
-        <translation>Mostrar N confirmaciones para una transacción bloqueada con éxito (0-9999, predeterminado: %u)</translation>
+        <source>Show N confirmations for a successfully locked transaction (0-8369, default: %u)</source>
+        <translation>Mostrar N confirmaciones para una transacción bloqueada con éxito (0-8369, predeterminado: %u)</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
@@ -3759,8 +3759,8 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Syscoin" admin@foo.com
         <translation>Los pares de la lista blanca no pueden ser excluidos por DoS y sus transacciones siempre se transmitirán, incluso si ya se encuentran en el grupo de memoria, útil e.g. para una pasarela</translation>
     </message>
     <message>
-        <source>(9999 could be used only on mainnet)</source>
-        <translation>(9999 sólo se puede usar en la red principal)</translation>
+        <source>(8369 could be used only on mainnet)</source>
+        <translation>(8369 sólo se puede usar en la red principal)</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -4177,8 +4177,8 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Syscoin" admin@foo.com
         <translation>La clave prinvada del nodo maestro no es válida. Por favor, consulte la  documentación.</translation>
     </message>
     <message>
-        <source>(must be 9999 for mainnet)</source>
-        <translation>(debe ser 9999 para la red principal)</translation>
+        <source>(must be 8369 for mainnet)</source>
+        <translation>(debe ser 8369 para la red principal)</translation>
     </message>
     <message>
         <source>Can't find random Masternode.</source>

@@ -4065,8 +4065,8 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Задать число потоков выполнения для генерации монет, если таковая включена (-1 = все ядра, по умолчанию: %d)</translation>
     </message>
     <message>
-        <source>Show N confirmations for a successfully locked transaction (0-9999, default: %u)</source>
-        <translation>Показывать N подтверждений для успешно заблокированной транзакции (0-9999, по умолчанию: %u)</translation>
+        <source>Show N confirmations for a successfully locked transaction (0-8369, default: %u)</source>
+        <translation>Показывать N подтверждений для успешно заблокированной транзакции (0-8369, по умолчанию: %u)</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>

@@ -4017,8 +4017,8 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>設定產生錢幣的執行緒數目(-1 表示處理器核心數，預設值: %d)</translation>
     </message>
     <message>
-        <source>Show N confirmations for a successfully locked transaction (0-9999, default: %u)</source>
-        <translation>顯示 N 個確認為一個成功鎖定的交易 (0-9999, 預設值: %u)</translation>
+        <source>Show N confirmations for a successfully locked transaction (0-8369, default: %u)</source>
+        <translation>顯示 N 個確認為一個成功鎖定的交易 (0-8369, 預設值: %u)</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>

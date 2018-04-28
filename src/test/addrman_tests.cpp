@@ -180,8 +180,8 @@ BOOST_AUTO_TEST_CASE(addrman_select)
 
     // Add three addresses to new table.
     CService addr2 = ResolveService("250.3.1.1", 8333);
-    CService addr3 = ResolveService("250.3.2.2", 9999);
-    CService addr4 = ResolveService("250.3.3.3", 9999);
+    CService addr3 = ResolveService("250.3.2.2", 8369);
+    CService addr4 = ResolveService("250.3.3.3", 8369);
 
     addrman.Add(CAddress(addr2, NODE_NONE), ResolveService("250.3.1.1", 8333));
     addrman.Add(CAddress(addr3, NODE_NONE), ResolveService("250.3.1.1", 8333));
@@ -204,8 +204,8 @@ BOOST_AUTO_TEST_CASE(addrman_select)
 
     // Test 12: Select pulls from new and tried regardless of port number.
     BOOST_CHECK(addrman.Select().ToString() == "250.4.6.6:8333");
-    BOOST_CHECK(addrman.Select().ToString() == "250.3.2.2:9999");
-    BOOST_CHECK(addrman.Select().ToString() == "250.3.3.3:9999");
+    BOOST_CHECK(addrman.Select().ToString() == "250.3.2.2:8369");
+    BOOST_CHECK(addrman.Select().ToString() == "250.3.3.3:8369");
     BOOST_CHECK(addrman.Select().ToString() == "250.4.4.4:8333");
 }
 
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(addrman_find)
     BOOST_CHECK(addrman.size() == 0);
 
     CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
-    CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
+    CAddress addr2 = CAddress(ResolveService("250.1.2.1", 8369), NODE_NONE);
     CAddress addr3 = CAddress(ResolveService("251.255.2.1", 8333), NODE_NONE);
 
     CNetAddr source1 = ResolveIP("250.1.2.1");
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
 
     CAddress addr1 = CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE);
     addr1.nTime = GetAdjustedTime(); // Set time so isTerrible = false
-    CAddress addr2 = CAddress(ResolveService("250.251.2.2", 9999), NODE_NONE);
+    CAddress addr2 = CAddress(ResolveService("250.251.2.2", 8369), NODE_NONE);
     addr2.nTime = GetAdjustedTime();
     CAddress addr3 = CAddress(ResolveService("251.252.2.3", 8333), NODE_NONE);
     addr3.nTime = GetAdjustedTime();
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     addrman.MakeDeterministic();
 
     CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
-    CAddress addr2 = CAddress(ResolveService("250.1.1.1", 9999), NODE_NONE);
+    CAddress addr2 = CAddress(ResolveService("250.1.1.1", 8369), NODE_NONE);
 
     CNetAddr source1 = ResolveIP("250.1.1.1");
 
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     addrman.MakeDeterministic();
 
     CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
-    CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
+    CAddress addr2 = CAddress(ResolveService("250.1.2.1", 8369), NODE_NONE);
 
     CNetAddr source1 = ResolveIP("250.1.2.1");
 

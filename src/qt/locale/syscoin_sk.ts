@@ -3782,8 +3782,8 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Nastaviť počet vlákien pre generáciu mincí (-1 = všetky jadrá, predvolené: %d)</translation>
     </message>
     <message>
-        <source>Show N confirmations for a successfully locked transaction (0-9999, default: %u)</source>
-        <translation>Ukázať N potvrdení pre úspešne zamknutú transakciu (0-9999, predvolené: %u)</translation>
+        <source>Show N confirmations for a successfully locked transaction (0-8369, default: %u)</source>
+        <translation>Ukázať N potvrdení pre úspešne zamknutú transakciu (0-8369, predvolené: %u)</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>

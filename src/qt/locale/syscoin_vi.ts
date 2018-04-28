@@ -4065,8 +4065,8 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Thiết lập số các luồng cho việc sinh coin nếu bật (-1 = tất cả các lõi, ngầm định: %d)</translation>
     </message>
     <message>
-        <source>Show N confirmations for a successfully locked transaction (0-9999, default: %u)</source>
-        <translation>Hiển thị N xác nhận cho mỗi giao dịch được khoá thành công (0-9999, ngầm định: %u)</translation>
+        <source>Show N confirmations for a successfully locked transaction (0-8369, default: %u)</source>
+        <translation>Hiển thị N xác nhận cho mỗi giao dịch được khoá thành công (0-8369, ngầm định: %u)</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
