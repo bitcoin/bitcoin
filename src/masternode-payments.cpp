@@ -589,6 +589,8 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 				LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required fee\n");
 				bFoundFee = true;
 			}
+			if (bFoundFee && bFoundPayment)
+				break;
 		}
 
         if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
