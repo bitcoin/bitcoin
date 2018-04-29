@@ -2245,7 +2245,7 @@ void BuildFeedbackJson(const COffer& offer, const CEscrow& escrow, UniValue& oFe
 			nTime = pindex->GetMedianTimePast();
 		}
 	}
-	oEscrow.push_back(Pair("time", nTime));
+	oFeedback.push_back(Pair("time", nTime));
 	oFeedback.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oFeedback.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
 	oFeedback.push_back(Pair("txid", escrow.txHash.GetHex()));
