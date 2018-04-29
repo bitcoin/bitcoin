@@ -3831,6 +3831,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             "    \"safe\" : xxx              (bool) Whether this output is considered safe to spend. Unconfirmed transactions\n"
             "                              from outside keys and unconfirmed replacement transactions are considered unsafe\n"
             "                              and are not eligible for spending by fundrawtransaction and sendtoaddress.\n"
+            "    \"stakeable\" : xxx,        (bool) Whether we have the private keys to stake this output\n"
             "  }\n"
             "  ,...\n"
             "]\n"
@@ -4002,6 +4003,22 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
         entry.pushKV("safe", out.fSafe);
+
+        if (IsHDWallet(pwallet))
+        {
+            CHDWallet *phdw = GetHDWallet(pwallet);
+            CKeyID stakingKeyID;
+            bool fStakeable = ExtractStakingKeyID(*scriptPubKey, stakingKeyID);
+            if (fStakeable)
+            {
+                isminetype mine = phdw->IsMine(stakingKeyID);
+                if (!(mine & ISMINE_SPENDABLE)
+                    || (mine & ISMINE_HARDWARE_DEVICE))
+                    fStakeable = false;
+            };
+            entry.pushKV("stakeable", fStakeable);
+        };
+
         if (fIncludeImmature)
             entry.pushKV("mature", out.fMature);
 

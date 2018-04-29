@@ -11598,7 +11598,8 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
 
                 COutPoint kernel(wtxid, i);
                 if (!CheckStakeUnused(kernel)
-                     || IsSpent(wtxid, i))
+                     || IsSpent(wtxid, i)
+                     || IsLockedCoin(wtxid, i))
                     continue;
 
                 const CScript *pscriptPubKey = txout->GetPScriptPubKey();
@@ -11639,51 +11640,37 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
                 if (r.nType != OUTPUT_STANDARD)
                     continue;
 
-                if ((r.nFlags & ORF_OWNED || r.nFlags & ORF_STAKEONLY)
-                    && !(IsSpent(txid, r.n)))
+                if (!(r.nFlags & ORF_OWNED || r.nFlags & ORF_STAKEONLY))
+                    continue;
+
+                if (IsSpent(txid, r.n)
+                    || IsLockedCoin(txid, r.n))
+                    continue;
+
+                CKeyID keyID;
+                if (!ExtractStakingKeyID(r.scriptPubKey, keyID))
+                    continue;
+
+                isminetype mine = IsMine(keyID);
+                if (!(mine & ISMINE_SPENDABLE))
+                    continue;
+                if ((mine & ISMINE_HARDWARE_DEVICE))
+                    continue;
+
+                if (twi == mapTempWallet.end()
+                    && (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
                 {
-                    std::vector<std::vector<uint8_t> > vSolutionsRet;
-                    txnouttype typeRet;
-                    const CScript *pscriptPubKey = &r.scriptPubKey;
-                    CScript coinstakePath;
-                    bool fHasIsCoinstakeOp = HasIsCoinstakeOp(r.scriptPubKey);
-                    if (fHasIsCoinstakeOp)
+                    if (0 != InsertTempTxn(txid, &rtx)
+                        || (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
                     {
-                        if (!GetCoinstakeScriptPath(r.scriptPubKey, coinstakePath))
-                            continue;
-                        pscriptPubKey = &coinstakePath;
+                        LogPrintf("ERROR: %s - InsertTempTxn failed %s.\n", __func__, txid.ToString());
+                        return;
                     };
-
-                    if (!Solver(*pscriptPubKey, typeRet, vSolutionsRet)
-                        || typeRet != TX_PUBKEYHASH)
-                        continue;
-
-                    // Must check if this wallet owns the staking key
-                    if (fHasIsCoinstakeOp)
-                    {
-                        CKeyID keyID = CKeyID(uint160(vSolutionsRet[0]));
-                        isminetype mine = IsMine(keyID);
-                        if (!(mine & ISMINE_SPENDABLE))
-                            continue;
-                        if ((mine & ISMINE_HARDWARE_DEVICE))
-                            continue;
-                    };
-
-                    if (twi == mapTempWallet.end()
-                        && (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
-                    {
-                        if (0 != InsertTempTxn(txid, &rtx)
-                            || (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
-                        {
-                            LogPrintf("ERROR: %s - InsertTempTxn failed %s.\n", __func__, txid.ToString());
-                            return;
-                        };
-                    };
-
-                    bool fSpendableIn = true;
-                    bool fNeedHardwareKey = false;
-                    vCoins.emplace_back(&twi->second, r.n, nDepth, fSpendableIn, true, true, true, fNeedHardwareKey, false);
                 };
+
+                bool fSpendableIn = true;
+                bool fNeedHardwareKey = false;
+                vCoins.emplace_back(&twi->second, r.n, nDepth, fSpendableIn, true, true, true, fNeedHardwareKey, false);
             };
         };
     }
