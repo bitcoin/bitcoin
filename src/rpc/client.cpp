@@ -108,6 +108,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendrawtransaction", 1, "allowhighfees" },
     { "testmempoolaccept", 0, "rawtxs" },
     { "testmempoolaccept", 1, "allowhighfees" },
+    { "testmempoolaccept", 2, "ignorelocks" },
     { "combinerawtransaction", 0, "txs" },
     { "fundrawtransaction", 1, "options" },
     { "fundrawtransaction", 2, "iswitness" },
@@ -202,6 +203,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "createsignaturewithkey", 1, "prevtx" },
 
 
+
     { "walletsettings", 1, "json" },
 
     { "getnewextaddress", 2, "bech32" },
@@ -231,6 +233,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "fundrawtransactionfrom", 2, "input_amounts" },
     { "fundrawtransactionfrom", 3, "output_amounts" },
     { "fundrawtransactionfrom", 4, "options" },
+
+    { "verifyrawtransaction", 1, "prevtxs" },
+    { "verifyrawtransaction", 2, "returndecoded" },
+
 
 
     { "smsgsend", 3, "paid_msg" },

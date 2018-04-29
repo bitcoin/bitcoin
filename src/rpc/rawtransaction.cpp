@@ -1366,10 +1366,10 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 
 UniValue testmempoolaccept(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3) {
         throw std::runtime_error(
             // clang-format off
-            "testmempoolaccept [\"rawtxs\"] ( allowhighfees )\n"
+            "testmempoolaccept [\"rawtxs\"] ( allowhighfees ignorelocks )\n"
             "\nReturns if raw transaction (serialized, hex-encoded) would be accepted by mempool.\n"
             "\nThis checks if the transaction violates the consensus or policy rules.\n"
             "\nSee sendrawtransaction call.\n"
@@ -1377,6 +1377,7 @@ UniValue testmempoolaccept(const JSONRPCRequest& request)
             "1. [\"rawtxs\"]       (array, required) An array of hex strings of raw transactions.\n"
             "                                        Length must be one for now.\n"
             "2. allowhighfees    (boolean, optional, default=false) Allow high fees\n"
+            "3. ignorelocks      (boolean, optional, default=false) Skip locktime/sequence checking\n"
             "\nResult:\n"
             "[                   (array) The result of the mempool acceptance test for each raw transaction in the input array.\n"
             "                            Length is exactly one for now.\n"
@@ -1399,7 +1400,7 @@ UniValue testmempoolaccept(const JSONRPCRequest& request)
             );
     }
 
-    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VBOOL});
+    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VBOOL, UniValue::VBOOL});
     if (request.params[0].get_array().size() != 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Array must contain exactly one raw transaction for now");
     }
@@ -1416,6 +1417,9 @@ UniValue testmempoolaccept(const JSONRPCRequest& request)
         max_raw_tx_fee = 0;
     }
 
+    bool ignore_locks = !request.params[2].isNull() ? request.params[2].get_bool() : false;
+
+
     UniValue result(UniValue::VARR);
     UniValue result_0(UniValue::VOBJ);
     result_0.pushKV("txid", tx_hash.GetHex());
@@ -1426,7 +1430,7 @@ UniValue testmempoolaccept(const JSONRPCRequest& request)
     {
         LOCK(cs_main);
         test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx), &missing_inputs,
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
+            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true, /* ignore_locks */ ignore_locks);
     }
     result_0.pushKV("allowed", test_accept_res);
     if (!test_accept_res) {
@@ -1454,7 +1458,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
     { "rawtransactions",    "signrawtransaction",           &signrawtransaction,        {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
     { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
-    { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","allowhighfees"} },
+    { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","allowhighfees","ignorelocks"} },
 
     { "blockchain",         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },
