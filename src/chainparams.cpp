@@ -301,7 +301,7 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 525600;
-		consensus.nSeniorityInterval = 60; // seniority increases every day
+		consensus.nSeniorityInterval = 60; // seniority increases every hour
 		consensus.nTotalSeniorityIntervals = 9;
         consensus.nMasternodePaymentsStartBlock = 2; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 2;
