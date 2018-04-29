@@ -331,22 +331,24 @@ UniValue getdifficulty(const JSONRPCRequest& request)
 
 std::string EntryDescriptionString()
 {
-    return "    \"size\" : n,             (numeric) transaction size in bytes\n"
-           "    \"fee\" : n,              (numeric) transaction fee in " + CURRENCY_UNIT + "\n"
-           "    \"modifiedfee\" : n,      (numeric) transaction fee with fee deltas used for mining priority\n"
-           "    \"time\" : n,             (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
-           "    \"height\" : n,           (numeric) block height when transaction entered pool\n"
-           "    \"startingpriority\" : n, (numeric) DEPRECATED. Priority when transaction entered pool\n"
-           "    \"currentpriority\" : n,  (numeric) DEPRECATED. Transaction priority now\n"
-           "    \"descendantcount\" : n,  (numeric) number of in-mempool descendant transactions (including this one)\n"
-           "    \"descendantsize\" : n,   (numeric) size of in-mempool descendants (including this one)\n"
-           "    \"descendantfees\" : n,   (numeric) modified fees (see above) of in-mempool descendants (including this one)\n"
-           "    \"ancestorcount\" : n,    (numeric) number of in-mempool ancestor transactions (including this one)\n"
-           "    \"ancestorsize\" : n,     (numeric) size of in-mempool ancestors (including this one)\n"
-           "    \"ancestorfees\" : n,     (numeric) modified fees (see above) of in-mempool ancestors (including this one)\n"
-           "    \"depends\" : [           (array) unconfirmed transactions used as inputs for this transaction\n"
-           "        \"transactionid\",    (string) parent transaction id\n"
-           "       ... ]\n";
+    return "    \"size\" : n,                 (numeric) transaction size in bytes\n"
+           "    \"fee\" : n,                  (numeric) transaction fee in " + CURRENCY_UNIT + "\n"
+           "    \"modifiedfee\" : n,          (numeric) transaction fee with fee deltas used for mining priority\n"
+           "    \"time\" : n,                 (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
+           "    \"height\" : n,               (numeric) block height when transaction entered pool\n"
+           "    \"startingpriority\" : n,     (numeric) DEPRECATED. Priority when transaction entered pool\n"
+           "    \"currentpriority\" : n,      (numeric) DEPRECATED. Transaction priority now\n"
+           "    \"descendantcount\" : n,      (numeric) number of in-mempool descendant transactions (including this one)\n"
+           "    \"descendantsize\" : n,       (numeric) size of in-mempool descendants (including this one)\n"
+           "    \"descendantfees\" : n,       (numeric) modified fees (see above) of in-mempool descendants (including this one)\n"
+           "    \"ancestorcount\" : n,        (numeric) number of in-mempool ancestor transactions (including this one)\n"
+           "    \"ancestorsize\" : n,         (numeric) size of in-mempool ancestors (including this one)\n"
+           "    \"ancestorfees\" : n,         (numeric) modified fees (see above) of in-mempool ancestors (including this one)\n"
+           "    \"depends\" : [               (array) unconfirmed transactions used as inputs for this transaction\n"
+           "        \"transactionid\",        (string) parent transaction id\n"
+           "       ... ],\n"
+           "    \"instantsend\" : true|false, (boolean) True if this transaction was sent as an InstantSend one\n"
+           "    \"instantlock\" : true|false  (boolean) True if this transaction was locked via InstantSend\n";
 }
 
 void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
