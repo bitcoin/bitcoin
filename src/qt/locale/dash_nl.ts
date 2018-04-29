@@ -1,231 +1,231 @@
-<TS language="vi" version="2.1">
+<TS language="nl" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Bấm phải chuột để sửa địa chỉ hoặc nhãn</translation>
+        <translation>Rechtermuisklik om het adres of het label aan te passen</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Tạo một địa chỉ mới</translation>
+        <translation>Maak een nieuw adres aan</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Mới</translation>
+        <translation>&amp;Nieuw</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Chép địa chỉ đã được chọn vào vùng đệm clipboard</translation>
+        <translation>Kopieer het huidig geselecteerde adres naar het klembord</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Sao chép</translation>
+        <translation>&amp;Kopiëren</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Xoá địa chỉ đang được chọn khỏi danh sách</translation>
+        <translation>Verwijder het geselecteerde adres van de lijst</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Xoá</translation>
+        <translation>&amp;Verwijderen</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Kết xuất dữ liệu trong tab này sang một file</translation>
+        <translation>Exporteer de data in de huidige tab naar een bestand</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Kết xuất</translation>
+        <translation>&amp;Exporteren</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>Đó&amp;ng</translation>
+        <translation>S&amp;luiten</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Chọn địa chỉ để gửi tiền đến</translation>
+        <translation>Kies het adres om Dash naar over te maken</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Chọn địa chỉ để nhận tiền</translation>
+        <translation>Kies het adres om Dash mee te ontvangen</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>C&amp;họn</translation>
+        <translation>K&amp;iezen</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Đia chỉ gửi</translation>
+        <translation>Verzendadressen</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Địa chỉ nhận</translation>
+        <translation>Ontvanstgadressen</translation>
     </message>
     <message>
         <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Đây là các địa chỉ Dash của bạn để gửi thanh toán. Luôn luôn kiểm tra số tiền và địa chỉ nhận trước khi bạn gửi tiền.</translation>
+        <translation>Dit zijn uw Dash adressen om betalingen mee uit te voeren. Controleer altijd het bedrag en ontvangstadres voordat u uw Dash verzendt.</translation>
     </message>
     <message>
         <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Đây là các địa chỉ Dash của bạn để nhận thanh toán. Gợi ý là sử dụng một địa chỉ nhận mới cho mỗi giao dịch.</translation>
+        <translation>Dit zijn uw Dash adressen om betalingen me te ontvangen. Het wordt aangeraden om voor elke transactie een niew ontvangstadres te gebruiken.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Sao chép Địa chỉ</translation>
+        <translation>Kopieer adres</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Sao chép &amp;Nhãn</translation>
+        <translation>Kopieer label</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>&amp;Sửa</translation>
+        <translation>Bewerken</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Kết xuất danh sách Địa chỉ</translation>
+        <translation>Exporteer adressenlijst</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>File định dạng phân cách bởi dấu phẩy (*.csv)</translation>
+        <translation>Kommagescheiden bestand (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Kết xuất không thành công</translation>
+        <translation>Exporteren mislukt</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Có lỗi xảy ra khi lưu các địa chỉ vào %1. Hãy thử lại.</translation>
+        <translation>Er was een probleem tijdens het opslaan van de adressenlijst naar %1. Probeer het alstublieft opnieuw.</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Nhãn</translation>
+        <translation>Label</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Địa chỉ</translation>
+        <translation>Adres</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(không có nhãn)</translation>
+        <translation>(zonder label)</translation>
     </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Khung hội thoại mật khẩu</translation>
+        <translation>Wachtwoordzinscherm</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Mời nhập mật khẩu</translation>
+        <translation>Voer wachtwoordzin in</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Mật khẩu mới</translation>
+        <translation>Nieuw wachtwoordzin</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Nhập lại mật khẩu mới</translation>
+        <translation>Herhaal nieuw wachtwoordzin</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Nhập mật khẩu mới cho ví. &lt;br/&gt;Hãy sử dụng mật khẩu có &lt;b&gt;10 hoặc hơn các ký tự ngẫu nhiên&lt;/b&gt;, hay &lt;b&gt;8 từ hoặc nhiều hơn&lt;/b&gt;.</translation>
+        <translation>Voer het nieuwe wachtwoord voor uw portemonnee in. &lt;br/&gt;Gelieve een wachtwoord te gebruiken van &lt;b&gt;tien of meer willekeurige karakters&lt;/b&gt; of &lt;b&gt;acht of meer woorden&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Mã hoá ví</translation>
+        <translation>Wallet versleutelen</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Công việc này cần mật khẩu ví của bạn để mở khoá ví.</translation>
+        <translation>Deze actie vereist uw portemonneewachtwoord om de wallet te openen.</translation>
     </message>
     <message>
         <source>Unlock wallet for mixing only</source>
-        <translation>Mở ví chỉ để trộn</translation>
+        <translation>Ontgrendel portemonnee alleen om te mixen</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Mở khoá ví</translation>
+        <translation>Ontgrendel portemonnee</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Công việc này cần mật khẩu ví của bạn để giải mã ví.</translation>
+        <translation>Deze bewerking heeft de wachtwoordzin van je portemonnee nodig om deze te ontgrendelen.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Giải mã ví</translation>
+        <translation>Ontsleutel portemonnee </translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Đổi mật khẩu</translation>
+        <translation>Wijzig wachtwoordzin</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Hãy nhập vào mật khẩu cũ và mật khẩu mới cho ví của bạn.</translation>
+        <translation>Voer het oude en het nieuwe wachtwoord in voor uw portemonnee.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Xác nhận mã hoá ví</translation>
+        <translation>Bevestig de versleuteling van uw portemonnee</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
-        <translation>Chú ý: Nếu bạn mã hoá ví và mất mật khẩu, bạn sẽ &lt;b&gt;MẤT TẤT CẢ DASH CỦA BẠN&lt;/b&gt;!</translation>
+        <translation>Waarschuwing: Als u uw portemonnee versleuteld en uw wachtwoord kwijt raakt zult u &lt;b&gt;AL UW DASH KWIJTRAKEN!&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Bạn có chắc là mình muốn mã hoá ví?</translation>
+        <translation>Weet u zeker dat u uw portemonnee wilt versleutelen?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>Ví đã được mã hoá.</translation>
+        <translation>Portemonnee is versleuteld</translation>
     </message>
     <message>
         <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 sẽ được đóng bây giờ để hoàn thành tiến trình mã hoá. Hãy nhớ rằng mã hoá ví không thể hoàn toàn bảo vệ tiền của bạn khỏi bị ăn trộm bởi những mã độc đã thâm nhập máy tính của bạn.</translation>
+        <translation>%1 wordt nu afgesloten om de versleuteling te voltooien. Denk eraan dat het versleutelen van uw portemonnee niet volledig kan beschermen tegen diefstal van uw geld door malware op uw computer.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
-        <translation>QUAN TRỌNG: Bất cứ sao lưu nào bạn đã làm trước đó với ví của bạn thì nên thay thế bằng phiên bản sao lưu mới nhất đã được mã hoá. Những bản sao lưu trước mà không mã hoá mà chứa HD Seed thì vẫn có toàn quyền truy cập đến tiền trong ví của bạn giống y như phiên bản ví mới đã được mã hoá.</translation>
+        <translation>BELANGRIJK: Alle eerder gemaakte back-up van uw portemonneebestand dienen vervangen te worden door het nieuw gegenereerde, versleutelde portemonneebestand. Eerdere back-ups van de niet versleutelde portemonnee bevatten dezelfde HD seed en zullen nog steeds volledig toegang hebben tot uw geld net als de nieuwe, versleutelde portemonnee.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>QUAN TRỌNG: Bất kỳ sao lưu nào mà bạn đã thực hiện trước với ví của bạn sẽ nên được thay thế bởi tệp Ví mới, được mã hoá. Vì lý do an ninh, những tệp sao lưu trước của ví không mã hoá sẽ trở nên vô nghĩa khi bạn bắt đầu sử dụng ví mới, có mã hoá.</translation>
+        <translation>BELANGRIJK: Alle vorige backups die je van je portemonnee hebt gemaakt moeten worden vervangen met het nieuw aangemaakte, versleutelde portemonneebestand. Voor veiligheidsredenen, vorige backups van de niet-versleutelde portemonnee worden onbruikbaar zodra je de nieuwe, versleutelde portemonnee gebruikt.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>Mã hoá ví không thành công</translation>
+        <translation>Portemonneeversleuteling mislukt</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Mã hoá ví bị lỗi vì lỗi bên trong của phần mềm. Ví của bạn không được mã hoá.</translation>
+        <translation>Door een interne fout is de portemonneeversleuteling mislukt. Je portemonnee is niet versleuteld.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>Mật khẩu bạn cung cấp không tương xứng.</translation>
+        <translation>De ingegeven wachtwoordzinnen komen niet overeen.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>Mở khoá ví không thành công</translation>
+        <translation>Portemonnee ontgrendelen mislukt</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Mật khẩu bạn nhập để giải mã ví không chính xác.</translation>
+        <translation>Het ingevoerde wachtwoord om de portemonnee te ontsleutelen was incorrect.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation>Giải mã ví không thành công</translation>
+        <translation>Het ontsleutelen van de portemonnee is mislukt</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Mật khẩu ví đã được đổi thành công.</translation>
+        <translation>Het wachtwoord van de portemonnee is succesvol gewijzigd.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Cảnh báo: Khoá Caps Lock đang được bật!</translation>
+        <translation>Waarschuwing: Caps-lock staat aan!</translation>
     </message>
 </context>
 <context>
@@ -236,14 +236,14 @@
     </message>
     <message>
         <source>Banned Until</source>
-        <translation>Cấm đến khi</translation>
+        <translation>Geband tot</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
         <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
-        <translation>Có lỗi nghiêm trọng xảy ra. Dash Core không thể tiếp tục một cách an toàn được nên phải thoát ra.</translation>
+        <translation>Er heeft zich een fatale fout voorgedaan. Dash Core kan niet veilig worden voortgezet en zal worden afgesloten.</translation>
     </message>
     <message>
         <source>Dash Core</source>
@@ -251,43 +251,43 @@
     </message>
     <message>
         <source>Wallet</source>
-        <translation>Ví</translation>
+        <translation>Portemonnee</translation>
     </message>
     <message>
         <source>Node</source>
-        <translation>Nút</translation>
+        <translation>Node</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Tổng thể</translation>
+        <translation>&amp;Overzicht</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Hiển thị thông tin tổng thể của ví</translation>
+        <translation>Toon algemeen overzicht van uw portemonnee</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;Gửi</translation>
+        <translation>&amp;Verzenden</translation>
     </message>
     <message>
         <source>Send coins to a Dash address</source>
-        <translation>Gửi tiền vào địa chỉ Dash</translation>
+        <translation>Verstuur Dash naar een Dashadres</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Nhận</translation>
+        <translation>&amp;Ontvangen</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and dash: URIs)</source>
-        <translation>Yêu cầu thanh toán (sinh mã QR và dash: URIs)</translation>
+        <translation>Vraag betaling aan (genereert QR-codes en Dash: URI's)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>Các &amp;Giao dịch</translation>
+        <translation>&amp;Transactis</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Xem lịch sử giao dịch</translation>
+        <translation>Blader door transactiegeschiedenis</translation>
     </message>
     <message>
         <source>&amp;Masternodes</source>
@@ -295,375 +295,375 @@
     </message>
     <message>
         <source>Browse masternodes</source>
-        <translation>Hiển thị các masternode</translation>
+        <translation>Blader door masternodes</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>T&amp;hoát</translation>
+        <translation>A&amp;fsluiten</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Thoát ứng dụng</translation>
+        <translation>Sluit applicatie</translation>
     </message>
     <message>
         <source>Show information about Dash Core</source>
-        <translation>Hiển thị thông tin về Dash Core</translation>
+        <translation>Toon informatie over Dash Core</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>Về &amp;QT</translation>
+        <translation>Over &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Hiển thị thông tin giới thiệu về Qt</translation>
+        <translation>Toon informatie over Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation>&amp;Tuỳ chọn...</translation>
+        <translation>&amp;Opties...</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation>&amp;Khoảng %1</translation>
+        <translation>&amp;Over %1</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
-        <translation>Sửa đổi tùy chỉnh cấu hình cho %1</translation>
+        <translation>Wijzig configuratieopties voor %1</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
-        <translation>Ẩ&amp;n / Hiện</translation>
+        <translation>&amp;Toon / Verberg</translation>
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>Hiển thị hoặc ẩn cửa sổ chính</translation>
+        <translation>Toon of verberg het hoofdscherm</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Mã hoá Ví...</translation>
+        <translation>&amp;Versleutel portemonnee...</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Mã hoá khoá riêng mà thuộc về ví của bạn</translation>
+        <translation>Versleutel de geheime sleutels die behoren tot uw portemonnee</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Sao lưu Ví...</translation>
+        <translation>&amp;Backup portemonnee...</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Sao lưu ví vào vị trí khác</translation>
+        <translation>Backup portemonnee naar een andere locatie</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>Đổi &amp;Mật khẩu...</translation>
+        <translation>&amp;Wijzig wachtwoordzin...</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Đổi mật khẩu dùng để mã hoá ví</translation>
+        <translation>Wijzig de wachtwoordzin die wordt gebruikt voor portemonneeversleuteling</translation>
     </message>
     <message>
         <source>&amp;Unlock Wallet...</source>
-        <translation>&amp;Mở khoá Ví...</translation>
+        <translation>&amp;Ontgrendel portemonnee...</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Mở khoá ví</translation>
+        <translation>Portemonnee ontgrendelen</translation>
     </message>
     <message>
         <source>&amp;Lock Wallet</source>
-        <translation>&amp;Khoá Ví</translation>
+        <translation>&amp;Portemonnee vergrendelen</translation>
     </message>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>Ký vào &amp;thông điệp...</translation>
+        <translation>Onderteken &amp;bericht</translation>
     </message>
     <message>
         <source>Sign messages with your Dash addresses to prove you own them</source>
-        <translation>Ký vào thông điệp với địa chỉ Dash để chứng minh bạn là chủ của chúng</translation>
+        <translation>Onderteken berichten met uw Dashadressen om te bewijzen dat u deze adressen bezit.</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
-        <translation>&amp;Kiểm tra thông điệp...</translation>
+        <translation>&amp;Verifieer handtekening</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
-        <translation>Kiểm tra thông điệp để đảm bảo rằng nó đã được ký bằng địa chỉ Dash nhất định</translation>
+        <translation>Verifieer handtekeningen om zeker te zijn dat de berichten zijn ondertekend met de gespecificeerde Dashadressen.</translation>
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation>&amp;Thông tin</translation>
+        <translation>&amp;Informatie</translation>
     </message>
     <message>
         <source>Show diagnostic information</source>
-        <translation>Hiển thị thông tin chuẩn đoán</translation>
+        <translation>Toon diagnostische informatie</translation>
     </message>
     <message>
         <source>&amp;Debug console</source>
-        <translation>Giao diện gỡ rối</translation>
+        <translation>&amp;Debug console</translation>
     </message>
     <message>
         <source>Open debugging console</source>
-        <translation>Mở giao diện gỡ rối</translation>
+        <translation>Open debugging console</translation>
     </message>
     <message>
         <source>&amp;Network Monitor</source>
-        <translation>Theo dõi &amp;Mạng</translation>
+        <translation>&amp;Networkmonitor</translation>
     </message>
     <message>
         <source>Show network monitor</source>
-        <translation>Hiển thị thông tin theo dõi mạng</translation>
+        <translation>Toon networkmonitor</translation>
     </message>
     <message>
         <source>&amp;Peers list</source>
-        <translation>&amp;Các máy ngang cấp</translation>
+        <translation>&amp;Peers lijst</translation>
     </message>
     <message>
         <source>Show peers info</source>
-        <translation>Hiển thị thông tin về các máy ngang cấp</translation>
+        <translation>Toon peers info</translation>
     </message>
     <message>
         <source>Wallet &amp;Repair</source>
-        <translation>&amp;Sửa Ví</translation>
+        <translation>Portemonnee &amp;Repareren</translation>
     </message>
     <message>
         <source>Show wallet repair options</source>
-        <translation>Hiển thị các tuỳ chọn để sửa ví</translation>
+        <translation>Toon reparatie opties voor de portemonnee</translation>
     </message>
     <message>
         <source>Open Wallet &amp;Configuration File</source>
-        <translation>Mở ví và file &amp;Cấu hình</translation>
+        <translation>Open portemonnee &amp;configuratie bestand</translation>
     </message>
     <message>
         <source>Open configuration file</source>
-        <translation>Mở tệp cấu hình</translation>
+        <translation>Open configuratie bestand</translation>
     </message>
     <message>
         <source>Open &amp;Masternode Configuration File</source>
-        <translation>Mở file cấu hình &amp;Masternode</translation>
+        <translation>Open &amp;Masternode configuratie bestand</translation>
     </message>
     <message>
         <source>Open Masternode configuration file</source>
-        <translation>Mở file cấu hình Masternode</translation>
+        <translation>Open Masternode configuratie bestand</translation>
     </message>
     <message>
         <source>Show Automatic &amp;Backups</source>
-        <translation>Hiển thị chế độ Tự động &amp;Sao lưu</translation>
+        <translation>Toon automatische &amp;backups</translation>
     </message>
     <message>
         <source>Show automatically created wallet backups</source>
-        <translation>Hiển thị những ví được sao lưu tự động</translation>
+        <translation>Toon automatisch aangemaakte backups van uw portemonnee</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>&amp;Gửi địa chỉ...</translation>
+        <translation>&amp;Verzendadressen</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>Hiển thị danh sách các địa chỉ đã sử dụng và các nhãn</translation>
+        <translation>Toon de lijst met gebruikte verzendadressen en labels</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>Địa chỉ nhận...</translation>
+        <translation>&amp;Ontvangstadressen</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>Hiển thị danh sách các địa chỉ đã sử dụng để nhận và các nhãn</translation>
+        <translation>Toon de lijst met gebruikte ontvangstadressen en labels</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>Mở &amp;URI...</translation>
+        <translation>Open &amp;URI</translation>
     </message>
     <message>
         <source>Open a dash: URI or payment request</source>
-        <translation>Mở một dash: URI hoặc một yêu cầu thanh toán</translation>
+        <translation>Open een dash: URI of betalingsaanvraag</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Các Tuỳ chọn dòng lệnh</translation>
+        <translation>&amp;Command-line opties</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Dash command-line options</source>
-        <translation>Hiển thị %1 tin nhắn hỗ trợ để nhận được danh sách Dash command-line khả dụng</translation>
+        <translation>Toon het %1 hulpbericht om een lijst te krijgen met mogelijke Dash commandoregelopties</translation>
     </message>
     <message>
         <source>%1 client</source>
-        <translation>%1 khách</translation>
+        <translation>%1 client</translation>
     </message>
     <message>
         <source>&amp;PrivateSend information</source>
-        <translation>Thông tin về &amp;PrivateSend</translation>
+        <translation>&amp;PrivateSend informatie</translation>
     </message>
     <message>
         <source>Show the PrivateSend basic information</source>
-        <translation>Hiển thị những thông tin cơ bản về PrivateSend</translation>
+        <translation>Toon de PrivateSend basis informatie</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Tệp</translation>
+        <translation>&amp;Bestand</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Thiết đặt</translation>
+        <translation>&amp;Instellingen</translation>
     </message>
     <message>
         <source>&amp;Tools</source>
-        <translation>&amp;Công cụ</translation>
+        <translation>&amp;Hulpmiddelen</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Trợ giúp</translation>
+        <translation>&amp;Help</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Bảng Thanh công cụ</translation>
+        <translation>Tab-werkbalk</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
-        <translation><numerusform>%n kết nối hiện thời tới mạng lưới của Dash</numerusform></translation>
+        <translation><numerusform>%n actieve verbinding met het Dash netwerk</numerusform><numerusform>%n actieve verbindingen met het Dash netwerk</numerusform></translation>
     </message>
     <message>
         <source>Network activity disabled</source>
-        <translation>Kết nối mạng bị tắt</translation>
+        <translation>Netwerk activiteit uitgeschakeld</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)...</source>
-        <translation>Đang đồng bộ phần đầu (%1%)...</translation>
+        <translation>Kopteksten synchroniseren (%1%)...</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation>Đang đồng bộ với mạng lưới...</translation>
+        <translation>Synchroniseren met het netwerk...</translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
-        <translation>Sắp xếp các khối trên đĩa...</translation>
+        <translation>Bezig met indexeren van blokken op harde schijf...</translation>
     </message>
     <message>
         <source>Processing blocks on disk...</source>
-        <translation>Đang xử lý các khối trên đĩa...</translation>
+        <translation>Bezig met verwerken van blokken op harde schijf...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
-        <translation>Sắp xếp lại các khối trên đĩa...</translation>
+        <translation>Bezig met herindexeren van blokken op harde schijf...</translation>
     </message>
     <message>
         <source>Connecting to peers...</source>
-        <translation>Đang kết nối với các máy ngang hàng...</translation>
+        <translation>Verbinden met peers...</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>Đã xử lý được %n block(s) của lịch sử giao dịch.</numerusform></translation>
+        <translation><numerusform>%n blok van transactiehistorie verwerkt.</numerusform><numerusform>%n blokken van transactiehistorie verwerkt.</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 đằng sau</translation>
+        <translation>%1 achter</translation>
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Đang nạp bộ đệm...</translation>
+        <translation>Aan het bijwerken...</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Khối vừa nhận đã được sinh ra từ %1.</translation>
+        <translation>Laatst ontvangen blok was %1 geleden gegenereerd.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Các giao dịch sau đây sẽ chưa thể thấy được.</translation>
+        <translation>Transacties na dit moment zullen nu nog niet zichtbaar zijn.</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Mới nhất</translation>
+        <translation>Bijgewerkt</translation>
     </message>
     <message>
         <source>Synchronizing additional data: %p%</source>
-        <translation>Đang đồng bộ những dữ liệu bổ sung: %p%</translation>
+        <translation>Extra data aan het synchroniseren: %p%</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation>Fout</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Cảnh báo</translation>
+        <translation>Waarschuwing</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Thông tin</translation>
+        <translation>Informatie</translation>
     </message>
     <message>
         <source>Date: %1
 </source>
-        <translation>Ngày: %1
+        <translation>Datum: %1
 </translation>
     </message>
     <message>
         <source>Amount: %1
 </source>
-        <translation>Số lượng: %1
+        <translation>Bedrag: %1
 </translation>
     </message>
     <message>
         <source>Type: %1
 </source>
-        <translation>Loại: %1
+        <translation>Type: %1
 </translation>
     </message>
     <message>
         <source>Label: %1
 </source>
-        <translation>Nhãn: %1
+        <translation>Label: %1
 </translation>
     </message>
     <message>
         <source>Address: %1
 </source>
-        <translation>Địa chỉ: %1
+        <translation>Adres: %1
 </translation>
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Giao dịch gửi đi</translation>
+        <translation>Verstuurde transactie</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Giao dịch nhận về</translation>
+        <translation>Binnenkomende transactie</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation>Sinh khoá HD đang &lt;b&gt;Bật&lt;/b&gt;</translation>
+        <translation>HD sleutel generatie is &lt;b&gt;ingeschakeld&lt;/b&gt;</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>Sinh khoá HD đang &lt;b&gt;Tắt&lt;/b&gt;</translation>
+        <translation>HD sleutel generatie is &lt;b&gt;uitgeschakeld&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Ví &lt;b&gt;đã được mã hoá&lt;/b&gt; và hiện tại &lt;b&gt;đã được mở&lt;/b&gt;</translation>
+        <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; en momenteel &lt;b&gt;ontgrendeld&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
-        <translation>Ví đã được &lt;b&gt;mã hoá&lt;/b&gt; và hiện tại đã được &lt;b&gt;mở khoá&lt;/b&gt; chỉ để trộn coin</translation>
+        <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; en momenteel &lt;b&gt;ontgrendeld&lt;/b&gt; enkel voor mixing</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Ví &lt;b&gt;đã được mã hoá&lt;/b&gt; và hiện tại &lt;b&gt;đã được khoá&lt;/b&gt;</translation>
+        <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; en momenteel &lt;b&gt;vergrendeld&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
     <name>ClientModel</name>
     <message>
         <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>Tổng số: %1 (Tương thích PS: %2 / Sẵn sàng: %3)</translation>
+        <translation>Totaal: %1 (PS compatibel: %2 / ingeschakeld: %3)</translation>
     </message>
     <message>
         <source>Network Alert</source>
-        <translation>Cảnh báo mạng</translation>
+        <translation>Netwerkwaarschuwing</translation>
     </message>
 </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
         <source>Quantity:</source>
-        <translation>Số lượng:</translation>
+        <translation>Aantal:</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -671,319 +671,319 @@
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Số tiền:</translation>
+        <translation>Bedrag:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Phí:</translation>
+        <translation>Vergoeding:</translation>
     </message>
     <message>
         <source>Coin Selection</source>
-        <translation>Chọn lựa coin</translation>
+        <translation>Munt selectie</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation>Bụi</translation>
+        <translation>Stof</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Phí sau:</translation>
+        <translation>Na vergoeding:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation>Trả lại:</translation>
+        <translation>Wisselgeld:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation>(bỏ) chọn tất cả</translation>
+        <translation>(de)selecteer alles</translation>
     </message>
     <message>
         <source>toggle lock state</source>
-        <translation>lật trạng thái khoá</translation>
+        <translation>Schakel slot staat</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation>Kiểu cây</translation>
+        <translation>Boom modus</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation>Kiểu danh sách</translation>
+        <translation>Lijst modus</translation>
     </message>
     <message>
         <source>(1 locked)</source>
-        <translation>(1 khoá)</translation>
+        <translation>(1 geblokeerd)</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Số tiền</translation>
+        <translation>Bedrag</translation>
     </message>
     <message>
         <source>Received with label</source>
-        <translation>Nhận được với nhãn</translation>
+        <translation>Ontvangen met label</translation>
     </message>
     <message>
         <source>Received with address</source>
-        <translation>Nhận được với địa chỉ</translation>
+        <translation>Ontvangst adressen</translation>
     </message>
     <message>
         <source>PS Rounds</source>
-        <translation>Các vòng PS</translation>
+        <translation>PS Rondes</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Ngày</translation>
+        <translation>Datum</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>Lượt xác nhận</translation>
+        <translation>Bevestigingen</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation>Đã được xác nhận</translation>
+        <translation>Bevestigd</translation>
     </message>
     <message>
         <source>Copy address</source>
-        <translation>Sao chép địa chỉ</translation>
+        <translation>Kopieer adres</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Sao chép nhãn</translation>
+        <translation>Kopieer Label</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Sao chép số tiền</translation>
+        <translation>Kopieer bedrag</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Sao chép mã giao dịch</translation>
+        <translation>Kopieer transactie-ID</translation>
     </message>
     <message>
         <source>Lock unspent</source>
-        <translation>Khoá khoản chưa tiêu</translation>
+        <translation>Blokeer ongebruikte</translation>
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation>Mở khoản chưa tiêu</translation>
+        <translation>Deblokkeer ongebruikte</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>Sao chép số lượng</translation>
+        <translation>Kopieer aantal</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>Sao chép phí</translation>
+        <translation>Kopieer vergoeding</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>Sao chép giá trị sau tính phí</translation>
+        <translation>Kopieer na vergoeding</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Sao chép các bytes</translation>
+        <translation>Kopieer bytes</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Sao chép bụi</translation>
+        <translation>Kopieer stof</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Sao chép tiền trả lại</translation>
+        <translation>Kopieer wisselgeld</translation>
     </message>
     <message>
         <source>Please switch to "List mode" to use this function.</source>
-        <translation>Hãy chuyển về "Chế độ danh sách" để sử dụng tính năng này.</translation>
+        <translation>Schakel over naar "Lijst mode" om deze functie te gebruiken.</translation>
     </message>
     <message>
         <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again.</source>
-        <translation>Đầu vào không ẩn danh được chọn. &lt;b&gt; PrivateSend sẽ bị tắt.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Nếu bạn vẫn muốn sử dụng PrivateSend, hãy bỏ chọn tất cả các đầu vào không ẩn danh trước và đánh dấu vào hộp PrivateSend lần nữa.</translation>
+        <translation>Niet-anoniem invoer geselecteerd. &lt;b&gt;PrivateSend wordt afgesloten. &lt;/b&gt;&lt;br&gt;&lt;br&gt; Indien u toch PrivateSend wenst te gebruiken, deselecteer dan eerst alle niet-anonieme invoer. Vink daarna PrivateSend opnieuw aan.</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation>(%1 được khoá)</translation>
+        <translation>(%1 geblokeerd)</translation>
     </message>
     <message>
         <source>yes</source>
-        <translation>có</translation>
+        <translation>ja</translation>
     </message>
     <message>
         <source>no</source>
-        <translation>không</translation>
+        <translation>nee</translation>
     </message>
     <message>
         <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation>Nhãn này sẽ chuyển sang đỏ nếu có địa chỉ nào nhận được một khoản nhỏ hơn ngưỡng nhỏ nhất định được gọi là bụi.</translation>
+        <translation>Deze label wordt rood als een ontvanger een hoeveelheid kleiner dan de huidige dust-drempel krijgt.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation>Có thể thay đổi +/- %1 duff(s) cho mỗi đầu vào.</translation>
+        <translation>Kan +/- %1 duff(s) per invoer variëren.</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(không có nhãn)</translation>
+        <translation>(geen label)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation>phần trả lại từ %1 (%2)</translation>
+        <translation>wijzig van %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
-        <translation>(phần trả lại)</translation>
+        <translation>(wijzig)</translation>
     </message>
     <message>
         <source>n/a</source>
-        <translation>không áp dụng</translation>
+        <translation>N.v.t.</translation>
     </message>
 </context>
 <context>
     <name>DarksendConfig</name>
     <message>
         <source>Configure PrivateSend</source>
-        <translation>Cấu hình PrivateSend</translation>
+        <translation>Configureer PrivateSend</translation>
     </message>
     <message>
         <source>Basic Privacy</source>
-        <translation>Mức Riêng tư Cơ bản</translation>
+        <translation>Eenvoudige Privacy</translation>
     </message>
     <message>
         <source>High Privacy</source>
-        <translation>Mức Riêng tư Cao</translation>
+        <translation>Hoge Privacy</translation>
     </message>
     <message>
         <source>Maximum Privacy</source>
-        <translation>Mức Riêng tư Tối đa</translation>
+        <translation>Maximum Privacy</translation>
     </message>
     <message>
         <source>Please select a privacy level.</source>
-        <translation>Hãy chọn mức độ riêng tư.</translation>
+        <translation>Kies een privacyniveau</translation>
     </message>
     <message>
         <source>Use 2 separate masternodes to mix funds up to 1000 DASH</source>
-        <translation>Sử dụng 2 masternode khác nhau để trộn số tiền lên đến 1000 DASH</translation>
+        <translation>Gebruik 2 verschillende masternodes om tot en met  100 Dash te mixen</translation>
     </message>
     <message>
         <source>Use 8 separate masternodes to mix funds up to 1000 DASH</source>
-        <translation>Sử dụng 8 masternode khác nhau để trộn số tiền lên đến 1000 DASH</translation>
+        <translation>Gebruik 8 verschillende masternodes om tot en met  1000 Dash te mixen</translation>
     </message>
     <message>
         <source>Use 16 separate masternodes</source>
-        <translation>Sử dụng 16 masternode khác nhau</translation>
+        <translation>Gebruik 16 verschillende masternodes</translation>
     </message>
     <message>
         <source>This option is the quickest and will cost about ~0.025 DASH to anonymize 1000 DASH</source>
-        <translation>Tuỳ chọn này là nhanh nhất và sẽ mất chi phí khoảng ~0.025 DASH để ẩn danh 1000 DASH</translation>
+        <translation>Deze optie is het snelst en kost ongeveer ~0.025 D om 1000 D te anonimiseren</translation>
     </message>
     <message>
         <source>This option is moderately fast and will cost about 0.05 DASH to anonymize 1000 DASH</source>
-        <translation>Tuỳ chọn này là tương đối nhanh và sẽ mất chi phí khoảng ~0.05 DASH để ẩn danh 1000 DASH</translation>
+        <translation>Deze optie is relatief snel en zal ongeveer 0.05 DASH kosten om 1000 DASH te anonimiseren </translation>
     </message>
     <message>
         <source>0.1 DASH per 1000 DASH you anonymize.</source>
-        <translation>0.1 DASH cho mỗi 1000 DASH bạn muốn ẩn danh.</translation>
+        <translation>0.1 DASH per 1000 DASH die je anonimiseert.</translation>
     </message>
     <message>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation>Đây là tuỳ chọn chậm nhất và an toàn nhất. Sử dụng mức vô danh cao nhất sẽ tốn kém</translation>
+        <translation>Deze optie is het langzaamst en meest veilig. Maximimum anonimiteit kost</translation>
     </message>
     <message>
         <source>PrivateSend Configuration</source>
-        <translation>Cấu hình của PrivateSend</translation>
+        <translation>PrivateSend configuratie</translation>
     </message>
     <message>
         <source>PrivateSend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash's configuration screen.</source>
-        <translation>PrivateSend đã được thiết lập thành công về mức cơ bản (%1 và 2 vòng). Bạn có thể thay đổi nó bất cứ thời gian nào bằng cách mở chức năng cấu hình của Dash.</translation>
+        <translation>PrivateSend is succesvol ingesteld op basis (%1 en 2 rondes). U kunt dit op elk gewenst moment wijzigen door het Dash configuratiescherm te openen.</translation>
     </message>
     <message>
         <source>PrivateSend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash's configuration screen.</source>
-        <translation>PrivateSend đã được thiết lập thành công ở mức cao (%1 và 8 vòng). Bạn có thể thay đổi nó bất cứ lúc nào bằng cách mở chức năng cấu hình Dash.</translation>
+        <translation>PrivateSend is succesvol ingesteld op hoog (%1 en 8 rondes). U kunt dit op elk gewenst moment wijzigen door het Dash configuratiescherm te openen.</translation>
     </message>
     <message>
         <source>PrivateSend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash's configuration screen.</source>
-        <translation>PrivateSend đã được thiết lập thành công ở mức tối đa (%1 và 16 vòng). Bạn có thể thay đổi nó bất cứ thời gian nào bằng cách mở chức năng cấu hình của Dash.</translation>
+        <translation>PrivateSend is succesvol ingesteld op maximaal (%1 en 16 rondes). U kunt dit op elk gewenst moment wijzigen door het Dash configuratiescherm te openen.</translation>
     </message>
 </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Sửa địa chỉ</translation>
+        <translation>Bewerk Adres</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Nhãn</translation>
+        <translation>&amp;Label</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>Nhãn tương ứng với địa chỉ này trong danh sách đầu vào</translation>
+        <translation>Het label dat bij dit adres item hoort</translation>
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>Địa &amp;chỉ</translation>
+        <translation>&amp;Adres</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Địa chỉ tương ứng với địa chỉ này trong danh sách đầu vào. Chỉ có thể thay đổi địa chỉ gửi đi.</translation>
+        <translation>Het adres dat bij dit adres item hoort. Dit kan alleen bewerkt worden voor verstuur adressen.</translation>
     </message>
     <message>
         <source>New receiving address</source>
-        <translation>Địa chỉ nhận mới</translation>
+        <translation>Nieuw ontvangstadres</translation>
     </message>
     <message>
         <source>New sending address</source>
-        <translation>Địa chỉ gửi mới</translation>
+        <translation>Nieuw verzendadres</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>Sửa địa chỉ nhận</translation>
+        <translation>Bewerk ontvangstadres</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Sửa địa chỉ gửi</translation>
+        <translation>Bewerk verzendadres</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Dash address.</source>
-        <translation>Địa chỉ vừa nhập "%1" không phải địa chỉ Dash hợp lệ.</translation>
+        <translation>Het ingevoerde adres "%1" is geen geldig Dash adres.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
-        <translation>Địa chỉ vừa nhập "%1" đã có trong danh sách địa chỉ.</translation>
+        <translation>Het opgegeven adres "%1" bestaat al in uw adresboek.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation>Không thể mở khoá ví.</translation>
+        <translation>Kon de portemonnee niet openen.</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation>Sinh khoá mới không thành công.</translation>
+        <translation>Genereren nieuwe sleutel mislukt.</translation>
     </message>
 </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Một thư mục dữ liệu mớ đã được tạo.</translation>
+        <translation>Een nieuwe gegevensmap wordt aangemaakt.</translation>
     </message>
     <message>
         <source>name</source>
-        <translation>tên</translation>
+        <translation>Naam</translation>
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>Thư mục đã tồn tại. Thêm %1 nếu bạn định tạo một thư mục mới tại đây.</translation>
+        <translation>Map bestaat al. Voeg %1 toe als u van plan bent hier een nieuwe map aan te maken.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>Đường dẫn đã tồn tại, và nó không phải là thư mục.</translation>
+        <translation>Pad bestaat al en is geen map.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>Không thể tạo thư mục dữ liệu ở đây.</translation>
+        <translation>Kan hier geen gegevensmap aanmaken.</translation>
     </message>
 </context>
 <context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
-        <translation>phiên bản</translation>
+        <translation>Versie</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
@@ -991,169 +991,169 @@
     </message>
     <message>
         <source>About %1</source>
-        <translation>About %1</translation>
+        <translation>Over %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
-        <translation>Các tuỳ chọn dòng lệnh</translation>
+        <translation>opdrachtregelopties</translation>
     </message>
     <message>
         <source>Usage:</source>
-        <translation>Cách dùng:</translation>
+        <translation>Gebruik:</translation>
     </message>
     <message>
         <source>command-line options</source>
-        <translation>tuỳ chọn dòng lệnh</translation>
+        <translation>opdrachtregelopties</translation>
     </message>
     <message>
         <source>UI Options:</source>
-        <translation>Các tuỳ chọn giao diện:</translation>
+        <translation>UI-opties:</translation>
     </message>
     <message>
         <source>Choose data directory on startup (default: %u)</source>
-        <translation>Chọn thư mục dữ liệu khi khởi động (ngầm định: %u)</translation>
+        <translation>Kies gegevensmap bij opstarten (standaard: %u)</translation>
     </message>
     <message>
         <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Chọn ngôn ngữ, ví dụ "vn_VN" (ngầm định: theo hệ thống)</translation>
+        <translation>Stel taal in, bijvoorbeeld "nl_NL" (standaard: systeemlocale)</translation>
     </message>
     <message>
         <source>Start minimized</source>
-        <translation>Bắt đầu thu nhỏ</translation>
+        <translation>Geminimaliseerd starten</translation>
     </message>
     <message>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Đặt chứng thực gốc cho yêu cầu thanh toán (ngầm định: -hệ thống-)</translation>
+        <translation>Zet SSL-rootcertificaat voor betalingsverzoeken (standaard: -systeem-)</translation>
     </message>
     <message>
         <source>Show splash screen on startup (default: %u)</source>
-        <translation>Hiển thị màn hình thông tin khi khởi động (ngầm định: %u)</translation>
+        <translation>Toon opstartscherm bij opstarten (standaard: %u)</translation>
     </message>
     <message>
         <source>Reset all settings changed in the GUI</source>
-        <translation>Tái thiết lập tất cả các thông số thay đổi trên giao diện đồ hoạ</translation>
+        <translation>Reset alle wijzigingen aan instellingen gedaan in de GUI</translation>
     </message>
     <message>
         <source>PrivateSend information</source>
-        <translation>Thông tin PrivateSend</translation>
+        <translation>PrivateSend informatie</translation>
     </message>
     <message>
         <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times..&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more info see &lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </source>
-        <translation>&lt;h3&gt;Cơ bản về PrivateSend&lt;/h3&gt; PrivateSend cho bạn sự thực sự riêng tư về tài chính bằng việc che dấu những nguồn cung. Tất cả Dash trong ví của bạn bao gồm những "nguồn" khác nhau mà bạn nghĩ đó là các coin riêng biệt và rời rạc.&lt;br&gt; PrivateSend sử dụng một tiến trình độc đáo để trộn các đầu vào của bạn với đầu vào của những người khác, mà không làm cho các coin rời khỏi ví của bạn. Bạn vẫn giữ quyền kiểm soát tiền của bạn bất cứ lúc nào..&lt;hr&gt; &lt;b&gt;Quá trình PrivateSend làm việc như sau: &lt;/b&gt; &lt;ol type="1"&gt; &lt;li&gt;PrivateSend bắt đầu bằng việc chia các giao dịch đầu vào của bạn thành những mệnh giá chuẩn. Những mệnh giá đó là 0.01 DASH, 0.1 DASH, 1 DASH, và 10 DASH -- cũng giống như các mệnh giá trên tiền giấy mà bạn sử dụng hàng ngày.&lt;li&gt; &lt;li&gt;Ví của bạn sau đó gửi yêu cầu đến những nút phần mềm được cấu hình đặc biệt trên mạng gọi là các "masternode". Những masternode được báo rằng bạn quan tâm đến việc xáo trộn một mệnh giá nào đó. Không có thông tin định danh nào được gửi đến cho các masternode, và như vậy họ không bao giờ biết bạn "là ai".&lt;/li&gt; &lt;li&gt;Khi hai người khác nhau gửi những thông điệp tương tự, có nghĩa là họ muốn xáo trộn cùng loại mệnh giá, một phiên xáo trộn bắt đầu.Masternode xáo trộn các đầu vào và hướng dẫn tất cả ví của tất cả ba người dùng để trả đầu vào đã được chuyển đổi trở lại cho chính họ. Ví của bạn sẽ trả mệnh giá đó trực tiếp cho nó, nhưng với một địa chỉ khác (được gọi là địa chỉ trả tiền lẻ).&lt;/li&gt; &lt;/li&gt;Để thực sự che khuất nguồn tiền của bạn, ví của bạn phải lặp lại quy trình đó một số lần với mỗi mệnh giá nhất định. Mỗi lần tiến trình hoàn tất, nó được gọi là một "vòng". Mỗi vòng của PrivateSend làm nên độ khó bậc số mũ để xác định nguồn tiền của bạn đến từ đâu.&lt;/li&gt; &lt;li&gt;Quá trình xáo trộn này xảy ra trong chế độ nền mà không xen vào những việc khác của bạn. Khi bạn muốn làm một giao dịch, nguồn tiền của bạn đã được ẩn danh hoá rồi. Do đó bạn không cần phải đợi thêm gì nữa.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt; &lt;b&gt;QUAN TRỌNG:&lt;/b&gt; Ví của bạn chỉ có chứa 1000 "địa chỉ tiền trả lại". Mỗi lần một sự kiện xáo trộn xảy ra, có đến 9 địa chỉ sẽ được sử dụng. Điều đó có nghĩa với ví mới với 1000 địa chỉ thì dùng cho 100 lần trộn. Khi 900 địa chỉ đã được sử dụng, ví của bạn phải tạo thêm các địa chỉ mới. Nó chỉ có thể làm việc đó, tuy nhiên, nếu bạn có chế độ tự động backup được bật&lt;br&gt; Kết quả là, những người dùng mà chế độ backup bị tắt sẽ có chế độ PrivateSend cũng bị tắt.&lt;hr&gt; Để biết thêm thông tin hãy xem &lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;</translation>
+        <translation>&lt;h3&gt;Basics van PrivateSend&lt;/h3&gt; PrivateSend geeft u echte financiële privacy door de oorsprong van uw geld te verbergen. Alle Dash in uw wallet bestaat uit verschillende "inputs" die u kunt beschouwen als afzonderlijke, discrete munten.&lt;br&gt; PrivateSend maakt gebruik van een innovatief proces om uw input te mengen met de input van twee andere mensen, zonder dat uw munten ooit uw wallet verlaten . U behoudt te alle tijden de controle over uw geld. &lt;hr&gt; &lt;b&gt;Het PrivateSend-proces werkt als volgt: &lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begint door uw transactie-inputs in standaard denominaties op te breken. Deze denominaties zijn 0,01 DASH, 0,1 DASH, 1 DASH en 10 DASH - eigenlijk net zoals de muntstukken van contant geld dat u elke dag gebruikt.&lt;/li&gt; Uw wallet stuurt daarna verzoeken naar speciaal geconfigureerde softwarenodes op het netwerk, zogenaamde "masternodes." Deze masternodes worden daarmee op de hoogte gesteld dat u geïnteresseerd bent in het mixen van een bepaalde denominatie. Er wordt geen identificeerbare informatie naar de masternodes gestuurd, ze kunnen dus niet weten wie u bent.&lt;/li&gt; &lt;li&gt;Wanneer twee andere mensen vergelijkbare berichten sturen, waarin ze aangeven dat ze dezelfde denominaties willen mixen, begint een mixsessie. De masternode mixt alle invoeren en instrueert de wallets van alle drie de gebruikers om de nu getransformeerde input aan zichzelf terug te betalen. Uw wallet betaalt die denominaties rechtstreeks naar zichzelf, maar met een ander adres (een wisselgeldadres genoemd).&lt;/li&gt; &lt;li&gt;Om uw geld volledig te verbergen, moet uw portemonnee dit proces een aantal keer herhalen voor elke denominatie. Iedere keer dat het proces wordt voltooid, wordt een 'ronde' genoemd. Elke ronde van PrivateSend maakt het exponentieel moeilijker om de herkomst van uw geld te bepalen.&lt;/li&gt; &lt;li&gt;Dit mixproces gebeurt op de achtergrond zonder enige tussenkomst van uw kant. Wanneer u een transactie wenst uit te voeren, zijn uw fondsen al geanonimiseerd. Er is geen extra wachttijd nodig.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;BELANGRIJK:&lt;/b&gt; Uw wallet bevat slechts 1000 van deze "wisselgeldadressen". Elke keer dat er een mixsessie plaatsvindt, worden maximaal 9 van uw adressen opgebruikt. Dit betekent dat deze 1000 adressen volstaan voor ongeveer 100 mixsessies. Wanneer er 900 adressen zijn opgebruikt, moet uw wallet nieuwe adressen aanmaken. Dit kan alleen maar als u automatische back-ups hebt ingeschakeld.&lt;br&gt; Daarom is voor gebruikers die back-ups hebben uitgeschakeld, ook PrivateSend uitgeschakeld. &lt;hr&gt;Voor meer informatie kijk op&lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https: //dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;</translation>
     </message>
 </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
-        <translation>Chào mừng</translation>
+        <translation>Welkom</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
-        <translation>Welcome to %1.</translation>
+        <translation>Welkom bij %1.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation>Đây là lần đầu chương trình khởi chạy, bạn có thể chọn nơi %1 sẽ lưu trữ data.</translation>
+        <translation>Omdat dit de eerste keer is dat het programma gestart is, kunt u nu kiezen waar %1 de data moet opslaan.</translation>
     </message>
     <message>
         <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 sẽ tải và lưu một bản của block chain của Dash. Có ít nhất %2GB dữ liệu sẽ được lưu vào trong thư mục này, và nó sẽ tăng lên theo thời gian. Ví của bạn cũng sẽ được lưu trong thư mục này.</translation>
+        <translation>%1 zal een kopie van de Dash-blockchain downloaden en opslaan. Ten minste %2GB aan data zal worden opgeslagen in deze folder, dit zal toenemen in de toekomst. De portemonnee zal ook in deze folder worden opgeslagen.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>Sử dụng thư mục dữ liệu ngầm định</translation>
+        <translation>Gebruik de standaard gegevensmap</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>Sử dụng thư mục dữ liệu tuỳ chọn:</translation>
+        <translation>Gebruik een persoonlijke gegevensmap:</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation>Lỗi: Thư mục bạn cọn "%1" không thể tạo được.</translation>
+        <translation>Fout: De gespecificeerde map "%1" kan niet worden gecreëerd.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation>Fout</translation>
     </message>
     <message>
         <source>%1 GB of free space available</source>
-        <translation>%1 GB còn trống </translation>
+        <translation>%1 GB aan vrije opslagruimte beschikbaar</translation>
     </message>
     <message>
         <source>(of %1 GB needed)</source>
-        <translation>(của %1 GB cần đến)</translation>
+        <translation>(van %1 GB benodigd)</translation>
     </message>
 </context>
 <context>
     <name>MasternodeList</name>
     <message>
         <source>Form</source>
-        <translation>Từ</translation>
+        <translation>Formulier</translation>
     </message>
     <message>
         <source>My Masternodes</source>
-        <translation>Các Masternode của tôi</translation>
+        <translation>Mijn Masternodes</translation>
     </message>
     <message>
         <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
-        <translation>Chú ý: Trạng thái của các masternode của bạn ở ví cục bộ có thể có tiềm năng hơi không chính xác. &lt;br /&gt;Luôn luôn đợi ví của bạn đồng bộ dữ liệu thêm và sau đó kiểm tra kém nút khác&lt;br /&gt;nếu masternode của bạn đang chạy nhưng bạn vẫn không thấy nó "ENABLED" trong trường "Trạng thái".</translation>
+        <translation>Opmerking: Status van uw masternodes in de lokale portemonnee kan mogelijk licht afwijkend zijn.&lt;br /&gt;Wacht steeds tot de portemonnee extra gegevens synchroniseert en controleer daarna een ander knooppunt&lt;br /&gt;Als jouw masternode moet werken, maar je ziet nog steeds niet 'Ingeschakeld' in het 'Status' veld.</translation>
     </message>
     <message>
         <source>Alias</source>
-        <translation>Bí danh</translation>
+        <translation>Alias</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Địa chỉ</translation>
+        <translation>Adres</translation>
     </message>
     <message>
         <source>Protocol</source>
-        <translation>Giao thức</translation>
+        <translation>Protocol</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation>Trạng thái</translation>
+        <translation>Status</translation>
     </message>
     <message>
         <source>Active</source>
-        <translation>Hoạt động</translation>
+        <translation>Actief</translation>
     </message>
     <message>
         <source>Last Seen</source>
-        <translation>Lần cuối thấy</translation>
+        <translation>Laatst gezien</translation>
     </message>
     <message>
         <source>Payee</source>
-        <translation>Người nhận</translation>
+        <translation>Begunstigde</translation>
     </message>
     <message>
         <source>S&amp;tart alias</source>
-        <translation>Khởi động bí danh</translation>
+        <translation>S&amp;tart alias</translation>
     </message>
     <message>
         <source>Start &amp;all</source>
-        <translation>Khởi động tất cả</translation>
+        <translation>Start &amp;alle</translation>
     </message>
     <message>
         <source>Start &amp;MISSING</source>
-        <translation>Khởi động masternode THIẾU</translation>
+        <translation>Start &amp;ONTBREKEND</translation>
     </message>
     <message>
         <source>&amp;Update status</source>
-        <translation>Cập nhật trạng thái</translation>
+        <translation>&amp;Vernieuw status</translation>
     </message>
     <message>
         <source>Show additional Masternode information</source>
-        <translation>Hiển thị thông tin thêm về Masternode</translation>
+        <translation>Toon aanvullende Masternode informatie</translation>
     </message>
     <message>
         <source>Show &amp;Info...</source>
-        <translation>Hiển thị &amp;Thông tin...</translation>
+        <translation>Toon &amp;Info...</translation>
     </message>
     <message>
         <source>Status will be updated automatically in (sec):</source>
-        <translation>Trạng thái sẽ được cập nhật tự động trong vòng (giây):</translation>
+        <translation>Status wordt automatisch bijgewerkt in (sec):</translation>
     </message>
     <message>
         <source>0</source>
@@ -1161,71 +1161,71 @@
     </message>
     <message>
         <source>All Masternodes</source>
-        <translation>Tất cả các masternode</translation>
+        <translation>Alle Masternodes</translation>
     </message>
     <message>
         <source>Filter List:</source>
-        <translation>Lọc danh sách:</translation>
+        <translation>Filter Lijst:</translation>
     </message>
     <message>
         <source>Filter masternode list</source>
-        <translation>Lọc danh sách masternode</translation>
+        <translation>Filter masternode lijst</translation>
     </message>
     <message>
         <source>Node Count:</source>
-        <translation>Số lượng các nút:</translation>
+        <translation>Aantal Nodes:</translation>
     </message>
     <message>
         <source>Start alias</source>
-        <translation>Khởi động bí danh</translation>
+        <translation>Start alias</translation>
     </message>
     <message>
         <source>Confirm masternode start</source>
-        <translation>Xác nhận khởi động masternode</translation>
+        <translation>Bevestig opstarten van Masternode</translation>
     </message>
     <message>
         <source>Are you sure you want to start masternode %1?</source>
-        <translation>Bạn có chắc muốn khởi động masternode %1?</translation>
+        <translation>Weet u zeker dat u Masternode %1 wenst op te starten?</translation>
     </message>
     <message>
         <source>Confirm all masternodes start</source>
-        <translation>Xác nhận khởi động tất cả các masternode</translation>
+        <translation>Bevestig het opstarten van alle Masternodes</translation>
     </message>
     <message>
         <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>Bạn có chắc là bạn muốn khởi động TẤT CẢ các masternode?</translation>
+        <translation>Weet u zeker dat u ALLE masternodes wenst te starten?</translation>
     </message>
     <message>
         <source>Command is not available right now</source>
-        <translation>Lệnh này chưa sẵn sàng bây giờ</translation>
+        <translation>Dit commando is momenteel niet beschikbaar</translation>
     </message>
     <message>
         <source>You can't use this command until masternode list is synced</source>
-        <translation>Bạn không thể sử dụng lệnh này đến tận khi danh sách masternode được đồng bộ</translation>
+        <translation>U kunt dit commando niet gebruiken totdat de Masternode lijst is gesynchroniseerd</translation>
     </message>
     <message>
         <source>Confirm missing masternodes start</source>
-        <translation>Xác nhận khởi động các masternode còn thiếu</translation>
+        <translation>Bevestig starten van ontbrekende masternodes</translation>
     </message>
     <message>
         <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>Bạn có chắc là bạn muốn khởi động những masternode CÒN THIẾU?</translation>
+        <translation>Weet u zeker dat u de ONTBREKENDE masternodes wenst te starten?</translation>
     </message>
     <message>
         <source>Additional information for Masternode %1</source>
-        <translation>Thông tin thêm về Masternode %1</translation>
+        <translation>Aanvullende informatie voor Masternode %1</translation>
     </message>
     <message>
         <source>Masternode Private Key</source>
-        <translation>Khoá riêng của Masternode</translation>
+        <translation>Geheime sleutel van de Masternode</translation>
     </message>
     <message>
         <source>Private Key</source>
-        <translation>Khoá riêng</translation>
+        <translation>Geheime sleutel</translation>
     </message>
     <message>
         <source>Collateral</source>
-        <translation>Đặt cọc</translation>
+        <translation>Onderpand</translation>
     </message>
     <message>
         <source>IP</source>
@@ -1233,77 +1233,77 @@
     </message>
     <message>
         <source>Version</source>
-        <translation>Phiên bản</translation>
+        <translation>Versie</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Không biết</translation>
+        <translation>Onbekend</translation>
     </message>
     <message>
         <source>Sentinel</source>
-        <translation>Lính canh</translation>
+        <translation>Sentinel</translation>
     </message>
 </context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
-        <translation>Form</translation>
+        <translation>Vorm</translation>
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
-        <translation>Những giao dịch mới có thể chưa hiện ra, và do đó số dư trong ví của bạn có thể chưa chính xác. Những thông tin này sẽ chính xác một khi ví của bạn đã hoàn tất việc đồng bộ với mạng lưới của Dash, như cụ thể bên dưới.</translation>
+        <translation>Recente transacties zijn mogelijk nog niet zichtbaar. De balans van de portemonnee is daarom mogelijk niet correct. Deze informatie is correct van zodra de synchronisatie met het Dash-netwerk werd voltooid, zoals onderaan beschreven.</translation>
     </message>
     <message>
         <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Việc chi tiêu Dash khi mà các giao dịch của nó chưa được đồng bộ hết sẽ không được chấp nhận bởi mạng lưới.</translation>
+        <translation>Pogingen om Dash uit te geven die betrokken zijn bij nog-niet-weergegeven transacties zullen niet worden geaccepteerd door het netwerk</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
-        <translation>Số khối còn lại</translation>
+        <translation>Aantal blokken resterend.</translation>
     </message>
     <message>
         <source>Unknown...</source>
-        <translation>Không xác định...</translation>
+        <translation>Onbekend...</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Thời gian cuối cùng của khối</translation>
+        <translation>Tijd laatste blok</translation>
     </message>
     <message>
         <source>Progress</source>
-        <translation>Tiến trình</translation>
+        <translation>Vooruitgang</translation>
     </message>
     <message>
         <source>Progress increase per hour</source>
-        <translation>Tiến trình tăng lên mỗi giờ</translation>
+        <translation>Vooruitgang per uur</translation>
     </message>
     <message>
         <source>calculating...</source>
-        <translation>đang tính...</translation>
+        <translation>Berekenen...</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
-        <translation>Thời gian ước đoán còn lại để hoàn tất việc đồng bộ</translation>
+        <translation>Geschatte tijd tot volledig synchroon</translation>
     </message>
     <message>
         <source>Hide</source>
-        <translation>Ẩn</translation>
+        <translation>Verbergen</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Không xác định. Đang đồng bộ phần đầu (%1)...</translation>
+        <translation>Onbekend. Kopteksten synchroniseren (%1%)...</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
-        <translation>Mở URI</translation>
+        <translation>Open URI</translation>
     </message>
     <message>
         <source>Open payment request from URI or file</source>
-        <translation>Mở yêu cầu thanh toán từ URI hoặc file</translation>
+        <translation>Open betalingsverzoek via URI of bestand</translation>
     </message>
     <message>
         <source>URI:</source>
@@ -1311,26 +1311,26 @@
     </message>
     <message>
         <source>Select payment request file</source>
-        <translation>Chọn file yêu cầ thanh toán</translation>
+        <translation>Selecteer betalingsverzoek bestand</translation>
     </message>
     <message>
         <source>Select payment request file to open</source>
-        <translation>Chọn tệp yêu cầu thanh toán để mở</translation>
+        <translation>Selecteer betalingsverzoekbestand om te openen</translation>
     </message>
 </context>
 <context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Các tuỳ chọn</translation>
+        <translation>Opties</translation>
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation>&amp;Chính</translation>
+        <translation>&amp;Algemeen</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation>Kích thước của dữ liệu cache</translation>
+        <translation>Grootte van de &amp;database cache</translation>
     </message>
     <message>
         <source>MB</source>
@@ -1338,127 +1338,129 @@
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>Số lượng các luồng kịch bản kiểm tra</translation>
+        <translation>Aantal threads voor &amp;scriptverificatie</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = tự động, &lt;0 = để đó rất nhiều lõi miễn phí)</translation>
+        <translation>(0 = auto, &lt;0 = laat dit aantal kernen vrij)</translation>
     </message>
     <message>
         <source>Amount of Dash to keep anonymized</source>
-        <translation>Lượng Dash muốn giữ vô danh</translation>
+        <translation>Aantal Dash om geanonimiseerd te houden</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation>&amp;Ví</translation>
+        <translation>W&amp;allet</translation>
     </message>
     <message>
         <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
-        <translation>Hiện thêm trang có danh sách tất cả các masternodes của bạn trong trang con thứ nhất &lt;br/&gt; và tất cả các masternode trên mạng trong trang con thứ hai.</translation>
+        <translation>Toon extra tabblad waarin je al jouw masternodes toont in de eerste sub-tab&lt;br/&gt; en alle masternodes op het netwerk in het tweede sub-tabblad.</translation>
     </message>
     <message>
         <source>Show Masternodes Tab</source>
-        <translation>Hiển thị trang Masternodes</translation>
+        <translation>Toon Masternodes tab</translation>
     </message>
     <message>
         <source>Show additional information and buttons for PrivateSend on overview screen.</source>
-        <translation>Hiển thị thêm thông tin và các nút cho PrivateSend trên màn hình tổng quát.</translation>
+        <translation>Toon extra informatie en knoppen voor PrivateSend op het overzichtscherm.</translation>
     </message>
     <message>
         <source>Enable advanced PrivateSend interface</source>
-        <translation>Bật chế độ giao diện PrivateSend cao cấp</translation>
+        <translation>Schakel de geavanceerde PrivateSend interface in</translation>
     </message>
     <message>
         <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
-        <translation>Hiển thị bảng hội thoại cảnh báo khi PrivateSend phát hiện ví chỉ còn rất ít khoá còn lại.</translation>
+        <translation>Toon waarschuwing-dialoog wanneer PrivateSend detecteert dat je portemonnee slechts een klein aantal sleutels over heeft.</translation>
     </message>
     <message>
         <source>Warn if PrivateSend is running out of keys</source>
-        <translation>Cảnh báo nếu PrivateSend đang thiếu khoá</translation>
+        <translation>Waarschuw als de sleutels voor PrivateSend dreigen op te raken</translation>
     </message>
     <message>
         <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-        <translation>Cho dù sử dụng thí nghiệm chế độ PrivateSend với việc trộn nhiều phiên trên một khối.&lt;br/&gt;Chú ý: Bạn cần sử dụng tính năng này một cách thận trọng.&lt;br/&gt;Hãy đảm bảo rằng bạn luôn lưu trữ sao lưu (tự động) ví gần nhất ở nơi an toàn.</translation>
+        <translation>Of je de experimentele PrivateSend-modus wenst te gebruiken met meerdere mengingssessies per blok.&lt;br/&gt;Nota: Je moet deze functie zorgvuldig gebruiken.&lt;br/&gt;Zorg ervoor dat je steeds een recente (auto)backup van jouw portemonnee op een veilige plek hebt!</translation>
     </message>
     <message>
         <source>Enable PrivateSend &amp;multi-session</source>
-        <translation>Bật chế độ đa &amp;kênh PrivateSend</translation>
+        <translation>Schakel PrivateSend &amp;multi-sessie in</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
-        <translation>Nếu bạn vô hiệu hóa các chi tiêu của phần tiền lẻ chưa được xác nhận, phần tiền lẻ từ một giao dịch &lt;br/&gt;không thể được sử dụng đến khi giao dịch đó nhận được ít nhất một xác nhận. &lt;br/&gt;Điều này ảnh hưởng đến cách tính số dư của bạn.</translation>
+        <translation>Indien het uitgeven van onbevestigd wisselgeld uitgeschakeld wordt dan kan het wisselgeld van een transactie niet worden gebruikt totdat de transactie ten minste een bevestiging heeft. 
+Dit heeft ook invloed op de manier waarop uw saldo wordt berekend.</translation>
     </message>
     <message>
         <source>PrivateSend rounds to use</source>
-        <translation>Số vòng PrivateSend được dùng</translation>
+        <translation>PrivateSend rondes te gebruiken</translation>
     </message>
     <message>
         <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
-        <translation>Số lượng này hoạt động như là một ngưỡng để tắt PrivateSend khi nó được chạm tới.</translation>
+        <translation>Dit bedrag fungeert als een drempel om PrivateSend uit te schakelen zodra het werd bereikt.</translation>
     </message>
     <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Tự động mở cổng cho phần mềm Dash Core trên rounter. Điều này chỉ hoạt động được khi rounter của bạn hỗ trợ UpnP và tính năng đó được bật lên.</translation>
+        <translation>Open automatisch de Dash client poort op de router. Dit werkt alleen als uw router UPnP ondersteunt en dit is ingeschakeld.</translation>
     </message>
     <message>
         <source>Accept connections from outside</source>
-        <translation>Chấp nhận kết nối từ bên ngoài</translation>
+        <translation>Laat uitgaande verbindingen toe.</translation>
     </message>
     <message>
         <source>Allow incoming connections</source>
-        <translation>Cho phép các kết nối tới</translation>
+        <translation>Laat binnenkomende verbindingen toe</translation>
     </message>
     <message>
         <source>Connect to the Dash network through a SOCKS5 proxy.</source>
-        <translation>Kết nối với mạng lưới Dash thông qua một SOCK5 proxy.</translation>
+        <translation>Verbind met het Dash netwerk via een SOCKS proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
-        <translation>&amp;Kết nối thông qua SOCK5 proxy (proxy ngầm định): </translation>
+        <translation>&amp;Verbind via een SOCKS-proxy (standaardproxy):</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation>Thu nhỏ thay vì thoát khỏi ứng dụng khi cửa sổ được đóng lại. Khi tuỳ chọn này được bật, ứng dụng sẽ được đóng chỉ sau khi chọn chức năng Thoát trên menu.</translation>
+        <translation>Minimaliseren in plaats van de applicatie af te sluiten wanneer het venster is afgesloten. Als deze optie is ingeschakeld, zal de toepassing pas worden afgesloten na het selecteren van Exit in het menu.</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Địa chỉ URL của bên thứ ba (ví dụ: một trang duyệt block) mà xuất hiện trong trang về các giao dịch giống như một mục trong menu ngữ cảnh.&lt;br/&gt;%s trong địa chỉ URL được thay thế bằng mã băm của giao dịch. Nhiều địa chỉ URL được phân cách với nhau bởi một đường thẳng dọc |.</translation>
+        <translation>Derde partij URL's (bijvoorbeeld block explorer) dat in de transacties tab verschijnen als contextmenu elementen. %s in de URL is vervangen door transactie hash. Verscheidene URL's zijn gescheiden met een verticale streep |.  </translation>
     </message>
     <message>
         <source>Expert</source>
-        <translation>Chuyên gia</translation>
+        <translation>Expert</translation>
     </message>
     <message>
         <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Thiết lập này xác định số tiền cho mỗi master nodes mà đầu vào thông qua đó được ẩn danh.&lt;br/&gt;Càng có nhiều vòng ẩn danh thì sẽ cho mức độ riêng tư càng cao, nhưng nó cũng tốn nhiều phí hơn.</translation>
+        <translation>Deze instelling bepaalt het aantal individuele masternodes waardoor een input zal worden geanonimiseerd. 
+Meer anonimisatie rondes geeft een hoger niveau van privacy, maar kost ook meer aan vergoedingen.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation>Hiển thị hoặc không hiển thị tính năng coin control.</translation>
+        <translation>Munt controle functies weergeven of niet.</translation>
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
-        <translation>Tự động bắt đầu %1 sau khi đăng nhập vào system.</translation>
+        <translation>Start %1 automatisch na inloggen in het systeem.</translation>
     </message>
     <message>
         <source>&amp;Start %1 on system login</source>
-        <translation>&amp;Bắt đầu %1 trên đăng nhập system</translation>
+        <translation>&amp;Start %1 bij het inloggen op het systeem</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation>Bật tính năng Coin &amp;control</translation>
+        <translation>Coin &amp;Control activeren</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>&amp;Tiêu phần trả lại chưa được xác nhận</translation>
+        <translation>&amp;Spendeer onbevestigd wisselgeld</translation>
     </message>
     <message>
         <source>&amp;Network</source>
-        <translation>&amp;Mạng</translation>
+        <translation>&amp;Netwerk</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>Ánh xạ cổng sử dụng &amp;UPnP</translation>
+        <translation>Portmapping via &amp;UPnP</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1466,23 +1468,23 @@
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>Địa chỉ IP của proxy (ví dụ: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation>IP-adres van de proxy (bijv. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation>&amp;Cổng:</translation>
+        <translation>&amp;Poort:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Cổng của proxy (ví dụ: 9050)</translation>
+        <translation>Poort van de proxy (bijv. 9050)</translation>
     </message>
     <message>
         <source>Used for reaching peers via:</source>
-        <translation>Sử dụng để tiếp cận các nút mạng ngang hàng thông qua:</translation>
+        <translation>Gebruikt om peers te bereiken via:</translation>
     </message>
     <message>
         <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation>Hiển thị, nếu sử dụng ngầm định proxy SOCKS5 để kết nối đến các điểm ngang hàng trong mạng.</translation>
+        <translation>Toont of de opgegeven standaard SOCK5 proxy gebruikt is om peers via dit netwerk type te bereiken</translation>
     </message>
     <message>
         <source>IPv4</source>
@@ -1498,85 +1500,85 @@
     </message>
     <message>
         <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Kết nối với mạng lưới Dash thông qua các proxy SOCKS5 riêng biệt cho các dịch vụ ẩn danh Tor.</translation>
+        <translation>Maak verbinding met Dashnetwerk door een aparte SOCKS5-proxy voor verborgen diensten van Tor.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Sử dụng các proxy SOCKS5 để kết nối với các đối tác thông qua dịch vụ ẩn danh Tor:</translation>
+        <translation>Gebruik aparte SOCK5 proxy om peers via Tor hidden services te bereiken:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>&amp;Cửa sổ</translation>
+        <translation>&amp;Scherm</translation>
     </message>
     <message>
         <source>&amp;Hide the icon from the system tray.</source>
-        <translation>Ẩ&amp;n biểu tượng trên khay hệ thống.</translation>
+        <translation>&amp;Verberg het icoon van het systeemvak.</translation>
     </message>
     <message>
         <source>Hide tray icon</source>
-        <translation>Ẩn biểu tượng trên khay hệ thống</translation>
+        <translation>Verberg systeemvakicoon</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Chỉ hiển thị biểu tượng ở khai sau khi thu nhỏ cửa sổ.</translation>
+        <translation>Laat alleen een systeemvak-icoon zien wanneer het venster geminimaliseerd is</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>Thu &amp;nhỏ về khay thay vì về thanh taskbar</translation>
+        <translation>&amp;Minimaliseer naar het systeemvak in plaats van de taakbalk</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>Thu &amp;nhỏ khi đóng</translation>
+        <translation>Minimaliseer bij sluiten van het &amp;venster</translation>
     </message>
     <message>
         <source>&amp;Display</source>
-        <translation>&amp;Hiển thị</translation>
+        <translation>&amp;Interface</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Ngôn ngữ người dùng:</translation>
+        <translation>Taal &amp;Gebruikersinterface:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation>Giao diện ngôn ngữ người dùng có thể được thiết lập tại đây. Tùy chọn này sẽ có hiệu lực sau khi khởi động lại %1.</translation>
+        <translation>De taal van de gebruikersinterface kan hier ingesteld worden. Deze instelling zal pas van kracht worden nadat %1 herstart wordt.</translation>
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/dash/</source>
-        <translation>Ngôn ngữ ị thiếu hoặc việc dịch chưa hoàn tất? Tham gia dịch giúp tại đây:
+        <translation>Is een een taal te kort of een vertaling onvolledig ? Help de vertaling hier: 
 https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>User Interface Theme:</source>
-        <translation>Kiểu giao diện người dùng</translation>
+        <translation>Gebruikersinterface thema:</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>Đơn vị &amp;hiển thị số lượng:</translation>
+        <translation>&amp;Eenheid om bedrag in te tonen:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Chọn đơn vị phân khu mặc định để hiển thị trong giao diện và khi gửi tiền.</translation>
+        <translation>Kies de standaard onderverdelingseenheid om weer te geven in uw programma, en voor het versturen van munten</translation>
     </message>
     <message>
         <source>Decimal digits</source>
-        <translation>Số các chữ số thập phân</translation>
+        <translation>Decimalen</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
-        <translation>URLs của giao dịch bên thứ ba</translation>
+        <translation>Transactie-URLs van derde partijen</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
-        <translation>Kích hoạt các tuỳ chọn dòng lệnh sẽ thay thế cho các tuỳ chọn trên:</translation>
+        <translation>Actieve commandoregelopties die bovenstaande opties overschrijven:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
-        <translation>Tái lập lại tất cả các tuỳ chọn về ngầm định.</translation>
+        <translation>Reset alle clientopties naar de standaardinstellingen.</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Tái lập Tuỳ chọn</translation>
+        <translation>&amp;Resetopties</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1584,106 +1586,106 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
-        <translation>&amp;Huỷ</translation>
+        <translation>Ann&amp;uleren</translation>
     </message>
     <message>
         <source>default</source>
-        <translation>ngầm định</translation>
+        <translation>standaard</translation>
     </message>
     <message>
         <source>none</source>
-        <translation>không có</translation>
+        <translation>geen</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation>Xác nhận tái lập tuỳ chọn</translation>
+        <translation>Bevestig reset van alle instellingen</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation>Cần phải khởi động phần mềm để kích hoạt các thay đổi.</translation>
+        <translation>Herstart van de client is vereist om aanpassingen door te voeren.</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
-        <translation>Phần mềm sẽ được tắt. Bạn có muốn xử lý?</translation>
+        <translation>De client zal worden afgesloten, wilt u doorgaan?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation>Thay đổi này có thể cần phải khởi động lại phần mềm.</translation>
+        <translation>Deze aanpassing vereist een herstart van de client.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Địa chỉ proxy được cung cấp không hợp lệ.</translation>
+        <translation>Het opgegeven proxyadres is ongeldig.</translation>
     </message>
 </context>
 <context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>Biểu mẫu</translation>
+        <translation>Vorm</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
-        <translation>Thông tin được hiển thị có thể đã lỗi thời. Ví của bạn sẽ tự động đồng bộ với mạng lưới Dash sau khi kết nối được thiết lập, tuy nhiên quá trình này chưa hoàn thành.</translation>
+        <translation>De weergegeven informatie kan achterhaald zijn. De beurs synchroniseert automatisch met het Dash netwerk nadat de verbinding is gelegd, maar dit proces is nog niet beeindigd.</translation>
     </message>
     <message>
         <source>Available:</source>
-        <translation>Sẵn sàng:</translation>
+        <translation>Beschikbaar:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation>Số dư có thể chi tiêu của bạn</translation>
+        <translation>Uw beschikbare saldo</translation>
     </message>
     <message>
         <source>Pending:</source>
-        <translation>Đang chờ:</translation>
+        <translation>Afwachtend:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Tổng của những giao dịch chưa được xác nhận, và do đó chưa được tính vào số dư có thể tiêu được</translation>
+        <translation>De som van de transacties die nog bevestigd moeten worden, en nog niet meetellen in uw beschikbare saldo</translation>
     </message>
     <message>
         <source>Immature:</source>
-        <translation>Chưa chín muồi:</translation>
+        <translation>Immatuur:</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation>Số dư khai thác được chưa được xác nhận đủ</translation>
+        <translation>Gedolven saldo dat nog niet tot wasdom is gekomen</translation>
     </message>
     <message>
         <source>Balances</source>
-        <translation>Số dư</translation>
+        <translation>Saldo's</translation>
     </message>
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation>Các giao dịch chưa được xác nhận cho các địa chỉ chỉ để theo dõi</translation>
+        <translation>Onbevestigde transacties naar een alleen-kijken adressen</translation>
     </message>
     <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation>Số dư đào được trong các địa chỉ chỉ theo dõi nhưng chưa sẵn sàng để tiêu được</translation>
+        <translation>Gemijnd saldo in alleen-kijken adressen </translation>
     </message>
     <message>
         <source>Total:</source>
-        <translation>Tổng:</translation>
+        <translation>Totaal:</translation>
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation>Tổng số dư hiện tại của bạn</translation>
+        <translation>Uw totale saldo</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
-        <translation>Tổng số dư hiện tại trong các địa chỉ chỉ theo dõi</translation>
+        <translation>Huidig totaal bedrag in alleen-kijken adressen</translation>
     </message>
     <message>
         <source>Watch-only:</source>
-        <translation>Chỉ theo dõi:</translation>
+        <translation>Alleen-kijken:</translation>
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
-        <translation>Số dư hiện tại của bạn trong địa chỉ chỉ theo dõi</translation>
+        <translation>Jouw huidig totaal bedrag in alleen-kijken adressen</translation>
     </message>
     <message>
         <source>Spendable:</source>
-        <translation>Có thể tiêu được:</translation>
+        <translation>Uitgeefbaar:</translation>
     </message>
     <message>
         <source>PrivateSend</source>
@@ -1691,299 +1693,300 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Status:</source>
-        <translation>Tình trạng:</translation>
+        <translation>Status:</translation>
     </message>
     <message>
         <source>Enabled/Disabled</source>
-        <translation>Bật/Tắt</translation>
+        <translation>Ingeschakeld/Uitgeschakeld</translation>
     </message>
     <message>
         <source>Completion:</source>
-        <translation>Hoàn thành:</translation>
+        <translation>Voltooiing:</translation>
     </message>
     <message>
         <source>Try to manually submit a PrivateSend request.</source>
-        <translation>Thử gửi một yêu cầu PrivateSend bằng tay.</translation>
+        <translation>Probeer handmatig een PrivateSend verzoek in te dienen</translation>
     </message>
     <message>
         <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
-        <translation>Khởi tạo lại trạng thái hiện tại của PrivateSend (có thể làm ngắt PrivateSend nếu nó đang trong quá trình Trộn, điều đó có thể làm bạn tốn tiền!)</translation>
+        <translation>Reset de huidige status van PrivateSend (kan PrivateSend onderbreken indien het Mix proces bezig is, wat u geld kan kosten!)</translation>
     </message>
     <message>
         <source>Information about PrivateSend and Mixing</source>
-        <translation>Thông tin về PrivateSend và Trộn coin</translation>
+        <translation>Informatie over PrivateSend en mixen</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation>Thông tin</translation>
+        <translation>Informatie</translation>
     </message>
     <message>
         <source>Amount and Rounds:</source>
-        <translation>Số tiền và số vòng:</translation>
+        <translation>Bedrag en Rondes:</translation>
     </message>
     <message>
         <source>0 DASH / 0 Rounds</source>
-        <translation>0 DASH / 0 Vòng</translation>
+        <translation>0 DASH / 0 Rondes</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
-        <translation>Mệnh giá được gửi:</translation>
+        <translation>Ingezonden Denom:</translation>
     </message>
     <message>
         <source>n/a</source>
-        <translation>không áp dụng</translation>
+        <translation>niet beschikbaar</translation>
     </message>
     <message>
         <source>Recent transactions</source>
-        <translation>Các giao dịch gần đây</translation>
+        <translation>Recente transacties</translation>
     </message>
     <message>
         <source>Start/Stop Mixing</source>
-        <translation>Bắt đầu/Tắt việc trộn</translation>
+        <translation>Start/Stop met Mixen</translation>
     </message>
     <message>
         <source>PrivateSend Balance:</source>
-        <translation>Số dư PrivateSend:</translation>
+        <translation>PrivateSend-balans:</translation>
     </message>
     <message>
         <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Mệnh giá mà bạn gửi cho Masternode. &lt;br&gt;Để trộn, những người dùng khác cũng cần gửi chính xác dùng loại mệnh giá đó.</translation>
+        <translation>De denominaties zijn bij de Masternode ingebracht. 
+Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
-        <translation>(Thông điệp cuối)</translation>
+        <translation>(Laatste Bericht)</translation>
     </message>
     <message>
         <source>Try Mix</source>
-        <translation>Thử Trộn</translation>
+        <translation>Probeer te Mixen</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation>Khởi động lại</translation>
+        <translation>Reset</translation>
     </message>
     <message>
         <source>out of sync</source>
-        <translation>không đồng bộ</translation>
+        <translation>niet gesynchroniseerd</translation>
     </message>
     <message>
         <source>Automatic backups are disabled, no mixing available!</source>
-        <translation>Tính năng tự động backup đã được tắt,  không thể trộn được!</translation>
+        <translation>Automatische backups uitgeschakeld, Mixfunctie is niet beschikbaar!</translation>
     </message>
     <message>
         <source>Start Mixing</source>
-        <translation>Bắt đầu Trộn</translation>
+        <translation>Start met Mixen</translation>
     </message>
     <message>
         <source>Stop Mixing</source>
-        <translation>Dừng Trộn</translation>
+        <translation>Stop met Mixen</translation>
     </message>
     <message>
         <source>No inputs detected</source>
-        <translation>Phát hiện không có đầu vào</translation>
+        <translation>Geen input gedetecteerd</translation>
     </message>
     <message numerus="yes">
         <source>%n Rounds</source>
-        <translation><numerusform>%n Vòng</numerusform></translation>
+        <translation><numerusform>%n Ronde</numerusform><numerusform>%n Rondes</numerusform></translation>
     </message>
     <message>
         <source>Found enough compatible inputs to anonymize %1</source>
-        <translation>Đã tìm được đủ đầu vào tương thích để ẩn danh hoá %1</translation>
+        <translation>Genoeg compatible munten om te anonimiseren %1</translation>
     </message>
     <message>
         <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
-        <translation>Không đủ đầu vào tương ứng để ẩn danh &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;sẽ ẩn danh &lt;span style='color:red;'&gt;%2&lt;/span&gt; thay vào đó</translation>
+        <translation>Niet genoeg compatibele inputs &lt;span style='color:red;'&gt;%1&lt;/span&gt;te anonimiseren,&lt;br&gt; zal in plaats daarvan &lt;span style='color:red;'&gt;%2&lt;/span&gt; anonimiseren</translation>
     </message>
     <message>
         <source>Overall progress</source>
-        <translation>Tiến trình chung</translation>
+        <translation>Totale voortgang</translation>
     </message>
     <message>
         <source>Denominated</source>
-        <translation>Đã chia mệnh giá</translation>
+        <translation>Gedenomineerd</translation>
     </message>
     <message>
         <source>Mixed</source>
-        <translation>Đã trộn</translation>
+        <translation>Gemixt</translation>
     </message>
     <message>
         <source>Anonymized</source>
-        <translation>Đã được ẩn danh</translation>
+        <translation>Geanonimiseerd</translation>
     </message>
     <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
-        <translation><numerusform>Các mệnh giá đầu vào có %5 của trung bình %n vòng</numerusform></translation>
+        <translation><numerusform>Gedenomineerde invoeren hebben gemiddeld %5 van %n ronde</numerusform><numerusform>Gedenomineerde inputs hebben gemiddeld %5 van %n rondes</numerusform></translation>
     </message>
     <message>
         <source>keys left: %1</source>
-        <translation>số khoá còn lại: %1</translation>
+        <translation>sleutels over: %1</translation>
     </message>
     <message>
         <source>Disabled</source>
-        <translation>Đã tắt</translation>
+        <translation>Uitgeschakeld</translation>
     </message>
     <message>
         <source>Very low number of keys left since last automatic backup!</source>
-        <translation>Còn lại rất ít các khoá từ khi tự động backup lần cuối!</translation>
+        <translation>Het aantal overgebleven sleutels sinds de laatste backup is erg laag!</translation>
     </message>
     <message>
         <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>Chúng tôi sẽ tạo một bản tự động backup cho bạn, tuy nhiên &lt;span style='color:red;'&gt;bạn nên luôn chắc chắn rằng bạn đã lưu backup ở nơi nào đó an toàn&lt;/span&gt;!</translation>
+        <translation>We staan op het punt om een nieuwe automatische backup voor u aan te maken, echter &lt;span style='color:red;'&gt;u moet er zelf altijd voor zorgen dat u backups op een veilige locatie heeft opgeslagen!&lt;/span&gt;</translation>
     </message>
     <message>
         <source>Note: You turn this message off in options.</source>
-        <translation>Chú ý: Bạn đã tắt thông báo này trong phần tuỳ chọn.</translation>
+        <translation>Opmerking: Dit bericht kan kan worden uitgeschakeld in de instellingen</translation>
     </message>
     <message>
         <source>WARNING! Something went wrong on automatic backup</source>
-        <translation>CHÚ Ý: Có gì đó có vấn đề khi đang tự động backup</translation>
+        <translation>WAARSCHUWING! Er is iets mis gegaan met de automatische backup</translation>
     </message>
     <message>
         <source>ERROR! Failed to create automatic backup</source>
-        <translation>LỖI: Không tạo được bản backup tự động</translation>
+        <translation>FOUT! Het maken van een automatische backup is mislukt</translation>
     </message>
     <message>
         <source>Mixing is disabled, please close your wallet and fix the issue!</source>
-        <translation>Trộn đã bị tắt, hãy đóng ví của bạn và xử lý vấn đề này đã.</translation>
+        <translation>Mixen is uiteschakeld, gelieve de portemonnee af te sluiten en het probleem op te lossen!</translation>
     </message>
     <message>
         <source>Enabled</source>
-        <translation>Đã bật</translation>
+        <translation>Ingeschakeld</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
-        <translation>hãy xem debug.log để biết thêm chi tiết.</translation>
+        <translation>zie debug.log voor meer informatie.</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
-        <translation>CẢNH BÁO! Không thể bổ sung keypool, hãy mở khoá ví của bạn để làm việc đó.</translation>
+        <translation>WAARSCHUWING! Het aanvullen van de keypool is mislukt, ontgrendel alstublieft uw portemonnee om dit te doen.</translation>
     </message>
     <message>
         <source>Last PrivateSend message:
 </source>
-        <translation>Thông điệp PrivateSend cuối cùng:
+        <translation>Laatste PrivateSend bericht:
 </translation>
     </message>
     <message>
         <source>N/A</source>
-        <translation>Không áp dụng</translation>
+        <translation>N.v.t.</translation>
     </message>
     <message>
         <source>PrivateSend was successfully reset.</source>
-        <translation>PrivateSend đã được thiết lập lại thành công.</translation>
+        <translation>PrivateSend is succesvol gereset</translation>
     </message>
     <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
-        <translation>Nếu bạn không muốn nhìn thấy thông tin nội bộ về phí/giao dich PrivateSend thì hãy chọn "Thông dụng nhất" là kiểu trên trang "Các giao dịch".</translation>
+        <translation>Als u de interne PrivateSend transacties/vergoeding niet wilt zien, selecteer dan "Meest gebruikte" als Type in de "Transacties" tab.</translation>
     </message>
     <message>
         <source>PrivateSend requires at least %1 to use.</source>
-        <translation>PrivateSend yêu cầu ít nhất %1 để sử dụng.</translation>
+        <translation>PrivateSend benodigd ten minste %1 om te gebruiken.</translation>
     </message>
     <message>
         <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
-        <translation>Ví đã được khoá và người dùng từ chối mở khoá. Tắt chức năng PrivateSend.</translation>
+        <translation>De portemonnee is vergrendeld en de gebruiker heeft geweigerd deze te ontgrendelen. PrivateSend is uitgeschakeld.</translation>
     </message>
 </context>
 <context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
-        <translation>Yêu cầu thanh toán bị lỗi</translation>
+        <translation>Fout bij betalingsverzoek</translation>
     </message>
     <message>
         <source>Cannot start dash: click-to-pay handler</source>
-        <translation>Không thể khởi động dash: trình xử lý click-to-pay</translation>
+        <translation>Kan Dash niet starten: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
-        <translation>xử lý URI</translation>
+        <translation>URI-afhandeling</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation>Yêu cầu thanh toán lấy URL là không hợp lệ: %1</translation>
+        <translation>URL om betalingsverzoek te verkrijgen is ongeldig: %1</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
-        <translation>Địa chỉ thanh toán không hợp lệ %1</translation>
+        <translation>Ongeldig betalingsadres %1</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
-        <translation>URI không thể phân tích. Nó có thể bởi địa chỉ Dash không hợp lệ hoặc thông số URI dị hình.</translation>
+        <translation>URI kan niet verwerkt worden! Dit kan het gevolg zijn van een ongeldig Dash adres of misvormde URI parameters.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation>Thanh toán cần file xử lý</translation>
+        <translation>Betalingsverzoek bestandsafhandeling</translation>
     </message>
     <message>
         <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Tệp yêu cầu thanh toán không thể đọc được. Nó có thể là nguyên nhân bởi tệp thanh toán không hợp lệ.</translation>
+        <translation>Betalingsverzoekbestand kan niet gelezen of verwerkt worden! Dit kan veroorzaakt worden door een ongeldig betalingsverzoekbestand.</translation>
     </message>
     <message>
         <source>Payment request rejected</source>
-        <translation>Yêu cầu giao dịch bị từ chối</translation>
+        <translation>Betalingsverzoek geweigerd</translation>
     </message>
     <message>
         <source>Payment request network doesn't match client network.</source>
-        <translation>Mạng yêu cầu thanh toán không tương xứng với mạng của phần mềm.</translation>
+        <translation>Betalingsaanvraagnetwerk komt niet overeen met klantennetwerk.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
-        <translation>Yêu cầu thanh toán đã hết hạn.</translation>
+        <translation>Betalingsverzoek verlopen.</translation>
     </message>
     <message>
         <source>Payment request is not initialized.</source>
-        <translation>Yêu cầu thanh toán không được khởi tạo.</translation>
+        <translation>Betalingsaanvraag is niet geïnitialiseerd.</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Yêu cầu thanh toán chưa được xác minh để tùy chỉnh các kịch bản thanh toán không được hỗ trợ.</translation>
+        <translation>Niet-geverifieerde betalingsverzoeken naar aangepaste betalingsscripts worden niet ondersteund.</translation>
     </message>
     <message>
         <source>Invalid payment request.</source>
-        <translation>Yêu cầu thanh toán không hợp lệ.</translation>
+        <translation>Ongeldig betalingsverzoek.</translation>
     </message>
     <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Yêu cầu thanh toán khoản tiền của  %1 là quá nhỏ (được xem là bụi).</translation>
+        <translation>Het gevraagde betalingsbedrag van %1 is te weinig (beschouwd als stof).</translation>
     </message>
     <message>
         <source>Refund from %1</source>
-        <translation>Trả lại từ %1</translation>
+        <translation>Restitutie van %1</translation>
     </message>
     <message>
         <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Yêu cầu thanh toán %1 quá lớn (%2 bytes, cho phép %3 bytes)</translation>
+        <translation>Betalingsverzoek %1 is te groot (%2 bytes, toegestaan ​​%3 bytes).</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
-        <translation>Lỗi kết nối với %1: %2</translation>
+        <translation>Fout bij communiceren met %1: %2</translation>
     </message>
     <message>
         <source>Payment request cannot be parsed!</source>
-        <translation>Yêu cầu thanh toán không thể xử lý!</translation>
+        <translation>Betalingsverzoek kan niet worden verwerkt!</translation>
     </message>
     <message>
         <source>Bad response from server %1</source>
-        <translation>Phản hồi xấu từ máy chủ %1</translation>
+        <translation>Ongeldige respons van server %1</translation>
     </message>
     <message>
         <source>Network request error</source>
-        <translation>Yêu cầu mạng bị lỗi</translation>
+        <translation>Fout bij netwerkverzoek</translation>
     </message>
     <message>
         <source>Payment acknowledged</source>
-        <translation>Thanh toán được ghi nhận</translation>
+        <translation>Betaling bevestigd</translation>
     </message>
 </context>
 <context>
     <name>PeerTableModel</name>
     <message>
         <source>NodeId</source>
-        <translation>NodeID</translation>
+        <translation>Node ID</translation>
     </message>
     <message>
         <source>Node/Service</source>
-        <translation>Nút/Dịch vụ</translation>
+        <translation>Node/Dienst</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -2002,43 +2005,43 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
-        <translation>%1 vẫn chưa thoát an toàn...</translation>
+        <translation>%1 sloot nog niet veilig af...</translation>
     </message>
     <message>
         <source>Error reading masternode configuration file: %1</source>
-        <translation>Lỗi khi đọc file cấu hình masternode: %1</translation>
+        <translation>Fout in het lezen van masternode configuratie bestand: %1</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Số lượng</translation>
+        <translation>Bedrag</translation>
     </message>
     <message>
         <source>Enter a Dash address (e.g. %1)</source>
-        <translation>Hãy nhập một địa chỉ Dash (VD: %1)</translation>
+        <translation>Voer een Dashadres in (bijv. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
-        <translation>%1 giờ</translation>
+        <translation>%1 d</translation>
     </message>
     <message>
         <source>%1 h</source>
-        <translation>%1 giờ</translation>
+        <translation>%1 uur</translation>
     </message>
     <message>
         <source>%1 m</source>
-        <translation>%1 phút</translation>
+        <translation>%1 m</translation>
     </message>
     <message>
         <source>%1 s</source>
-        <translation>%1 giây</translation>
+        <translation>%1 s</translation>
     </message>
     <message>
         <source>None</source>
-        <translation>Không</translation>
+        <translation>Geen</translation>
     </message>
     <message>
         <source>N/A</source>
-        <translation>N/A</translation>
+        <translation>N.v.t.</translation>
     </message>
     <message>
         <source>%1 ms</source>
@@ -2046,186 +2049,186 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation><numerusform>%n giây</numerusform></translation>
+        <translation><numerusform>%n seconde</numerusform><numerusform>%n seconden</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation><numerusform>%n phút</numerusform></translation>
+        <translation><numerusform>%n minuut</numerusform><numerusform>%n minuten</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
-        <translation><numerusform>%n giờ</numerusform></translation>
+        <translation><numerusform>%n uur</numerusform><numerusform>%n uren</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation><numerusform>%n ngày</numerusform></translation>
+        <translation><numerusform>%n dag</numerusform><numerusform>%n dagen</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
-        <translation><numerusform>%n tuần</numerusform></translation>
+        <translation><numerusform>%n week</numerusform><numerusform>%n weken</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation><numerusform>%n năm</numerusform></translation>
+        <translation><numerusform>%n jaar</numerusform><numerusform>%n jaren</numerusform></translation>
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation>%1 và %2</translation>
+        <translation>%1 en %2</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation>không xác định</translation>
+        <translation>onbekend</translation>
     </message>
 </context>
 <context>
     <name>QObject::QObject</name>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Error: Xác định data directory "%1" không tồn tại.</translation>
+        <translation>Fout: Opgegeven gegevensmap "%1" bestaat niet.</translation>
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Error: Không thể parse configuration file: %1. Chỉ dùng key=value syntax.</translation>
+        <translation>Fout: Kan configuratiebestand niet verwerken: %1. Gebruik enkel de key=value syntax.</translation>
     </message>
     <message>
         <source>Error: %1</source>
-        <translation>Error: %1</translation>
+        <translation>Fout: %1</translation>
     </message>
 </context>
 <context>
     <name>QRDialog</name>
     <message>
         <source>QR-Code Title</source>
-        <translation>Tiêu đề mã QR</translation>
+        <translation>QR-Code titel</translation>
     </message>
     <message>
         <source>QR Code</source>
-        <translation>Mã QR</translation>
+        <translation>QR-code</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
+        <translation>&amp;Sla afbeelding op...</translation>
     </message>
     <message>
         <source>Error creating QR Code.</source>
-        <translation>Lỗi khi tạo mã QR.</translation>
+        <translation>Fout bij het Creëren van QR Code.</translation>
     </message>
 </context>
 <context>
     <name>QRGeneralImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
+        <translation>&amp;Sla afbeelding op...</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation>&amp;Sao chép ảnh</translation>
+        <translation>&amp;Afbeelding kopiëren</translation>
     </message>
     <message>
         <source>Save QR Code</source>
-        <translation>&amp;Lưu mã QR</translation>
+        <translation>Sla QR Code op.</translation>
     </message>
     <message>
         <source>PNG Image (*.png)</source>
-        <translation>PNG Image (*.png)</translation>
+        <translation>PNG afbeelding (*.png)</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
+        <translation>&amp;Sla afbeelding op...</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation>&amp;Sao chép ảnh</translation>
+        <translation>&amp;Afbeelding kopiëren</translation>
     </message>
     <message>
         <source>Save QR Code</source>
-        <translation>&amp;Lưu mã QR</translation>
+        <translation>Sla QR-code op</translation>
     </message>
     <message>
         <source>PNG Image (*.png)</source>
-        <translation>Ảnh dạng PNG (*.png)</translation>
+        <translation>PNG afbeelding (*.png)</translation>
     </message>
 </context>
 <context>
     <name>RPCConsole</name>
     <message>
         <source>Tools window</source>
-        <translation>Cửa sổ công cụ</translation>
+        <translation>Gereedschapsscherm</translation>
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation>&amp;Thông tin</translation>
+        <translation>&amp;Informatie</translation>
     </message>
     <message>
         <source>General</source>
-        <translation>Chung chung</translation>
+        <translation>Algemeen</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Tên</translation>
+        <translation>Naam</translation>
     </message>
     <message>
         <source>N/A</source>
-        <translation>Không áp dụng</translation>
+        <translation>N.v.t.</translation>
     </message>
     <message>
         <source>Number of connections</source>
-        <translation>Số kết nối</translation>
+        <translation>Aantal connecties</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>&amp;Mở</translation>
+        <translation>&amp;Open</translation>
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Thời gian khởi động</translation>
+        <translation>Opstarttijd</translation>
     </message>
     <message>
         <source>Network</source>
-        <translation>Mạng</translation>
+        <translation>Netwerk</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Thời gian block cuối cùng</translation>
+        <translation>Tijd laatste blok</translation>
     </message>
     <message>
         <source>Debug log file</source>
-        <translation>Debug log file</translation>
+        <translation>Debug-logbestand</translation>
     </message>
     <message>
         <source>Current number of blocks</source>
-        <translation>Số khối hiện tại</translation>
+        <translation>Huidig aantal blokken</translation>
     </message>
     <message>
         <source>Client version</source>
-        <translation>Phiên bản</translation>
+        <translation>Clientversie</translation>
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
-        <translation>Sử dụng BerkeleyDB version</translation>
+        <translation>Gebruikt BerkeleyDB versie</translation>
     </message>
     <message>
         <source>Block chain</source>
-        <translation>Block chain</translation>
+        <translation>Blokketen</translation>
     </message>
     <message>
         <source>Number of Masternodes</source>
-        <translation>Số lượng Masternodes</translation>
+        <translation>Aantal Masternodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
-        <translation>Bể nhớ chung</translation>
+        <translation>Memory Pool</translation>
     </message>
     <message>
         <source>Current number of transactions</source>
-        <translation>Số lượng giao dịch hiện tại</translation>
+        <translation>Huidig aantal transacties</translation>
     </message>
     <message>
         <source>Memory usage</source>
-        <translation>Bộ nhớ sử dụng</translation>
+        <translation>Geheugengebruik</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -2233,243 +2236,243 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Clear console</source>
-        <translation>Xoá console</translation>
+        <translation>Maak console leeg</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation>&amp;Lưu lượng mạng</translation>
+        <translation>&amp;Netwerkverkeer</translation>
     </message>
     <message>
         <source>&amp;Clear</source>
-        <translation>&amp;Xoá</translation>
+        <translation>&amp;Wissen</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation>Tổng</translation>
+        <translation>Totalen</translation>
     </message>
     <message>
         <source>Received</source>
-        <translation>Đã nhận</translation>
+        <translation>Ontvangen</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation>Đã gửi</translation>
+        <translation>Verstuurd</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
-        <translation>&amp;Máy ngang cấp</translation>
+        <translation>$Peers</translation>
     </message>
     <message>
         <source>Banned peers</source>
-        <translation>Các nút ngang hàng đã bị khoá</translation>
+        <translation>Gebande peers</translation>
     </message>
     <message>
         <source>Select a peer to view detailed information.</source>
-        <translation>Hãy chọn một máy đồng cấp để xem thông tin chi tiết.</translation>
+        <translation>Selecteer een peer om details te bekijken</translation>
     </message>
     <message>
         <source>Whitelisted</source>
-        <translation>Danh sách trắng</translation>
+        <translation>Toegestaan</translation>
     </message>
     <message>
         <source>Direction</source>
-        <translation>Hướng</translation>
+        <translation>Richting</translation>
     </message>
     <message>
         <source>Version</source>
-        <translation>Phiên bản</translation>
+        <translation>Versie</translation>
     </message>
     <message>
         <source>Starting Block</source>
-        <translation>Khởi động khối</translation>
+        <translation>Start Blok</translation>
     </message>
     <message>
         <source>Synced Headers</source>
-        <translation>Đồng bộ các đầu mục</translation>
+        <translation>Gesynchroniseerde headers</translation>
     </message>
     <message>
         <source>Synced Blocks</source>
-        <translation>Các khối đã đồng bộ</translation>
+        <translation>Gesynchroniseerde blokken</translation>
     </message>
     <message>
         <source>Wallet Path</source>
-        <translation>Đường dẫn đến Ví</translation>
+        <translation>Portemonnee bestandspad</translation>
     </message>
     <message>
         <source>User Agent</source>
-        <translation>User Agent</translation>
+        <translation>Gebruikers klant</translation>
     </message>
     <message>
         <source>Datadir</source>
-        <translation>Thư mục dữ liệu</translation>
+        <translation>Gegevensmap</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Mở cái %1 debug log file từ danh mục dữ liệu hiện tại. Điều này cần vài giây cho large log files.</translation>
+        <translation>Open het %1 debug-logbestand van de huidige gegevensmap. Dit kan een aantal seconden duren voor grote logbestanden.</translation>
     </message>
     <message>
         <source>Decrease font size</source>
-        <translation>Giảm cỡ chữ</translation>
+        <translation>Verklein lettergrootte</translation>
     </message>
     <message>
         <source>Increase font size</source>
-        <translation>Tăng cỡ chữ</translation>
+        <translation>Vergroot lettergrootte</translation>
     </message>
     <message>
         <source>Services</source>
-        <translation>Dịch vụ</translation>
+        <translation>Services</translation>
     </message>
     <message>
         <source>Ban Score</source>
-        <translation>Điểm cấm</translation>
+        <translation>Verbanningscore</translation>
     </message>
     <message>
         <source>Connection Time</source>
-        <translation>Thời gian kết nối</translation>
+        <translation>Verbindingstijd</translation>
     </message>
     <message>
         <source>Last Send</source>
-        <translation>Lần gửi cuối</translation>
+        <translation>Laats gestuurd</translation>
     </message>
     <message>
         <source>Last Receive</source>
-        <translation>Lần nhận cuối</translation>
+        <translation>Laatst ontvangen</translation>
     </message>
     <message>
         <source>Ping Time</source>
-        <translation>Thời gian phản hồi</translation>
+        <translation>Pingtijd</translation>
     </message>
     <message>
         <source>The duration of a currently outstanding ping.</source>
-        <translation>Khoảng thời gian để chờ cho một ping hiện thời.</translation>
+        <translation>De duur van een momenteel uitstaande ping.</translation>
     </message>
     <message>
         <source>Ping Wait</source>
-        <translation>Đợi Ping</translation>
+        <translation>Pingwachttijd</translation>
     </message>
     <message>
         <source>Min Ping</source>
-        <translation>Ping tối thiểu</translation>
+        <translation>Min Ping</translation>
     </message>
     <message>
         <source>Time Offset</source>
-        <translation>Time Offset</translation>
+        <translation>Tijdcompensatie</translation>
     </message>
     <message>
         <source>&amp;Wallet Repair</source>
-        <translation>Sửa &amp;Ví</translation>
+        <translation>&amp;Portemonnee Herstel</translation>
     </message>
     <message>
         <source>Salvage wallet</source>
-        <translation>Cứu ví</translation>
+        <translation>Gerede portemonnee</translation>
     </message>
     <message>
         <source>Rescan blockchain files</source>
-        <translation>Quét lại file blockchain</translation>
+        <translation>Herscan blokketenbestanden</translation>
     </message>
     <message>
         <source>Recover transactions 1</source>
-        <translation>Phục hồi các giao dịch 1</translation>
+        <translation>Herstelde transacties 1</translation>
     </message>
     <message>
         <source>Recover transactions 2</source>
-        <translation>Phục hồi các giao dịch 2</translation>
+        <translation>Herstelde transacties 2</translation>
     </message>
     <message>
         <source>Upgrade wallet format</source>
-        <translation>Nâng cấp định dạng ví</translation>
+        <translation>Upgrade portemonnee formaat</translation>
     </message>
     <message>
         <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>Nút dưới đây sẽ khởi động lại ví với tuỳ chọn dòng lệnh để sửa lại ví, sửa lại những vấn đề với các tệp blockchain bị lỗi hoặc các giao dịch bị thiếu/cũ.</translation>
+        <translation>De knoppen onderaan zal de portemonnee herstarten met commandoregelopties om de portemonnee te herstellen of om problemen met corrupte blokketenbestanden of ontbrekende transacties te herstellen.</translation>
     </message>
     <message>
         <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
-        <translation>-salvagewallet: Thử phục hồi khoá riêng từ tệp wallet.dat bị lỗi.</translation>
+        <translation>-red portemonnee: Poging om geheime sleutels terug te halen uit het beschadigede portemonnee bestand (wallet.dat.)</translation>
     </message>
     <message>
         <source>-rescan: Rescan the block chain for missing wallet transactions.</source>
-        <translation>-rescan: Quét lại blockchain để tìm những giao dịch bị thiếu.</translation>
+        <translation>-herscan: Herscan de blokketen voor verlopen transacties.</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
-        <translation>-zapwallettxes=1: Phục hồi các giao dịch từ blockchain (giữ các meta-data, ví dụ: chủ tải khoản).</translation>
+        <translation>-zapwallettxes=1: Herstelde transacties van de blokketen (behoud metadata; bv. accounteigenaar)</translation>
     </message>
     <message>
         <source>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</source>
-        <translation>-zapwallettxes=2: Phục hồi tất cả các giao dịch từ blockchain (bỏ đi các meta-data).</translation>
+        <translation>-zapwallettxed=2: Herstelde transacties vanuit de blokketen (laat metadata vervallen)</translation>
     </message>
     <message>
         <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
-        <translation>-upgradewallet: Nâng cấp ví lên định dạng mới nhất khi khởi động. (Chú ý: điều này KHÔNG có nghĩa là nâng cấp bản thân phần mềm ví)</translation>
+        <translation>-upgrade portemonnee= Upgrade portemonnee naar het laatste formaat bij het starten: (Noot: dit is GEEN update van de portemonnee zelf!)</translation>
     </message>
     <message>
         <source>Wallet repair options.</source>
-        <translation>Các tuỳ chọn sửa ví.</translation>
+        <translation>Portemonneeherstelopties</translation>
     </message>
     <message>
         <source>Rebuild index</source>
-        <translation>Lập lại chỉ mục</translation>
+        <translation>Herbouw de index</translation>
     </message>
     <message>
         <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-reindex: Tái lập lại chỉ mục cho chuỗi khối từ tệp hiện tại blk000??.dat</translation>
+        <translation>-herbouw index: Herbouw de blokketen index vanuit de huidige blk000???.dat bestanden.</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation>&amp;Ngắt kết nối</translation>
+        <translation>&amp;Verbreek verbinding</translation>
     </message>
     <message>
         <source>Ban for</source>
-        <translation>Cấm</translation>
+        <translation>Ban Node voor</translation>
     </message>
     <message>
         <source>1 &amp;hour</source>
-        <translation>1 &amp;giờ</translation>
+        <translation>1 &amp;uur</translation>
     </message>
     <message>
         <source>1 &amp;day</source>
-        <translation>1 ngà&amp;y</translation>
+        <translation>1 &amp;dag</translation>
     </message>
     <message>
         <source>1 &amp;week</source>
-        <translation>1 &amp;tuần</translation>
+        <translation>1 &amp;week</translation>
     </message>
     <message>
         <source>1 &amp;year</source>
-        <translation>1 &amp;năm</translation>
+        <translation>1 &amp;jaar</translation>
     </message>
     <message>
         <source>&amp;Unban</source>
-        <translation>&amp;Bor</translation>
+        <translation>&amp;Maak ban voor Node ongedaan</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
-        <translation>Welcome to the %1 RPC console.</translation>
+        <translation>Welkom bij de %1 RPC-console.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Sử dụng các phím mũi tên lên và xuống để xem lịch sử, và &lt;b&gt;Ctrl-L&lt;/b&gt; để xoá màn hình.</translation>
+        <translation>Gebruik de pijltjestoetsen om door de geschiedenis te navigeren, en &lt;b&gt;Ctrl-L&lt;/b&gt; om het scherm leeg te maken.</translation>
     </message>
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Gõ &lt;b&gt;help&lt;/b&gt; để xem tổng thể các lệnh có thể dùng.</translation>
+        <translation>Typ &lt;b&gt;help&lt;/b&gt; voor een overzicht van de beschikbare commando's.</translation>
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramification of a command.</source>
-        <translation>CẢNH BÁO: Những người lừa đảo hay Scammer đã từng đánh lừa và nói với người dùng là hãy gõ những câu lệnh ở đây và ăn cắp nội dung ví của bạn. Đừng sử dụng console nếu như bạn không thực sự hoàn toàn hiểu chi tiết từng câu lệnh và các tham số của nó.</translation>
+        <translation>WAARSCHUWING: Er zijn oplichters die gebruikers hier commando's in laten voeren om zo de inhoud van hun portemonnee te stelen. Gebruik deze console niet zonder dat u de gevolgen van uw commando's volledig begrijpt.</translation>
     </message>
     <message>
         <source>In:</source>
-        <translation>Vào:</translation>
+        <translation>In:</translation>
     </message>
     <message>
         <source>Out:</source>
-        <translation>Ra:</translation>
+        <translation>Uit:</translation>
     </message>
     <message>
         <source>Network activity disabled</source>
-        <translation>Kết nối mạng bị tắt</translation>
+        <translation>Netwerkactiviteit uitgeschakeld</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -2477,7 +2480,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>%1 KB</source>
-        <translation>%1 KB</translation>
+        <translation>%1 Kb</translation>
     </message>
     <message>
         <source>%1 MB</source>
@@ -2485,7 +2488,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>%1 GB</source>
-        <translation>%1 GB</translation>
+        <translation>%1 Gb</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2493,153 +2496,156 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>via %1</source>
-        <translation>theo %1</translation>
+        <translation>via %1</translation>
     </message>
     <message>
         <source>never</source>
-        <translation>không bao giờ</translation>
+        <translation>nooit</translation>
     </message>
     <message>
         <source>Inbound</source>
-        <translation>Kết nối về</translation>
+        <translation>Inkomend</translation>
     </message>
     <message>
         <source>Outbound</source>
-        <translation>Kết nối đi</translation>
+        <translation>Uitgaand</translation>
     </message>
     <message>
         <source>Yes</source>
-        <translation>Đồng ý</translation>
+        <translation>Ja</translation>
     </message>
     <message>
         <source>No</source>
-        <translation>Không đồng ý</translation>
+        <translation>Nee</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Không xác định</translation>
+        <translation>onbekend</translation>
     </message>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation>Sử dụng lại địa chỉ đã được sử dụng để nhận trước đây.&lt;br&gt;Sử dụng lại địa chỉ nảy sinh vấn đề an ninh và riêng tư.&lt;br&gt;Đừng sử dụng nó trừ khi bạn tạo lại yêu cầu thanh toán mà bạn đã làm trước đây.</translation>
+        <translation>Gebruik een van de eerder gebruikte ontvangstadressen opnieuw.
+Het opnieuw gebruiken van adressen heeft beveiliging- en privacy problemen. 
+Gebruik dit niet, behalve als er eerder een betalingsverzoek opnieuw gegenereerd is.</translation>
     </message>
     <message>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>Tái &amp;sử dụng lại địa chỉ nhận đã có (không khuyến khích)</translation>
+        <translation>H&amp;ergebruik en bestaand ontvangstadres (niet aanbevolen)</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation>Một thông điệp tuỳ chọn để đính vào yêu cầu thanh toán, nó sẽ hiển thị khi yêu cầu được mở. Chú ý: Thông điệp sẽ không được gửi thông qua mạng lưới Dash.</translation>
+        <translation>Een optioneel bericht om aan het betalingsverzoek toe te voegen, die zal worden getoond wanneer het verzoek wordt geopend. Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwerk.</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation>&amp;Thông điệp:</translation>
+        <translation>&amp;Bericht</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation>Một nhãn tuỳ chọn để liên kết với địa chỉ nhận mới.</translation>
+        <translation>Een optioneel label om te associëren met het nieuwe ontvangende adres</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation>Một thông điệp tuỳ chọn để đính vào yêu cầu thanh toán, nó sẽ hiển thị khi yêu cầu được mở.&lt;br&gt;Chú ý: Thông điệp sẽ không được gửi thông qua mạng lưới Dash.</translation>
+        <translation>Een optioneel bericht om aan het betalingsverzoek toe te voegen, die zal worden getoond wanneer het verzoek wordt geopend. &lt;br&gt;
+Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwerk.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>Sử dụng biểu mẫu này để yêu cầu thanh toán. Tất cả các trường đều là &lt;b&gt;không bắt buộc&lt;/b&gt;.</translation>
+        <translation>Gebruik dit formulier om te verzoeken tot betaling. Alle velden zijn &lt;b&gt;optioneel&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Nhãn:</translation>
+        <translation>&amp;Label:</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation>Một tuỳ chọn về số tiền yêu cầu. Để nó trống hoặc bằng không để không yêu cầu một số tiền cụ thể.</translation>
+        <translation>Een optioneel te verzoeken bedrag. Laat dit leeg, of nul, om geen specifiek bedrag aan te vragen.</translation>
     </message>
     <message>
         <source>&amp;Amount:</source>
-        <translation>&amp;Số tiền:</translation>
+        <translation>&amp;Bedrag</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
-        <translation>&amp;Yêu cầu thanh toán</translation>
+        <translation>&amp;Betalingsverzoek</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Xoá tất cả các ô.</translation>
+        <translation>Wis alle velden op het formulier.</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation>Xoá</translation>
+        <translation>Wissen</translation>
     </message>
     <message>
         <source>Request InstantSend</source>
-        <translation>Yêu cầu InstantSend</translation>
+        <translation>Verzoek InstantSend</translation>
     </message>
     <message>
         <source>Requested payments history</source>
-        <translation>Xem lịch sử thanh toán</translation>
+        <translation>Geschiedenis van de betalingsverzoeken</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation>Hiển thị những yêu cầu được chọn (giống như click đúp vào mỗi thành phần)</translation>
+        <translation>Toon het geselecteerde verzoek (doet hetzelfde als dubbelklikken)</translation>
     </message>
     <message>
         <source>Show</source>
-        <translation>Xem</translation>
+        <translation>Toon</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation>Xoá thành phần được chọn khỏi danh sách</translation>
+        <translation>Verwijder de geselecteerde items van de lijst</translation>
     </message>
     <message>
         <source>Remove</source>
-        <translation>Xoá</translation>
+        <translation>Verwijder</translation>
     </message>
     <message>
         <source>Copy URI</source>
-        <translation>Copy URI</translation>
+        <translation>Kopieer URI</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Sao chép nhãn</translation>
+        <translation>Kopieer label</translation>
     </message>
     <message>
         <source>Copy message</source>
-        <translation>Sao chép thông điệp</translation>
+        <translation>Kopieer bericht</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Sao chép số tiền</translation>
+        <translation>Kopieer bedrag</translation>
     </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
         <source>QR Code</source>
-        <translation>Mã QR</translation>
+        <translation>QR-code</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation>Copy &amp;URI</translation>
+        <translation>Kopieer &amp;URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>Copy địa chỉ</translation>
+        <translation>Kopieer &amp;adres</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
+        <translation>&amp;Sla afbeelding op...</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
-        <translation>Yêu cầu thanh toán tới %1</translation>
+        <translation>Betalingsverzoek tot %1</translation>
     </message>
     <message>
         <source>Payment information</source>
-        <translation>Thông tin thanh toán</translation>
+        <translation>Betalingsinformatie</translation>
     </message>
     <message>
         <source>URI</source>
@@ -2647,19 +2653,19 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Địa chỉ</translation>
+        <translation>Adres</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Số tiền</translation>
+        <translation>Bedrag</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Nhãn</translation>
+        <translation>Label</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation>Thông điệp</translation>
+        <translation>Bericht</translation>
     </message>
     <message>
         <source>InstantSend</source>
@@ -2667,77 +2673,77 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Yes</source>
-        <translation>Đồng ý</translation>
+        <translation>Ja</translation>
     </message>
     <message>
         <source>No</source>
-        <translation>Không</translation>
+        <translation>Nee</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Kết quả là URI quá dài, hãy thử rút gọn chữ trong nhãn / thông điệp.</translation>
+        <translation>Resulterende URI te lang, probeer de tekst korter te maken voor het label/bericht.</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
-        <translation>Lỗi mã hoá URI thành mã QR.</translation>
+        <translation>Fout tijdens encoderen URI in QR-code</translation>
     </message>
 </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Ngày</translation>
+        <translation>Datum</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Nhãn</translation>
+        <translation>Label</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation>Thông điệp</translation>
+        <translation>Bericht</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(không có nhãn)</translation>
+        <translation>(geen label)</translation>
     </message>
     <message>
         <source>(no message)</source>
-        <translation>(không thông điệp)</translation>
+        <translation>(geen bericht)</translation>
     </message>
     <message>
         <source>(no amount requested)</source>
-        <translation>(không amount yêu cầu)</translation>
+        <translation>(geen bedrag aangevraagd)</translation>
     </message>
     <message>
         <source>Requested</source>
-        <translation>Đã yêu cầu</translation>
+        <translation>Verzoek ingediend</translation>
     </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Gửi tiền</translation>
+        <translation>Verstuur munten</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation>Tính năng Coin Control</translation>
+        <translation>Coin controleopties</translation>
     </message>
     <message>
         <source>Inputs...</source>
-        <translation>Đầu vào...</translation>
+        <translation>Inputs...</translation>
     </message>
     <message>
         <source>automatically selected</source>
-        <translation>tự động chọn</translation>
+        <translation>automatisch geselecteerd</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation>Không đủ tiền!</translation>
+        <translation>Onvoldoende fonds!</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation>Số lượng:</translation>
+        <translation>Kwantiteit</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -2745,55 +2751,55 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Số tiền:</translation>
+        <translation>Bedrag:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Phí:</translation>
+        <translation>Vergoeding:</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation>Bụi</translation>
+        <translation>Stof:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Phí sau:</translation>
+        <translation>Na vergoeding:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation>Trả lại:</translation>
+        <translation>Wisselgeld:</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Nếu nó được kích hoạt, nhưng địa chỉ tiền nhận lại là trống hoặc không hợp lệ, thì tiền lẻ trả lại sẽ được gửi đến một địa chỉ được sinh mới.</translation>
+        <translation>Als dit is geactiveerd, maar het wisselgeldadres is leeg of ongeldig, dan wordt het wisselgeld verzonden naar een nieuw gegenereerd adres.</translation>
     </message>
     <message>
         <source>Custom change address</source>
-        <translation>Thay đổi địa chỉ tiền trả lại</translation>
+        <translation>Aangepast wisselgeldadres</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
-        <translation>Phí giao dịch</translation>
+        <translation>Transactiekosten</translation>
     </message>
     <message>
         <source>Choose...</source>
-        <translation>Chọn...</translation>
+        <translation>Kies...</translation>
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until your have validated the complete chain.</source>
-        <translation>Sử dụng fallbackfee có thể dẫn tới việc giao dịch mất đến hàng giờ hoặc hàng ngày (hoặc thậm chí không bao giờ) có thể được xác thực. Hãy cân nhắc tự chọn mức phí hoặc đợi đến khi bạn được chuỗi xác thực hoàn chỉnh.</translation>
+        <translation>Het gebruik van de terugvalvergoeding kan resulteren in het verzenden van een transactie die meerdere uren of dagen (of nooit) nodig heeft om bevestigd te worden. Overweeg om handmatig een vergoeding te kiezen of wacht totdat de volledige blockchain gevalideerd is.</translation>
     </message>
     <message>
         <source>Warning: Fee estimation is currently not possible.</source>
-        <translation>Warning: Fee ước tính hiện tại không khả thi.</translation>
+        <translation>Waarschuwing: Schatting van de transactiekosten is momenteel niet mogelijk.</translation>
     </message>
     <message>
         <source>collapse fee-settings</source>
-        <translation>Thu gọn các thiết lập về phí</translation>
+        <translation>Klap de vergoedinginstellingen dicht</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
-        <translation>Thời gian xác nhận đối tượng:</translation>
+        <translation>Bevestigingstijddoel:</translation>
     </message>
     <message>
         <source>PrivateSend</source>
@@ -2805,238 +2811,238 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Nếu mức phí tuỳ chỉnh được đặt là 1000 duff và giao dịch chỉ có 250 byte, thì "theo kilobyte" chỉ trả 250 duff cho phí,&lt;br /&gt;trong khi "ít nhất" phải trả 1000 duff. Cho các giao dịch lớn hơn 1 kilobyte thì cả hai đều trả theo kilobyte.</translation>
+        <translation>Als de aangepaste vergoeding is ingesteld op 1000 duffs en de transactie is maar 250 bytes, dan wordt bij "per kilobyte" 250 duffs aan toeslag berekend, &lt;br /&gt;terwijl er bij "tenminste" 1000 duffs worden berekend. Voor transacties die groter zijn dan een kilobyte, wordt in beide gevallen per kilobyte de toeslag berekend.</translation>
     </message>
     <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "total at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Nếu phí giao dịch tuỳ chỉnh được đặt là 1000 duff và giao dịch chỉ có 250 bytes, thì "theo kilobyte" chỉ trả 250 duff phí,&lt;br /&gt;trong khi "tổng ít nhất" trả 1000 duff. Với các giao dịch lớn hơn 1 kilobyte thì cả hai đều trả theo kilobyte.</translation>
+        <translation>Als de aangepaste toeslag is ingesteld op 1000 duffs en de transactie is maar 250 bytes, dan wordt bij "per kilobyte" 250 duffs aan toeslag berekend, &lt;br /&gt;terwijl er bij "totaal tenminste" 1000 duffs worden berekend. Voor transacties die groter zijn dan een kilobyte, wordt in beide gevallen per kilobyte de toeslag berekend.</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
-        <translation>Chỉ trả phí tối thiểu cũng được chỉ khi mà có lượng giao dịch ít hơn không gian trong khối.&lt;br /&gt;Nhưng cần lưu ý là nó có thể xảy ra hiện tượng giao dịch không bao giờ được xác nhận một khi có nhiều nhu cầu giao dash hơn khả năng mà mạng lưới có thể xử lý được.</translation>
+        <translation>Het betalen van de minimale vergoeding is prima zo lang er minder transactie volume is dan ruimte in de blokken. &lt;br /&gt;Maar houd er rekening mee dat dit kan eindigen in een nooit bevestigde transactie zodra er meer vraag is voor Dash transacties fdan het netwerk kan verwerken.</translation>
     </message>
     <message>
         <source>per kilobyte</source>
-        <translation>mỗi kilobyte</translation>
+        <translation>per kilobyte</translation>
     </message>
     <message>
         <source>Hide</source>
-        <translation>Ẩn</translation>
+        <translation>Verbergen</translation>
     </message>
     <message>
         <source>total at least</source>
-        <translation>tổng ít nhất</translation>
+        <translation>minimaal totaal</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
-        <translation>(xem gợi ý)</translation>
+        <translation>(lees de tooltip)</translation>
     </message>
     <message>
         <source>Recommended:</source>
-        <translation>Gợi ý:</translation>
+        <translation>Aanbevolen:</translation>
     </message>
     <message>
         <source>Custom:</source>
-        <translation>Tuỳ chỉnh:</translation>
+        <translation>Aangepast:</translation>
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Phí khởi tạo thông minh chưa được khởi tạo. Thường thì sẽ mất vài block...)</translation>
+        <translation>(Slimme kosten zijn nog niet geïnitialiseerd Dit duurt meestal een paar blokken...)</translation>
     </message>
     <message>
         <source>normal</source>
-        <translation>bình thường</translation>
+        <translation>normaal</translation>
     </message>
     <message>
         <source>fast</source>
-        <translation>nhanh</translation>
+        <translation>snel</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Xác nhận việc gửi</translation>
+        <translation>Bevestig de verstuuractie</translation>
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>&amp;Gửi</translation>
+        <translation>&amp;Verstuur</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Xoá tất cả các ô.</translation>
+        <translation>Wis alle velden van het formulier.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>Xoá &amp;Tất cả</translation>
+        <translation>Verwijder &amp;Alles</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Gửi đến nhiều địa chỉ một lúc</translation>
+        <translation>Verstuur aan verschillende ontvangers ineens</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
-        <translation>Thêm &amp;Người nhận</translation>
+        <translation>Voeg &amp;Ontvanger Toe</translation>
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Số dư:</translation>
+        <translation>Saldo:</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>Sao chép số lượng</translation>
+        <translation>Kopieer aantal</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Sao chép số tiền</translation>
+        <translation>Kopieer bedrag</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>Sao chép phí</translation>
+        <translation>Kopieer vergoeding</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>Sao chép giá trị sau tính phí</translation>
+        <translation>Kopieer na vergoeding</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Sao chép bytes</translation>
+        <translation>Kopieer bytes</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Sao chép bụi</translation>
+        <translation>Kopieer stof</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Sao chép tiền trả lại</translation>
+        <translation>Kopieer wijziging</translation>
     </message>
     <message>
         <source>using</source>
-        <translation>sử dụng</translation>
+        <translation>gebruiken</translation>
     </message>
     <message>
         <source>anonymous funds</source>
-        <translation>các khoản tiền ẩn danh</translation>
+        <translation>anonieme geldmiddelen</translation>
     </message>
     <message>
         <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(privatesend yêu cầu số lượng này để làm tròn về giá trị gần nhất %1).</translation>
+        <translation>(PrivateSend vereist dat dit bedrag afgerond wordt naar dedichtstbijzijnde %1)</translation>
     </message>
     <message>
         <source>any available funds (not anonymous)</source>
-        <translation>bất kỳ nguồn cung nào còn (không ẩn danh)</translation>
+        <translation>Al het beschikbare geldmiddelen (niet anoniem)</translation>
     </message>
     <message>
         <source>and InstantSend</source>
-        <translation>và InstantSend</translation>
+        <translation>en InstantSend</translation>
     </message>
     <message>
         <source>%1 to %2</source>
-        <translation>%1 đến %2</translation>
+        <translation>%1 tot %2</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
-        <translation>Bạn có chắc mình muốn gửi?</translation>
+        <translation>Weet u zeker dat u wilt verzenden?</translation>
     </message>
     <message>
         <source>are added as transaction fee</source>
-        <translation>được thêm vào như là phí giao dịch</translation>
+        <translation>worden toegevoegd als transactiekosten</translation>
     </message>
     <message>
         <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
-        <translation>Tổng số tiền = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
+        <translation>Totaal bedrag = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;=%2</translation>
     </message>
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
-        <translation>&lt;b&gt;(%1 của %2 các thành phần được hiển thị)&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;(%1 van de %2 items weergegeven)&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation>Xác nhận việc gửi tiền</translation>
+        <translation>Bevestig versturen munten</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
-        <translation>Địa chỉ nhận không hợp lệ. Hãy kiểm tra lại xem.</translation>
+        <translation>Het adres van de ontvanger is niet geldig. Gelieve opnieuw te controleren.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Số tiền thanh toán phải lớn hơn 0.</translation>
+        <translation>Het ingevoerde bedrag moet groter zijn dan 0.</translation>
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation>Số tiền này lớn hơn số dư của bạn.</translation>
+        <translation>Het bedrag is hoger dan uw huidige saldo.</translation>
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Tổng số lớn hơn số dư của bạn khi tính cả %1 phí giao dịch.</translation>
+        <translation>Het totaal overschrijdt uw huidige saldo wanneer de %1 transactie vergoeding wordt meegerekend.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Tìm thấy địa chỉ trùng: các địa chỉ chỉ có thể được dùng mỗi lần một.</translation>
+        <translation>Dubbel adres gevonden: adressen mogen maar één keer worden gebruikt worden.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation>Tạo giao dịch không thành công!</translation>
+        <translation>Transactiecreatie mislukt</translation>
     </message>
     <message>
         <source>The transaction was rejected with the following reason: %1</source>
-        <translation>The transaction đã bị từ chối với lý do sau: %1</translation>
+        <translation>De transactie werd afgewezen om de volgende reden: %1</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation>Mức phí cao hơn %1 có thể được xem là mức cao thái quá.</translation>
+        <translation>Een vergoeding van meer dan %1 wordt beschouwd als een absurd hoge vergoeding.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
-        <translation>Yêu cầu thanh toán đã hết hạn.</translation>
+        <translation>Betalingsverzoek verlopen.</translation>
     </message>
     <message numerus="yes">
         <source>%n block(s)</source>
-        <translation><numerusform>%n khối</numerusform></translation>
+        <translation><numerusform>%n blok</numerusform><numerusform>%n blokken</numerusform></translation>
     </message>
     <message>
         <source>Pay only the required fee of %1</source>
-        <translation>Chỉ thanh toán mức phí yêu cầu của %1</translation>
+        <translation>Betaal alleen de verplichte transactie vergoeding van %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Ước lượng để bắt đầu xác thực trong vòng %n khối.</numerusform></translation>
+        <translation><numerusform>Schatting is dat bevestiging begint binnen %n blok.</numerusform><numerusform>Schatting is dat bevestiging begint binnen %n blokken.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Dash address</source>
-        <translation>Cảnh báo: Địa chỉ Dash không hợp lệ</translation>
+        <translation>WAARSCHUWING: Ongeldig Dash adres</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
-        <translation>Cảnh báo: Không biết địa chỉ trả lại</translation>
+        <translation>Waarschuwing: Onbekend wisselgeldadres</translation>
     </message>
     <message>
         <source>Confirm custom change address</source>
-        <translation>Confirm custom change address</translation>
+        <translation>Bevestig aangepast wisselgeldadres</translation>
     </message>
     <message>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation>The address bạn đã chọn dành cho change thì không phải part of this wallet. Bất kỳ hay tất cả funds in your wallet có thể được gửi đến address này. Bạn chắc chứ?</translation>
+        <translation>Het wisselgeldadres dat u heeft geselecteerd maakt geen deel uit van deze portemonnee. Een deel of zelfs alle geld in uw portemonnee kan mogelijk naar dit adres worden verzonden. Weet je het zeker?</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(không có nhãn)</translation>
+        <translation>(geen label)</translation>
     </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
         <source>This is a normal payment.</source>
-        <translation>Đây là giao dịch thông thường.</translation>
+        <translation>Dit is een normale betaling.</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>Trả &amp;Cho</translation>
+        <translation>Betaal &amp;Aan:</translation>
     </message>
     <message>
         <source>The Dash address to send the payment to</source>
-        <translation>Địa chỉ Dash để gửi thanh toán</translation>
+        <translation>Het Dashadres om betaling aan te versturen</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Chọn địa chỉ đã sử dụng trước</translation>
+        <translation>Kies een eerder gebruikt adres</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -3044,7 +3050,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Dán địa chỉ từ clipboard</translation>
+        <translation>Plak adres vanuit klembord</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -3052,96 +3058,96 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation>Xoá thành phần này</translation>
+        <translation>Verwijder deze toevoeging</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Nhãn:</translation>
+        <translation>&amp;Label:</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Nhập nhãn cho địa chỉ này để đưa vào danh sách địa chỉ đã dùng</translation>
+        <translation>Vul een label voor dit adres in om het aan de lijst met gebruikte adressen toe te voegen</translation>
     </message>
     <message>
         <source>A&amp;mount:</source>
-        <translation>&amp;Số tiền:</translation>
+        <translation>Bedra&amp;g:</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>Phí sẽ được trừ trong khoản tiền mà bạn gửi. Bên nhận sẽ nhận được một khoản nhỏ hơn số Dash mà bạn nhập vào ở trong trường số lượng. Nếu có nhiều người nhận được chọn, phí được chia đều cho mọi người.</translation>
+        <translation>De vergoeding zal worden afgetrokken van het bedrag dat wordt verzonden. De ontvanger zal een lagere hoeveelheid Dash ontvangt dan u in het veld bedrag invoert. Als meerdere ontvangers zijn geselecteerd, wordt de vergoeding gelijk verdeeld.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
-        <translation>T&amp;rừ phí từ số tiền gửi</translation>
+        <translation>Trek de transactiekosten a&amp;f van het bedrag.</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation>Thông điệp:</translation>
+        <translation>Bericht:</translation>
     </message>
     <message>
         <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
-        <translation>Một thông điệp được đính với dash: URI đó sẽ được lưu trữ với các giao dịch cho các bạn tham khảo. Lưu ý: Thông điệp này sẽ không được gửi qua mạng Dash. </translation>
+        <translation>Een boodschap die was bijgevoegd aan de dash: URI die met de transactie voor uw referentie wordt opgeslagen. Opmerking: Dit bericht zal niet over het Dash netwerk worden verzonden.</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
-        <translation>Đây là một yêu cầu thanh toán không được kiểm chứng.</translation>
+        <translation>Dit is een niet-geverifieerd betalingsverzoek.</translation>
     </message>
     <message>
         <source>This is an authenticated payment request.</source>
-        <translation>Đây là một yêu cầu thanh toán đã được kiểm chứng.</translation>
+        <translation>Dit is een geverifieerd betalingsverzoek.</translation>
     </message>
     <message>
         <source>Pay To:</source>
-        <translation>Trả cho:</translation>
+        <translation>Betaal Aan:</translation>
     </message>
     <message>
         <source>Memo:</source>
-        <translation>Ghi nhớ:</translation>
+        <translation>Memo:</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>Nhập nhãn cho địa chỉ để thêm nó vào sổ địa chỉ của bạn.</translation>
+        <translation>Vul een label in voor dit adres om het toe te voegen aan uw adresboek</translation>
     </message>
 </context>
 <context>
     <name>SendConfirmationDialog</name>
     <message>
         <source>Yes</source>
-        <translation>Yes</translation>
+        <translation>Ja</translation>
     </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
         <source>%1 is shutting down...</source>
-        <translation>%1 đang shutting down...</translation>
+        <translation>%1 is aan het afsluiten...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation>Đừng tắt máy tính cho đến khi cửa sổ này biến mất.</translation>
+        <translation>Sluit de computer niet af totdat dit venster verdwenen is.</translation>
     </message>
 </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Chữ ký - Ký / Kiểm tra Thông điệp</translation>
+        <translation>Handtekeningen - Onderteken een bericht / Verifiëer een handtekening</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Ký thông điệp</translation>
+        <translation>O&amp;nderteken Bericht</translation>
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive Dash sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Bạn có thể ký vào thông điệp/thoả thuận với địa chỉ của bạn để chứng minh bạn có thể nhận Dash đã gửi cho họ. Hãy cẩn thận không ký vào những gì mơ hồ hay ngẫu nhiên, như là thứ lừa đảo để lừa bạn ký xác nhận của bạn vào đó cho họ. Chỉ ký vào những gì mà bạn hoàn thoàn đồng ý.</translation>
+        <translation>U kunt berichten/overeenkomsten ondertekenen met een van uw adressen om te bewijzen dat u dit adres bezit. Pas op dat u geen onduidelijke of willekeurige dingen ondertekent, want phishingaanvallen zouden u kunnen misleiden om zo uw identiteit te stelen. Onderteken alleen berichten waarmee u het volledig eens bent.</translation>
     </message>
     <message>
         <source>The Dash address to sign the message with</source>
-        <translation>Địa chỉ Dash để ký cho thông điệp</translation>
+        <translation>Het Dashadres om bericht mee te ondertekenen</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Chọn địa chỉ đã dùng</translation>
+        <translation>Kies een eerder gebruikt adres</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -3149,7 +3155,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Dán địa chỉ từ clipboard</translation>
+        <translation>Plak adres vanuit klembord</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -3157,118 +3163,118 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
-        <translation>Nhập vào thông điệp mà bạn muốn ký tại đây</translation>
+        <translation>Typ hier het bericht dat u wilt ondertekenen</translation>
     </message>
     <message>
         <source>Signature</source>
-        <translation>Chữ ký</translation>
+        <translation>Handtekening</translation>
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Copy chữ ký hiện tại vào bộ đệm của hệ thống</translation>
+        <translation>Kopieer de huidige handtekening naar het systeemklembord</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Dash address</source>
-        <translation>Ký vào thông điệp để chứng tỏ bạn sở hữu địa chỉ Dash</translation>
+        <translation>Teken het bericht om te bewijzen dat u dit Dash adres bezit</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation>&amp;Ký thông điệp</translation>
+        <translation>Onderteken &amp;Bericht</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
-        <translation>Tái lập lại tất cả các trường cần ký</translation>
+        <translation>Verwijder alles in de invulvelden</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>Xoá &amp;tất cả</translation>
+        <translation>Verwijder &amp;Alles</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Xác thực Thông điệp</translation>
+        <translation>&amp;Verifiëer Bericht</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation>Hãy nhập vào địa chỉ của người nhận, thông điệp (hãy đảm bảo rằng bạn copy cả dấu xuống dòng, dấu cách, dấu tab,... một cách chính xác) và chữ ký bên dưới để kiểm tra thông điệp. Hãy cẩn thận để không đọc thêm vào phần chữ ký mà nó dùng để ký, để tránh bị đánh lừa bởi kiểu tấn công người trung gian. Chú ý đây chỉ để chứng minh chữ ký của bên nhận với địa chỉ đó, nó không thể chứng minh người gửi hoặc bất kỳ giao dich nào!</translation>
+        <translation>Voer het adres van de ontvanger in, bericht (zorg ervoor dat de regeleinden, spaties, tabs etc. precies kloppen) en onderteken onderaan om het bericht te verifiëren. Wees voorzicht om niet meer in de ondertekening te lezen dan in het getekende bericht zelf, om te voorkomen dat je wordt aangevallen met een man-in-the-middle attack. Houd er mee rekening dat dit alleen de ondertekende partij bewijst met het ontvangen adres, er kan niet bewezen worden dat er een transactie heeft plaatsgevonden!</translation>
     </message>
     <message>
         <source>The Dash address the message was signed with</source>
-        <translation>Địa chỉ Dash mà thông điệp được ký bởi</translation>
+        <translation>Het Dashadres waarmee het bericht ondertekend is</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Dash address</source>
-        <translation>Kiểm tra lại thông điệp để đảm bảo rằng nó được ký với địa chỉ Dash cụ thể</translation>
+        <translation>Verifieer het bericht om zeker te zijn dat het getekend werd met het opgegeven Dash adres</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>Xác thực &amp;Thông điệp</translation>
+        <translation>Verifiëer &amp;Bericht</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
-        <translation>Tái lập lại tất cả các trường kiểm tra</translation>
+        <translation>Verwijder alles in de invulvelden</translation>
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
-        <translation>Bấm "Ký Thông điệp" để sinh chữ ký</translation>
+        <translation>Klik op "Onderteken Bericht" om de handtekening te genereren</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
-        <translation>Địa chỉ vừa nhập không hợp lệ.</translation>
+        <translation>Het opgegeven adres is ongeldig.</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation>Hãy kiểm tra địa chỉ và thử lại.</translation>
+        <translation>Controleer het adres en probeer het opnieuw.</translation>
     </message>
     <message>
         <source>The entered address does not refer to a key.</source>
-        <translation>Địa chỉ bạn nhập không đề cập đến một khoá.</translation>
+        <translation>Het opgegeven adres verwijst niet naar een sleutel.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
-        <translation>Mở khoá ví bị huỷ bỏ.</translation>
+        <translation>Portemonnee-ontsleuteling is geannuleerd.</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation>Khoá riêng cho địa chỉ vừa nhập không có.</translation>
+        <translation>Geheime sleutel voor het ingevoerde adres is niet beschikbaar.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
-        <translation>Ký vào thông điệp thất bại.</translation>
+        <translation>Ondertekenen van het bericht is mislukt.</translation>
     </message>
     <message>
         <source>Message signed.</source>
-        <translation>Thông điệp đã được ký.</translation>
+        <translation>Bericht ondertekend.</translation>
     </message>
     <message>
         <source>The signature could not be decoded.</source>
-        <translation>Chữ ký không thể giải mã được.</translation>
+        <translation>De handtekening kon niet worden gedecodeerd.</translation>
     </message>
     <message>
         <source>Please check the signature and try again.</source>
-        <translation>Hãy kiểm tra chữ ký và thử lại.</translation>
+        <translation>Controleer de handtekening en probeer het opnieuw.</translation>
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
-        <translation>Chữ ký không tương xứng với nội dung thông điệp.</translation>
+        <translation>De handtekening hoort niet bij het bericht.</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
-        <translation>Không thể xác thực thông điệp.</translation>
+        <translation>Berichtverificatie mislukt.</translation>
     </message>
     <message>
         <source>Message verified.</source>
-        <translation>Thông điệp đã được xác thực.</translation>
+        <translation>Bericht geverifiëerd.</translation>
     </message>
 </context>
 <context>
     <name>SplashScreen</name>
     <message>
         <source>[testnet]</source>
-        <translation>[mạng thử]</translation>
+        <translation>[testnetwerk]</translation>
     </message>
     <message>
         <source>Version %1</source>
-        <translation>Phiên bản %1</translation>
+        <translation>Versie %1</translation>
     </message>
 </context>
 <context>
@@ -3282,147 +3288,147 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>TransactionDesc</name>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Mở cho %n khối nữa</numerusform></translation>
+        <translation><numerusform>Open voor nog %n blok</numerusform><numerusform>Open voor nog %n blokken</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation>Mở đến khi %1</translation>
+        <translation>Open tot %1</translation>
     </message>
     <message>
         <source>conflicted</source>
-        <translation>xung đột</translation>
+        <translation>Conflicterend</translation>
     </message>
     <message>
         <source>%1/offline</source>
-        <translation>%1/ngắt kết nối</translation>
+        <translation>%1/offline</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
-        <translation>0/chưa xác thực, %1</translation>
+        <translation>0/onbevestigd, %1</translation>
     </message>
     <message>
         <source>in memory pool</source>
-        <translation>trong memory pool</translation>
+        <translation>in geheugenpoel</translation>
     </message>
     <message>
         <source>not in memory pool</source>
-        <translation>không có trong memory pool</translation>
+        <translation>niet in geheugenpoel</translation>
     </message>
     <message>
         <source>abandoned</source>
-        <translation>bị từ chối</translation>
+        <translation>Opgegeven</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
-        <translation>%1/chưa xác nhận</translation>
+        <translation>%1/onbevestigd</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
-        <translation>%1 xác nhận</translation>
+        <translation>%1 bevestigingen</translation>
     </message>
     <message>
         <source>verified via InstantSend</source>
-        <translation>đã được kiểm tra bởi InstantSend</translation>
+        <translation>geverifieerd met InstantSend</translation>
     </message>
     <message>
         <source>InstantSend verification in progress - %1 of %2 signatures</source>
-        <translation>Việc kiểm chứng InstantSend đang trong tiến trình - %1 của %2 các chữ ký</translation>
+        <translation>Bezig met InstantSend verficatie - %1 van %2 ondertekeningen</translation>
     </message>
     <message>
         <source>InstantSend verification failed</source>
-        <translation>Kiểm chứng InstantSend thất bại</translation>
+        <translation>InstantSend verificatie mislukt</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation>Trạng thái</translation>
+        <translation>Status</translation>
     </message>
     <message>
         <source>, has not been successfully broadcast yet</source>
-        <translation>, đã không được phát sóng thành công</translation>
+        <translation>, is nog niet met succes uitgezonden</translation>
     </message>
     <message numerus="yes">
         <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, quảng bá thông qua %n điểm nút</numerusform></translation>
+        <translation><numerusform>, uitgezonden via %n node</numerusform><numerusform>, uitgezonden via %n nodes</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Ngày</translation>
+        <translation>Datum</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation>Nguồn</translation>
+        <translation>Bron</translation>
     </message>
     <message>
         <source>Generated</source>
-        <translation>Đã được sinh</translation>
+        <translation>Gegenereerd</translation>
     </message>
     <message>
         <source>From</source>
-        <translation>Từ</translation>
+        <translation>Van</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation>không biết</translation>
+        <translation>onbekend</translation>
     </message>
     <message>
         <source>To</source>
-        <translation>Đến</translation>
+        <translation>naar</translation>
     </message>
     <message>
         <source>own address</source>
-        <translation>địa chỉ của mình</translation>
+        <translation>eigen adres</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation>chỉ theo dõi</translation>
+        <translation>Alleen-bekijkbaar</translation>
     </message>
     <message>
         <source>label</source>
-        <translation>nhãn</translation>
+        <translation>Label</translation>
     </message>
     <message>
         <source>Credit</source>
-        <translation>Có</translation>
+        <translation>Credit</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>mãn hạn trong %n khối nữa</numerusform></translation>
+        <translation><numerusform>komt beschikbaar na %n nieuw blok</numerusform><numerusform>komt beschikbaar na %n nieuwe blokken</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
-        <translation>không chấp nhận</translation>
+        <translation>niet geaccepteerd</translation>
     </message>
     <message>
         <source>Debit</source>
-        <translation>Nợ</translation>
+        <translation>Debet</translation>
     </message>
     <message>
         <source>Total debit</source>
-        <translation>Tổng nợ</translation>
+        <translation>Totaal debit</translation>
     </message>
     <message>
         <source>Total credit</source>
-        <translation>Tổng có</translation>
+        <translation>Totaal credit</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation>Phí giao dịch</translation>
+        <translation>Transactiekosten</translation>
     </message>
     <message>
         <source>Net amount</source>
-        <translation>Số tiền chưa gồm phí</translation>
+        <translation>Netto bedrag</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation>Thông điệp</translation>
+        <translation>Bericht</translation>
     </message>
     <message>
         <source>Comment</source>
-        <translation>Bình luận</translation>
+        <translation>Opmerking</translation>
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation>Mã giao dịch</translation>
+        <translation>Transactie-ID</translation>
     </message>
     <message>
         <source>Output index</source>
@@ -3430,149 +3436,149 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Transaction total size</source>
-        <translation>Tổng kích thước giao dịch</translation>
+        <translation>Transactie totale grootte</translation>
     </message>
     <message>
         <source>Merchant</source>
-        <translation>Người bán</translation>
+        <translation>Handelaar</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Coin được tạo phải được trưởng thành %1 khối trước khi chúng có thể được tiêu. Khi bạn sinh khối này, nó được quảng bá trong mạng để thêm vào chuỗi khối. Nếu nó không được đưa vào chuỗi, trạng thái của nó được chuyển thành "không được chấp nhận" và sẽ không thể tiêu được. Điều này thỉnh thoảng có xảy ra nếu những nút khác cũng sinh trong vòng vài giây với khối của bạn.</translation>
+        <translation>Gegenereerde munten moeten %1 blokken rijpen voordat ze kunnen worden besteed. Toen dit blok gegenereerd werd, werd het uitgezonden naar het netwerk om aan de blokketen toegevoegd te worden. Als het niet lukt om in de keten toegevoegd te worden, zal de status te veranderen naar "niet geaccepteerd" en zal het niet besteedbaar zijn. Dit kan soms gebeuren als een ander knooppunt een blok genereert binnen een paar seconden na die van u.</translation>
     </message>
     <message>
         <source>Debug information</source>
-        <translation>Thông tin gỡ rối</translation>
+        <translation>Debug-informatie</translation>
     </message>
     <message>
         <source>Transaction</source>
-        <translation>Giao dịch</translation>
+        <translation>Transactie</translation>
     </message>
     <message>
         <source>Inputs</source>
-        <translation>Đầu vào</translation>
+        <translation>Inputs</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Số tiền</translation>
+        <translation>Bedrag</translation>
     </message>
     <message>
         <source>true</source>
-        <translation>đúng</translation>
+        <translation>waar</translation>
     </message>
     <message>
         <source>false</source>
-        <translation>sai</translation>
+        <translation>onwaar</translation>
     </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Bảng này hiển thị mô tả chi tiết về giao dịch</translation>
+        <translation>Dit venster laat een uitgebreide beschrijving van de transactie zien</translation>
     </message>
     <message>
         <source>Details for %1</source>
-        <translation>Details for %1</translation>
+        <translation>Details voor %1</translation>
     </message>
 </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Ngày</translation>
+        <translation>Datum</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation>Kiểu</translation>
+        <translation>Type</translation>
     </message>
     <message>
         <source>Address / Label</source>
-        <translation>Địa chỉ / Nhãn</translation>
+        <translation>Adres / Label</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Mở cho %n khối nữa</numerusform></translation>
+        <translation><numerusform>Open voor nog %n blok</numerusform><numerusform>Open voor nog %n blokken</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation>Mở đến khi %1</translation>
+        <translation>Open tot %1</translation>
     </message>
     <message>
         <source>Offline</source>
-        <translation>Ngắt kết nối</translation>
+        <translation>Offline</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation>Chưa xác thực</translation>
+        <translation>Onbevestigd</translation>
     </message>
     <message>
         <source>Abandoned</source>
-        <translation>Bị từ chối</translation>
+        <translation>Opgegeven</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>Đang xác nhận (%1 của %2 xác nhận được đề nghị)</translation>
+        <translation>Bevestigen (%1 van %2 aanbevolen bevestigingen)</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>Được xác nhận (%1 xác nhận)</translation>
+        <translation>Bevestigd (%1 bevestigingen)</translation>
     </message>
     <message>
         <source>Conflicted</source>
-        <translation>Xung đột</translation>
+        <translation>Conflicterend</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Chưa hoàn thành (%1 xác nhận, sẽ sẵn sàng sau %2)</translation>
+        <translation>Niet beschikbaar (%1 bevestigingen, zal beschikbaar zijn na %2)</translation>
     </message>
     <message>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Khối này đã không nhận được bởi bất kỳ các nút nào khác và có thể sẽ không được chấp nhận!</translation>
+        <translation>Dit blok is niet ontvangen bij andere nodes en zal waarschijnlijk niet worden geaccepteerd!</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation>Đã sinh nhưng không được chấp nhận</translation>
+        <translation>Gegenereerd maar niet geaccepteerd</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation>Nhận với</translation>
+        <translation>Ontvangen met</translation>
     </message>
     <message>
         <source>Received from</source>
-        <translation>Nhận từ</translation>
+        <translation>Ontvangen van</translation>
     </message>
     <message>
         <source>Received via PrivateSend</source>
-        <translation>Nhận được thông qua PrivateSend</translation>
+        <translation>Ontvangen via PrivateSend</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Gửi đến</translation>
+        <translation>Verzonden aan</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
-        <translation>Trả cho bản thân bạn</translation>
+        <translation>Betaling aan uzelf</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Được đào</translation>
+        <translation>Gedolven</translation>
     </message>
     <message>
         <source>PrivateSend Denominate</source>
-        <translation>Mệnh giá PrivateSend</translation>
+        <translation>PrivateSend denominatie</translation>
     </message>
     <message>
         <source>PrivateSend Collateral Payment</source>
-        <translation>Thanh toán đảm bảo cho PrivateSend</translation>
+        <translation>PrivateSend Onderpand Betaling</translation>
     </message>
     <message>
         <source>PrivateSend Make Collateral Inputs</source>
-        <translation>PrivateSend Tạo Đặt Cọc Đầu Vào</translation>
+        <translation>PrivateSend Vorm Onderpand Inputs</translation>
     </message>
     <message>
         <source>PrivateSend Create Denominations</source>
-        <translation>PrivateSend Tạo Các Mệnh Giá</translation>
+        <translation>PrivateSend Creëer Denominaties</translation>
     </message>
     <message>
         <source>PrivateSend</source>
@@ -3580,82 +3586,82 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation>chỉ theo dõi</translation>
+        <translation>Alleen-bekijkbaar</translation>
     </message>
     <message>
         <source>(n/a)</source>
-        <translation>(không áp dụng)</translation>
+        <translation>(nvt)</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(không nhãn)</translation>
+        <translation>(geen label)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Trạng thái giao dịch: Di chuột qua ô này để hiển thị số lần xác nhận.</translation>
+        <translation>Transactiestatus. Houd de cursor boven dit veld om het aantal bevestigingen te laten zien.</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
-        <translation>Thời gian giao dịch đã được nhận.</translation>
+        <translation>Datum en tijd waarop deze transactie is ontvangen.</translation>
     </message>
     <message>
         <source>Type of transaction.</source>
-        <translation>Kiểu giao dịch.</translation>
+        <translation>Type transactie.</translation>
     </message>
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation>Cho dù có hay không thì một địa chỉ chỉ theo dõi cũng liên quan đến giao dịch này.</translation>
+        <translation>Of er een alleen-bekijken-adres is betrokken bij deze transactie.</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
-        <translation>Người dùng định nghĩa ý định/mục đích của giao dịch.</translation>
+        <translation>Door gebruiker gedefinieerde intentie/doel van de transactie.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation>Lượng tiền được gỡ bỏ hoặc thêm vào số dư.</translation>
+        <translation>Bedrag verwijderd van of toegevoegd aan saldo.</translation>
     </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>All</source>
-        <translation>Tất cả</translation>
+        <translation>Alles</translation>
     </message>
     <message>
         <source>Today</source>
-        <translation>Hôm nay</translation>
+        <translation>Vandaag</translation>
     </message>
     <message>
         <source>This week</source>
-        <translation>Tuần này</translation>
+        <translation>Deze week</translation>
     </message>
     <message>
         <source>This month</source>
-        <translation>Tháng này</translation>
+        <translation>Deze maand</translation>
     </message>
     <message>
         <source>Last month</source>
-        <translation>Tháng gần nhất</translation>
+        <translation>Vorige maand</translation>
     </message>
     <message>
         <source>This year</source>
-        <translation>Năm nay</translation>
+        <translation>Dit jaar</translation>
     </message>
     <message>
         <source>Range...</source>
-        <translation>Khoảng...</translation>
+        <translation>Bereik...</translation>
     </message>
     <message>
         <source>Most Common</source>
-        <translation>Phổ biến nhất</translation>
+        <translation>Meest Voorkomend</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation>Nhận với</translation>
+        <translation>Ontvangen met</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Gửi đến</translation>
+        <translation>Verzonden aan</translation>
     </message>
     <message>
         <source>PrivateSend</source>
@@ -3663,1118 +3669,1118 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>PrivateSend Make Collateral Inputs</source>
-        <translation>PrivateSend Tạo Đặt Cọc Đầu Vào</translation>
+        <translation>PrivateSend Vorm Onderpand Inputs</translation>
     </message>
     <message>
         <source>PrivateSend Create Denominations</source>
-        <translation>PrivateSend Tạo Các Mệnh Giá</translation>
+        <translation>PrivateSend Creëer Denominaties</translation>
     </message>
     <message>
         <source>PrivateSend Denominate</source>
-        <translation>Mệnh giá PrivateSend</translation>
+        <translation>PrivateSend Denomineren</translation>
     </message>
     <message>
         <source>PrivateSend Collateral Payment</source>
-        <translation>PrivateSend Collateral Payment</translation>
+        <translation>PrivateSend Onderpand Betaling</translation>
     </message>
     <message>
         <source>To yourself</source>
-        <translation>Đến bản thân bạn</translation>
+        <translation>Aan uzelf</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Được đào</translation>
+        <translation>Gedolven</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation>Khác</translation>
+        <translation>Anders</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Nhập địa chỉ hoặc nhãn để tìm</translation>
+        <translation>Vul adres of label in om te zoeken</translation>
     </message>
     <message>
         <source>Min amount</source>
-        <translation>Số tiền tối thiểu</translation>
+        <translation>Min. bedrag</translation>
     </message>
     <message>
         <source>Abandon transaction</source>
-        <translation>Từ bỏ giao dịch</translation>
+        <translation>Doe afstand van transactie</translation>
     </message>
     <message>
         <source>Copy address</source>
-        <translation>Sao chép địa chỉ</translation>
+        <translation>Kopieer adres</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Sao chép nhãn</translation>
+        <translation>Kopieer label</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Sao chép số tiền</translation>
+        <translation>Kopieer bedrag</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Sao chép mã giao dịch</translation>
+        <translation>Kopieer transactie-ID</translation>
     </message>
     <message>
         <source>Copy raw transaction</source>
-        <translation>Sao chép giao dịch thô</translation>
+        <translation>Kopieer ruwe transactie</translation>
     </message>
     <message>
         <source>Copy full transaction details</source>
-        <translation>Sao chép chi tiết đầy đủ về giao dịch</translation>
+        <translation>Kopieer volledige transactiedetials</translation>
     </message>
     <message>
         <source>Edit label</source>
-        <translation>Sửa nhãn</translation>
+        <translation>Bewerk label</translation>
     </message>
     <message>
         <source>Show transaction details</source>
-        <translation>Xem chi tiết giao dịch</translation>
+        <translation>Toon transactiedetails</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
-        <translation>Kết xuất Lịch sử Giao dịch</translation>
+        <translation>Exporteer transactiegeschiedenis</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>File định dạng phân cách bởi dấu phẩy (*.csv)</translation>
+        <translation>Kommagescheiden bestand (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation>Đã được xác nhận</translation>
+        <translation>Bevestigd</translation>
     </message>
     <message>
         <source>Watch-only</source>
-        <translation>Chỉ theo dõi</translation>
+        <translation>Alleen-bekijkbaar</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Ngày</translation>
+        <translation>Datum</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation>Kiểu</translation>
+        <translation>Type</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Nhãn</translation>
+        <translation>Label</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Địa chỉ</translation>
+        <translation>Adres</translation>
     </message>
     <message>
         <source>ID</source>
-        <translation>Mã</translation>
+        <translation>ID</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Kết xuất không thành công</translation>
+        <translation>Export mislukt</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Có một lỗi xảy ra khi lưu lịch sử giao dịch vào %1.</translation>
+        <translation>Er is een fout opgetreden bij het opslaan van de transactiegeschiedenis naar %1.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation>Kết xuất thành công</translation>
+        <translation>Export succesvol</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation>Lịch sử giao dịch đã được lưu thành công vào %1.</translation>
+        <translation>De transactiegeschiedenis was succesvol bewaard in %1.</translation>
     </message>
     <message>
         <source>Range:</source>
-        <translation>Khoảng:</translation>
+        <translation>Bereik:</translation>
     </message>
     <message>
         <source>to</source>
-        <translation>đến</translation>
+        <translation>naar</translation>
     </message>
 </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation>Đơn vị mà hiển thị số lượng trong đó. Hãy click để chọn một đơn vị khác.</translation>
+        <translation>Eenheid om bedragen uit te drukken. Klik om een andere eenheid te selecteren.</translation>
     </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
-        <translation>Không có ví nào được nạp.</translation>
+        <translation>Er is geen portemonnee geladen.</translation>
     </message>
 </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Gửi tiền</translation>
+        <translation>Verstuur munten</translation>
     </message>
     <message>
         <source>InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.</source>
-        <translation>InstantSend không hỗ trợ gửi giá trị lớn đến vậy. Các giao dịch hiện giới hạn với %1 DASH.</translation>
+        <translation>InstantSend ondersteund het verzenden van zulke hoge bedragen nog niet. Transacties zijn momenteel gelimiteerd tot %1 Dash.</translation>
     </message>
     <message>
         <source>Used way too many inputs (&gt;%1) for this InstantSend transaction, fees could be huge.</source>
-        <translation>Sử dụng quá nhiều đầu vào (&gt;%1) cho giao dịch InstantSend này, phí giao dịch có thể rất lớn.</translation>
+        <translation>Er worden veel te veel inputs (&gt;%1) gebruikt voor deze InstantSend transactie, de vergoeding kan enorm zijn.</translation>
     </message>
 </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Kết xuất</translation>
+        <translation>&amp;Exporteer</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Kết xuất dữ liệu trong tab này sang một file</translation>
+        <translation>Exporteer de data in de huidige tab naar een bestand</translation>
     </message>
     <message>
         <source>Selected amount:</source>
-        <translation>Chọn số lượng:</translation>
+        <translation>Gekozen bedrag:</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation>Sao lưu Ví</translation>
+        <translation>Portemonnee backuppen</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
-        <translation>Dữ liệu Ví (*.dat)</translation>
+        <translation>Portemonneedata (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation>Sao lưu không thành công</translation>
+        <translation>Backup mislukt</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>Có lỗi xảy ra khi lưu dữ liệu ví xuống %1.</translation>
+        <translation>Er is een fout opgetreden bij het wegschrijven van de portemonneedata naar %1.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
-        <translation>Sao lưu thành công</translation>
+        <translation>Backup succesvol</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation>Dữ liệu ví đã được lưu thành công vào %1.</translation>
+        <translation>De portemonneedata is succesvol opgeslagen in %1.</translation>
     </message>
 </context>
 <context>
     <name>dash-core</name>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Liên kết với địa chỉ nhất định và luôn luôn lắng nghe trên đó. Sử dụng ký hiệu [host]:port cho IPv6</translation>
+        <translation>Bind aan opgegeven adres en luister er altijd op. Gebruik [host]:port notatie voor IPv6</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Lỗi: Lắng nghe để nhận kết nối bị lỗi (lỗi trả về %s)</translation>
+        <translation>Fout: luisteren naar binnenkomende verbindingen mislukt (luisteren gaf foutmelding %s)</translation>
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Thực hiện lệnh khi một cảnh báo liên quan được nhận hoặc chúng ta thấy sự phân nhánh thực sự dài (%s trong cmd được thay bởi message)</translation>
+        <translation>Voer opdracht uit zodra een waarschuwing is ontvangen of wanneer we een erg lange fork detecteren (%s in opdracht wordt vervangen door bericht)</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Thực hiện lệnh khi một giao dịch ví thay đổi (%s trong cmd được thay thế bởi TxID)</translation>
+        <translation>Voer opdracht uit zodra een portemonneetransactie verandert (%s in cmd wordt vervangen door TxID)</translation>
     </message>
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Thực hiện lệnh khi khối tốt nhất thay đổi (%s trong cmd được thay thế bởi giá trị băm của khối)</translation>
+        <translation>Voer opdracht uit zodra het beste blok verandert (%s in cmd wordt vervangen door blokhash)</translation>
     </message>
     <message>
         <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Đặt tên để tạo dựng url cho các thành phần KeePass mà nó sẽ lưu giữ mật khẩu của ví</translation>
+        <translation>Naam om url te vormen voor de KeePass invoer die de wachtwoordzin van de wallet opslaat</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation>Đặt kích thước tối đa cho giao dịch với ưu tiên cao/phí thấp theo bytes (ngầm định: %d)</translation>
+        <translation>Stel de maximale grote in van hoge prioriteit/lage kosten transacties in bytes (default: %d)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Thiết lập số luồng của kịch bản kiểm tra (%u to %d, 0 = tự động, &lt;0 = để nhiều lõi miễn phí, ngầm định: %d)</translation>
+        <translation>Kies het aantal scriptverificatie processen (%u tot %d, 0 = auto, &lt;0 = laat dit aantal kernen vrij, standaard: %d)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Đây là phiên bản chưa chính thức - hãy dùng và tự chấp nhận mạo hiểm - đừng dùng để đào coin hoặc các ứng dụng thương mại.</translation>
+        <translation>Dit is een pre-release testversie - gebruik op eigen risico! Gebruik deze niet voor het delven van munten of handelsdoeleinden</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Cảnh báo: Mạng lưới có vẻ chưa hoàn toàn đồng ý! Một vài máy đào có vẻ như đã kinh nghiệm với những vấn đề này.</translation>
+        <translation>Waarschuwing: Het lijkt erop dat het netwerk geen consensus kan vinden! Sommige delvers lijken problemen te ondervinden.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Cảnh báo: Chúng ta có vẻ không được sự đồng ý một cách đầy đủ từ các đối tác ngang hàng! Bạn cần nâng cấp hoặc các nút khác cần nâng cấp.</translation>
+        <translation>Waarschuwing: Het lijkt erop dat we geen consensus kunnen vinden met onze peers! Mogelijk dient u te upgraden, of andere nodes moeten wellicht upgraden.</translation>
     </message>
     <message>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Bạn cần chỉ rõ masternodeprivkey trong tệp cấu hình. Hãy xem tài liệu để có hướng dẫn.</translation>
+        <translation>U moet een geheime sleutel van een Masternode invoeren. Raadpleeg de documentatie voor hulp.</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation>Chấp nhận dòng lệnh và các lệnh JSON-RPC</translation>
+        <translation>Ontvang command-lijn en JSON-RPC commando's.</translation>
     </message>
     <message>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Thêm nút để kết nối tới và giữ mở kết nối</translation>
+        <translation>Voeg een node toe om mee te verbinden en probeer de verbinding open te houden.</translation>
     </message>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Cho phép DNS tìm kiếm -addnode, -seednode và -connect</translation>
+        <translation>Sta DNS opzoekingen to voor -addnode, -seednode en -connect</translation>
     </message>
     <message>
         <source>Already have that input.</source>
-        <translation>Đã có đầu vào đó.</translation>
+        <translation>Deze invoer is reeds gekend</translation>
     </message>
     <message>
         <source>Block creation options:</source>
-        <translation>Tuỳ chọn tạo khối:</translation>
+        <translation>Opties bij aanmaken van blokken:</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
-        <translation>Không thể hạ cấp ví</translation>
+        <translation>Kan de portemonnee niet verlagen van versie</translation>
     </message>
     <message>
         <source>Cannot write default address</source>
-        <translation>Không thể viết vào địa chỉ ngầm định</translation>
+        <translation>Kan niet schrijven naar het standaard adres</translation>
     </message>
     <message>
         <source>Collateral not valid.</source>
-        <translation>Collateral không hợp lệ.</translation>
+        <translation>Onderpand niet geldig.</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Kết nối với một nút để lấy địa chỉ ngang hàng, và ngắt kết nối</translation>
+        <translation>Verbind naar een node om het peer adres op te halen en verbreek.</translation>
     </message>
     <message>
         <source>Connection options:</source>
-        <translation>Tuỳ chọn kết nối:</translation>
+        <translation>Verbindingsopties:</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
-        <translation>Phát hiện ra dữ liệu khối bị hỏng</translation>
+        <translation>Corrupte blok database gedetecteerd</translation>
     </message>
     <message>
         <source>Debugging/Testing options:</source>
-        <translation>Tuỳ chọn Gỡ rối/Kiểm tra:</translation>
+        <translation>Debug-/testopties:</translation>
     </message>
     <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>Không tải ví và tắt các lời gọi ví RPC</translation>
+        <translation>Laad geen portemonnee en laat geen RPC berichten toe</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
-        <translation>Bạn có muốn xây dựng lại dữ liệu khối bây giờ không?</translation>
+        <translation>Wil je de blokken database nu herbouwen?</translation>
     </message>
     <message>
         <source>Done loading</source>
-        <translation>Nạp xong</translation>
+        <translation>Klaar met laden</translation>
     </message>
     <message>
         <source>Entries are full.</source>
-        <translation>Các đầu vào đã đầy.</translation>
+        <translation>Ingaven zijn vol</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
-        <translation>Lỗi khởi tạo cơ sở dữ liệu khối</translation>
+        <translation>Fout bij het initialiseren van de  blokken database</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation>Lỗi khởi tạo cơ sở dữ liệu môi trường ví %s!</translation>
+        <translation>Fout bij het initialiseren van de  portenomnee database omgeving %s!</translation>
     </message>
     <message>
         <source>Error loading block database</source>
-        <translation>Lỗi nạp cơ sở dữ liệu khối</translation>
+        <translation>Fout tijdens laden van blokdatabase</translation>
     </message>
     <message>
         <source>Error opening block database</source>
-        <translation>Lỗi mở cơ sở dữ liệu khối</translation>
+        <translation>Fout bij het openen van de blokken database</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
-        <translation>Lỗi đọc từ cơ sở dữ liệu, đang tắt phần mềm.</translation>
+        <translation>Fout bij het lezen van de database, programma wordt beëindigd.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation>Fout</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
-        <translation>Lỗi: Dung lượng đĩa thấp!</translation>
+        <translation>Fout: Schijfruimte is laag!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Không thành công khi lắng nghe trên các cổng. Sử dụng -listen=0 nếu bạn muốn nó.</translation>
+        <translation>Het is mislukt om naar gelijk welke poort te luisteren. Gebruik -listen=0 als je dit wil</translation>
     </message>
     <message>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(1 = giữ lại dữ liệu tx, ví dụ chủ tài khoản và thông tin yêu cầu thanh toán, 2 = bỏ dữ liệu tx)</translation>
+        <translation>(1 = behoudt tx meta data bijv. account eigenaar en betalingsverzoek informatie, 2. sla tx meta data niet op)</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>-maxtxfee được thiết lập rất cao! Mức phí cao này có thể được trả chỉ cho một giao dịch.</translation>
+        <translation>-maxtxfee staat zeer hoog! Transactiekosten van deze grootte kunnen worden gebruikt in een enkele transactie.</translation>
     </message>
     <message>
         <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation>Một tỷ lệ phí (theo %s/kB) sẽ được sử dụng khi việc tính phí không có đủ dữ liệu (ngầm định: %s)</translation>
+        <translation>Een transactietarief (in %s/kB) dat gebruikt wordt als de transactiekosten schatting niet genoeg data heeft. (normaal: %s)</translation>
     </message>
     <message>
         <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>Chấp nhận các giao dịch chuyển tiếp nhận được từ các nút ngang hàng trong danh sách trắng thậm chí đó không phải giao dịch chuyển tiếp (ngầm định: %d)</translation>
+        <translation>Accepteer doorgestuurde transacties ontvangen van goedgekeurde peers, ook wanneer je zelf geen transacties doorstuurt (standaard: %d)</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>Cho phép các kết nối JSON-RPC từ các nguồn nhất định. Các địa chỉ &lt;ip&gt; hợp lệ là các địa chỉ IP đơn (ví dụ: 1.2.3.4), một mạng/netmask (ví dụ: 1.2.3.4/255.255.255.0) hoặc một mạng/CIDR (ví dụ: 1.2.3.4/24). Tuỳ chọn này có thể chỉ ra nhiều lần.</translation>
+        <translation>Sta JSON-RPC verbindingen toe vanuit een gespecificeerde bron. Geldig voor &lt;ip&gt; zijn een enkel IP (bijv. 1.2.3.4), een netwerk/netmask (bijv. 1.2.3.4/255.255.255.0) of een netwerk/CIDR (bijv. 1.2.3.4/24). Deze optie kan meerdere keren gespecificeerd worden.</translation>
     </message>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>Liên kết với địa chỉ cụ thể và đưa nó vào danh sách chấp nhận của các đối tác kết nối vào nó. Sử dụng cách viết [địa chỉ máy]:cổng cho IPv6</translation>
+        <translation>Bind aan opgegeven adres en keur peers die ermee verbinden goed. Gebruik [host]:poort notatie voor IPv6</translation>
     </message>
     <message>
         <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>Liên kết với địa chỉ cụ thể để lắng nghe các kết nối JSON-RPC. Sử dụng cách viết [địa chỉ máy]:cổng cho IPv6. Tùy chọn này có thể được chỉ định nhiều lần (ngầm định: bind cho tất cả các giao diện)</translation>
+        <translation>Bind aan opgegeven adres om te luisteren naar JSON-RPC connecties. Gebruik [host]:port notatie voor IPv6. Deze instelling kan meerdere keren worden opgegeven (standaard: bind aan alle interfaces)</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Tạo tệp mới với các quyền hệ thống ngầm định, thay vì umask 077 (chỉ có tác dụng với chức năng ví được tắt)</translation>
+        <translation>Creër nieuwe bestanden met standaard systeem bestandsrechten in plaats van umask 077 (alleen effectief met uitgeschakelde portemonnee functionaliteit)</translation>
     </message>
     <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>Xoá hết tất cả các giao dịch ví và chỉ phục hồi những phần đó của blockchain qua -rescan khi khởi động</translation>
+        <translation>Verwijder alle transacties van de portemonnee en herstel alleen de delen van de blokketen door -rescan tijdens het opstarten</translation>
     </message>
     <message>
         <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
-        <translation>Lỗi tải %s: Bạn không thể mở HD trên ví mà không phải là HD</translation>
+        <translation>Fout bij het laden van %s: U kunt HD niet inschakelen op een al bestaande non-HD wallet</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation>Đã thấy các mệnh giá đầu ra chưa được xác nhận, sẽ đợi đến khi chúng xác nhận để tiếp tục.</translation>
+        <translation>Niet-bevestigde denominatie outputs gevonden, voortzetting zal worden  gepauseerd totdat deze zijn bevestigd.</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation>Cách kiểm tra khối triệt để -checkblocks là (0-4, ngầm định: %u)</translation>
+        <translation>Hoe grondig de blokverificatie van -checkblocks is (0-4, standaard: %u)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>Nếu paytxfee không được thiết lập, bao gồm đầy đủ phí để giao dịch bắt đầu xác nhận bình quân trong n khối (ngầm định: %u)</translation>
+        <translation>Als paytxfee niet is ingesteld, voeg voldoende vergoeding toe zodat transacties starten met bevestigingen binnen n blokken (standaard: %u)</translation>
     </message>
     <message>
         <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation>Nếu khối này nằm trong chuỗi giả định rằng nó và các khối trước nó là hợp lệ và có khả năng bỏ qua kịch bản kiểm tra (0 để kiểm tra tất cả, ngầm định: %s, testnet: %s)</translation>
+        <translation>Als dit blok in de keten staat, gaat het ervan uit dat dit blok en zijn voorouders geldig zijn en mogelijk hun script verificatie overslaan (0 om alles te verifiëren, standaard:%s, testnet:%s)</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation>Số lượng không phù hợp cho -maxtxfee=&lt;số lượng&gt;: '%s' (phải bằng ít nhất mức phí chuyển tiếp tối thiểu %s để tránh tình trạng tắc các giao dịch)</translation>
+        <translation>ongeldig bedrag voor -maxtxfee=&lt;bedrag&gt;: '%s' (moet ten minste de minimale doorgeefvergoeding van %s zijn om vastgelopen transacties te voorkomen)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>Duy trì một chỉ mục giao dịch đầy đủ, sử dụng bởi lệnh gọi rpc getrawtransaction (ngầm định: %u)</translation>
+        <translation>Onderhoud een volledige transactieindex, gebruikt door de getrawtransaction rpc call (standaard: %u)</translation>
     </message>
     <message>
         <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</source>
-        <translation>Hãy chắc chắn rằng bạn mã hoá ví của bạn và xoá tất cả các bản backup không mã hoá sau khi bạn đã kiểm tra rằng ví hoạt động tốt mà không có lỗi.</translation>
+        <translation>Zorg ervoor dat u uw wallet versleuteld, verwijder alle niet versleutelde backups nadat u getest hebt dat de nieuwe wallet werkt!</translation>
     </message>
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>Kích thước tối đa của dữ liệu trong các giao dịch cung cấp dữ liệu, chúng tôi chuyển tiếp và đào (ngầm định: %u)</translation>
+        <translation>Maximale grootte van de gegevens in gegevensdragertransacties die we doorgeven en mijnen (standaard: %u)</translation>
     </message>
     <message>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation>Số giây hạn chế để không cho phép các đối tác ngang hàng cư xử không đúng tiếp tục kết nối lại (ngầm định: %u)</translation>
+        <translation>Aantal seconden dat zich misdragende peers niet opnieuw kunnen verbinden (standaard: %u)</translation>
     </message>
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
-        <translation>Thông tin gỡ rối đầu ra (ngầm định: %u, cung cấp &lt;category&gt;  là một tuỳ chọn)</translation>
+        <translation>Output extra debugginginformatie (standaard: %u, het leveren van &lt;categorie&gt; is optioneel)</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>Sửa dụng các SOCKS5 proxy riêng biệt cho mỗi đối tác ngang hàng thông qua dịch vụ ẩn Tor (ngầm định: %s)</translation>
+        <translation>Gebruik een aparte SOCKS5 proxy om verborgen diensten van Tor te bereiken (standaard: %s)</translation>
     </message>
     <message>
         <source>User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>Sử dụng gợi nhớ cho ví (bip39). Chỉ có tác dụng trong khi tạo ví/khởi động lần đầu (ngầm định: sinh ngẫu nhiên)</translation>
+        <translation>Door de gebruiker gedefinieerde mnemonic voor HD-wallet (bip39). Werkt alleen tijdens het aanmaken van een wallet/ eerste start (standaard: willekeurig gegenereerd)</translation>
     </message>
     <message>
         <source>User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>Sử dụng mẫu định trước cho ví HD (nên ở dạng số thập lục hex). Chỉ có tác dụng trong việc khởi tạo/khởi động lần đầu (ngầm định: sinh ngẫu nhiên)</translation>
+        <translation>Door de gebruiker gedefinieerde seed voor HD-wallet (moet in hex zijn). Heeft alleen effect tijdens het aanmaken van een portemonnee / eerste start (standaard: willekeurig gegenereerd)</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>Cái điểm ngang hàng trong danh sách trắng không thể bị cấm DoS và các giao dịch của nó luôn được chuyển tiếp, thậm chí cả khi nó đã có trong mempool, hữu ích ví dụ như cho một cửa ngõ</translation>
+        <translation>Goedgekeurde peers kunnen niet ge-DoS-banned worden en hun transacties worden altijd doorgegeven, zelfs als ze reeds in de mempool aanwezig zijn, nuttig voor bijv. een gateway</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
-        <translation>Bạn cần tái tạo lại cơ sở dữ liệu sử dụng tham số -reindex-chainstate để thay cho -txindex</translation>
+        <translation>U moet de database herbouwen met -reindex-chainstate om -txindex aan te passen</translation>
     </message>
     <message>
         <source>(default: %s)</source>
-        <translation>(ngầm định: %s)</translation>
+        <translation>(standaard: %s)</translation>
     </message>
     <message>
         <source>Accept public REST requests (default: %u)</source>
-        <translation>Chấp nhận các yêu cầu REST công khai (ngầm định: %u)</translation>
+        <translation>Laat publiek REST vragen toe (standaard %u)</translation>
     </message>
     <message>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>Luôn luôn tìm kiếm địa chỉ các đối tác ngang hàng thông qua tìm kiếm DNS (ngầm định: %u)</translation>
+        <translation>Vind anderen door middel van een DNS-naslag (standaard: %u)</translation>
     </message>
     <message>
         <source>Can't mix: no compatible inputs found!</source>
-        <translation>Không thể trộn: không thấy đầu vào tương thích!</translation>
+        <translation>Kan niet mixen: geen compatibele inputs gevonden!</translation>
     </message>
     <message>
         <source>Chain selection options:</source>
-        <translation>Các tuỳ chọn lựa chọn chuỗi:</translation>
+        <translation>Keten selectie opties:</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
-        <translation>Kết nối thông qua SOCKS 5 proxy</translation>
+        <translation>Verbind via SOCKS5 proxy</translation>
     </message>
     <message>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Kết nối tới KeePassHttp trên cổng &lt;port&gt; (ngầm định: %u)</translation>
+        <translation>Verbind naar KeePassHttps via poort &lt;port&gt; (standaard: %u)</translation>
     </message>
     <message>
         <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>Cho phép phần mềm hoạt động như là masternode (0-1, ngầm định: %u)</translation>
+        <translation>Stel de client toe om te handelen als een masternode (0-1, standaard: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
-        <translation>Đầu vào vượt ngưỡng tối đa. </translation>
+        <translation>Invoer overschrijdt de maximale grootte.</translation>
     </message>
     <message>
         <source>Error loading %s: You can't disable HD on a already existing HD wallet</source>
-        <translation>Lỗi khi tải %s: Bạn có thể tắt HD trên ví đã có HD.</translation>
+        <translation>Fout bij het laden van %s: U kunt HD niet uitschakelen op een al bestaande HD wallet</translation>
     </message>
     <message>
         <source>Failed to load fulfilled requests cache from</source>
-        <translation>Không thể tải cache yêu cầu đã được thực hiện từ</translation>
+        <translation>Fout bij het inladen van de fulfilled requests cache uit</translation>
     </message>
     <message>
         <source>Failed to load governance cache from</source>
-        <translation>Không thể cache tải dữ liệu governance từ</translation>
+        <translation>Fout bij het inladen van de governance cache uit</translation>
     </message>
     <message>
         <source>Failed to load masternode cache from</source>
-        <translation>Không thể tải cache dữ liệu về masternode từ</translation>
+        <translation>Fout bij het inladen van de masternode cache uit</translation>
     </message>
     <message>
         <source>Failed to load masternode payments cache from</source>
-        <translation>Không thể tải được cache dữ liệu về các giao dịch từ</translation>
+        <translation>Fout bij het inladen van de masternode betalingen cache uit</translation>
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
-        <translation>Đã tìm đủ người dùng, đang ký (vui lòng đợi %s)</translation>
+        <translation>Voldoende gebruikers gevonden, aan het ondertekenen ( wacht %s )</translation>
     </message>
     <message>
         <source>Found enough users, signing ...</source>
-        <translation>Đã kiếm đủ người dùng, đang ký ...</translation>
+        <translation>Voldoende gebruikers gevonden, aan het ondertekenen ...</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>Bao nhiêu khối để kiểm tra khi khởi động (ngầm định: %u, 0 = tất cả)</translation>
+        <translation>Aantal te checken blokken bij het opstarten (standaard: %u, 0 = allemaal)</translation>
     </message>
     <message>
         <source>Importing...</source>
-        <translation>Đang nạp...</translation>
+        <translation>Importeren...</translation>
     </message>
     <message>
         <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>Kèm địa chỉ IP trong thông tin gỡ rối đầu ra (ngầm định: %u)</translation>
+        <translation>IP-adressen toevoegen in de debuguitvoer (standaard: %u)</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
-        <translation>Kiểu không tương thích.</translation>
+        <translation>Incompatibele modus.</translation>
     </message>
     <message>
         <source>Incompatible version.</source>
-        <translation>Phiên bản không tương thích.</translation>
+        <translation>Incompatibele versie.</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Khối sáng thế không chính xác hoặc không tìm thấy. Sai datadir cho mạng lưới?</translation>
+        <translation>Incorrect of geen genesisblok gevonden. Verkeerde gegevensmap voor het netwerk?</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Thông tin</translation>
+        <translation>Informatie</translation>
     </message>
     <message>
         <source>Input is not valid.</source>
-        <translation>Đầu vào không hợp lệ.</translation>
+        <translation>Inover is ongeldig</translation>
     </message>
     <message>
         <source>Insufficient funds.</source>
-        <translation>Không đủ tiền.</translation>
+        <translation>Ontoereikend saldo.</translation>
     </message>
     <message>
         <source>Invalid -onion address: '%s'</source>
-        <translation>Địa chỉ -onion không hợp lệ: '%s'</translation>
+        <translation>Ongeldig -onion adres: '%s'</translation>
     </message>
     <message>
         <source>Invalid -proxy address: '%s'</source>
-        <translation>Địa chỉ proxy không hợp lệ: '%s'</translation>
+        <translation>Ongeldig -proxy adres: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation>Số tiền không hợp lệ cho -paytxfee=&lt;số tiền&gt;: '%s' (ít nhất phải bằng %s)</translation>
+        <translation>Ongeldig bedrag voor -paytxfee=&lt;bedrag&gt;: '%s' (Minimum %s)</translation>
     </message>
     <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Keypool đã hết, hãy gọi keypoolrefill trước</translation>
+        <translation>Keypool op geraakt, roep alsjeblieft eerst keypoolrefill functie aan</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Lắng nghe kết nối JSON-RPC trên &lt;cổng&gt; (ngầm định: %u hoặc mạng thử: %u)</translation>
+        <translation>Luister naar JSON-RPC-verbindingen op &lt;poort&gt; (standaard: %u of testnet: %u)</translation>
     </message>
     <message>
         <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Lắng nghe kết nối từ &lt;cổng&gt; (ngầm định: %u hoặc mạng thử: %u)</translation>
+        <translation>Luister naar verbindingen op &lt;poort&gt; (standaard: %u of testnet: %u)</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
-        <translation>Đang tải danh sách từ chối...</translation>
+        <translation>Verbanningslijst aan het laden...</translation>
     </message>
     <message>
         <source>Loading fulfilled requests cache...</source>
-        <translation>Đang tải cache dữ liệu thực hiện...</translation>
+        <translation>Laden fulfilled requests chache...</translation>
     </message>
     <message>
         <source>Loading masternode cache...</source>
-        <translation>Đang tải cache cho masternode...</translation>
+        <translation>Laden masternode cache...</translation>
     </message>
     <message>
         <source>Loading masternode payment cache...</source>
-        <translation>Đang tải bộ đệm thanh toán cho masternode...</translation>
+        <translation>Laden masternode payment cache...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
-        <translation>Khoá đã sẵn sàng.</translation>
+        <translation>Vergrendeling is al op zijn plaats.</translation>
     </message>
     <message>
         <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>Khoá các masternode từ tệp cấu hình masternode (ngầm định: %u)</translation>
+        <translation>Vergrendel masternodes vanuit het masternode configuratiebestand (standaard: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Tối đa cho bộ đệm nhận của mỗi kết nối, &lt;n&gt;*1000 bytes (ngầm định: %u)</translation>
+        <translation>Maximum per-connectie ontvangstbuffer, &lt;n&gt;*1000 bytes (standaard: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Tối đa cho bộ đệm gửi của mỗi kết nối, &lt;n&gt;*1000 bytes (ngầm định: %u)</translation>
+        <translation>Maximum per-connectie verstuurbuffer, &lt;n&gt;*1000 bytes (standaard: %u)</translation>
     </message>
     <message>
         <source>Mixing in progress...</source>
-        <translation>Đang trong quá trình trộn...</translation>
+        <translation>Bezig met mixen...</translation>
     </message>
     <message>
         <source>Mnemonic passphrase is too long, must be at most 256 characters</source>
-        <translation>Câu gợi nhớ quá dài, nó chỉ được dài nhất là 256 ký tự</translation>
+        <translation>Mnemonisch wachtwoordzin is te lang: mag maximaal 256 tekens bevatten</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation>Cần chỉ rõ một cổng với -whitebind: '%s'</translation>
+        <translation>Verplicht een poort met -whitebind op te geven: '%s'</translation>
     </message>
     <message>
         <source>No Masternodes detected.</source>
-        <translation>Không tìm thấy các Master node.</translation>
+        <translation>Geen Masternodes gedetecteerd.</translation>
     </message>
     <message>
         <source>No compatible Masternode found.</source>
-        <translation>Không tìm thấy Masternode tương thích.</translation>
+        <translation>Geen compatibele Masternode gevonden.</translation>
     </message>
     <message>
         <source>Not in the Masternode list.</source>
-        <translation>Không có trong danh sách Masternode.</translation>
+        <translation>Niet in de Masternode lijst.</translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>Chỉ kết nối với các nút trong mạng &lt;net&gt; (IPv4, IPv6 hoặc onion)</translation>
+        <translation>Verbind alleen met nodes in netwerk &lt;net&gt; (ipv4, ipv6 of onion)</translation>
     </message>
     <message>
         <source>Port: %d</source>
-        <translation>Cổng: %d</translation>
+        <translation>Poort: %d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>Thêm tiền tố đầu ra debug với dấu thời gian (ngầm định: %u)</translation>
+        <translation>Begin debug output met tijdstempel (standaard: %u)</translation>
     </message>
     <message>
         <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation>Tái tạo chuỗi trạng thái và chỉ mục khối từ các file blk*.dat trên đĩa</translation>
+        <translation>Herbouw ketenstaat en block index met behulp van de blk*.dat bestanden op de harde schijf</translation>
     </message>
     <message>
         <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation>Tái tạo chuỗi trạng thái từ chỉ mục khối</translation>
+        <translation>Herbouw ketenstaat vanuit de huidige geindexeerde blokken</translation>
     </message>
     <message>
         <source>Send trace/debug info to debug.log file (default: %u)</source>
-        <translation>Gửi thông tin trace/debug vào file debug.log (ngầm định: %u)</translation>
+        <translation>Stuur traceer-/debuginformatie naar debug.log (standaard: %u)</translation>
     </message>
     <message>
         <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
-        <translation>Gửi giao dịch như là giao dịch không phí nếu có thể (ngầm định: %u)</translation>
+        <translation>Verstuur transacties als nul-vergoedingtransacties indien mogelijk (standaard: %u)</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>Thiết lập kích thước pool đến &lt;n&gt; (ngầm định: %u)</translation>
+        <translation>Stel sleutelpoelgrootte in op &lt;n&gt; (standaard: %u)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>Thiết lập số luồng phục vụ các lời gọi RPC (ngầm định: %d)</translation>
+        <translation>Stel het aantal threads in om RPC-aanvragen mee te bedienen (standaard: %d)</translation>
     </message>
     <message>
         <source>Specify configuration file (default: %s)</source>
-        <translation>Hãy chỉ rõ tệp cấu hình (ngầm định: %s)</translation>
+        <translation>Specificeer configuratiebestand (standaard: %s)</translation>
     </message>
     <message>
         <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>Hãy xác định thời gian hết hạn tính theo milli giây (tối thiểu: 1, ngầm định: %d)</translation>
+        <translation>Specificeer de time-out tijd in milliseconden (minimum: 1, standaard: %d)</translation>
     </message>
     <message>
         <source>Specify masternode configuration file (default: %s)</source>
-        <translation>Hãy chỉ ra tệp cấu hình masternode (ngầm định: %s)</translation>
+        <translation>Kies masternodeconfiguratiebeastand (standaard: %s)</translation>
     </message>
     <message>
         <source>Specify pid file (default: %s)</source>
-        <translation>Hãy chỉ rõ tệp pid (ngầm định: %s)</translation>
+        <translation>Specificeer pid-bestand (standaard: %s)</translation>
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>Tiên các khoản trả lại chưa được xác nhận khi gửi các giao dịch (ngầm định: %u)</translation>
+        <translation>Besteed onbevestigd wisselgeld bij het doen van transacties (standaard: %u)</translation>
     </message>
     <message>
         <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>Đã gửi các những thành phần sau tới masternode: %u / %d</translation>
+        <translation>De volgende gegevens zijn ingediend bij masternode: %u / %d</translation>
     </message>
     <message>
         <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Đã gửi đến masternode, đang đợi các đầu vào khác nữa (%u / %d) %s</translation>
+        <translation>Ingediend bij masternode, wachtende op meer gegevens (%u / %d ) %s</translation>
     </message>
     <message>
         <source>Submitted to masternode, waiting in queue %s</source>
-        <translation>Đã được gửi cho masternode, đang đợi trong hàng đợi %s</translation>
+        <translation>Ingediend bij masternode, wachten in de wachtrij %s</translation>
     </message>
     <message>
         <source>Synchroning blockchain...</source>
-        <translation>Đang đồng bộ chuỗi khối...</translation>
+        <translation>Blockchain synchroniseren...</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
-        <translation>Đồng bộ thất bại</translation>
+        <translation>Synchronisatie mislukt</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
-        <translation>Đồng bộ đã hoàn thành</translation>
+        <translation>Synchronisatie voltooid</translation>
     </message>
     <message>
         <source>Synchronizing masternodes...</source>
-        <translation>Đang đồng bộ các masternode...</translation>
+        <translation>Masternodes synchroniseren...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
-        <translation>Đây không phải là một Masternode.</translation>
+        <translation>Dit is geen Masternode.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>Ngưỡng ngắt kết nối khi đối tác ngang hàng cư xử không đúng (ngầm định: %u)</translation>
+        <translation>Drempel om verbinding te verbreken naar zich misdragende peers (standaard: %u)</translation>
     </message>
     <message>
         <source>Too many %f denominations, removing.</source>
-        <translation>Có quá nhiều %f mệnh giá, đang xoá.</translation>
+        <translation>Te veel %f denominaties, verwijderen.</translation>
     </message>
     <message>
         <source>Tor control port password (default: empty)</source>
-        <translation>Mật khẩu kiểm soát cổng Tor (ngầm định: bỏ trống)</translation>
+        <translation>Tor bepaalt poortwachtwoord (standaard: empty)</translation>
     </message>
     <message>
         <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>Bật cơ chế lắng nghe onion để có thể sử dụng cổng điều khiển Tor (ngầm định: %s)</translation>
+        <translation>Tor bepaalt welke poort te gebruiken als luisteren naar onion wordt gebruikt (standaard: %s)</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation>Không thể khởi động máy chủ HTTP. Hãy xem nhật ký lỗi để biết thêm chi tiết.</translation>
+        <translation>Niet mogelijk ok HTTP-server te starten. Zie debuglogboek voor details.</translation>
     </message>
     <message>
         <source>Unknown response.</source>
-        <translation>Trả lời không xác định.</translation>
+        <translation>Onbekend reactie.</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Tuỳ chọn không được hỗ trợ -benchmark, sử dụng -debug=bench.</translation>
+        <translation>Niet-ondersteund argument -benchmark genegeerd, gebruik -debug=bench.</translation>
     </message>
     <message>
         <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Tuỳ chọn không được hỗ trợ -debugnet, sử dụng -debug=net.</translation>
+        <translation>Niet-ondersteund argument -debugnet genegeerd, gebruik -debug=net</translation>
     </message>
     <message>
         <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Tuỳ chọn không được hỗ trợ -tor, hãy sử dụng -onion.</translation>
+        <translation>Niet-ondersteund argument -tor gevonden, gebruik -onion.</translation>
     </message>
     <message>
         <source>Upgrade wallet to latest format on startup</source>
-        <translation>Nâng cấp ví lên định dạng mới nhất khi khởi động</translation>
+        <translation>Upgrade portemonee naar laatste formaat bij opstarten</translation>
     </message>
     <message>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Sử dụng tích hợp KeePass 2 dùng KeePassHttp plugin (ngầm định: %u)</translation>
+        <translation>Gebruik KeePass 2 integratie met KeePassHttp-plugin (standaard: %u)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>Sử dụng UPnP để ánh xạ cổng lắng nghe (ngầm định: %u)</translation>
+        <translation>Gebruik UPnP om de luisterende poort te mappen (standaard: %u)</translation>
     </message>
     <message>
         <source>Use the test chain</source>
-        <translation>Sử dụng chuỗi thử</translation>
+        <translation>Gebruik de test keten</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation>Bình luận User Agent (%s) có chứa những ký tự không an toàn.</translation>
+        <translation>User Agentcommentaar (%s) bevat onveilige karakters.</translation>
     </message>
     <message>
         <source>Will retry...</source>
-        <translation>Sẽ thử lại...</translation>
+        <translation>Opnieuw aan het proberen...</translation>
     </message>
     <message>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Masternodeprivkey không hợp lệ. Hãy xem lại tài liệu.</translation>
+        <translation>Ongeldige geheime sleutel voor de masternode. Raadpleeg de documentatie alstublieft.</translation>
     </message>
     <message>
         <source>Can't find random Masternode.</source>
-        <translation>Không tìm thấy Masternode ngẫu nhiên.</translation>
+        <translation>Kan Masternode niet vinden.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
-        <translation>Không thể trộn trong quá trình đồng bộ.</translation>
+        <translation>Kan niet Mixen tijdens het synchroniseren.</translation>
     </message>
     <message>
         <source>Could not parse masternode.conf</source>
-        <translation>Không hiểu được tệp masternode.conf</translation>
+        <translation>Kan masternode.conf niet lezen</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation>Lỗi netmask được chỉ ra trong -whitelist: '%s'</translation>
+        <translation>Ongeldig netmask gespecificeerd in -whitelist: '%s'</translation>
     </message>
     <message>
         <source>Invalid port detected in masternode.conf</source>
-        <translation>Phát hiện thấy cổng không hợp lệ trong tệp masternode.conf</translation>
+        <translation>Ongeldige poort gevonden in masternode.conf</translation>
     </message>
     <message>
         <source>Invalid script detected.</source>
-        <translation>Kịch bản được phát hiện không hợp lệ.</translation>
+        <translation>Ongeldig script gevonden.</translation>
     </message>
     <message>
         <source>KeePassHttp id for the established association</source>
-        <translation>KeePassHttp id cho thiết lập sự kết hợp</translation>
+        <translation>KeePassHttp id voor de ingestelde associatie</translation>
     </message>
     <message>
         <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Khoá KeePassHttp cho liên lạc mã hoá AES với KeePass</translation>
+        <translation>KeePassHttp sleutel voor AES versleutelde communicatie met KeePass</translation>
     </message>
     <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>Giữ nhiều nhất &lt;n&gt; các giao dịch không kết nối được trong bộ nhớ (ngầm định: %u)</translation>
+        <translation>Houd maximaal &lt;n&gt; onverbonden transacties in geheugen (standaard: %u)</translation>
     </message>
     <message>
         <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Tắt tất cả các chức năng đắc trưng của Dash (Masternode, PrivateSend, InstantSend, Governance) (0-1, ngầm định: %u)</translation>
+        <translation>Uitschakelen van alle Dash specifieke functies (Masternodes, PrivateSend, InstantSend, Governance) (0-1, standaard: %u)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>Tự phát hiện địa chỉ IP (ngầm định: 1 khi nghe và không dùng -externalip hoặc -proxy)</translation>
+        <translation>Ontdek eigen IP-adressen (standaard: 1 voor luisteren en geen -externalip of -proxy)</translation>
     </message>
     <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>Không giữ các giao dịch trong mempool lâu hơn &lt;n&gt; giờ (ngầm định: %u)</translation>
+        <translation>Bewaar transactie niet langer dan &lt;n&gt; uren in de geheugenpool (standaard: %u)</translation>
     </message>
     <message>
         <source>Enable InstantSend, show confirmations for locked transactions (0-1, default: %u)</source>
-        <translation>Bật InstantSend, hiển thị các xác thực cho các giao dịch bị khoá (0-1, ngầm định: %u)</translation>
+        <translation>Inschakelen van InstantSend, toon bevestigingen van vastgezette transacties (0-1, standaard: %u)</translation>
     </message>
     <message>
         <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
-        <translation>Cho phép nhiều phiên trộn PrivateSend cho mỗi khối, thí nghiệm (0-1, ngầm định: %u)</translation>
+        <translation>Inschakel van meerdere PrivateSend mix sessies per blok, experimenteel (0-1, standaard: %u)</translation>
     </message>
     <message>
         <source>Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
-        <translation>Cho phép sử dụng tự động PrivateSend cho các nguồn được lưu trong ví (0-1, ngầm định: %u)</translation>
+        <translation>Inschakelen van het automatisch gebruik van PrivateSend voor geld opgeslagen in deze wallet (0-1, standaard: %u)</translation>
     </message>
     <message>
         <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
-        <translation>Thực hiện lên khi một giao dịch InstantSend được khoá thành công (%s trong cmd được thay thế bằng TxID)</translation>
+        <translation>Voer opdracht uit zodra een wallettransactie succesvol vastgezet is (%s in cmd wordt vervangen door TxID)</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
-        <translation>Không tạo được file dự phòng, file đã tồn tại rồi! Điều này có thể xảy ra nếu bạn khởi động lại ví trong ít hơn 60 giây. Bạn có thể tiếp tục nếu bạn đồng ý với việc đó.</translation>
+        <translation>Backup maken is mislukt, het bestand bestaat al! Dit kan gebeuren als u de wallet herstart binnen 60 seconden. U kunt verder gaan als u hier ok mee bent.</translation>
     </message>
     <message>
         <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation>Phí (theo %s/kB) nhỏ hơn giá trị này được xem là không phí cho việc chuyển tiếp, đào và tạo giao dịch (ngầm định: %s)</translation>
+        <translation>Vergoedingen (in %s/kB) kleiner dan dit worden beschouwd als nul-vergoeding voor doorgeven, mijnen en transactiecreatie (standaard: %s)</translation>
     </message>
     <message>
         <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Phí (theo %s/kB) nhỏ hơn giá trị này được xem là không phí cho việc tạo giao dịch (ngầm định: %s)</translation>
+        <translation>Transactiekosten (in %s/kB) kleiner dan dit worden beschouwd dat geen transactiekosten in rekening worden gebracht voor transactiecreatie (standaard: %s)</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>Nếu &lt;category&gt; không được cung cấp hoặc nếu &lt;category&gt; = 1, xuất tất cả các thông tin gỡ lỗi.</translation>
+        <translation>Als er geen &lt;categorie&gt; is opgegeven of als de &lt;categorie&gt; 1 is, laat dan alle debugginginformatie zien.</translation>
     </message>
     <message>
         <source>InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.</source>
-        <translation>InstantSend chưa hỗ trợ việc gửi những giá trị lớn như vậy. Các giao dịch hiện tại bị giới hạn đến %1 DASH.</translation>
+        <translation>InstantSend ondersteund het verzenden van zulke hoge bedragen nog niet. Transacties zijn momenteel gelimiteerd tot %1 Dash.</translation>
     </message>
     <message>
         <source>InstantSend requires inputs with at least %d confirmations, you might need to wait a few minutes and try again.</source>
-        <translation>InstantSend cần các đầu vào ít nhất %d xác thực, bạn cần đợi thêm vài phút nữa và thử lại.</translation>
+        <translation>InstantSend vereist dat inputs ten minste %d bevestigingen hebben, u zult een paar minuten moeten wachten en opnieuw moeten proberen.</translation>
     </message>
     <message>
         <source>Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)</source>
-        <translation>Duy trì một chỉ mục địa chỉ đầy đủ, được dùng để tra cứu số dư, txids và những khoản tiền còn chưa tiêu của các địa chỉ (ngầm định: %u)</translation>
+        <translation>Hou een volledige transactieindex bij, wordt gebruikt om het balans, txids en niet-uitgegeven outputs voor adresen op te vragen (standaard: %u)</translation>
     </message>
     <message>
         <source>Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)</source>
-        <translation>Duy trì một chỉ mục địa chỉ đầy đủ, được dùng để tra cứu txids và những khoản tiền còn chưa tiêu của các địa chỉ (ngầm định: %u)</translation>
+        <translation>Hou een volledige uitgaveindex bij, wordt gebruikt om de txids van uitgaven en input index voor een outpoint op te vragen (standaard: %u)</translation>
     </message>
     <message>
         <source>Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)</source>
-        <translation>Duy trì một chỉ mục đầy đủ các đánh dấu thời gian cho các giá trị băm của khối, được dùng để tra cứu số các giá trị băm trong một khoảng thời gian xác định (ngầm định: %u)</translation>
+        <translation>Hou een tijdstempelindex bij voor blok hashes, wordt gebruikt om blokhashes op te vragen voor een bereik aan tijdstempels (standaard: %u)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</source>
-        <translation>Duy trì nhiều nhất &lt;n&gt; kết nối đến các nút ngang hàng (các kết nối dịch vụ tạm thời không được tính) (ngầm định: %u)</translation>
+        <translation>Onderhoudt maximaal &lt;n&gt; connecties met peers (tijdelijke service connecties uitgezonderd) (standaard: %u)</translation>
     </message>
     <message>
         <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>PrivateSend sử dụng một số lượng mệnh giá nhất định để gửi tiền, bạn có thể đơn giản cần ẩn danh một ít coins nữa.</translation>
+        <translation>PrivateSend gebruikt exact gedenomineerde bedragen om geld te versturen, u zult wellicht simpelweg meer geld moeten anonimiseren.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation>Cấu hình xén tỉa dưới mức tối thiểu của %d MiB. Hãy sử dụng một số lớn hơn.</translation>
+        <translation>Prune is ingesteld op minder dan het minimum van %d MiB. Gebruik a.u.b. een hoger aantal.</translation>
     </message>
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation>Xén tỉa: việc đồng bộ ví mới đây đã đi quá dữ liệu được xén tỉa. Bạn cần -reindex (download toàn bộ blockchain lần nữa trong trường hợp các nút bị xén tỉa)</translation>
+        <translation>Prune: laatste wallet synchronisatie gaat verder terug dan de middels -prune beperkte data. U moet -reindex gebruiken (downloadt opnieuw de gehele blockchain voor een pruned node)</translation>
     </message>
     <message>
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>Ngẫu nhiên hoá các chứng thư cho mỗi kết nối qua proxy. Nó bật Tor stream isolation (ngầm định: %u)</translation>
+        <translation>Gebruik willekeurige inloggegevens voor elke proxyverbinding. Dit maakt streamisolatie voor Tor mogelijk (standaard: %u)</translation>
     </message>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Rescans là không thể trong chế độ xén tỉa. Bạn cần sử dụng -reindex mà nó sẽ tải xuống toàn bộ blockchain lại.</translation>
+        <translation>Herscannen is niet mogelijk i.c.m. -prune. U moet -reindex gebruiken dat de hele blockchain opnieuw zal downloaden.</translation>
     </message>
     <message>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
-        <translation>Hãy chỉ đường dẫn đầy đủ đến thư mục dành cho việc tự động backup ví (thư mục phải được tạo sẵn)</translation>
+        <translation>Voer het volledige pad in voor de map met automatische walletbackups (moet al bestaan)</translation>
     </message>
     <message>
         <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation>Hỗ trợ việc lọc các khối và giao dịch với bộ lọc bloom (ngầm định: %u)</translation>
+        <translation>Ondersteun filtering van blokken en transacties met bloomfilters (standaard: %u)</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
-        <translation>Cơ sở dữ liệu khối có chứa một khối mà nó có vẻ sẽ xuất hiện trong tương lai. Điều này có thể là do ngày giờ trên máy tính của bạn được thiết lập không chính xác. Chỉ khi tái lập lại cơ sở dữ liệu khối nếu bạn chắc chắn rằng ngày giờ máy tính của bạn là chính xác.</translation>
+        <translation>De blokdatabase bevat een blok dat lijkt uit de toekomst te komen. Dit kan gebeuren omdat de datum en tijd van uw computer niet goed staat. Herbouw de blokdatabase pas nadat u de datum en tijd van uw computer correct heeft ingesteld.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>Giá trị giao dịch quá nhỏ để gửi sau khi đã trừ đi mức phí giao dịch</translation>
+        <translation>Het transactiebedrag is te klein om te versturen nadat de transactievergoeding in mindering is gebracht</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation>Tổng độ dài của chuỗi phiên bản mạng (%i) vượt qua độ dài tối đa (%i). Hãy giảm số hoặc kích thước của uacomments.</translation>
+        <translation>Totale lengte van netwerkversiestring (%i) overschrijdt maximale lengte (%i). Verminder het aantal of grootte van uacomments.</translation>
     </message>
     <message>
         <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
-        <translation>Thử giữ cho thông lượng mạng truyền ra dưới ngưỡng (theo MiB mỗi 24 giờ), 0 = không giới hạn (ngầm định: %d)</translation>
+        <translation>Pogingen om uitgaand verkeer onder een bepaald doel te houden (in MiB per 24u), 0 = geen limiet (standaard: %d)</translation>
     </message>
     <message>
         <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
-        <translation>Không tìm đủ nguồn tiền PrivateSend denominated cho giao dịch này.</translation>
+        <translation>Kan onvoldoende met PrivateSend gedenomineerd geld vinden voor deze transactie.</translation>
     </message>
     <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Tìm thấy tham số không được hỗ trợ -socks. Thiết lập phiên bản SOCKS không còn hiệu lực nữa, chỉ có proxy SOCKS5 mới được hỗ trợ.</translation>
+        <translation>Niet-ondersteund argument -socks gevonden. Instellen van SOCKS-versie is niet meer mogelijk, alleen SOCKS5-proxies worden ondersteund.</translation>
     </message>
     <message>
         <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Tham số không được hỗ trợ -whitelistalwaysrelay đã bị bỏ qua, hãy sử dụng -whitelistrelay và/hoặc -whitelistforcerelay.</translation>
+        <translation>Niet ondersteund argument -whitelistalwaysrelay genegeerd, gebruik -whitelistrelay en/of -whitelistforcerelay.</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>Sử dụng UPnP để ánh xạ các cổng lắng nghe (ngầm định: 1 khi nghe và không -proxy)</translation>
+        <translation>Gebruik UPnP om de luisterende poort te mappen (standaard: 1 als er geluisterd worden en geen -proxy is meegegeven)</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
-        <translation>CẢNH BÁO: Bổ sung keypool không thành công, hãy mở khoá ví của bạn để làm điều đó.</translation>
+        <translation>WAARSCHUWING! Het bijvullen van de keypool is mislukt, ontgrendel alstublieft uw wallet om dit te doen. </translation>
     </message>
     <message>
         <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
-        <translation>Ví đã được khoá, không thể bổ sung keypool! Tự động backups và trộn đã bị tắt, hãy mở khoá ví của bạn để bổ sung keypool.</translation>
+        <translation>Wallet is vergrendeld, niet instaat om keypool aan te vullen! Automatische backups en PrivateSend zijn uitgeschakeld, ontgrendel alstublieft uw wallet om de keypool aan te vullen.</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Cảnh báo: Không xác định được phiên bản khối được đào! Có thể những luật chưa được biết đang có tác động</translation>
+        <translation>Waarschuwing: Onbekende blok versies worden gemined! Er zijn mogelijk onbekende regels in werking getreden</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>Bạn cần tái lập lại cơ sở dữ liệu sử dụng -reindex để quay trở lại chế độ không bị xén tỉa. Điều này sẽ làm tải lại toàn bộ blockchain</translation>
+        <translation>U moet de database herbouwen met -reindex om terug te gaan naar de niet-prune modus. Dit zal de gehele blockchain opnieuw downloaden.</translation>
     </message>
     <message>
         <source>(%d could be used only on mainnet)</source>
-        <translation>(%d chỉ có thể sử dụng ở trên mạng chính thức)</translation>
+        <translation>(%d kan alleen gebruikt worden op mainnet)</translation>
     </message>
     <message>
         <source>(default: %u)</source>
-        <translation>(ngầm định: %u)</translation>
+        <translation>(default: %u)</translation>
     </message>
     <message>
         <source>(must be %d for mainnet)</source>
-        <translation>(phải là %d cho mạng chính)</translation>
+        <translation>(moet %d zijn voor mainnet)</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
-        <translation>-maxmempool phải ít nhất %d MB</translation>
+        <translation>-maxmempool moet minstens %d MB zijn</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; có thể là:</translation>
+        <translation>&lt;categorie&gt; kan zijn:</translation>
     </message>
     <message>
         <source>Append comment to the user agent string</source>
-        <translation>Thêm bình luận vào thông tin user agent</translation>
+        <translation>Voeg commentaar toe aan de user agent string</translation>
     </message>
     <message>
         <source>Automatic backups disabled</source>
-        <translation>Tự động backup đã bị tắt</translation>
+        <translation>Automatische backups uitgeschakeld</translation>
     </message>
     <message>
         <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>Tự động tạo dịch vụ ẩn Tor (ngầm định: %d)</translation>
+        <translation>Creëer automatisch verborgen dienst van Tor (standaard:%d)</translation>
     </message>
     <message>
         <source>ERROR! Failed to create automatic backup</source>
-        <translation>LỖI: Thất bại trong việc backup tự động</translation>
+        <translation>FOUT! Het maken van een automatische backup is mislukt</translation>
     </message>
     <message>
         <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation>Cho phép xuất bản khối băm trong &lt;address&gt;</translation>
+        <translation>Sta toe om hashblok te publiceren in &lt;adres&gt;</translation>
     </message>
     <message>
         <source>Enable publish hash transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>Cho phép công bố hash transaction (khoá thông qua InstantSend) trong &lt;address&gt;</translation>
+        <translation>Inschakelen publiceren van de hashtransactie (vastgezet met InstantSend) in &lt;address&gt;</translation>
     </message>
     <message>
         <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>Cho phép công bố hash transaction trong &lt;address&gt;</translation>
+        <translation>Sta toe om hashtransactie te publiceren in &lt;adres&gt;</translation>
     </message>
     <message>
         <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>Cho phép công bố các khối thô trong &lt;address&gt;</translation>
+        <translation>Sta toe rauw blok te publiceren in &lt;adres&gt;</translation>
     </message>
     <message>
         <source>Enable publish raw transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>Cho phép công bố các giao dịch raw (được khoá qua InstantSend) trong &lt;address&gt;</translation>
+        <translation>Inschakelen het publiceren van de ruwe transactie (vastgezet via InstantSend) in &lt;address&gt;</translation>
     </message>
     <message>
         <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>Cho phép công bố giao dịch raw trong &lt;address&gt;</translation>
+        <translation>Sta toe ruwe transacties te publiceren in &lt;adres&gt;</translation>
     </message>
     <message>
         <source>Enable transaction replacement in the memory pool (default: %u)</source>
-        <translation>Cho phép thay thế giao dịch trong bể nhớ (ngầm định: %u)</translation>
+        <translation>Transactie vervanging inschakelen in het geheugen (standaard: %u)</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Lỗi: Một lỗi bên trong trầm trọng đã xảy ra, hãy xem file debug.log để biết thêm chi tiết</translation>
+        <translation>Fout: er is een fout opgetreden,  zie debug.log voor details</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
-        <translation>Không tạo được backup %s!</translation>
+        <translation>Back-up maken mislukt %s!</translation>
     </message>
     <message>
         <source>Failed to create backup, error: %s</source>
-        <translation>Không tạo được backup, lỗi: %s</translation>
+        <translation>Back-up maken mislukt, foutmelding %s</translation>
     </message>
     <message>
         <source>Failed to delete backup, error: %s</source>
-        <translation>Không xoá được backup, lỗi: %s</translation>
+        <translation>Verwijderen van de back-up is mislukt, foutmelding: %s</translation>
     </message>
     <message>
         <source>Failed to parse host:port string</source>
-        <translation>Không diễn dịch được thông tin địa chỉ máy:cổng</translation>
+        <translation>Inlezen van de host:poort string is mislukt</translation>
     </message>
     <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>Phí (theo %s/kB) để thêm vào giao dịch mà bạn gửi (ngầm định: %s)</translation>
+        <translation>Transactievergoeding (in %s/kB) toevoegen aan transacties die u doet (standaard: %s)</translation>
     </message>
     <message>
         <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation>Nhập các khối từ các file ngoài blk000??.dat khi khởi động</translation>
+        <translation>Importeer blokken van externe blk000??.dat-bestand bij opstarten</translation>
     </message>
     <message>
         <source>InstantSend options:</source>
-        <translation>Các tuỳ chọn InstantSend:</translation>
+        <translation>InstantSend-opties:</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation>Số lượng không hợp lệ cho -fallbackfee=&lt;amount&gt;: '%s'</translation>
+        <translation>Ongeldig bedrag voor -fallbackfee=&lt;bedrag&gt;: '%s'</translation>
     </message>
     <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Giữ cho bể nhớ giao dịch dưới &lt;n&gt; megabytes (ngầm định: %u)</translation>
+        <translation>De transactiegeheugenpool moet onder de &lt;n&gt; megabytes blijven (standaard: %u)</translation>
     </message>
     <message>
         <source>Last PrivateSend was too recent.</source>
-        <translation>Lần gửi PrivateSend mới nhất quá gần.</translation>
+        <translation>Vorige PrivateSend is te recent.</translation>
     </message>
     <message>
         <source>Last successful PrivateSend action was too recent.</source>
-        <translation>PrivateSend mới nhất được thực hiện quá gần đây.</translation>
+        <translation>Vorige succesvolle PrivateSend actie is te recent.</translation>
     </message>
     <message>
         <source>Line: %d</source>
-        <translation>Dòng: %d</translation>
+        <translation>Lijn: %d</translation>
     </message>
     <message>
         <source>Loading addresses...</source>
-        <translation>Nạp các địa chỉ...</translation>
+        <translation>Laden adresen...</translation>
     </message>
     <message>
         <source>Loading block index...</source>
-        <translation>Đang nạp chỉ mục khối...</translation>
+        <translation>Laden blokindex...</translation>
     </message>
     <message>
         <source>Loading governance cache...</source>
-        <translation>Đang tải bộ đệm quản trị...</translation>
+        <translation>Laden governance cache...</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>
-        <translation>Đang nạp ví... (%3.2f %%)</translation>
+        <translation>Laden portemonnee... (%3.2f %%)</translation>
     </message>
     <message>
         <source>Loading wallet...</source>
-        <translation>Đang tải ví...</translation>
+        <translation>Laden portemonnee...</translation>
     </message>
     <message>
         <source>Location of the auth cookie (default: data dir)</source>
-        <translation>Vị trí của auth cookie (ngầm định: thư mục dữ liệu)</translation>
+        <translation>Locatie van de auth cookie (standaard: data dir)</translation>
     </message>
     <message>
         <source>Make the wallet broadcast transactions</source>
-        <translation>Làm cho ví truyền rộng các giao dịch</translation>
+        <translation>Laat de portemonnee transacties uitsturen</translation>
     </message>
     <message>
         <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>Bộ đệm Masternode đang trống, bỏ qua các bộ đệm thanh toán và bộ đệm quản trị...</translation>
+        <translation>Masternode cache is leeg, betalings- en governancecache worden overgeslagen...</translation>
     </message>
     <message>
         <source>Masternode options:</source>
-        <translation>Tuỳ chọn Masternode:</translation>
+        <translation>Masternode-opties:</translation>
     </message>
     <message>
         <source>Masternode queue is full.</source>
-        <translation>Danh sách hàng đợi Masternode đã đầy.</translation>
+        <translation>Masternode wachtrij is vol.</translation>
     </message>
     <message>
         <source>Masternode:</source>
@@ -4782,163 +4788,163 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>Số bytes tối thiểu mỗi sigop trong các giao dịch chúng ta chuyển tiếp và đào (ngầm định: %u)</translation>
+        <translation>Minimale bytes per sigop in transacties die worden doorgegeven en gemijnd (standaard: %u)</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
-        <translation>Thiếu thông tin giao dịch đầu vào.</translation>
+        <translation>De input transactieinformatie ontbreekt.</translation>
     </message>
     <message>
         <source>No errors detected.</source>
-        <translation>Không phát hiện ra các lỗi.</translation>
+        <translation>Geen fouten gevonden</translation>
     </message>
     <message>
         <source>No matching denominations found for mixing.</source>
-        <translation>Không tìm thấy mệnh giá tương ứng để trộn.</translation>
+        <translation>Geen overeenkomende denominaties gevonden om mee te mixen.</translation>
     </message>
     <message>
         <source>Node relay options:</source>
-        <translation>Tuỳ chọn trung chuyển nút:</translation>
+        <translation>Node doorgeefopties:</translation>
     </message>
     <message>
         <source>Non-standard public key detected.</source>
-        <translation>Phát hiện thấy khoá công khai không hợp chuẩn.</translation>
+        <translation>Niet-standaard publieke sleutel aangetroffen.</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
-        <translation>Không tương thích với các giao dịch hiện tại.</translation>
+        <translation>Niet compatibel met bestaande transacties.</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation>Chưa có đủ thông tin mô tả tệp.</translation>
+        <translation>Niet genoeg file descriptors beschikbaar.</translation>
     </message>
     <message>
         <source>Not enough funds to anonymize.</source>
-        <translation>Không đủ tiền để ẩn danh.</translation>
+        <translation>Niet genoeg geld om the anonimiseren.</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: %u)</source>
-        <translation>Số lượng ví tự động backup (ngầm định: %u)</translation>
+        <translation>Aantal automatische wallet back-ups (standaard: %u)</translation>
     </message>
     <message>
         <source>Options:</source>
-        <translation>Tuỳ chọn:</translation>
+        <translation>Opties:</translation>
     </message>
     <message>
         <source>Password for JSON-RPC connections</source>
-        <translation>Mật khẩu cho kết nối JSON-RPC</translation>
+        <translation>Paswoord voor JSON-RPC verbinding</translation>
     </message>
     <message>
         <source>Print version and exit</source>
-        <translation>In ra phiên bản và thoát</translation>
+        <translation>Print versie en sluit af</translation>
     </message>
     <message>
         <source>PrivateSend is idle.</source>
-        <translation>PrivateSend đang nghỉ</translation>
+        <translation>PrivateSend is niet actief.</translation>
     </message>
     <message>
         <source>PrivateSend options:</source>
-        <translation>Các tuỳ chọn PrivateSend:</translation>
+        <translation>PrivateSend-opties:</translation>
     </message>
     <message>
         <source>PrivateSend request complete:</source>
-        <translation>Yêu cầu gửi PrivateSend đã hoàn thành:</translation>
+        <translation>PrivateSend verzoek voltooid:</translation>
     </message>
     <message>
         <source>PrivateSend request incomplete:</source>
-        <translation>Yêu cầu gửi PrivateSend không hoàn thành:</translation>
+        <translation>PrivateSend aanvraag niet voltooid:</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
-        <translation>Xén-tỉa không thể được cấu hình với một giá trị âm.</translation>
+        <translation>Prune kan niet worden geconfigureerd met een negatieve waarde.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
-        <translation>Chế độ Xén-tỉa không tương thích với -txindex.</translation>
+        <translation>Terugsnoeimodus is niet compatibel met -txindex.</translation>
     </message>
     <message>
         <source>Pruning blockstore...</source>
-        <translation>Đang xén tỉa các khối lưu trữ...</translation>
+        <translation>Terugsnoeien blockstore...</translation>
     </message>
     <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
-        <translation>Quét lại block chain để tìm ra những giao dịch mà ví còn thiếu khi khởi động</translation>
+        <translation>Herscan de blokketen voor missende portemonneetransacties bij opstarten</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation>Wallet sẽ hủy thanh toán nhỏ hơn phí relay.</translation>
+        <translation>De portemonnee vermijdt minder te betalen dan de minimale doorgeef vergoeding.</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>Đây là minimum transaction fee bạn pay cho mỗi transaction.</translation>
+        <translation>Dit is de minimum transactievergoeding dat je betaalt op elke transactie.</translation>
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Đây là transaction fee bạn sẽ pay nếu gửi transaction.</translation>
+        <translation>Dit is de transactievergoeding dat je betaalt wanneer je een transactie verstuurt.</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
-        <translation>Transaction amounts phải không âm</translation>
+        <translation>Transactiebedragen moeten positief zijn</translation>
     </message>
     <message>
         <source>Transaction has too long of a mempool chain</source>
-        <translation>Transaction có chuỗi mempool chain quá dài</translation>
+        <translation>Transactie heeft een te lange mempoolketen</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
-        <translation>Transaction phải có ít nhất một người nhận</translation>
+        <translation>Transactie moet ten minste één ontvanger hebben</translation>
     </message>
     <message>
         <source>Trying to connect...</source>
-        <translation>Đang thử kết nối...</translation>
+        <translation>Proberen te verbinden...</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation>Unable to bind to %s on this computer. %s is probably already running.</translation>
+        <translation>Niet in staat om %s te verbinden op deze computer. %s draait waarschijnlijk al.</translation>
     </message>
     <message>
         <source>Upgrading UTXO database</source>
-        <translation>Upgrading UTXO database</translation>
+        <translation>Upgraden UTXO-database</translation>
     </message>
     <message>
         <source>Use devnet chain with provided name</source>
-        <translation>Sử dụng mạng phát triển có tên được cung cấp</translation>
+        <translation>Gebruik Devnet chain met de opgegeven naam</translation>
     </message>
     <message>
         <source>Wallet debugging/testing options:</source>
-        <translation>Wallet debugging/testing options:</translation>
+        <translation>Portemonee debugging/testing opties:</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation>Wallet needed to be rewritten: restart %s to complete</translation>
+        <translation>Portemonnee moest herschreven worden: Herstart %s om te voltooien</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation>Cảnh báo: luật mới chưa rõ đã được kích hoạt (versionbit %i)</translation>
+        <translation>Waarschuwing: onbekende nieuwe regels geactiveerd (versionbit %i)</translation>
     </message>
     <message>
         <source>Wasn't able to create wallet backup folder %s!</source>
-        <translation>Không thể tạo được thư mục backup ví %s!</translation>
+        <translation>Was niet in staat om de back-up folder aan te maken %s!</translation>
     </message>
     <message>
         <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation>Cho dù hoạt động trong chế độ chỉ có các khối (ngầm định: %u)</translation>
+        <translation>Om in alleen een blokmodus te opereren (standaard: %u)</translation>
     </message>
     <message>
         <source>ZeroMQ notification options:</source>
-        <translation>Tuỳ chọn thông báo ZeroMQ:</translation>
+        <translation>ZeroMQ notificatieopties:</translation>
     </message>
     <message>
         <source>no mixing available.</source>
-        <translation>không có phiên trộn nào sẵn sàng.</translation>
+        <translation>Geen Mixen beschikbaar.</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
-        <translation>xem debug.log để biết thêm chi tiết.</translation>
+        <translation>zie debug.log voor meer informatie.</translation>
     </message>
     <message>
         <source>RPC server options:</source>
-        <translation>Tuỳ chọn cho RPC server</translation>
+        <translation>RPC-serveropties:</translation>
     </message>
     <message>
         <source>Dash Core</source>
@@ -4946,399 +4952,399 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>The %s developers</source>
-        <translation>The %s developers</translation>
+        <translation>De %s ontwikkelaars</translation>
     </message>
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect/-noconnect)</source>
-        <translation>Chấp nhận kết nối từ bên ngoài (ngầm định: 1 nếu không có -proxy hoặc -connect/-noconnect)</translation>
+        <translation>Sta verbindingen van buiten toe (standaard: 1 zonder -proxy of -connect/-noconnect)</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation>Cannot obtain a lock on data directory %s. %s is probably already running.</translation>
+        <translation>Kan geen lock verkrijgen op gegevensmap %s. %s draait waarschijnlijk al.</translation>
     </message>
     <message>
         <source>Connect only to the specified node(s); -noconnect or -connect=0 alone to disable automatic connections</source>
-        <translation>Chỉ kết nối đến (các) nút được cung cấp: -noconnect hoặc chỉ dùng -connect=0  để tắt chức năng tự kết nối</translation>
+        <translation>Verbindt alleen met opgegeven node(s); -noconnect of -connect=0 alleen bestemd om automatische verbindingen uit te schakelen</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation>Distributed under the MIT software license, see the accompanying file %s or %s</translation>
+        <translation>Uitgegeven onder de MIT software licentie, zie het bijgevoegde bestand %s of %s</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</translation>
+        <translation>Waarschuwing: Fout bij het lezen van %s! Alle sleutels zijn in goede orde uitgelezen, maar transactiedata of adresboeklemma's zouden kunnen ontbreken of fouten bevatten.</translation>
     </message>
     <message>
         <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</translation>
+        <translation>Forceer het doorsturen van transacties van goedgekeurde peers, zelfs wanneer deze niet voldoen aan de lokale doorstuurregels (standaard: %d)</translation>
     </message>
     <message>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
-        <translation>Không chính xác hoặc không tìm thấy khối ban đầu của devnet. Thư mục dữ liệu devnet được cung cấp không chính xác?</translation>
+        <translation>Onjuiste of geen devnet genesisblok gevonden. Verkeerde devnet gegevensmap opgegeven?</translation>
     </message>
     <message>
         <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</translation>
+        <translation>Maximum toegestane peer tijd compensatie. Lokaal perspectief van tijd mag worden beinvloed door peers die met deze hoeveelheid voor of achter lopen. (standaard: %u seconden)</translation>
     </message>
     <message>
         <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</translation>
+        <translation>Maximum totale transactiekosten (in %s) om te gebruiken in een enkele portemonneetransactie; als dit te laag is ingesteld kunnen grote transacties worden verhinderd (standaard: %s)</translation>
     </message>
     <message>
         <source>Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>Ghi đè địa chỉ spork. Chỉ hữu ích với regtest và devnet. Sử dụng nó với mainnet và testnet sẽ cấm bạn.</translation>
+        <translation>Overschrijf spork adres. Alleen bruikbaar voor regtest en devnet. Dit gebruiken op mainnet of testnet zal u een ban opleveren.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</translation>
+        <translation>Waarschuwing: Controleer dat de datum en tijd van uw computer correct zijn ingesteld! Bij een onjuist ingestelde klok zal %s niet goed werken.</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation>Please contribute if you find %s useful. Visit %s for further information about the software.</translation>
+        <translation>Gelieve bij te dragen als je %s nuttig vindt. Bezoek %s voor meer informatie over de software.</translation>
     </message>
     <message>
         <source>Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (%u-%u, default: %u, 1=very frequent, high fees, %u=very infrequent, low fees)</source>
-        <translation>Cung cấp thanh khoản cho PrivateSend bằng việc thường xuyên trộn coin theo mức độ thường xuyên (%u-%u, ngầm định: %u, 1=rất thường xuyên, phí cao, %u=rất không thường xuyên, phí thấp)</translation>
+        <translation>Voorzie PrivateSend van liquiditeit door niet vaak maar stelselmatig geld te mixen (%u-%u, standaard: %u, 1=heel vaak, hoge vergoedingen, %u=heel zelden, lage vergoedingen)</translation>
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect/-noconnect)</source>
-        <translation>Truy vấn các địa chỉ ngang hàng thông qua cơ chế tìm kiếm DNS, nếu địa chỉ thấp (ngầm định: 1 trừ khi -connect/-noconnect)</translation>
+        <translation>Vraag peer adressen aan via DNS-naslag, indien weinig adressen (standaard: 1 tenzij -connect/-noconnect)</translation>
     </message>
     <message>
         <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</translation>
+        <translation>Beperk benodigde opslag door het prunen (verwijderen) van oude blokken in te schakelen. Dit maakt het mogelijk om het pruneblockchain RPC commando aan te roepen om specifieke bloks te verwijderen, en maakt het automatische prunen van oude bloks mogelijk wanneer een doelgrootte in MiB is ingesteld. Deze modus is niet compatibel met -txindex en -rescan. Waarschuwing: ongedaan maken van deze instellingen vereist het opnieuw downloaden van gehele de blokketen. (standaard:0 = uitschakelen prunen, 1 = handmatig prunen via RPC toestaan, &gt;%u = automatisch blokketen bestanden prunen om beneden de gespecificeerde doelgrootte in MiB te blijven)</translation>
     </message>
     <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</translation>
+        <translation>Specificeer het laagste tarief (in %s/kB) voor transacties die bij het maken van een blok moeten worden in rekening worden gebracht (standaard: %s)</translation>
     </message>
     <message>
         <source>Show N confirmations for a successfully locked transaction (%u-%u, default: %u)</source>
-        <translation>Hiển thị N xác thực cho một giao dịch được khoá thành công (%u-%u, ngầm định: %u)</translation>
+        <translation>Toon N bevestigingen voor een succesvol vergrendelde transactie (%u-%u, standaard: %u)</translation>
     </message>
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation>This is the transaction fee you may pay when fee estimates are not available.</translation>
+        <translation>Dit is de transactievergoeding die je mogelijk betaalt indien geschatte tarief niet beschikbaar is</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</translation>
+        <translation>Dit product bevat software dat ontwikkeld is door het OpenSSL Project voor gebruik in de OpenSSL Toolkit %s en cryptografische software geschreven door Eric Young en UPnP software geschreven door Thomas Bernard.</translation>
     </message>
     <message>
         <source>Unable to locate enough PrivateSend non-denominated funds for this transaction.</source>
-        <translation>Không thể tìm đủ lượng ngân sách chưa phân mệnh giá Private Send cho giao dịch  này.</translation>
+        <translation>Kan onvoldoende met PrivateSend niet-gedenomineerd geld vinden voor deze transactie.</translation>
     </message>
     <message>
         <source>Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation>Sử dụng N masternode riêng biệt cho mỗi mệnh giá đầu vào để trộn ngân quỹ (%u-%u, ngầm định: %u)</translation>
+        <translation>Gebruik N afzonderlijke masternodes voor elke gedenomineerde input om geld te mixen (%u-%u, standaard: %u)</translation>
     </message>
     <message>
         <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>
-        <translation>Sử dụng cơ chế sinh khoá theo xác định phân cấp (HD) sau BIP39/BIP44. Chỉ có tác dụng trong quá trình tạo ví/lần khởi động lần đầu tiên</translation>
+        <translation>Gebruik hierarchisch deterministische sleutelgeneratie (HD) na BIP39/BIP44. Heeft alleen effect tijdens het maken van de wallet / eerste start.</translation>
     </message>
     <message>
         <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
-        <translation>Sử dụng mã gợi nhớ xác định trước cho ví HD (BIP39). Chỉ có tác dụng trong quá trình tạo ví/khởi động lần đầu (ngầm định: không có gì)</translation>
+        <translation>Gebruik de door de gebruiker opgegeven mnemonische wachtwoordzin voor HD-wallet (BIP39). Heeft alleen effect tijdens het aanmaken van de portemonnee/eerste start (standaard: empty string)</translation>
     </message>
     <message>
         <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</translation>
+        <translation>Gebruikersnaam en gehasht wachtwoord voor JSON-RPC-verbindingen. Het veld &lt;userpw&gt; is in het formaat: &lt;GEBRUIKERSNAAM&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Een kanoniek Pythonscript is inbegrepen in share/rpcuser. De client verbindt dan normaal via de rpcuser=&lt;GEBRUIKERSNAAM&gt;/rpcpassword=&lt;PASWOORD&gt; argumenten. Deze optie kan meerdere keren worden meegegeven</translation>
     </message>
     <message>
         <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
-        <translation>Wallet will not create transactions that violate mempool chain limits (default: %u)</translation>
+        <translation>Portemonnee creëert geen transacties die mempool-ketenlimieten schenden (standaard: %u)</translation>
     </message>
     <message>
         <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>Cảnh báo: Có ít nhất %d của %d các masternode đang chạy trên phiên bản phần mềm mới hơn. Hãy kiểm tra lại phiên bản mới ra nhất, bạn có thể cũng cần phải update.</translation>
+        <translation>Waarschuwing: Ten minste %d van de %d masternodes werken met een nieuwere softwareversie. Controleer alstublieft de nieuwste releases, misschien moet u ook updaten.</translation>
     </message>
     <message>
         <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
-        <translation>Cảnh báo: Mỗi một masternode (trong số %d được biết) đang chạy trên phiên bản phần mềm mới hơn. Hãy kiểm tra lại phiên bản phần mềm mới nhất, có vẻ như bạn đã bỏ sót một đợt nâng cấp chính/nâng cấp quan trọng.</translation>
+        <translation>Waarschuwing: Alle masternodes (van de %d bekende) werken met een nieuwere softwareversie. Controleer alstublieft de nieuwste releases, het is zeer waarschijnlijk dat u een belangrijke/kritische update mist.</translation>
     </message>
     <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
+        <translation>Waarschuwing: portemonnee bestand is corrupt, data is veiliggesteld! Originele %s is opgeslagen als %s in %s; als uw balans of transacties incorrect zijn dient u een backup terug te zetten.</translation>
     </message>
     <message>
         <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
-        <translation>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</translation>
+        <translation>Goedgekeurde peers die verbinden vanaf een bepaald IP adres (vb. 1.2.3.4) of CIDR genoteerd netwerk (vb. 1.2.3.0/24). Kan meerdere keren worden gespecificeerd.</translation>
     </message>
     <message>
         <source>%s corrupt, salvage failed</source>
-        <translation>%s corrupt, salvage failed</translation>
+        <translation>%s corrupt, veiligstellen mislukt</translation>
     </message>
     <message>
         <source>%s is not a valid backup folder!</source>
-        <translation>%s không phải là thư mục sao lưu dự phòng hợp lệ!</translation>
+        <translation>%s is geen geldige back-up map!</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
-        <translation>%s is set very high!</translation>
+        <translation>%s is zeer hoog ingesteld!</translation>
     </message>
     <message>
         <source>(press q to shutdown and continue later)</source>
-        <translation>(bấm q để tắt và tiếp tục sau)</translation>
+        <translation>(druk op q om af te sluiten en later verder te gaan)</translation>
     </message>
     <message>
         <source>-devnet can only be specified once</source>
-        <translation>-devnet chỉ có thể chỉ ra một lần duy nhất</translation>
+        <translation>-devnet kan maar één keer worden opgegeven</translation>
     </message>
     <message>
         <source>-port must be specified when -devnet and -listen are specified</source>
-        <translation>-port phải được chỉ rõ khi -devnet và -listen được sử dụng</translation>
+        <translation>-poort moet worden opgegeven wanneer -devnet en -listen worden gebruikt</translation>
     </message>
     <message>
         <source>-rpcport must be specified when -devnet and -server are specified</source>
-        <translation>-rpcport phải được chỉ rõ khi -devnet và -server được sử dụng</translation>
+        <translation>-rpcport moet worden opgegeven wanneer -devnet en -server worden gebruikt</translation>
     </message>
     <message>
         <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
-        <translation>Cho phép địa chỉ RFC1918 để chuyển tiếp và kết nối đến (ngầm định: %u)</translation>
+        <translation>Sta toe dat RFC1918 adressen worden doorgegeven en er mee wordt verbonden (standaard: %u)</translation>
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet on startup</source>
-        <translation>Attempt to recover private keys from a corrupt wallet on startup</translation>
+        <translation>Probeer bij het opstarten de geheime sleutel te herstellen van een beschadigde wallet</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
-        <translation>Cannot resolve -%s address: '%s'</translation>
+        <translation>Kan -%s adres niet herleiden: '%s'</translation>
     </message>
     <message>
         <source>Change index out of range</source>
-        <translation>Change index out of range</translation>
+        <translation>Wijzigingsindex buiten bereik</translation>
     </message>
     <message>
         <source>Copyright (C)</source>
-        <translation>Bản quyền (C)</translation>
+        <translation>Copyright (C)</translation>
     </message>
     <message>
         <source>Error loading %s</source>
-        <translation>Error loading %s</translation>
+        <translation>Fout bij het laden van %s</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
-        <translation>Error loading %s: Wallet corrupted</translation>
+        <translation>Fout bij het laden van %s: Portomonnee corrupt</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation>Error loading %s: Wallet requires newer version of %s</translation>
+        <translation>Fout bij laden %s: Portemonnee vereist een nieuwere versie van %s</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
-        <translation>Error upgrading chainstate database</translation>
+        <translation>Fout bij het upgraden van de ketenstaat database</translation>
     </message>
     <message>
         <source>Failed to find mixing queue to join</source>
-        <translation>Không tìm thấy hàng đợi trộn để tham gia</translation>
+        <translation>Het is niet gelukt om een Mix-wachtrij te vinden om bij aan te sluiten</translation>
     </message>
     <message>
         <source>Failed to start a new mixing queue</source>
-        <translation>Không thể khởi động được một hàng đợi trộn mới</translation>
+        <translation>Het is niet gelukt om een nieuwe Mix-wachtrij te starten</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation>Initialization sanity check failed. %s is shutting down.</translation>
+        <translation>Initialisatie sanity check mislukt. %s is aan het afsluiten.</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation>Invalid amount for -%s=&lt;amount&gt;: '%s'</translation>
+        <translation>Ongeldig bedrag voor -%s=&lt;bedrag&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
-        <translation>Địa chỉ spork được chỉ ra không hợp lệ với -sporkaddr</translation>
+        <translation>Ongeldig sporkadres opgegeven met -sporkaddr</translation>
     </message>
     <message>
         <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
-        <translation>Giữ N Dash ẩn danh (%u-%u, ngầm định: %u)</translation>
+        <translation>Hou N Dash geanonimiseerd (%u-%u, standaard: %u)</translation>
     </message>
     <message>
         <source>Print this help message and exit</source>
-        <translation>Print this help message and exit</translation>
+        <translation>Print dit helpbericht en sluit af</translation>
     </message>
     <message>
         <source>Receive and display P2P network alerts (default: %u)</source>
-        <translation>Nhận và hiển thị các cảnh báo mạng P2P (ngầm định: %u)</translation>
+        <translation>Ontvang en geef P2P network alerts weer (standaard: %u)</translation>
     </message>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation>Giảm -maxconnections từ %d đến %d, bởi vì những giới hạn của hệ thống.</translation>
+        <translation>Verminder -maxconnections van %d naar %d, vanwege systeembeperkingen.</translation>
     </message>
     <message>
         <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation>Chuyển tiếp và đào các giao dịch mang dữ liệu (ngầm định: %u)</translation>
+        <translation>Geef gegevensdragertransacties door en mijn ze ook (standaard: %u)</translation>
     </message>
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>Chuyển tiếp các khoá đa chữ ký không phải P2SH (ngầm định: %u)</translation>
+        <translation>Geef non-P2SH multisig door (standaard: %u)</translation>
     </message>
     <message>
         <source>Rescanning...</source>
-        <translation>Đang quét lại...</translation>
+        <translation>Opnieuw scannen...</translation>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation>Chạy trên chế độ nền như là một tiến trình ngầm và chấp nhận các lệnh</translation>
+        <translation>Draai in de achtergrond als daemon en aanvaard opdrachten</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Gửi thông tin về trace/debug ra màn hình thay vì vào file debug.log.</translation>
+        <translation>Verzend trace/debug-info naar de console in plaats van het debug.log-bestand</translation>
     </message>
     <message>
         <source>Session not complete!</source>
-        <translation>Phiên làm việc chưa hoàn thành.</translation>
+        <translation>Sessie niet voltooid!</translation>
     </message>
     <message>
         <source>Session timed out.</source>
-        <translation>Hết thời gian cho phiên làm việc.</translation>
+        <translation>Sessie verlopen.</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>Thiết lập kích thước bộ đệm cơ sở dữ liệu theo megabytes (%d đến %d, ngầm định: %d)</translation>
+        <translation>Zet database cache grootte in megabytes (%d tot %d, standaard: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>Thiết lập kích thước khối tối đa theo bytes (ngầm định: %d)</translation>
+        <translation>Stel de maximale blok grootte in bytes in (standaard: %d)</translation>
     </message>
     <message>
         <source>Set the masternode private key</source>
-        <translation>Đặt khoá riêng cho masternode</translation>
+        <translation>Stel de masternode private key in</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>Hiển thị tất cả các tuỳ chọn gỡ rối (cách sử dụng: --help -help-debug)</translation>
+        <translation>Toon alle foutopsporingsopties (gebruik: --help -help-debug)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Rút gọn tệp debug.log khi phần mềm khởi động (ngầm định: 1 khi không có -debug)</translation>
+        <translation>Verklein debug.log-bestand bij het opstarten van de client (standaard: 1 als geen -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
-        <translation>Thất bại khi ký giao dịch</translation>
+        <translation>Ondertekenen van transactie mislukt</translation>
     </message>
     <message>
         <source>Specify data directory</source>
-        <translation>Hãy chọn thư mục</translation>
+        <translation>Stel gegevensmap in</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
-        <translation>Xác định tệp ví (trong thư mục dữ liệu)</translation>
+        <translation>Specificeer het portemonnee bestand (vanuit de gegevensmap)</translation>
     </message>
     <message>
         <source>Specify your own public address</source>
-        <translation>Hãy xác định địa chỉ công khai của bạn</translation>
+        <translation>Specificeer uw eigen publieke adres</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
-        <translation>Starting network threads...</translation>
+        <translation>Netwerkthread starten...</translation>
     </message>
     <message>
         <source>Synchronization pending...</source>
-        <translation>Đang chuẩn bị đồng bộ...</translation>
+        <translation>Synchronisatie in behandeling...</translation>
     </message>
     <message>
         <source>Synchronizing governance objects...</source>
-        <translation>Đang đồng bộ các đối tượng quản trị...</translation>
+        <translation>Synchroniseren governance objecten...</translation>
     </message>
     <message>
         <source>Synchronizing masternode payments...</source>
-        <translation>Đang đồng bộ các giao dịch masternode...</translation>
+        <translation>Synchroniseren masternode betalingen...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
-        <translation>The source code is available from %s.</translation>
+        <translation>De broncode is beschikbaar van %s.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
-        <translation>Giá trị giao dịch quá nhỏ để trả phí</translation>
+        <translation>Het transactiebedrag is te klein om transactiekosten in rekening te brengen</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
-        <translation>Đây là phần mềm thử nghiệm.</translation>
+        <translation>Dit is experimentele software.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation>Số tiền của giao dịch quá nhỏ</translation>
+        <translation>Transactiebedrag te klein</translation>
     </message>
     <message>
         <source>Transaction created successfully.</source>
-        <translation>Giao dịch được tạo thành công.</translation>
+        <translation>Transactie succesvol aangemaakt.</translation>
     </message>
     <message>
         <source>Transaction fees are too high.</source>
-        <translation>Phí giao dịch quá cao.</translation>
+        <translation>Transactiekosten zijn te hoog.</translation>
     </message>
     <message>
         <source>Transaction not valid.</source>
-        <translation>Giao dịch không hợp lệ.</translation>
+        <translation>Transactie is niet geldig.</translation>
     </message>
     <message>
         <source>Transaction too large for fee policy</source>
-        <translation>Giao dịch quá lớn cho chính sách miễn phí</translation>
+        <translation>De transactie is te groot voor het transactiekostenbeleid</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation>Không thể để ràng buộc vào %s trên máy tính này (bind trả lại lỗi %s)</translation>
+        <translation>Niet in staat om aan %s te binden op deze computer (bind gaf error %s)</translation>
     </message>
     <message>
         <source>Unable to sign spork message, wrong key?</source>
-        <translation>Không thể ký vào thông điệp phân nhánh, sai khoá?</translation>
+        <translation>Niet in staat om het sporkbericht te ondertekenen, verkeerde sleutel?</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Không biết mạng được chỉ ra trong -onlynet: '%s'</translation>
+        <translation>Onbekend netwerk gespecificeerd in -onlynet: '%s'</translation>
     </message>
     <message>
         <source>Unknown state: id = %u</source>
-        <translation>Trạng thái không xác định: id = %u</translation>
+        <translation>Onbekende staat: id = %u</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
-        <translation>Username cho kết nối JSON-RPC</translation>
+        <translation>Gebruikersnaam voor JSON-RPC-verbindingen</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
-        <translation>Đang kiểm tra các khối...</translation>
+        <translation>Blokken aan het controleren...</translation>
     </message>
     <message>
         <source>Verifying wallet...</source>
-        <translation>Đang kiểm tra ví...</translation>
+        <translation>Wallet wordt geverifieerd...</translation>
     </message>
     <message>
         <source>Very low number of keys left: %d</source>
-        <translation>Còn lại số lượg rất ít các khoá: %d</translation>
+        <translation>Het aantal resterende sleutels is heel laag: %d</translation>
     </message>
     <message>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation>Ví %s nằm ở bên ngoài thư mục dữ liệu %s</translation>
+        <translation>Wallet %s bevindt zich buiten de gegevensmap %s</translation>
     </message>
     <message>
         <source>Wallet is locked.</source>
-        <translation>Ví đã bị khoá.</translation>
+        <translation>Portemonnee zit op slot.</translation>
     </message>
     <message>
         <source>Wallet options:</source>
-        <translation>Tuỳ chọn ví:</translation>
+        <translation>Portemonnee-opties</translation>
     </message>
     <message>
         <source>Wallet window title</source>
-        <translation>Tiêu đề cửa sổ ví</translation>
+        <translation>Wallet venster titel</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Cảnh báo</translation>
+        <translation>Waarschuwing</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>
-        <translation>Các đầu vào của bạn đã được thêm vào một cách thành công.</translation>
+        <translation>Uw gegevens zijn succesvol toegevoegd.</translation>
     </message>
     <message>
         <source>Your transaction was accepted into the pool!</source>
-        <translation>Giao dịch của bạn đã được chấp nhận vào bể!</translation>
+        <translation>Uw transactie was geaccepteerd in de pool!</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
-        <translation>Dọn sạch tất cả các giao dịch khỏi ví...</translation>
+        <translation>Bezig met het zappen van alle transacties van de portemonnee...</translation>
     </message>
 </context>
 </TS>

@@ -138,7 +138,7 @@ void AskPassphraseDialog::accept()
                                          "<br><br><b>" +
                                          tr("IMPORTANT: Any previous backups you have made of your wallet file "
                                          "should be replaced with the newly generated, encrypted wallet file. "
-                                         "Previous backups of the unencrypted wallet file contain the same HD seed and"
+                                         "Previous backups of the unencrypted wallet file contain the same HD seed and "
                                          "still have full access to all your funds just like the new, encrypted wallet.") +
                                          "</b></qt>");
                     } else {

@@ -483,7 +483,7 @@ void MasternodeList::ShowQRCode(std::string strAlias) {
     }
 
     // Title of popup window
-    QString strWindowtitle = tr("Additional information for Masternode ") + QString::fromStdString(strAlias);
+    QString strWindowtitle = tr("Additional information for Masternode %1").arg(QString::fromStdString(strAlias));
 
     // Title above QR-Code
     QString strQRCodeTitle = tr("Masternode Private Key");
