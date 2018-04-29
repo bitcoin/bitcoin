@@ -7,8 +7,6 @@
 #include "masternode-budget.h"
 #include "masternodeman.h"
 
-using namespace std::string_literals;
-
 std::ostream& operator<<(std::ostream& os, uint256 value)
 {
     return os << value.ToString();
@@ -29,10 +27,10 @@ std::ostream& operator<<(std::ostream& os, const CTxBudgetPayment& value)
 
 namespace
 {
-    CKey CreateKeyPair(std::vector<unsigned char> privKey)
+    CKey CreateKeyPair(const unsigned char privKey[32])
     {
         CKey keyPair;
-        keyPair.Set(std::begin(privKey), std::end(privKey), true);
+        keyPair.Set(privKey, privKey + 32, true);
 
         return keyPair;
     }
@@ -87,30 +85,49 @@ namespace
     }
 
 
+    const unsigned char vchKey0[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
+    const unsigned char vchKey1[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0};
+    const unsigned char vchKey2[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0};
+
     struct FinalizedBudgetFixture
     {
-        const std::string budgetName = "test"s;
+        const std::string budgetName;
         const int blockStart = 129600;
 
-        const CKey keyPairA = CreateKeyPair({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1});
-        const CKey keyPairB = CreateKeyPair({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0});
-        const CKey keyPairC = CreateKeyPair({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0});
+        const CKey keyPairA;
+        const CKey keyPairB;
+        const CKey keyPairC;
 
-        const CBudgetProposal proposalA = CreateProposal("A", keyPairA, 42);
-        const CBudgetProposal proposalB = CreateProposal("B", keyPairB, 404);
-        const CBudgetProposal proposalC = CreateProposal("C", keyPairC, 42);
+        const CBudgetProposal proposalA;
+        const CBudgetProposal proposalB;
+        const CBudgetProposal proposalC;
 
-        const CMasternode mn1 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(1), 1 * COIN}});
-        const CMasternode mn2 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(2), 1 * COIN}});
-        const CMasternode mn3 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(3), 1 * COIN}});
-        const CMasternode mn4 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(4), 1 * COIN}});
-        const CMasternode mn5 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(5), 1 * COIN}});
+        const CMasternode mn1;
+        const CMasternode mn2;
+        const CMasternode mn3;
+        const CMasternode mn4;
+        const CMasternode mn5;
 
-        std::vector<uint256> hashes{100500};
-        std::vector<CBlockIndex> blocks{100500};
+        std::vector<uint256> hashes;
+        std::vector<CBlockIndex> blocks;
         std::string error;
 
         FinalizedBudgetFixture()
+            : budgetName("test")
+            , blockStart(129600)
+            , keyPairA(CreateKeyPair(vchKey0))
+            , keyPairB(CreateKeyPair(vchKey1))
+            , keyPairC(CreateKeyPair(vchKey2))
+            , proposalA(CreateProposal("A", keyPairA, 42))
+            , proposalB(CreateProposal("B", keyPairB, 404))
+            , proposalC(CreateProposal("C", keyPairC, 42))
+            , mn1(CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN))))
+            , mn2(CreateMasternode(CTxIn(COutPoint(ArithToUint256(2), 1 * COIN))))
+            , mn3(CreateMasternode(CTxIn(COutPoint(ArithToUint256(3), 1 * COIN))))
+            , mn4(CreateMasternode(CTxIn(COutPoint(ArithToUint256(4), 1 * COIN))))
+            , mn5(CreateMasternode(CTxIn(COutPoint(ArithToUint256(5), 1 * COIN))))
+            , hashes(100500)
+            , blocks(100500)
         {
             SetMockTime(GetTime());
 
