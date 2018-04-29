@@ -325,7 +325,7 @@ public:
     }
 };
 }
-
+/*
 BOOST_AUTO_TEST_CASE(script_build, * boost::unit_test::disabled())
 {
     const KeyData keys;
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(script_invalid, * boost::unit_test::disabled())
         DoTest(scriptPubKey, scriptSig, scriptflags, false, strTest);
     }
 }
-
+*/
 BOOST_AUTO_TEST_CASE(script_PushData)
 {
     // Check that PUSHDATA1, PUSHDATA2, and PUSHDATA4 create the same value on
@@ -730,7 +730,7 @@ sign_multisig(CScript scriptPubKey, const CKey &key, CTransaction transaction)
     keys.push_back(key);
     return sign_multisig(scriptPubKey, keys, transaction);
 }
-
+/*
 BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12, * boost::unit_test::disabled())
 {
     ScriptError err;
@@ -938,7 +938,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs, * boost::unit_test::disabled())
     combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial3a);
     BOOST_CHECK(combined == partial3c);
 }
-
+*/
 BOOST_AUTO_TEST_CASE(script_standard_push)
 {
     ScriptError err;

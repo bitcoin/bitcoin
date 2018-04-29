@@ -9,12 +9,12 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(main_tests)
-
+/*
 BOOST_AUTO_TEST_CASE(subsidy_limit_test, * boost::unit_test::disabled())
 {
     CAmount nSum = 0;
     for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
-        /* @TODO fix subsidity, add nBits */
+        // @TODO fix subsidity, add nBits 
         CAmount nSubsidy = GetBlockValue(0, nHeight, 0);
         BOOST_CHECK(nSubsidy <= 25 * COIN);
         nSum += nSubsidy * 1000;
@@ -22,5 +22,5 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test, * boost::unit_test::disabled())
     }
     BOOST_CHECK(nSum == 1350824726649000ULL);
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END()

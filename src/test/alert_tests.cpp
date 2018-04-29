@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(GenerateAlerts)
     GenerateAlertTests();
 }
 #endif
-
+/*
 BOOST_AUTO_TEST_CASE(AlertApplies, * boost::unit_test::disabled())
 {
     SetMockTime(11);
@@ -232,5 +232,5 @@ BOOST_AUTO_TEST_CASE(AlertNotify, * boost::unit_test::disabled())
 
     SetMockTime(0);
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END()
