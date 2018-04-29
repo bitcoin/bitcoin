@@ -64,10 +64,10 @@ namespace
     void FillBlock(CBlockIndex& block, uint256& hash, /*const*/ CBlockIndex* prevBlock, size_t height)
     {
         FillHash(hash, height);
-        FillBlock(block, height ? prevBlock : nullptr, hash);
+        FillBlock(block, height ? prevBlock : NULL, hash);
 
         assert(static_cast<int>(UintToArith256(block.GetBlockHash()).GetLow64()) == block.nHeight);
-        assert(block.pprev == nullptr || block.nHeight == block.pprev->nHeight + 1);
+        assert(block.pprev == NULL || block.nHeight == block.pprev->nHeight + 1);
 
     }
 
@@ -725,7 +725,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
         SetMockTime(superblockProjectedTime - 2 * Params().TargetSpacing());
 
         // Call & Check
-        const bool isSubmitted = budget.UpdateProposal(vote, nullptr, error);
+        const bool isSubmitted = budget.UpdateProposal(vote, NULL, error);
 
         BOOST_CHECK(isSubmitted);
         BOOST_CHECK(error.empty());
@@ -758,7 +758,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
         SetMockTime(superblockProjectedTime - 2 * Params().TargetSpacing());
 
         // Call & Check
-        const bool isSubmitted = budget.UpdateProposal(vote, nullptr, error);
+        const bool isSubmitted = budget.UpdateProposal(vote, NULL, error);
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());
@@ -790,7 +790,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
         SetMockTime(superblockProjectedTime - 2 * Params().TargetSpacing());
 
         // Call & Check
-        const bool isSubmitted = budget.UpdateProposal(vote, nullptr, error);
+        const bool isSubmitted = budget.UpdateProposal(vote, NULL, error);
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());
