@@ -31,7 +31,7 @@ class BumpFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [["-prematurewitness", "-walletprematurewitness", "-deprecatedrpc=addwitnessaddress", "-walletrbf={}".format(i)]
+        self.extra_args = [["-deprecatedrpc=addwitnessaddress", "-walletrbf={}".format(i)]
                            for i in range(self.num_nodes)]
 
     def run_test(self):

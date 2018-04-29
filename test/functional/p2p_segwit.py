@@ -230,55 +230,9 @@ class SegWitTest(BitcoinTestFramework):
 
         sync_blocks(self.nodes)
 
-        # Create a p2sh output -- this is so we can pass the standardness
-        # rules (an anyone-can-spend OP_TRUE would be rejected, if not wrapped
-        # in P2SH).
-        p2sh_program = CScript([OP_TRUE])
-        p2sh_pubkey = hash160(p2sh_program)
-        scriptPubKey = CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])
-
-        # Now check that unnecessary witnesses can't be used to blind a node
-        # to a transaction, eg by violating standardness checks.
-        tx2 = CTransaction()
-        tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
-        tx2.vout.append(CTxOut(tx.vout[0].nValue-1000, scriptPubKey))
-        tx2.rehash()
-        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx2, False, True)
-        self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
-
-        # We'll add an unnecessary witness to this transaction that would cause
-        # it to be non-standard, to test that violating policy with a witness before
-        # segwit activation doesn't blind a node to a transaction.  Transactions
-        # rejected for having a witness before segwit activation shouldn't be added
-        # to the rejection cache.
-        tx3 = CTransaction()
-        tx3.vin.append(CTxIn(COutPoint(tx2.sha256, 0), CScript([p2sh_program])))
-        tx3.vout.append(CTxOut(tx2.vout[0].nValue-1000, scriptPubKey))
-        tx3.wit.vtxinwit.append(CTxInWitness())
-        tx3.wit.vtxinwit[0].scriptWitness.stack = [b'a'*400000]
-        tx3.rehash()
-        # Note that this should be rejected for the premature witness reason,
-        # rather than a policy check, since segwit hasn't activated yet.
-        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, tx3, True, False, b'no-witness-yet')
-
-        # If we send without witness, it should be accepted.
-        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, tx3, False, True)
-
-        # Now create a new anyone-can-spend utxo for the next test.
-        tx4 = CTransaction()
-        tx4.vin.append(CTxIn(COutPoint(tx3.sha256, 0), CScript([p2sh_program])))
-        tx4.vout.append(CTxOut(tx3.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
-        tx4.rehash()
-        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx3, False, True)
-        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx4, False, True)
-
-        self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
-
         # Update our utxo list; we spent the first entry.
         self.utxo.pop(0)
-        self.utxo.append(UTXO(tx4.sha256, 0, tx4.vout[0].nValue))
+        self.utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
     # ~6 months after segwit activation, the SCRIPT_VERIFY_WITNESS flag was
     # backdated so that it applies to all blocks, going back to the genesis
@@ -1119,7 +1073,7 @@ class SegWitTest(BitcoinTestFramework):
             self.old_node.announce_tx_and_wait_for_getdata(block4.vtx[0])
             assert(block4.sha256 not in self.old_node.getdataset)
 
-    # V0 segwit outputs should be standard after activation, but not before.
+    # V0 segwit outputs and inputs are always standard. V0 segwit inputs may only be mined after activation, but not before.
     def test_standardness_v0(self, segwit_activated):
         self.log.info("Testing standardness of v0 outputs (%s activation)" % ("after" if segwit_activated else "before"))
         assert(len(self.utxo))
@@ -1148,45 +1102,46 @@ class SegWitTest(BitcoinTestFramework):
         tx.vin = [CTxIn(COutPoint(p2sh_tx.sha256, 0), CScript([witness_program]))]
         tx.vout = [CTxOut(p2sh_tx.vout[0].nValue-10000, scriptPubKey)]
         tx.vout.append(CTxOut(8000, scriptPubKey)) # Might burn this later
+        tx.vin[0].nSequence = BIP125_SEQUENCE_NUMBER  # Just to have the option to bump this tx from the mempool
         tx.rehash()
 
-        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, tx, with_witness=True, accepted=segwit_activated)
+        # This is always accepted, since the mempool policy is to consider segwit as always active
+        # and thus allow segwit outputs
+        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, tx, with_witness=True, accepted=True)
 
         # Now create something that looks like a P2PKH output. This won't be spendable.
         scriptPubKey = CScript([OP_0, hash160(witness_hash)])
         tx2 = CTransaction()
-        if segwit_activated:
-            # if tx was accepted, then we spend the second output.
-            tx2.vin = [CTxIn(COutPoint(tx.sha256, 1), b"")]
-            tx2.vout = [CTxOut(7000, scriptPubKey)]
-            tx2.wit.vtxinwit.append(CTxInWitness())
-            tx2.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
-        else:
-            # if tx wasn't accepted, we just re-spend the p2sh output we started with.
-            tx2.vin = [CTxIn(COutPoint(p2sh_tx.sha256, 0), CScript([witness_program]))]
-            tx2.vout = [CTxOut(p2sh_tx.vout[0].nValue-1000, scriptPubKey)]
+        # tx was accepted, so we spend the second output.
+        tx2.vin = [CTxIn(COutPoint(tx.sha256, 1), b"")]
+        tx2.vout = [CTxOut(7000, scriptPubKey)]
+        tx2.wit.vtxinwit.append(CTxInWitness())
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
         tx2.rehash()
 
-        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, tx2, with_witness=True, accepted=segwit_activated)
+        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, tx2, with_witness=True, accepted=True)
 
         # Now update self.utxo for later tests.
         tx3 = CTransaction()
-        if segwit_activated:
-            # tx and tx2 were both accepted.  Don't bother trying to reclaim the
-            # P2PKH output; just send tx's first output back to an anyone-can-spend.
-            sync_mempools([self.nodes[0], self.nodes[1]])
-            tx3.vin = [CTxIn(COutPoint(tx.sha256, 0), b"")]
-            tx3.vout = [CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE]))]
-            tx3.wit.vtxinwit.append(CTxInWitness())
-            tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
+        # tx and tx2 were both accepted.  Don't bother trying to reclaim the
+        # P2PKH output; just send tx's first output back to an anyone-can-spend.
+        sync_mempools([self.nodes[0], self.nodes[1]])
+        tx3.vin = [CTxIn(COutPoint(tx.sha256, 0), b"")]
+        tx3.vout = [CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE]))]
+        tx3.wit.vtxinwit.append(CTxInWitness())
+        tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
+        tx3.rehash()
+        if not segwit_activated:
+            # Just check mempool acceptance, but don't add the transaction to the mempool, since witness is disallowed
+            # in blocks and the tx is impossible to mine right now.
+            assert_equal(self.nodes[0].testmempoolaccept([bytes_to_hex_str(tx3.serialize_with_witness())]), [{'txid': tx3.hash, 'allowed': True}])
+            # Create the same output as tx3, but by replacing tx
+            tx3_out = tx3.vout[0]
+            tx3 = tx
+            tx3.vout = [tx3_out]
             tx3.rehash()
-            test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx3, with_witness=True, accepted=True)
-        else:
-            # tx and tx2 didn't go anywhere; just clean up the p2sh_tx output.
-            tx3.vin = [CTxIn(COutPoint(p2sh_tx.sha256, 0), CScript([witness_program]))]
-            tx3.vout = [CTxOut(p2sh_tx.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE]))]
-            tx3.rehash()
-            test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx3, with_witness=True, accepted=True)
+            assert_equal(self.nodes[0].testmempoolaccept([bytes_to_hex_str(tx3.serialize_with_witness())]), [{'txid': tx3.hash, 'allowed': True}])
+        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx3, with_witness=True, accepted=True)
 
         self.nodes[0].generate(1)
         sync_blocks(self.nodes)
@@ -1855,6 +1810,60 @@ class SegWitTest(BitcoinTestFramework):
         test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True)
         self.utxo.append(UTXO(tx5.sha256, 0, tx5.vout[0].nValue))
 
+    def test_non_standard_witness_blinding(self):
+        self.log.info("Testing behavior of unnecessary witnesses in transactions does not blind the node for the transaction")
+        assert (len(self.utxo) > 0)
+
+        # Create a p2sh output -- this is so we can pass the standardness
+        # rules (an anyone-can-spend OP_TRUE would be rejected, if not wrapped
+        # in P2SH).
+        p2sh_program = CScript([OP_TRUE])
+        p2sh_pubkey = hash160(p2sh_program)
+        scriptPubKey = CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])
+
+        # Now check that unnecessary witnesses can't be used to blind a node
+        # to a transaction, eg by violating standardness checks.
+        tx = CTransaction()
+        tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
+        tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, scriptPubKey))
+        tx.rehash()
+        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx, False, True)
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+
+        # We'll add an unnecessary witness to this transaction that would cause
+        # it to be non-standard, to test that violating policy with a witness
+        # doesn't blind a node to a transaction.  Transactions
+        # rejected for having a witness shouldn't be added
+        # to the rejection cache.
+        tx2 = CTransaction()
+        tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), CScript([p2sh_program])))
+        tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, scriptPubKey))
+        tx2.wit.vtxinwit.append(CTxInWitness())
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a' * 400]
+        tx2.rehash()
+        # This will be rejected due to a policy check:
+        # No witness is allowed, since it is not a witness program but a p2sh program
+        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, tx2, True, False, b'bad-witness-nonstandard')
+
+        # If we send without witness, it should be accepted.
+        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, tx2, False, True)
+
+        # Now create a new anyone-can-spend utxo for the next test.
+        tx3 = CTransaction()
+        tx3.vin.append(CTxIn(COutPoint(tx2.sha256, 0), CScript([p2sh_program])))
+        tx3.vout.append(CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
+        tx3.rehash()
+        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx2, False, True)
+        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx3, False, True)
+
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+
+        # Update our utxo list; we spent the first entry.
+        self.utxo.pop(0)
+        self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
+
     def test_non_standard_witness(self):
         self.log.info("Testing detection of non-standard P2WSH witness")
         pad = chr(1).encode('latin-1')
@@ -2023,6 +2032,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_premature_coinbase_witness_spend()
         self.test_uncompressed_pubkey()
         self.test_signature_version_1()
+        self.test_non_standard_witness_blinding()
         self.test_non_standard_witness()
         sync_blocks(self.nodes)
         self.test_upgrade_after_activation(node_id=2)
