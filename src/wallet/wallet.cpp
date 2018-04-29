@@ -4618,6 +4618,8 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
 {
     CKeyID keyid = key.GetID();
     if (key.IsCompressed()) {
+        if (fParticlMode)
+            return std::vector<CTxDestination>{std::move(keyid)};
         CTxDestination segwit = WitnessV0KeyHash(keyid);
         CTxDestination p2sh = CScriptID(GetScriptForDestination(segwit));
         return std::vector<CTxDestination>{std::move(keyid), std::move(p2sh), std::move(segwit)};
