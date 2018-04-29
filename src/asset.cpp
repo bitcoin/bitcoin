@@ -1067,8 +1067,8 @@ bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oAsset
     oAsset.push_back(Pair("txid", asset.txHash.GetHex()));
     oAsset.push_back(Pair("height", (int)asset.nHeight));
 	int64_t nTime = 0;
-	if (chainActive.Height() >= asset.nHeight) {
-		CBlockIndex *pindex = chainActive[asset.nHeight];
+	if (chainActive.Height() >= asset.nHeight-1) {
+		CBlockIndex *pindex = chainActive[asset.nHeight-1];
 		if (pindex) {
 			nTime = pindex->GetMedianTimePast();
 		}
@@ -1103,8 +1103,8 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
 	oAsset.push_back(Pair("height", (int)asset.nHeight));
 	int64_t nTime = 0;
-	if (chainActive.Height() >= asset.nHeight) {
-		CBlockIndex *pindex = chainActive[asset.nHeight];
+	if (chainActive.Height() >= asset.nHeight-1) {
+		CBlockIndex *pindex = chainActive[asset.nHeight-1];
 		if (pindex) {
 			nTime = pindex->GetMedianTimePast();
 		}

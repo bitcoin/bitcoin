@@ -1073,8 +1073,8 @@ bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, co
 	oName.push_back(Pair("type", type));
 	oName.push_back(Pair("height", (int)nHeight));
 	int64_t nTime = 0;
-	if (chainActive.Height() >= nHeight) {
-		CBlockIndex *pindex = chainActive[nHeight];
+	if (chainActive.Height() >= nHeight-1) {
+		CBlockIndex *pindex = chainActive[nHeight-1];
 		if (pindex) {
 			nTime = pindex->GetMedianTimePast();
 		}
@@ -2066,8 +2066,8 @@ bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName)
 	oName.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));	
 	oName.push_back(Pair("txid", alias.txHash.GetHex()));
 	int64_t nTime = 0;
-	if (chainActive.Height() >= alias.nHeight) {
-		CBlockIndex *pindex = chainActive[alias.nHeight];
+	if (chainActive.Height() >= alias.nHeight-1) {
+		CBlockIndex *pindex = chainActive[alias.nHeight-1];
 		if (pindex) {
 			nTime = pindex->GetMedianTimePast();
 		}
@@ -2090,8 +2090,8 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 	oName.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));
 	oName.push_back(Pair("alias", stringFromVch(alias.vchAlias)));
 	int64_t nTime = 0; 
-	if (chainActive.Height() >= alias.nHeight) {
-		CBlockIndex *pindex = chainActive[alias.nHeight];
+	if (chainActive.Height() >= alias.nHeight-1) {
+		CBlockIndex *pindex = chainActive[alias.nHeight-1];
 		if (pindex) {
 			nTime = pindex->GetMedianTimePast();
 		}

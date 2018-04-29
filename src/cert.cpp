@@ -786,8 +786,8 @@ bool BuildCertJson(const CCert& cert, UniValue& oCert)
     oCert.push_back(Pair("txid", cert.txHash.GetHex()));
     oCert.push_back(Pair("height", (int)cert.nHeight));
 	int64_t nTime = 0;
-	if (chainActive.Height() >= cert.nHeight) {
-		CBlockIndex *pindex = chainActive[cert.nHeight];
+	if (chainActive.Height() >= cert.nHeight-1) {
+		CBlockIndex *pindex = chainActive[cert.nHeight-1];
 		if (pindex) {
 			nTime = pindex->GetMedianTimePast();
 		}
@@ -816,8 +816,8 @@ bool BuildCertIndexerHistoryJson(const CCert& cert, UniValue& oCert)
 	oCert.push_back(Pair("cert", stringFromVch(cert.vchCert)));
 	oCert.push_back(Pair("height", (int)cert.nHeight));
 	int64_t nTime = 0;
-	if (chainActive.Height() >= cert.nHeight) {
-		CBlockIndex *pindex = chainActive[cert.nHeight];
+	if (chainActive.Height() >= cert.nHeight-1) {
+		CBlockIndex *pindex = chainActive[cert.nHeight-1];
 		if (pindex) {
 			nTime = pindex->GetMedianTimePast();
 		}
