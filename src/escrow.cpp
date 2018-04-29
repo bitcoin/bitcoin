@@ -2286,6 +2286,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 	oEscrow.push_back(Pair("witness", stringFromVch(escrow.vchWitness)));
 	oEscrow.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oEscrow.push_back(Pair("offer_price", theOffer.GetPrice()));
+	oEscrow.push_back(Pair("offer_title", stringFromVch(theOffer.sTitle)));
 	oEscrow.push_back(Pair("reseller", stringFromVch(escrow.vchLinkSellerAlias)));
 	oEscrow.push_back(Pair("quantity", (int)escrow.nQty));
 	const CAmount &nEscrowFees = escrow.nDeposit + escrow.nArbiterFee + escrow.nWitnessFee + escrow.nNetworkFee + escrow.nShipping;
@@ -2346,6 +2347,7 @@ bool BuildEscrowIndexerJson(const COffer& theOffer, const CEscrow &escrow, UniVa
 	oEscrow.push_back(Pair("buyer", stringFromVch(escrow.vchBuyerAlias)));
 	oEscrow.push_back(Pair("currency", IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_COIN) ? GetPaymentOptionsString(escrow.nPaymentOption) : stringFromVch(theOffer.sCurrencyCode)));
 	oEscrow.push_back(Pair("offer_price", theOffer.GetPrice()));
+	oEscrow.push_back(Pair("offer_title", stringFromVch(theOffer.sTitle)));
 	oEscrow.push_back(Pair("quantity", (int)escrow.nQty));
 	const CAmount &nEscrowFees = escrow.nDeposit + escrow.nArbiterFee + escrow.nWitnessFee + escrow.nNetworkFee + escrow.nShipping;
 	const CAmount &nTotalWithoutFee = escrow.nAmountOrBidPerUnit*escrow.nQty;
