@@ -59,10 +59,10 @@ namespace
     void FillBlock(CBlockIndex& block, uint256& hash, /*const*/ CBlockIndex* prevBlock, size_t height)
     {
         FillHash(hash, height);
-        FillBlock(block, height ? prevBlock : nullptr, hash);
+        FillBlock(block, height ? prevBlock : NULL, hash);
 
         assert(static_cast<int>(UintToArith256(block.GetBlockHash()).GetLow64()) == block.nHeight);
-        assert(block.pprev == nullptr || block.nHeight == block.pprev->nHeight + 1);
+        assert(block.pprev == NULL || block.nHeight == block.pprev->nHeight + 1);
 
     }
 
@@ -304,11 +304,11 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote4a(mn4.vin, proposalA.GetHash(), VOTE_YES);
         CBudgetVote vote5a(mn5.vin, proposalA.GetHash(), VOTE_YES);
 
-        budget.UpdateProposal(vote1a, nullptr, error);
-        budget.UpdateProposal(vote2a, nullptr, error);
-        budget.UpdateProposal(vote3a, nullptr, error);
-        budget.UpdateProposal(vote4a, nullptr, error);
-        budget.UpdateProposal(vote5a, nullptr, error);
+        budget.UpdateProposal(vote1a, NULL, error);
+        budget.UpdateProposal(vote2a, NULL, error);
+        budget.UpdateProposal(vote3a, NULL, error);
+        budget.UpdateProposal(vote4a, NULL, error);
+        budget.UpdateProposal(vote5a, NULL, error);
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
@@ -351,18 +351,18 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote1c(mn1.vin, proposalC.GetHash(), VOTE_YES);
         CBudgetVote vote2c(mn2.vin, proposalC.GetHash(), VOTE_YES);
 
-        budget.UpdateProposal(vote1a, nullptr, error);
-        budget.UpdateProposal(vote2a, nullptr, error);
-        budget.UpdateProposal(vote3a, nullptr, error);
-        budget.UpdateProposal(vote4a, nullptr, error);
-        budget.UpdateProposal(vote5a, nullptr, error);
+        budget.UpdateProposal(vote1a, NULL, error);
+        budget.UpdateProposal(vote2a, NULL, error);
+        budget.UpdateProposal(vote3a, NULL, error);
+        budget.UpdateProposal(vote4a, NULL, error);
+        budget.UpdateProposal(vote5a, NULL, error);
 
-        budget.UpdateProposal(vote1b, nullptr, error);
-        budget.UpdateProposal(vote2b, nullptr, error);
-        budget.UpdateProposal(vote3b, nullptr, error);
+        budget.UpdateProposal(vote1b, NULL, error);
+        budget.UpdateProposal(vote2b, NULL, error);
+        budget.UpdateProposal(vote3b, NULL, error);
 
-        budget.UpdateProposal(vote1c, nullptr, error);
-        budget.UpdateProposal(vote2c, nullptr, error);
+        budget.UpdateProposal(vote1c, NULL, error);
+        budget.UpdateProposal(vote2c, NULL, error);
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
@@ -407,18 +407,18 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote1a(mn1.vin, proposalA.GetHash(), VOTE_YES);
         CBudgetVote vote2a(mn2.vin, proposalA.GetHash(), VOTE_YES);
 
-        budget.UpdateProposal(vote1c, nullptr, error);
-        budget.UpdateProposal(vote2c, nullptr, error);
-        budget.UpdateProposal(vote3c, nullptr, error);
-        budget.UpdateProposal(vote4c, nullptr, error);
-        budget.UpdateProposal(vote5c, nullptr, error);
+        budget.UpdateProposal(vote1c, NULL, error);
+        budget.UpdateProposal(vote2c, NULL, error);
+        budget.UpdateProposal(vote3c, NULL, error);
+        budget.UpdateProposal(vote4c, NULL, error);
+        budget.UpdateProposal(vote5c, NULL, error);
 
-        budget.UpdateProposal(vote1b, nullptr, error);
-        budget.UpdateProposal(vote2b, nullptr, error);
-        budget.UpdateProposal(vote3b, nullptr, error);
+        budget.UpdateProposal(vote1b, NULL, error);
+        budget.UpdateProposal(vote2b, NULL, error);
+        budget.UpdateProposal(vote3b, NULL, error);
 
-        budget.UpdateProposal(vote1a, nullptr, error);
-        budget.UpdateProposal(vote2a, nullptr, error);
+        budget.UpdateProposal(vote1a, NULL, error);
+        budget.UpdateProposal(vote2a, NULL, error);
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
