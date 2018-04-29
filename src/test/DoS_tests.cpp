@@ -115,6 +115,7 @@ CTransaction RandomOrphan()
     return it->second.tx;
 }
 
+/*
 BOOST_AUTO_TEST_CASE(DoS_mapOrphans, * boost::unit_test::disabled())
 {
     CKey key;
@@ -195,5 +196,5 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans, * boost::unit_test::disabled())
     BOOST_CHECK(mapOrphanTransactions.empty());
     BOOST_CHECK(mapOrphanTransactionsByPrev.empty());
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END()

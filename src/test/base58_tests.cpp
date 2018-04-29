@@ -119,7 +119,7 @@ public:
         return exp_payload.size() == 0;
     }
 };
-
+/*
 // Goal: check that parsed keys match test payload
 BOOST_AUTO_TEST_CASE(base58_keys_valid_parse, * boost::unit_test::disabled())
 {
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen, * boost::unit_test::disabled())
 
     SelectParams(CBaseChainParams::UNITTEST);
 }
-
+*/
 // Goal: check that base58 parsing code is robust against a variety of corrupted data
 BOOST_AUTO_TEST_CASE(base58_keys_invalid)
 {
