@@ -200,13 +200,12 @@ void CPrivateSend::InitStandardDenominations()
         1SYS+1000 == (.1SYS+100)*10
         10SYS+10000 == (1SYS+1000)*10
     */
-    /* Disabled
-    vecStandardDenominations.push_back( (100      * COIN)+100000 );
-    */
-    vecStandardDenominations.push_back( (10       * COIN)+1000000 );
-    vecStandardDenominations.push_back( (1        * COIN)+100000 );
-    vecStandardDenominations.push_back( (.1       * COIN)+10000 );
-    vecStandardDenominations.push_back( (.01      * COIN)+1000 );
+     Disabled
+    vecStandardDenominations.push_back( (100      * COIN)+1000000);
+    vecStandardDenominations.push_back( (10       * COIN)+100000 );
+    vecStandardDenominations.push_back( (1        * COIN)+10000 );
+    vecStandardDenominations.push_back( (.1       * COIN)+1000 );
+   // vecStandardDenominations.push_back( (.01      * COIN)+1000 );
     /* Disabled till we need them
     vecStandardDenominations.push_back( (.001     * COIN)+1 );
     */

@@ -145,7 +145,7 @@ You retain control of your money at all times..<hr> \
 <b>The PrivateSend process works like this:</b>\
 <ol type=\"1\"> \
 <li>PrivateSend begins by breaking your transaction inputs down into standard denominations. \
-These denominations are 0.01 SYS, 0.1 SYS, 1 SYS and 10 SYS -- sort of like the paper money you use every day.</li> \
+These denominations are 0.1 SYS, 1 SYS, 10 SYS and 100 SYS -- sort of like the paper money you use every day.</li> \
 <li>Your wallet then sends requests to specially configured software nodes on the network, called \"masternodes.\" \
 These masternodes are informed then that you are interested in mixing a certain denomination. \
 No identifiable information is sent to the masternodes, so they never know \"who\" you are.</li> \
