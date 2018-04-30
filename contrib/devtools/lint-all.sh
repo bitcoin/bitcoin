@@ -1,8 +1,7 @@
 #!/bin/bash
 #
 # Copyright (c) 2017 The Bitcoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# Distributed under the MIT software license, see the accompanying file COPYING.
 #
 # This script runs all contrib/devtools/lint-*.sh files, and fails if any exit
 # with a non-zero status code.

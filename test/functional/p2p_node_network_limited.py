@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017 The Bitcoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# Distributed under the MIT software license, see the accompanying file COPYING.
 """Tests NODE_NETWORK_LIMITED.
 
 Tests that a node configured with -prune=550 signals NODE_NETWORK_LIMITED correctly

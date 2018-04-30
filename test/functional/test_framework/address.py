@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016-2017 The Bitcoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# Distributed under the MIT software license, see the accompanying file COPYING.
 """Encode and decode BASE58, P2PKH and P2SH addresses."""
 
 from .script import hash256, hash160, sha256, CScript, OP_0
