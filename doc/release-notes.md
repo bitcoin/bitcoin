@@ -179,8 +179,8 @@ The `validateaddress` RPC output has been extended with a few new fields, and su
   `getrawtransaction` RPC commands.
 - New `fees` field introduced in `getrawmempool`, `getmempoolancestors`, `getmempooldescendants` and
    `getmempoolentry` when verbosity is set to `true` with sub-fields `ancestor`, `base`, `modified`
-   and `descendent` denominated in BTC. This new field deprecates previous fee fields, such as
-   `fee`, `modifiedfee`, `ancestorfee` and `descendentfee`.
+   and `descendant` denominated in BTC. This new field deprecates previous fee fields, such as
+   `fee`, `modifiedfee`, `ancestorfee` and `descendantfee`.
 
 External wallet files
 ---------------------
