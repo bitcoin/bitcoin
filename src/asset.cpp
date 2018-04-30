@@ -290,22 +290,27 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			}
 			if ((theAsset.fInterestRate != 0 || theAsset.bCanAdjustInterestRate) && theAsset.bUseInputRanges)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Interest cannot be set on this type of asset");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Interest cannot be set on this type of asset");
 				return error(errorMessage.c_str());
 			}
 			if (!AssetRange(theAsset.nBalance, theAsset.nPrecision, theAsset.bUseInputRanges))
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Initial balance out of money range");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Initial balance out of money range");
 				return true;
 			}
 			if (theAsset.nPrecision > 8)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Precision must be between 0 and 8");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2013 - " + _("Precision must be between 0 and 8");
 				return true;
 			}
 			if (theAsset.nMaxSupply != -1 && !AssetRange(theAsset.nMaxSupply, theAsset.nPrecision, theAsset.bUseInputRanges))
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Max supply out of money range");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2014 - " + _("Max supply out of money range");
+				return true;
+			}
+			if (theAsset.nBalance > theAsset.nMaxSupply)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Total supply cannot exceed maximum supply");
 				return true;
 			}
 			break;
@@ -313,17 +318,17 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		case OP_ASSET_UPDATE:
 			if(theAsset.sCategory.size() > 0 && !boost::algorithm::istarts_with(stringFromVch(theAsset.sCategory), "assets"))
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2013 - " + _("Must use a asset category");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Must use a asset category");
 				return error(errorMessage.c_str());
 			}
 			if (theAsset.nBalance < 0)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2014 - " + _("Balance must be greator than or equal to 0");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Balance must be greator than or equal to 0");
 				return error(errorMessage.c_str());
 			}
 			if (theAsset.fInterestRate < 0 || theAsset.fInterestRate > 1)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Interest must be between 0 and 1");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Interest must be between 0 and 1");
 				return error(errorMessage.c_str());
 			}
 			break;
@@ -331,29 +336,29 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		case OP_ASSET_TRANSFER:
 			if (!theAssetAllocation.listSendingAllocationInputs.empty() || !theAssetAllocation.listSendingAllocationAmounts.empty() || !theAsset.listAllocationInputs.empty())
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Cannot transfer input allocations");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Cannot transfer input allocations");
 				return error(errorMessage.c_str());
 			}
 			break;
 		case OP_ASSET_SEND:
 			if (theAssetAllocation.listSendingAllocationInputs.empty() && theAssetAllocation.listSendingAllocationAmounts.empty())
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Asset send must send an input or transfer balance");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2020 - " + _("Asset send must send an input or transfer balance");
 				return error(errorMessage.c_str());
 			}
 			if (theAssetAllocation.listSendingAllocationInputs.size() > 250 || theAssetAllocation.listSendingAllocationAmounts.size() > 250)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Too many receivers in one allocation send, maximum of 250 is allowed at once");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Too many receivers in one allocation send, maximum of 250 is allowed at once");
 				return error(errorMessage.c_str());
 			}
 			if (theAssetAllocation.vchMemo.size() > MAX_MEMO_LENGTH)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("memo too long, must be 128 character or less");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("memo too long, must be 128 character or less");
 				return error(errorMessage.c_str());
 			}
 			break;
 		default:
-			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2020 - " + _("Asset transaction has unknown op");
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2023 - " + _("Asset transaction has unknown op");
 			return error(errorMessage.c_str());
 		}
 	}
@@ -371,7 +376,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		if (!GetAsset(op == OP_ASSET_SEND ? theAssetAllocation.vchAsset : theAsset.vchAsset, dbAsset))
 		{
 			if (op != OP_ASSET_ACTIVATE) {
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Failed to read from asset DB");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Failed to read from asset DB");
 				return true;
 			}
 		}
@@ -380,7 +385,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		{
 			if (dbAsset.vchAlias != vvchAlias)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Cannot edit this asset. Asset owner must sign off on this change");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot edit this asset. Asset owner must sign off on this change");
 				return true;
 			}
 		}
@@ -390,14 +395,14 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			if (!theAsset.listAllocationInputs.empty()) {
 				if(!dbAsset.bUseInputRanges)
 				{
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2023 - " + _("This asset does not use input ranges");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("This asset does not use input ranges");
 					return true;
 				}
 				// ensure the new inputs being added are greator than the last input
 				for (auto&input : theAsset.listAllocationInputs) {
 					if(input.start < dbAsset.nTotalSupply)
 					{
-						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot edit this asset. New asset inputs must be added to the end of the supply: ") + boost::lexical_cast<std::string>(input.start) + " vs " + boost::lexical_cast<std::string>(dbAsset.nTotalSupply);
+						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Cannot edit this asset. New asset inputs must be added to the end of the supply: ") + boost::lexical_cast<std::string>(input.start) + " vs " + boost::lexical_cast<std::string>(dbAsset.nTotalSupply);
 						return true;
 					}
 				}
@@ -405,7 +410,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				increaseBalanceByAmount = validateRangesAndGetCount(theAsset.listAllocationInputs);
 				if (increaseBalanceByAmount == 0)
 				{
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid input ranges");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Invalid input ranges");
 					return true;
 				}
 				dbAsset.listAllocationInputs.insert(std::end(dbAsset.listAllocationInputs), std::begin(theAsset.listAllocationInputs), std::end(theAsset.listAllocationInputs));
@@ -417,12 +422,12 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			theAsset.nTotalSupply += increaseBalanceByAmount;
 			if (!AssetRange(theAsset.nTotalSupply, dbAsset.nPrecision, dbAsset.bUseInputRanges))
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Total supply out of money range");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Total supply out of money range");
 				return true;
 			}
 			if (theAsset.nTotalSupply > dbAsset.nMaxSupply)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Total supply cannot exceed maximum supply");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2030 - " + _("Total supply cannot exceed maximum supply");
 				return true;
 			}
 
@@ -442,7 +447,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			GetAssetAllocation(allocationTuple, dbAssetAllocation);
 			if (!theAssetAllocation.listSendingAllocationAmounts.empty()) {
 				if (dbAsset.bUseInputRanges) {
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Invalid asset send, request to send amounts but asset uses input ranges");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2031 - " + _("Invalid asset send, request to send amounts but asset uses input ranges");
 					return true;
 				}
 				// check balance is sufficient on sender
@@ -451,12 +456,12 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 					nTotal += amountTuple.second;
 					if (amountTuple.second <= 0)
 					{
-						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Receiving amount must be positive");
+						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2032 - " + _("Receiving amount must be positive");
 						return true;
 					}
 				}
 				if (theAsset.nBalance < nTotal) {
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2030 - " + _("Sender balance is insufficient");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2033 - " + _("Sender balance is insufficient");
 					return true;
 				}
 				for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
@@ -485,7 +490,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						theAsset.nBalance -= amountTuple.second;
 						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
 						{
-							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2031 - " + _("Failed to write to asset allocation DB");
+							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2034 - " + _("Failed to write to asset allocation DB");
 							continue;
 						}
 						if (strResponse != "") {
@@ -496,7 +501,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			}
 			else if (!theAssetAllocation.listSendingAllocationInputs.empty()) {
 				if (!dbAsset.bUseInputRanges) {
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2032 - " + _("Invalid asset send, request to send input ranges but asset uses amounts");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2035 - " + _("Invalid asset send, request to send input ranges but asset uses amounts");
 					return true;
 				}
 				// check balance is sufficient on sender
@@ -507,7 +512,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 					const unsigned int rangeTotal = validateRangesAndGetCount(inputTuple.second);
 					if (rangeTotal == 0)
 					{
-						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2033 - " + _("Invalid input range");
+						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2036 - " + _("Invalid input range");
 						return true;
 					}
 					const CAmount rangeTotalAmount = rangeTotal;
@@ -515,7 +520,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 					nTotal += rangeTotalAmount;
 				}
 				if (theAsset.nBalance < nTotal) {
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2034 - " + _("Sender balance is insufficient");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2037 - " + _("Sender balance is insufficient");
 					return true;
 				}
 				for (unsigned int i = 0; i < theAssetAllocation.listSendingAllocationInputs.size(); i++) {
@@ -526,7 +531,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 					// ensure entire allocation range being subtracted exists on sender (full inclusion check)
 					if (!doesRangeContain(dbAsset.listAllocationInputs, input.second))
 					{
-						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2035 - " + _("Input not found");
+						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2038 - " + _("Input not found");
 						return true;
 					}
 					if (!bSanityCheck) {
@@ -556,7 +561,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						theAsset.nBalance -= rangeTotals[i];
 						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
 						{
-							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2036 - " + _("Failed to write to asset allocation DB");
+							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2039 - " + _("Failed to write to asset allocation DB");
 							return error(errorMessage.c_str());
 						}
 
@@ -583,7 +588,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 
 			if (op == OP_ASSET_UPDATE) {
 				if (!theAsset.bCanAdjustInterestRate && theAsset.fInterestRate != dbAsset.fInterestRate) {
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2037 - " + _("Cannot adjust interest rate for this asset");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Cannot adjust interest rate for this asset");
 					return true;
 				}
 			}
@@ -602,7 +607,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			theAsset.vchSymbol = vchFromString(assetUpper);
 			if (GetAsset(theAsset.vchAsset, theAsset))
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2038 - " + _("Asset already exists");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2041 - " + _("Asset already exists");
 				return true;
 			}
 			// starting supply is the supplied balance upon init
@@ -623,7 +628,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		if (!bSanityCheck) {
 			if (!passetdb->WriteAsset(theAsset, op))
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2039 - " + _("Failed to write to asset DB");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2042 - " + _("Failed to write to asset DB");
 				return error(errorMessage.c_str());
 			}
 			// debug

@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply)
 	// 1 max supply good
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetmaxsupply " + gooddata + " assets 8 false 1 1 0 false ''"));
 	// balance > max supply
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetmaxsupply " + gooddata + " assets 3 false 2000 1000 0 false ''"));
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew abc jagassetmaxsupply " + gooddata + " assets 3 false 2000 1000 0 false ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 {
