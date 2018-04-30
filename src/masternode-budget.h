@@ -255,11 +255,10 @@ public:
     const std::map<uint256, CFinalizedBudgetVote>& GetVotes() const { return mapVotes; }
     std::string GetProposals() const;
     int GetBlockStart() const {return nBlockStart;}
-    int GetBlockEnd() const {return nBlockStart + (int)(vecBudgetPayments.size() - 1);}
+    int GetBlockEnd() const {return nBlockStart;} // Paid in single block
     int GetVoteCount() const {return (int)mapVotes.size();}
+    const std::vector<CTxBudgetPayment>& GetBudgetPayments() const;
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    bool GetBudgetPaymentByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment) const;
-    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, CAmount& nAmount) const;
 
     //check to see if we should vote on this
     bool AutoCheck();

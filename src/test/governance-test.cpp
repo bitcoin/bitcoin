@@ -29,6 +29,11 @@ bool operator == (const CTxBudgetPayment& a, const CTxBudgetPayment& b)
            a.payee == b.payee;
 }
 
+bool operator != (const CTxBudgetPayment& a, const CTxBudgetPayment& b)
+{
+    return !(a == b);
+}
+
 std::ostream& operator<<(std::ostream& os, const CTxBudgetPayment& value)
 {
     return os << "{" << value.nProposalHash.ToString() << ":" << value.nAmount << "@" << value.payee.ToString() << "}";
@@ -518,7 +523,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         BOOST_CHECK(!budget.IsTransactionValid(expected, blockStart + 2));
     }
 
-    BOOST_AUTO_TEST_CASE(GetBudgetPaymentByBlock_Block0)
+    BOOST_AUTO_TEST_CASE(GetBudgetPayments)
     {
         // Set Up
         std::vector<CTxBudgetPayment> txBudgetPayments;
@@ -526,46 +531,16 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalB));
 
         CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
-        CTxBudgetPayment actual;
+
+        std::vector<CTxBudgetPayment> expected;
+        expected.push_back(GetPayment(proposalB));
+        expected.push_back(GetPayment(proposalA));
 
         // Call & Check
-        bool result = budget.GetBudgetPaymentByBlock(blockStart, actual);
+        std::vector<CTxBudgetPayment> actual = budget.GetBudgetPayments();
 
-        BOOST_CHECK_EQUAL(actual, GetPayment(proposalB));
-        BOOST_CHECK(result);
+        BOOST_CHECK_EQUAL_COLLECTIONS(actual.begin(), actual.end(), expected.begin(), expected.end());
     }
-
-    BOOST_AUTO_TEST_CASE(GetBudgetPaymentByBlock_Block1)
-    {
-        // Set Up
-        std::vector<CTxBudgetPayment> txBudgetPayments;
-        txBudgetPayments.push_back(GetPayment(proposalA));
-        txBudgetPayments.push_back(GetPayment(proposalB));
-
-        CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
-        CTxBudgetPayment actual;
-
-        // Call & Check
-        bool result = budget.GetBudgetPaymentByBlock(blockStart + 1, actual);
-
-        BOOST_CHECK_EQUAL(actual, GetPayment(proposalA));
-        BOOST_CHECK(result);
-    }
-
-    BOOST_AUTO_TEST_CASE(GetBudgetPaymentByBlock_Block2)
-    {
-        // Set Up
-        std::vector<CTxBudgetPayment> txBudgetPayments;
-        txBudgetPayments.push_back(GetPayment(proposalA));
-        txBudgetPayments.push_back(GetPayment(proposalB));
-
-        CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
-        CTxBudgetPayment dummy;
-
-        // Call & Check
-        BOOST_CHECK(!budget.GetBudgetPaymentByBlock(blockStart + 2, dummy));
-    }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -1002,10 +977,10 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         // Call & Check
 
         BOOST_CHECK_EQUAL(fb.GetBlockStart(), blockHeight);
-        BOOST_CHECK_EQUAL(fb.GetBlockEnd(), blockHeight + 2);
+        BOOST_CHECK_EQUAL(fb.GetBlockEnd(), blockHeight);
     }
 
-    BOOST_AUTO_TEST_CASE(FirstProposalIsPaid)
+    BOOST_AUTO_TEST_CASE(AllProposalsArePaidInOneBlock)
     {
         // Set Up
 
@@ -1027,6 +1002,8 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         std::vector<CTxOut> expected;
         expected.push_back(CTxOut(9 * COIN, CScript()));
         expected.push_back(CTxOut(404, PayToPublicKey(keyPairB.GetPubKey()))); // Highest amount is #1
+        expected.push_back(CTxOut(111, PayToPublicKey(keyPairC.GetPubKey())));
+        expected.push_back(CTxOut(42, PayToPublicKey(keyPairA.GetPubKey()))); // Lowest amount is #31
 
         // Call & Check
 
@@ -1038,7 +1015,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
     }
 
-    BOOST_AUTO_TEST_CASE(SecondProposalIsPaid)
+    BOOST_AUTO_TEST_CASE(NoProposalsArePaidAfterSuperblockIsPaid)
     {
         // Set Up
 
@@ -1062,7 +1039,6 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         // Set expectations
         std::vector<CTxOut> expected;
         expected.push_back(CTxOut(9 * COIN, CScript()));
-        expected.push_back(CTxOut(111, PayToPublicKey(keyPairC.GetPubKey()))); // Lower amount is #2
 
         // Call & Check
 
