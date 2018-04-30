@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2017 The Bitcoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# Distributed under the MIT software license, see the accompanying file COPYING.
 """Test processing of unrequested blocks.
 
 Setup: two nodes, node0+node1, not connected to each other. Node1 will have

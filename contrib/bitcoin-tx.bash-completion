@@ -1,7 +1,6 @@
 # bash programmable completion for bitcoin-tx(1)
 # Copyright (c) 2016 The Bitcoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# Distributed under the MIT software license, see the accompanying file COPYING.
 
 _bitcoin_tx() {
     local cur prev words=() cword

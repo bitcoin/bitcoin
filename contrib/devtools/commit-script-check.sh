@@ -1,7 +1,6 @@
 #!/bin/sh
 # Copyright (c) 2017 The Bitcoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# Distributed under the MIT software license, see the accompanying file COPYING.
 
 # This simple script checks for commits beginning with: scripted-diff:
 # If found, looks for a script between the lines -BEGIN VERIFY SCRIPT- and
