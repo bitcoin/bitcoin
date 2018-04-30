@@ -1177,9 +1177,9 @@ UniValue SyscoinListReceived(bool includeempty=true)
 UniValue syscointxfund_helper(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, vector<CRecipient> &vecSend) {
 	CMutableTransaction txNew;
 	txNew.nVersion = SYSCOIN_TX_VERSION;
+	COutPoint aliasOutPointWitness;
 	if (!vchWitness.empty())
 	{
-		COutPoint aliasOutPointWitness;
 		aliasunspent(vchWitness, aliasOutPointWitness);
 		if (aliasOutPointWitness.IsNull())
 		{
@@ -1203,7 +1203,7 @@ UniValue syscointxfund_helper(const vector<unsigned char> &vchAlias, const vecto
 	if (GetUTXOCoin(aliasOutPoint, pcoin))
 		txNew.vin.push_back(CTxIn(aliasOutPoint, pcoin.out.scriptPubKey));
 
-	if(vchWitness == vchAlias || aliasOutPointWitness == aliasOutPoint)
+	if(vchWitness == vchAlias || (!aliasOutPointWitness.IsNull() && aliasOutPointWitness == aliasOutPoint))
 		throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Witness to this transaction must be different than the funding alias"));
 	// set an address for syscointxfund so it uses that address to fund (alias passed in)
 
