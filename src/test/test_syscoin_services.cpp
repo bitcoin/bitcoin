@@ -101,9 +101,9 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
     boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
 	string nodePath = fpath.string() + string(" -datadir=") + dataDir;
 	if(regTest)
-		nodePath += string(" -regtest -addressindex -unittest");
+		nodePath += string(" -regtest -addressindex");
 	if(!extraArgs.empty())
-		nodePath += string(" ") + extraArgs;
+		nodePath += string("  -unittest ") + extraArgs;
 
     boost::thread t(runCommand, nodePath);
 	printf("Launching %s, waiting 1 second before trying to ping...\n", nodePath.c_str());
