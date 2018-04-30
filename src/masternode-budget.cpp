@@ -514,6 +514,8 @@ void CBudgetManager::CheckAndRemove()
 
 void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
 {
+    assert (txNew.vout.size() == 1); // There is a blank for block creator's reward
+
     LOCK(cs);
 
     CBlockIndex* pindexPrev = chainActive.Tip();

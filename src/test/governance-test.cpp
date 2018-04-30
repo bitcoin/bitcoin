@@ -17,6 +17,11 @@ std::ostream& operator<<(std::ostream& os, const CTxIn& value)
     return os << value.ToString();
 }
 
+std::ostream& operator<<(std::ostream& os, const CTxOut& value)
+{
+    return os << value.ToString();
+}
+
 bool operator == (const CTxBudgetPayment& a, const CTxBudgetPayment& b)
 {
     return a.nProposalHash == b.nProposalHash &&
@@ -28,7 +33,6 @@ std::ostream& operator<<(std::ostream& os, const CTxBudgetPayment& value)
 {
     return os << "{" << value.nProposalHash.ToString() << ":" << value.nAmount << "@" << value.payee.ToString() << "}";
 }
-
 
 namespace
 {
@@ -913,8 +917,13 @@ namespace
         std::vector<uint256> hashes;
         std::vector<CBlockIndex> blocks;
 
+        const int fees;
+        const uint256 finalBudgetCollateral;
+
+        std::string error;
+
         SuperblockPaymentFixture()
-            : blockHeight(129600)
+            : blockHeight(1296000)
             , keyPairA(CreateKeyPair(vchKey0))
             , keyPairB(CreateKeyPair(vchKey1))
             , keyPairC(CreateKeyPair(vchKey2))
@@ -925,13 +934,15 @@ namespace
             , mn5(CreateMasternode(CTxIn(COutPoint(ArithToUint256(5), 1 * COIN))))
             , hashes(static_cast<size_t>(blockHeight + 1))
             , blocks(static_cast<size_t>(blockHeight + 1))
+            , fees(0)
+            , finalBudgetCollateral(ArithToUint256(1))
         {
             // Build a main chain 100500 blocks long.
             for (size_t i = 0; i < blocks.size(); ++i)
             {
                 FillBlock(blocks[i], hashes[i], &blocks[i - 1], i);
             }
-            chainActive.SetTip(&blocks.back());
+            chainActive.SetTip(&blocks[blockHeight-1]);
 
             mnodeman.Add(mn1);
             mnodeman.Add(mn2);
@@ -966,7 +977,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
         txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
 
-        CFinalizedBudgetBroadcast fb("test", blockHeight, txBudgetPayments, ArithToUint256(1));
+        CFinalizedBudgetBroadcast fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
 
         BOOST_REQUIRE(budget.GetFinalizedBudgets().empty());
         
@@ -976,6 +987,167 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
 
         BOOST_REQUIRE_EQUAL(actual.size(), 1);
         BOOST_CHECK_EQUAL(fb.GetHash(), actual.front()->GetHash());
+    }
+
+    BOOST_AUTO_TEST_CASE(FinalizedBudgetHasCorrectStartAndEnd)
+    {
+        // Set Up
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(CreatePayment(keyPairA, 42));
+        txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
+        txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
+
+        CFinalizedBudgetBroadcast fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+
+        // Call & Check
+
+        BOOST_CHECK_EQUAL(fb.GetBlockStart(), blockHeight);
+        BOOST_CHECK_EQUAL(fb.GetBlockEnd(), blockHeight + 2);
+    }
+
+    BOOST_AUTO_TEST_CASE(FirstProposalIsPaid)
+    {
+        // Set Up
+
+        // Create finalized budget
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(CreatePayment(keyPairA, 42));
+        txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
+        txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
+        CFinalizedBudgetBroadcast fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+
+        // Add finalized budget to budget manager
+        budget.AddFinalizedBudget(fb, false); // false = don't check collateral
+
+        // Vote for finalized buget
+        CFinalizedBudgetVote vote1(mn1.vin, fb.GetHash());
+        budget.UpdateFinalizedBudget(vote1, NULL, error);
+
+        // Set expectations
+        std::vector<CTxOut> expected;
+        expected.push_back(CTxOut(9 * COIN, CScript()));
+        expected.push_back(CTxOut(404, PayToPublicKey(keyPairB.GetPubKey()))); // Highest amount is #1
+
+        // Call & Check
+
+        CMutableTransaction actual;
+        actual.vout.push_back(CTxOut());
+
+        budget.FillBlockPayee(actual, fees);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
+    }
+
+    BOOST_AUTO_TEST_CASE(SecondProposalIsPaid)
+    {
+        // Set Up
+
+        // Create finalized budget
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(CreatePayment(keyPairA, 42));
+        txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
+        txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
+        CFinalizedBudgetBroadcast fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+
+        // Add finalized budget to budget manager
+        budget.AddFinalizedBudget(fb, false); // false = don't check collateral
+
+        // Vote for finalized buget
+        CFinalizedBudgetVote vote1(mn1.vin, fb.GetHash());
+        budget.UpdateFinalizedBudget(vote1, NULL, error);
+
+        // Rewind 1 block forward
+        chainActive.SetTip(&blocks[blockHeight]);
+
+        // Set expectations
+        std::vector<CTxOut> expected;
+        expected.push_back(CTxOut(9 * COIN, CScript()));
+        expected.push_back(CTxOut(111, PayToPublicKey(keyPairC.GetPubKey()))); // Lower amount is #2
+
+        // Call & Check
+
+        CMutableTransaction actual;
+        actual.vout.push_back(CTxOut());
+
+        budget.FillBlockPayee(actual, fees);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
+    }
+
+    BOOST_AUTO_TEST_CASE(BudgetWithZeroVotesIsNotPaid)
+    {
+        // Set Up
+
+        // Create finalized budget
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(CreatePayment(keyPairA, 42));
+        txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
+        txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
+        CFinalizedBudgetBroadcast fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+
+        // Add finalized budget to budget manager
+        budget.AddFinalizedBudget(fb, false); // false = don't check collateral
+
+        // Set expectations
+        std::vector<CTxOut> expected;
+        expected.push_back(CTxOut(9 * COIN, CScript()));
+
+        // Call & Check
+
+        CMutableTransaction actual;
+        actual.vout.push_back(CTxOut());
+
+        budget.FillBlockPayee(actual, fees);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
+    }
+
+    BOOST_AUTO_TEST_CASE(BudgetWithMoreVotesWins)
+    {
+        // Set Up
+
+        // Create finalized budget #1
+        std::vector<CTxBudgetPayment> txBudgetPayments1;
+        txBudgetPayments1.push_back(CreatePayment(keyPairB, 404));
+        txBudgetPayments1.push_back(CreatePayment(keyPairC, 111));
+        CFinalizedBudgetBroadcast fb1("test", blockHeight, txBudgetPayments1, finalBudgetCollateral);
+
+        // Create finalized budget #2
+        std::vector<CTxBudgetPayment> txBudgetPayments2;
+        txBudgetPayments2.push_back(CreatePayment(keyPairA, 42));
+        CFinalizedBudgetBroadcast fb2("test", blockHeight, txBudgetPayments2, finalBudgetCollateral);
+
+        // Add finalized budgets to budget manager
+        budget.AddFinalizedBudget(fb1, false); // false = don't check collateral
+        budget.AddFinalizedBudget(fb2, false); // false = don't check collateral
+
+        // Vote for finalized bugets
+        CFinalizedBudgetVote vote1(mn1.vin, fb1.GetHash());
+        CFinalizedBudgetVote vote2(mn2.vin, fb1.GetHash());
+
+        CFinalizedBudgetVote vote3(mn3.vin, fb2.GetHash());
+        CFinalizedBudgetVote vote4(mn4.vin, fb2.GetHash());
+        CFinalizedBudgetVote vote5(mn5.vin, fb2.GetHash());
+
+        budget.UpdateFinalizedBudget(vote1, NULL, error);
+        budget.UpdateFinalizedBudget(vote2, NULL, error);
+        budget.UpdateFinalizedBudget(vote3, NULL, error);
+        budget.UpdateFinalizedBudget(vote4, NULL, error);
+        budget.UpdateFinalizedBudget(vote5, NULL, error);
+
+        // Set expectations
+        std::vector<CTxOut> expected;
+        expected.push_back(CTxOut(9 * COIN, CScript()));
+        expected.push_back(CTxOut(42, PayToPublicKey(keyPairA.GetPubKey()))); // Payment from budget #2
+
+        // Call & Check
+
+        CMutableTransaction actual;
+        actual.vout.push_back(CTxOut());
+
+        budget.FillBlockPayee(actual, fees);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
     }
 
 BOOST_AUTO_TEST_SUITE_END()
