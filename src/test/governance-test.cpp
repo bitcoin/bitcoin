@@ -7,8 +7,6 @@
 #include "masternode-budget.h"
 #include "masternodeman.h"
 
-using namespace std::string_literals;
-
 std::ostream& operator<<(std::ostream& os, uint256 value)
 {
     return os << value.ToString();
@@ -29,10 +27,10 @@ std::ostream& operator<<(std::ostream& os, const CTxBudgetPayment& value)
 
 namespace
 {
-    CKey CreateKeyPair(std::vector<unsigned char> privKey)
+    CKey CreateKeyPair(const unsigned char privKey[32])
     {
         CKey keyPair;
-        keyPair.Set(std::begin(privKey), std::end(privKey), true);
+        keyPair.Set(privKey, privKey + 32, true);
 
         return keyPair;
     }
@@ -87,35 +85,53 @@ namespace
     }
 
 
+    const unsigned char vchKey0[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
+    const unsigned char vchKey1[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0};
+    const unsigned char vchKey2[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0};
+
     struct FinalizedBudgetFixture
     {
-        const std::string budgetName = "test"s;
+        const std::string budgetName;
         const int blockStart = 129600;
 
-        const CKey keyPairA = CreateKeyPair({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1});
-        const CKey keyPairB = CreateKeyPair({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0});
-        const CKey keyPairC = CreateKeyPair({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0});
+        const CKey keyPairA;
+        const CKey keyPairB;
+        const CKey keyPairC;
 
-        const CBudgetProposal proposalA = CreateProposal("A", keyPairA, 42);
-        const CBudgetProposal proposalB = CreateProposal("B", keyPairB, 404);
-        const CBudgetProposal proposalC = CreateProposal("C", keyPairC, 101);
+        const CBudgetProposal proposalA;
+        const CBudgetProposal proposalB;
+        const CBudgetProposal proposalC;
 
-        const CMasternode mn1 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(1), 1 * COIN}});
-        const CMasternode mn2 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(2), 1 * COIN}});
-        const CMasternode mn3 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(3), 1 * COIN}});
-        const CMasternode mn4 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(4), 1 * COIN}});
-        const CMasternode mn5 = CreateMasternode(CTxIn{COutPoint{ArithToUint256(5), 1 * COIN}});
+        const CMasternode mn1;
+        const CMasternode mn2;
+        const CMasternode mn3;
+        const CMasternode mn4;
+        const CMasternode mn5;
 
-        std::vector<uint256> hashes{100500};
-        std::vector<CBlockIndex> blocks{100500};
+        std::vector<uint256> hashes;
+        std::vector<CBlockIndex> blocks;
         std::string error;
 
         FinalizedBudgetFixture()
+            : budgetName("test")
+            , blockStart(129600)
+            , keyPairA(CreateKeyPair(vchKey0))
+            , keyPairB(CreateKeyPair(vchKey1))
+            , keyPairC(CreateKeyPair(vchKey2))
+            , proposalA(CreateProposal("A", keyPairA, 42))
+            , proposalB(CreateProposal("B", keyPairB, 404))
+            , proposalC(CreateProposal("C", keyPairC, 42))
+            , mn1(CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN))))
+            , mn2(CreateMasternode(CTxIn(COutPoint(ArithToUint256(2), 1 * COIN))))
+            , mn3(CreateMasternode(CTxIn(COutPoint(ArithToUint256(3), 1 * COIN))))
+            , mn4(CreateMasternode(CTxIn(COutPoint(ArithToUint256(4), 1 * COIN))))
+            , mn5(CreateMasternode(CTxIn(COutPoint(ArithToUint256(5), 1 * COIN))))
+            , hashes(100500)
+            , blocks(100500)
         {
             SetMockTime(GetTime());
 
             fMasterNode = true;
-            strBudgetMode = "auto"s;
 
             // Build a main chain 100500 blocks long.
             for (size_t i = 0; i < blocks.size(); ++i)
@@ -140,7 +156,7 @@ namespace
             chainActive = CChain{};
         }
 
-        CBudgetProposal CreateProposal(std::string name, CKey payee, CAmount amount) -> CBudgetProposal
+        CBudgetProposal CreateProposal(std::string name, CKey payee, CAmount amount)
         {
             CBudgetProposal p(
                 name,
@@ -164,25 +180,25 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
     BOOST_AUTO_TEST_CASE(CompareHash_Equal)
     {
         // Set Up
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA));
-        payments.push_back(GetPayment(proposalB));
-        payments.push_back(GetPayment(proposalC));
+        std::vector<CTxBudgetPayment> payments1;
+        payments1.push_back(GetPayment(proposalA));
+        payments1.push_back(GetPayment(proposalB));
+        payments1.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget1(
             budgetName, 
             blockStart, 
-            payments,
+            payments1,
             ArithToUint256(1)
         );
 
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA));
-        payments.push_back(GetPayment(proposalB));
-        payments.push_back(GetPayment(proposalC));
+        std::vector<CTxBudgetPayment> payments2;
+        payments2.push_back(GetPayment(proposalA));
+        payments2.push_back(GetPayment(proposalB));
+        payments2.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget2(
             budgetName,
             blockStart,
-            payments,
+            payments2,
             ArithToUint256(2)
         );
 
@@ -193,25 +209,25 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
     BOOST_AUTO_TEST_CASE(CompareHash_DifferentName)
     {
         // Set Up
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA));
-        payments.push_back(GetPayment(proposalB));
-        payments.push_back(GetPayment(proposalC));
+        std::vector<CTxBudgetPayment> payments1;
+        payments1.push_back(GetPayment(proposalA));
+        payments1.push_back(GetPayment(proposalB));
+        payments1.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget1(
             budgetName,
             blockStart,
-            payments,
+            payments1,
             ArithToUint256(1)
         );
 
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA)); 
-        payments.push_back(GetPayment(proposalB)); 
-        payments.push_back(GetPayment(proposalC);
+        std::vector<CTxBudgetPayment> payments2;
+        payments2.push_back(GetPayment(proposalA));
+        payments2.push_back(GetPayment(proposalB));
+        payments2.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget2(
             "he-who-must-not-be-named",
             blockStart,
-            payments,
+            payments2,
             ArithToUint256(2)
         );
 
@@ -222,23 +238,23 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
     BOOST_AUTO_TEST_CASE(CompareHash_DifferentSet)
     {
         // Set Up
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA));
-        payments.push_back(GetPayment(proposalC));
+        std::vector<CTxBudgetPayment> payments1;
+        payments1.push_back(GetPayment(proposalA));
+        payments1.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget1(
             budgetName,
             blockStart,
-            payments,
+            payments1,
             ArithToUint256(1)
         );
 
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA)); 
-        payments.push_back(GetPayment(proposalB));
+        std::vector<CTxBudgetPayment> payments2;
+        payments2.push_back(GetPayment(proposalA));
+        payments2.push_back(GetPayment(proposalB));
         CFinalizedBudgetBroadcast budget2(
             budgetName,
             blockStart,
-            payments,
+            payments2,
             ArithToUint256(2)
         );
 
@@ -249,25 +265,25 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
     BOOST_AUTO_TEST_CASE(CompareHash_DifferentOrder)
     {
         // Set Up
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalA)); 
-        payments.push_back(GetPayment(proposalB)); 
-        payments.push_back(GetPayment(proposalC));
+        std::vector<CTxBudgetPayment> payments1;
+        payments1.push_back(GetPayment(proposalA));
+        payments1.push_back(GetPayment(proposalB));
+        payments1.push_back(GetPayment(proposalC));
         CFinalizedBudgetBroadcast budget1(
             budgetName,
             blockStart,
-            payments,
+            payments1,
             ArithToUint256(1)
         );
 
-        std::vector<CTxBudgetPayment> payments; 
-        payments.push_back(GetPayment(proposalB)); 
-        payments.push_back(GetPayment(proposalC)); 
-        payments.push_back(GetPayment(proposalA));
+        std::vector<CTxBudgetPayment> payments2;
+        payments2.push_back(GetPayment(proposalB));
+        payments2.push_back(GetPayment(proposalC));
+        payments2.push_back(GetPayment(proposalA));
         CFinalizedBudgetBroadcast budget2(
             budgetName,
             blockStart,
-            payments,
+            payments2,
             ArithToUint256(2)
         );
 
@@ -288,11 +304,11 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote4a(mn4.vin, proposalA.GetHash(), VOTE_YES);
         CBudgetVote vote5a(mn5.vin, proposalA.GetHash(), VOTE_YES);
 
-        budget.UpdateProposal(vote1a, nullptr, error);
-        budget.UpdateProposal(vote2a, nullptr, error);
-        budget.UpdateProposal(vote3a, nullptr, error);
-        budget.UpdateProposal(vote4a, nullptr, error);
-        budget.UpdateProposal(vote5a, nullptr, error);
+        budget.UpdateProposal(vote1a, NULL, error);
+        budget.UpdateProposal(vote2a, NULL, error);
+        budget.UpdateProposal(vote3a, NULL, error);
+        budget.UpdateProposal(vote4a, NULL, error);
+        budget.UpdateProposal(vote5a, NULL, error);
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
@@ -335,18 +351,18 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote1c(mn1.vin, proposalC.GetHash(), VOTE_YES);
         CBudgetVote vote2c(mn2.vin, proposalC.GetHash(), VOTE_YES);
 
-        budget.UpdateProposal(vote1a, nullptr, error);
-        budget.UpdateProposal(vote2a, nullptr, error);
-        budget.UpdateProposal(vote3a, nullptr, error);
-        budget.UpdateProposal(vote4a, nullptr, error);
-        budget.UpdateProposal(vote5a, nullptr, error);
+        budget.UpdateProposal(vote1a, NULL, error);
+        budget.UpdateProposal(vote2a, NULL, error);
+        budget.UpdateProposal(vote3a, NULL, error);
+        budget.UpdateProposal(vote4a, NULL, error);
+        budget.UpdateProposal(vote5a, NULL, error);
 
-        budget.UpdateProposal(vote1b, nullptr, error);
-        budget.UpdateProposal(vote2b, nullptr, error);
-        budget.UpdateProposal(vote3b, nullptr, error);
+        budget.UpdateProposal(vote1b, NULL, error);
+        budget.UpdateProposal(vote2b, NULL, error);
+        budget.UpdateProposal(vote3b, NULL, error);
 
-        budget.UpdateProposal(vote1c, nullptr, error);
-        budget.UpdateProposal(vote2c, nullptr, error);
+        budget.UpdateProposal(vote1c, NULL, error);
+        budget.UpdateProposal(vote2c, NULL, error);
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
@@ -391,18 +407,18 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote1a(mn1.vin, proposalA.GetHash(), VOTE_YES);
         CBudgetVote vote2a(mn2.vin, proposalA.GetHash(), VOTE_YES);
 
-        budget.UpdateProposal(vote1c, nullptr, error);
-        budget.UpdateProposal(vote2c, nullptr, error);
-        budget.UpdateProposal(vote3c, nullptr, error);
-        budget.UpdateProposal(vote4c, nullptr, error);
-        budget.UpdateProposal(vote5c, nullptr, error);
+        budget.UpdateProposal(vote1c, NULL, error);
+        budget.UpdateProposal(vote2c, NULL, error);
+        budget.UpdateProposal(vote3c, NULL, error);
+        budget.UpdateProposal(vote4c, NULL, error);
+        budget.UpdateProposal(vote5c, NULL, error);
 
-        budget.UpdateProposal(vote1b, nullptr, error);
-        budget.UpdateProposal(vote2b, nullptr, error);
-        budget.UpdateProposal(vote3b, nullptr, error);
+        budget.UpdateProposal(vote1b, NULL, error);
+        budget.UpdateProposal(vote2b, NULL, error);
+        budget.UpdateProposal(vote3b, NULL, error);
 
-        budget.UpdateProposal(vote1a, nullptr, error);
-        budget.UpdateProposal(vote2a, nullptr, error);
+        budget.UpdateProposal(vote1a, NULL, error);
+        budget.UpdateProposal(vote2a, NULL, error);
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
