@@ -76,7 +76,7 @@ static const bool DEFAULT_DISABLE_WALLET = false;
 extern const char * DEFAULT_WALLET_DAT;
 
 //! if set, all keys will be derived by using BIP39/BIP44
-static const bool DEFAULT_USE_HD_WALLET = false;
+static const bool DEFAULT_USE_HD_WALLET = true;
 
 bool AutoBackupWallet (CWallet* wallet, const std::string& strWalletFile_, std::string& strBackupWarningRet, std::string& strBackupErrorRet);
 
