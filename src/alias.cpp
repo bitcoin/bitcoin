@@ -1055,6 +1055,8 @@ void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
 	CSyscoinAddress address(EncodeBase58(alias.vchAddress));
 	oName.push_back(Pair("address", address.ToString()));
 	oName.push_back(Pair("expires_on", alias.nExpireTime));
+	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
+	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
 	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "alias");
 	WriteAliasIndexHistory(alias, op);
 }
@@ -2099,6 +2101,8 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 	oName.push_back(Pair("time", nTime));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
 	oName.push_back(Pair("accepttransferflags", (int)alias.nAcceptTransferFlags));
+	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
+	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
 	return true;
 }
 unsigned int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
