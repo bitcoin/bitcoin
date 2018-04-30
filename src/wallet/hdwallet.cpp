@@ -10346,7 +10346,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
                 };
             };
 
-            bool fSpendableIn = (coinControl && !coinControl->fAllowWatchOnly && !(r.nFlags & ORF_OWNED)) ? false : true;
+            bool fSpendableIn = (r.nFlags & ORF_OWNED) || (coinControl && coinControl->fAllowWatchOnly);
             bool fNeedHardwareKey = (r.nFlags & ORF_HARDWARE_DEVICE);
 
             vCoins.emplace_back(&twi->second, r.n, nDepth, fSpendableIn, true, safeTx, true, fNeedHardwareKey);
