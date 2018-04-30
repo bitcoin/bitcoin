@@ -279,11 +279,6 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 	int height, targetHeight, newHeight, timeoutCounter;
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getinfo"));
-	// sync mn to finish before we try to generate
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "mnsync next"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "mnsync next"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "mnsync next"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "mnsync next"));
 	targetHeight = find_value(r.get_obj(), "blocks").get_int() + nBlocks;
 	newHeight = 0;
 	const string &sBlocks = strprintf("%d",nBlocks);
