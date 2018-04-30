@@ -4884,11 +4884,11 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             walletInstance->SetMinVersion(FEATURE_HD);
         }
 
-		// Top up the keypool
-		if (!walletInstance->TopUpKeyPool()) {
-			InitError(_("Unable to generate initial keys") += "\n");
-			return NULL;
-		}
+		// Top up the keypool only if wallet is not locked
+        if (!walletInstance->IsLocked() && !walletInstance->TopUpKeyPool()) {
+            InitError(_("Unable to generate initial keys") += "\n");
+            return NULL;
+        }
 
         walletInstance->SetBestChain(chainActive.GetLocator());
 
