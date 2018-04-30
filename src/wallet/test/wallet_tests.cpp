@@ -36,12 +36,16 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 {
     // Cap last block file size, and mine new block in a new block file.
     CBlockIndex* const nullBlock = nullptr;
-    CBlockIndex* oldTip = chainActive.Tip();
+    CBlockIndex* oldTip;
+    {
+        LOCK(cs_main);
+        oldTip = chainActive.Tip();
+    }
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    CBlockIndex* newTip = chainActive.Tip();
 
     LOCK(cs_main);
+    CBlockIndex* newTip = chainActive.Tip();
 
     // Verify ScanForWalletTransactions picks up transactions in both the old
     // and new block files.
@@ -117,7 +121,11 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 {
     // Create two blocks with same timestamp to verify that importwallet rescan
     // will pick up both blocks, not just the first.
-    const int64_t BLOCK_TIME = chainActive.Tip()->GetBlockTimeMax() + 5;
+    int64_t BLOCK_TIME;
+    {
+        LOCK(cs_main);
+        BLOCK_TIME = chainActive.Tip()->GetBlockTimeMax() + 5;
+    }
     SetMockTime(BLOCK_TIME);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
@@ -293,7 +301,10 @@ public:
         int changePos = -1;
         std::string error;
         CCoinControl dummy;
-        BOOST_CHECK(wallet->CreateTransaction({recipient}, tx, reservekey, fee, changePos, error, dummy));
+        {
+            LOCK(cs_main);
+            BOOST_CHECK(wallet->CreateTransaction({recipient}, tx, reservekey, fee, changePos, error, dummy));
+        }
         CValidationState state;
         BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, {}, reservekey, nullptr, state));
         CMutableTransaction blocktx;
@@ -302,10 +313,16 @@ public:
             blocktx = CMutableTransaction(*wallet->mapWallet.at(tx->GetHash()).tx);
         }
         CreateAndProcessBlock({CMutableTransaction(blocktx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        LOCK(wallet->cs_wallet);
-        auto it = wallet->mapWallet.find(tx->GetHash());
-        BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.SetMerkleBranch(chainActive.Tip(), 1);
+        std::map<uint256, CWalletTx>::iterator it;
+        {
+            LOCK(wallet->cs_wallet);
+            it = wallet->mapWallet.find(tx->GetHash());
+            BOOST_CHECK(it != wallet->mapWallet.end());
+        }
+        {
+            LOCK(cs_main);
+            it->second.SetMerkleBranch(chainActive.Tip(), 1);
+        }
         return it->second;
     }
 

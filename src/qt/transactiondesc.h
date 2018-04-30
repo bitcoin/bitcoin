@@ -5,8 +5,12 @@
 #ifndef BITCOIN_QT_TRANSACTIONDESC_H
 #define BITCOIN_QT_TRANSACTIONDESC_H
 
+#include <sync.h>
+
 #include <QObject>
 #include <QString>
+
+extern CCriticalSection cs_main;
 
 class TransactionRecord;
 
@@ -29,7 +33,7 @@ public:
 private:
     TransactionDesc() {}
 
-    static QString FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks, int64_t adjustedTime);
+    static QString FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks, int64_t adjustedTime) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 #endif // BITCOIN_QT_TRANSACTIONDESC_H

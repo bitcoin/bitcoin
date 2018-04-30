@@ -18,7 +18,6 @@
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <streams.h>
-#include <sync.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <util.h>
