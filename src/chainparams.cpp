@@ -366,13 +366,13 @@ public:
         nDefaultPort = 18369;
         nPruneAfterHeight = 1000;
 
-		genesis = CreateGenesisBlock(1524507764, 1649039, 0x1e0ffff0, 1, 8.88 * COIN);
+		genesis = CreateGenesisBlock(1524507866, 442226, 0x1e0ffff0, 1, 8.88 * COIN);
 		/*
 		uint256 hash;
 		CBlockHeader genesisHeader = genesis.GetBlockHeader();
 		GenerateGenesisBlock(genesisHeader, &hash);*/
 		consensus.hashGenesisBlock = genesis.GetHash();
-		assert(consensus.hashGenesisBlock == uint256S("0x00000701f616edd1c07a7eac60ddd5e14f61b30bbe2b0126d0c0e4a0ceb7a5cb"));
+		assert(consensus.hashGenesisBlock == uint256S("0x00000478aace753a4709f7503b5b583456a5a8635e989d7f899eb000bbea9fd4"));
 		assert(genesis.hashMerkleRoot == uint256S("0x3fc1815124d408495fb860705d2188d84fcfeb5efc894f26fefc81a5cbdc49e8"));
 
         vFixedSeeds.clear();
