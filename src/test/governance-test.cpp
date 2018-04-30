@@ -158,7 +158,7 @@ namespace
 
             mnodeman.Clear();
             budget.Clear();
-            chainActive = CChain{};
+            chainActive = CChain();
         }
 
         CBudgetProposal CreateProposal(std::string name, CKey payee, CAmount amount)
