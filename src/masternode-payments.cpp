@@ -64,7 +64,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &nFe
 		else {
 			CAmount nTotalRewardWithMasternodes;
 			GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), nTotalRewardWithMasternodes, false, true, 1);
-			if (block.vtx[0]->GetValueOut() > nTotalRewardWithMasternodes) {
+			if (block.vtx[0]->GetValueOut() > (nTotalRewardWithMasternodes + nFee)) {
 				strErrorRet = strprintf("IsBlockValueValid: coinbase amount exceeds block subsidy schedule");
 				return false;
 			}
@@ -96,7 +96,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &nFe
 		else {
 			CAmount nTotalRewardWithMasternodes;
 			GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), nTotalRewardWithMasternodes, false, true, 1);
-			if (block.vtx[0]->GetValueOut() > nTotalRewardWithMasternodes) {
+			if (block.vtx[0]->GetValueOut() > (nTotalRewardWithMasternodes + nFee)) {
 				strErrorRet = strprintf("IsBlockValueValid: coinbase amount exceeds block subsidy schedule");
 				return false;
 			}
