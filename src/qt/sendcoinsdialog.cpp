@@ -55,20 +55,6 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
 
     // Crown specific
     QSettings settings;
-    if (!settings.contains("bUseInstantX"))
-        settings.setValue("bUseInstantX", false);
-        
-    bool useInstantX = settings.value("bUseInstantX").toBool();
-    if(fLiteMode) {
-        ui->checkInstantX->setVisible(false);
-        CoinControlDialog::coinControl->useInstantX = false;
-    }
-    else{
-        ui->checkInstantX->setChecked(useInstantX);
-        CoinControlDialog::coinControl->useInstantX = useInstantX;
-    }
-    
-    connect(ui->checkInstantX, SIGNAL(stateChanged ( int )), this, SLOT(updateInstantX()));
 
     // Coin Control: clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
@@ -204,26 +190,13 @@ SendCoinsDialog::~SendCoinsDialog()
     delete ui;
 }
 
-bool SendCoinsDialog::instantXChecked()
-{
-    return ui->checkInstantX->isChecked();
-}
-
 QStringList SendCoinsDialog::constructConfirmationMessage(QList<SendCoinsRecipient> &recipients)
 {
     QString strFunds = "";
     QString strFee = "";
 
     recipients[0].inputType = ALL_COINS;
-    strFunds = tr("using") + " <b>" + tr("any available funds (not recommended)") + "</b>";
-
-    if(instantXChecked()) {
-        recipients[0].useInstantX = true;
-        strFunds += " ";
-        strFunds += tr("and InstantX");
-    } else {
-        recipients[0].useInstantX = false;
-    }
+    strFunds = tr("using") + " <b>" + tr("any available funds (not recommended)") + "</b> " + "and InstantX";
 
     // Format confirmation message
     QStringList formatted;
@@ -578,13 +551,13 @@ void SendCoinsDialog::updateDisplayUnit()
     updateSmartFeeLabel();
 }
 
-void SendCoinsDialog::updateInstantX()
-{
-    QSettings settings;
-    settings.setValue("bUseInstantX", ui->checkInstantX->isChecked());
-    CoinControlDialog::coinControl->useInstantX = ui->checkInstantX->isChecked();
-    coinControlUpdateLabels();
-}
+//void SendCoinsDialog::updateInstantX()
+//{
+//    QSettings settings;
+//    settings.setValue("bUseInstantX", ui->checkInstantX->isChecked());
+//    CoinControlDialog::coinControl->useInstantX = ui->checkInstantX->isChecked();
+//    coinControlUpdateLabels();
+//}
 
 void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
 {
