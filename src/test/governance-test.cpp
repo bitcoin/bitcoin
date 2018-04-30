@@ -836,7 +836,7 @@ namespace
             SetMockTime(0);
 
             budget.Clear();
-            chainActive = CChain{};
+            chainActive = CChain();
         }
 
         CBudgetProposal CreateProposal(int blockStart, CKey payee, CAmount amount)
