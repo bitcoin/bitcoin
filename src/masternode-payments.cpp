@@ -39,7 +39,6 @@ CCriticalSection cs_mapMasternodePaymentVotes;
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &nFee, const CAmount &blockReward, std::string& strErrorRet)
 {
     strErrorRet = "";
-
 	bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward + nFee);
 	if (fDebug) LogPrintf("block.vtx[0].GetValueOut() %lld <= blockReward %lld\n", block.vtx[0]->GetValueOut(), blockReward + nFee);
 
@@ -112,6 +111,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
     if(!masternodeSync.IsSynced()) {
         //there is no budget data to use to check anything, let's just accept the longest chain
         if(fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Client not synced, skipping block payee checks\n");
+		nTotalRewardWithMasternodes = txNew.GetValueOut()-nFee;
         return true;
     }
 
@@ -569,6 +569,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 
     //require at least MNPAYMENTS_SIGNATURES_REQUIRED signatures
 
+
     for (const auto& payee : vecPayees) {
         if (payee.GetVoteCount() >= nMaxSignatures) {
             nMaxSignatures = payee.GetVoteCount();
@@ -608,7 +609,12 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
             }
         }
     }
-	if (nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) return true;
+
+	// if not enough sigs approve longest chain
+	if (nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) {
+		nTotalRewardWithMasternodes = txNew.GetValueOut()-nFee;
+		return true;
+	}
     LogPrintf("CMasternodeBlockPayees::IsTransactionValid -- ERROR: Missing required payment, possible payees: '%s', amount: %f SYS\n", strPayeesPossible, (float)nMasternodePayment/COIN);
     return false;
 }
@@ -650,7 +656,13 @@ bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
     LOCK(cs_mapMasternodeBlocks);
 
     const auto it = mapMasternodeBlocks.find(nBlockHeight);
-    return it == mapMasternodeBlocks.end() ? true : it->second.IsTransactionValid(txNew, nFee, nBlockHeight, nTotalRewardWithMasternodes);
+	if (it == mapMasternodeBlocks.end()) {
+		nTotalRewardWithMasternodes = txNew.GetValueOut()-nFee;
+		return true;
+	}
+	else {
+		return it->second.IsTransactionValid(txNew, nFee, nBlockHeight, nTotalRewardWithMasternodes);
+	}
 }
 
 void CMasternodePayments::CheckAndRemove()

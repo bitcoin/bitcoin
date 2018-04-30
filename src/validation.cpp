@@ -2551,7 +2551,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     if (!IsBlockValueValid(block, pindex->nHeight, nFees, nTotalRewardWithMasternodes, strError)) {
         return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
     }
-
+	GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, 1);
+	if (block.vtx[0]->GetValueOut() > nTotalRewardWithMasternodes) {
+		return state.DoS(0, error("ConnectBlock(SYS): coinbase amount exceeds block subsidy schedule"),
+			REJECT_INVALID, "bad-cb-reward");
+	}
     // END SYSCOIN
 
     if (!control.Wait())
