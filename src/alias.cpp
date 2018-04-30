@@ -1189,6 +1189,7 @@ UniValue syscointxfund_helper(const vector<unsigned char> &vchAlias, const vecto
 		if (GetUTXOCoin(aliasOutPointWitness, pcoinW))
 			txNew.vin.push_back(CTxIn(aliasOutPointWitness, pcoinW.out.scriptPubKey));
 	}
+	
 
 	COutPoint aliasOutPoint;
 	unsigned int unspentcount = aliasunspent(vchAlias, aliasOutPoint);
@@ -1202,6 +1203,8 @@ UniValue syscointxfund_helper(const vector<unsigned char> &vchAlias, const vecto
 	if (GetUTXOCoin(aliasOutPoint, pcoin))
 		txNew.vin.push_back(CTxIn(aliasOutPoint, pcoin.out.scriptPubKey));
 
+	if(vchWitness == vchAlias || aliasOutPointWitness == aliasOutPoint)
+		throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Witness to this transaction must be different than the funding alias"));
 	// set an address for syscointxfund so it uses that address to fund (alias passed in)
 
 	CAliasIndex alias;
