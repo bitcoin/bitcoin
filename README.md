@@ -22,7 +22,7 @@ which leverage the bitcoin protocol and blockchain technology.
  - Masternode collateral requirement: 100000 Syscoins
  - Masternode seniority: 3 percent every 4 months until 27 percent over 3 years
  - Governance proposals payout schedule: every month
- - Governance funding per found (168630 Syscoins per month)
+ - Governance funding per round (168630 Syscoins per month)
 
 Services include:
 
