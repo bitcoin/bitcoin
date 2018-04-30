@@ -3954,9 +3954,9 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
 
 DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 {
+	fFirstRunRet = false;
     if (!fFileBacked)
         return DB_LOAD_OK;
-    fFirstRunRet = false;
     DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
     if (nLoadWalletRet == DB_NEED_REWRITE)
     {
@@ -4884,8 +4884,8 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             walletInstance->SetMinVersion(FEATURE_HD);
         }
 
-		// Top up the keypool only if wallet is not locked
-        if (!walletInstance->IsLocked() && !walletInstance->TopUpKeyPool()) {
+		// Top up the keypool
+        if (!walletInstance->TopUpKeyPool()) {
             InitError(_("Unable to generate initial keys") += "\n");
             return NULL;
         }
