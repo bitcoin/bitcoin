@@ -331,7 +331,7 @@ Then build using:
     
     gmake
 
-*Note* that as of Bitcoin Core version 0.16.0, you need to add --disable-asm at the configure step to disable defailt ASM optimization to compile for FreeBSD. See [here](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=226155) for details.
+*Note* that as of Bitcoin Core version 0.16.0, you need to add `--disable-asm` at the configure step to disable default ASM optimization to compile for FreeBSD. See [here](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=226155) for details.
 
 *Note on debugging*: The version of `gdb` installed by default is [ancient and considered harmful](https://wiki.freebsd.org/GdbRetirement).
 It is not suitable for debugging a multi-threaded C++ program, not even for getting backtraces. Please install the package `gdb` and
