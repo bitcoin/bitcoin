@@ -8,14 +8,35 @@ http://www.syscoin.org
 What is Syscoin?
 ----------------
 
-Syscoin is an experimental new digital currency that enables anonymous, instant
-payments to anyone, anywhere in the world. Syscoin uses peer-to-peer technology
-to operate with no central authority: managing transactions and issuing money
-are carried out collectively by the network. Syscoin Core is the name of the open
-source software which enables the use of this currency.
+Syscoin is a merge-minable SHA256 coin which provides an array of useful services
+which leverage the bitcoin protocol and blockchain technology.
+
+ - 1 minute block targets, diff retarget each block using Dark Gravity Wave(24) 
+ - Flexible rewards schedule paying 25% to miners and 75% to masternodes
+ - 888 million total coins (deflation 5 percent per year, deflation on all payouts)
+ - Block time: 60 seconds target
+ - Rewards: 38.5 Syscoins per block deflated 5 percent per year of which 10 percent is allocated to governance proposals (3.85 Syscoins per block). 75 percent of the result goes to masternode and 25 percent to miner.
+ - SHA256 Proof of Work
+ - Minable either exclusively or via merge-mining any PoW coin
+ - Syscoin data service fees burned
+ - Masternode collateral requirement: 100000 Syscoins
+ - Masternode seniority: 3 percent every 4 months until 27 percent over 3 years
+ - Governance proposals payout schedule: every month
+ - Governance funding per found (168630 Syscoins per month)
+
+Services include:
+
+- Layer 2 PoW/PoS hybrid consensus with bonded validator system (masternodes)
+- Decentralized governance (blockchain pays people for work by creating proposals and getting masternodes to vote on them)
+- Decentralized Identity reservation, ownership & exchange
+- Digital certificate storage, ownership & exchange
+- Distributed marketplate & exchange
+- Digital Services Provider marketplace & platform
+- Digital Asset Creation and Management
+- Decentralized Escrow service
 
 For more information, as well as an immediately useable, binary version of
-the Syscoin Core software, see http://www.syscoin.org.
+the Syscoin client sofware, see https://www.syscoin.org.
 
 
 License
