@@ -3982,10 +3982,9 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
             }
         }
     }
-
+	fFirstRunRet = mapKeys.empty() && mapCryptedKeys.empty() && mapWatchKeys.empty() && setWatchOnly.empty() && mapScripts.empty();
     if (nLoadWalletRet != DB_LOAD_OK)
         return nLoadWalletRet;
-    fFirstRunRet = !vchDefaultKey.IsValid();
 
     uiInterface.LoadWallet(this);
 
@@ -4088,17 +4087,6 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         return false;
     CWalletDB(strWalletFile).ErasePurpose(CSyscoinAddress(address).ToString());
     return CWalletDB(strWalletFile).EraseName(CSyscoinAddress(address).ToString());
-}
-
-bool CWallet::SetDefaultKey(const CPubKey &vchPubKey)
-{
-    if (fFileBacked)
-    {
-        if (!CWalletDB(strWalletFile).WriteDefaultKey(vchPubKey))
-            return false;
-    }
-    vchDefaultKey = vchPubKey;
-    return true;
 }
 
 /**
@@ -4896,14 +4884,11 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             walletInstance->SetMinVersion(FEATURE_HD);
         }
 
-        CPubKey newDefaultKey;
-        if (walletInstance->GetKeyFromPool(newDefaultKey, false)) {
-            walletInstance->SetDefaultKey(newDefaultKey);
-            if (!walletInstance->SetAddressBook(walletInstance->vchDefaultKey.GetID(), "", "receive")) {
-                InitError(_("Cannot write default address") += "\n");
-                return NULL;
-            }
-        }
+		// Top up the keypool
+		if (!walletInstance->TopUpKeyPool()) {
+			InitError(_("Unable to generate initial keys") += "\n");
+			return NULL;
+		}
 
         walletInstance->SetBestChain(chainActive.GetLocator());
 
