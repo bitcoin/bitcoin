@@ -594,6 +594,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 		BOOST_FOREACH(CTxOut txout, txNew.vout) {
 			if (payeeScript == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
 				LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");
+				bFoundPayment = true;
 				break;
 			}
 		}
