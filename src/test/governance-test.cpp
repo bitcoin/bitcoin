@@ -59,10 +59,10 @@ namespace
     void FillBlock(CBlockIndex& block, uint256& hash, /*const*/ CBlockIndex* prevBlock, size_t height)
     {
         FillHash(hash, height);
-        FillBlock(block, height ? prevBlock : nullptr, hash);
+        FillBlock(block, height ? prevBlock : NULL, hash);
 
         assert(static_cast<int>(UintToArith256(block.GetBlockHash()).GetLow64()) == block.nHeight);
-        assert(block.pprev == nullptr || block.nHeight == block.pprev->nHeight + 1);
+        assert(block.pprev == NULL || block.nHeight == block.pprev->nHeight + 1);
 
     }
 
@@ -92,7 +92,7 @@ namespace
     struct FinalizedBudgetFixture
     {
         const std::string budgetName;
-        const int blockStart = 129600;
+        const int blockStart;
 
         const CKey keyPairA;
         const CKey keyPairB;
