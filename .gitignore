@@ -120,3 +120,6 @@ contrib/devtools/split-debug.sh
 Aithercoin-qt.pro.user
 src/aithercoind
 src/main.h.autosave
+.qmake.stash
+Makefile.*
+object_script.*

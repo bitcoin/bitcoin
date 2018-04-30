@@ -1,4 +1,4 @@
-Aithercoin 0.4.4 BETA
+Aithercoin 0.1.1b
 
 Copyright (c) 2013 NovaCoin Developers
 Copyright (c) 2011-2013 PPCoin Developers
