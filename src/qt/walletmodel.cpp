@@ -670,7 +670,7 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
 {
     std::vector<COutput> vCoins;
 	// SYSCOIN include sys outputs
-    wallet->AvailableCoins(vCoins, true, NULL, false, ALL_COINS, true);
+    wallet->AvailableCoins(vCoins, true, NULL, false, ALL_COINS, false, true);
 
     LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
     std::vector<COutPoint> vLockedCoins;
