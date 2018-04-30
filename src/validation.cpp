@@ -2539,16 +2539,16 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     // to recognize that block is actually invalid.
     // TODO: resync data (both ways?) and try to reprocess this block later.
 	CAmount nTotalRewardWithMasternodes;
-	const CAmount &blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
+	const CAmount &blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 
-	if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, nFees, blockReward, nTotalRewardWithMasternodes)) {
+	if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nFees, nTotalRewardWithMasternodes)) {
 		mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
 		return state.DoS(0, error("ConnectBlock(SYS): couldn't find masternode or superblock payments"),
 			REJECT_INVALID, "bad-cb-payee");
 	}
 
     std::string strError = "";
-    if (!IsBlockValueValid(block, pindex->nHeight, nFees, nTotalRewardWithMasternodes, strError)) {
+    if (!IsBlockValueValid(block, pindex->nHeight, nTotalRewardWithMasternodes, nFees, strError)) {
         return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
     }
     // END SYSCOIN

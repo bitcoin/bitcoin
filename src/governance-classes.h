@@ -73,7 +73,7 @@ public:
     static void ExecuteBestSuperblock(int nBlockHeight);
 
     static std::string GetRequiredPaymentsString(int nBlockHeight);
-    static bool IsValid(const CTransaction& txNew, int nBlockHeight, const CAmount &nFee, const CAmount &blockReward);
+    static bool IsValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward);
 };
 
 /**
