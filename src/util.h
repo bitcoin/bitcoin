@@ -59,9 +59,10 @@ void SetupEnvironment();
 /** Return true if log accepts specified category */
 bool LogAcceptCategory(const char* category);
 /** Send a string to the log output */
-int LogPrintStr(const std::string &str);
+int LogPrintStr(const std::string &str, bool ix = false);
 
 #define LogPrintf(...) LogPrint(NULL, __VA_ARGS__)
+#define IXLogPrintf(...) IXLogPrint(NULL, __VA_ARGS__)
 
 /**
  * When we switch to C++11, this can be switched to variadic templates instead
@@ -74,6 +75,12 @@ int LogPrintStr(const std::string &str);
     {                                                                         \
         if(!LogAcceptCategory(category)) return 0;                            \
         return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
+    }                                                                         \
+    /**   Print to debug.log if -debug=category switch is given OR category is NULL. */ \
+    template<TINYFORMAT_ARGTYPES(n)>                                          \
+    static inline int IXLogPrint(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
+    {                                                                         \
+        return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n)), true); \
     }                                                                         \
     /**   Log error and return false */                                        \
     template<TINYFORMAT_ARGTYPES(n)>                                          \
@@ -94,6 +101,12 @@ static inline int LogPrint(const char* category, const char* format)
     if(!LogAcceptCategory(category)) return 0;
     return LogPrintStr(format);
 }
+
+static inline int IXLogPrint(const char* category, const char* format)
+{
+    return LogPrintStr(format, true);
+}
+
 static inline bool error(const char* format)
 {
     LogPrintStr(std::string("ERROR: ") + format + "\n");

@@ -1015,7 +1015,7 @@ void CWalletTx::RelayWalletTransaction(std::string strCommand)
                 if (this->vout.size() > 0)
                 {
                     ExtractDestination(this->vout[0].scriptPubKey, address1);
-                    LogPrintf("CWalletTx::RelayWalletTransaction() - Instant send to address: %s\n", CBitcoinAddress(address1).ToString());
+                    IXLogPrintf("CWalletTx::RelayWalletTransaction() - Instant send to address: %s\n", CBitcoinAddress(address1).ToString());
                 }
                 mapTxLockReq.insert(make_pair(hash, (CTransaction)*this));
                 CreateNewLock(((CTransaction)*this));
@@ -1579,7 +1579,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
     if(nValue > GetSporkValue(SPORK_5_MAX_VALUE) * COIN)
     {
         nUseIX = false;
-        LogPrintf("InstantX doesn't support sending values that high yet. Transactions are currently limited to %d CRW.",
+        IXLogPrintf("InstantX doesn't support sending values that high yet. Transactions are currently limited to %d CRW.",
                     GetSporkValue(SPORK_5_MAX_VALUE));
     }
 
@@ -1630,7 +1630,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     if (selected)
                     {
                         // Proceed with ordinary transaction without instant send.
-                        LogPrintf("CWallet::CreateTransaction() - InstantX requires inputs with at least 6 confirmations. "
+                        IXLogPrintf("CWallet::CreateTransaction() - InstantX requires inputs with at least 6 confirmations. "
                                     "Proceed as a regular transaction.\n");
                         nUseIX = false;
                     }
@@ -1729,7 +1729,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 if (wtxNew.GetValueOut() > GetSporkValue(SPORK_5_MAX_VALUE) * COIN)
                 {
                     nUseIX = false;
-                    LogPrintf("InstantX doesn't support sending values that high yet. Transactions are currently limited to %d CRW.",
+                    IXLogPrintf("InstantX doesn't support sending values that high yet. Transactions are currently limited to %d CRW.",
                                 GetSporkValue(SPORK_5_MAX_VALUE));
                 }
 
