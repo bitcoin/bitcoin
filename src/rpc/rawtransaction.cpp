@@ -259,19 +259,29 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
         }
     }
 
-
     // Allow txindex to catch up if we need to query it and before we acquire cs_main.
+    bool txindex_ready = false;
     if (g_txindex && !pblockindex) {
-        g_txindex->BlockUntilSyncedToCurrentChain();
+        txindex_ready = g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
     LOCK(cs_main);
 
     if (pblockindex == nullptr)
     {
+        if (!g_txindex) {
+            throw JSONRPCError(RPC_DATA_UNAVAILABLE,
+                               "Use -txindex to enable blockchain transaction queries");
+        } else if (!txindex_ready) {
+            throw JSONRPCError(RPC_DATA_UNAVAILABLE,
+                               "Blockchain transactions are still in the process of being indexed");
+        }
+
         CTransactionRef tx;
-        if (!GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock, false) || hashBlock.IsNull())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
+        if (!g_txindex->FindTx(oneTxid, hashBlock, tx)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+                               "Transaction not found in block: " + oneTxid.ToString());
+        }
         pblockindex = LookupBlockIndex(hashBlock);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");

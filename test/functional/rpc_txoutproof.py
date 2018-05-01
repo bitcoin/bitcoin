@@ -40,7 +40,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         tx2 = self.nodes[0].createrawtransaction([node0utxos.pop()], {self.nodes[1].getnewaddress(): 49.99})
         txid2 = self.nodes[0].sendrawtransaction(self.nodes[0].signrawtransactionwithwallet(tx2)["hex"])
         # This will raise an exception because the transaction is not yet in a block
-        assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[0].gettxoutproof, [txid1])
+        assert_raises_rpc_error(-5, "Transaction not found in block", self.nodes[3].gettxoutproof, [txid1])
 
         self.nodes[0].generate(1)
         blockhash = self.nodes[0].getblockhash(chain_height + 1)
@@ -64,8 +64,8 @@ class MerkleBlockTest(BitcoinTestFramework):
         txid_spent = txin_spent["txid"]
         txid_unspent = txid1 if txin_spent["txid"] != txid1 else txid2
 
-        # We can't find the block from a fully-spent tx
-        assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[2].gettxoutproof, [txid_spent])
+        # We can't find the block from a fully-spent tx without txindex
+        assert_raises_rpc_error(-33, "Use -txindex to enable blockchain transaction queries", self.nodes[2].gettxoutproof, [txid_spent])
         # We can get the proof if we specify the block
         assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid_spent], blockhash)), [txid_spent])
         # We can't get the proof if we specify a non-existent block
