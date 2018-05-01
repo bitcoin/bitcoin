@@ -394,9 +394,18 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBl
     voutSuperblockRet.clear();
 
     // CONFIGURE SUPERBLOCK OUTPUTS
-
+	pSuperblock->IsValid(txNewRet, nBlockHeight);
     // Superblock payments are appended to the end of the coinbase vout vector
     DBG( std::cout << "CSuperblockManager::CreateSuperblock Number payments: " << pSuperblock->CountPayments() << std::endl; );
+	// SYSCOIN
+	// payments should not exceed limit
+	CAmount nPaymentsTotalAmount = pSuperblock->GetPaymentsTotalAmount();
+	CAmount nPaymentsLimit = CSuperBlock::GetPaymentsLimit(nBlockHeight);
+	if (nPaymentsTotalAmount > nPaymentsLimit) {
+		LogPrintf("CreateSuperblock::IsValid -- Warning: Superblock invalid, payments limit exceeded: payments %lld, limit %lld\n", nPaymentsTotalAmount, nPaymentsLimit);
+		return
+	}
+
 
     // TODO: How many payments can we add before things blow up?
     //       Consider at least following limits:
