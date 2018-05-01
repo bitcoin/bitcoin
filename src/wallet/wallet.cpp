@@ -4616,99 +4616,99 @@ void CWallet::postInitProcess(boost::thread_group& threadGroup)
 
 bool CWallet::ParameterInteraction()
 {
-	if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
-		return true;
+    if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
+        return true;
 
-	if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && SoftSetBoolArg("-walletbroadcast", false)) {
-		LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
-	}
+    if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && SoftSetBoolArg("-walletbroadcast", false)) {
+        LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
+    }
 
-	if (GetBoolArg("-salvagewallet", false) && SoftSetBoolArg("-rescan", true)) {
-		// Rewrite just private keys: rescan to find transactions
-		LogPrintf("%s: parameter interaction: -salvagewallet=1 -> setting -rescan=1\n", __func__);
-	}
+    if (GetBoolArg("-salvagewallet", false) && SoftSetBoolArg("-rescan", true)) {
+        // Rewrite just private keys: rescan to find transactions
+        LogPrintf("%s: parameter interaction: -salvagewallet=1 -> setting -rescan=1\n", __func__);
+    }
 
-	// -zapwallettx implies a rescan
-	if (GetBoolArg("-zapwallettxes", false) && SoftSetBoolArg("-rescan", true)) {
-		LogPrintf("%s: parameter interaction: -zapwallettxes=<mode> -> setting -rescan=1\n", __func__);
-	}
+    // -zapwallettx implies a rescan
+    if (GetBoolArg("-zapwallettxes", false) && SoftSetBoolArg("-rescan", true)) {
+        LogPrintf("%s: parameter interaction: -zapwallettxes=<mode> -> setting -rescan=1\n", __func__);
+    }
 
-	if (GetBoolArg("-sysperms", false))
-		return InitError("-sysperms is not allowed in combination with enabled wallet functionality");
-	if (GetArg("-prune", 0) && GetBoolArg("-rescan", false))
-		return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
+    if (GetBoolArg("-sysperms", false))
+        return InitError("-sysperms is not allowed in combination with enabled wallet functionality");
+    if (GetArg("-prune", 0) && GetBoolArg("-rescan", false))
+        return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
 
-	if (::minRelayTxFee.GetFeePerK() > HIGH_TX_FEE_PER_KB)
-		InitWarning(AmountHighWarn("-minrelaytxfee") + " " +
-			_("The wallet will avoid paying less than the minimum relay fee."));
+    if (::minRelayTxFee.GetFeePerK() > HIGH_TX_FEE_PER_KB)
+        InitWarning(AmountHighWarn("-minrelaytxfee") + " " +
+                    _("The wallet will avoid paying less than the minimum relay fee."));
 
-	if (IsArgSet("-mintxfee"))
-	{
-		CAmount n = 0;
-		if (!ParseMoney(GetArg("-mintxfee", ""), n) || 0 == n)
-			return InitError(AmountErrMsg("mintxfee", GetArg("-mintxfee", "")));
-		if (n > HIGH_TX_FEE_PER_KB)
-			InitWarning(AmountHighWarn("-mintxfee") + " " +
-				_("This is the minimum transaction fee you pay on every transaction."));
-		CWallet::minTxFee = CFeeRate(n);
-	}
-	if (IsArgSet("-fallbackfee"))
-	{
-		CAmount nFeePerK = 0;
-		if (!ParseMoney(GetArg("-fallbackfee", ""), nFeePerK))
-			return InitError(strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'"), GetArg("-fallbackfee", "")));
-		if (nFeePerK > HIGH_TX_FEE_PER_KB)
-			InitWarning(AmountHighWarn("-fallbackfee") + " " +
-				_("This is the transaction fee you may pay when fee estimates are not available."));
-		CWallet::fallbackFee = CFeeRate(nFeePerK);
-	}
-	if (IsArgSet("-paytxfee"))
-	{
-		CAmount nFeePerK = 0;
-		if (!ParseMoney(GetArg("-paytxfee", ""), nFeePerK))
-			return InitError(AmountErrMsg("paytxfee", GetArg("-paytxfee", "")));
-		if (nFeePerK > HIGH_TX_FEE_PER_KB)
-			InitWarning(AmountHighWarn("-paytxfee") + " " +
-				_("This is the transaction fee you will pay if you send a transaction."));
+    if (IsArgSet("-mintxfee"))
+    {
+        CAmount n = 0;
+        if (!ParseMoney(GetArg("-mintxfee", ""), n) || 0 == n)
+            return InitError(AmountErrMsg("mintxfee", GetArg("-mintxfee", "")));
+        if (n > HIGH_TX_FEE_PER_KB)
+            InitWarning(AmountHighWarn("-mintxfee") + " " +
+                        _("This is the minimum transaction fee you pay on every transaction."));
+        CWallet::minTxFee = CFeeRate(n);
+    }
+    if (IsArgSet("-fallbackfee"))
+    {
+        CAmount nFeePerK = 0;
+        if (!ParseMoney(GetArg("-fallbackfee", ""), nFeePerK))
+            return InitError(strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'"), GetArg("-fallbackfee", "")));
+        if (nFeePerK > HIGH_TX_FEE_PER_KB)
+            InitWarning(AmountHighWarn("-fallbackfee") + " " +
+                        _("This is the transaction fee you may pay when fee estimates are not available."));
+        CWallet::fallbackFee = CFeeRate(nFeePerK);
+    }
+    if (IsArgSet("-paytxfee"))
+    {
+        CAmount nFeePerK = 0;
+        if (!ParseMoney(GetArg("-paytxfee", ""), nFeePerK))
+            return InitError(AmountErrMsg("paytxfee", GetArg("-paytxfee", "")));
+        if (nFeePerK > HIGH_TX_FEE_PER_KB)
+            InitWarning(AmountHighWarn("-paytxfee") + " " +
+                        _("This is the transaction fee you will pay if you send a transaction."));
 
-		payTxFee = CFeeRate(nFeePerK, 1000);
-		if (payTxFee < ::minRelayTxFee)
-		{
-			return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-				GetArg("-paytxfee", ""), ::minRelayTxFee.ToString()));
-		}
-	}
-	if (IsArgSet("-maxtxfee"))
-	{
-		CAmount nMaxFee = 0;
-		if (!ParseMoney(GetArg("-maxtxfee", ""), nMaxFee))
-			return InitError(AmountErrMsg("maxtxfee", GetArg("-maxtxfee", "")));
-		if (nMaxFee > HIGH_MAX_TX_FEE)
-			InitWarning(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
-		maxTxFee = nMaxFee;
-		if (CFeeRate(maxTxFee, 1000) < ::minRelayTxFee)
-		{
-			return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
-				GetArg("-maxtxfee", ""), ::minRelayTxFee.ToString()));
-		}
-	}
-	nTxConfirmTarget = GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
-	bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
-	fSendFreeTransactions = GetBoolArg("-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
+        payTxFee = CFeeRate(nFeePerK, 1000);
+        if (payTxFee < ::minRelayTxFee)
+        {
+            return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
+                                       GetArg("-paytxfee", ""), ::minRelayTxFee.ToString()));
+        }
+    }
+    if (IsArgSet("-maxtxfee"))
+    {
+        CAmount nMaxFee = 0;
+        if (!ParseMoney(GetArg("-maxtxfee", ""), nMaxFee))
+            return InitError(AmountErrMsg("maxtxfee", GetArg("-maxtxfee", "")));
+        if (nMaxFee > HIGH_MAX_TX_FEE)
+            InitWarning(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
+        maxTxFee = nMaxFee;
+        if (CFeeRate(maxTxFee, 1000) < ::minRelayTxFee)
+        {
+            return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
+                                       GetArg("-maxtxfee", ""), ::minRelayTxFee.ToString()));
+        }
+    }
+    nTxConfirmTarget = GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
+    bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
+    fSendFreeTransactions = GetBoolArg("-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
 
-	if (fSendFreeTransactions && GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY) <= 0)
-		return InitError("Creation of free transactions with their relay disabled is not supported.");
+    if (fSendFreeTransactions && GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY) <= 0)
+        return InitError("Creation of free transactions with their relay disabled is not supported.");
 
-	if (IsArgSet("-walletbackupsdir")) {
-		if (!boost::filesystem::is_directory(GetArg("-walletbackupsdir", ""))) {
-			LogPrintf("%s: Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.\n", __func__);
-			InitWarning("Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.\n");
+    if (IsArgSet("-walletbackupsdir")) {
+        if (!boost::filesystem::is_directory(GetArg("-walletbackupsdir", ""))) {
+            LogPrintf("%s: Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.\n", __func__);
+            InitWarning("Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.\n");
 
-			ForceRemoveArg("-walletbackupsdir");
-		}
-	}
+            ForceRemoveArg("-walletbackupsdir");
+        }
+    }
 
-	return true;
+    return true;
 }
 
 bool CWallet::InitAutoBackup()
@@ -4719,43 +4719,42 @@ bool CWallet::InitAutoBackup()
 
 bool CWallet::BackupWallet(const std::string& strDest)
 {
-	if (!fFileBacked)
-		return false;
-	while (true)
-	{
-		{
-			LOCK(bitdb.cs_db);
-			if (!bitdb.mapFileUseCount.count(strWalletFile) || bitdb.mapFileUseCount[strWalletFile] == 0)
-			{
-				// Flush log data to the dat file
-				bitdb.CloseDb(strWalletFile);
-				bitdb.CheckpointLSN(strWalletFile);
-				bitdb.mapFileUseCount.erase(strWalletFile);
+    if (!fFileBacked)
+        return false;
+    while (true)
+    {
+        {
+            LOCK(bitdb.cs_db);
+            if (!bitdb.mapFileUseCount.count(strWalletFile) || bitdb.mapFileUseCount[strWalletFile] == 0)
+            {
+                // Flush log data to the dat file
+                bitdb.CloseDb(strWalletFile);
+                bitdb.CheckpointLSN(strWalletFile);
+                bitdb.mapFileUseCount.erase(strWalletFile);
 
-				// Copy wallet file
-				boost::filesystem::path pathSrc = GetDataDir() / strWalletFile;
-				boost::filesystem::path pathDest(strDest);
-				if (boost::filesystem::is_directory(pathDest))
-					pathDest /= strWalletFile;
+                // Copy wallet file
+                boost::filesystem::path pathSrc = GetDataDir() / strWalletFile;
+                boost::filesystem::path pathDest(strDest);
+                if (boost::filesystem::is_directory(pathDest))
+                    pathDest /= strWalletFile;
 
-				try {
+                try {
 #if BOOST_VERSION >= 104000
-					boost::filesystem::copy_file(pathSrc, pathDest, boost::filesystem::copy_option::overwrite_if_exists);
+                    boost::filesystem::copy_file(pathSrc, pathDest, boost::filesystem::copy_option::overwrite_if_exists);
 #else
-					boost::filesystem::copy_file(pathSrc, pathDest);
+                    boost::filesystem::copy_file(pathSrc, pathDest);
 #endif
-					LogPrintf("copied %s to %s\n", strWalletFile, pathDest.string());
-					return true;
-				}
-				catch (const boost::filesystem::filesystem_error& e) {
-					LogPrintf("error copying %s to %s - %s\n", strWalletFile, pathDest.string(), e.what());
-					return false;
-				}
-			}
-		}
-		MilliSleep(100);
-	}
-	return false;
+                    LogPrintf("copied %s to %s\n", strWalletFile, pathDest.string());
+                    return true;
+                } catch (const boost::filesystem::filesystem_error& e) {
+                    LogPrintf("error copying %s to %s - %s\n", strWalletFile, pathDest.string(), e.what());
+                    return false;
+                }
+            }
+        }
+        MilliSleep(100);
+    }
+    return false;
 }
 
 // This should be called carefully:
