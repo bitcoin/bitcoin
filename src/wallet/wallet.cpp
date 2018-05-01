@@ -4167,10 +4167,11 @@ void CReserveKey::KeepKey()
 
 void CReserveKey::ReturnKey()
 {
-	if (nIndex != -1)
-		pwallet->ReturnKey(nIndex);
-	nIndex = -1;
-	vchPubKey = CPubKey();
+    if (nIndex != -1) {
+        pwallet->ReturnKey(nIndex, fInternal);
+    }
+    nIndex = -1;
+    vchPubKey = CPubKey();
 }
 
 static void LoadReserveKeysToSet(std::set<CKeyID>& setAddress, const std::set<int64_t>& setKeyPool, CWalletDB& walletdb)
@@ -4780,12 +4781,14 @@ bool AutoBackupWallet(CWallet* wallet, const std::string& strWalletFile_, std::s
 CKeyPool::CKeyPool()
 {
     nTime = GetTime();
+    fInternal = false;
 }
 
-CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn)
+CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn, bool fInternalIn)
 {
     nTime = GetTime();
     vchPubKey = vchPubKeyIn;
+    fInternal = fInternalIn;
 }
 
 CWalletKey::CWalletKey(int64_t nExpires)
