@@ -35,43 +35,51 @@
 
 #include <univalue.h>
 
-/**
- * Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock.
- * If blockIndex is provided, the transaction is fetched from the corresponding block.
- */
-bool GetTransaction(const uint256& hash, CTransactionRef& txOut, uint256& hashBlock, bool fAllowSlow, CBlockIndex* blockIndex)
+bool GetTransaction(const uint256& tx_hash, CTransactionRef& tx, uint256& block_hash, bool allow_slow)
 {
-    CBlockIndex* pindexSlow = blockIndex;
+    // First check for an unconfirmed transaction in the mempool.
+    if (tx = mempool.get(tx_hash)) {
+        block_hash.SetNull();
+        return true;
+    }
 
-    LOCK(cs_main);
+    // Search for transaction in the txindex if it is enabled and up-to-date.
+    bool f_txindex_ready = g_txindex && g_txindex->BlockUntilSyncedToCurrentChain();
+    if (f_txindex_ready && g_txindex->FindTx(tx_hash, block_hash, tx)) {
+        return true;
+    }
 
-    if (!blockIndex) {
-        CTransactionRef ptx = mempool.get(hash);
-        if (ptx) {
-            txOut = ptx;
+    // If txindex is not available, try a best-effort lookup using the UTXO set cache.
+    if (!f_txindex_ready && allow_slow) {
+        const CBlockIndex* block_index = nullptr;
+        {
+            LOCK(cs_main);
+            const Coin& coin = AccessByTxid(*pcoinsTip, tx_hash);
+            if (!coin.IsSpent()) {
+                block_index = chainActive[coin.nHeight];
+            }
+        }
+
+        if (block_index && GetTransactionInBlock(tx_hash, block_index, tx)) {
+            block_hash = block_index->GetBlockHash();
             return true;
-        }
-
-        if (g_txindex) {
-            return g_txindex->FindTx(hash, hashBlock, txOut);
-        }
-
-        if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
-            const Coin& coin = AccessByTxid(*pcoinsTip, hash);
-            if (!coin.IsSpent()) pindexSlow = chainActive[coin.nHeight];
         }
     }
 
-    if (pindexSlow) {
-        CBlock block;
-        if (ReadBlockFromDisk(block, pindexSlow, Params().GetConsensus())) {
-            for (const auto& tx : block.vtx) {
-                if (tx->GetHash() == hash) {
-                    txOut = tx;
-                    hashBlock = pindexSlow->GetBlockHash();
-                    return true;
-                }
-            }
+    return false;
+}
+
+bool GetTransactionInBlock(const uint256& tx_hash, const CBlockIndex* block_index, CTransactionRef& tx)
+{
+    CBlock block;
+    if (!ReadBlockFromDisk(block, block_index, Params().GetConsensus())) {
+        return false;
+    }
+
+    for (const auto& block_tx : block.vtx) {
+        if (block_tx->GetHash() == tx_hash) {
+            tx = block_tx;
+            return true;
         }
     }
 
@@ -217,21 +225,27 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
 
     CTransactionRef tx;
     uint256 hash_block;
-    if (!GetTransaction(hash, tx, hash_block, true, blockindex)) {
-        std::string errmsg;
-        if (blockindex) {
-            if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
-            }
-            errmsg = "No such transaction found in the provided block";
-        } else if (!g_txindex) {
-            errmsg = "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
-        } else if (!f_txindex_ready) {
-            errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
-        } else {
-            errmsg = "No such mempool or blockchain transaction";
+    if (blockindex) {
+        if (GetTransactionInBlock(hash, blockindex, tx)) {
+            hash_block = blockindex->GetBlockHash();
+        } else if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
+            throw JSONRPCError(RPC_DATA_UNAVAILABLE, "Block not available");
+         } else {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+                               "No such transaction found in the provided block.");
         }
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
+    } else {
+        if (!GetTransaction(hash, tx, hash_block, true)) {
+            std::string errmsg;
+            if (!g_txindex) {
+                errmsg = "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
+            } else if (!f_txindex_ready) {
+                errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
+            } else {
+                errmsg = "No such mempool or blockchain transaction";
+            }
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
+        }
     }
 
     if (!fVerbose) {
