@@ -1,37 +1,38 @@
 Source: syscoin
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
-Uploaders: Micah Anderson <micah@debian.org>
+Maintainer: Holger Schinzel <holger@syscoin.org>
+Uploaders: Holger Schinzel <holger@syscoin.org>
 Build-Depends: debhelper,
  devscripts,
  automake,
  libtool,
  bash-completion,
- libboost-system-dev (>> 1.35) | libboost-system1.35-dev,
  libdb4.8++-dev,
  libssl-dev,
  pkg-config,
- libminiupnpc8-dev | libminiupnpc-dev (>> 1.6),
- libboost-filesystem-dev (>> 1.35) | libboost-filesystem1.35-dev,
- libboost-program-options-dev (>> 1.35) | libboost-program-options1.35-dev,
- libboost-thread-dev (>> 1.35) | libboost-thread1.35-dev,
- libboost-test-dev (>> 1.35) | libboost-test1.35-dev,
+ libevent-dev,
+ libboost-system1.48-dev | libboost-system-dev (>> 1.35),
+ libboost-filesystem1.48-dev | libboost-filesystem-dev (>> 1.35),
+ libboost-program-options1.48-dev | libboost-program-options-dev (>> 1.35),
+ libboost-thread1.48-dev | libboost-thread-dev (>> 1.35),
+ libboost-test1.48-dev | libboost-test-dev (>> 1.35),
+ libboost-chrono1.48-dev | libboost-chrono-dev (>> 1.35),
  qt4-qmake,
  libqt4-dev,
  libqrencode-dev,
  libprotobuf-dev, protobuf-compiler,
  python
 Standards-Version: 3.9.2
-Homepage: https://syscoincore.org/
+Homepage: https://www.syscoin.org/
 Vcs-Git: git://github.com/syscoin/syscoin.git
-Vcs-Browser: https://github.com/syscoin/syscoin2
+Vcs-Browser: https://github.com/syscoin/syscoin
 
 Package: syscoind
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Syscoin is an experimental new digital currency that enables instant
+ Syscoin is an experimental new digital currency that enables anonymous, instant
  payments to anyone, anywhere in the world. Syscoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
  and issuing money are carried out collectively by the network. Syscoin Core
@@ -44,7 +45,7 @@ Package: syscoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Syscoin is an experimental new digital currency that enables instant
+ Syscoin is an experimental new digital currency that enables anonymous, instant
  payments to anyone, anywhere in the world. Syscoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
  and issuing money are carried out collectively by the network. Syscoin Core
@@ -56,7 +57,7 @@ Package: syscoin-tx
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer digital currency - standalone transaction tool
- Syscoin is an experimental new digital currency that enables instant
+ Syscoin is an experimental new digital currency that enables anonymous, instant
  payments to anyone, anywhere in the world. Syscoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
  and issuing money are carried out collectively by the network. Syscoin Core

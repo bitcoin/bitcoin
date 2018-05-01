@@ -51,7 +51,6 @@ public:
 
     // static because also called from sendcoinsdialog
     static void updateLabels(WalletModel*, QDialog*);
-    static QString getPriorityLabel(double dPriority, double mempoolEstimatePriority);
 
     static QList<CAmount> payAmounts;
     static CCoinControl *coinControl;
@@ -80,9 +79,9 @@ private:
         COLUMN_AMOUNT,
         COLUMN_LABEL,
         COLUMN_ADDRESS,
+        COLUMN_PRIVATESEND_ROUNDS,
         COLUMN_DATE,
         COLUMN_CONFIRMATIONS,
-        COLUMN_PRIORITY,
         COLUMN_TXHASH,
         COLUMN_VOUT_INDEX,
     };
@@ -101,7 +100,6 @@ private Q_SLOTS:
     void clipboardFee();
     void clipboardAfterFee();
     void clipboardBytes();
-    void clipboardPriority();
     void clipboardLowOutput();
     void clipboardChange();
     void radioTreeMode(bool);
@@ -110,6 +108,7 @@ private Q_SLOTS:
     void headerSectionClicked(int);
     void buttonBoxClicked(QAbstractButton*);
     void buttonSelectAllClicked();
+    void buttonToggleLockClicked();
     void updateLabelLocked();
 };
 

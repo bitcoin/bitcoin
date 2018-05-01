@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +10,7 @@
 
 #include "util.h"
 
+#include "support/allocators/secure.h"
 #include "chainparamsbase.h"
 #include "random.h"
 #include "serialize.h"
@@ -22,6 +24,7 @@
 #include <pthread.h>
 #include <pthread_np.h>
 #endif
+#include <thread>
 
 #ifndef WIN32
 // for posix_fallocate
@@ -36,6 +39,7 @@
 #endif // __linux__
 
 #include <algorithm>
+#include <sched.h>
 #include <fcntl.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
@@ -72,9 +76,15 @@
 #include <sys/prctl.h>
 #endif
 
+#ifdef HAVE_MALLOPT_ARENA_MAX
+#include <malloc.h>
+#endif
+
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/foreach.hpp>
@@ -97,21 +107,35 @@ namespace boost {
 
 } // namespace boost
 
-using namespace std;
+
+
+//Syscoin only features
+bool fMasternodeMode = false;
+bool fUnitTest = false;
+bool fLiteMode = false;
+/**
+    nWalletBackups:
+        1..10   - number of automatic backups to keep
+        0       - disabled by command-line
+        -1      - disabled because of some error during run-time
+        -2      - disabled because wallet was locked and we were not able to replenish keypool
+*/
+int nWalletBackups = 10;
 
 const char * const SYSCOIN_CONF_FILENAME = "syscoin.conf";
 const char * const SYSCOIN_PID_FILENAME = "syscoind.pid";
 
-map<string, string> mapArgs;
-map<string, vector<string> > mapMultiArgs;
+CCriticalSection cs_args;
+std::map<std::string, std::string> mapArgs;
+static std::map<std::string, std::vector<std::string> > _mapMultiArgs;
+const std::map<std::string, std::vector<std::string> >& mapMultiArgs = _mapMultiArgs;
 bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
-bool fDaemon = false;
-bool fServer = false;
-string strMiscWarning;
+
 bool fLogTimestamps = DEFAULT_LOGTIMESTAMPS;
 bool fLogTimeMicros = DEFAULT_LOGTIMEMICROS;
+bool fLogThreadNames = DEFAULT_LOGTHREADNAMES;
 bool fLogIPs = DEFAULT_LOGIPS;
 std::atomic<bool> fReopenDebugLog(false);
 CTranslationInterface translationInterface;
@@ -191,7 +215,7 @@ static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
  */
 static FILE* fileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
-static list<string> *vMsgsBeforeOpenLog;
+static std::list<std::string>* vMsgsBeforeOpenLog;
 
 static int FileWriteStr(const std::string &str, FILE *fp)
 {
@@ -202,7 +226,7 @@ static void DebugPrintInit()
 {
     assert(mutexDebugLog == NULL);
     mutexDebugLog = new boost::mutex();
-    vMsgsBeforeOpenLog = new list<string>;
+    vMsgsBeforeOpenLog = new std::list<std::string>;
 }
 
 void OpenDebugLog()
@@ -214,12 +238,13 @@ void OpenDebugLog()
     assert(vMsgsBeforeOpenLog);
     boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
     fileout = fopen(pathDebug.string().c_str(), "a");
-    if (fileout) setbuf(fileout, NULL); // unbuffered
-
-    // dump buffered messages from before we opened the log
-    while (!vMsgsBeforeOpenLog->empty()) {
-        FileWriteStr(vMsgsBeforeOpenLog->front(), fileout);
-        vMsgsBeforeOpenLog->pop_front();
+    if (fileout) {
+        setbuf(fileout, NULL); // unbuffered
+        // dump buffered messages from before we opened the log
+        while (!vMsgsBeforeOpenLog->empty()) {
+            FileWriteStr(vMsgsBeforeOpenLog->front(), fileout);
+            vMsgsBeforeOpenLog->pop_front();
+        }
     }
 
     delete vMsgsBeforeOpenLog;
@@ -230,26 +255,50 @@ bool LogAcceptCategory(const char* category)
 {
     if (category != NULL)
     {
-        if (!fDebug)
-            return false;
-
         // Give each thread quick access to -debug settings.
         // This helps prevent issues debugging global destructors,
         // where mapMultiArgs might be deleted before another
         // global destructor calls LogPrint()
-        static boost::thread_specific_ptr<set<string> > ptrCategory;
+        static boost::thread_specific_ptr<std::set<std::string> > ptrCategory;
+
+        if (!fDebug) {
+            if (ptrCategory.get() != NULL) {
+                LogPrintf("debug turned off: thread %s\n", GetThreadName());
+                ptrCategory.release();
+            }
+            return false;
+        }
+
         if (ptrCategory.get() == NULL)
         {
-            const vector<string>& categories = mapMultiArgs["-debug"];
-            ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
-            // thread_specific_ptr automatically deletes the set when the thread ends.
+            if (mapMultiArgs.count("-debug")) {
+                std::string strThreadName = GetThreadName();
+                LogPrintf("debug turned on:\n");
+                for (int i = 0; i < (int)mapMultiArgs.at("-debug").size(); ++i)
+                    LogPrintf("  thread %s category %s\n", strThreadName, mapMultiArgs.at("-debug")[i]);
+                const std::vector<std::string>& categories = mapMultiArgs.at("-debug");
+                ptrCategory.reset(new std::set<std::string>(categories.begin(), categories.end()));
+                // thread_specific_ptr automatically deletes the set when the thread ends.
+                // "syscoin" is a composite category enabling all Syscoin-related debug output
+                if(ptrCategory->count(std::string("syscoin"))) {
+                    ptrCategory->insert(std::string("privatesend"));
+                    ptrCategory->insert(std::string("instantsend"));
+                    ptrCategory->insert(std::string("masternode"));
+                    ptrCategory->insert(std::string("spork"));
+                    ptrCategory->insert(std::string("keepass"));
+                    ptrCategory->insert(std::string("mnpayments"));
+                    ptrCategory->insert(std::string("gobject"));
+                }
+            } else {
+                ptrCategory.reset(new std::set<std::string>());
+            }
         }
-        const set<string>& setCategories = *ptrCategory.get();
+        const std::set<std::string>& setCategories = *ptrCategory.get();
 
         // if not debugging everything and not debugging specific category, LogPrint does nothing.
-        if (setCategories.count(string("")) == 0 &&
-            setCategories.count(string("1")) == 0 &&
-            setCategories.count(string(category)) == 0)
+        if (setCategories.count(std::string("")) == 0 &&
+            setCategories.count(std::string("1")) == 0 &&
+            setCategories.count(std::string(category)) == 0)
             return false;
     }
     return true;
@@ -258,11 +307,11 @@ bool LogAcceptCategory(const char* category)
 /**
  * fStartedNewLine is a state variable held by the calling context that will
  * suppress printing of the timestamp when multiple calls are made that don't
- * end in a newline. Initialize it to true, and hold it, in the calling context.
+ * end in a newline. Initialize it to true, and hold/manage it, in the calling context.
  */
-static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine)
+static std::string LogTimestampStr(const std::string &str, std::atomic_bool *fStartedNewLine)
 {
-    string strStamped;
+    std::string strStamped;
 
     if (!fLogTimestamps)
         return str;
@@ -276,20 +325,43 @@ static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine
     } else
         strStamped = str;
 
-    if (!str.empty() && str[str.size()-1] == '\n')
-        *fStartedNewLine = true;
-    else
-        *fStartedNewLine = false;
-
     return strStamped;
+}
+
+/**
+ * fStartedNewLine is a state variable held by the calling context that will
+ * suppress printing of the thread name when multiple calls are made that don't
+ * end in a newline. Initialize it to true, and hold/manage it, in the calling context.
+ */
+static std::string LogThreadNameStr(const std::string &str, std::atomic_bool *fStartedNewLine)
+{
+    std::string strThreadLogged;
+
+    if (!fLogThreadNames)
+        return str;
+
+    std::string strThreadName = GetThreadName();
+
+    if (*fStartedNewLine)
+        strThreadLogged = strprintf("%16s | %s", strThreadName.c_str(), str.c_str());
+    else
+        strThreadLogged = str;
+
+    return strThreadLogged;
 }
 
 int LogPrintStr(const std::string &str)
 {
     int ret = 0; // Returns total number of characters written
-    static bool fStartedNewLine = true;
+    static std::atomic_bool fStartedNewLine(true);
 
-    string strTimestamped = LogTimestampStr(str, &fStartedNewLine);
+    std::string strThreadLogged = LogThreadNameStr(str, &fStartedNewLine);
+    std::string strTimestamped = LogTimestampStr(strThreadLogged, &fStartedNewLine);
+
+    if (!str.empty() && str[str.size()-1] == '\n')
+        fStartedNewLine = true;
+    else
+        fStartedNewLine = false;
 
     if (fPrintToConsole)
     {
@@ -344,8 +416,9 @@ static void InterpretNegativeSetting(std::string& strKey, std::string& strValue)
 
 void ParseParameters(int argc, const char* const argv[])
 {
+    LOCK(cs_args);
     mapArgs.clear();
-    mapMultiArgs.clear();
+    _mapMultiArgs.clear();
 
     for (int i = 1; i < argc; i++)
     {
@@ -373,12 +446,19 @@ void ParseParameters(int argc, const char* const argv[])
         InterpretNegativeSetting(str, strValue);
 
         mapArgs[str] = strValue;
-        mapMultiArgs[str].push_back(strValue);
+        _mapMultiArgs[str].push_back(strValue);
     }
+}
+
+bool IsArgSet(const std::string& strArg)
+{
+    LOCK(cs_args);
+    return mapArgs.count(strArg);
 }
 
 std::string GetArg(const std::string& strArg, const std::string& strDefault)
 {
+    LOCK(cs_args);
     if (mapArgs.count(strArg))
         return mapArgs[strArg];
     return strDefault;
@@ -386,6 +466,7 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault)
 
 int64_t GetArg(const std::string& strArg, int64_t nDefault)
 {
+    LOCK(cs_args);
     if (mapArgs.count(strArg))
         return atoi64(mapArgs[strArg]);
     return nDefault;
@@ -393,6 +474,7 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault)
 
 bool GetBoolArg(const std::string& strArg, bool fDefault)
 {
+    LOCK(cs_args);
     if (mapArgs.count(strArg))
         return InterpretBool(mapArgs[strArg]);
     return fDefault;
@@ -400,6 +482,7 @@ bool GetBoolArg(const std::string& strArg, bool fDefault)
 
 bool SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
+    LOCK(cs_args);
     if (mapArgs.count(strArg))
         return false;
     mapArgs[strArg] = strValue;
@@ -412,6 +495,25 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue)
         return SoftSetArg(strArg, std::string("1"));
     else
         return SoftSetArg(strArg, std::string("0"));
+}
+
+void ForceSetArg(const std::string& strArg, const std::string& strValue)
+{
+    LOCK(cs_args);
+    mapArgs[strArg] = strValue;
+}
+
+void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values)
+{
+    LOCK(cs_args);
+    _mapMultiArgs[strArg] = values;
+}
+
+void ForceRemoveArg(const std::string& strArg)
+{
+    LOCK(cs_args);
+    mapArgs.erase(strArg);
+    _mapMultiArgs.erase(strArg);
 }
 
 static const int screenWidth = 79;
@@ -455,13 +557,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Syscoin
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Syscoin
-    // Mac: ~/Library/Application Support/Syscoin
-    // Unix: ~/.syscoin
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\SyscoinCore
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\SyscoinCore
+    // Mac: ~/Library/Application Support/SyscoinCore
+    // Unix: ~/.syscoincore
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Syscoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "SyscoinCore";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -471,10 +573,10 @@ boost::filesystem::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/Syscoin";
+    return pathRet / "Library/Application Support/SyscoinCore";
 #else
     // Unix
-    return pathRet / ".syscoin";
+    return pathRet / ".syscoincore";
 #endif
 #endif
 }
@@ -496,8 +598,8 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     if (!path.empty())
         return path;
 
-    if (mapArgs.count("-datadir")) {
-        path = fs::system_complete(mapArgs["-datadir"]);
+    if (IsArgSet("-datadir")) {
+        path = fs::system_complete(GetArg("-datadir", ""));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -513,40 +615,67 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     return path;
 }
 
+boost::filesystem::path GetBackupsDir()
+{
+    namespace fs = boost::filesystem;
+
+    if (!IsArgSet("-walletbackupsdir"))
+        return GetDataDir() / "backups";
+
+    return fs::absolute(GetArg("-walletbackupsdir", ""));
+}
+
 void ClearDatadirCache()
 {
+    LOCK(csPathCached);
+
     pathCached = boost::filesystem::path();
     pathCachedNetSpecific = boost::filesystem::path();
 }
 
-boost::filesystem::path GetConfigFile()
+boost::filesystem::path GetConfigFile(const std::string& confPath)
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", SYSCOIN_CONF_FILENAME));
+    boost::filesystem::path pathConfigFile(confPath);
     if (!pathConfigFile.is_complete())
         pathConfigFile = GetDataDir(false) / pathConfigFile;
 
     return pathConfigFile;
 }
 
-void ReadConfigFile(map<string, string>& mapSettingsRet,
-                    map<string, vector<string> >& mapMultiSettingsRet)
+boost::filesystem::path GetMasternodeConfigFile()
 {
-    boost::filesystem::ifstream streamConfig(GetConfigFile());
-    if (!streamConfig.good())
-        return; // No syscoin.conf file is OK
+    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "masternode.conf"));
+    if (!pathConfigFile.is_complete())
+        pathConfigFile = GetDataDir() / pathConfigFile;
+    return pathConfigFile;
+}
 
-    set<string> setOptions;
-    setOptions.insert("*");
+void ReadConfigFile(const std::string& confPath)
+{
+    boost::filesystem::ifstream streamConfig(GetConfigFile(confPath));
+    if (!streamConfig.good()){
+        // Create empty syscoin.conf if it does not excist
+        FILE* configFile = fopen(GetConfigFile(confPath).string().c_str(), "a");
+        if (configFile != NULL)
+            fclose(configFile);
+        return; // Nothing to read, so just return
+    }
 
-    for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
-        // Don't overwrite existing settings so command line settings override syscoin.conf
-        string strKey = string("-") + it->string_key;
-        string strValue = it->value[0];
-        InterpretNegativeSetting(strKey, strValue);
-        if (mapSettingsRet.count(strKey) == 0)
-            mapSettingsRet[strKey] = strValue;
-        mapMultiSettingsRet[strKey].push_back(strValue);
+        LOCK(cs_args);
+        std::set<std::string> setOptions;
+        setOptions.insert("*");
+
+        for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
+        {
+            // Don't overwrite existing settings so command line settings override syscoin.conf
+            std::string strKey = std::string("-") + it->string_key;
+            std::string strValue = it->value[0];
+            InterpretNegativeSetting(strKey, strValue);
+            if (mapArgs.count(strKey) == 0)
+                mapArgs[strKey] = strValue;
+            _mapMultiArgs[strKey].push_back(strValue);
+        }
     }
     // If datadir is changed in .conf file:
     ClearDatadirCache();
@@ -601,19 +730,19 @@ bool TryCreateDirectory(const boost::filesystem::path& p)
     return false;
 }
 
-void FileCommit(FILE *fileout)
+void FileCommit(FILE *file)
 {
-    fflush(fileout); // harmless if redundantly called
+    fflush(file); // harmless if redundantly called
 #ifdef WIN32
-    HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(fileout));
+    HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     FlushFileBuffers(hFile);
 #else
     #if defined(__linux__) || defined(__NetBSD__)
-    fdatasync(fileno(fileout));
+    fdatasync(fileno(file));
     #elif defined(__APPLE__) && defined(F_FULLFSYNC)
-    fcntl(fileno(fileout), F_FULLFSYNC, 0);
+    fcntl(fileno(file), F_FULLFSYNC, 0);
     #else
-    fsync(fileno(fileout));
+    fsync(fileno(file));
     #endif
 #endif
 }
@@ -697,21 +826,25 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
 
 void ShrinkDebugFile()
 {
+    // Amount of debug.log to save at end when shrinking (must fit in memory)
+    constexpr size_t RECENT_DEBUG_HISTORY_SIZE = 10 * 1000000;
     // Scroll debug.log if it's getting too big
     boost::filesystem::path pathLog = GetDataDir() / "debug.log";
     FILE* file = fopen(pathLog.string().c_str(), "r");
-    if (file && boost::filesystem::file_size(pathLog) > 10 * 1000000)
+    // If debug.log file is more than 10% bigger the RECENT_DEBUG_HISTORY_SIZE
+    // trim it down by saving only the last RECENT_DEBUG_HISTORY_SIZE bytes
+    if (file && boost::filesystem::file_size(pathLog) > 11 * (RECENT_DEBUG_HISTORY_SIZE / 10))
     {
         // Restart the file with some of the end
-        std::vector <char> vch(200000,0);
+        std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
         fseek(file, -((long)vch.size()), SEEK_END);
-        int nBytes = fread(begin_ptr(vch), 1, vch.size(), file);
+        int nBytes = fread(vch.data(), 1, vch.size(), file);
         fclose(file);
 
         file = fopen(pathLog.string().c_str(), "w");
         if (file)
         {
-            fwrite(begin_ptr(vch), 1, nBytes, file);
+            fwrite(vch.data(), 1, nBytes, file);
             fclose(file);
         }
     }
@@ -759,8 +892,33 @@ void RenameThread(const char* name)
 #endif
 }
 
+std::string GetThreadName()
+{
+    char name[16];
+#if defined(PR_GET_NAME)
+    // Only the first 15 characters are used (16 - NUL terminator)
+    ::prctl(PR_GET_NAME, name, 0, 0, 0);
+#elif defined(MAC_OSX)
+    pthread_getname_np(pthread_self(), name, 16);
+// #elif (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
+// #else
+    // no get_name here
+#endif
+    return std::string(name);
+}
+
 void SetupEnvironment()
 {
+#ifdef HAVE_MALLOPT_ARENA_MAX
+    // glibc-specific: On 32-bit systems set the number of arenas to 1.
+    // By default, since glibc 2.10, the C library will create up to two heap
+    // arenas per core. This is known to cause excessive virtual address space
+    // usage in our usage. Work around it by setting the maximum number of
+    // arenas to 1.
+    if (sizeof(void*) == 4) {
+        mallopt(M_ARENA_MAX, 1);
+    }
+#endif
     // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
     // may be invalid, in which case the "C" locale is used as fallback.
 #if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
@@ -792,20 +950,78 @@ bool SetupNetworking()
 
 int GetNumCores()
 {
-#if BOOST_VERSION >= 105600
-    return boost::thread::physical_concurrency();
-#else // Must fall back to hardware_concurrency, which unfortunately counts virtual cores
-    return boost::thread::hardware_concurrency();
-#endif
+	return std::thread::hardware_concurrency();
 }
 
-std::string CopyrightHolders(const std::string& strPrefix)
+std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+    std::string strCopyrightHolders = strPrefix + strprintf(" %u-%u ", nStartYear, nEndYear) + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
 
     // Check for untranslated substitution to make sure Syscoin Core copyright is not removed by accident
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Syscoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Syscoin Core developers";
+        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2009, nEndYear) + "The Syscoin Core developers";
     }
     return strCopyrightHolders;
+}
+
+uint32_t StringVersionToInt(const std::string& strVersion)
+{
+    std::vector<std::string> tokens;
+    boost::split(tokens, strVersion, boost::is_any_of("."));
+    if(tokens.size() != 3)
+        throw std::bad_cast();
+    uint32_t nVersion = 0;
+    for(unsigned idx = 0; idx < 3; idx++)
+    {
+        if(tokens[idx].length() == 0)
+            throw std::bad_cast();
+        uint32_t value = boost::lexical_cast<uint32_t>(tokens[idx]);
+        if(value > 255)
+            throw std::bad_cast();
+        nVersion <<= 8;
+        nVersion |= value;
+    }
+    return nVersion;
+}
+
+std::string IntVersionToString(uint32_t nVersion)
+{
+    if((nVersion >> 24) > 0) // MSB is always 0
+        throw std::bad_cast();
+    if(nVersion == 0)
+        throw std::bad_cast();
+    std::array<std::string, 3> tokens;
+    for(unsigned idx = 0; idx < 3; idx++)
+    {
+        unsigned shift = (2 - idx) * 8;
+        uint32_t byteValue = (nVersion >> shift) & 0xff;
+        tokens[idx] = boost::lexical_cast<std::string>(byteValue);
+    }
+    return boost::join(tokens, ".");
+}
+
+std::string SafeIntVersionToString(uint32_t nVersion)
+{
+    try
+    {
+        return IntVersionToString(nVersion);
+    }
+    catch(const std::bad_cast&)
+    {
+        return "invalid_version";
+    }
+}
+
+int ScheduleBatchPriority(pthread_t thread)
+{
+#ifdef SCHED_BATCH
+	const static sched_param param{ .sched_priority = 0 };
+	if (int ret = pthread_setschedparam(thread, SCHED_BATCH, &param)) {
+		LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(errno));
+		return ret;
+	}
+	return 0;
+#else
+	return 1;
+#endif
 }

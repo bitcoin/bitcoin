@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +13,7 @@
 
 #include "base58.h"
 #include "init.h"
-#include "main.h" // For strMessageMagic
+#include "validation.h" // For strMessageMagic
 #include "wallet/wallet.h"
 
 #include <string>
@@ -28,21 +29,31 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
 {
     ui->setupUi(this);
 
-	// SYSCOIN
-	QString theme = GUIUtil::getThemeName();
-    ui->addressBookButton_SM->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/address-book"));
-    ui->pasteButton_SM->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/editpaste"));
-    ui->copySignatureButton_SM->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/editcopy"));
-    ui->signMessageButton_SM->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/edit"));
-    ui->clearButton_SM->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/remove"));
-    ui->addressBookButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/address-book"));
-    ui->verifyMessageButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/transaction_0"));
-    ui->clearButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/remove"));
-
 #if QT_VERSION >= 0x040700
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
 #endif
 
+    QString theme = GUIUtil::getThemeName();
+
+#ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
+    ui->signMessageButton_SM->setIcon(QIcon());
+    ui->clearButton_SM->setIcon(QIcon());
+    ui->verifyMessageButton_VM->setIcon(QIcon());
+    ui->clearButton_VM->setIcon(QIcon());
+#else
+    ui->signMessageButton_SM->setIcon(QIcon(":/icons/" + theme + "/edit"));
+    ui->clearButton_SM->setIcon(QIcon(":/icons/" + theme + "/remove"));
+    ui->verifyMessageButton_VM->setIcon(QIcon(":/icons/" + theme + "/transaction_0"));
+    ui->clearButton_VM->setIcon(QIcon(":/icons/" + theme + "/remove"));
+#endif
+
+    // These icons are needed on Mac also
+    ui->addressBookButton_SM->setIcon(QIcon(":/icons/" + theme + "/address-book"));
+    ui->pasteButton_SM->setIcon(QIcon(":/icons/" + theme + "/editpaste"));
+    ui->copySignatureButton_SM->setIcon(QIcon(":/icons/" + theme + "/editcopy"));   
+    ui->addressBookButton_VM->setIcon(QIcon(":/icons/" + theme + "/address-book"));
+
+      
     GUIUtil::setupAddressWidget(ui->addressIn_SM, this);
     GUIUtil::setupAddressWidget(ui->addressIn_VM, this);
 
@@ -144,7 +155,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     }
 
     CKey key;
-    if (!pwalletMain->GetKey(keyID, key))
+    if (!model->getPrivKey(keyID, key))
     {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel_SM->setText(tr("Private key for the entered address is not available."));

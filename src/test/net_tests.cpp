@@ -9,36 +9,35 @@
 #include "serialize.h"
 #include "streams.h"
 #include "net.h"
+#include "netbase.h"
 #include "chainparams.h"
-
-using namespace std;
 
 class CAddrManSerializationMock : public CAddrMan
 {
 public:
-    virtual void Serialize(CDataStream& s, int nType, int nVersionDummy) const = 0;
+    virtual void Serialize(CDataStream& s) const = 0;
 
     //! Ensure that bucket placement is always the same for testing purposes.
     void MakeDeterministic()
     {
         nKey.SetNull();
-        seed_insecure_rand(true);
+        insecure_rand = FastRandomContext(true);
     }
 };
 
 class CAddrManUncorrupted : public CAddrManSerializationMock
 {
 public:
-    void Serialize(CDataStream& s, int nType, int nVersionDummy) const
+    void Serialize(CDataStream& s) const override
     {
-        CAddrMan::Serialize(s, nType, nVersionDummy);
+        CAddrMan::Serialize(s);
     }
 };
 
 class CAddrManCorrupted : public CAddrManSerializationMock
 {
 public:
-    void Serialize(CDataStream& s, int nType, int nVersionDummy) const
+    void Serialize(CDataStream& s) const override
     {
         // Produces corrupt output that claims addrman has 20 addrs when it only has one addr.
         unsigned char nVersion = 1;
@@ -51,19 +50,23 @@ public:
         int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30);
         s << nUBuckets;
 
-        CAddress addr = CAddress(CService("252.1.1.1", 7777), NODE_NONE);
-        CAddrInfo info = CAddrInfo(addr, CNetAddr("252.2.2.2"));
+        CService serv;
+        Lookup("252.1.1.1", serv, 7777, false);
+        CAddress addr = CAddress(serv, NODE_NONE);
+        CNetAddr resolved;
+        LookupHost("252.2.2.2", resolved, false);
+        CAddrInfo info = CAddrInfo(addr, resolved);
         s << info;
     }
 };
 
-CDataStream AddrmanToStream(CAddrManSerializationMock& addrman)
+CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
 {
     CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
     ssPeersIn << FLATDATA(Params().MessageStart());
-    ssPeersIn << addrman;
+    ssPeersIn << _addrman;
     std::string str = ssPeersIn.str();
-    vector<unsigned char> vchData(str.begin(), str.end());
+    std::vector<unsigned char> vchData(str.begin(), str.end());
     return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
 }
 
@@ -74,14 +77,17 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     CAddrManUncorrupted addrmanUncorrupted;
     addrmanUncorrupted.MakeDeterministic();
 
-    CService addr1 = CService("250.7.1.1", 8369);
-    CService addr2 = CService("250.7.2.2", 9999);
-    CService addr3 = CService("250.7.3.3", 9999);
+    CService addr1, addr2, addr3;
+    Lookup("250.7.1.1", addr1, 8333, false);
+    Lookup("250.7.2.2", addr2, 8369, false);
+    Lookup("250.7.3.3", addr3, 8369, false);
 
     // Add three addresses to new table.
-    addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), CService("252.5.1.1", 8369));
-    addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), CService("252.5.1.1", 8369));
-    addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), CService("252.5.1.1", 8369));
+    CService source;
+    Lookup("252.5.1.1", source, 8333, false);
+    addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source);
+    addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source);
+    addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source);
 
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);
@@ -145,6 +151,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
 BOOST_AUTO_TEST_CASE(cnode_simple_test)
 {
     SOCKET hSocket = INVALID_SOCKET;
+    NodeId id = 0;
+    int height = 0;
 
     in_addr ipv4Addr;
     ipv4Addr.s_addr = 0xa0b0c001;
@@ -154,12 +162,12 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    CNode* pnode1 = new CNode(hSocket, addr, pszDest, fInboundIn);
+    std::unique_ptr<CNode> pnode1(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, pszDest, fInboundIn));
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    CNode* pnode2 = new CNode(hSocket, addr, pszDest, fInboundIn);
+    std::unique_ptr<CNode> pnode2(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, pszDest, fInboundIn));
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
 }

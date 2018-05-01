@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,10 +14,12 @@
 #include "uint256.h"
 #include "version.h"
 
+
 #include <vector>
 
 typedef uint256 ChainCode;
 
+/* ----------- Syscoin Hash ------------------------------------------------- */
 /** A hasher class for Syscoin's 256-bit hash (double SHA-256). */
 class CHash256 {
 private:
@@ -25,9 +28,9 @@ public:
     static const size_t OUTPUT_SIZE = CSHA256::OUTPUT_SIZE;
 
     void Finalize(unsigned char hash[OUTPUT_SIZE]) {
-        unsigned char buf[sha.OUTPUT_SIZE];
+        unsigned char buf[CSHA256::OUTPUT_SIZE];
         sha.Finalize(buf);
-        sha.Reset().Write(buf, sha.OUTPUT_SIZE).Finalize(hash);
+        sha.Reset().Write(buf, CSHA256::OUTPUT_SIZE).Finalize(hash);
     }
 
     CHash256& Write(const unsigned char *data, size_t len) {
@@ -49,9 +52,9 @@ public:
     static const size_t OUTPUT_SIZE = CRIPEMD160::OUTPUT_SIZE;
 
     void Finalize(unsigned char hash[OUTPUT_SIZE]) {
-        unsigned char buf[sha.OUTPUT_SIZE];
+        unsigned char buf[CSHA256::OUTPUT_SIZE];
         sha.Finalize(buf);
-        CRIPEMD160().Write(buf, sha.OUTPUT_SIZE).Finalize(hash);
+        CRIPEMD160().Write(buf, CSHA256::OUTPUT_SIZE).Finalize(hash);
     }
 
     CHash160& Write(const unsigned char *data, size_t len) {
@@ -102,6 +105,60 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end,
     return result;
 }
 
+/** Compute the 256-bit hash of the concatenation of three objects. */
+template<typename T1, typename T2, typename T3, typename T4>
+inline uint256 Hash(const T1 p1begin, const T1 p1end,
+                    const T2 p2begin, const T2 p2end,
+                    const T3 p3begin, const T3 p3end,
+                    const T4 p4begin, const T4 p4end) {
+    static const unsigned char pblank[1] = {};
+    uint256 result;
+    CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0]))
+              .Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0]))
+              .Write(p3begin == p3end ? pblank : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0]))
+              .Write(p4begin == p4end ? pblank : (const unsigned char*)&p4begin[0], (p4end - p4begin) * sizeof(p4begin[0]))
+              .Finalize((unsigned char*)&result);
+    return result;
+}
+
+/** Compute the 256-bit hash of the concatenation of three objects. */
+template<typename T1, typename T2, typename T3, typename T4, typename T5>
+inline uint256 Hash(const T1 p1begin, const T1 p1end,
+                    const T2 p2begin, const T2 p2end,
+                    const T3 p3begin, const T3 p3end,
+                    const T4 p4begin, const T4 p4end,
+                    const T5 p5begin, const T5 p5end) {
+    static const unsigned char pblank[1] = {};
+    uint256 result;
+    CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0]))
+              .Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0]))
+              .Write(p3begin == p3end ? pblank : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0]))
+              .Write(p4begin == p4end ? pblank : (const unsigned char*)&p4begin[0], (p4end - p4begin) * sizeof(p4begin[0]))
+              .Write(p5begin == p5end ? pblank : (const unsigned char*)&p5begin[0], (p5end - p5begin) * sizeof(p5begin[0]))
+              .Finalize((unsigned char*)&result);
+    return result;
+}
+
+/** Compute the 256-bit hash of the concatenation of three objects. */
+template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+inline uint256 Hash(const T1 p1begin, const T1 p1end,
+                    const T2 p2begin, const T2 p2end,
+                    const T3 p3begin, const T3 p3end,
+                    const T4 p4begin, const T4 p4end,
+                    const T5 p5begin, const T5 p5end,
+                    const T6 p6begin, const T6 p6end) {
+    static const unsigned char pblank[1] = {};
+    uint256 result;
+    CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0]))
+              .Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0]))
+              .Write(p3begin == p3end ? pblank : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0]))
+              .Write(p4begin == p4end ? pblank : (const unsigned char*)&p4begin[0], (p4end - p4begin) * sizeof(p4begin[0]))
+              .Write(p5begin == p5end ? pblank : (const unsigned char*)&p5begin[0], (p5end - p5begin) * sizeof(p5begin[0]))
+              .Write(p6begin == p6end ? pblank : (const unsigned char*)&p6begin[0], (p6end - p6begin) * sizeof(p6begin[0]))
+              .Finalize((unsigned char*)&result);
+    return result;
+}
+
 /** Compute the 160-bit hash an object. */
 template<typename T1>
 inline uint160 Hash160(const T1 pbegin, const T1 pend)
@@ -132,15 +189,17 @@ class CHashWriter
 private:
     CHash256 ctx;
 
+    const int nType;
+    const int nVersion;
 public:
-    int nType;
-    int nVersion;
 
     CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
 
-    CHashWriter& write(const char *pch, size_t size) {
+    int GetType() const { return nType; }
+    int GetVersion() const { return nVersion; }
+
+    void write(const char *pch, size_t size) {
         ctx.Write((const unsigned char*)pch, size);
-        return (*this);
     }
 
     // invalidates the object
@@ -153,7 +212,42 @@ public:
     template<typename T>
     CHashWriter& operator<<(const T& obj) {
         // Serialize to this stream
-        ::Serialize(*this, obj, nType, nVersion);
+        ::Serialize(*this, obj);
+        return (*this);
+    }
+};
+
+/** Reads data from an underlying stream, while hashing the read data. */
+template<typename Source>
+class CHashVerifier : public CHashWriter
+{
+private:
+    Source* source;
+
+public:
+    CHashVerifier(Source* source_) : CHashWriter(source_->GetType(), source_->GetVersion()), source(source_) {}
+
+    void read(char* pch, size_t nSize)
+    {
+        source->read(pch, nSize);
+        this->write(pch, nSize);
+    }
+
+    void ignore(size_t nSize)
+    {
+        char data[1024];
+        while (nSize > 0) {
+            size_t now = std::min<size_t>(nSize, 1024);
+            read(data, now);
+            nSize -= now;
+        }
+    }
+
+    template<typename T>
+    CHashVerifier<Source>& operator>>(T& obj)
+    {
+        // Unserialize from this stream
+        ::Unserialize(*this, obj);
         return (*this);
     }
 };
@@ -204,5 +298,6 @@ public:
  *      .Finalize()
  */
 uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
+uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
 
 #endif // SYSCOIN_HASH_H

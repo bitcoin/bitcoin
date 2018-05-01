@@ -1,7 +1,8 @@
-#!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Syscoin Core developers
-# Distributed under the MIT software license, see the accompanying
+#!/usr/bin/env python2
+#
+# Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#
 
 from test_framework.mininode import *
 from test_framework.test_framework import SyscoinTestFramework
@@ -75,34 +76,32 @@ class TestNode(NodeConnCB):
         def received_pong():
             return (self.last_pong.nonce == self.ping_counter)
         self.connection.send_message(msg_ping(nonce=self.ping_counter))
-        success = wait_until(received_pong, timeout=timeout)
+        success = wait_until(received_pong, timeout)
         self.ping_counter += 1
         return success
 
 class MaxUploadTest(SyscoinTestFramework):
+    def __init__(self):
+        self.utxo = []
+        self.txouts = gen_return_txouts()
  
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("SYSCOIND", "syscoind"),
+                          default=os.getenv("SYSD", "syscoind"),
                           help="syscoind binary to test")
 
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = True
-        self.num_nodes = 1
-
-        self.utxo = []
-        self.txouts = gen_return_txouts()
+    def setup_chain(self):
+        initialize_chain_clean(self.options.tmpdir, 2)
 
     def setup_network(self):
         # Start a node with maxuploadtarget of 200 MB (/24h)
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-maxuploadtarget=800", "-blockmaxsize=999000"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-maxuploadtarget=200", "-blockmaxsize=999000"]))
 
     def mine_full_block(self, node, address):
         # Want to create a full block
         # We'll generate a 66k transaction below, and 14 of them is close to the 1MB block limit
-        for j in range(14):
+        for j in xrange(14):
             if len(self.utxo) < 14:
                 self.utxo = node.listunspent()
             inputs=[]
@@ -140,7 +139,7 @@ class MaxUploadTest(SyscoinTestFramework):
         test_nodes = []
         connections = []
 
-        for i in range(3):
+        for i in xrange(3):
             test_nodes.append(TestNode())
             connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_nodes[i]))
             test_nodes[i].add_connection(connections[i])
@@ -175,14 +174,14 @@ class MaxUploadTest(SyscoinTestFramework):
         getdata_request = msg_getdata()
         getdata_request.inv.append(CInv(2, big_old_block))
 
-        max_bytes_per_day = 800*1024*1024
-        daily_buffer = 144 * 4000000
+        max_bytes_per_day = 200*1024*1024
+        daily_buffer = 144 * MAX_BLOCK_SIZE
         max_bytes_available = max_bytes_per_day - daily_buffer
         success_count = max_bytes_available // old_block_size
 
-        # 576MB will be reserved for relaying new blocks, so expect this to
-        # succeed for ~235 tries.
-        for i in range(success_count):
+        # 144MB will be reserved for relaying new blocks, so expect this to
+        # succeed for ~70 tries.
+        for i in xrange(success_count):
             test_nodes[0].send_message(getdata_request)
             test_nodes[0].sync_with_ping()
             assert_equal(test_nodes[0].block_receive_map[big_old_block], i+1)
@@ -190,22 +189,22 @@ class MaxUploadTest(SyscoinTestFramework):
         assert_equal(len(self.nodes[0].getpeerinfo()), 3)
         # At most a couple more tries should succeed (depending on how long 
         # the test has been running so far).
-        for i in range(3):
+        for i in xrange(3):
             test_nodes[0].send_message(getdata_request)
         test_nodes[0].wait_for_disconnect()
         assert_equal(len(self.nodes[0].getpeerinfo()), 2)
-        print("Peer 0 disconnected after downloading old block too many times")
+        print "Peer 0 disconnected after downloading old block too many times"
 
         # Requesting the current block on test_nodes[1] should succeed indefinitely,
         # even when over the max upload target.
-        # We'll try 800 times
+        # We'll try 200 times
         getdata_request.inv = [CInv(2, big_new_block)]
-        for i in range(800):
+        for i in xrange(200):
             test_nodes[1].send_message(getdata_request)
             test_nodes[1].sync_with_ping()
             assert_equal(test_nodes[1].block_receive_map[big_new_block], i+1)
 
-        print("Peer 1 able to repeatedly download new block")
+        print "Peer 1 able to repeatedly download new block"
 
         # But if test_nodes[1] tries for an old block, it gets disconnected too.
         getdata_request.inv = [CInv(2, big_old_block)]
@@ -213,9 +212,9 @@ class MaxUploadTest(SyscoinTestFramework):
         test_nodes[1].wait_for_disconnect()
         assert_equal(len(self.nodes[0].getpeerinfo()), 1)
 
-        print("Peer 1 disconnected after trying to download old block")
+        print "Peer 1 disconnected after trying to download old block"
 
-        print("Advancing system time on node to clear counters...")
+        print "Advancing system time on node to clear counters..."
 
         # If we advance the time by 24 hours, then the counters should reset,
         # and test_nodes[2] should be able to retrieve the old block.
@@ -225,12 +224,12 @@ class MaxUploadTest(SyscoinTestFramework):
         test_nodes[2].sync_with_ping()
         assert_equal(test_nodes[2].block_receive_map[big_old_block], 1)
 
-        print("Peer 2 able to download old block")
+        print "Peer 2 able to download old block"
 
         [c.disconnect_node() for c in connections]
 
         #stop and start node 0 with 1MB maxuploadtarget, whitelist 127.0.0.1
-        print("Restarting nodes with -whitelist=127.0.0.1")
+        print "Restarting nodes with -whitelist=127.0.0.1"
         stop_node(self.nodes[0], 0)
         self.nodes[0] = start_node(0, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000"])
 
@@ -238,7 +237,7 @@ class MaxUploadTest(SyscoinTestFramework):
         test_nodes = []
         connections = []
 
-        for i in range(3):
+        for i in xrange(3):
             test_nodes.append(TestNode())
             connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_nodes[i]))
             test_nodes[i].add_connection(connections[i])
@@ -248,7 +247,7 @@ class MaxUploadTest(SyscoinTestFramework):
 
         #retrieve 20 blocks which should be enough to break the 1MB limit
         getdata_request.inv = [CInv(2, big_new_block)]
-        for i in range(20):
+        for i in xrange(20):
             test_nodes[1].send_message(getdata_request)
             test_nodes[1].sync_with_ping()
             assert_equal(test_nodes[1].block_receive_map[big_new_block], i+1)
@@ -258,7 +257,7 @@ class MaxUploadTest(SyscoinTestFramework):
         test_nodes[1].wait_for_disconnect()
         assert_equal(len(self.nodes[0].getpeerinfo()), 3) #node is still connected because of the whitelist
 
-        print("Peer 1 still connected after trying to download old block (whitelisted)")
+        print "Peer 1 still connected after trying to download old block (whitelisted)"
 
         [c.disconnect_node() for c in connections]
 

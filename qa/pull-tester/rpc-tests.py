@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Syscoin Core developers
+#!/usr/bin/env python2
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,16 +29,7 @@ import subprocess
 import tempfile
 import re
 
-sys.path.append("qa/pull-tester/")
 from tests_config import *
-
-BOLD = ("","")
-if os.name == 'posix':
-    # primitive formatting on supported
-    # terminal via ANSI escape sequences:
-    BOLD = ('\033[0m', '\033[1m')
-
-RPC_TESTS_DIR = SRCDIR + '/qa/rpc-tests/'
 
 #If imported values are not defined then set to zero (or disabled)
 if 'ENABLE_WALLET' not in vars():
@@ -52,62 +43,54 @@ if 'ENABLE_ZMQ' not in vars():
 
 ENABLE_COVERAGE=0
 
-#Create a set to store arguments and create the passon string
+#Create a set to store arguments and create the passOn string
 opts = set()
-passon_args = []
-PASSON_REGEX = re.compile("^--")
-PARALLEL_REGEX = re.compile('^-parallel=')
+passOn = ""
+p = re.compile("^--")
 
-print_help = False
-run_parallel = 4
+bold = ("","")
+if (os.name == 'posix'):
+    bold = ('\033[0m', '\033[1m')
 
 for arg in sys.argv[1:]:
-    if arg == "--help" or arg == "-h" or arg == "-?":
-        print_help = True
-        break
     if arg == '--coverage':
         ENABLE_COVERAGE = 1
-    elif PASSON_REGEX.match(arg):
-        passon_args.append(arg)
-    elif PARALLEL_REGEX.match(arg):
-        run_parallel = int(arg.split(sep='=', maxsplit=1)[1])
+    elif (p.match(arg) or arg == "-h"):
+        passOn += " " + arg
     else:
         opts.add(arg)
 
 #Set env vars
-if "SYSCOIND" not in os.environ:
-    os.environ["SYSCOIND"] = BUILDDIR + '/src/syscoind' + EXEEXT
-if "SYSCOINCLI" not in os.environ:
-    os.environ["SYSCOINCLI"] = BUILDDIR + '/src/syscoin-cli' + EXEEXT
+buildDir = BUILDDIR
+if "SYSD" not in os.environ:
+    os.environ["SYSD"] = buildDir + '/src/syscoind' + EXEEXT
+if "SYSCLI" not in os.environ:
+    os.environ["SYSCLI"] = buildDir + '/src/syscoin-cli' + EXEEXT
 
 if EXEEXT == ".exe" and "-win" not in opts:
-    # https://github.com/syscoin/syscoin2/commit/d52802551752140cf41f0d9a225a43e84404d3e9
-    # https://github.com/syscoin/syscoin2/pull/5677#issuecomment-136646964
-    print("Win tests currently disabled by default.  Use -win option to enable")
+    # https://github.com/syscoin/syscoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
+    # https://github.com/syscoin/syscoin/pull/5677#issuecomment-136646964
+    print "Win tests currently disabled by default.  Use -win option to enable"
     sys.exit(0)
 
 if not (ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_SYSCOIND == 1):
-    print("No rpc tests to run. Wallet, utils, and syscoind must all be enabled")
+    print "No rpc tests to run. Wallet, utils, and syscoind must all be enabled"
     sys.exit(0)
 
-# python3-zmq may not be installed. Handle this gracefully and with some helpful info
+# python-zmq may not be installed. Handle this gracefully and with some helpful info
 if ENABLE_ZMQ:
     try:
         import zmq
-    except ImportError:
-        print("ERROR: \"import zmq\" failed. Set ENABLE_ZMQ=0 or "
-              "to run zmq tests, see dependency info in /qa/README.md.")
-        # ENABLE_ZMQ=0
-        raise
+    except ImportError as e:
+        print("ERROR: \"import zmq\" failed. Set ENABLE_ZMQ=0 or " \
+            "to run zmq tests, see dependency info in /qa/README.md.")
+        raise e
 
+#Tests
 testScripts = [
-    # longest test should go first, to favor running tests in parallel
-    'p2p-fullblocktest.py',
-    'walletbackup.py',
     'bip68-112-113-p2p.py',
     'wallet.py',
     'wallet-hd.py',
-    'wallet-dump.py',
     'listtransactions.py',
     'receivedby.py',
     'mempool_resurrect_test.py',
@@ -125,25 +108,26 @@ testScripts = [
     'proxy_test.py',
     'merkle_blocks.py',
     'fundrawtransaction.py',
+    'fundrawtransaction-hd.py',
     'signrawtransactions.py',
+    'walletbackup.py',
     'nodehandling.py',
     'reindex.py',
+    'addressindex.py',
+    'timestampindex.py',
+    'spentindex.py',
     'decodescript.py',
+    'p2p-fullblocktest.py', # NOTE: needs syscoin_hash to pass
     'blockchain.py',
     'disablewallet.py',
-    'sendheaders.py',
+    'sendheaders.py', # NOTE: needs syscoin_hash to pass
     'keypool.py',
+    'keypool-hd.py',
     'prioritise_transaction.py',
-    'invalidblockrequest.py',
-    'invalidtxrequest.py',
+    'invalidblockrequest.py', # NOTE: needs syscoin_hash to pass
+    'invalidtxrequest.py', # NOTE: needs syscoin_hash to pass
     'abandonconflict.py',
     'p2p-versionbits-warning.py',
-    'p2p-segwit.py',
-    'segwit.py',
-    'importprunedfunds.py',
-    'signmessages.py',
-    'p2p-compactblocks.py',
-    'nulldummy.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
@@ -151,136 +135,76 @@ if ENABLE_ZMQ:
 testScriptsExt = [
     'bip9-softforks.py',
     'bip65-cltv.py',
-    'bip65-cltv-p2p.py',
+    'bip65-cltv-p2p.py', # NOTE: needs syscoin_hash to pass
     'bip68-sequence.py',
-    'bipdersig-p2p.py',
+    'bipdersig-p2p.py', # NOTE: needs syscoin_hash to pass
     'bipdersig.py',
-    'getblocktemplate_longpoll.py',
+    'getblocktemplate_longpoll.py', # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/syscoin/syscoin/issues/6651
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
+    # 'pruning.py', # Prune mode is incompatible with -txindex.
     'forknotify.py',
     'invalidateblock.py',
-    'rpcbind_test.py',
+#    'rpcbind_test.py', #temporary, bug in libevent, see #6655
     'smartfees.py',
     'maxblocksinflight.py',
-    'p2p-acceptblock.py',
+    'p2p-acceptblock.py', # NOTE: needs syscoin_hash to pass
     'mempool_packages.py',
     'maxuploadtarget.py',
-    'replace-by-fee.py',
-    'p2p-feefilter.py',
-    'pruning.py', # leave pruning last as it takes a REALLY long time
+    # 'replace-by-fee.py', # RBF is disabled in Syscoin Core
 ]
 
-
 def runtests():
-    test_list = []
-    if '-extended' in opts:
-        test_list = testScripts + testScriptsExt
-    elif len(opts) == 0 or (len(opts) == 1 and "-win" in opts):
-        test_list = testScripts
-    else:
-        for t in testScripts + testScriptsExt:
-            if t in opts or re.sub(".py$", "", t) in opts:
-                test_list.append(t)
-
-    if print_help:
-        # Only print help of the first script and exit
-        subprocess.check_call((RPC_TESTS_DIR + test_list[0]).split() + ['-h'])
-        sys.exit(0)
-
     coverage = None
 
     if ENABLE_COVERAGE:
         coverage = RPCCoverage()
         print("Initializing coverage directory at %s\n" % coverage.dir)
-    flags = ["--srcdir=%s/src" % BUILDDIR] + passon_args
-    if coverage:
-        flags.append(coverage.flag)
 
-    if len(test_list) > 1 and run_parallel > 1:
-        # Populate cache
-        subprocess.check_output([RPC_TESTS_DIR + 'create_cache.py'] + flags)
+    rpcTestDir = buildDir + '/qa/rpc-tests/'
+    run_extended = '-extended' in opts
+    cov_flag = coverage.flag if coverage else ''
+    flags = " --srcdir %s/src %s %s" % (buildDir, cov_flag, passOn)
 
     #Run Tests
-    max_len_name = len(max(test_list, key=len))
-    time_sum = 0
-    time0 = time.time()
-    job_queue = RPCTestHandler(run_parallel, test_list, flags)
-    results = BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "PASSED", "DURATION") + BOLD[0]
-    all_passed = True
-    for _ in range(len(test_list)):
-        (name, stdout, stderr, passed, duration) = job_queue.get_next()
-        all_passed = all_passed and passed
-        time_sum += duration
+    for i in range(len(testScripts)):
+        if (len(opts) == 0
+                or (len(opts) == 1 and "-win" in opts )
+                or run_extended
+                or testScripts[i] in opts
+                or re.sub(".py$", "", testScripts[i]) in opts ):
 
-        print('\n' + BOLD[1] + name + BOLD[0] + ":")
-        print(stdout)
-        print('stderr:\n' if not stderr == '' else '', stderr)
-        results += "%s | %s | %s s\n" % (name.ljust(max_len_name), str(passed).ljust(6), duration)
-        print("Pass: %s%s%s, Duration: %s s\n" % (BOLD[1], passed, BOLD[0], duration))
-    results += BOLD[1] + "\n%s | %s | %s s (accumulated)" % ("ALL".ljust(max_len_name), str(all_passed).ljust(6), time_sum) + BOLD[0]
-    print(results)
-    print("\nRuntime: %s s" % (int(time.time() - time0)))
+            print("Running testscript %s%s%s ..." % (bold[1], testScripts[i], bold[0]))
+            time0 = time.time()
+            subprocess.check_call(
+                rpcTestDir + testScripts[i] + flags, shell=True)
+            print("Duration: %s s\n" % (int(time.time() - time0)))
+
+            # exit if help is called so we print just one set of
+            # instructions
+            p = re.compile(" -h| --help")
+            if p.match(passOn):
+                sys.exit(0)
+
+    # Run Extended Tests
+    for i in range(len(testScriptsExt)):
+        if (run_extended or testScriptsExt[i] in opts
+                or re.sub(".py$", "", testScriptsExt[i]) in opts):
+
+            print(
+                "Running 2nd level testscript "
+                + "%s%s%s ..." % (bold[1], testScriptsExt[i], bold[0]))
+            time0 = time.time()
+            subprocess.check_call(
+                rpcTestDir + testScriptsExt[i] + flags, shell=True)
+            print("Duration: %s s\n" % (int(time.time() - time0)))
 
     if coverage:
         coverage.report_rpc_coverage()
 
         print("Cleaning up coverage data")
         coverage.cleanup()
-
-    sys.exit(not all_passed)
-
-
-class RPCTestHandler:
-    """
-    Trigger the testscrips passed in via the list.
-    """
-
-    def __init__(self, num_tests_parallel, test_list=None, flags=None):
-        assert(num_tests_parallel >= 1)
-        self.num_jobs = num_tests_parallel
-        self.test_list = test_list
-        self.flags = flags
-        self.num_running = 0
-        # In case there is a graveyard of zombie syscoinds, we can apply a
-        # pseudorandom offset to hopefully jump over them.
-        # (625 is PORT_RANGE/MAX_NODES)
-        self.portseed_offset = int(time.time() * 1000) % 625
-        self.jobs = []
-
-    def get_next(self):
-        while self.num_running < self.num_jobs and self.test_list:
-            # Add tests
-            self.num_running += 1
-            t = self.test_list.pop(0)
-            port_seed = ["--portseed={}".format(len(self.test_list) + self.portseed_offset)]
-            log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
-            log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
-            self.jobs.append((t,
-                              time.time(),
-                              subprocess.Popen((RPC_TESTS_DIR + t).split() + self.flags + port_seed,
-                                               universal_newlines=True,
-                                               stdout=log_stdout,
-                                               stderr=log_stderr),
-                              log_stdout,
-                              log_stderr))
-        if not self.jobs:
-            raise IndexError('pop from empty list')
-        while True:
-            # Return first proc that finishes
-            time.sleep(.5)
-            for j in self.jobs:
-                (name, time0, proc, log_out, log_err) = j
-                if proc.poll() is not None:
-                    log_out.seek(0), log_err.seek(0)
-                    [stdout, stderr] = [l.read().decode('utf-8') for l in (log_out, log_err)]
-                    log_out.close(), log_err.close()
-                    passed = stderr == "" and proc.returncode == 0
-                    self.num_running -= 1
-                    self.jobs.remove(j)
-                    return name, stdout, stderr, passed, int(time.time() - time0)
-            print('.', end='', flush=True)
 
 
 class RPCCoverage(object):
@@ -300,7 +224,7 @@ class RPCCoverage(object):
     """
     def __init__(self):
         self.dir = tempfile.mkdtemp(prefix="coverage")
-        self.flag = '--coveragedir=%s' % self.dir
+        self.flag = '--coveragedir %s' % self.dir
 
     def report_rpc_coverage(self):
         """

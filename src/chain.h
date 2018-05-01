@@ -28,7 +28,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(VARINT(nBlocks));
         READWRITE(VARINT(nSize));
         READWRITE(VARINT(nUndoSize));
@@ -76,7 +76,7 @@ struct CDiskBlockPos
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(VARINT(nFile));
         READWRITE(VARINT(nPos));
     }
@@ -144,8 +144,6 @@ enum BlockStatus: uint32_t {
     BLOCK_FAILED_VALID       =   32, //!< stage after last reached validness failed
     BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
-
-    BLOCK_OPT_WITNESS       =   128, //!< block data in blk*.data was received with a witness-enforcing client
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -164,7 +162,6 @@ public:
 
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
-
 
     //! height of the entry in the chain. The genesis block has height 0
     int nHeight;
@@ -201,7 +198,10 @@ public:
     unsigned int nNonce;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
-    uint32_t nSequenceId;
+    int32_t nSequenceId;
+
+    //! (memory only) Maximum nTime in the chain upto and including this block.
+    unsigned int nTimeMax;
 
     void SetNull()
     {
@@ -217,8 +217,9 @@ public:
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
+        nTimeMax = 0;
 
-        nVersion = 0;
+        nVersion       = 0;
         hashMerkleRoot = uint256();
         nTime          = 0;
         nBits          = 0;
@@ -260,7 +261,7 @@ public:
     }
 
 	// SYSCOIN defined in chain.cpp
-    CBlockHeader GetBlockHeader(const Consensus::Params& consensusParams) const;
+	CBlockHeader GetBlockHeader(const Consensus::Params& consensusParams) const;
 
     uint256 GetBlockHash() const
     {
@@ -270,6 +271,11 @@ public:
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
+    }
+
+    int64_t GetBlockTimeMax() const
+    {
+        return (int64_t)nTimeMax;
     }
 
     enum { nMedianTimeSpan=11 };
@@ -325,11 +331,11 @@ public:
     //! Efficiently find an ancestor of this block.
     CBlockIndex* GetAncestor(int height);
     const CBlockIndex* GetAncestor(int height) const;
-    // SYSCOIN
-    inline int GetBaseVersion() const
-    {
-        return CPureBlockHeader::GetBaseVersion(nVersion);
-    }
+	// SYSCOIN
+	inline int GetBaseVersion() const
+	{
+		return CPureBlockHeader::GetBaseVersion(nVersion);
+	}
 };
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);
@@ -340,21 +346,25 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
 class CDiskBlockIndex : public CBlockIndex
 {
 public:
+    uint256 hash;
     uint256 hashPrev;
 
     CDiskBlockIndex() {
+        hash = uint256();
         hashPrev = uint256();
     }
 
     explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
+        hash = (hash == uint256() ? pindex->GetBlockHash() : hash);
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH))
             READWRITE(VARINT(nVersion));
 
         READWRITE(VARINT(nHeight));
@@ -367,6 +377,8 @@ public:
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
 
+        // block hash
+        READWRITE(hash);
         // block header
         READWRITE(this->nVersion);
         READWRITE(hashPrev);
@@ -378,6 +390,8 @@ public:
 
     uint256 GetBlockHash() const
     {
+        if(hash != uint256()) return hash;
+        // should never really get here, keeping this as a fallback
         CBlockHeader block;
         block.nVersion        = nVersion;
         block.hashPrevBlock   = hashPrev;
@@ -455,6 +469,9 @@ public:
 
     /** Find the last common block between this chain and a block index entry. */
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
+
+    /** Find the earliest block with timestamp equal or greater than the given. */
+    CBlockIndex* FindEarliestAtLeast(int64_t nTime) const;
 };
 
 #endif // SYSCOIN_CHAIN_H

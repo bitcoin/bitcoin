@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Syscoin Core developers
+#!/usr/bin/env python2
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,36 +13,21 @@ from test_framework.util import *
 
 class DisableWalletTest (SyscoinTestFramework):
 
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = True
-        self.num_nodes = 1
+    def setup_chain(self):
+        print("Initializing test directory "+self.options.tmpdir)
+        initialize_chain_clean(self.options.tmpdir, 1)
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [['-disablewallet']])
+        self.nodes = start_nodes(1, self.options.tmpdir, [['-disablewallet']])
         self.is_network_split = False
         self.sync_all()
 
     def run_test (self):
-        # Check regression: https://github.com/syscoin/syscoin2/issues/6963#issuecomment-154548880
-        x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
+        # Check regression: https://github.com/syscoin/syscoin/issues/6963#issuecomment-154548880
+        x = self.nodes[0].validateaddress('7TSBtVu959hGEGPKyHjJz9k55RpWrPffXz')
         assert(x['isvalid'] == False)
-        x = self.nodes[0].validateaddress('mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
+        x = self.nodes[0].validateaddress('ycwedq2f3sz2Yf9JqZsBCQPxp18WU3Hp4J')
         assert(x['isvalid'] == True)
-
-        # Checking mining to an address without a wallet
-        try:
-            self.nodes[0].generatetoaddress(1, 'mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
-        except JSONRPCException as e:
-            assert("Invalid address" not in e.error['message'])
-            assert("ProcessNewBlock, block not accepted" not in e.error['message'])
-            assert("Couldn't create new block" not in e.error['message'])
-
-        try:
-            self.nodes[0].generatetoaddress(1, '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
-            raise AssertionError("Must not mine to invalid address!")
-        except JSONRPCException as e:
-            assert("Invalid address" in e.error['message'])
 
 if __name__ == '__main__':
     DisableWalletTest ().main ()

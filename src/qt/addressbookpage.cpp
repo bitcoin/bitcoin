@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,20 +29,18 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     mode(_mode),
     tab(_tab)
 {
+    QString theme = GUIUtil::getThemeName();
     ui->setupUi(this);
-
-	// SYSCOIN
-	QString theme = GUIUtil::getThemeName();
     if (!platformStyle->getImagesOnButtons()) {
         ui->newAddress->setIcon(QIcon());
         ui->copyAddress->setIcon(QIcon());
         ui->deleteAddress->setIcon(QIcon());
         ui->exportButton->setIcon(QIcon());
     } else {
-        ui->newAddress->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
-        ui->copyAddress->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/editcopy"));
-        ui->deleteAddress->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/remove"));
-        ui->exportButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/export"));
+        ui->newAddress->setIcon(QIcon(":/icons/" + theme + "/add"));
+        ui->copyAddress->setIcon(QIcon(":/icons/" + theme + "/editcopy"));
+        ui->deleteAddress->setIcon(QIcon(":/icons/" + theme + "/remove"));
+        ui->exportButton->setIcon(QIcon(":/icons/" + theme + "/export"));
     }
 
     switch(mode)
@@ -284,13 +283,12 @@ void AddressBookPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-	// SYSCOIN
-    writer.addColumn(tr("Label"), AddressTableModel::Label, Qt::EditRole);
-    writer.addColumn(tr("Address"), AddressTableModel::Address, Qt::EditRole);
+    writer.addColumn("Label", AddressTableModel::Label, Qt::EditRole);
+    writer.addColumn("Address", AddressTableModel::Address, Qt::EditRole);
 
     if(!writer.write()) {
-		QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file: ") + filename,
-                              QMessageBox::Abort, QMessageBox::Abort);
+        QMessageBox::critical(this, tr("Exporting Failed"),
+            tr("There was an error trying to save the address list to %1. Please try again.").arg(filename));
     }
 }
 

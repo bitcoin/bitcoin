@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Syscoin Core developers
-# Distributed under the MIT software license, see the accompanying
+# Copyright (c) 2014-2015 The Bitcoin Core developers
+# Copyright (c) 2014-2017 The Dash Core developers
+# Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
@@ -8,6 +8,7 @@
 # Helpful routines for regression testing
 #
 
+# Add python-syscoinrpc to module search path:
 import os
 import sys
 
@@ -15,7 +16,6 @@ from binascii import hexlify, unhexlify
 from base64 import b64encode
 from decimal import Decimal, ROUND_DOWN
 import json
-import http.client
 import random
 import shutil
 import subprocess
@@ -28,20 +28,6 @@ from .authproxy import AuthServiceProxy, JSONRPCException
 
 COVERAGE_DIR = None
 
-# The maximum number of nodes a single test can spawn
-MAX_NODES = 8
-# Don't assign rpc or p2p ports lower than this
-PORT_MIN = 11000
-# The number of ports to "reserve" for p2p and rpc, each
-PORT_RANGE = 5000
-
-SYSCOIND_PROC_WAIT_TIMEOUT = 60
-
-
-class PortSeed:
-    # Must be initialized with a unique integer for each process
-    n = None
-
 #Set Mocktime default to OFF.
 #MOCKTIME is only needed for scripts that use the
 #cached version of the blockchain.  If the cached
@@ -52,9 +38,9 @@ MOCKTIME = 0
 def enable_mocktime():
     #For backwared compatibility of the python scripts
     #with previous versions of the cache, set MOCKTIME 
-    #to Jan 1, 2014 + (201 * 10 * 60)
+    #to regtest genesis time + (201 * 156)
     global MOCKTIME
-    MOCKTIME = 1388534400 + (201 * 10 * 60)
+    MOCKTIME = 1417713337 + (201 * 156)
 
 def disable_mocktime():
     global MOCKTIME
@@ -94,13 +80,20 @@ def get_rpc_proxy(url, node_number, timeout=None):
 
     return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
 
+def get_mnsync_status(node):
+    result = node.mnsync("status")
+    return result['IsSynced']
+
+def wait_to_sync(node):
+    synced = False
+    while not synced:
+        synced = get_mnsync_status(node)
+        time.sleep(0.5)
 
 def p2p_port(n):
-    assert(n <= MAX_NODES)
-    return PORT_MIN + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
-
+    return 11000 + n + os.getpid()%999
 def rpc_port(n):
-    return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
+    return 12000 + n + os.getpid()%999
 
 def check_json_precision():
     """Make sure json library being used does not lose precision converting SYS values"""
@@ -121,34 +114,34 @@ def hex_str_to_bytes(hex_str):
 def str_to_b64str(string):
     return b64encode(string.encode('utf-8')).decode('ascii')
 
-def sync_blocks(rpc_connections, wait=1, timeout=60):
+def sync_blocks(rpc_connections, wait=1):
     """
-    Wait until everybody has the same tip
+    Wait until everybody has the same block count
     """
-    while timeout > 0:
-        tips = [ x.getbestblockhash() for x in rpc_connections ]
-        if tips == [ tips[0] ]*len(tips):
-            return True
+    while True:
+        counts = [ x.getblockcount() for x in rpc_connections ]
+        if counts == [ counts[0] ]*len(counts):
+            break
         time.sleep(wait)
-        timeout -= wait
-    raise AssertionError("Block sync failed")
 
-def sync_mempools(rpc_connections, wait=1, timeout=60):
+def sync_mempools(rpc_connections, wait=1):
     """
     Wait until everybody has the same transactions in their memory
     pools
     """
-    while timeout > 0:
+    while True:
         pool = set(rpc_connections[0].getrawmempool())
         num_match = 1
         for i in range(1, len(rpc_connections)):
             if set(rpc_connections[i].getrawmempool()) == pool:
                 num_match = num_match+1
         if num_match == len(rpc_connections):
-            return True
+            break
         time.sleep(wait)
-        timeout -= wait
-    raise AssertionError("Mempool sync failed")
+
+def sync_masternodes(rpc_connections):
+    for node in rpc_connections:
+        wait_to_sync(node)
 
 syscoind_processes = {}
 
@@ -156,30 +149,17 @@ def initialize_datadir(dirname, n):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    rpc_u, rpc_p = rpc_auth_pair(n)
-    with open(os.path.join(datadir, "syscoin.conf"), 'w', encoding='utf8') as f:
+    with open(os.path.join(datadir, "syscoin.conf"), 'w') as f:
         f.write("regtest=1\n")
-        f.write("rpcuser=" + rpc_u + "\n")
-        f.write("rpcpassword=" + rpc_p + "\n")
+        f.write("rpcuser=rt\n")
+        f.write("rpcpassword=rt\n")
         f.write("port="+str(p2p_port(n))+"\n")
         f.write("rpcport="+str(rpc_port(n))+"\n")
         f.write("listenonion=0\n")
     return datadir
 
-def rpc_auth_pair(n):
-    return 'rpcuser💻' + str(n), 'rpcpass🔑' + str(n)
-
 def rpc_url(i, rpchost=None):
-    rpc_u, rpc_p = rpc_auth_pair(i)
-    host = '127.0.0.1'
-    port = rpc_port(i)
-    if rpchost:
-        parts = rpchost.split(':')
-        if len(parts) == 2:
-            host, port = parts
-        else:
-            host = rpchost
-    return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
+    return "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))
 
 def wait_for_syscoind_start(process, url, i):
     '''
@@ -201,75 +181,69 @@ def wait_for_syscoind_start(process, url, i):
                 raise # unkown JSON RPC exception
         time.sleep(0.25)
 
-def initialize_chain(test_dir, num_nodes):
+def initialize_chain(test_dir):
     """
-    Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
-    Afterward, create num_nodes copies from the cache
+    Create (or copy from cache) a 200-block-long chain and
+    4 wallets.
     """
 
-    assert num_nodes <= MAX_NODES
-    create_cache = False
-    for i in range(MAX_NODES):
-        if not os.path.isdir(os.path.join('cache', 'node'+str(i))):
-            create_cache = True
-            break
-
-    if create_cache:
+    if (not os.path.isdir(os.path.join("cache","node0"))
+        or not os.path.isdir(os.path.join("cache","node1"))
+        or not os.path.isdir(os.path.join("cache","node2"))
+        or not os.path.isdir(os.path.join("cache","node3"))):
 
         #find and delete old cache directories if any exist
-        for i in range(MAX_NODES):
+        for i in range(4):
             if os.path.isdir(os.path.join("cache","node"+str(i))):
                 shutil.rmtree(os.path.join("cache","node"+str(i)))
 
         # Create cache directories, run syscoinds:
-        for i in range(MAX_NODES):
+        for i in range(4):
             datadir=initialize_datadir("cache", i)
-            args = [ os.getenv("SYSCOIND", "syscoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
+            args = [ os.getenv("SYSD", "syscoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             syscoind_processes[i] = subprocess.Popen(args)
             if os.getenv("PYTHON_DEBUG", ""):
-                print("initialize_chain: syscoind started, waiting for RPC to come up")
+                print "initialize_chain: syscoind started, waiting for RPC to come up"
             wait_for_syscoind_start(syscoind_processes[i], rpc_url(i), i)
             if os.getenv("PYTHON_DEBUG", ""):
-                print("initialize_chain: RPC succesfully started")
+                print "initialize_chain: RPC succesfully started"
 
         rpcs = []
-        for i in range(MAX_NODES):
+        for i in range(4):
             try:
                 rpcs.append(get_rpc_proxy(rpc_url(i), i))
             except:
                 sys.stderr.write("Error connecting to "+url+"\n")
                 sys.exit(1)
 
-        # Create a 200-block-long chain; each of the 4 first nodes
+        # Create a 200-block-long chain; each of the 4 nodes
         # gets 25 mature blocks and 25 immature.
-        # Note: To preserve compatibility with older versions of
-        # initialize_chain, only 4 nodes will generate coins.
-        #
-        # blocks are created with timestamps 10 minutes apart
-        # starting from 2010 minutes in the past
+        # blocks are created with timestamps 156 seconds apart
+        # starting from 31356 seconds in the past
         enable_mocktime()
-        block_time = get_mocktime() - (201 * 10 * 60)
+        block_time = get_mocktime() - (201 * 156)
         for i in range(2):
             for peer in range(4):
                 for j in range(25):
                     set_node_times(rpcs, block_time)
                     rpcs[peer].generate(1)
-                    block_time += 10*60
+                    block_time += 156
                 # Must sync before next peer starts generating blocks
                 sync_blocks(rpcs)
 
         # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
+        wait_syscoinds()
         disable_mocktime()
-        for i in range(MAX_NODES):
+        for i in range(4):
             os.remove(log_filename("cache", i, "debug.log"))
             os.remove(log_filename("cache", i, "db.log"))
             os.remove(log_filename("cache", i, "peers.dat"))
             os.remove(log_filename("cache", i, "fee_estimates.dat"))
 
-    for i in range(num_nodes):
+    for i in range(4):
         from_dir = os.path.join("cache", "node"+str(i))
         to_dir = os.path.join(test_dir,  "node"+str(i))
         shutil.copytree(from_dir, to_dir)
@@ -310,16 +284,17 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     """
     datadir = os.path.join(dirname, "node"+str(i))
     if binary is None:
-        binary = os.getenv("SYSCOIND", "syscoind")
-    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-mocktime="+str(get_mocktime()) ]
+        binary = os.getenv("SYSD", "syscoind")
+    # RPC tests still depend on free transactions
+    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-blockprioritysize=50000", "-mocktime="+str(get_mocktime()) ]
     if extra_args is not None: args.extend(extra_args)
     syscoind_processes[i] = subprocess.Popen(args)
     if os.getenv("PYTHON_DEBUG", ""):
-        print("start_node: syscoind started, waiting for RPC to come up")
+        print "start_node: syscoind started, waiting for RPC to come up"
     url = rpc_url(i, rpchost)
     wait_for_syscoind_start(syscoind_processes[i], url, i)
     if os.getenv("PYTHON_DEBUG", ""):
-        print("start_node: RPC succesfully started")
+        print "start_node: RPC succesfully started"
     proxy = get_rpc_proxy(url, i, timeout=timewait)
 
     if COVERAGE_DIR:
@@ -327,16 +302,16 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
 
     return proxy
 
-def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None):
     """
     Start multiple syscoinds, return RPC connections to them
     """
-    if extra_args is None: extra_args = [ None for _ in range(num_nodes) ]
-    if binary is None: binary = [ None for _ in range(num_nodes) ]
+    if extra_args is None: extra_args = [ None for i in range(num_nodes) ]
+    if binary is None: binary = [ None for i in range(num_nodes) ]
     rpcs = []
     try:
         for i in range(num_nodes):
-            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i]))
+            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, binary=binary[i]))
     except: # If one node failed to start, stop the others
         stop_nodes(rpcs)
         raise
@@ -346,21 +321,14 @@ def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
 
 def stop_node(node, i):
-    try:
-        node.stop()
-    except http.client.CannotSendRequest as e:
-        print("WARN: Unable to stop node: " + repr(e))
-    syscoind_processes[i].wait(timeout=SYSCOIND_PROC_WAIT_TIMEOUT)
+    node.stop()
+    syscoind_processes[i].wait()
     del syscoind_processes[i]
 
 def stop_nodes(nodes):
     for node in nodes:
-        try:
-            node.stop()
-        except http.client.CannotSendRequest as e:
-            print("WARN: Unable to stop node: " + repr(e))
+        node.stop()
     del nodes[:] # Emptying array closes connections as a side effect
-    wait_syscoinds()
 
 def set_node_times(nodes, t):
     for node in nodes:
@@ -369,7 +337,7 @@ def set_node_times(nodes, t):
 def wait_syscoinds():
     # Wait for all syscoinds to cleanly exit
     for syscoind in syscoind_processes.values():
-        syscoind.wait(timeout=SYSCOIND_PROC_WAIT_TIMEOUT)
+        syscoind.wait()
     syscoind_processes.clear()
 
 def connect_nodes(from_connection, node_num):
@@ -490,15 +458,6 @@ def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
 
     return (txid, signresult["hex"], fee)
 
-def assert_fee_amount(fee, tx_size, fee_per_kB):
-    """Assert the fee was in range"""
-    target_fee = tx_size * fee_per_kB / 1000
-    if fee < target_fee:
-        raise AssertionError("Fee of %s SYS too low! (Should be %s SYS)"%(str(fee), str(target_fee)))
-    # allow the wallet's estimation to be at most 2 bytes off
-    if fee > (tx_size + 2) * fee_per_kB / 1000:
-        raise AssertionError("Fee of %s SYS too high! (Should be %s SYS)"%(str(fee), str(target_fee)))
-
 def assert_equal(thing1, thing2):
     if thing1 != thing2:
         raise AssertionError("%s != %s"%(str(thing1),str(thing2)))
@@ -508,14 +467,10 @@ def assert_greater_than(thing1, thing2):
         raise AssertionError("%s <= %s"%(str(thing1),str(thing2)))
 
 def assert_raises(exc, fun, *args, **kwds):
-    assert_raises_message(exc, None, fun, *args, **kwds)
-
-def assert_raises_message(exc, message, fun, *args, **kwds):
     try:
         fun(*args, **kwds)
-    except exc as e:
-        if message is not None and message not in e.error['message']:
-            raise AssertionError("Expected substring not found:"+e.error['message'])
+    except exc:
+        pass
     except Exception as e:
         raise AssertionError("Unexpected exception raised: "+type(e).__name__)
     else:
@@ -529,7 +484,7 @@ def assert_is_hex_string(string):
             "Couldn't interpret %r as hexadecimal; raised: %s" % (string, e))
 
 def assert_is_hash_string(string, length=64):
-    if not isinstance(string, str):
+    if not isinstance(string, basestring):
         raise AssertionError("Expected a string, got type %r" % type(string))
     elif length and len(string) != length:
         raise AssertionError(
@@ -580,7 +535,7 @@ def create_confirmed_utxos(fee, node, count):
     addr2 = node.getnewaddress()
     if iterations <= 0:
         return utxos
-    for i in range(iterations):
+    for i in xrange(iterations):
         t = utxos.pop()
         inputs = []
         inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
@@ -606,11 +561,11 @@ def gen_return_txouts():
     # So we have big transactions (and therefore can't fit very many into each block)
     # create one script_pubkey
     script_pubkey = "6a4d0200" #OP_RETURN OP_PUSH2 512 bytes
-    for i in range (512):
+    for i in xrange (512):
         script_pubkey = script_pubkey + "01"
     # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
     txouts = "81"
-    for k in range(128):
+    for k in xrange(128):
         # add txout value
         txouts = txouts + "0000000000000000"
         # add length of script_pubkey
@@ -632,7 +587,7 @@ def create_tx(node, coinbase, to_address, amount):
 def create_lots_of_big_transactions(node, txouts, utxos, fee):
     addr = node.getnewaddress()
     txids = []
-    for i in range(len(utxos)):
+    for i in xrange(len(utxos)):
         t = utxos.pop()
         inputs = []
         inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
@@ -650,4 +605,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, fee):
 
 def get_bip9_status(node, key):
     info = node.getblockchaininfo()
-    return info['bip9_softforks'][key]
+    for row in info['bip9_softforks']:
+        if row['id'] == key:
+            return row
+    raise IndexError ('key:"%s" not found' % key)

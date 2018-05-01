@@ -13,8 +13,6 @@ class QValidatedLineEdit;
 
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
-// SYSCOIN
-class QNetworkReply;
 QT_END_NAMESPACE
 
 namespace Ui {

@@ -9,10 +9,18 @@
 #include <utility>
 #include <vector>
 
+#include "rpc/server.h"
+#include "test/test_syscoin.h"
+#include "validation.h"
 #include "wallet/test/wallet_test_fixture.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
+#include <univalue.h>
+
+extern UniValue importmulti(const JSONRPCRequest& request);
+extern UniValue dumpwallet(const JSONRPCRequest& request);
+extern UniValue importwallet(const JSONRPCRequest& request);
 
 // how many times to run all the tests to have a chance to catch errors that only show up with particular random shuffles
 #define RUN_TESTS 100
@@ -21,14 +29,14 @@
 // we repeat those tests this many times and only complain if all iterations of the test fail
 #define RANDOM_REPEATS 5
 
-using namespace std;
+std::vector<std::unique_ptr<CWalletTx>> wtxn;
 
-typedef set<pair<const CWalletTx*,unsigned int> > CoinSet;
+typedef std::set<std::pair<const CWalletTx*,unsigned int> > CoinSet;
 
 BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
 static const CWallet wallet;
-static vector<COutput> vCoins;
+static std::vector<COutput> vCoins;
 
 static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0)
 {
@@ -42,26 +50,26 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
         // so stop vin being empty, and cache a non-zero Debit to fake out IsFromMe()
         tx.vin.resize(1);
     }
-    CWalletTx* wtx = new CWalletTx(&wallet, tx);
+    std::unique_ptr<CWalletTx> wtx(new CWalletTx(&wallet, MakeTransactionRef(std::move(tx))));
     if (fIsFromMe)
     {
         wtx->fDebitCached = true;
         wtx->nDebitCached = 1;
     }
-    COutput output(wtx, nInput, nAge, true, true);
+    COutput output(wtx.get(), nInput, nAge, true, true);
     vCoins.push_back(output);
+    wtxn.emplace_back(std::move(wtx));
 }
 
 static void empty_wallet(void)
 {
-    BOOST_FOREACH(COutput output, vCoins)
-        delete output.tx;
     vCoins.clear();
+    wtxn.clear();
 }
 
 static bool equal_sets(CoinSet a, CoinSet b)
 {
-    pair<CoinSet::iterator, CoinSet::iterator> ret = mismatch(a.begin(), a.end(), b.begin());
+    std::pair<CoinSet::iterator, CoinSet::iterator> ret = mismatch(a.begin(), a.end(), b.begin());
     return ret.first == a.end() && ret.second == b.end();
 }
 
@@ -178,11 +186,11 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         add_coin( 3*COIN);
         add_coin( 4*COIN); // now we have 5+6+7+8+18+20+30+100+200+300+400 = 1094 cents
         BOOST_CHECK( wallet.SelectCoinsMinConf(95 * CENT, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
-        BOOST_CHECK_EQUAL(nValueRet, 1 * COIN);  // we should get 1 SYS in 1 coin
+        BOOST_CHECK_EQUAL(nValueRet, 1 * COIN);  // we should get 1 BTC in 1 coin
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 1U);
 
         BOOST_CHECK( wallet.SelectCoinsMinConf(195 * CENT, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
-        BOOST_CHECK_EQUAL(nValueRet, 2 * COIN);  // we should get 2 SYS in 1 coin
+        BOOST_CHECK_EQUAL(nValueRet, 2 * COIN);  // we should get 2 BTC in 1 coin
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 1U);
 
         // empty the wallet and start again, now with fractions of a cent, to test small change avoidance
@@ -217,7 +225,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         // run the 'mtgox' test (see http://blockexplorer.com/tx/29a3efd3ef04f9153d47a990bd7b048a4b2d213daaa5fb8ed670fb85f13bdbcf)
         // they tried to consolidate 10 50k coins into one 500k coin, and ended up with 50k in change
         empty_wallet();
-        for (int i = 0; i < 20; i++)
+        for (int j = 0; j < 20; j++)
             add_coin(50000 * COIN);
 
         BOOST_CHECK( wallet.SelectCoinsMinConf(500000 * COIN, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
@@ -296,7 +304,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
             BOOST_CHECK(!equal_sets(setCoinsRet, setCoinsRet2));
 
             int fails = 0;
-            for (int i = 0; i < RANDOM_REPEATS; i++)
+            for (int j = 0; j < RANDOM_REPEATS; j++)
             {
                 // selecting 1 from 100 identical coins depends on the shuffle; this test will fail 1% of the time
                 // run the test RANDOM_REPEATS times and only complain if all of them fail
@@ -317,7 +325,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
             add_coin(25 * CENT);
 
             fails = 0;
-            for (int i = 0; i < RANDOM_REPEATS; i++)
+            for (int j = 0; j < RANDOM_REPEATS; j++)
             {
                 // selecting 1 from 100 identical coins depends on the shuffle; this test will fail 1% of the time
                 // run the test RANDOM_REPEATS times and only complain if all of them fail
@@ -349,6 +357,137 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
     BOOST_CHECK(wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, 0, vCoins, setCoinsRet, nValueRet));
     BOOST_CHECK_EQUAL(nValueRet, 1003 * COIN);
     BOOST_CHECK_EQUAL(setCoinsRet.size(), 2U);
+
+    empty_wallet();
+}
+
+BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
+{
+    LOCK(cs_main);
+
+    // Cap last block file size, and mine new block in a new block file.
+    CBlockIndex* oldTip = chainActive.Tip();
+    GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    CBlockIndex* newTip = chainActive.Tip();
+
+    // Verify ScanForWalletTransactions picks up transactions in both the old
+    // and new block files.
+    {
+        CWallet wallet;
+        LOCK(wallet.cs_wallet);
+        wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+        BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip));
+		// SYSCOIN
+        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 69.3 * COIN);
+    }
+
+    // Prune the older block file.
+    PruneOneBlockFile(oldTip->GetBlockPos().nFile);
+    UnlinkPrunedFiles({oldTip->GetBlockPos().nFile});
+
+    // Verify ScanForWalletTransactions only picks transactions in the new block
+    // file.
+    {
+        CWallet wallet;
+        LOCK(wallet.cs_wallet);
+        wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+        BOOST_CHECK_EQUAL(newTip, wallet.ScanForWalletTransactions(oldTip));
+		// SYSCOIN
+        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 34.65 * COIN);
+    }
+
+    // Verify importmulti RPC returns failure for a key whose creation time is
+    // before the missing block, and success for a key whose creation time is
+    // after.
+    {
+        CWallet wallet;
+        CWallet *backup = ::pwalletMain;
+        ::pwalletMain = &wallet;
+        UniValue keys;
+        keys.setArray();
+        UniValue key;
+        key.setObject();
+        key.pushKV("scriptPubKey", HexStr(GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
+        key.pushKV("timestamp", 0);
+        key.pushKV("internal", UniValue(true));
+        keys.push_back(key);
+        key.clear();
+        key.setObject();
+        CKey futureKey;
+        futureKey.MakeNewKey(true);
+        key.pushKV("scriptPubKey", HexStr(GetScriptForRawPubKey(futureKey.GetPubKey())));
+        key.pushKV("timestamp", newTip->GetBlockTimeMax() + 7200);
+        key.pushKV("internal", UniValue(true));
+        keys.push_back(key);
+        JSONRPCRequest request;
+        request.params.setArray();
+        request.params.push_back(keys);
+
+        UniValue response = importmulti(request);
+        BOOST_CHECK_EQUAL(response.write(), strprintf("[{\"success\":false,\"error\":{\"code\":-1,\"message\":\"Failed to rescan before time %d, transactions may be missing.\"}},{\"success\":true}]", newTip->GetBlockTimeMax()));
+        ::pwalletMain = backup;
+    }
+}
+
+// Verify importwallet RPC starts rescan at earliest block with timestamp
+// greater or equal than key birthday. Previously there was a bug where
+// importwallet RPC would start the scan at the latest block with timestamp less
+// than or equal to key birthday.
+BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
+{
+    CWallet *pwalletMainBackup = ::pwalletMain;
+    LOCK(cs_main);
+
+    // Create two blocks with same timestamp to verify that importwallet rescan
+    // will pick up both blocks, not just the first.
+    const int64_t BLOCK_TIME = chainActive.Tip()->GetBlockTimeMax() + 5;
+    SetMockTime(BLOCK_TIME);
+    coinbaseTxns.emplace_back(*CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
+    coinbaseTxns.emplace_back(*CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
+
+    // Set key birthday to block time increased by the timestamp window, so
+    // rescan will start at the block time.
+    const int64_t KEY_TIME = BLOCK_TIME + 7200;
+    SetMockTime(KEY_TIME);
+    coinbaseTxns.emplace_back(*CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
+
+    // Import key into wallet and call dumpwallet to create backup file.
+    {
+        CWallet wallet;
+        LOCK(wallet.cs_wallet);
+        wallet.mapKeyMetadata[coinbaseKey.GetPubKey().GetID()].nCreateTime = KEY_TIME;
+        wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+
+        JSONRPCRequest request;
+        request.params.setArray();
+        request.params.push_back("wallet.backup");
+        ::pwalletMain = &wallet;
+        ::dumpwallet(request);
+    }
+
+    // Call importwallet RPC and verify all blocks with timestamps >= BLOCK_TIME
+    // were scanned, and no prior blocks were scanned.
+    {
+        CWallet wallet;
+
+        JSONRPCRequest request;
+        request.params.setArray();
+        request.params.push_back("wallet.backup");
+        ::pwalletMain = &wallet;
+        ::importwallet(request);
+
+        BOOST_CHECK_EQUAL(wallet.mapWallet.size(), 3);
+        BOOST_CHECK_EQUAL(coinbaseTxns.size(), 103);
+        for (size_t i = 0; i < coinbaseTxns.size(); ++i) {
+            bool found = wallet.GetWalletTx(coinbaseTxns[i].GetHash());
+            bool expected = i >= 100;
+            BOOST_CHECK_EQUAL(found, expected);
+        }
+    }
+
+    SetMockTime(0);
+    ::pwalletMain = pwalletMainBackup;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

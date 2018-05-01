@@ -25,7 +25,7 @@ static const struct {
     {"macosx", false, false, true},
     {"windows", true, false, false},
     /* Other: linux, unix, ... */
-    {"other", true, true, false}
+    {"other", true, false, false}
 };
 static const unsigned platform_styles_count = sizeof(platform_styles)/sizeof(*platform_styles);
 
@@ -73,11 +73,11 @@ QIcon ColorizeIcon(const QString& filename, const QColor& colorbase)
 }
 
 
-PlatformStyle::PlatformStyle(const QString &name, bool imagesOnButtons, bool colorizeIcons, bool useExtraSpacing):
-    name(name),
-    imagesOnButtons(imagesOnButtons),
-    colorizeIcons(colorizeIcons),
-    useExtraSpacing(useExtraSpacing),
+PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _colorizeIcons, bool _useExtraSpacing):
+    name(_name),
+    imagesOnButtons(_imagesOnButtons),
+    colorizeIcons(_colorizeIcons),
+    useExtraSpacing(_useExtraSpacing),
     singleColor(0,0,0),
     textColor(0,0,0)
 {

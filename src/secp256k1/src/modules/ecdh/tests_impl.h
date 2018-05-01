@@ -4,8 +4,37 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_MODULE_ECDH_TESTS_
-#define _SECP256K1_MODULE_ECDH_TESTS_
+#ifndef SECP256K1_MODULE_ECDH_TESTS_H
+#define SECP256K1_MODULE_ECDH_TESTS_H
+
+void test_ecdh_api(void) {
+    /* Setup context that just counts errors */
+    secp256k1_context *tctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    secp256k1_pubkey point;
+    unsigned char res[32];
+    unsigned char s_one[32] = { 0 };
+    int32_t ecount = 0;
+    s_one[31] = 1;
+
+    secp256k1_context_set_error_callback(tctx, counting_illegal_callback_fn, &ecount);
+    secp256k1_context_set_illegal_callback(tctx, counting_illegal_callback_fn, &ecount);
+    CHECK(secp256k1_ec_pubkey_create(tctx, &point, s_one) == 1);
+
+    /* Check all NULLs are detected */
+    CHECK(secp256k1_ecdh(tctx, res, &point, s_one) == 1);
+    CHECK(ecount == 0);
+    CHECK(secp256k1_ecdh(tctx, NULL, &point, s_one) == 0);
+    CHECK(ecount == 1);
+    CHECK(secp256k1_ecdh(tctx, res, NULL, s_one) == 0);
+    CHECK(ecount == 2);
+    CHECK(secp256k1_ecdh(tctx, res, &point, NULL) == 0);
+    CHECK(ecount == 3);
+    CHECK(secp256k1_ecdh(tctx, res, &point, s_one) == 1);
+    CHECK(ecount == 3);
+
+    /* Cleanup */
+    secp256k1_context_destroy(tctx);
+}
 
 void test_ecdh_generator_basepoint(void) {
     unsigned char s_one[32] = { 0 };
@@ -68,8 +97,9 @@ void test_bad_scalar(void) {
 }
 
 void run_ecdh_tests(void) {
+    test_ecdh_api();
     test_ecdh_generator_basepoint();
     test_bad_scalar();
 }
 
-#endif
+#endif /* SECP256K1_MODULE_ECDH_TESTS_H */

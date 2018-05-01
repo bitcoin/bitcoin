@@ -13,13 +13,15 @@
 #include "guiutil.h"
 #include "optionsmodel.h"
 
-#include "main.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
+#include "validation.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h" // for CWallet::GetRequiredFee()
-#endif
+
+#include "privatesend-client.h"
+#endif // ENABLE_WALLET
 
 #include <boost/thread.hpp>
 
@@ -29,14 +31,11 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QTimer>
-#if QT_VERSION < 0x050000
-#include <QUrl>
-#else
-#include <QUrlQuery>
-#endif
-using namespace std;
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
+
+#ifdef ENABLE_WALLET
+extern CWallet* pwalletMain;
+#endif // ENABLE_WALLET
+
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
@@ -82,19 +81,24 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     if (!enableWallet) {
         ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWallet));
     }
+
     /* Display elements init */
-    // SYSCOIN Theme selector
-    ui->theme->addItem(tr("shade"), QVariant(""));
-	ui->theme->addItem(tr("solid"), QVariant("1"));
-	ui->theme->addItem(tr("white"), QVariant("2"));
-	ui->defaultPegAlias->setPlaceholderText("sysrates.peg");
-	ui->zecEndPoint->setPlaceholderText("http://zec.syscoin.org:8080/");
-	ui->btcEndPoint->setPlaceholderText("http://btc.syscoin.org:8080/");
-	ui->zecRPCLogin->setPlaceholderText("sysuser");
-	ui->btcRPCLogin->setPlaceholderText("sysuser");
-	ui->zecRPCPassword->setPlaceholderText("JcfJqiyhVVRsYJo0MQKjBJxOZMCrXPqQjUt2Kte2qU");
-	ui->btcRPCPassword->setPlaceholderText("JcfJqiyhVVRsYJo0MQKjBJxOZMCrXPqQjUt2Kte2qU");
-    /* Display elements init */
+    
+    /* Number of displayed decimal digits selector */
+    QString digits;
+    for(int index = 2; index <=8; index++){
+        digits.setNum(index);
+        ui->digits->addItem(digits, digits);
+    }
+    
+    /* Theme selector */
+    ui->theme->addItem(QString("SYS-light"), QVariant("light"));
+    ui->theme->addItem(QString("SYS-light-hires"), QVariant("light-hires"));
+    ui->theme->addItem(QString("SYS-blue"), QVariant("drkblue"));
+    ui->theme->addItem(QString("SYS-Crownium"), QVariant("crownium"));
+    ui->theme->addItem(QString("SYS-traditional"), QVariant("trad"));
+    
+    /* Language selector */
     QDir translations(":translations");
 
     ui->syscoinAtStartup->setToolTip(ui->syscoinAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
@@ -152,6 +156,7 @@ OptionsDialog::~OptionsDialog()
 {
     delete ui;
 }
+
 void OptionsDialog::setModel(OptionsModel *_model)
 {
     this->model = _model;
@@ -180,14 +185,15 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->databaseCache, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     connect(ui->threadsScriptVerif, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     /* Wallet */
+    connect(ui->showMasternodesTab, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Network */
     connect(ui->allowIncoming, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocksTor, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
-	// SYSCOIN
-	connect(ui->theme, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
+    connect(ui->digits, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
+    connect(ui->theme, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
 }
@@ -200,8 +206,14 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
 
     /* Wallet */
-    mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
+    mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
+    mapper->addMapping(ui->showAdvancedPSUI, OptionsModel::ShowAdvancedPSUI);
+    mapper->addMapping(ui->lowKeysWarning, OptionsModel::LowKeysWarning);
+    mapper->addMapping(ui->privateSendMultiSession, OptionsModel::PrivateSendMultiSession);
+    mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
+    mapper->addMapping(ui->privateSendRounds, OptionsModel::PrivateSendRounds);
+    mapper->addMapping(ui->privateSendAmount, OptionsModel::PrivateSendAmount);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -222,22 +234,13 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
 #endif
 
-   /* Display */
-	// SYSCOIN
-	mapper->addMapping(ui->zecEndPoint, OptionsModel::ZecEndPoint);
-	mapper->addMapping(ui->btcEndPoint, OptionsModel::BTCEndPoint);
-	mapper->addMapping(ui->zecRPCLogin, OptionsModel::ZecRPCLogin);
-	mapper->addMapping(ui->btcRPCLogin, OptionsModel::BTCRPCLogin);
-	mapper->addMapping(ui->zecRPCPassword, OptionsModel::ZecRPCPassword);
-	mapper->addMapping(ui->btcRPCPassword, OptionsModel::BTCRPCPassword);
-
-	mapper->addMapping(ui->theme, OptionsModel::Theme);
-	mapper->addMapping(ui->defaultAlias, OptionsModel::DefaultAlias);
-	mapper->addMapping(ui->defaultPegAlias, OptionsModel::DefaultPegAlias);
-	mapper->addMapping(ui->safeSearch, OptionsModel::SafeSearch);
+    /* Display */
+    mapper->addMapping(ui->digits, OptionsModel::Digits);
+    mapper->addMapping(ui->theme, OptionsModel::Theme);
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
+
 }
 
 void OptionsDialog::setOkButtonState(bool fState)
@@ -266,6 +269,11 @@ void OptionsDialog::on_resetButton_clicked()
 void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
+#ifdef ENABLE_WALLET
+    privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
+    if(pwalletMain)
+        pwalletMain->MarkDirty();
+#endif // ENABLE_WALLET
     accept();
     updateDefaultProxyNets();
 }
@@ -308,6 +316,9 @@ void OptionsDialog::showRestartWarning(bool fPersistent)
 void OptionsDialog::clearStatusLabel()
 {
     ui->statusLabel->clear();
+    if (model && model->isRestartRequired()) {
+        showRestartWarning(true);
+    }
 }
 
 void OptionsDialog::updateProxyValidationState()
@@ -317,7 +328,7 @@ void OptionsDialog::updateProxyValidationState()
     if (pUiProxyIp->isValid() && (!ui->proxyPort->isEnabled() || ui->proxyPort->text().toInt() > 0) && (!ui->proxyPortTor->isEnabled() || ui->proxyPortTor->text().toInt() > 0))
     {
         setOkButtonState(otherProxyWidget->isValid()); //only enable ok button if both proxys are valid
-        ui->statusLabel->clear();
+        clearStatusLabel();
     }
     else
     {
@@ -358,7 +369,8 @@ QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) cons
 {
     Q_UNUSED(pos);
     // Validate the proxy
-    proxyType addrProxy = proxyType(CService(input.toStdString(), 9050), true);
+    CService serv(LookupNumeric(input.toStdString().c_str(), 9050));
+    proxyType addrProxy = proxyType(serv, true);
     if (addrProxy.IsValid())
         return QValidator::Acceptable;
 

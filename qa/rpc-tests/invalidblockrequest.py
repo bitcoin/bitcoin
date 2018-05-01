@@ -1,7 +1,8 @@
-#!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Syscoin Core developers
-# Distributed under the MIT software license, see the accompanying
+#!/usr/bin/env python2
+#
+# Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
@@ -25,7 +26,6 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
     ''' Can either run this test as 1 node with expected answers, or two and compare them. 
         Change the "outcome" variable from each TestInstance object to only do the comparison. '''
     def __init__(self):
-        super().__init__()
         self.num_nodes = 1
 
     def run_test(self):
@@ -34,11 +34,12 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         self.tip = None
         self.block_time = None
         NetworkThread().start() # Start up network handling in another thread
+        sync_masternodes(self.nodes)
         test.run()
 
     def get_tests(self):
         if self.tip is None:
-            self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
+            self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
         self.block_time = int(time.time())+1
 
         '''
@@ -58,7 +59,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         Now we need that block to mature so we can spend the coinbase.
         '''
         test = TestInstance(sync_every_block=False)
-        for i in range(100):
+        for i in xrange(100):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()
             self.tip = block.sha256
@@ -103,7 +104,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         '''
         block3 = create_block(self.tip, create_coinbase(height), self.block_time)
         self.block_time += 1
-        block3.vtx[0].vout[0].nValue = 100 * COIN # Too high!
+        block3.vtx[0].vout[0].nValue = 1000 * COIN # Too high!
         block3.vtx[0].sha256=None
         block3.vtx[0].calc_sha256()
         block3.hashMerkleRoot = block3.calc_merkle_root()

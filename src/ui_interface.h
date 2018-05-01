@@ -85,10 +85,17 @@ public:
     /** Number of network connections changed. */
     boost::signals2::signal<void (int newNumConnections)> NotifyNumConnectionsChanged;
 
+    /** Network activity state changed. */
+    boost::signals2::signal<void (bool networkActive)> NotifyNetworkActiveChanged;
+
+    /** Number of masternodes changed. */
+    boost::signals2::signal<void (int newNumMasternodes)> NotifyStrMasternodeCountChanged;
+
     /**
-     * Status bar alerts changed.
+     * New, updated or cancelled alert.
+     * @note called with lock cs_mapAlerts held.
      */
-    boost::signals2::signal<void ()> NotifyAlertChanged;
+    boost::signals2::signal<void (const uint256 &hash, ChangeType status)> NotifyAlertChanged;
 
     /** A wallet has been loaded. */
     boost::signals2::signal<void (CWallet* wallet)> LoadWallet;
@@ -96,11 +103,17 @@ public:
     /** Show progress e.g. for verifychain */
     boost::signals2::signal<void (const std::string &title, int nProgress)> ShowProgress;
 
+    /** Set progress break action (possible "cancel button" triggers that action) */
+    boost::signals2::signal<void (std::function<void(void)> action)> SetProgressBreakAction;
+
     /** New block has been accepted */
     boost::signals2::signal<void (bool, const CBlockIndex *)> NotifyBlockTip;
 
     /** Best header has changed */
     boost::signals2::signal<void (bool, const CBlockIndex *)> NotifyHeaderTip;
+
+    /** Additional data sync progress changed */
+    boost::signals2::signal<void (double nSyncProgress)> NotifyAdditionalDataSyncProgressChanged;
 
     /** Banlist did change. */
     boost::signals2::signal<void (void)> BannedListChanged;
@@ -111,6 +124,8 @@ void InitWarning(const std::string& str);
 
 /** Show error message **/
 bool InitError(const std::string& str);
+
+std::string AmountHighWarn(const std::string& optname);
 
 std::string AmountErrMsg(const char* const optname, const std::string& strValue);
 

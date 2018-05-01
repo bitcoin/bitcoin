@@ -7,11 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>780</width>
-    <height>513</height>
+    <height>500</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string notr="true">Syscoin Core - Command-line options</string>
+  <property name="maximumSize">
+   <size>
+    <width>16777215</width>
+    <height>500</height>
+   </size>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <property name="spacing">
@@ -35,7 +38,7 @@
       <number>0</number>
      </property>
      <property name="topMargin">
-      <number>4</number>
+      <number>0</number>
      </property>
      <property name="rightMargin">
       <number>0</number>
@@ -48,8 +51,32 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>96</width>
+         <height>464</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>96</width>
+         <height>564</height>
+        </size>
+       </property>
+       <property name="baseSize">
+        <size>
+         <width>96</width>
+         <height>564</height>
+        </size>
+       </property>
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="pixmap">
+        <pixmap resource="../syscoin.qrc">:/images/drkblue/about</pixmap>
+       </property>
        <property name="scaledContents">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -83,8 +110,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>639</width>
-          <height>220</height>
+          <width>630</width>
+          <height>201</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">

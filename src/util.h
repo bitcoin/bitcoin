@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +18,7 @@
 #include "compat.h"
 #include "tinyformat.h"
 #include "utiltime.h"
+#include "amount.h"
 
 #include <atomic>
 #include <exception>
@@ -28,10 +30,29 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <pthread.h>
+// Debugging macros
 
-static const bool DEFAULT_LOGTIMEMICROS = false;
-static const bool DEFAULT_LOGIPS        = false;
-static const bool DEFAULT_LOGTIMESTAMPS = true;
+// Uncomment the following line to enable debugging messages
+// or enable on a per file basis prior to inclusion of util.h
+//#define ENABLE_SYS_DEBUG
+#ifdef ENABLE_SYS_DEBUG
+#define DBG( x ) x
+#else
+#define DBG( x ) 
+#endif
+
+//Syscoin only features
+
+extern bool fMasternodeMode;
+extern bool fUnitTest;
+extern bool fLiteMode;
+extern int nWalletBackups;
+
+static const bool DEFAULT_LOGTIMEMICROS  = false;
+static const bool DEFAULT_LOGIPS         = false;
+static const bool DEFAULT_LOGTIMESTAMPS  = true;
+static const bool DEFAULT_LOGTHREADNAMES = false;
 
 /** Signals for translation. */
 class CTranslationInterface
@@ -41,15 +62,14 @@ public:
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
 
-extern std::map<std::string, std::string> mapArgs;
-extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
+extern const std::map<std::string, std::vector<std::string> >& mapMultiArgs;
 extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
-extern bool fServer;
-extern std::string strMiscWarning;
+
 extern bool fLogTimestamps;
 extern bool fLogTimeMicros;
+extern bool fLogThreadNames;
 extern bool fLogIPs;
 extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;
@@ -75,41 +95,26 @@ bool LogAcceptCategory(const char* category);
 /** Send a string to the log output */
 int LogPrintStr(const std::string &str);
 
-#define LogPrintf(...) LogPrint(NULL, __VA_ARGS__)
+#define LogPrint(category, ...) do { \
+    if (LogAcceptCategory((category))) { \
+        LogPrintStr(tinyformat::format(__VA_ARGS__)); \
+    } \
+} while(0)
 
-template<typename T1, typename... Args>
-static inline int LogPrint(const char* category, const char* fmt, const T1& v1, const Args&... args)
-{
-    if(!LogAcceptCategory(category)) return 0;                            \
-    return LogPrintStr(tfm::format(fmt, v1, args...));
-}
+#define LogPrintf(...) do { \
+    LogPrintStr(tinyformat::format(__VA_ARGS__)); \
+} while(0)
 
-template<typename T1, typename... Args>
-bool error(const char* fmt, const T1& v1, const Args&... args)
+template<typename... Args>
+bool error(const char* fmt, const Args&... args)
 {
-    LogPrintStr("ERROR: " + tfm::format(fmt, v1, args...) + "\n");
-    return false;
-}
-
-/**
- * Zero-arg versions of logging and error, these are not covered by
- * the variadic templates above (and don't take format arguments but
- * bare strings).
- */
-static inline int LogPrint(const char* category, const char* s)
-{
-    if(!LogAcceptCategory(category)) return 0;
-    return LogPrintStr(s);
-}
-static inline bool error(const char* s)
-{
-    LogPrintStr(std::string("ERROR: ") + s + "\n");
+    LogPrintStr("ERROR: " + tinyformat::format(fmt, args...) + "\n");
     return false;
 }
 
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
 void ParseParameters(int argc, const char*const argv[]);
-void FileCommit(FILE *fileout);
+void FileCommit(FILE *file);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
@@ -117,13 +122,15 @@ bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
 bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
+boost::filesystem::path GetBackupsDir();
 void ClearDatadirCache();
-boost::filesystem::path GetConfigFile();
+boost::filesystem::path GetConfigFile(const std::string& confPath);
+boost::filesystem::path GetMasternodeConfigFile();
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
 #endif
-void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
+void ReadConfigFile(const std::string& confPath);
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
@@ -139,6 +146,14 @@ inline bool IsSwitchChar(char c)
     return c == '-';
 #endif
 }
+
+/**
+ * Return true if the given argument has been manually set
+ *
+ * @param strArg Argument to get (e.g. "-foo")
+ * @return true if the argument has been set
+ */
+bool IsArgSet(const std::string& strArg);
 
 /**
  * Return string argument or default value
@@ -185,6 +200,11 @@ bool SoftSetArg(const std::string& strArg, const std::string& strValue);
  */
 bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
+// Forces a arg setting
+void ForceSetArg(const std::string& strArg, const std::string& strValue);
+void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
+void ForceRemoveArg(const std::string& strArg);
+
 /**
  * Format a string to be used as group of options in help messages
  *
@@ -210,6 +230,7 @@ std::string HelpMessageOpt(const std::string& option, const std::string& message
 int GetNumCores();
 
 void RenameThread(const char* name);
+std::string GetThreadName();
 
 /**
  * .. and a wrapper that just calls func once
@@ -239,6 +260,42 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
-std::string CopyrightHolders(const std::string& strPrefix);
+std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear);
+
+/**
+ * @brief Converts version strings to 4-byte unsigned integer
+ * @param strVersion version in "x.x.x" format (decimal digits only)
+ * @return 4-byte unsigned integer, most significant byte is always 0
+ * Throws std::bad_cast if format doesn\t match.
+ */
+uint32_t StringVersionToInt(const std::string& strVersion);
+
+
+/**
+ * @brief Converts version as 4-byte unsigned integer to string
+ * @param nVersion 4-byte unsigned integer, most significant byte is always 0
+ * @return version string in "x.x.x" format (last 3 bytes as version parts)
+ * Throws std::bad_cast if format doesn\t match.
+ */
+std::string IntVersionToString(uint32_t nVersion);
+
+
+/**
+ * @brief Copy of the IntVersionToString, that returns "Invalid version" string
+ * instead of throwing std::bad_cast
+ * @param nVersion 4-byte unsigned integer, most significant byte is always 0
+ * @return version string in "x.x.x" format (last 3 bytes as version parts)
+ * or "Invalid version" if can't cast the given value
+ */
+std::string SafeIntVersionToString(uint32_t nVersion);
+
+/**
++ * On platforms that support it, tell the kernel the calling thread is
++ * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.
++ *
++ * @return The return value of sched_setschedule(), or 1 on systems without
++ * sched_setchedule().
++ */
+int ScheduleBatchPriority(pthread_t thread);
 
 #endif // SYSCOIN_UTIL_H

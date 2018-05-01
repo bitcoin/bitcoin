@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Syscoin Core developers
+#!/usr/bin/env python2
+# Copyright (c) 2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 import socket
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
@@ -36,10 +35,6 @@ addnode connect to generic DNS name
 
 class ProxyTest(SyscoinTestFramework):
     def __init__(self):
-        super().__init__()
-        self.num_nodes = 4
-        self.setup_clean_chain = False
-
         self.have_ipv6 = test_ipv6_local()
         # Create two proxies on different ports
         # ... one unauthenticated
@@ -60,7 +55,7 @@ class ProxyTest(SyscoinTestFramework):
             self.conf3.unauth = True
             self.conf3.auth = True
         else:
-            print("Warning: testing without local IPv6 support")
+            print "Warning: testing without local IPv6 support"
 
         self.serv1 = Socks5Server(self.conf1)
         self.serv1.start()
@@ -81,7 +76,7 @@ class ProxyTest(SyscoinTestFramework):
             ]
         if self.have_ipv6:
             args[3] = ['-listen', '-debug=net', '-debug=proxy', '-proxy=[%s]:%i' % (self.conf3.addr),'-proxyrandomize=0', '-noonion']
-        return start_nodes(self.num_nodes, self.options.tmpdir, extra_args=args)
+        return start_nodes(4, self.options.tmpdir, extra_args=args)
 
     def node_test(self, node, proxies, auth, test_onion=True):
         rv = []

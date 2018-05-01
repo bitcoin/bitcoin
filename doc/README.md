@@ -1,9 +1,11 @@
-Syscoin Core 0.13.2
-=====================
+Syscoin Core
+=============
 
 Setup
 ---------------------
-[Syscoin Core](http://syscoin.org/en/download) is the original Syscoin client and it builds the backbone of the network. However, it downloads and stores the entire history of Syscoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+Syscoin Core is the original Syscoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Syscoin transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+
+To download Syscoin Core, visit [syscoincore.org](https://syscoincore.org/en/releases/).
 
 Running
 ---------------------
@@ -35,10 +37,12 @@ Building
 ---------------------
 The following are developer notes on how to build Syscoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
+- [Dependencies](dependencies.md)
 - [OS X Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
 - [Windows Build Notes](build-windows.md)
 - [OpenBSD Build Notes](build-openbsd.md)
+- [NetBSD Build Notes](build-netbsd.md)
 - [Gitian Building Guide](gitian-building.md)
 
 Development
@@ -46,13 +50,12 @@ Development
 The Syscoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
-- [Multiwallet Qt Development](multiwallet-qt.md)
 - [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
 - [Source Code Documentation (External Link)](https://dev.visucore.com/syscoin/doxygen/)
 - [Translation Process](translation_process.md)
 - [Translation Strings Policy](translation_strings_policy.md)
-- [Unit Tests](unit-tests.md)
+- [Travis CI](travis-ci.md)
 - [Unauthenticated REST Interface](REST-interface.md)
 - [Shared Libraries](shared-libraries.md)
 - [BIPS](bips.md)
@@ -67,11 +70,14 @@ The Syscoin repo's [root README](/README.md) contains relevant information on th
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
 - [Files](files.md)
+- [Fuzz-testing](fuzzing.md)
+- [Reduce Traffic](reduce-traffic.md)
 - [Tor Support](tor.md)
 - [Init Scripts (systemd/upstart/openrc)](init.md)
+- [ZMQ](zmq.md)
 
 License
 ---------------------
-Distributed under the [MIT software license](http://www.opensource.org/licenses/mit-license.php).
+Distributed under the [MIT software license](/COPYING).
 This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](https://www.openssl.org/). This product includes
 cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.

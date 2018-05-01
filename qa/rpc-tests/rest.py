@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Syscoin Core developers
+#!/usr/bin/env python2
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,9 +13,16 @@ from test_framework.util import *
 from struct import *
 from io import BytesIO
 from codecs import encode
+import binascii
 
-import http.client
-import urllib.parse
+try:
+    import http.client as httplib
+except ImportError:
+    import httplib
+try:
+    import urllib.parse as urlparse
+except ImportError:
+    import urlparse
 
 def deser_uint256(f):
     r = 0
@@ -26,7 +33,7 @@ def deser_uint256(f):
 
 #allows simple http get calls
 def http_get_call(host, port, path, response_object = 0):
-    conn = http.client.HTTPConnection(host, port)
+    conn = httplib.HTTPConnection(host, port)
     conn.request('GET', path)
 
     if response_object:
@@ -36,7 +43,7 @@ def http_get_call(host, port, path, response_object = 0):
 
 #allows simple http post calls with a request body
 def http_post_call(host, port, path, requestdata = '', response_object = 0):
-    conn = http.client.HTTPConnection(host, port)
+    conn = httplib.HTTPConnection(host, port)
     conn.request('POST', path, requestdata)
 
     if response_object:
@@ -47,13 +54,12 @@ def http_post_call(host, port, path, requestdata = '', response_object = 0):
 class RESTTest (SyscoinTestFramework):
     FORMAT_SEPARATOR = "."
 
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = True
-        self.num_nodes = 3
+    def setup_chain(self):
+        print("Initializing test directory "+self.options.tmpdir)
+        initialize_chain_clean(self.options.tmpdir, 3)
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
+        self.nodes = start_nodes(3, self.options.tmpdir)
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
@@ -61,15 +67,15 @@ class RESTTest (SyscoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        url = urllib.parse.urlparse(self.nodes[0].url)
-        print("Mining blocks...")
+        url = urlparse.urlparse(self.nodes[0].url)
+        print "Mining blocks..."
 
         self.nodes[0].generate(1)
         self.sync_all()
         self.nodes[2].generate(100)
         self.sync_all()
 
-        assert_equal(self.nodes[0].getbalance(), 50)
+        assert_equal(self.nodes[0].getbalance(), 500)
 
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
@@ -145,7 +151,7 @@ class RESTTest (SyscoinTestFramework):
         output.write(bin_response)
         output.seek(0)
         chainHeight = unpack("i", output.read(4))[0]
-        hashFromBinResponse = hex(deser_uint256(output))[2:].zfill(64)
+        hashFromBinResponse = hex(deser_uint256(output))[2:].zfill(65).rstrip("L")
 
         assert_equal(bb_hash, hashFromBinResponse) #check if getutxo's chaintip during calculation was fine
         assert_equal(chainHeight, 102) #chain height must be 102

@@ -8,12 +8,15 @@
 #endif
 
 #include "netaddress.h"
+#include "netbase.h"
 #include "hash.h"
 #include "utilstrencodings.h"
 #include "tinyformat.h"
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
+
+bool fAllowPrivateNet = DEFAULT_ALLOWPRIVATENET;
 
 void CNetAddr::Init()
 {
@@ -223,7 +226,11 @@ bool CNetAddr::IsValid() const
 
 bool CNetAddr::IsRoutable() const
 {
-    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsLocal());
+    if (!IsValid())
+        return false;
+    if (!fAllowPrivateNet && IsRFC1918())
+        return false;
+    return !(IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsLocal());
 }
 
 enum Network CNetAddr::GetNetwork() const
@@ -240,17 +247,20 @@ enum Network CNetAddr::GetNetwork() const
     return NET_IPV6;
 }
 
-std::string CNetAddr::ToStringIP() const
+std::string CNetAddr::ToStringIP(bool fUseGetnameinfo) const
 {
     if (IsTor())
         return EncodeBase32(&ip[6], 10) + ".onion";
-    CService serv(*this, 0);
-    struct sockaddr_storage sockaddr;
-    socklen_t socklen = sizeof(sockaddr);
-    if (serv.GetSockAddr((struct sockaddr*)&sockaddr, &socklen)) {
-        char name[1025] = "";
-        if (!getnameinfo((const struct sockaddr*)&sockaddr, socklen, name, sizeof(name), NULL, 0, NI_NUMERICHOST))
-            return std::string(name);
+    if (fUseGetnameinfo)
+    {
+        CService serv(*this, 0);
+        struct sockaddr_storage sockaddr;
+        socklen_t socklen = sizeof(sockaddr);
+        if (serv.GetSockAddr((struct sockaddr*)&sockaddr, &socklen)) {
+            char name[1025] = "";
+            if (!getnameinfo((const struct sockaddr*)&sockaddr, socklen, name, sizeof(name), NULL, 0, NI_NUMERICHOST))
+                return std::string(name);
+        }
     }
     if (IsIPv4())
         return strprintf("%u.%u.%u.%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0));
@@ -556,18 +566,18 @@ std::string CService::ToStringPort() const
     return strprintf("%u", port);
 }
 
-std::string CService::ToStringIPPort() const
+std::string CService::ToStringIPPort(bool fUseGetnameinfo) const
 {
     if (IsIPv4() || IsTor()) {
-        return ToStringIP() + ":" + ToStringPort();
+        return ToStringIP(fUseGetnameinfo) + ":" + ToStringPort();
     } else {
-        return "[" + ToStringIP() + "]:" + ToStringPort();
+        return "[" + ToStringIP(fUseGetnameinfo) + "]:" + ToStringPort();
     }
 }
 
-std::string CService::ToString() const
+std::string CService::ToString(bool fUseGetnameinfo) const
 {
-    return ToStringIPPort();
+    return ToStringIPPort(fUseGetnameinfo);
 }
 
 void CService::SetPort(unsigned short portIn)
