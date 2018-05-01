@@ -572,15 +572,16 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees) c
     }
 }
 
-CFinalizedBudget *CBudgetManager::FindFinalizedBudget(uint256 nHash)
+CFinalizedBudget* CBudgetManager::FindFinalizedBudget(uint256 nHash)
 {
-    if(mapFinalizedBudgets.count(nHash))
-        return &mapFinalizedBudgets[nHash];
+    std::map<uint256, CFinalizedBudget>::iterator found = mapFinalizedBudgets.find(nHash);
+    if (found != mapFinalizedBudgets.end())
+        return NULL;
 
-    return NULL;
+    return &found->second;
 }
 
-CBudgetProposal *CBudgetManager::FindProposal(const std::string &strProposalName)
+CBudgetProposal* CBudgetManager::FindProposal(const std::string &strProposalName)
 {
     //find the prop with the highest yes count
 
@@ -605,10 +606,11 @@ CBudgetProposal *CBudgetManager::FindProposal(uint256 nHash)
 {
     LOCK(cs);
 
-    if(mapProposals.count(nHash))
-        return &mapProposals[nHash];
+    std::map<uint256, CBudgetProposal>::iterator found = mapProposals.find(nHash);
+    if (found != mapProposals.end())
+        return NULL;
 
-    return NULL;
+    return &found->second;
 }
 
 bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight) const
@@ -621,7 +623,7 @@ bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight) const
     return (20 * bestBudget->GetVoteCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION));
 }
 
-bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
+bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const
 {
     LOCK(cs);
 
@@ -630,10 +632,10 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
 
     // ------- Grab The Highest Count
 
-    std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
+    std::map<uint256, CFinalizedBudget>::const_iterator it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
     {
-        CFinalizedBudget* pfinalizedBudget = &((*it).second);
+        const CFinalizedBudget* pfinalizedBudget = &((*it).second);
         if(pfinalizedBudget->GetVoteCount() > nHighestCount &&
                 nBlockHeight >= pfinalizedBudget->GetBlockStart() &&
                 nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
@@ -655,7 +657,7 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
     it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
     {
-        CFinalizedBudget* pfinalizedBudget = &((*it).second);
+        const CFinalizedBudget* pfinalizedBudget = &((*it).second);
 
         if(10 * (nHighestCount - pfinalizedBudget->GetVoteCount()) < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)){
             if(nBlockHeight >= pfinalizedBudget->GetBlockStart() && nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
@@ -1182,7 +1184,7 @@ void CBudgetManager::MarkSynced()
 }
 
 
-void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
+void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial) const
 {
     LOCK(cs);
 
@@ -1198,16 +1200,17 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     int nInvCount = 0;
 
-    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
-    while(it1 != mapSeenMasternodeBudgetProposals.end()){
-        CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
-        if(pbudgetProposal && pbudgetProposal->fValid && (nProp.IsNull() || (*it1).first == nProp)){
+    std::map<uint256, CBudgetProposalBroadcast>::const_iterator it1 = mapSeenMasternodeBudgetProposals.begin();
+    while(it1 != mapSeenMasternodeBudgetProposals.end())
+    {
+        std::map<uint256, CBudgetProposal>::const_iterator pbudgetProposal = mapProposals.find((*it1).first);
+        if(pbudgetProposal != mapProposals.end() && pbudgetProposal->second.fValid && (nProp.IsNull() || (*it1).first == nProp)){
             pfrom->PushInventory(CInv(MSG_BUDGET_PROPOSAL, (*it1).second.GetHash()));
             nInvCount++;
         
             //send votes
-            std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
-            while(it2 != pbudgetProposal->mapVotes.end()){
+            std::map<uint256, CBudgetVote>::const_iterator it2 = pbudgetProposal->second.mapVotes.begin();
+            while(it2 != pbudgetProposal->second.mapVotes.end()){
                 if((*it2).second.fValid){
                     if((fPartial && !(*it2).second.fSynced) || !fPartial) {
                         pfrom->PushInventory(CInv(MSG_BUDGET_VOTE, (*it2).second.GetHash()));
@@ -1226,11 +1229,11 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     nInvCount = 0;
 
-    std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
+    std::map<uint256, CFinalizedBudgetBroadcast>::const_iterator it3 = mapSeenFinalizedBudgets.begin();
     while(it3 != mapSeenFinalizedBudgets.end()){
-        CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
-        if(pfinalizedBudget && (nProp.IsNull() || (*it3).first == nProp))
-            pfinalizedBudget->Sync(pfrom, fPartial);
+        std::map<uint256, CFinalizedBudget>::const_iterator pfinalizedBudget = mapFinalizedBudgets.find((*it3).first);
+        if(pfinalizedBudget != mapFinalizedBudgets.end() && (nProp.IsNull() || (*it3).first == nProp))
+            pfinalizedBudget->second.Sync(pfrom, fPartial);
         ++it3;
     }
 
@@ -1965,7 +1968,7 @@ void CFinalizedBudget::ResetAutoChecked()
     fAutoChecked = false;
 }
 
-bool CFinalizedBudget::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
+bool CFinalizedBudget::IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const
 {
     assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
 
@@ -2043,7 +2046,7 @@ void CFinalizedBudget::MarkSynced()
     }
 }
 
-int CFinalizedBudget::Sync(CNode* pfrom, bool fPartial)
+int CFinalizedBudget::Sync(CNode* pfrom, bool fPartial) const
 {
     if (!fValid)
         return 0;
@@ -2053,7 +2056,7 @@ int CFinalizedBudget::Sync(CNode* pfrom, bool fPartial)
     ++invCount;
 
     //send votes
-    for(std::map<uint256,CFinalizedBudgetVote>::iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
+    for(std::map<uint256,CFinalizedBudgetVote>::const_iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
     {
         if(!vote->second.fValid)
             continue;

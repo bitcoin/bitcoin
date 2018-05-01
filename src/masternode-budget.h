@@ -116,50 +116,40 @@ public:
     }
 
     void ResetSync();
-
     void MarkSynced();
-
-    void Sync(CNode *node, uint256 nProp, bool fPartial = false);
+    void Sync(CNode *node, uint256 nProp, bool fPartial = false) const;
 
     void ProcessMessage(CNode *pfrom, std::string &strCommand, CDataStream &vRecv);
 
     void NewBlock();
 
     CBudgetProposal *FindProposal(const std::string &strProposalName);
-
     CBudgetProposal *FindProposal(uint256 nHash);
-
     CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
 
     CAmount GetTotalBudget(int nHeight);
 
     std::vector<CBudgetProposal *> GetBudget();
-
     std::vector<CBudgetProposal *> GetAllProposals();
-
     std::vector<CFinalizedBudget *> GetFinalizedBudgets();
 
-    bool IsBudgetPaymentBlock(int nBlockHeight) const;
-
-    bool AddProposal(const CBudgetProposal &budgetProposal, bool checkCollateral = true);
-
     bool AddFinalizedBudget(CFinalizedBudget &finalizedBudget, bool checkCollateral = true);
-
+    bool UpdateFinalizedBudget(CFinalizedBudgetVote &vote, CNode *pfrom, std::string &strError);
     void SubmitFinalBudget();
 
+    bool AddProposal(const CBudgetProposal &budgetProposal, bool checkCollateral = true);
     bool UpdateProposal(const CBudgetVote &vote, CNode *pfrom, std::string &strError);
-
     bool SubmitProposalVote(const CBudgetVote &vote, std::string &strError);
 
-    bool UpdateFinalizedBudget(CFinalizedBudgetVote &vote, CNode *pfrom, std::string &strError);
-
-    bool IsTransactionValid(const CTransaction &txNew, int nBlockHeight);
-
-    std::string GetRequiredPaymentsString(int nBlockHeight) const;
-
+    bool IsBudgetPaymentBlock(int nBlockHeight) const;
+    bool IsTransactionValid(const CTransaction &txNew, int nBlockHeight) const;
     void FillBlockPayee(CMutableTransaction &txNew, CAmount nFees) const;
 
+    std::string GetRequiredPaymentsString(int nBlockHeight) const;
+    std::string ToString() const;
+
     void CheckOrphanVotes();
+    void CheckAndRemove();
 
     void Clear()
     {
@@ -175,11 +165,6 @@ public:
         mapOrphanMasternodeBudgetVotes.clear();
         mapOrphanFinalizedBudgetVotes.clear();
     }
-
-    void CheckAndRemove();
-
-    std::string ToString() const;
-
 
     ADD_SERIALIZE_METHODS;
 
@@ -285,7 +270,7 @@ public:
     int GetBlockEnd() const {return nBlockStart;} // Paid in single block
     int GetVoteCount() const {return (int)mapVotes.size();}
     const std::vector<CTxBudgetPayment>& GetBudgetPayments() const;
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
+    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const;
 
     //check to see if we should vote on this
     bool AutoCheck();
@@ -296,7 +281,7 @@ public:
     void SubmitVote();
 
     void MarkSynced();
-    int Sync(CNode* pfrom, bool fPartial);
+    int Sync(CNode* pfrom, bool fPartial) const;
     void ResetSync();
 
     //checks the hashes to make sure we know about them
