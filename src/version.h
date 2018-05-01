@@ -9,16 +9,14 @@
 /**
  * network protocol versioning
  */
-static const int PROTOCOL_VERSION = 70052;
+static const int PROTOCOL_VERSION = 70053;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
 
-//! In this version, 'getheaders' was introduced.
-static const int GETHEADERS_VERSION = 70030;
-
 //! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = 70052;
+static const int MIN_PEER_PROTO_VERSION_PREV = 70052;
+static const int MIN_PEER_PROTO_VERSION_CURR = 70053;
 
 //! minimum peer version accepted by legacySigner
 static const int MIN_POOL_PEER_PROTO_VERSION = 70052;
@@ -32,14 +30,14 @@ static const int MIN_MNW_PEER_PROTO_VERSION = 70052;
 //! minimum peer version that can receive masternode payments
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70040;
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70052;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_PREV = 70052;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_CURR = 70053;
 
 //! minimum peer version that can receive systemnode payments
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
-static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_1 = 70051;
-static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_2 = 70052;
+static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_PREV = 70052;
+static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_CURR = 70053;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this

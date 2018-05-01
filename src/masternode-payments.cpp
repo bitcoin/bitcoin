@@ -342,9 +342,9 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
 }
 
 int CMasternodePayments::GetMinMasternodePaymentsProto() {
-    return IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
-            ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
-            : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
+    return IsSporkActive(SPORK_10_MASTERNODE_DONT_PAY_OLD_NODES)
+            ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_CURR
+            : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_PREV;
 }
 
 void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
