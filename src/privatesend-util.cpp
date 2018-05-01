@@ -6,7 +6,7 @@
 CKeyHolder::CKeyHolder(CWallet* pwallet) :
     reserveKey(pwallet)
 {
-    reserveKey.GetReservedKey(pubKey);
+    reserveKey.GetReservedKey(pubKey, false);
 }
 
 void CKeyHolder::KeepKey()

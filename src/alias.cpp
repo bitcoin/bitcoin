@@ -1480,7 +1480,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	else {
 		CReserveKey reservekey(pwalletMain);
 		CPubKey vchPubKey;
-		reservekey.GetReservedKey(vchPubKey);
+		reservekey.GetReservedKey(vchPubKey, true);
 		CTxOut changeOut(nChange, GetScriptForDestination(vchPubKey.GetID()));
 		tx.vout.push_back(changeOut);
 	}
