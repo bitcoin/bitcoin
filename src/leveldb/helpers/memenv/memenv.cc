@@ -176,6 +176,7 @@ class SequentialFileImpl : public SequentialFile {
     return Status::OK();
   }
 
+  virtual std::string GetName() const { return "[memenv]"; }
  private:
   FileState* file_;
   uint64_t pos_;
@@ -196,6 +197,7 @@ class RandomAccessFileImpl : public RandomAccessFile {
     return file_->Read(offset, n, result, scratch);
   }
 
+  virtual std::string GetName() const { return "[memenv]"; }
  private:
   FileState* file_;
 };
@@ -218,6 +220,7 @@ class WritableFileImpl : public WritableFile {
   virtual Status Flush() { return Status::OK(); }
   virtual Status Sync() { return Status::OK(); }
 
+  virtual std::string GetName() const { return "[memenv]"; }
  private:
   FileState* file_;
 };
@@ -273,6 +276,19 @@ class InMemoryEnv : public EnvWrapper {
     file->Ref();
     file_map_[fname] = file;
 
+    *result = new WritableFileImpl(file);
+    return Status::OK();
+  }
+
+  virtual Status NewAppendableFile(const std::string& fname,
+                                   WritableFile** result) {
+    MutexLock lock(&mutex_);
+    FileState** sptr = &file_map_[fname];
+    FileState* file = *sptr;
+    if (file == NULL) {
+      file = new FileState();
+      file->Ref();
+    }
     *result = new WritableFileImpl(file);
     return Status::OK();
   }

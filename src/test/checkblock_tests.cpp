@@ -1,10 +1,11 @@
 // Copyright (c) 2013-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "clientversion.h"
 #include "consensus/validation.h"
-#include "main.h" // For CheckBlock
+#include "validation.h" // For CheckBlock
 #include "primitives/block.h"
 #include "test/test_syscoin.h"
 #include "utiltime.h"
@@ -41,26 +42,5 @@ bool read_block(const std::string& filename, CBlock& block)
     return true;
 }
 
-BOOST_AUTO_TEST_CASE(May15)
-{
-    // Putting a 1MB binary file in the git repository is not a great
-    // idea, so this test is only run if you manually download
-    // test/data/Mar12Fork.dat from
-    // http://sourceforge.net/projects/syscoin/files/Syscoin/blockchain/Mar12Fork.dat/download
-    unsigned int tMay15 = 1368576000;
-    SetMockTime(tMay15); // Test as if it was right at May 15
-
-    CBlock forkingBlock;
-    if (read_block("Mar12Fork.dat", forkingBlock))
-    {
-        CValidationState state;
-
-        // After May 15'th, big blocks are OK:
-        forkingBlock.nTime = tMay15; // Invalidates PoW
-        BOOST_CHECK(CheckBlock(forkingBlock, state, false, false));
-    }
-
-    SetMockTime(0);
-}
 
 BOOST_AUTO_TEST_SUITE_END()

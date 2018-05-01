@@ -61,6 +61,9 @@ public:
 
     /** Current number of blocks (to know whether cached status is still valid) */
     int cur_num_blocks;
+
+    //** Know when to update transaction for ix locks **/
+    int cur_num_ix_locks;
 };
 
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
@@ -78,40 +81,12 @@ public:
         RecvWithAddress,
         RecvFromOther,
         SendToSelf,
-		// SYSCOIN
-        AliasActivate,
-		AliasPaymentSent,
-		AliasPaymentRecv,
-        AliasUpdate,
-        AliasTransfer,
-		AliasRecv,
-        
-        OfferActivate,
-        OfferUpdate,
-        OfferAccept,
-		OfferAcceptAcknowledge,
-		OfferAcceptRecv,
-      
-        CertActivate,
-        CertUpdate,
-        CertTransfer,
-		CertRecv,
-
-        EscrowActivate,
-		EscrowAcknowledge,
-        EscrowRelease,
-		EscrowReleaseRecv,
-        EscrowRefund,
-		EscrowRefundRecv,
-		EscrowReleaseComplete,
-		EscrowRefundComplete,
-		EscrowFeedback,
-
-		MessageActivate,
-		MessageRecv,
-		EscrowFeedbackRecv,
-        OfferAcceptFeedback,
-		OfferAcceptFeedbackRecv
+        RecvWithPrivateSend,
+        PrivateSendDenominate,
+        PrivateSendCollateralPayment,
+        PrivateSendMakeCollaterals,
+        PrivateSendCreateDenominations,
+        PrivateSend
     };
 
     /** Number of confirmation recommended for accepting a transaction */

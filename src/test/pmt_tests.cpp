@@ -9,15 +9,13 @@
 #include "uint256.h"
 #include "arith_uint256.h"
 #include "version.h"
-#include "random.h"
 #include "test/test_syscoin.h"
+#include "test/test_random.h"
 
 #include <vector>
 
 #include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
-
-using namespace std;
 
 class CPartialMerkleTreeTester : public CPartialMerkleTree
 {
@@ -45,14 +43,14 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         for (unsigned int j=0; j<nTx; j++) {
             CMutableTransaction tx;
             tx.nLockTime = j; // actual transaction data doesn't matter; just make the nLockTime's unique
-            block.vtx.push_back(CTransaction(tx));
+            block.vtx.push_back(MakeTransactionRef(std::move(tx)));
         }
 
         // calculate actual merkle root and height
         uint256 merkleRoot1 = BlockMerkleRoot(block);
         std::vector<uint256> vTxid(nTx, uint256());
         for (unsigned int j=0; j<nTx; j++)
-            vTxid[j] = block.vtx[j].GetHash();
+            vTxid[j] = block.vtx[j]->GetHash();
         int nHeight = 1, nTx_ = nTx;
         while (nTx_ > 1) {
             nTx_ = (nTx_+1)/2;
@@ -122,7 +120,6 @@ BOOST_AUTO_TEST_CASE(pmt_malleability)
     std::vector<bool> vMatch = boost::assign::list_of(false)(false)(false)(false)(false)(false)(false)(false)(false)(true)(true)(false);
 
     CPartialMerkleTree tree(vTxid, vMatch);
-    std::vector<uint256> vTxid2;
     std::vector<unsigned int> vIndex;
     BOOST_CHECK(tree.ExtractMatches(vTxid, vIndex).IsNull());
 }

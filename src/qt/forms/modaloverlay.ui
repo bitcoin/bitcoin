@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>640</width>
-    <height>385</height>
+    <height>401</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,9 +32,9 @@
    <item>
     <widget class="QWidget" name="bgWidget" native="true">
      <property name="styleSheet">
-      <string notr="true">#bgWidget { background: rgba(0,0,0,220); }</string>
+      <string notr="true"/>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayoutMain" stretch="1">
+     <layout class="QVBoxLayout" name="verticalLayoutMain" stretch="0">
       <property name="leftMargin">
        <number>60</number>
       </property>
@@ -50,11 +50,9 @@
       <item>
        <widget class="QWidget" name="contentWidget" native="true">
         <property name="styleSheet">
-         <string notr="true">#contentWidget { background: rgba(255,255,255,240); border-radius: 6px; }
-
-QLabel { color: rgb(40,40,40);  }</string>
+         <string notr="true"/>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayoutSub" stretch="1,0,0,0">
+        <layout class="QVBoxLayout" name="verticalLayoutSub" stretch="1,0,0,0,0">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -90,8 +88,8 @@ QLabel { color: rgb(40,40,40);  }</string>
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>:/icons/shade/warning</normaloff>
-                 <disabledoff>:/icons/shade/warning</disabledoff>:/icons/warning</iconset>
+                 <normaloff>:/icons/warning</normaloff>
+                 <disabledoff>:/icons/warning</disabledoff>:/icons/warning</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -130,7 +128,7 @@ QLabel { color: rgb(40,40,40);  }</string>
              <item>
               <widget class="QLabel" name="infoText">
                <property name="text">
-                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Syscoin network after a connection is established, but this process has not completed yet. This means that recent transactions will not be visible, and the balance will not be up-to-date until this process has completed.</string>
+                <string>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Syscoin network, as detailed below.</string>
                </property>
                <property name="textFormat">
                 <enum>Qt::RichText</enum>
@@ -149,7 +147,7 @@ QLabel { color: rgb(40,40,40);  }</string>
                 </font>
                </property>
                <property name="text">
-                <string>Spending syscoins may not be possible during that phase!</string>
+                <string>Attempting to spend Syscoin that are affected by not-yet-displayed transactions will not be accepted by the network.</string>
                </property>
                <property name="textFormat">
                 <enum>Qt::RichText</enum>
@@ -204,7 +202,7 @@ QLabel { color: rgb(40,40,40);  }</string>
             <number>10</number>
            </property>
            <item row="0" column="0">
-            <widget class="QLabel" name="labelAmoutOfBlocksLeft">
+            <widget class="QLabel" name="labelNumberOfBlocksLeft">
              <property name="font">
               <font>
                <weight>75</weight>
@@ -212,14 +210,14 @@ QLabel { color: rgb(40,40,40);  }</string>
               </font>
              </property>
              <property name="text">
-              <string>Amount of blocks left</string>
+              <string>Number of blocks left</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLabel" name="amountOfBlocksLeft">
+            <widget class="QLabel" name="numberOfBlocksLeft">
              <property name="text">
-              <string>unknown...</string>
+              <string>Unknown...</string>
              </property>
             </widget>
            </item>
@@ -245,7 +243,7 @@ QLabel { color: rgb(40,40,40);  }</string>
               </sizepolicy>
              </property>
              <property name="text">
-              <string>unknown...</string>
+              <string>Unknown...</string>
              </property>
             </widget>
            </item>
@@ -267,7 +265,7 @@ QLabel { color: rgb(40,40,40);  }</string>
              <item>
               <widget class="QLabel" name="percentageProgress">
                <property name="text">
-                <string>~</string>
+                <string notr="true">~</string>
                </property>
               </widget>
              </item>
@@ -275,6 +273,9 @@ QLabel { color: rgb(40,40,40);  }</string>
               <widget class="QProgressBar" name="progressBar">
                <property name="value">
                 <number>24</number>
+               </property>
+               <property name="format">
+                <string/>
                </property>
               </widget>
              </item>
@@ -289,7 +290,7 @@ QLabel { color: rgb(40,40,40);  }</string>
               </font>
              </property>
              <property name="text">
-              <string>Progress increase per Hour</string>
+              <string>Progress increase per hour</string>
              </property>
             </widget>
            </item>
@@ -349,6 +350,23 @@ QLabel { color: rgb(40,40,40);  }</string>
               <string>Hide</string>
              </property>
             </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </item>

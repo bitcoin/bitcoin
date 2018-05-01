@@ -1,6 +1,5 @@
 {
     "txid": "07894b4d12fe7853dd911402db1620920d261b9627c447f931417d330c25f06e",
-    "hash": "07894b4d12fe7853dd911402db1620920d261b9627c447f931417d330c25f06e",
     "version": 1,
     "locktime": 0,
     "vin": [
@@ -24,7 +23,7 @@
                 "reqSigs": 1,
                 "type": "pubkeyhash",
                 "addresses": [
-                    "13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"
+                    "Xdak8YsJz8tm1iHFmycfTyKeUvHgfbdpyw"
                 ]
             }
         }, 

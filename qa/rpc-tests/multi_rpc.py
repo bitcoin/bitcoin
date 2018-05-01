@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Syscoin Core developers
+#!/usr/bin/env python2
+# Copyright (c) 2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,37 +8,38 @@
 #
 
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import str_to_b64str, assert_equal
+from test_framework.util import *
+import base64
 
-import os
-import http.client
-import urllib.parse
+try:
+    import http.client as httplib
+except ImportError:
+    import httplib
+try:
+    import urllib.parse as urlparse
+except ImportError:
+    import urlparse
 
 class HTTPBasicsTest (SyscoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = False
-        self.num_nodes = 1
+    def setup_nodes(self):
+        return start_nodes(4, self.options.tmpdir)
 
     def setup_chain(self):
-        super().setup_chain()
+        print("Initializing test directory "+self.options.tmpdir)
+        initialize_chain(self.options.tmpdir)
         #Append rpcauth to syscoin.conf before initialization
         rpcauth = "rpcauth=rt:93648e835a54c573682c2eb19f882535$7681e9c5b74bdd85e78166031d2058e1069b3ed7ed967c93fc63abba06f31144"
         rpcauth2 = "rpcauth=rt2:f8607b1a88861fac29dfccf9b52ff9f$ff36a0c23c8c62b4846112e50fa888416e94c17bfd4c42f88fd8f55ec6a3137e"
-        with open(os.path.join(self.options.tmpdir+"/node0", "syscoin.conf"), 'a', encoding='utf8') as f:
+        with open(os.path.join(self.options.tmpdir+"/node0", "syscoin.conf"), 'a') as f:
             f.write(rpcauth+"\n")
             f.write(rpcauth2+"\n")
-
-    def setup_network(self):
-        self.nodes = self.setup_nodes()
 
     def run_test(self):
 
         ##################################################
         # Check correctness of the rpcauth config option #
         ##################################################
-        url = urllib.parse.urlparse(self.nodes[0].url)
+        url = urlparse.urlparse(self.nodes[0].url)
 
         #Old authpair
         authpair = url.username + ':' + url.password
@@ -54,7 +55,7 @@ class HTTPBasicsTest (SyscoinTestFramework):
 
         headers = {"Authorization": "Basic " + str_to_b64str(authpair)}
 
-        conn = http.client.HTTPConnection(url.hostname, url.port)
+        conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
         conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         resp = conn.getresponse()
@@ -64,7 +65,7 @@ class HTTPBasicsTest (SyscoinTestFramework):
         #Use new authpair to confirm both work
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
 
-        conn = http.client.HTTPConnection(url.hostname, url.port)
+        conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
         conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         resp = conn.getresponse()
@@ -75,7 +76,7 @@ class HTTPBasicsTest (SyscoinTestFramework):
         authpairnew = "rtwrong:"+password
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
 
-        conn = http.client.HTTPConnection(url.hostname, url.port)
+        conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
         conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         resp = conn.getresponse()
@@ -86,7 +87,7 @@ class HTTPBasicsTest (SyscoinTestFramework):
         authpairnew = "rt:"+password+"wrong"
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
 
-        conn = http.client.HTTPConnection(url.hostname, url.port)
+        conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
         conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         resp = conn.getresponse()
@@ -97,7 +98,7 @@ class HTTPBasicsTest (SyscoinTestFramework):
         authpairnew = "rt2:"+password2
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
 
-        conn = http.client.HTTPConnection(url.hostname, url.port)
+        conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
         conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         resp = conn.getresponse()
@@ -108,7 +109,7 @@ class HTTPBasicsTest (SyscoinTestFramework):
         authpairnew = "rt2:"+password2+"wrong"
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
 
-        conn = http.client.HTTPConnection(url.hostname, url.port)
+        conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
         conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         resp = conn.getresponse()

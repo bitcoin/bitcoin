@@ -24,32 +24,48 @@ public:
     */
     bool SendMessage(const char *command, const void* data, size_t size);
 
-    bool Initialize(void *pcontext);
-    void Shutdown();
+    bool Initialize(void *pcontext) override;
+    void Shutdown() override;
 };
 
 class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyBlock(const CBlockIndex *pindex);
+    bool NotifyBlock(const CBlockIndex *pindex) override;
 };
 
 class CZMQPublishHashTransactionNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyTransaction(const CTransaction &transaction);
+    bool NotifyTransaction(const CTransaction &transaction) override;
+};
+
+class CZMQPublishHashTransactionLockNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyTransactionLock(const CTransaction &transaction) override;
 };
 
 class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyBlock(const CBlockIndex *pindex);
+    bool NotifyBlock(const CBlockIndex *pindex) override;
 };
 
 class CZMQPublishRawTransactionNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyTransaction(const CTransaction &transaction);
+    bool NotifyTransaction(const CTransaction &transaction) override;
 };
 
+class CZMQPublishRawTransactionLockNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyTransactionLock(const CTransaction &transaction) override;
+};
+class CZMQPublishRawSyscoinNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+	bool NotifySyscoinUpdate(const char *value, const char *topic) override;
+};
 #endif // SYSCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

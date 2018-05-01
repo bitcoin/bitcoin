@@ -31,7 +31,7 @@ outgoing connections be anonymized, but more is possible.
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
-	./syscoin -proxy=127.0.0.1:9050
+	./syscoind -proxy=127.0.0.1:9050
 
 
 2. Run a syscoin hidden server
@@ -42,11 +42,11 @@ reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equiv
 config file):
 
 	HiddenServiceDir /var/lib/tor/syscoin-service/
-	HiddenServicePort 8369 127.0.0.1:8369
-	HiddenServicePort 18369 127.0.0.1:18369
+	HiddenServicePort 8333 127.0.0.1:8333
+	HiddenServicePort 18333 127.0.0.1:18333
 
 The directory can be different of course, but (both) port numbers should be equal to
-your syscoind's P2P listen port (8369 by default).
+your syscoind's P2P listen port (8333 by default).
 
 	-externalip=X   You can tell syscoin about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
@@ -81,12 +81,12 @@ as well, use `discover` instead:
 
 	./syscoind ... -discover
 
-and open port 8369 on your firewall (or use -upnp).
+and open port 8333 on your firewall (or use -upnp).
 
 If you only want to use Tor to reach onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-	./syscoin -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
+	./syscoind -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
 
 3. Automatically listen on Tor
 --------------------------------
@@ -99,10 +99,10 @@ This means that if Tor is running (and proper authentication has been configured
 Syscoin Core automatically creates a hidden service to listen on. This will positively 
 affect the number of available .onion nodes.
 
-This new feature is enabled by default if Syscoin Core is listening, and
-a connection to Tor can be made. It can be configured with the `-listenonion`,
-`-torcontrol` and `-torpassword` settings. To show verbose debugging
-information, pass `-debug=tor`.
+This new feature is enabled by default if Syscoin Core is listening (`-listen`), and
+requires a Tor connection to work. It can be explicitly disabled with `-listenonion=0`
+and, if not disabled, configured using the `-torcontrol` and `-torpassword` settings.
+To show verbose debugging information, pass `-debug=tor`.
 
 Connecting to Tor's control socket API requires one of two authentication methods to be 
 configured. For cookie authentication the user running syscoind must have write access 
@@ -114,3 +114,12 @@ Debian-based systems the user running syscoind can be added to the debian-tor gr
 which has the appropriate permissions. An alternative authentication method is the use 
 of the `-torpassword` flag and a `hash-password` which can be enabled and specified in 
 Tor configuration.
+
+4. Privacy recommendations
+---------------------------
+
+- Do not add anything but syscoin ports to the hidden service created in section 2.
+  If you run a web service too, create a new hidden service for that.
+  Otherwise it is trivial to link them, which may reduce privacy. Hidden
+  services created automatically (as in section 3) always have only one port
+  open.

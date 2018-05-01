@@ -1,6 +1,5 @@
 {
     "txid": "aded538f642c17e15f4d3306b8be7e1a4d1ae0c4616d641ab51ea09ba65e5cb5",
-    "hash": "aded538f642c17e15f4d3306b8be7e1a4d1ae0c4616d641ab51ea09ba65e5cb5",
     "version": 1,
     "locktime": 317000,
     "vin": [
@@ -204,7 +203,7 @@
                 "reqSigs": 1,
                 "type": "pubkeyhash",
                 "addresses": [
-                    "1E7SGgAZFCHDnVZLuRViX3gUmxpMfdvd2o"
+                    "XooH6vpTCuVowS9vmJowNaNGcJQ3cQT7rs"
                 ]
             }
         }, 
@@ -217,7 +216,7 @@
                 "reqSigs": 1,
                 "type": "pubkeyhash",
                 "addresses": [
-                    "1AtWkdmfmYkErU16d3KYykJUbEp9MAj9Sb"
+                    "XkaMatRZjFxq1QbgUvdmqGzGRaPqSLvvS6"
                 ]
             }
         }

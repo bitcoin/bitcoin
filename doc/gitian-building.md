@@ -41,13 +41,13 @@ Debian Linux was chosen as the host distribution because it has a lightweight in
 Any kind of virtualization can be used, for example:
 - [VirtualBox](https://www.virtualbox.org/) (covered by this guide)
 - [KVM](http://www.linux-kvm.org/page/Main_Page)
-- [LXC](https://linuxcontainers.org/), see also [Gitian host docker container](https://github.com/gdm85/tenku/tree/master/docker/gitian-syscoin-host/README.md).
+- [LXC](https://linuxcontainers.org/)
 
 You can also install Gitian on actual hardware instead of using virtualization.
 
 Create a new VirtualBox VM
 ---------------------------
-In the VirtualBox GUI click "New" and choose the following parameters in the wizard:
+In the VirtualBox GUI click "Create" and choose the following parameters in the wizard:
 
 ![](gitian-building/create_new_vm.png)
 
@@ -55,7 +55,7 @@ In the VirtualBox GUI click "New" and choose the following parameters in the wiz
 
 ![](gitian-building/create_vm_memsize.png)
 
-- Memory Size: at least 3000MB, anything less and the build might not complete.
+- Memory Size: at least 1024MB, anything less will really slow down the build.
 
 ![](gitian-building/create_vm_hard_disk.png)
 
@@ -73,6 +73,13 @@ In the VirtualBox GUI click "New" and choose the following parameters in the wiz
 
 - File location and size: at least 40GB; as low as 20GB *may* be possible, but better to err on the safe side
 - Click `Create`
+
+Get the [Debian 8.x net installer](http://cdimage.debian.org/debian-cd/8.2.0/amd64/iso-cd/debian-8.2.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
+This DVD image can be validated using a SHA256 hashing tool, for example on
+Unixy OSes by entering the following in a terminal:
+
+    echo "d393d17ac6b3113c81186e545c416a00f28ed6e05774284bb5e8f0df39fcbcb9  debian-8.2.0-amd64-netinst.iso" | sha256sum -c
+    # (must return OK)
 
 After creating the VM, we need to configure it.
 
@@ -94,13 +101,6 @@ After creating the VM, we need to configure it.
   - Guest Port: `22`
 
 - Click `Ok` twice to save.
-
-Get the [Debian 8.x net installer](http://cdimage.debian.org/debian-cd/8.5.0/amd64/iso-cd/debian-8.5.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
-This DVD image can be validated using a SHA256 hashing tool, for example on
-Unixy OSes by entering the following in a terminal:
-
-    echo "ad4e8c27c561ad8248d5ebc1d36eb172f884057bfeb2c22ead823f59fa8c3dff  debian-8.5.0-amd64-netinst.iso" | sha256sum -c
-    # (must return OK)
 
 Then start the VM. On the first launch you will be asked for a CD or DVD image. Choose the downloaded iso.
 
@@ -159,10 +159,6 @@ To select a different button, press `Tab`.
   - Select disk to partition: SCSI1 (0,0,0)
 
 ![](gitian-building/debian_install_12_choose_disk.png)
-
-  - Partition Disks -> *All files in one partition*
-
-![](gitian-building/all_files_in_one_partition.png)
 
   - Finish partitioning and write changes to disk -> *Yes* (`Tab`, `Enter` to select the `Yes` button)
 
@@ -266,7 +262,6 @@ Then set up LXC and the rest with the following, which is a complex jumble of se
 # the version of lxc-start in Debian needs to run as root, so make sure
 # that the build script can execute it without providing a password
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc
-echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-execute" >> /etc/sudoers.d/gitian-lxc
 # make /etc/rc.local script that sets up bridge between guest and host
 echo '#!/bin/sh -e' > /etc/rc.local
 echo 'brctl addbr br0' >> /etc/rc.local
@@ -305,19 +300,18 @@ cd ..
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
-Clone the git repositories for syscoin and Gitian.
+Clone the git repositories for Syscoin Core and Gitian.
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
-git clone https://github.com/syscoin/syscoin2
-git clone https://github.com/syscoin-core/gitian.sigs.git
+git clone https://github.com/syscoin/syscoin
 ```
 
 Setting up the Gitian image
 -------------------------
 
 Gitian needs a virtual image of the operating system to build in.
-Currently this is Ubuntu Trusty x86_64.
+Currently this is Ubuntu Precise x86_64.
 This image will be copied and used every time that a build is started to
 make sure that the build is deterministic.
 Creating the image will take a while, but only has to be done once.
@@ -333,11 +327,19 @@ There will be a lot of warnings printed during the build of the image. These can
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
+**Note**: Repeat this step when you have upgraded to a newer version of Gitian.
+
+**Note**: if you get the error message *"bin/make-base-vm: mkfs.ext4: not found"* during this process you have to make the following change in file *"gitian-builder/bin/make-base-vm"* at line 117:
+```bash
+# mkfs.ext4 -F $OUT-lxc
+/sbin/mkfs.ext4 -F $OUT-lxc # (some Gitian environents do NOT find mkfs.ext4. Some do...)
+```
+
 Getting and building the inputs
 --------------------------------
 
 Follow the instructions in [doc/release-process.md](release-process.md#fetch-and-build-inputs-first-time-or-when-dependency-versions-change)
-in the syscoin repository under 'Fetch and create inputs' to install sources which require
+in the Syscoin Core repository under 'Fetch and build inputs' to install sources which require
 manual intervention. Also optionally follow the next step: 'Seed the Gitian sources cache
 and offline git repositories' which will fetch the remaining files required for building
 offline.
@@ -346,7 +348,7 @@ Building Syscoin Core
 ----------------
 
 To build Syscoin Core (for Linux, OS X and Windows) just follow the steps under 'perform
-Gitian builds' in [doc/release-process.md](release-process.md#perform-gitian-builds) in the syscoin repository.
+Gitian builds' in [doc/release-process.md](release-process.md#perform-gitian-builds) in the Syscoin Core repository.
 
 This may take some time as it will build all the dependencies needed for each descriptor.
 These dependencies will be cached after a successful build to avoid rebuilding them when possible.
@@ -360,14 +362,15 @@ tail -f var/build.log
 
 Output from `gbuild` will look something like
 
+```bash
     Initialized empty Git repository in /home/debian/gitian-builder/inputs/syscoin/.git/
     remote: Counting objects: 57959, done.
     remote: Total 57959 (delta 0), reused 0 (delta 0), pack-reused 57958
     Receiving objects: 100% (57959/57959), 53.76 MiB | 484.00 KiB/s, done.
     Resolving deltas: 100% (41590/41590), done.
-    From https://github.com/syscoin/syscoin2
+    From https://github.com/syscoin/syscoin
     ... (new tags, new branch etc)
-    --- Building for trusty amd64 ---
+    --- Building for precise amd64 ---
     Stopping target if it is up
     Making a new image copy
     stdin: is not a tty
@@ -381,7 +384,7 @@ Output from `gbuild` will look something like
     Creating build script (var/build-script)
     lxc-start: Connection refused - inotify event with no name (mask 32768)
     Running build script (log in var/build.log)
-
+```
 Building an alternative repository
 -----------------------------------
 
@@ -391,8 +394,8 @@ and inputs.
 
 For example:
 ```bash
-URL=https://github.com/laanwj/syscoin.git
-COMMIT=2014_03_windows_unicode_path
+URL=https://github.com/syscoin/syscoin.git
+COMMIT=b616fb8ef0d49a919b72b0388b091aaec5849b96
 ./bin/gbuild --commit syscoin=${COMMIT} --url syscoin=${URL} ../syscoin/contrib/gitian-descriptors/gitian-linux.yml
 ./bin/gbuild --commit syscoin=${COMMIT} --url syscoin=${URL} ../syscoin/contrib/gitian-descriptors/gitian-win.yml
 ./bin/gbuild --commit syscoin=${COMMIT} --url syscoin=${URL} ../syscoin/contrib/gitian-descriptors/gitian-osx.yml
@@ -416,14 +419,14 @@ So, if you use LXC:
 export PATH="$PATH":/path/to/gitian-builder/libexec
 export USE_LXC=1
 cd /path/to/gitian-builder
-./libexec/make-clean-vm --suite trusty --arch amd64
+./libexec/make-clean-vm --suite precise --arch amd64
 
-LXC_ARCH=amd64 LXC_SUITE=trusty on-target -u root apt-get update
-LXC_ARCH=amd64 LXC_SUITE=trusty on-target -u root \
+LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root apt-get update
+LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root \
   -e DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends -y install \
   $( sed -ne '/^packages:/,/[^-] .*/ {/^- .*/{s/"//g;s/- //;p}}' ../syscoin/contrib/gitian-descriptors/*|sort|uniq )
-LXC_ARCH=amd64 LXC_SUITE=trusty on-target -u root apt-get -q -y purge grub
-LXC_ARCH=amd64 LXC_SUITE=trusty on-target -u root -e DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
+LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root apt-get -q -y purge grub
+LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root -e DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
 ```
 
 And then set offline mode for apt-cacher-ng:
@@ -441,10 +444,10 @@ Then when building, override the remote URLs that gbuild would otherwise pull fr
 ```bash
 
 cd /some/root/path/
-git clone https://github.com/syscoin-core/syscoin-detached-sigs.git
+git clone https://github.com/syscoin/syscoin-detached-sigs.git
 
-SYSPATH=/some/root/path/syscoin
-SIGPATH=/some/root/path/syscoin-detached-sigs
+SYSPATH=/some/root/path/syscoin.git
+SIGPATH=/some/root/path/syscoin-detached-sigs.git
 
 ./bin/gbuild --url syscoin=${SYSPATH},signature=${SIGPATH} ../syscoin/contrib/gitian-descriptors/gitian-win-signer.yml
 ```
@@ -455,7 +458,7 @@ Signing externally
 If you want to do the PGP signing on another device, that's also possible; just define `SIGNER` as mentioned
 and follow the steps in the build process as normal.
 
-    gpg: skipped "laanwj": secret key not available
+    gpg: skipped "crowning-": secret key not available
 
 When you execute `gsign` you will get an error from GPG, which can be ignored. Copy the resulting `.assert` files
 in `gitian.sigs` to your signing machine and do
@@ -469,9 +472,9 @@ in `gitian.sigs` to your signing machine and do
 This will create the `.sig` files that can be committed together with the `.assert` files to assert your
 Gitian build.
 
-Uploading signatures
+Uploading signatures 
 ---------------------
 
-After building and signing you can push your signatures (both the `.assert` and `.assert.sig` files) to the
-[syscoin-core/gitian.sigs](https://github.com/syscoin-core/gitian.sigs/) repository, or if that's not possible create a pull
-request. You can also mail the files to Wladimir (laanwj@gmail.com) and he will commit them.
+Push your signatures (both the `.assert` and `.assert.sig` files) to the
+[syscoin/gitian.sigs](https://github.com/syscoin/gitian.sigs/) repository, or if that's not possible to create a pull
+request.

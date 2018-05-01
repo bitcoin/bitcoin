@@ -39,7 +39,7 @@
         <string>Select payment request file</string>
        </property>
        <property name="text">
-        <string notr="true">…</string>
+        <string notr="true">...</string>
        </property>
        <property name="autoDefault">
         <bool>false</bool>

@@ -1,4 +1,4 @@
-Syscoin Core 0.13.2
+Syscoin Core 0.12.1
 =====================
 
 Intro
@@ -19,5 +19,5 @@ depending on the speed of your computer and network connection, the synchronizat
 process can take anywhere from a few hours to a day or more.
 
 See the syscoin wiki at:
-  https://en.syscoin.it/wiki/Main_Page
+  https://syscoin.atlassian.net/wiki/
 for more help and information.

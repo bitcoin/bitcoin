@@ -1,3 +1,7 @@
+// Copyright (c) 2016-2017 The Syscoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef FEEDBACK_H
 #define FEEDBACK_H
 #include "script/script.h"
@@ -8,33 +12,23 @@ enum FeedbackUser {
 	FEEDBACKSELLER=2,
 	FEEDBACKARBITER=3
 };
-
 class CFeedback {
 public:
 	std::vector<unsigned char> vchFeedback;
 	unsigned char nRating;
 	unsigned char nFeedbackUserTo;
 	unsigned char nFeedbackUserFrom;
-	uint64_t nHeight;
-	uint256 txHash;
     CFeedback() {
         SetNull();
-    }
-    CFeedback(unsigned char nAcceptFeedbackUserFrom, unsigned char nAcceptFeedbackUserTo) {
-        SetNull();
-		nFeedbackUserFrom = nAcceptFeedbackUserFrom;
-		nFeedbackUserTo = nAcceptFeedbackUserTo;
     }
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
 		READWRITE(vchFeedback);
 		READWRITE(VARINT(nRating));
 		READWRITE(VARINT(nFeedbackUserFrom));
 		READWRITE(VARINT(nFeedbackUserTo));
-		READWRITE(VARINT(nHeight));
-		READWRITE(txHash);
 	}
 
     friend bool operator==(const CFeedback &a, const CFeedback &b) {
@@ -43,8 +37,6 @@ public:
 		&& a.nRating == b.nRating
 		&& a.nFeedbackUserFrom == b.nFeedbackUserFrom
 		&& a.nFeedbackUserTo == b.nFeedbackUserTo
-		&& a.nHeight == b.nHeight
-		&& a.txHash == b.txHash
         );
     }
 
@@ -53,21 +45,22 @@ public:
 		nRating = b.nRating;
 		nFeedbackUserFrom = b.nFeedbackUserFrom;
 		nFeedbackUserTo = b.nFeedbackUserTo;
-		nHeight = b.nHeight;
-		txHash = b.txHash;
         return *this;
     }
 
     friend bool operator!=(const CFeedback &a, const CFeedback &b) {
         return !(a == b);
     }
-
-    void SetNull() { txHash.SetNull(); nHeight = 0; nRating = 0; nFeedbackUserFrom = 0; nFeedbackUserTo = 0; vchFeedback.clear();}
-    bool IsNull() const { return ( txHash.IsNull() && nHeight == 0 && nRating == 0 && nFeedbackUserFrom == 0 && nFeedbackUserTo == 0 && vchFeedback.empty()); }
-};
-struct feedbacksort {
-    bool operator ()(const CFeedback& a, const CFeedback& b) {
-        return a.nHeight < b.nHeight;
-    }
+	static std::string FeedbackUserToString(const unsigned char nFeedbackUser) {
+		switch (nFeedbackUser) {
+			case FEEDBACKNONE:			return "NONE";
+			case FEEDBACKBUYER:			return "BUYER";
+			case FEEDBACKSELLER:		return "SELLER";
+			case FEEDBACKARBITER:		return "ARBITER";
+			default:                    return "";
+		}
+	}
+    void SetNull() {  nRating = 0; nFeedbackUserFrom = 0; nFeedbackUserTo = 0; vchFeedback.clear();}
+    bool IsNull() const { return (  nRating == 0 && nFeedbackUserFrom == 0 && nFeedbackUserTo == 0 && vchFeedback.empty()); }
 };
 #endif // FEEDBACK_H

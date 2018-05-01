@@ -19,8 +19,6 @@
 
 #include <univalue.h>
 
-static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
-
 class CRPCCommand;
 
 namespace RPCServer
@@ -43,14 +41,17 @@ struct UniValueType {
     UniValue::VType type;
 };
 
-class JSONRequest
+class JSONRPCRequest
 {
 public:
     UniValue id;
     std::string strMethod;
     UniValue params;
+    bool fHelp;
+    std::string URI;
+    std::string authUser;
 
-    JSONRequest() { id = NullUniValue; }
+    JSONRPCRequest() { id = NullUniValue; params = NullUniValue; fHelp = false; }
     void parse(const UniValue& valRequest);
 };
 
@@ -74,6 +75,11 @@ bool RPCIsInWarmup(std::string *statusOut);
  */
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValue::VType>& typesExpected, bool fAllowNull=false);
+
+/**
+ * Type-check one argument; throws JSONRPCError if wrong type given.
+ */
+void RPCTypeCheckArgument(const UniValue& value, UniValue::VType typeExpected);
 
 /*
   Check for expected keys/value types in an Object.
@@ -124,7 +130,7 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface);
  */
 void RPCRunLater(const std::string& name, boost::function<void(void)> func, int64_t nSeconds);
 
-typedef UniValue(*rpcfn_type)(const UniValue& params, bool fHelp);
+typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
 
 class CRPCCommand
 {
@@ -133,6 +139,7 @@ public:
     std::string name;
     rpcfn_type actor;
     bool okSafeMode;
+    std::vector<std::string> argNames;
 };
 
 /**
@@ -149,19 +156,17 @@ public:
 
     /**
      * Execute a method.
-     * @param method   Method to execute
-     * @param params   UniValue Array of arguments (JSON objects)
+     * @param request The JSONRPCRequest to execute
      * @returns Result of the call.
      * @throws an exception (UniValue) when an error happens.
      */
-    UniValue execute(const std::string &method, const UniValue &params) const;
+    UniValue execute(const JSONRPCRequest &request) const;
 
     /**
     * Returns a list of registered commands
     * @returns List of registered commands.
     */
     std::vector<std::string> listCommands() const;
-
 
     /**
      * Appends a CRPCCommand to the dispatch table.
@@ -172,7 +177,55 @@ public:
 };
 
 extern CRPCTable tableRPC;
+// SYSCOIN service rpc functions
+extern UniValue aliasnew(const JSONRPCRequest& request);
+extern UniValue syscointxfund(const JSONRPCRequest& request);
 
+extern UniValue aliasupdate(const JSONRPCRequest& request);
+extern UniValue aliasinfo(const JSONRPCRequest& request);
+extern UniValue aliasbalance(const JSONRPCRequest& request);
+extern UniValue prunesyscoinservices(const JSONRPCRequest& request);
+extern UniValue aliaspay(const JSONRPCRequest& request);
+extern UniValue aliasaddscript(const JSONRPCRequest& request);
+extern UniValue aliasupdatewhitelist(const JSONRPCRequest& request);
+extern UniValue aliasclearwhitelist(const JSONRPCRequest& request);
+extern UniValue aliaswhitelist(const JSONRPCRequest& request);
+extern UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request);
+extern UniValue sendrawtransaction(const JSONRPCRequest& request);
+extern UniValue createrawtransaction(const JSONRPCRequest& request);
+extern UniValue syscoinsendrawtransaction(const JSONRPCRequest& request);
+extern UniValue syscoindecoderawtransaction(const JSONRPCRequest& request);
+extern UniValue offernew(const JSONRPCRequest& request);
+extern UniValue offerupdate(const JSONRPCRequest& request);
+extern UniValue offerlink(const JSONRPCRequest& request);
+extern UniValue offerinfo(const JSONRPCRequest& request);
+
+extern UniValue certupdate(const JSONRPCRequest& request);
+extern UniValue certnew(const JSONRPCRequest& request);
+extern UniValue certtransfer(const JSONRPCRequest& request);
+extern UniValue certinfo(const JSONRPCRequest& request);
+
+extern UniValue escrownew(const JSONRPCRequest& request);
+extern UniValue escrowbid(const JSONRPCRequest& request);
+extern UniValue escrowcreaterawtransaction(const JSONRPCRequest& request);
+extern UniValue escrowrelease(const JSONRPCRequest& request);
+extern UniValue escrowcompleterelease(const JSONRPCRequest& request);
+extern UniValue escrowrefund(const JSONRPCRequest& request);
+extern UniValue escrowcompleterefund(const JSONRPCRequest& request);
+extern UniValue escrowinfo(const JSONRPCRequest& request);
+extern UniValue escrowfeedback(const JSONRPCRequest& request);
+extern UniValue escrowacknowledge(const JSONRPCRequest& request);
+extern UniValue createmultisig(const JSONRPCRequest& request);
+
+extern UniValue assetnew(const JSONRPCRequest& request);
+extern UniValue assetupdate(const JSONRPCRequest& request);
+extern UniValue assettransfer(const JSONRPCRequest& request);
+extern UniValue assetsend(const JSONRPCRequest& request);
+extern UniValue assetinfo(const JSONRPCRequest& request);
+extern UniValue assetallocationsend(const JSONRPCRequest& request);
+extern UniValue assetallocationcollectinterest(const JSONRPCRequest& request);
+extern UniValue assetallocationinfo(const JSONRPCRequest& request);
+extern UniValue assetallocationsenderstatus(const JSONRPCRequest& request);
 /**
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
@@ -196,7 +249,6 @@ bool StartRPC();
 void InterruptRPC();
 void StopRPC();
 std::string JSONRPCExecBatch(const UniValue& vReq);
+void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
 
-// Retrieves any serialization flags requested in command line argument
-int RPCSerializationFlags();
 #endif // SYSCOIN_RPCSERVER_H

@@ -1,5 +1,7 @@
-#!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Syscoin Core developers
+#!/usr/bin/env python2
+# coding=utf-8
+# ^^^^^^^^^^^^ TODO remove when supporting only Python3
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,17 +13,20 @@ class WalletTest (SyscoinTestFramework):
     def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
         """Return curr_balance after asserting the fee was in range"""
         fee = balance_with_fee - curr_balance
-        assert_fee_amount(fee, tx_size, fee_per_byte * 1000)
+        target_fee = fee_per_byte * tx_size
+        if fee < target_fee:
+            raise AssertionError("Fee of %s SYS too low! (Should be %s SYS)"%(str(fee), str(target_fee)))
+        # allow the node's estimation to be at most 2 bytes off
+        if fee > fee_per_byte * (tx_size + 2):
+            raise AssertionError("Fee of %s SYS too high! (Should be %s SYS)"%(str(fee), str(target_fee)))
         return curr_balance
 
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = True
-        self.num_nodes = 4
-        self.extra_args = [['-usehd={:d}'.format(i%2==0)] for i in range(4)]
+    def setup_chain(self):
+        print("Initializing test directory "+self.options.tmpdir)
+        initialize_chain_clean(self.options.tmpdir, 4)
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(3, self.options.tmpdir, self.extra_args[:3])
+        self.nodes = start_nodes(3, self.options.tmpdir)
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
@@ -35,20 +40,20 @@ class WalletTest (SyscoinTestFramework):
         assert_equal(len(self.nodes[1].listunspent()), 0)
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
-        print("Mining blocks...")
+        print "Mining blocks..."
 
         self.nodes[0].generate(1)
 
         walletinfo = self.nodes[0].getwalletinfo()
-        assert_equal(walletinfo['immature_balance'], 50)
+        assert_equal(walletinfo['immature_balance'], 500)
         assert_equal(walletinfo['balance'], 0)
 
         self.sync_all()
         self.nodes[1].generate(101)
         self.sync_all()
 
-        assert_equal(self.nodes[0].getbalance(), 50)
-        assert_equal(self.nodes[1].getbalance(), 50)
+        assert_equal(self.nodes[0].getbalance(), 500)
+        assert_equal(self.nodes[1].getbalance(), 500)
         assert_equal(self.nodes[2].getbalance(), 0)
 
         # Check that only first and second nodes have UTXOs
@@ -56,9 +61,10 @@ class WalletTest (SyscoinTestFramework):
         assert_equal(len(self.nodes[1].listunspent()), 1)
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
-        # Send 21 SYS from 0 to 2 using sendtoaddress call.
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
+        # Send 210 SYS from 0 to 2 using sendtoaddress call.
+        # Second transaction will be child of first, and will require a fee
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 110)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 100)
 
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 0)
@@ -71,7 +77,7 @@ class WalletTest (SyscoinTestFramework):
         unspent_0 = self.nodes[2].listunspent()[0]
         unspent_0 = {"txid": unspent_0["txid"], "vout": unspent_0["vout"]}
         self.nodes[2].lockunspent(False, [unspent_0])
-        assert_raises_message(JSONRPCException, "Insufficient funds", self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 20)
+        assert_raises(JSONRPCException, self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 200)
         assert_equal([unspent_0], self.nodes[2].listlockunspent())
         self.nodes[2].lockunspent(True, [unspent_0])
         assert_equal(len(self.nodes[2].listlockunspent()), 0)
@@ -80,10 +86,10 @@ class WalletTest (SyscoinTestFramework):
         self.nodes[1].generate(100)
         self.sync_all()
 
-        # node0 should end up with 100 sys in block rewards plus fees, but
-        # minus the 21 plus fees sent to node2
-        assert_equal(self.nodes[0].getbalance(), 100-21)
-        assert_equal(self.nodes[2].getbalance(), 21)
+        # node0 should end up with 100000 SYS in block rewards plus fees, but
+        # minus the 210 plus fees sent to node2
+        assert_equal(self.nodes[0].getbalance(), 1000-210)
+        assert_equal(self.nodes[2].getbalance(), 210)
 
         # Node0 should have two unspent outputs.
         # Create a couple of transactions to send them to node2, submit them through
@@ -97,7 +103,7 @@ class WalletTest (SyscoinTestFramework):
             inputs = []
             outputs = {}
             inputs.append({ "txid" : utxo["txid"], "vout" : utxo["vout"]})
-            outputs[self.nodes[2].getnewaddress("from1")] = utxo["amount"] - 3
+            outputs[self.nodes[2].getnewaddress("from1")] = utxo["amount"]
             raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
             txns_to_send.append(self.nodes[0].signrawtransaction(raw_tx))
 
@@ -110,42 +116,42 @@ class WalletTest (SyscoinTestFramework):
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 0)
-        assert_equal(self.nodes[2].getbalance(), 94)
-        assert_equal(self.nodes[2].getbalance("from1"), 94-21)
+        assert_equal(self.nodes[2].getbalance(), 1000)
+        assert_equal(self.nodes[2].getbalance("from1"), 1000-210)
 
-        # Send 10 SYS normal
+        # Send 100 SYS normal
         address = self.nodes[0].getnewaddress("test")
         fee_per_byte = Decimal('0.001') / 1000
         self.nodes[2].settxfee(fee_per_byte * 1000)
-        txid = self.nodes[2].sendtoaddress(address, 10, "", "", False)
+        txid = self.nodes[2].sendtoaddress(address, 100, "", "", False)
         self.nodes[2].generate(1)
         self.sync_all()
-        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), Decimal('84'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
-        assert_equal(self.nodes[0].getbalance(), Decimal('10'))
+        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), Decimal('900'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
+        assert_equal(self.nodes[0].getbalance(), Decimal('100'))
 
-        # Send 10 SYS with subtract fee from amount
-        txid = self.nodes[2].sendtoaddress(address, 10, "", "", True)
+        # Send 100 SYS with subtract fee from amount
+        txid = self.nodes[2].sendtoaddress(address, 100, "", "", True)
         self.nodes[2].generate(1)
         self.sync_all()
-        node_2_bal -= Decimal('10')
+        node_2_bal -= Decimal('100')
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
-        node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), Decimal('20'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
+        node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), Decimal('200'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
 
-        # Sendmany 10 SYS
-        txid = self.nodes[2].sendmany('from1', {address: 10}, 0, "", [])
+        # Sendmany 100 SYS
+        txid = self.nodes[2].sendmany('from1', {address: 100}, 0, False, "", [])
         self.nodes[2].generate(1)
         self.sync_all()
-        node_0_bal += Decimal('10')
-        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), node_2_bal - Decimal('10'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
+        node_0_bal += Decimal('100')
+        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), node_2_bal - Decimal('100'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
-        # Sendmany 10 SYS with subtract fee from amount
-        txid = self.nodes[2].sendmany('from1', {address: 10}, 0, "", [address])
+        # Sendmany 100 SYS with subtract fee from amount
+        txid = self.nodes[2].sendmany('from1', {address: 100}, 0, False, "", [address])
         self.nodes[2].generate(1)
         self.sync_all()
-        node_2_bal -= Decimal('10')
+        node_2_bal -= Decimal('100')
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
-        node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('10'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
+        node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('100'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
 
         # Test ResendWalletTransactions:
         # Create a couple of transactions, then start up a fourth
@@ -155,7 +161,7 @@ class WalletTest (SyscoinTestFramework):
         txid2 = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         sync_mempools(self.nodes)
 
-        self.nodes.append(start_node(3, self.options.tmpdir, self.extra_args[3]))
+        self.nodes.append(start_node(3, self.options.tmpdir))
         connect_nodes_bi(self.nodes, 0, 3)
         sync_blocks(self.nodes)
 
@@ -176,7 +182,7 @@ class WalletTest (SyscoinTestFramework):
         #4. check if recipient (node0) can list the zero value tx
         usp = self.nodes[1].listunspent()
         inputs = [{"txid":usp[0]['txid'], "vout":usp[0]['vout']}]
-        outputs = {self.nodes[1].getnewaddress(): 49.998, self.nodes[0].getnewaddress(): 11.11}
+        outputs = {self.nodes[1].getnewaddress(): 499.998, self.nodes[0].getnewaddress(): 11.11}
 
         rawTx = self.nodes[1].createrawtransaction(inputs, outputs).replace("c0833842", "00000000") #replace 11.11 with 0.0 (int32)
         decRawTx = self.nodes[1].decoderawtransaction(rawTx)
@@ -199,6 +205,7 @@ class WalletTest (SyscoinTestFramework):
 
         #do some -walletbroadcast tests
         stop_nodes(self.nodes)
+        wait_syscoinds()
         self.nodes = start_nodes(3, self.options.tmpdir, [["-walletbroadcast=0"],["-walletbroadcast=0"],["-walletbroadcast=0"]])
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
@@ -224,6 +231,7 @@ class WalletTest (SyscoinTestFramework):
 
         #restart the nodes with -walletbroadcast=1
         stop_nodes(self.nodes)
+        wait_syscoinds()
         self.nodes = start_nodes(3, self.options.tmpdir)
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
@@ -292,16 +300,7 @@ class WalletTest (SyscoinTestFramework):
                            {"address": address_to_import},
                            {"spendable": True})
 
-        # Mine a block from node0 to an address from node1
-        cbAddr = self.nodes[1].getnewaddress()
-        blkHash = self.nodes[0].generatetoaddress(1, cbAddr)[0]
-        cbTxId = self.nodes[0].getblock(blkHash)['tx'][0]
-        self.sync_all()
-
-        # Check that the txid and balance is found by node1
-        self.nodes[1].gettransaction(cbTxId)
-
-        # check if wallet or blockchain maintenance changes the balance
+        #check if wallet or blochchain maintenance changes the balance
         self.sync_all()
         blocks = self.nodes[0].generate(2)
         self.sync_all()
@@ -317,7 +316,7 @@ class WalletTest (SyscoinTestFramework):
             for s in [u'рыба', u'𝅘𝅥𝅯']:
                 addr = self.nodes[0].getaccountaddress(s)
                 label = self.nodes[0].getaccount(addr)
-                assert_equal(label, s)
+                assert_equal(label.encode('utf-8'), s.encode('utf-8')) # TODO remove encode(...) when supporting only Python3
                 assert(s in self.nodes[0].listaccounts().keys())
         self.nodes[0].ensure_ascii = True # restore to default
 
@@ -327,15 +326,13 @@ class WalletTest (SyscoinTestFramework):
             '-reindex',
             '-zapwallettxes=1',
             '-zapwallettxes=2',
-            # disabled until issue is fixed: https://github.com/syscoin/syscoin2/issues/7463
-            # '-salvagewallet',
+            '-salvagewallet',
         ]
-        chainlimit = 6
         for m in maintenance:
-            print("check " + m)
+            print "check " + m
             stop_nodes(self.nodes)
-            # set lower ancestor limit for later
-            self.nodes = start_nodes(3, self.options.tmpdir, [[m, "-limitancestorcount="+str(chainlimit)]] * 3)
+            wait_syscoinds()
+            self.nodes = start_nodes(3, self.options.tmpdir, [[m]] * 3)
             while m == '-reindex' and [block_count] * 3 != [self.nodes[i].getblockcount() for i in range(3)]:
                 # reindex will leave rpc warm up "early"; Wait for it to finish
                 time.sleep(0.1)
@@ -348,26 +345,5 @@ class WalletTest (SyscoinTestFramework):
         assert_equal(coinbase_tx_1["transactions"][0]["blockhash"], blocks[1])
         assert_equal(len(self.nodes[0].listsinceblock(blocks[1])["transactions"]), 0)
 
-        # ==Check that wallet prefers to use coins that don't exceed mempool limits =====
-
-        # Get all non-zero utxos together
-        chain_addrs = [self.nodes[0].getnewaddress(), self.nodes[0].getnewaddress()]
-        singletxid = self.nodes[0].sendtoaddress(chain_addrs[0], self.nodes[0].getbalance(), "", "", True)
-        self.nodes[0].generate(1)
-        node0_balance = self.nodes[0].getbalance()
-        # Split into two chains
-        rawtx = self.nodes[0].createrawtransaction([{"txid":singletxid, "vout":0}], {chain_addrs[0]:node0_balance/2-Decimal('0.01'), chain_addrs[1]:node0_balance/2-Decimal('0.01')})
-        signedtx = self.nodes[0].signrawtransaction(rawtx)
-        singletxid = self.nodes[0].sendrawtransaction(signedtx["hex"])
-        txids = [singletxid, singletxid]
-        self.nodes[0].generate(1)
-
-        # Make a long chain of unconfirmed payments without hitting mempool limit
-        txid_list = []
-        for i in range(chainlimit*2):
-            txid_list.append(self.nodes[0].sendtoaddress(chain_addrs[0], Decimal('0.0001')))
-        assert_equal(self.nodes[0].getmempoolinfo()['size'], chainlimit*2)
-        assert_equal(len(txid_list), chainlimit*2)
-
 if __name__ == '__main__':
-    WalletTest().main()
+    WalletTest ().main ()

@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,18 +32,15 @@
 #include <QVBoxLayout>
 
 /** "Help message" or "About" dialog box */
-HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
+HelpMessageDialog::HelpMessageDialog(QWidget *parent, HelpMode helpMode) :
     QDialog(parent),
     ui(new Ui::HelpMessageDialog)
 {
     ui->setupUi(this);
 
-    QString version = tr("Syscoin Client") + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
-    QString bitcoinversion = tr("built upon Bitcoin Core") + " " + tr("version") + " " + QString::fromStdString(FormatBitcoinVersion());
-	// SYSCOIN
-	//QString sysversion = tr("Syscoin Client") + " " + tr("version") + " " + QString::fromStdString(SYSCOIN_CLIENT_VERSION);
+    QString version = tr(PACKAGE_NAME) + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
     /* On x86 add a bit specifier to the version so that users can distinguish between
-     * 32 and 64 bit builds. On other architectures, 32/64 bit may be more ambigious.
+     * 32 and 64 bit builds. On other architectures, 32/64 bit may be more ambiguous.
      */
 #if defined(__x86_64__)
     version += " " + tr("(%1-bit)").arg(64);
@@ -50,13 +48,14 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
     version += " " + tr("(%1-bit)").arg(32);
 #endif
 
-    if (about)
+    if (helpMode == about)
     {
         setWindowTitle(tr("About %1").arg(tr(PACKAGE_NAME)));
 
         /// HTML-format the license message from the core
         QString licenseInfo = QString::fromStdString(LicenseInfo());
         QString licenseInfoHTML = licenseInfo;
+
         // Make URLs clickable
         QRegExp uri("<(.*)>", Qt::CaseSensitive, QRegExp::RegExp2);
         uri.setMinimal(true); // use non-greedy matching
@@ -67,13 +66,10 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         ui->aboutMessage->setTextFormat(Qt::RichText);
         ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         text = version + "\n" + licenseInfo;
-        ui->aboutMessage->setText(version + "<br>" + bitcoinversion + "<br><br>" + licenseInfoHTML);
+        ui->aboutMessage->setText(version + "<br><br>" + licenseInfoHTML);
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
-		// SYSCOIN
-		QString theme = GUIUtil::getThemeName();
-		ui->aboutLogo->setPixmap(QPixmap(":/images/" + theme + "/about"));
-    } else {
+    } else if (helpMode == cmdline) {
         setWindowTitle(tr("Command-line options"));
         QString header = tr("Usage:") + "\n" +
             "  syscoin-qt [" + tr("command-line options") + "]                     " + "\n";
@@ -135,7 +131,46 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         ui->helpMessage->moveCursor(QTextCursor::Start);
         ui->scrollArea->setVisible(false);
         ui->aboutLogo->setVisible(false);
+    } else if (helpMode == pshelp) {
+        setWindowTitle(tr("PrivateSend information"));
+
+        ui->aboutMessage->setTextFormat(Qt::RichText);
+        ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        ui->aboutMessage->setText(tr("\
+<h3>PrivateSend Basics</h3> \
+PrivateSend gives you true financial privacy by obscuring the origins of your funds. \
+All the Syscoin in your wallet is comprised of different \"inputs\" which you can think of as separate, discrete coins.<br> \
+PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. \
+You retain control of your money at all times..<hr> \
+<b>The PrivateSend process works like this:</b>\
+<ol type=\"1\"> \
+<li>PrivateSend begins by breaking your transaction inputs down into standard denominations. \
+These denominations are 0.1 SYS, 1 SYS, 10 SYS and 100 SYS -- sort of like the paper money you use every day.</li> \
+<li>Your wallet then sends requests to specially configured software nodes on the network, called \"masternodes.\" \
+These masternodes are informed then that you are interested in mixing a certain denomination. \
+No identifiable information is sent to the masternodes, so they never know \"who\" you are.</li> \
+<li>When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. \
+The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. \
+Your wallet pays that denomination directly to itself, but in a different address (called a change address).</li> \
+<li>In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. \
+Each time the process is completed, it's called a \"round.\" Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.</li> \
+<li>This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, \
+your funds will already be anonymized. No additional waiting is required.</li> \
+</ol> <hr>\
+<b>IMPORTANT:</b> Your wallet only contains 1000 of these \"change addresses.\" Every time a mixing event happens, up to 9 of your addresses are used up. \
+This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. \
+It can only do this, however, if you have automatic backups enabled.<br> \
+Consequently, users who have backups disabled will also have PrivateSend disabled. <hr>\
+For more info see <a href=\"https://syscoinpay.atlassian.net/wiki/display/DOC/PrivateSend\">https://syscoinpay.atlassian.net/wiki/display/DOC/PrivateSend</a> \
+        "));
+        ui->aboutMessage->setWordWrap(true);
+        ui->helpMessage->setVisible(false);
+        ui->aboutLogo->setVisible(false);
     }
+    // Theme dependent Gfx in About popup
+    QString helpMessageGfx = ":/images/" + GUIUtil::getThemeName() + "/about";
+    QPixmap pixmap = QPixmap(helpMessageGfx);
+    ui->aboutLogo->setPixmap(pixmap);
 }
 
 HelpMessageDialog::~HelpMessageDialog()
