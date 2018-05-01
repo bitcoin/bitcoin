@@ -394,18 +394,9 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBl
     voutSuperblockRet.clear();
 
     // CONFIGURE SUPERBLOCK OUTPUTS
-	pSuperblock->IsValid(txNewRet, nBlockHeight);
+
     // Superblock payments are appended to the end of the coinbase vout vector
     DBG( std::cout << "CSuperblockManager::CreateSuperblock Number payments: " << pSuperblock->CountPayments() << std::endl; );
-	// SYSCOIN
-	// payments should not exceed limit
-	CAmount nPaymentsTotalAmount = pSuperblock->GetPaymentsTotalAmount();
-	CAmount nPaymentsLimit = CSuperBlock::GetPaymentsLimit(nBlockHeight);
-	if (nPaymentsTotalAmount > nPaymentsLimit) {
-		LogPrintf("CreateSuperblock::IsValid -- Warning: Superblock invalid, payments limit exceeded: payments %lld, limit %lld\n", nPaymentsTotalAmount, nPaymentsLimit);
-		return
-	}
-
 
     // TODO: How many payments can we add before things blow up?
     //       Consider at least following limits:
@@ -441,14 +432,14 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBl
     DBG( std::cout << "CSuperblockManager::CreateSuperblock End" << std::endl; );
 }
 
-bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight, const CAmount &nFee, const CAmount &blockReward)
+bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward)
 {
     // GET BEST SUPERBLOCK, SHOULD MATCH
     LOCK(governance.cs);
 
     CSuperblock_sptr pSuperblock;
     if(CSuperblockManager::GetBestSuperblock(pSuperblock, nBlockHeight)) {
-        return pSuperblock->IsValid(txNew, nBlockHeight, nFee, blockReward);
+        return pSuperblock->IsValid(txNew, nBlockHeight, blockReward);
     }
 
     return false;
@@ -674,7 +665,7 @@ CAmount CSuperblock::GetPaymentsTotalAmount()
 *   - Does this transaction match the superblock?
 */
 
-bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, const CAmount& nFee, const CAmount &blockReward)
+bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward)
 {
     // TODO : LOCK(cs);
     // No reason for a lock here now since this method only accesses data
@@ -719,8 +710,8 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, const CAm
     // miner should not get more than he would usually get
     CAmount nBlockValue = txNew.GetValueOut();
     
-	if(nBlockValue > (blockReward + nFee + nPaymentsTotalAmount)) {
-        LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, block value limit exceeded: block %lld, limit %lld\n", nBlockValue, blockReward + nFee + nPaymentsTotalAmount);
+	if(nBlockValue > (blockReward + nPaymentsTotalAmount)) {
+        LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, block value limit exceeded: block %lld, limit %lld\n", nBlockValue, blockReward + nPaymentsTotalAmount);
         return false;
     }
 

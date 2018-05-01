@@ -129,6 +129,7 @@ SYSCOIN_CORE_H = \
   governance-vote.h \
   governance-votedb.h \
   flat-database.h \
+  hdchain.h \
   httprpc.h \
   httpserver.h \
   indirectmap.h \
@@ -386,6 +387,7 @@ libsyscoin_common_a_SOURCES = \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
+  hdchain.cpp \
   key.cpp \
   keystore.cpp \
   netaddress.cpp \

@@ -968,6 +968,11 @@ void InitParameterInteraction()
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendmultisession=0\n", __func__, nLiqProvTmp);
     }
 
+    if (IsArgSet("-hdseed") && IsHex(GetArg("-hdseed", "not hex")) && (IsArgSet("-mnemonic") || IsArgSet("-mnemonicpassphrase"))) {
+        ForceRemoveArg("-mnemonic");
+        ForceRemoveArg("-mnemonicpassphrase");
+        LogPrintf("%s: parameter interaction: can't use -hdseed and -mnemonic/-mnemonicpassphrase together, will prefer -seed\n", __func__);
+    }
 #endif // ENABLE_WALLET
 
     // Make sure additional indexes are recalculated correctly in VerifyDB
