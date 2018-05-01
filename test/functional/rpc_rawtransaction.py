@@ -41,7 +41,7 @@ class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [["-addresstype=legacy"], ["-addresstype=legacy"], ["-addresstype=legacy"]]
+        self.extra_args = [["-addresstype=legacy"], ["-addresstype=legacy"], ["-addresstype=legacy", "-txindex"]]
 
     def setup_network(self, split=False):
         super().setup_network()
@@ -230,6 +230,28 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(gottx['in_active_chain'], False)
         self.nodes[0].reconsiderblock(block1)
         assert_equal(self.nodes[0].getbestblockhash(), block2)
+
+        # Create new transaction and don't broadcast.
+        to_address = self.nodes[0].getnewaddress()
+        prevout_index = [i for i, out in enumerate(gottx['vout']) if out['value'] == 1][0]
+        inputs = [{"txid": tx, "vout": prevout_index}]
+        outputs = {to_address: 0.9999}
+        spending_rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
+        spending_tx = self.nodes[1].signrawtransactionwithwallet(spending_rawtx)['hex']
+        spending_txid = bytes_to_hex_str(hash256(hex_str_to_bytes(spending_tx)))
+
+        # Searching unknown transaction without -txindex.
+        assert_raises_rpc_error(-33, "No such mempool transaction. Use -txindex to enable blockchain transaction queries.", self.nodes[1].getrawtransaction, spending_txid)
+
+        # Searching unknown transaction with txindex.
+        assert_raises_rpc_error(-5, "No such mempool or blockchain transaction.", self.nodes[2].getrawtransaction, spending_txid)
+
+        # Broadcast transaction to mempool.
+        self.nodes[0].sendrawtransaction(spending_tx)
+        self.sync_all()
+
+        gottx = self.nodes[2].getrawtransaction(spending_txid, True)
+        assert_equal(gottx['txid'], spending_txid)
 
         #########################
         # RAW TX MULTISIG TESTS #
