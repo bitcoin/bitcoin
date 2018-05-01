@@ -3754,82 +3754,97 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
     return nFeeNeeded;
 }
 
-
 DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 {
-	if (!fFileBacked)
-		return DB_LOAD_OK;
 	fFirstRunRet = false;
-	DBErrors nLoadWalletRet = CWalletDB(strWalletFile, "cr+").LoadWallet(this);
-	if (nLoadWalletRet == DB_NEED_REWRITE)
-	{
-		if (CDB::Rewrite(strWalletFile, "\x04pool"))
-		{
-			LOCK(cs_wallet);
-			setKeyPool.clear();
-			// Note: can't top-up keypool here, because wallet is locked.
-			// User will be prompted to unlock wallet the next operation
-			// that requires a new key.
-		}
-	}
+    if (!fFileBacked)
+        return DB_LOAD_OK;
+    DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
+    if (nLoadWalletRet == DB_NEED_REWRITE)
+    {
+        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+        {
+            LOCK(cs_wallet);
+            setInternalKeyPool.clear();
+            setExternalKeyPool.clear();
+            nKeysLeftSinceAutoBackup = 0;
+            // Note: can't top-up keypool here, because wallet is locked.
+            // User will be prompted to unlock wallet the next operation
+            // that requires a new key.
+        }
+    }
 
-	if (nLoadWalletRet != DB_LOAD_OK)
-		return nLoadWalletRet;
-	fFirstRunRet = !vchDefaultKey.IsValid();
+    {
+        LOCK2(cs_main, cs_wallet);
+        for (auto& pair : mapWallet) {
+            for(unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
+                if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
+                    setWalletUTXO.insert(COutPoint(pair.first, i));
+                }
+            }
+        }
+    }
+	fFirstRunRet = mapKeys.empty() && mapCryptedKeys.empty() && mapWatchKeys.empty() && setWatchOnly.empty() && mapScripts.empty();
+	if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && IsHDEnabled())
+		fFirstRunRet = false;
+    if (nLoadWalletRet != DB_LOAD_OK)
+        return nLoadWalletRet;
 
-	uiInterface.LoadWallet(this);
+    uiInterface.LoadWallet(this);
 
-	return DB_LOAD_OK;
+    return DB_LOAD_OK;
 }
 
-
-DBErrors CWallet::ZapSelectTx(vector<uint256>& vHashIn, vector<uint256>& vHashOut)
+DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut)
 {
-	if (!fFileBacked)
-		return DB_LOAD_OK;
-	DBErrors nZapSelectTxRet = CWalletDB(strWalletFile, "cr+").ZapSelectTx(this, vHashIn, vHashOut);
-	if (nZapSelectTxRet == DB_NEED_REWRITE)
-	{
-		if (CDB::Rewrite(strWalletFile, "\x04pool"))
-		{
-			LOCK(cs_wallet);
-			setKeyPool.clear();
-			// Note: can't top-up keypool here, because wallet is locked.
-			// User will be prompted to unlock wallet the next operation
-			// that requires a new key.
-		}
-	}
+    if (!fFileBacked)
+        return DB_LOAD_OK;
+    DBErrors nZapSelectTxRet = CWalletDB(strWalletFile,"cr+").ZapSelectTx(this, vHashIn, vHashOut);
+    if (nZapSelectTxRet == DB_NEED_REWRITE)
+    {
+        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+        {
+            LOCK(cs_wallet);
+            setInternalKeyPool.clear();
+            setExternalKeyPool.clear();
+            // Note: can't top-up keypool here, because wallet is locked.
+            // User will be prompted to unlock wallet the next operation
+            // that requires a new key.
+        }
+    }
 
-	if (nZapSelectTxRet != DB_LOAD_OK)
-		return nZapSelectTxRet;
+    if (nZapSelectTxRet != DB_LOAD_OK)
+        return nZapSelectTxRet;
 
-	MarkDirty();
+    MarkDirty();
 
-	return DB_LOAD_OK;
+    return DB_LOAD_OK;
 
 }
 
 DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
 {
-	if (!fFileBacked)
-		return DB_LOAD_OK;
-	DBErrors nZapWalletTxRet = CWalletDB(strWalletFile, "cr+").ZapWalletTx(this, vWtx);
-	if (nZapWalletTxRet == DB_NEED_REWRITE)
-	{
-		if (CDB::Rewrite(strWalletFile, "\x04pool"))
-		{
-			LOCK(cs_wallet);
-			setKeyPool.clear();
-			// Note: can't top-up keypool here, because wallet is locked.
-			// User will be prompted to unlock wallet the next operation
-			// that requires a new key.
-		}
-	}
+    if (!fFileBacked)
+        return DB_LOAD_OK;
+    DBErrors nZapWalletTxRet = CWalletDB(strWalletFile,"cr+").ZapWalletTx(this, vWtx);
+    if (nZapWalletTxRet == DB_NEED_REWRITE)
+    {
+        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+        {
+            LOCK(cs_wallet);
+            setInternalKeyPool.clear();
+            setExternalKeyPool.clear();
+            nKeysLeftSinceAutoBackup = 0;
+            // Note: can't top-up keypool here, because wallet is locked.
+            // User will be prompted to unlock wallet the next operation
+            // that requires a new key.
+        }
+    }
 
-	if (nZapWalletTxRet != DB_LOAD_OK)
-		return nZapWalletTxRet;
+    if (nZapWalletTxRet != DB_LOAD_OK)
+        return nZapWalletTxRet;
 
-	return DB_LOAD_OK;
+    return DB_LOAD_OK;
 }
 
 
@@ -3888,91 +3903,141 @@ bool CWallet::SetDefaultKey(const CPubKey &vchPubKey)
 	return true;
 }
 /**
-* Mark old keypool keys as used,
-* and generate all new keys
-*/
+ * Mark old keypool keys as used,
+ * and generate all new keys 
+ */
 bool CWallet::NewKeyPool()
 {
-	{
-		LOCK(cs_wallet);
-		CWalletDB walletdb(strWalletFile);
-		BOOST_FOREACH(int64_t nIndex, setKeyPool)
-			walletdb.ErasePool(nIndex);
-		setKeyPool.clear();
+    {
+        LOCK(cs_wallet);
+        CWalletDB walletdb(strWalletFile);
+        BOOST_FOREACH(int64_t nIndex, setInternalKeyPool) {
+            walletdb.ErasePool(nIndex);
+        }
+        setInternalKeyPool.clear();
+        BOOST_FOREACH(int64_t nIndex, setExternalKeyPool) {
+            walletdb.ErasePool(nIndex);
+        }
+        setExternalKeyPool.clear();
+        privateSendClient.fEnablePrivateSend = false;
+        nKeysLeftSinceAutoBackup = 0;
 
-		if (IsLocked())
-			return false;
+        if (!TopUpKeyPool())
+            return false;
 
-		int64_t nKeys = max(GetArg("-keypool", DEFAULT_KEYPOOL_SIZE), (int64_t)0);
-		for (int i = 0; i < nKeys; i++)
-		{
-			int64_t nIndex = i + 1;
-			walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));
-			setKeyPool.insert(nIndex);
-		}
-		LogPrintf("CWallet::NewKeyPool wrote %d new keys\n", nKeys);
-	}
-	return true;
+        LogPrintf("CWallet::NewKeyPool rewrote keypool\n");
+    }
+    return true;
 }
 
+size_t CWallet::KeypoolCountExternalKeys()
+{
+    AssertLockHeld(cs_wallet); // setExternalKeyPool
+    return setExternalKeyPool.size();
+}
 
+size_t CWallet::KeypoolCountInternalKeys()
+{
+    AssertLockHeld(cs_wallet); // setInternalKeyPool
+    return setInternalKeyPool.size();
+}
 
 bool CWallet::TopUpKeyPool(unsigned int kpSize)
 {
-	{
-		LOCK(cs_wallet);
+    {
+        LOCK(cs_wallet);
 
-		if (IsLocked())
-			return false;
+        if (IsLocked())
+            return false;
 
-		CWalletDB walletdb(strWalletFile);
+        // Top up key pool
+        unsigned int nTargetSize;
+        if (kpSize > 0)
+            nTargetSize = kpSize;
+        else
+            nTargetSize = std::max(GetArg("-keypool", DEFAULT_KEYPOOL_SIZE), (int64_t) 0);
 
-		// Top up key pool
-		unsigned int nTargetSize;
-		if (kpSize > 0)
-			nTargetSize = kpSize;
-		else
-			nTargetSize = max(GetArg("-keypool", DEFAULT_KEYPOOL_SIZE), (int64_t)0);
+        // count amount of available keys (internal, external)
+        // make sure the keypool of external and internal keys fits the user selected target (-keypool)
+        int64_t amountExternal = setExternalKeyPool.size();
+        int64_t amountInternal = setInternalKeyPool.size();
+        int64_t missingExternal = std::max(std::max((int64_t) nTargetSize, (int64_t) 1) - amountExternal, (int64_t) 0);
+        int64_t missingInternal = std::max(std::max((int64_t) nTargetSize, (int64_t) 1) - amountInternal, (int64_t) 0);
 
-		while (setKeyPool.size() < (nTargetSize + 1))
-		{
-			int64_t nEnd = 1;
-			if (!setKeyPool.empty())
-				nEnd = *(--setKeyPool.end()) + 1;
-			if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
-				throw runtime_error(std::string(__func__) + ": writing generated key failed");
-			setKeyPool.insert(nEnd);
-			LogPrintf("keypool added key %d, size=%u\n", nEnd, setKeyPool.size());
-		}
-	}
-	return true;
+        if (!IsHDEnabled())
+        {
+            // don't create extra internal keys
+            missingInternal = 0;
+        } else {
+            nTargetSize *= 2;
+        }
+        bool fInternal = false;
+        CWalletDB walletdb(strWalletFile);
+        for (int64_t i = missingInternal + missingExternal; i--;)
+        {
+            int64_t nEnd = 1;
+            if (i < missingInternal) {
+                fInternal = true;
+            }
+            if (!setInternalKeyPool.empty()) {
+                nEnd = *(--setInternalKeyPool.end()) + 1;
+            }
+            if (!setExternalKeyPool.empty()) {
+                nEnd = std::max(nEnd, *(--setExternalKeyPool.end()) + 1);
+            }
+            // TODO: implement keypools for all accounts?
+            if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey(0, fInternal), fInternal)))
+                throw std::runtime_error(std::string(__func__) + ": writing generated key failed");
+
+            if (fInternal) {
+                setInternalKeyPool.insert(nEnd);
+            } else {
+                setExternalKeyPool.insert(nEnd);
+            }
+            LogPrintf("keypool added key %d, size=%u, internal=%d\n", nEnd, setInternalKeyPool.size() + setExternalKeyPool.size(), fInternal);
+
+            double dProgress = 100.f * nEnd / (nTargetSize + 1);
+            std::string strMsg = strprintf(_("Loading wallet... (%3.2f %%)"), dProgress);
+            uiInterface.InitMessage(strMsg);
+        }
+    }
+    return true;
 }
 
-void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool)
+void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fInternal)
 {
-	nIndex = -1;
-	keypool.vchPubKey = CPubKey();
-	{
-		LOCK(cs_wallet);
+    nIndex = -1;
+    keypool.vchPubKey = CPubKey();
+    {
+        LOCK(cs_wallet);
 
-		if (!IsLocked())
-			TopUpKeyPool();
+        if (!IsLocked())
+            TopUpKeyPool();
 
-		// Get the oldest key
-		if (setKeyPool.empty())
-			return;
+        fInternal = fInternal && IsHDEnabled();
+        std::set<int64_t>& setKeyPool = fInternal ? setInternalKeyPool : setExternalKeyPool;
 
-		CWalletDB walletdb(strWalletFile);
+        // Get the oldest key
+        if(setKeyPool.empty())
+            return;
 
-		nIndex = *(setKeyPool.begin());
-		setKeyPool.erase(setKeyPool.begin());
-		if (!walletdb.ReadPool(nIndex, keypool))
-			throw runtime_error(std::string(__func__) + ": read failed");
-		if (!HaveKey(keypool.vchPubKey.GetID()))
-			throw runtime_error(std::string(__func__) + ": unknown key in key pool");
-		assert(keypool.vchPubKey.IsValid());
-		LogPrintf("keypool reserve %d\n", nIndex);
-	}
+        CWalletDB walletdb(strWalletFile);
+
+        nIndex = *setKeyPool.begin();
+        setKeyPool.erase(nIndex);
+        if (!walletdb.ReadPool(nIndex, keypool)) {
+            throw std::runtime_error(std::string(__func__) + ": read failed");
+        }
+        if (!HaveKey(keypool.vchPubKey.GetID())) {
+            throw std::runtime_error(std::string(__func__) + ": unknown key in key pool");
+        }
+        if (keypool.fInternal != fInternal) {
+            throw std::runtime_error(std::string(__func__) + ": keypool entry misclassified");
+        }
+
+        assert(keypool.vchPubKey.IsValid());
+        LogPrintf("keypool reserve %d\n", nIndex);
+    }
 }
 
 void CWallet::KeepKey(int64_t nIndex)
@@ -3987,54 +4052,69 @@ void CWallet::KeepKey(int64_t nIndex)
     LogPrintf("keypool keep %d\n", nIndex);
 }
 
-void CWallet::ReturnKey(int64_t nIndex)
+void CWallet::ReturnKey(int64_t nIndex, bool fInternal)
 {
-	// Return to key pool
-	{
-		LOCK(cs_wallet);
-		setKeyPool.insert(nIndex);
-	}
-	LogPrintf("keypool return %d\n", nIndex);
+    // Return to key pool
+    {
+        LOCK(cs_wallet);
+        if (fInternal) {
+            setInternalKeyPool.insert(nIndex);
+        } else {
+            setExternalKeyPool.insert(nIndex);
+        }
+    }
+    LogPrintf("keypool return %d\n", nIndex);
 }
 
-
-bool CWallet::GetKeyFromPool(CPubKey& result)
+bool CWallet::GetKeyFromPool(CPubKey& result, bool fInternal)
 {
-	int64_t nIndex = 0;
-	CKeyPool keypool;
-	{
-		LOCK(cs_wallet);
-		ReserveKeyFromKeyPool(nIndex, keypool);
-		if (nIndex == -1)
-		{
-			if (IsLocked()) return false;
-			result = GenerateNewKey();
-			return true;
-		}
-		KeepKey(nIndex);
-		result = keypool.vchPubKey;
-	}
-	return true;
+    int64_t nIndex = 0;
+    CKeyPool keypool;
+    {
+        LOCK(cs_wallet);
+        ReserveKeyFromKeyPool(nIndex, keypool, fInternal);
+        if (nIndex == -1)
+        {
+            if (IsLocked()) return false;
+            // TODO: implement keypool for all accouts?
+            result = GenerateNewKey(0, fInternal);
+            return true;
+        }
+        KeepKey(nIndex);
+        result = keypool.vchPubKey;
+    }
+    return true;
 }
 
-
+static int64_t GetOldestKeyInPool(const std::set<int64_t>& setKeyPool, CWalletDB& walletdb) {
+    CKeyPool keypool;
+    int64_t nIndex = *(setKeyPool.begin());
+    if (!walletdb.ReadPool(nIndex, keypool)) {
+        throw std::runtime_error(std::string(__func__) + ": read oldest key in keypool failed");
+    }
+    assert(keypool.vchPubKey.IsValid());
+    return keypool.nTime;
+}
 
 int64_t CWallet::GetOldestKeyPoolTime()
 {
-	LOCK(cs_wallet);
+    LOCK(cs_wallet);
 
-	// if the keypool is empty, return <NOW>
-	if (setKeyPool.empty())
-		return GetTime();
+    // if the keypool is empty, return <NOW>
+    if (setExternalKeyPool.empty() && setInternalKeyPool.empty())
+        return GetTime();
 
-	// load oldest key from keypool, get time and return
-	CKeyPool keypool;
-	CWalletDB walletdb(strWalletFile);
-	int64_t nIndex = *(setKeyPool.begin());
-	if (!walletdb.ReadPool(nIndex, keypool))
-		throw runtime_error(std::string(__func__) + ": read oldest key in keypool failed");
-	assert(keypool.vchPubKey.IsValid());
-	return keypool.nTime;
+    CWalletDB walletdb(strWalletFile);
+    int64_t oldestKey = -1;
+
+    // load oldest key from keypool, get time and return
+    if (!setInternalKeyPool.empty()) {
+        oldestKey = std::max(GetOldestKeyInPool(setInternalKeyPool, walletdb), oldestKey);
+    }
+    if (!setExternalKeyPool.empty()) {
+        oldestKey = std::max(GetOldestKeyInPool(setExternalKeyPool, walletdb), oldestKey);
+    }
+    return oldestKey;
 }
 
 std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
@@ -4265,24 +4345,21 @@ static void LoadReserveKeysToSet(std::set<CKeyID>& setAddress, const std::set<in
     }
 }
 
-void CWallet::GetAllReserveKeys(set<CKeyID>& setAddress) const
+void CWallet::GetAllReserveKeys(std::set<CKeyID>& setAddress) const
 {
-	setAddress.clear();
+    setAddress.clear();
 
-	CWalletDB walletdb(strWalletFile);
+    CWalletDB walletdb(strWalletFile);
 
-	LOCK2(cs_main, cs_wallet);
-	BOOST_FOREACH(const int64_t& id, setKeyPool)
-	{
-		CKeyPool keypool;
-		if (!walletdb.ReadPool(id, keypool))
-			throw runtime_error(std::string(__func__) + ": read failed");
-		assert(keypool.vchPubKey.IsValid());
-		CKeyID keyID = keypool.vchPubKey.GetID();
-		if (!HaveKey(keyID))
-			throw runtime_error(std::string(__func__) + ": unknown key in key pool");
-		setAddress.insert(keyID);
-	}
+    LOCK2(cs_main, cs_wallet);
+    LoadReserveKeysToSet(setAddress, setInternalKeyPool, walletdb);
+    LoadReserveKeysToSet(setAddress, setExternalKeyPool, walletdb);
+
+    BOOST_FOREACH (const CKeyID& keyID, setAddress) {
+        if (!HaveKey(keyID)) {
+            throw std::runtime_error(std::string(__func__) + ": unknown key in key pool");
+        }
+    }
 }
 
 bool CWallet::UpdatedTransaction(const uint256 &hashTx)
@@ -4804,7 +4881,24 @@ bool CWallet::ParameterInteraction()
 
 bool CWallet::InitAutoBackup()
 {
-   
+    if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
+        return true;
+
+    std::string strWarning;
+    std::string strError;
+
+    nWalletBackups = GetArg("-createwalletbackups", 10);
+    nWalletBackups = std::max(0, std::min(10, nWalletBackups));
+
+    std::string strWalletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
+
+    if(!AutoBackupWallet(NULL, strWalletFile, strWarning, strError)) {
+        if (!strWarning.empty())
+            InitWarning(strWarning);
+        if (!strError.empty())
+            return InitError(strError);
+    }
+
     return true;
 }
 
@@ -4852,7 +4946,126 @@ bool CWallet::BackupWallet(const std::string& strDest)
 // either supply "wallet" (if already loaded) or "strWalletFile" (if wallet wasn't loaded yet)
 bool AutoBackupWallet(CWallet* wallet, const std::string& strWalletFile_, std::string& strBackupWarningRet, std::string& strBackupErrorRet)
 {
-    
+    namespace fs = boost::filesystem;
+
+    strBackupWarningRet = strBackupErrorRet = "";
+    std::string strWalletFile = "";
+
+    if (nWalletBackups <= 0) {
+        LogPrintf("Automatic wallet backups are disabled!\n");
+        return false;
+    }
+
+    fs::path backupsDir = GetBackupsDir();
+
+    if (!fs::exists(backupsDir))
+    {
+        // Always create backup folder to not confuse the operating system's file browser
+        LogPrintf("Creating backup folder %s\n", backupsDir.string());
+        if(!fs::create_directories(backupsDir)) {
+            // smth is wrong, we shouldn't continue until it's resolved
+            strBackupErrorRet = strprintf(_("Wasn't able to create wallet backup folder %s!"), backupsDir.string());
+            LogPrintf("%s\n", strBackupErrorRet);
+            nWalletBackups = -1;
+            return false;
+        }
+    } else if (!fs::is_directory(backupsDir)) {
+        // smth is wrong, we shouldn't continue until it's resolved
+        strBackupErrorRet = strprintf(_("%s is not a valid backup folder!"), backupsDir.string());
+        LogPrintf("%s\n", strBackupErrorRet);
+        nWalletBackups = -1;
+        return false;
+    }
+
+    // Create backup of the ...
+    std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d-%H-%M", GetTime());
+    if (wallet)
+    {
+        // ... opened wallet
+        LOCK2(cs_main, wallet->cs_wallet);
+        strWalletFile = wallet->strWalletFile;
+        fs::path backupFile = backupsDir / (strWalletFile + dateTimeStr);
+        if(!wallet->BackupWallet(backupFile.string())) {
+            strBackupWarningRet = strprintf(_("Failed to create backup %s!"), backupFile.string());
+            LogPrintf("%s\n", strBackupWarningRet);
+            nWalletBackups = -1;
+            return false;
+        }
+        // Update nKeysLeftSinceAutoBackup using current external keypool size
+        wallet->nKeysLeftSinceAutoBackup = wallet->KeypoolCountExternalKeys();
+        LogPrintf("nKeysLeftSinceAutoBackup: %d\n", wallet->nKeysLeftSinceAutoBackup);
+        if(wallet->IsLocked()) {
+            strBackupWarningRet = _("Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.");
+            LogPrintf("%s\n", strBackupWarningRet);
+            nWalletBackups = -2;
+            return false;
+        }
+    } else {
+        // ... strWalletFile file
+        strWalletFile = strWalletFile_;
+        fs::path sourceFile = GetDataDir() / strWalletFile;
+        fs::path backupFile = backupsDir / (strWalletFile + dateTimeStr);
+        sourceFile.make_preferred();
+        backupFile.make_preferred();
+        if (fs::exists(backupFile))
+        {
+            strBackupWarningRet = _("Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.");
+            LogPrintf("%s\n", strBackupWarningRet);
+            return false;
+        }
+        if(fs::exists(sourceFile)) {
+            try {
+                fs::copy_file(sourceFile, backupFile);
+                LogPrintf("Creating backup of %s -> %s\n", sourceFile.string(), backupFile.string());
+            } catch(fs::filesystem_error &error) {
+                strBackupWarningRet = strprintf(_("Failed to create backup, error: %s"), error.what());
+                LogPrintf("%s\n", strBackupWarningRet);
+                nWalletBackups = -1;
+                return false;
+            }
+        }
+    }
+
+    // Keep only the last 10 backups, including the new one of course
+    typedef std::multimap<std::time_t, fs::path> folder_set_t;
+    folder_set_t folder_set;
+    fs::directory_iterator end_iter;
+    backupsDir.make_preferred();
+    // Build map of backup files for current(!) wallet sorted by last write time
+    fs::path currentFile;
+    for (fs::directory_iterator dir_iter(backupsDir); dir_iter != end_iter; ++dir_iter)
+    {
+        // Only check regular files
+        if ( fs::is_regular_file(dir_iter->status()))
+        {
+            currentFile = dir_iter->path().filename();
+            // Only add the backups for the current wallet, e.g. wallet.dat.*
+            if(dir_iter->path().stem().string() == strWalletFile)
+            {
+                folder_set.insert(folder_set_t::value_type(fs::last_write_time(dir_iter->path()), *dir_iter));
+            }
+        }
+    }
+
+    // Loop backward through backup files and keep the N newest ones (1 <= N <= 10)
+    int counter = 0;
+    BOOST_REVERSE_FOREACH(PAIRTYPE(const std::time_t, fs::path) file, folder_set)
+    {
+        counter++;
+        if (counter > nWalletBackups)
+        {
+            // More than nWalletBackups backups: delete oldest one(s)
+            try {
+                fs::remove(file.second);
+                LogPrintf("Old backup deleted: %s\n", file.second);
+            } catch(fs::filesystem_error &error) {
+                strBackupWarningRet = strprintf(_("Failed to delete backup, error: %s"), error.what());
+                LogPrintf("%s\n", strBackupWarningRet);
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 
