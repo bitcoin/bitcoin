@@ -12,6 +12,7 @@
 #include <validation.h>
 #include <httpserver.h>
 #include <rpc/blockchain.h>
+#include <rpc/rawtransaction.h>
 #include <rpc/server.h>
 #include <streams.h>
 #include <sync.h>
@@ -357,7 +358,7 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
 
     CTransactionRef tx;
     uint256 hashBlock = uint256();
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
+    if (!GetTransaction(hash, tx, hashBlock, true))
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());

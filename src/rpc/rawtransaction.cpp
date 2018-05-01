@@ -35,6 +35,48 @@
 
 #include <univalue.h>
 
+/**
+ * Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock.
+ * If blockIndex is provided, the transaction is fetched from the corresponding block.
+ */
+bool GetTransaction(const uint256& hash, CTransactionRef& txOut, uint256& hashBlock, bool fAllowSlow, CBlockIndex* blockIndex)
+{
+    CBlockIndex* pindexSlow = blockIndex;
+
+    LOCK(cs_main);
+
+    if (!blockIndex) {
+        CTransactionRef ptx = mempool.get(hash);
+        if (ptx) {
+            txOut = ptx;
+            return true;
+        }
+
+        if (g_txindex) {
+            return g_txindex->FindTx(hash, hashBlock, txOut);
+        }
+
+        if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
+            const Coin& coin = AccessByTxid(*pcoinsTip, hash);
+            if (!coin.IsSpent()) pindexSlow = chainActive[coin.nHeight];
+        }
+    }
+
+    if (pindexSlow) {
+        CBlock block;
+        if (ReadBlockFromDisk(block, pindexSlow, Params().GetConsensus())) {
+            for (const auto& tx : block.vtx) {
+                if (tx->GetHash() == hash) {
+                    txOut = tx;
+                    hashBlock = pindexSlow->GetBlockHash();
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
 
 static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
@@ -175,7 +217,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
 
     CTransactionRef tx;
     uint256 hash_block;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, true, blockindex)) {
+    if (!GetTransaction(hash, tx, hash_block, true, blockindex)) {
         std::string errmsg;
         if (blockindex) {
             if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {

@@ -16,7 +16,6 @@
 #include <consensus/validation.h>
 #include <cuckoocache.h>
 #include <hash.h>
-#include <index/txindex.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -1016,53 +1015,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     const CChainParams& chainparams = Params();
     return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, pfMissingInputs, GetTime(), plTxnReplaced, bypass_limits, nAbsurdFee, test_accept);
 }
-
-/**
- * Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock.
- * If blockIndex is provided, the transaction is fetched from the corresponding block.
- */
-bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus::Params& consensusParams, uint256& hashBlock, bool fAllowSlow, CBlockIndex* blockIndex)
-{
-    CBlockIndex* pindexSlow = blockIndex;
-
-    LOCK(cs_main);
-
-    if (!blockIndex) {
-        CTransactionRef ptx = mempool.get(hash);
-        if (ptx) {
-            txOut = ptx;
-            return true;
-        }
-
-        if (g_txindex) {
-            return g_txindex->FindTx(hash, hashBlock, txOut);
-        }
-
-        if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
-            const Coin& coin = AccessByTxid(*pcoinsTip, hash);
-            if (!coin.IsSpent()) pindexSlow = chainActive[coin.nHeight];
-        }
-    }
-
-    if (pindexSlow) {
-        CBlock block;
-        if (ReadBlockFromDisk(block, pindexSlow, consensusParams)) {
-            for (const auto& tx : block.vtx) {
-                if (tx->GetHash() == hash) {
-                    txOut = tx;
-                    hashBlock = pindexSlow->GetBlockHash();
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
-
-
-
 
 
 //////////////////////////////////////////////////////////////////////////////
