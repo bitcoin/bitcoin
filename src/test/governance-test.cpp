@@ -97,7 +97,7 @@ namespace
     struct FinalizedBudgetFixture
     {
         const std::string budgetName;
-        const int blockStart = 129600;
+        const int blockStart;
 
         const CKey keyPairA;
         const CKey keyPairB;
@@ -309,11 +309,19 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote4a(mn4.vin, proposalA.GetHash(), VOTE_YES);
         CBudgetVote vote5a(mn5.vin, proposalA.GetHash(), VOTE_YES);
 
+<<<<<<< HEAD
         budget.SubmitProposalVote(vote1a, error);
         budget.SubmitProposalVote(vote2a, error);
         budget.SubmitProposalVote(vote3a, error);
         budget.SubmitProposalVote(vote4a, error);
         budget.SubmitProposalVote(vote5a, error);
+=======
+        budget.UpdateProposal(vote1a, NULL, error);
+        budget.UpdateProposal(vote2a, NULL, error);
+        budget.UpdateProposal(vote3a, NULL, error);
+        budget.UpdateProposal(vote4a, NULL, error);
+        budget.UpdateProposal(vote5a, NULL, error);
+>>>>>>> Current-dev
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
@@ -356,6 +364,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote1c(mn1.vin, proposalC.GetHash(), VOTE_YES);
         CBudgetVote vote2c(mn2.vin, proposalC.GetHash(), VOTE_YES);
 
+<<<<<<< HEAD
         budget.SubmitProposalVote(vote1a, error);
         budget.SubmitProposalVote(vote2a, error);
         budget.SubmitProposalVote(vote3a, error);
@@ -368,6 +377,20 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
 
         budget.SubmitProposalVote(vote1c, error);
         budget.SubmitProposalVote(vote2c, error);
+=======
+        budget.UpdateProposal(vote1a, NULL, error);
+        budget.UpdateProposal(vote2a, NULL, error);
+        budget.UpdateProposal(vote3a, NULL, error);
+        budget.UpdateProposal(vote4a, NULL, error);
+        budget.UpdateProposal(vote5a, NULL, error);
+
+        budget.UpdateProposal(vote1b, NULL, error);
+        budget.UpdateProposal(vote2b, NULL, error);
+        budget.UpdateProposal(vote3b, NULL, error);
+
+        budget.UpdateProposal(vote1c, NULL, error);
+        budget.UpdateProposal(vote2c, NULL, error);
+>>>>>>> Current-dev
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
@@ -412,6 +435,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CBudgetVote vote1a(mn1.vin, proposalA.GetHash(), VOTE_YES);
         CBudgetVote vote2a(mn2.vin, proposalA.GetHash(), VOTE_YES);
 
+<<<<<<< HEAD
         budget.SubmitProposalVote(vote1c, error);
         budget.SubmitProposalVote(vote2c, error);
         budget.SubmitProposalVote(vote3c, error);
@@ -424,6 +448,20 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
 
         budget.SubmitProposalVote(vote1a, error);
         budget.SubmitProposalVote(vote2a, error);
+=======
+        budget.UpdateProposal(vote1c, NULL, error);
+        budget.UpdateProposal(vote2c, NULL, error);
+        budget.UpdateProposal(vote3c, NULL, error);
+        budget.UpdateProposal(vote4c, NULL, error);
+        budget.UpdateProposal(vote5c, NULL, error);
+
+        budget.UpdateProposal(vote1b, NULL, error);
+        budget.UpdateProposal(vote2b, NULL, error);
+        budget.UpdateProposal(vote3b, NULL, error);
+
+        budget.UpdateProposal(vote1a, NULL, error);
+        budget.UpdateProposal(vote2a, NULL, error);
+>>>>>>> Current-dev
 
         // Finalizing budget
         SetMockTime(GetTime() + 24 * 60 * 60 + 1); // 1 hour + 1 second has passed
