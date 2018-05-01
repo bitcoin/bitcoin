@@ -1210,7 +1210,7 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
 
     CScript scriptCollateral;
     CPubKey vchPubKey;
-    assert(reservekeyCollateral.GetReservedKey(vchPubKey, false)); // should never fail, as we just unlocked
+    assert(reservekeyCollateral.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
     scriptCollateral = GetScriptForDestination(vchPubKey.GetID());
 
     vecSend.push_back((CRecipient){scriptCollateral, CPrivateSend::GetMaxCollateralAmount(), false});

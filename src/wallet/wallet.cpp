@@ -3082,7 +3082,7 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
         // make our change address
         CScript scriptChange;
         CPubKey vchPubKey;
-        bool success = reservekey.GetReservedKey(vchPubKey, true);
+        bool success = reservekey.GetReservedKey(vchPubKey);
         assert(success); // should never fail, as we just unlocked
         scriptChange = GetScriptForDestination(vchPubKey.GetID());
         reservekey.KeepKey();
@@ -3345,7 +3345,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                             // Reserve a new key pair from key pool
 							CPubKey vchPubKey;
 							bool ret;
-							ret = reservekey.GetReservedKey(vchPubKey, true);
+							ret = reservekey.GetReservedKey(vchPubKey);
 							assert(ret); // should never fail, as we just unlocked
 							scriptChange = GetScriptForDestination(vchPubKey.GetID());
 							
@@ -4221,15 +4221,15 @@ bool CWallet::UpdatedTransaction(const uint256 &hashTx)
     return false;
 }
 
-void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
+void CWallet::GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
 {
-	std::shared_ptr<CReserveKey> rKey(new CReserveKey(this));
-    CPubKey pubkey;
-    if (!rKey->GetReservedKey(pubkey, false))
-        return;
+	boost::shared_ptr<CReserveKey> rKey(new CReserveKey(this));
+	CPubKey pubkey;
+	if (!rKey->GetReservedKey(pubkey))
+		return;
 
-    script = rKey;
-    script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+	script = rKey;
+	script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
 }
 
 void CWallet::LockCoin(const COutPoint& output)

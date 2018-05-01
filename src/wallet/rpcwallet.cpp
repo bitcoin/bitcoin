@@ -224,7 +224,7 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
 
     CReserveKey reservekey(pwalletMain);
     CPubKey vchPubKey;
-    if (!reservekey.GetReservedKey(vchPubKey, true))
+    if (!reservekey.GetReservedKey(vchPubKey))
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
 
     reservekey.KeepKey();

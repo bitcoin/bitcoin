@@ -1020,7 +1020,7 @@ public:
     }
 
     void ReturnKey();
-    bool GetReservedKey(CPubKey &pubkey, bool fInternalIn /*= false*/);
+    bool GetReservedKey(CPubKey &pubkey);
     void KeepKey();
     void KeepScript() override { KeepKey(); }
 };
