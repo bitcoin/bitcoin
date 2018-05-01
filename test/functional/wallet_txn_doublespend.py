@@ -3,9 +3,16 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there is a double-spend conflict."""
+from decimal import Decimal
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    connect_nodes,
+    disconnect_nodes,
+    find_output,
+    sync_blocks,
+)
 
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -84,14 +91,14 @@ class TxnMallTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance(), expected)
 
         # foo and bar accounts should be debited:
-        assert_equal(self.nodes[0].getbalance("foo", 0), 1219+tx1["amount"]+tx1["fee"])
-        assert_equal(self.nodes[0].getbalance("bar", 0), 29+tx2["amount"]+tx2["fee"])
+        assert_equal(self.nodes[0].getbalance("foo", 0), 1219 + tx1["amount"] + tx1["fee"])
+        assert_equal(self.nodes[0].getbalance("bar", 0), 29 + tx2["amount"] + tx2["fee"])
 
         if self.options.mine_block:
             assert_equal(tx1["confirmations"], 1)
             assert_equal(tx2["confirmations"], 1)
             # Node1's "from0" balance should be both transaction amounts:
-            assert_equal(self.nodes[1].getbalance("from0"), -(tx1["amount"]+tx2["amount"]))
+            assert_equal(self.nodes[1].getbalance("from0"), -(tx1["amount"] + tx2["amount"]))
         else:
             assert_equal(tx1["confirmations"], 0)
             assert_equal(tx2["confirmations"], 0)
@@ -117,7 +124,7 @@ class TxnMallTest(BitcoinTestFramework):
         assert_equal(tx1["confirmations"], -2)
         assert_equal(tx2["confirmations"], -2)
 
-        # Node0's total balance should be starting balance, plus 100BTC for 
+        # Node0's total balance should be starting balance, plus 100BTC for
         # two more matured blocks, minus 1240 for the double-spend, plus fees (which are
         # negative):
         expected = starting_balance + 100 - 1240 + fund_foo_tx["fee"] + fund_bar_tx["fee"] + doublespend_fee
@@ -128,18 +135,11 @@ class TxnMallTest(BitcoinTestFramework):
         # fees (which are negative)
         assert_equal(self.nodes[0].getbalance("foo"), 1219)
         assert_equal(self.nodes[0].getbalance("bar"), 29)
-        assert_equal(self.nodes[0].getbalance(""), starting_balance
-                                                              -1219
-                                                              -  29
-                                                              -1240
-                                                              + 100
-                                                              + fund_foo_tx["fee"]
-                                                              + fund_bar_tx["fee"]
-                                                              + doublespend_fee)
+        assert_equal(self.nodes[0].getbalance(""),
+                     starting_balance - 1219 - 29 - 1240 + 100 + fund_foo_tx["fee"] + fund_bar_tx["fee"] + doublespend_fee)
 
         # Node1's "from0" account balance should be just the doublespend:
         assert_equal(self.nodes[1].getbalance("from0"), 1240)
 
 if __name__ == '__main__':
     TxnMallTest().main()
-
