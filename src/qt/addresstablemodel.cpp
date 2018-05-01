@@ -371,7 +371,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     {
         // Generate a new address to associate with given label
         CPubKey newKey;
-        if(!wallet->GetKeyFromPool(newKey))
+        if(!wallet->GetKeyFromPool(newKey, false))
         {
             WalletModel::UnlockContext ctx(walletModel->requestUnlock());
             if(!ctx.isValid())
@@ -380,7 +380,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 editStatus = WALLET_UNLOCK_FAILURE;
                 return QString();
             }
-            if(!wallet->GetKeyFromPool(newKey))
+            if(!wallet->GetKeyFromPool(newKey, false))
             {
                 editStatus = KEY_GENERATION_FAILURE;
                 return QString();

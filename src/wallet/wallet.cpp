@@ -789,7 +789,7 @@ bool CWallet::GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bFo
 			for (map<uint256, CWalletTx>::iterator it = mapWallet.begin();
 				it != mapWallet.end() && account.vchPubKey.IsValid();
 				++it)
-				BOOST_FOREACH(const CTxOut& txout, (*it).second.tx->vout)
+				BOOST_FOREACH(const CTxOut& txout, (*it).second.vout)
 				if (txout.scriptPubKey == scriptPubKey) {
 					bForceNew = true;
 					break;
@@ -4347,7 +4347,7 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const {
 		if (blit != mapBlockIndex.end() && chainActive.Contains(blit->second)) {
 			// ... which are already in a block
 			int nHeight = blit->second->nHeight;
-			BOOST_FOREACH(const CTxOut &txout, wtx.tx->vout) {
+			BOOST_FOREACH(const CTxOut &txout, wtx.vout) {
 				// iterate over all their outputs
 				CAffectedKeysVisitor(*this, vAffected).Process(txout.scriptPubKey);
 				BOOST_FOREACH(const CKeyID &keyid, vAffected) {
