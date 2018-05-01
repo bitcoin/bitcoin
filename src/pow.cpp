@@ -31,7 +31,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const Conse
     uint64_t PastBlocksMin = pastSecondsMin / params.nPowTargetSpacing;
     uint64_t PastBlocksMax = pastSecondsMax / params.nPowTargetSpacing;
 
-    if (BlockLastSolved == NULL || BlockLastSolved->nHeight <= 600 || (uint64_t)BlockLastSolved->nHeight < PastBlocksMin) { return UintToArith256(params.powLimit).GetCompact(); }
+    if (BlockLastSolved == NULL || BlockLastSolved->nHeight <= 1000 || (uint64_t)BlockLastSolved->nHeight < PastBlocksMin) { return UintToArith256(params.powLimit).GetCompact(); }
 
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
         if (PastBlocksMax > 0 && i > PastBlocksMax) { break; }
@@ -86,8 +86,8 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockH
     const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
 	int64_t nPastBlocks = 24;
 	
-    // make sure we have at least 600 blocks, otherwise just return powLimit
-    if (!pindexLast || pindexLast->nHeight <= 600) {
+    // make sure we have at least 1000 blocks, otherwise just return powLimit
+    if (!pindexLast || pindexLast->nHeight <= 1000) {
 		return UintToArith256(Params(CBaseChainParams::REGTEST).GetConsensus().powLimit).GetCompact();
     }
 
