@@ -64,17 +64,14 @@ UniValue debug(const JSONRPCRequest& request)
         );
 
     std::string strMode = request.params[0].get_str();
-    logCategories = BCLog::NONE;
+    g_logger->DisableCategory(BCLog::ALL);
 
     std::vector<std::string> categories;
     boost::split(categories, strMode, boost::is_any_of("+"));
 
     if (std::find(categories.begin(), categories.end(), std::string("0")) == categories.end()) {
         for (const auto& cat : categories) {
-            uint64_t flag;
-            if (GetLogCategory(&flag, &cat)) {
-                logCategories |= flag;
-            }
+            g_logger->EnableCategory(cat);
         }
     }
 
@@ -1037,21 +1034,22 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
     }
 }
 
-uint64_t getCategoryMask(UniValue cats) {
+void EnableOrDisableLogCategories(UniValue cats, bool enable) {
     cats = cats.get_array();
-    uint64_t mask = 0;
     for (unsigned int i = 0; i < cats.size(); ++i) {
-        uint64_t flag = 0;
         std::string cat = cats[i].get_str();
-        if (!GetLogCategory(&flag, &cat)) {
+
+        bool success;
+        if (enable) {
+            success = g_logger->EnableCategory(cat);
+        } else {
+            success = g_logger->DisableCategory(cat);
+        }
+
+        if (!success) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown logging category " + cat);
         }
-        if (flag == BCLog::NONE) {
-            return 0;
-        }
-        mask |= flag;
     }
-    return mask;
 }
 
 UniValue logging(const JSONRPCRequest& request)
@@ -1092,25 +1090,25 @@ UniValue logging(const JSONRPCRequest& request)
         );
     }
 
-    uint64_t originalLogCategories = logCategories;
+    uint64_t original_log_categories = g_logger->GetCategoryMask();
     if (request.params[0].isArray()) {
-        logCategories |= getCategoryMask(request.params[0]);
+        EnableOrDisableLogCategories(request.params[0], true);
     }
-
     if (request.params[1].isArray()) {
-        logCategories &= ~getCategoryMask(request.params[1]);
+        EnableOrDisableLogCategories(request.params[1], false);
     }
+    uint64_t updated_log_categories = g_logger->GetCategoryMask();
+    uint64_t changed_log_categories = original_log_categories ^ updated_log_categories;
 
     // Update libevent logging if BCLog::LIBEVENT has changed.
     // If the library version doesn't allow it, UpdateHTTPServerLogging() returns false,
     // in which case we should clear the BCLog::LIBEVENT flag.
     // Throw an error if the user has explicitly asked to change only the libevent
     // flag and it failed.
-    uint64_t changedLogCategories = originalLogCategories ^ logCategories;
-    if (changedLogCategories & BCLog::LIBEVENT) {
-        if (!UpdateHTTPServerLogging(logCategories & BCLog::LIBEVENT)) {
-            logCategories &= ~BCLog::LIBEVENT;
-            if (changedLogCategories == BCLog::LIBEVENT) {
+    if (changed_log_categories & BCLog::LIBEVENT) {
+        if (!UpdateHTTPServerLogging(g_logger->WillLogCategory(BCLog::LIBEVENT))) {
+            g_logger->DisableCategory(BCLog::LIBEVENT);
+            if (changed_log_categories == BCLog::LIBEVENT) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "libevent logging cannot be updated when using libevent before v2.1.1.");
             }
         }

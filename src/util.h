@@ -87,7 +87,7 @@ bool SetupNetworking();
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)
 {
-    LogPrintStr("ERROR: " + SafeStringFormat(fmt, args...) + "\n");
+    LogPrintf("ERROR: %s\n", SafeStringFormat(fmt, args...));
     return false;
 }
 
