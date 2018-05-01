@@ -51,7 +51,7 @@ bool fSendFreeTransactions = DEFAULT_SEND_FREE_TRANSACTIONS;
 bool bBIP69Enabled = true;
 
 const char * DEFAULT_WALLET_DAT = "wallet.dat";
-
+const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
 /** 
  * Fees smaller than this (in satoshis) are considered zero fee (for transaction creation)
  * Override with -mintxfee
@@ -4138,24 +4138,23 @@ std::set<CTxDestination> CWallet::GetAccountAddresses(const std::string& strAcco
     return result;
 }
 
-bool CReserveKey::GetReservedKey(CPubKey& pubkey, bool fInternalIn)
+bool CReserveKey::GetReservedKey(CPubKey& pubkey)
 {
-    if (nIndex == -1)
-    {
-        CKeyPool keypool;
-        pwallet->ReserveKeyFromKeyPool(nIndex, keypool, fInternalIn);
-        if (nIndex != -1) {
-            vchPubKey = keypool.vchPubKey;
-        }
-        else {
-            return false;
-        }
-        fInternal = keypool.fInternal;
-    }
-    assert(vchPubKey.IsValid());
-    pubkey = vchPubKey;
-    return true;
+	if (nIndex == -1)
+	{
+		CKeyPool keypool;
+		pwallet->ReserveKeyFromKeyPool(nIndex, keypool);
+		if (nIndex != -1)
+			vchPubKey = keypool.vchPubKey;
+		else {
+			return false;
+		}
+	}
+	assert(vchPubKey.IsValid());
+	pubkey = vchPubKey;
+	return true;
 }
+
 
 void CReserveKey::KeepKey()
 {
