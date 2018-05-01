@@ -941,7 +941,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
 
 		// Write to disk
 		if (fInsertedNew || fUpdated)
-			if (!walletdb.WriteTx(wtx))
+			if (!pwalletdb->WriteTx(wtx))
 				return false;
 
 		// Break debit/credit balance caches:
