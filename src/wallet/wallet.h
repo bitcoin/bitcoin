@@ -631,7 +631,7 @@ public:
 	std::set<int64_t> setKeyPool;
     // Map from Key ID (for regular keys) or Script ID (for watch-only keys) to
     // key metadata.
-    std::map<CTxDestination, CKeyMetadata> mapKeyMetadata;
+    std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
@@ -867,7 +867,7 @@ public:
     void ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fInternal);
     void KeepKey(int64_t nIndex);
     void ReturnKey(int64_t nIndex, bool fInternal);
-    bool GetKeyFromPool(CPubKey &key, bool fInternal /*= false*/);
+	bool GetKeyFromPool(CPubKey &key);
     int64_t GetOldestKeyPoolTime();
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
 
