@@ -1517,7 +1517,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, C
 	{
 		std::string chain = ChainNameFromCommandLine();
 		// SYSCOIN 3 snapshot
-		nTotalRewardWithMasternodes = 532150364 * COIN;
+		nTotalRewardWithMasternodes = 532210364 * COIN;
 		return nTotalRewardWithMasternodes;
 	}
 	CAmount nSubsidy = 38.5 * COIN;
