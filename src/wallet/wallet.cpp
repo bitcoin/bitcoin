@@ -4173,18 +4173,6 @@ void CReserveKey::ReturnKey()
 	vchPubKey = CPubKey();
 }
 
-static void LoadReserveKeysToSet(std::set<CKeyID>& setAddress, const std::set<int64_t>& setKeyPool, CWalletDB& walletdb)
-{
-    BOOST_FOREACH(const int64_t& id, setKeyPool)
-    {
-        CKeyPool keypool;
-        if (!walletdb.ReadPool(id, keypool))
-            throw std::runtime_error(std::string(__func__) + ": read failed");
-        assert(keypool.vchPubKey.IsValid());
-        CKeyID keyID = keypool.vchPubKey.GetID();
-        setAddress.insert(keyID);
-    }
-}
 
 void CWallet::GetAllReserveKeys(set<CKeyID>& setAddress) const
 {
@@ -4222,7 +4210,7 @@ bool CWallet::UpdatedTransaction(const uint256 &hashTx)
 
 void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
 {
-	boost::shared_ptr<CReserveKey> rKey(new CReserveKey(this));
+	std::shared_ptr<CReserveKey> rKey(new CReserveKey(this));
 	CPubKey pubkey;
 	if (!rKey->GetReservedKey(pubkey))
 		return;
