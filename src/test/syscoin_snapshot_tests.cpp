@@ -66,7 +66,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 		GenerateMainNetBlocks(1, "mainnet1");
 	}
 
-	string sendString = "sendtoaddress " + newaddress + " 536831.76";
+	string sendString = "sendtoaddress " + newaddress + " 325000";
 	BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
 	GenerateMainNetBlocks(1, "mainnet1");
 	GenerateMainNetBlocks(1, "mainnet2");
