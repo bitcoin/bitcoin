@@ -2109,21 +2109,21 @@ UniValue keypoolrefill(const JSONRPCRequest& request)
             + HelpExampleRpc("keypoolrefill", "")
         );
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+	LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    // 0 is interpreted by TopUpKeyPool() as the default keypool size given by -keypool
-    unsigned int kpSize = 0;
-    if (request.params.size() > 0) {
-        if (request.params[0].get_int() < 0)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size.");
-        kpSize = (unsigned int)request.params[0].get_int();
-    }
+	// 0 is interpreted by TopUpKeyPool() as the default keypool size given by -keypool
+	unsigned int kpSize = 0;
+	if (params.size() > 0) {
+		if (params[0].get_int() < 0)
+			throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size.");
+		kpSize = (unsigned int)params[0].get_int();
+	}
 
-    EnsureWalletIsUnlocked();
-    pwalletMain->TopUpKeyPool(kpSize);
+	EnsureWalletIsUnlocked();
+	pwalletMain->TopUpKeyPool(kpSize);
 
-    if (pwalletMain->GetKeyPoolSize() < (pwalletMain->IsHDEnabled() ? kpSize * 2 : kpSize))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
+	if (pwalletMain->GetKeyPoolSize() < kpSize)
+		throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
 
     return NullUniValue;
 }
