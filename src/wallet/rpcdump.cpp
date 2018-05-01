@@ -687,7 +687,7 @@ UniValue dumpwallet(const UniValue& params, bool fHelp)
 		return NullUniValue;
 
 	if (fHelp || params.size() != 1)
-		throw std::runtime_error(
+		throw runtime_error(
 			"dumpwallet \"filename\"\n"
 			"\nDumps all wallet keys in a human-readable format.\n"
 			"\nArguments:\n"
@@ -701,7 +701,7 @@ UniValue dumpwallet(const UniValue& params, bool fHelp)
 
 	EnsureWalletIsUnlocked();
 
-	std::ofstream file;
+	ofstream file;
 	file.open(params[0].get_str().c_str());
 	if (!file.is_open())
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");

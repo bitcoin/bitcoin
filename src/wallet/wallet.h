@@ -803,7 +803,7 @@ public:
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
     bool EncryptWallet(const SecureString& strWalletPassphrase);
 
-    void GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const;
+    void GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) const;
 
     /** 
      * Increment the next transaction order id
