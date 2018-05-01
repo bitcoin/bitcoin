@@ -597,6 +597,8 @@ private:
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
+	/* the HD chain data model (external chain counters) */
+	CHDChain hdChain;
 
     bool fFileBacked;
 
