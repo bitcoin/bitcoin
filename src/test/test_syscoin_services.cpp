@@ -62,25 +62,11 @@ void StartMainNetNodes()
 	StopMainNetNodes();
 	printf("Starting 2 nodes in mainnet setup...\n");
 	StartNode("mainnet1", false);
-	CallRPC("mainnet1", "mnsync next", false, false);
-	MilliSleep(50);
-	CallRPC("mainnet1", "mnsync next", false, false);
-	MilliSleep(50);
-	CallRPC("mainnet1", "mnsync next", false, false);
-	MilliSleep(50);
-	CallRPC("mainnet1", "mnsync next", false, false);
+	GenerateMainNetBlocks("mainnet1", 2);
 
 	StartNode("mainnet2", false);
 	StopNode("mainnet2");
 	StartNode("mainnet2", false);
-	CallRPC("mainnet2", "mnsync next", false, false);
-	MilliSleep(50);
-	CallRPC("mainnet2", "mnsync next", false, false);
-	MilliSleep(50);
-	CallRPC("mainnet2", "mnsync next", false, false);
-	MilliSleep(50);
-	CallRPC("mainnet2", "mnsync next", false, false);
-	MilliSleep(50);
 	CallRPC("mainnet1", "addnode 127.0.0.1:19379 onetry", false, false);
 }
 void StopMainNetNodes()
