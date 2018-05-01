@@ -39,7 +39,8 @@ In a typical situation, this suffices to run behind a Tor proxy:
 
 If you configure your Tor system accordingly, it is possible to make your node also
 reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equivalent
-config file):
+config file): *Needed for Tor version 0.2.7.0 and older versions of Tor only. For newer
++versions of Tor the [onion listener can be configured automatically](#3-automatically-listen-on-tor).*
 
 	HiddenServiceDir /var/lib/tor/bitcoin-service/
 	HiddenServicePort 8333 127.0.0.1:8333
