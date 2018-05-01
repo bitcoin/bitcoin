@@ -54,7 +54,7 @@ public:
 	CHDChain() { SetNull(); }
 	ADD_SERIALIZE_METHODS;
 	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action)
+	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
 	{
 		READWRITE(this->nVersion);
 		nVersion = this->nVersion;
@@ -94,7 +94,7 @@ public:
 	ADD_SERIALIZE_METHODS;
 
 	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action) {
+	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
 		READWRITE(this->nVersion);
 		nVersion = this->nVersion;
 		READWRITE(nCreateTime);

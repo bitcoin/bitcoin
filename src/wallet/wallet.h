@@ -123,21 +123,36 @@ struct CompactTallyItem
 class CKeyPool
 {
 public:
-	int64_t nTime;
-	CPubKey vchPubKey;
+    int64_t nTime;
+    CPubKey vchPubKey;
+    bool fInternal; // for change outputs
 
-	CKeyPool();
-	CKeyPool(const CPubKey& vchPubKeyIn);
+    CKeyPool();
+    CKeyPool(const CPubKey& vchPubKeyIn, bool fInternalIn);
 
-	ADD_SERIALIZE_METHODS;
+    ADD_SERIALIZE_METHODS;
 
-	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-		if (!(nType & SER_GETHASH))
-			READWRITE(nVersion);
-		READWRITE(nTime);
-		READWRITE(vchPubKey);
-	}
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH))
+            READWRITE(nVersion);
+        READWRITE(nTime);
+        READWRITE(vchPubKey);
+        if (ser_action.ForRead()) {
+            try {
+                READWRITE(fInternal);
+            }
+            catch (std::ios_base::failure&) {
+                /* flag as external address if we can't read the internal boolean
+                   (this will be the case for any wallet before the HD chain split version) */
+                fInternal = false;
+            }
+        }
+        else {
+            READWRITE(fInternal);
+        }
+    }
 };
 
 /** Address book data */
@@ -588,7 +603,7 @@ private:
     bool fFileBacked;
 
 
-  
+    int64_t nTimeFirstKey;
 
     /**
      * Private version of AddWatchOnly method which does not accept a
@@ -674,8 +689,6 @@ public:
 	CPubKey vchDefaultKey;
 
     std::set<COutPoint> setLockedCoins;
-
-	int64_t nTimeFirstKey;
 
     int64_t nKeysLeftSinceAutoBackup;
 
