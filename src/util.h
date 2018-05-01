@@ -70,14 +70,14 @@ bool SetupNetworking();
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)
 {
-    LogPrintStr("ERROR: " + tfm::format(fmt, args...) + "\n");
+    LogPrintf("ERROR: %s\n", tfm::format(fmt, args...));
     return false;
 }
 
 template<typename... Args>
 int errorN(int n, const char *fmt, const Args&... args)
 {
-    LogPrintStr("ERROR: " + tfm::format(fmt, args...) + "\n");
+    LogPrintf("ERROR: %s\n", tfm::format(fmt, args...));
     return n;
 }
 
@@ -85,7 +85,7 @@ template<typename... Args>
 int errorN(int n, std::string &s, const char *func, const char *fmt, const Args&... args)
 {
     s = tfm::format(fmt, args...);
-    LogPrintStr(_("ERROR, ") + func + ": " + s + "\n");
+    LogPrintf("ERROR: %s\n", std::string(func) + ": " + s);
     return n;
 }
 

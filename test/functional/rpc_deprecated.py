@@ -49,6 +49,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         #
         address0 = self.nodes[0].getnewaddress()
         self.nodes[0].generatetoaddress(101, address0)
+        self.sync_all()
         address1 = self.nodes[1].getnewaddress()
         self.nodes[1].generatetoaddress(101, address1)
 
