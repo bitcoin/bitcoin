@@ -2116,7 +2116,7 @@ UniValue keypoolrefill(const JSONRPCRequest& request)
 	if (request.params.size() > 0) {
 		if (request.params[0].get_int() < 0)
 			throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size.");
-		kpSize = (unsigned int)request.params[0].get_int();
+		kpSize = (unsigned int)params[0].get_int();
 	}
 
 	EnsureWalletIsUnlocked();
@@ -2183,6 +2183,9 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     bool fForMixingOnly = false;
     if (request.params.size() >= 3)
         fForMixingOnly = request.params[2].get_bool();
+
+    if (fForMixingOnly && !pwalletMain->IsLocked() && pwalletMain->IsLocked())
+        throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already unlocked for mixing only.");
 
     if (!pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already fully unlocked.");
