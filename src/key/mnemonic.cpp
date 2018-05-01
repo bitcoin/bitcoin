@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2015 The ShadowCoin developers
-// Copyright (c) 2017 The Particl developers
+// Copyright (c) 2017-2018 The Particl developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -300,7 +300,7 @@ int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<ui
 
     if (nLanguage < 1 || nLanguage > WLL_MAX)
     {
-        sError = "Unknown language.";
+        sError = "Unknown language";
         return errorN(1, "%s: %s", __func__, sError.c_str());
     };
 
@@ -311,6 +311,12 @@ int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<ui
     {
         sError = "Word List too long.";
         return errorN(2, "%s: %s", __func__, sError.c_str());
+    };
+
+    if (strstr(sWordList.c_str(), "  ") != NULL)
+    {
+        sError = "Multiple spaces between words";
+        return errorN(4, "%s: %s", __func__, sError.c_str());
     };
 
     strcpy(tmp, sWordList.c_str());
@@ -339,7 +345,7 @@ int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<ui
     if (!fIgnoreChecksum
         && vWordInts.size() % 3 != 0)
     {
-        sError = "No. of words must be divisible by 3.";
+        sError = "No. of words must be divisible by 3";
         return errorN(4, "%s: %s", __func__, sError.c_str());
     };
 
@@ -472,6 +478,8 @@ int MnemonicToSeed(const std::string &sMnemonic, const std::string &sPasswordIn,
     std::string sPassword = sPasswordIn;
     NormaliseInput(sPassword);
 
+    if (strstr(sWordList.c_str(), "  ") != NULL)
+        return errorN(1, "%s: Multiple spaces between words.", __func__);
 
     int nIterations = 2048;
 

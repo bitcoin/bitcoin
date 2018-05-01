@@ -758,7 +758,7 @@ static int ExtractExtKeyId(const std::string &sInKey, CKeyID &keyId, CChainParam
         keyId = ekp.GetID();
     } else
     {
-        throw std::runtime_error("Invalid key.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid key.");
     };
     return 0;
 };
@@ -882,30 +882,30 @@ UniValue extkey(const JSONRPCRequest &request)
         std::vector<uint8_t> vchOut;
 
         if (!DecodeBase58(sInKey.c_str(), vchOut))
-            throw std::runtime_error("DecodeBase58 failed.");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "DecodeBase58 failed.");
         if (!VerifyChecksum(vchOut))
-            throw std::runtime_error("VerifyChecksum failed.");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "VerifyChecksum failed.");
 
         size_t keyLen = vchOut.size();
         std::string sError;
 
         if (keyLen != BIP32_KEY_LEN)
-            throw std::runtime_error(strprintf("Unknown ext key length '%d'", keyLen));
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown ext key length '%d'", keyLen));
 
         if (memcmp(&vchOut[0], &Params().Base58Prefix(CChainParams::EXT_SECRET_KEY)[0], 4) == 0
             || memcmp(&vchOut[0], &Params().Base58Prefix(CChainParams::EXT_SECRET_KEY_BTC)[0], 4) == 0)
         {
             if (ExtKeyPathV(sMode, vchOut, keyInfo, sError) != 0)
-                throw std::runtime_error(strprintf("ExtKeyPathV failed %s.", sError.c_str()));
+                throw JSONRPCError(RPC_MISC_ERROR, strprintf("ExtKeyPathV failed %s.", sError.c_str()));
         } else
         if (memcmp(&vchOut[0], &Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY)[0], 4) == 0
             || memcmp(&vchOut[0], &Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY_BTC)[0], 4) == 0)
         {
             if (ExtKeyPathP(sMode, vchOut, keyInfo, sError) != 0)
-                throw std::runtime_error(strprintf("ExtKeyPathP failed %s.", sError.c_str()));
+                throw JSONRPCError(RPC_MISC_ERROR, strprintf("ExtKeyPathP failed %s.", sError.c_str()));
         } else
         {
-            throw std::runtime_error(strprintf("Unknown prefix '%s'", sInKey.substr(0, 4)));
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown prefix '%s'", sInKey.substr(0, 4)));
         };
 
         result.pushKV("key_info", keyInfo);
@@ -959,7 +959,7 @@ UniValue extkey(const JSONRPCRequest &request)
             };
         };
         if (keyId.IsNull())
-            throw std::runtime_error(strprintf("Must specify ext key or id %s.", mode == "account" ? "or 'default'" : ""));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Must specify ext key or id %s.", mode == "account" ? "or 'default'" : ""));
 
         int nListFull = 0; // 0 id only, 1 id+pubkey, 2 id+pubkey+secret
         if (request.params.size() > nParamOffset)
@@ -975,7 +975,7 @@ UniValue extkey(const JSONRPCRequest &request)
         if (mode == "account")
         {
             if (0 != AccountInfo(pwallet, keyId, nListFull, true, result, sError))
-                throw std::runtime_error("AccountInfo failed: " + sError);
+                throw JSONRPCError(RPC_MISC_ERROR, "AccountInfo failed: " + sError);
         } else
         {
             CKeyID idMaster;
@@ -984,7 +984,7 @@ UniValue extkey(const JSONRPCRequest &request)
             else
                 LogPrintf("%s: Warning: Master key isn't set!\n", __func__);
             if (0 != KeyInfo(pwallet, idMaster, keyId, nListFull, result, sError))
-                throw std::runtime_error("KeyInfo failed: " + sError);
+                throw JSONRPCError(RPC_MISC_ERROR, "KeyInfo failed: " + sError);
         };
     } else
     if (mode == "gen")
@@ -1012,10 +1012,10 @@ UniValue extkey(const JSONRPCRequest &request)
 
                 sstr >> nHashes;
                 if (!sstr)
-                    throw std::runtime_error("Invalid num hashes");
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid num hashes");
 
                 if (nHashes < 1)
-                    throw std::runtime_error("Num hashes must be 1 or more.");
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Num hashes must be 1 or more.");
             };
 
             if (request.params.size() > 3)
@@ -1077,17 +1077,17 @@ UniValue extkey(const JSONRPCRequest &request)
 
         CExtKey58 eKey58;
         if (eKey58.Set58(sInKey.c_str()) != 0)
-            throw std::runtime_error("Import failed - Invalid key.");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Import failed - Invalid key.");
 
         if (fBip44)
         {
             if (!eKey58.IsValid(CChainParams::EXT_SECRET_KEY_BTC))
-                throw std::runtime_error("Import failed - BIP44 key must begin with a bitcoin secret key prefix.");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Import failed - BIP44 key must begin with a bitcoin secret key prefix.");
         } else
         {
             if (!eKey58.IsValid(CChainParams::EXT_SECRET_KEY)
                 && !eKey58.IsValid(CChainParams::EXT_PUBLIC_KEY_BTC))
-                throw std::runtime_error("Import failed - Key must begin with a particl prefix.");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Import failed - Key must begin with a particl prefix.");
         };
 
         sek.kp = eKey58.GetKey();
@@ -1096,18 +1096,18 @@ UniValue extkey(const JSONRPCRequest &request)
             LOCK(pwallet->cs_wallet);
             CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
-                throw std::runtime_error("TxnBegin failed.");
+                throw JSONRPCError(RPC_MISC_ERROR, "TxnBegin failed.");
 
             int rv;
             CKeyID idDerived;
             if (0 != (rv = pwallet->ExtKeyImportLoose(&wdb, sek, idDerived, fBip44, fSaveBip44)))
             {
                 wdb.TxnAbort();
-                throw std::runtime_error(strprintf("ExtKeyImportLoose failed, %s", ExtKeyGetString(rv)));
+                throw JSONRPCError(RPC_MISC_ERROR, strprintf("ExtKeyImportLoose failed, %s", ExtKeyGetString(rv)));
             };
 
             if (!wdb.TxnCommit())
-                throw std::runtime_error("TxnCommit failed.");
+                throw JSONRPCError(RPC_MISC_ERROR, "TxnCommit failed.");
 
             CBitcoinAddress addr;
             addr.Set(fBip44 ? idDerived : sek.GetID(), CChainParams::EXT_KEY_HASH);
@@ -1144,13 +1144,13 @@ UniValue extkey(const JSONRPCRequest &request)
                 errno = 0;
                 nTimeStartScan = strtoimax(sVar.c_str(), nullptr, 10);
                 if (errno != 0)
-                    throw std::runtime_error("Import Account failed - Parse time error.");
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Import Account failed - Parse time error.");
             } else
             {
                 int year, month, day;
 
                 if (sscanf(sVar.c_str(), "%d-%d-%d", &year, &month, &day) != 3)
-                    throw std::runtime_error("Import Account failed - Parse time error.");
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Import Account failed - Parse time error.");
 
                 struct tm tmdate;
                 tmdate.tm_year = year - 1900;
@@ -1178,7 +1178,7 @@ UniValue extkey(const JSONRPCRequest &request)
             sek.kp = eKey58.GetKey();
         } else
         {
-            throw std::runtime_error("Import Account failed - Invalid key.");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Import Account failed - Invalid key.");
         };
 
         {
@@ -1190,22 +1190,22 @@ UniValue extkey(const JSONRPCRequest &request)
             LOCK2(cs_main, pwallet->cs_wallet);
             CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
-                throw std::runtime_error("TxnBegin failed.");
+                throw JSONRPCError(RPC_MISC_ERROR, "TxnBegin failed.");
 
             int rv = pwallet->ExtKeyImportAccount(&wdb, sek, nCreatedAt, sLabel);
             if (rv == 1)
             {
                 wdb.TxnAbort();
-                throw std::runtime_error("Import failed - ExtKeyImportAccount failed.");
+                throw JSONRPCError(RPC_WALLET_ERROR, "Import failed - ExtKeyImportAccount failed.");
             } else
             if (rv == 2)
             {
                 wdb.TxnAbort();
-                throw std::runtime_error("Import failed - account exists.");
+                throw JSONRPCError(RPC_WALLET_ERROR, "Import failed - account exists.");
             } else
             {
                 if (!wdb.TxnCommit())
-                    throw std::runtime_error("TxnCommit failed.");
+                    throw JSONRPCError(RPC_MISC_ERROR, "TxnCommit failed.");
                 result.pushKV("result", "Success.");
 
                 if (rv == 3)
@@ -1231,7 +1231,9 @@ UniValue extkey(const JSONRPCRequest &request)
                 sInKey = request.params[nParamOffset].get_str();
                 nParamOffset++;
             } else
-                throw std::runtime_error("Must specify ext key or id.");
+            {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Must specify ext key or id.");
+            };
         };
 
         CKeyID idNewMaster;
@@ -1241,16 +1243,16 @@ UniValue extkey(const JSONRPCRequest &request)
             LOCK(pwallet->cs_wallet);
             CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
-                throw std::runtime_error("TxnBegin failed.");
+                throw JSONRPCError(RPC_MISC_ERROR, "TxnBegin failed.");
 
             int rv;
             if (0 != (rv = pwallet->ExtKeySetMaster(&wdb, idNewMaster)))
             {
                 wdb.TxnAbort();
-                throw std::runtime_error(strprintf("ExtKeySetMaster failed, %s.", ExtKeyGetString(rv)));
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("ExtKeySetMaster failed, %s.", ExtKeyGetString(rv)));
             };
             if (!wdb.TxnCommit())
-                throw std::runtime_error("TxnCommit failed.");
+                throw JSONRPCError(RPC_MISC_ERROR, "TxnCommit failed.");
             result.pushKV("result", "Success.");
         } // cs_wallet
 
@@ -1264,7 +1266,9 @@ UniValue extkey(const JSONRPCRequest &request)
                 sInKey = request.params[nParamOffset].get_str();
                 nParamOffset++;
             } else
-                throw std::runtime_error("Must specify ext key or id.");
+            {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Must specify ext key or id.");
+            };
         };
 
         CKeyID idNewDefault;
@@ -1288,19 +1292,19 @@ UniValue extkey(const JSONRPCRequest &request)
             if (!wdb.TxnBegin())
             {
                 delete sea;
-                throw std::runtime_error("TxnBegin failed.");
+                throw JSONRPCError(RPC_MISC_ERROR, "TxnBegin failed.");
             };
             if (0 != (rv = pwallet->ExtKeySetDefaultAccount(&wdb, idNewDefault)))
             {
                 delete sea;
                 wdb.TxnAbort();
-                throw std::runtime_error(strprintf("ExtKeySetDefaultAccount failed, %s.", ExtKeyGetString(rv)));
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("ExtKeySetDefaultAccount failed, %s.", ExtKeyGetString(rv)));
             };
             if (!wdb.TxnCommit())
             {
                 delete sea;
                 pwallet->idDefaultAccount = idOldDefault;
-                throw std::runtime_error("TxnCommit failed.");
+                throw JSONRPCError(RPC_MISC_ERROR, "TxnCommit failed.");
             };
 
             result.pushKV("result", "Success.");
@@ -1327,7 +1331,7 @@ UniValue extkey(const JSONRPCRequest &request)
             std::string strParam = request.params[nParamOffset].get_str();
             std::transform(strParam.begin(), strParam.end(), strParam.begin(), ::tolower);
 
-            throw std::runtime_error(strprintf("Unknown parameter '%s'", strParam.c_str()));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown parameter '%s'", strParam.c_str()));
         };
 
         CExtKeyAccount *sea = new CExtKeyAccount();
@@ -1336,7 +1340,7 @@ UniValue extkey(const JSONRPCRequest &request)
             LOCK(pwallet->cs_wallet);
             CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
-                throw std::runtime_error("TxnBegin failed.");
+                throw JSONRPCError(RPC_MISC_ERROR, "TxnBegin failed.");
 
             int rv;
             if ((rv = pwallet->ExtKeyDeriveNewAccount(&wdb, sea, sLabel, sPath)) != 0)
@@ -1347,7 +1351,7 @@ UniValue extkey(const JSONRPCRequest &request)
             } else
             {
                 if (!wdb.TxnCommit())
-                    throw std::runtime_error("TxnCommit failed.");
+                    throw JSONRPCError(RPC_MISC_ERROR, "TxnCommit failed.");
 
                 result.pushKV("result", "Success.");
                 result.pushKV("account", sea->GetIDString58());
@@ -1374,7 +1378,9 @@ UniValue extkey(const JSONRPCRequest &request)
                 sInKey = request.params[nParamOffset].get_str();
                 nParamOffset++;
             } else
-                throw std::runtime_error("Must specify ext key or id.");
+            {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Must specify ext key or id.");
+            };
         };
         if (request.params.size() > nParamOffset)
         {
@@ -1391,7 +1397,7 @@ UniValue extkey(const JSONRPCRequest &request)
 
         CKeyID id;
         if (!addr.SetString(sInKey))
-            throw std::runtime_error("Invalid key or account id.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid key or account id.");
 
         bool fAccount = false;
         bool fKey = false;
@@ -1420,7 +1426,7 @@ UniValue extkey(const JSONRPCRequest &request)
                 fKey = true;
         } else
         {
-            throw std::runtime_error("Invalid key or account id.");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid key or account id.");
         };
 
         CStoredExtKey sek;
@@ -1429,7 +1435,7 @@ UniValue extkey(const JSONRPCRequest &request)
             LOCK(pwallet->cs_wallet);
             CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
-                throw std::runtime_error("TxnBegin failed.");
+                throw JSONRPCError(RPC_MISC_ERROR, "TxnBegin failed.");
 
             if (fKey)
             {
@@ -1446,7 +1452,7 @@ UniValue extkey(const JSONRPCRequest &request)
                 } else
                 {
                     wdb.TxnAbort();
-                    throw std::runtime_error("Key not in wallet.");
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Key not in wallet.");
                 };
 
                 if (0 != ManageExtKey(*pSek, sOptName, sOptValue, result, sError))
@@ -1459,7 +1465,7 @@ UniValue extkey(const JSONRPCRequest &request)
                     && !wdb.WriteExtKey(id, *pSek))
                 {
                     wdb.TxnAbort();
-                    throw std::runtime_error("WriteExtKey failed.");
+                    throw JSONRPCError(RPC_MISC_ERROR, "WriteExtKey failed.");
                 };
             };
 
@@ -1477,7 +1483,7 @@ UniValue extkey(const JSONRPCRequest &request)
                 } else
                 {
                     wdb.TxnAbort();
-                    throw std::runtime_error("Account not in wallet.");
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Account not in wallet.");
                 };
 
                 if (0 != ManageExtAccount(*pSea, sOptName, sOptValue, result, sError))
@@ -1490,7 +1496,7 @@ UniValue extkey(const JSONRPCRequest &request)
                     && !wdb.WriteExtAccount(id, *pSea))
                 {
                     wdb.TxnAbort();
-                    throw std::runtime_error("Write failed.");
+                    throw JSONRPCError(RPC_WALLET_ERROR,"WriteExtAccount failed.");
                 };
             };
 
@@ -1500,7 +1506,7 @@ UniValue extkey(const JSONRPCRequest &request)
             } else
             {
                 if (!wdb.TxnCommit())
-                    throw std::runtime_error("TxnCommit failed.");
+                    throw JSONRPCError(RPC_MISC_ERROR, "TxnCommit failed.");
                 result.pushKV("result", "Success.");
             };
         } // cs_wallet
@@ -1522,7 +1528,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
     EnsureWalletIsUnlocked(pwallet);
 
     if (request.params.size() < 1)
-        throw std::runtime_error("Please specify a private extkey or mnemonic phrase.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify a private extkey or mnemonic phrase.");
 
     std::string sMnemonic = request.params[0].get_str();
     bool fSaveBip44Root = false;
@@ -1540,7 +1546,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
         std::string s = request.params[2].get_str();
 
         if (!part::GetStringBool(s, fSaveBip44Root))
-            throw std::runtime_error(strprintf("Unknown argument for save_bip44_root: %s.", s.c_str()));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown argument for save_bip44_root: %s.", s.c_str()));
     };
 
     if (request.params.size() > 3)
@@ -1552,14 +1558,14 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
     {
         std::string s = request.params[5].get_str();
         if (!ParseInt64(s, &nScanFrom))
-            throw std::runtime_error(strprintf("Unknown argument for scan_chain_from: %s.", s.c_str()));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown argument for scan_chain_from: %s.", s.c_str()));
     } else
     if (request.params[5].isNum())
     {
         nScanFrom = request.params[5].get_int64();
     };
     if (request.params.size() > 6)
-        throw std::runtime_error(strprintf("Unknown parameter '%s'", request.params[6].get_str()));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown parameter '%s'", request.params[6].get_str()));
 
     LogPrintf("Importing master key and account with labels '%s', '%s'.\n", sLblMaster.c_str(), sLblAccount.c_str());
 
@@ -1574,7 +1580,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
     {
         if (!eKey58.IsValid(CChainParams::EXT_SECRET_KEY)
             && !eKey58.IsValid(CChainParams::EXT_SECRET_KEY_BTC))
-            throw std::runtime_error("Please specify a private extkey or mnemonic phrase.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify a private extkey or mnemonic phrase.");
 
         // Key was provided directly
         ekp = eKey58.GetKey();
@@ -1584,10 +1590,10 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
 
         // First check the mnemonic is valid
         if (0 != MnemonicDecode(-1, sMnemonic, vEntropy, sError))
-            throw std::runtime_error(strprintf("MnemonicDecode failed: %s", sError.c_str()));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("MnemonicDecode failed: %s", sError.c_str()));
 
         if (0 != MnemonicToSeed(sMnemonic, sPassphrase, vSeed))
-            throw std::runtime_error("MnemonicToSeed failed.");
+            throw JSONRPCError(RPC_MISC_ERROR, "MnemonicToSeed failed.");
 
         ekp.SetMaster(&vSeed[0], vSeed.size());
     };
@@ -1610,18 +1616,18 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
         LOCK(pwallet->cs_wallet);
         CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
         if (!wdb.TxnBegin())
-            throw std::runtime_error("TxnBegin failed.");
+            throw JSONRPCError(RPC_MISC_ERROR, "TxnBegin failed.");
 
         if (0 != (rv = pwallet->ExtKeyImportLoose(&wdb, sek, idDerived, fBip44, fSaveBip44Root)))
         {
             wdb.TxnAbort();
-            throw std::runtime_error(strprintf("ExtKeyImportLoose failed, %s", ExtKeyGetString(rv)));
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("ExtKeyImportLoose failed, %s", ExtKeyGetString(rv)));
         };
 
         if (0 != (rv = pwallet->ExtKeySetMaster(&wdb, idDerived)))
         {
             wdb.TxnAbort();
-            throw std::runtime_error(strprintf("ExtKeySetMaster failed, %s.", ExtKeyGetString(rv)));
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("ExtKeySetMaster failed, %s.", ExtKeyGetString(rv)));
         };
 
         sea = new CExtKeyAccount();
@@ -1629,7 +1635,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
         {
             pwallet->ExtKeyRemoveAccountFromMapsAndFree(sea);
             wdb.TxnAbort();
-            throw std::runtime_error(strprintf("ExtKeyDeriveNewAccount failed, %s.", ExtKeyGetString(rv)));
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("ExtKeyDeriveNewAccount failed, %s.", ExtKeyGetString(rv)));
         };
 
         CKeyID idNewDefaultAccount = sea->GetID();
@@ -1639,7 +1645,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
         {
             pwallet->ExtKeyRemoveAccountFromMapsAndFree(sea);
             wdb.TxnAbort();
-            throw std::runtime_error(strprintf("ExtKeySetDefaultAccount failed, %s.", ExtKeyGetString(rv)));
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("ExtKeySetDefaultAccount failed, %s.", ExtKeyGetString(rv)));
         };
 
         if (fGenesisChain)
@@ -1661,7 +1667,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
         {
             pwallet->idDefaultAccount = idOldDefault;
             pwallet->ExtKeyRemoveAccountFromMapsAndFree(sea);
-            throw std::runtime_error("TxnCommit failed.");
+            throw JSONRPCError(RPC_MISC_ERROR, "TxnCommit failed.");
         };
     } // cs_wallet
 
@@ -2100,7 +2106,7 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
     } else
     {
         if (!pwallet->ImportStealthAddress(sxAddr, skSpend))
-            throw std::runtime_error("Could not save to wallet.");
+            throw JSONRPCError(RPC_WALLET_ERROR, "Could not save to wallet.");
         result.pushKV("result", "Success");
         result.pushKV("stealth_address", sxAddr.Encoded(fBech32));
     };
@@ -2601,11 +2607,11 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
 
         CHDWalletDB wdb(pwallet->GetDBHandle());
         if (!wdb.TxnBegin())
-            throw std::runtime_error("TxnBegin failed.");
+            throw JSONRPCError(RPC_MISC_ERROR, "TxnBegin failed.");
 
         Dbc *pcursor = wdb.GetTxnCursor();
         if (!pcursor)
-            throw std::runtime_error("GetTxnCursor failed.");
+            throw JSONRPCError(RPC_MISC_ERROR, "GetTxnCursor failed.");
 
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
 
@@ -2641,7 +2647,7 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
             pwallet->UnloadTransaction(hash); // ignore failure
 
             if ((rv = pcursor->del(0)) != 0)
-                throw std::runtime_error("pcursor->del failed.");
+                throw JSONRPCError(RPC_MISC_ERROR, "pcursor->del failed.");
 
             nRemoved++;
         };
@@ -2663,7 +2669,7 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
                 pwallet->UnloadTransaction(hash); // ignore failure
 
                 if ((rv = pcursor->del(0)) != 0)
-                    throw std::runtime_error("pcursor->del failed.");
+                    throw JSONRPCError(RPC_MISC_ERROR, "pcursor->del failed.");
 
                 // TODO: Remove CStoredTransaction
 
@@ -2674,7 +2680,7 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
         pcursor->close();
         if (!wdb.TxnCommit())
         {
-            throw std::runtime_error("TxnCommit failed.");
+            throw JSONRPCError(RPC_MISC_ERROR, "TxnCommit failed.");
         };
     }
 
@@ -4571,7 +4577,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
                 CTempRecipient &r = vecSend.back();
 
                 if (sAddress != "script")
-                    JSONRPCError(RPC_INVALID_PARAMETER, "address parameter must be 'script' to set script explicitly.");
+                    JSONRPCError(RPC_INVALID_PARAMETER, "Address parameter must be 'script' to set script explicitly.");
 
                 std::string sScript = obj["script"].get_str();
                 std::vector<uint8_t> scriptData = ParseHex(sScript);
@@ -4579,7 +4585,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
                 r.fScriptSet = true;
 
                 if (typeOut != OUTPUT_STANDARD)
-                    throw std::runtime_error("In progress, setting script only works for standard outputs.");
+                    throw std::runtime_error("TODO: Currently setting a script only works for standard outputs.");
             };
         };
         nCommentOfs = 1;

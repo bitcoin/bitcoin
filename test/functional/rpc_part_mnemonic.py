@@ -121,6 +121,19 @@ class MnemonicTest(ParticlTestFramework):
         ro = node.mnemonic('decode', '', ' sortir hygiène boueux détourer doyen émission prospère tunnel cerveau miracle brioche feuille arbitre terne alléger prison connoter diable méconnu fraise pelle carbone erreur admettre  ')
         assert(ro['master'] == 'tprv8ZgxMBicQKsPdsKV1vzsQkRQp5TobgyfXsBLcU49jmnC2zBT4Cd5LTCtdoWe5gg7EPjjQnAsxbMG1qyoCn1bHn6n4c1ZEdFLKg1TJAwTriQ')
 
+        # Multiple spaces between words
+        try:
+            ro = node.mnemonic('decode', '', 'abandon  baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
+            assert(False), 'Decoded with multiple spaces.'
+        except JSONRPCException as e:
+            print('msg', e.error['message'])
+            assert("Multiple spaces between words" in e.error['message'])
+        try:
+            ro = node.mnemonic('decode', '', 'abandon  baby cabbage dad eager fabric gadget habit ice   kangaroo lab absorb')
+            assert(False), 'Decoded with multiple spaces.'
+        except JSONRPCException as e:
+            assert("Multiple spaces between words" in e.error['message'])
+
 
 if __name__ == '__main__':
     MnemonicTest().main()

@@ -36,7 +36,7 @@ UniValue smsgenable(const JSONRPCRequest &request)
             "Enable secure messaging.");
 
     if (smsg::fSecMsgEnabled)
-        throw std::runtime_error("Secure messaging is already enabled.");
+        throw JSONRPCError(RPC_MISC_ERROR, "Secure messaging is already enabled.");
 
     UniValue result(UniValue::VOBJ);
 
@@ -60,7 +60,7 @@ UniValue smsgdisable(const JSONRPCRequest &request)
             "Disable secure messaging.");
 
     if (!smsg::fSecMsgEnabled)
-        throw std::runtime_error("Secure messaging is already disabled.");
+        throw JSONRPCError(RPC_MISC_ERROR, "Secure messaging is already disabled.");
 
     UniValue result;
     result.pushKV("result", (smsgModule.Disable() ? "Disabled secure messaging." : "Failed to disable secure messaging."));
@@ -292,9 +292,9 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         CKeyID keyID;
         CBitcoinAddress coinAddress(addr);
         if (!coinAddress.IsValid())
-            throw std::runtime_error("Invalid address.");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address.");
         if (!coinAddress.GetKeyID(keyID))
-            throw std::runtime_error("Invalid address.");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address.");
 
         if (!smsgModule.SetWalletAddressOption(keyID, "receive", fValue)
             && !smsgModule.SetSmsgAddressOption(keyID, "receive", fValue))
@@ -331,9 +331,9 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         CKeyID keyID;
         CBitcoinAddress coinAddress(addr);
         if (!coinAddress.IsValid())
-            throw std::runtime_error("Invalid address.");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address.");
         if (!coinAddress.GetKeyID(keyID))
-            throw std::runtime_error("Invalid address.");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address.");
 
         if (!smsgModule.SetWalletAddressOption(keyID, "anon", fValue)
             && !smsgModule.SetSmsgAddressOption(keyID, "anon", fValue))
@@ -353,7 +353,7 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
     {
 #ifdef ENABLE_WALLET
         if (!smsgModule.pwallet)
-            throw std::runtime_error("No wallet.");
+            throw JSONRPCError(RPC_MISC_ERROR, "No wallet.");
         uint32_t nKeys = 0;
         UniValue keys(UniValue::VOBJ);
 
@@ -395,7 +395,7 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         result.pushKV("keys", keys);
         result.pushKV("result", strprintf("%u", nKeys));
 #else
-        throw std::runtime_error("No wallet.");
+        throw JSONRPCError(RPC_MISC_ERROR, "No wallet.");
 #endif
     } else
     {
@@ -439,7 +439,7 @@ UniValue smsgscanbuckets(const JSONRPCRequest &request)
 #ifdef ENABLE_WALLET
     if (smsgModule.pwallet && smsgModule.pwallet->IsLocked()
         && smsgModule.addresses.size() > 0)
-        throw std::runtime_error("Wallet is locked.");
+        throw JSONRPCError(RPC_MISC_ERROR, "Wallet is locked.");
 #endif
 
     UniValue result(UniValue::VOBJ);
@@ -725,10 +725,8 @@ UniValue smsgsendanon(const JSONRPCRequest &request)
 
     CKeyID kiFrom, kiTo;
     CBitcoinAddress coinAddress(addrTo);
-    if (!coinAddress.IsValid())
-        throw std::runtime_error("Invalid to address.");
-    if (!coinAddress.GetKeyID(kiTo))
-        throw std::runtime_error("Invalid to address.");
+    if (!coinAddress.IsValid() || !coinAddress.GetKeyID(kiTo))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid to address.");
 
     UniValue result(UniValue::VOBJ);
     std::string sError;
@@ -1140,7 +1138,7 @@ UniValue smsgview(const JSONRPCRequest &request)
 
 #ifdef ENABLE_WALLET
     if (smsgModule.pwallet->IsLocked())
-        throw std::runtime_error("Wallet is locked.");
+        throw JSONRPCError(RPC_MISC_ERROR, "Wallet is locked.");
 
     char cbuf[256];
     bool fMatchAll = false;
@@ -1218,22 +1216,22 @@ UniValue smsgview(const JSONRPCRequest &request)
         if (sTemp == "-from")
         {
             if (i >= request.params.size()-1)
-                throw std::runtime_error("Argument required for: " + sTemp);
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Argument required for: " + sTemp);
             i++;
             sTemp = request.params[i].get_str();
             tFrom = part::strToEpoch(sTemp.c_str());
             if (tFrom < 0)
-                throw std::runtime_error("from format error: " + std::string(strerror(errno)));
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "from format error: " + std::string(strerror(errno)));
         } else
         if (sTemp == "-to")
         {
             if (i >= request.params.size()-1)
-                throw std::runtime_error("Argument required for: " + sTemp);
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Argument required for: " + sTemp);
             i++;
             sTemp = request.params[i].get_str();
             tTo = part::strToEpoch(sTemp.c_str());
             if (tTo < 0)
-                throw std::runtime_error("to format error: " + std::string(strerror(errno)));
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "to format error: " + std::string(strerror(errno)));
         } else
         if (sTemp == "asc")
         {
@@ -1244,14 +1242,14 @@ UniValue smsgview(const JSONRPCRequest &request)
             fDesc = true;
         } else
         {
-            throw std::runtime_error("Unknown parameter: " + sTemp);
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown parameter: " + sTemp);
         };
 
         i++;
     };
 
     if (!fMatchAll && vMatchAddress.size() < 1)
-        throw std::runtime_error("No address found.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "No address found.");
 
     UniValue result(UniValue::VOBJ);
 
@@ -1403,7 +1401,7 @@ UniValue smsgview(const JSONRPCRequest &request)
         result.pushKV("to", part::GetTimeString(tTo, cbuf, sizeof(cbuf)));
 #else
     UniValue result(UniValue::VOBJ);
-    throw std::runtime_error("No wallet.");
+    throw JSONRPCError(RPC_MISC_ERROR, "No wallet.");
 #endif
     return result;
 }
