@@ -231,12 +231,12 @@ public:
 		nDefaultPort = 8369;
 		nPruneAfterHeight = 1000000;
 		uint256 hash;
-		genesis = CreateGenesisBlock(1524507506, 6952321, 0x1e0ffff0, 1, 8.88 * COIN);
+		genesis = CreateGenesisBlock(1525170117, 2559938, 0x1e0ffff0, 1, 8.88 * COIN);
 		/*CBlockHeader genesisHeader = genesis.GetBlockHeader();
 		GenerateGenesisBlock(genesisHeader, &hash);*/
 
 		consensus.hashGenesisBlock = genesis.GetHash();
-		assert(consensus.hashGenesisBlock == uint256S("0x00000cd4b4e6a465c66094bc7d18e828f0b8d56e6afc571fbe9e25e48338d441"));
+		assert(consensus.hashGenesisBlock == uint256S("0x000006e5c08d6d2414435b294210266753b05a75f90e926dd5e6082306812622"));
 		assert(genesis.hashMerkleRoot == uint256S("0x3fc1815124d408495fb860705d2188d84fcfeb5efc894f26fefc81a5cbdc49e8"));
 
 		vSeeds.push_back(CDNSSeedData("seed1.syscoin.org", "seed1.syscoin.org"));
