@@ -143,7 +143,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     if (request.params.size() > 0)
         strAccount = AccountFromValue(request.params[0]);
 
-    if (!pwalletMain->IsLocked(true))
+    if (!pwalletMain->IsLocked())
         pwalletMain->TopUpKeyPool();
 
     // Generate a new key that is added to wallet
@@ -219,7 +219,7 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    if (!pwalletMain->IsLocked(true))
+    if (!pwalletMain->IsLocked())
         pwalletMain->TopUpKeyPool();
 
     CReserveKey reservekey(pwalletMain);
@@ -2184,7 +2184,7 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     if (request.params.size() >= 3)
         fForMixingOnly = request.params[2].get_bool();
 
-    if (fForMixingOnly && !pwalletMain->IsLocked(true) && pwalletMain->IsLocked())
+    if (fForMixingOnly && !pwalletMain->IsLocked() && pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already unlocked for mixing only.");
 
     if (!pwalletMain->IsLocked())

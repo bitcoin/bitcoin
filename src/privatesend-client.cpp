@@ -688,7 +688,7 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman& connman, bool fDryRun
 {
     if(fMasternodeMode) return false; // no client-side mixing on masternodes
     if(!fEnablePrivateSend) return false;
-    if(!pwalletMain || pwalletMain->IsLocked(true)) return false;
+    if(!pwalletMain || pwalletMain->IsLocked()) return false;
     if(nState != POOL_STATE_IDLE) return false;
 
     if(!masternodeSync.IsMasternodeListSynced()) {
@@ -710,7 +710,7 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman& connman, bool fDryRun
         return false;
     }
 
-    if(!fDryRun && pwalletMain->IsLocked(true)) {
+    if(!fDryRun && pwalletMain->IsLocked()) {
         strAutoDenomResult = _("Wallet is locked.");
         return false;
     }
@@ -1047,7 +1047,7 @@ bool CPrivateSendClient::PrepareDenominate(int nMinRounds, int nMaxRounds, std::
         return false;
     }
 
-    if (pwalletMain->IsLocked(true)) {
+    if (pwalletMain->IsLocked()) {
         strErrorRet = "Wallet locked, unable to create transaction!";
         return false;
     }

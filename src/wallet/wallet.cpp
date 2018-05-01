@@ -340,7 +340,7 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool fForMixingOnl
 
 bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase)
 {
-    bool fWasLocked = IsLocked(true);
+    bool fWasLocked = IsLocked();
     bool bUseKeePass = false;
 
     SecureString strOldWalletPassphraseFinal;
@@ -3947,7 +3947,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     {
         LOCK(cs_wallet);
 
-        if (IsLocked(true))
+        if (IsLocked())
             return false;
 
         // Top up key pool
@@ -4011,7 +4011,7 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fIn
     {
         LOCK(cs_wallet);
 
-        if (!IsLocked(true))
+        if (!IsLocked())
             TopUpKeyPool();
 
         fInternal = fInternal && IsHDEnabled();
@@ -4075,7 +4075,7 @@ bool CWallet::GetKeyFromPool(CPubKey& result, bool fInternal)
         ReserveKeyFromKeyPool(nIndex, keypool, fInternal);
         if (nIndex == -1)
         {
-            if (IsLocked(true)) return false;
+            if (IsLocked()) return false;
             // TODO: implement keypool for all accouts?
             result = GenerateNewKey(0, fInternal);
             return true;
@@ -4996,7 +4996,7 @@ bool AutoBackupWallet(CWallet* wallet, const std::string& strWalletFile_, std::s
         // Update nKeysLeftSinceAutoBackup using current external keypool size
         wallet->nKeysLeftSinceAutoBackup = wallet->KeypoolCountExternalKeys();
         LogPrintf("nKeysLeftSinceAutoBackup: %d\n", wallet->nKeysLeftSinceAutoBackup);
-        if(wallet->IsLocked(true)) {
+        if(wallet->IsLocked()) {
             strBackupWarningRet = _("Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.");
             LogPrintf("%s\n", strBackupWarningRet);
             nWalletBackups = -2;
