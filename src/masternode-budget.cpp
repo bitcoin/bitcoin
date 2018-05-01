@@ -522,13 +522,32 @@ void CBudgetManager::CheckAndRemove()
     LogPrintf("CBudgetManager::CheckAndRemove - PASSED\n");
 }
 
-void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
+const CFinalizedBudget* CBudgetManager::GetMostVotedBudget(int height) const
+{
+    const CFinalizedBudget* budgetToPay = NULL;
+    typedef std::map<uint256, CFinalizedBudget>::const_iterator FinalizedBudgetIterator;
+    for (FinalizedBudgetIterator i = mapFinalizedBudgets.begin(); i != mapFinalizedBudgets.end(); ++i)
+    {
+        if (height != i->second.GetBlockStart())
+            continue;
+
+        if (i->second.GetVoteCount() == 0) // discard budgets with no votes
+            continue;
+
+        if ((!budgetToPay || i->second.GetVoteCount() > budgetToPay->GetVoteCount()))
+            budgetToPay = &i->second;
+    }
+
+    return budgetToPay;
+}
+
+void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees) const
 {
     assert (txNew.vout.size() == 1); // There is a blank for block creator's reward
 
     LOCK(cs);
 
-    CBlockIndex* pindexPrev = chainActive.Tip();
+    const CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev)
         return;
 
@@ -538,21 +557,7 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
 
     // Find finalized budgets with the most votes
 
-    CFinalizedBudget* budgetToPay = NULL;
-    typedef std::map<uint256, CFinalizedBudget>::iterator FinalizedBudgetIterator;
-    for (FinalizedBudgetIterator i = mapFinalizedBudgets.begin(); i != mapFinalizedBudgets.end(); ++i)
-    {
-        CFinalizedBudget& fb = i->second;
-        if (pindexPrev->nHeight + 1 != fb.GetBlockStart())
-            continue;
-
-        if (fb.GetVoteCount() == 0)
-            continue;
-
-        if ((!budgetToPay || fb.GetVoteCount() > budgetToPay->GetVoteCount()))
-            budgetToPay = &fb;
-    }
-
+    const CFinalizedBudget* budgetToPay = GetMostVotedBudget(pindexPrev->nHeight + 1);
     if (budgetToPay == NULL)
         return;
 
@@ -606,30 +611,14 @@ CBudgetProposal *CBudgetManager::FindProposal(uint256 nHash)
     return NULL;
 }
 
-bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight)
+bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight) const
 {
-    int nHighestCount = -1;
+    const CFinalizedBudget* bestBudget = GetMostVotedBudget(nBlockHeight);
+    if (bestBudget == NULL)
+        return false;
 
-    std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
-    while(it != mapFinalizedBudgets.end())
-    {
-        CFinalizedBudget* pfinalizedBudget = &((*it).second);
-        if(pfinalizedBudget->GetVoteCount() > nHighestCount && 
-            nBlockHeight >= pfinalizedBudget->GetBlockStart() && 
-            nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
-            nHighestCount = pfinalizedBudget->GetVoteCount();
-        }
-
-        ++it;
-    }
-
-    /*
-        If budget doesn't have 5% of the network votes, then we should pay a masternode instead
-    */
-    if(20 * nHighestCount > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
-        return true;
-
-    return false;
+    // If budget doesn't have 5% of the masternode votes, we should not pay it
+    return (20 * bestBudget->GetVoteCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION));
 }
 
 bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
@@ -807,30 +796,24 @@ std::vector<CFinalizedBudget*> CBudgetManager::GetFinalizedBudgets()
     return vFinalizedBudgetsRet;
 }
 
-std::string CBudgetManager::GetRequiredPaymentsString(int nBlockHeight)
+std::string CBudgetManager::GetRequiredPaymentsString(int nBlockHeight) const
 {
     LOCK(cs);
 
     std::string ret = "unknown-budget";
 
-    std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
-    while(it != mapFinalizedBudgets.end())
-    {
-        CFinalizedBudget& pfinalizedBudget = it->second;
-        if(nBlockHeight == pfinalizedBudget.GetBlockStart())
-        {
-            BOOST_FOREACH(const CTxBudgetPayment& payment, pfinalizedBudget.GetBudgetPayments())
-            {
-                if(ret == "unknown-budget"){
-                    ret = payment.nProposalHash.ToString();
-                } else {
-                    ret += ",";
-                    ret += payment.nProposalHash.ToString();
-                }
-            }
-        }
+    const CFinalizedBudget* pfinalizedBudget = GetMostVotedBudget(nBlockHeight);
+    if (pfinalizedBudget == NULL)
+        return ret;
 
-        ++it;
+    BOOST_FOREACH(const CTxBudgetPayment& payment, pfinalizedBudget->GetBudgetPayments())
+    {
+        if(ret == "unknown-budget"){
+            ret = payment.nProposalHash.ToString();
+        } else {
+            ret += ",";
+            ret += payment.nProposalHash.ToString();
+        }
     }
 
     return ret;

@@ -1005,6 +1005,8 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         expected.push_back(CTxOut(111, PayToPublicKey(keyPairC.GetPubKey())));
         expected.push_back(CTxOut(42, PayToPublicKey(keyPairA.GetPubKey()))); // Lowest amount is #31
 
+        BOOST_REQUIRE_EQUAL(chainActive.Tip()->nHeight + 1, blockHeight);
+
         // Call & Check
 
         CMutableTransaction actual;
@@ -1012,6 +1014,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
 
         budget.FillBlockPayee(actual, fees);
 
+        BOOST_CHECK(budget.IsBudgetPaymentBlock(chainActive.Tip()->nHeight + 1));
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
     }
 
@@ -1035,6 +1038,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
 
         // Rewind 1 block forward
         chainActive.SetTip(&blocks[blockHeight]);
+        BOOST_REQUIRE_EQUAL(chainActive.Tip()->nHeight + 1, blockHeight + 1);
 
         // Set expectations
         std::vector<CTxOut> expected;
@@ -1047,6 +1051,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
 
         budget.FillBlockPayee(actual, fees);
 
+        BOOST_CHECK(!budget.IsBudgetPaymentBlock(chainActive.Tip()->nHeight + 1));
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
     }
 
@@ -1068,6 +1073,8 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         std::vector<CTxOut> expected;
         expected.push_back(CTxOut(9 * COIN, CScript()));
 
+        BOOST_REQUIRE_EQUAL(chainActive.Tip()->nHeight + 1, blockHeight);
+
         // Call & Check
 
         CMutableTransaction actual;
@@ -1075,6 +1082,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
 
         budget.FillBlockPayee(actual, fees);
 
+        BOOST_CHECK(!budget.IsBudgetPaymentBlock(chainActive.Tip()->nHeight + 1));
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
     }
 

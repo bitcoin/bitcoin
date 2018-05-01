@@ -703,7 +703,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("FeeTX",  finalizedBudget->GetFeeTxHash().ToString()));
             bObj.push_back(Pair("Hash",  finalizedBudget->GetHash().ToString()));
             bObj.push_back(Pair("BlockStart",  (int64_t)finalizedBudget->GetBlockStart()));
-            bObj.push_back(Pair("BlockEnd",    (int64_t)finalizedBudget->GetBlockEnd()));
+            bObj.push_back(Pair("BlockEnd",    (int64_t)finalizedBudget->GetBlockStart())); // Budgets are paid in a single block !
             bObj.push_back(Pair("Proposals",  finalizedBudget->GetProposals()));
             bObj.push_back(Pair("VoteCount",  (int64_t)finalizedBudget->GetVoteCount()));
             bObj.push_back(Pair("Status",  finalizedBudget->GetStatus()));
