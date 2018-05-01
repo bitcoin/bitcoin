@@ -76,6 +76,11 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
         break;
     case TX_WITNESS_V0_KEYHASH:
     {
+        if (sigversion == IsMineSigVersion::WITNESS_V0) {
+            // P2WPKH inside P2WSH is invalid.
+            isInvalid = true;
+            return ISMINE_NO;
+        }
         if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
             // We do not support bare witness outputs unless the P2SH version of it would be
             // acceptable as well. This protects against matching before segwit activates.
@@ -100,6 +105,11 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
         break;
     case TX_SCRIPTHASH:
     {
+        if (sigversion != IsMineSigVersion::TOP) {
+            // P2SH inside P2WSH or P2SH is invalid.
+            isInvalid = true;
+            return ISMINE_NO;
+        }
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
@@ -109,6 +119,11 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
     }
     case TX_WITNESS_V0_SCRIPTHASH:
     {
+        if (sigversion == IsMineSigVersion::WITNESS_V0) {
+            // P2WSH inside P2WSH is invalid.
+            isInvalid = true;
+            return ISMINE_NO;
+        }
         if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
             break;
         }
