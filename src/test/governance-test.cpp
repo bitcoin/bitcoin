@@ -128,7 +128,7 @@ namespace
 
         FinalizedBudgetFixture()
             : budgetName("test")
-            , blockStart(129600)
+            , blockStart(1296000)
             , keyPairA(CreateKeyPair(vchKey0))
             , keyPairB(CreateKeyPair(vchKey1))
             , keyPairC(CreateKeyPair(vchKey2))
@@ -140,8 +140,8 @@ namespace
             , mn3(CreateMasternode(CTxIn(COutPoint(ArithToUint256(3), 1 * COIN))))
             , mn4(CreateMasternode(CTxIn(COutPoint(ArithToUint256(4), 1 * COIN))))
             , mn5(CreateMasternode(CTxIn(COutPoint(ArithToUint256(5), 1 * COIN))))
-            , hashes(100500)
-            , blocks(100500)
+            , hashes(1290500)
+            , blocks(1290500)
         {
             SetMockTime(GetTime());
 
@@ -466,17 +466,37 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
 
         CMutableTransaction expected;
         expected.vout.push_back(CTxOut(proposalB.GetAmount(), proposalB.GetPayee()));
+        expected.vout.push_back(CTxOut(proposalA.GetAmount(), proposalA.GetPayee()));
 
         // Call & Check
         BOOST_CHECK(budget.IsTransactionValid(expected, blockStart));
     }
 
-    BOOST_AUTO_TEST_CASE(IsTransactionValid_Block0_Invalid)
+    BOOST_AUTO_TEST_CASE(IsTransactionValid_Block0_Invalid_MissingPayment)
     {
         // Set Up
         std::vector<CTxBudgetPayment> txBudgetPayments;
         txBudgetPayments.push_back(GetPayment(proposalA));
         txBudgetPayments.push_back(GetPayment(proposalB));
+
+        CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+
+        CMutableTransaction wrong1;
+        wrong1.vout.push_back(CTxOut(proposalB.GetAmount(), proposalB.GetPayee()));
+
+        CMutableTransaction wrong2;
+        wrong2.vout.push_back(CTxOut(proposalA.GetAmount(), proposalA.GetPayee()));
+
+        // Call & Check
+        BOOST_CHECK(!budget.IsTransactionValid(wrong1, blockStart));
+        BOOST_CHECK(!budget.IsTransactionValid(wrong2, blockStart));
+    }
+
+    BOOST_AUTO_TEST_CASE(IsTransactionValid_Block0_Invalid_WrongPayment)
+    {
+        // Set Up
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
 
         CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
 
@@ -500,27 +520,15 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
 
         CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
 
-        CMutableTransaction expected;
-        expected.vout.push_back(CTxOut(proposalA.GetAmount(), proposalA.GetPayee()));
+        CMutableTransaction wrong1;
+        wrong1.vout.push_back(CTxOut(proposalA.GetAmount(), proposalA.GetPayee()));
+
+        CMutableTransaction wrong2;
+        wrong2.vout.push_back(CTxOut(proposalB.GetAmount(), proposalB.GetPayee()));
 
         // Call & Check
-        BOOST_CHECK(budget.IsTransactionValid(expected, blockStart + 1));
-    }
-
-    BOOST_AUTO_TEST_CASE(IsTransactionValid_Block2)
-    {
-        // Set Up
-        std::vector<CTxBudgetPayment> txBudgetPayments;
-        txBudgetPayments.push_back(GetPayment(proposalA));
-        txBudgetPayments.push_back(GetPayment(proposalB));
-
-        CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
-
-        CMutableTransaction expected;
-        expected.vout.push_back(CTxOut(proposalB.GetAmount(), proposalB.GetPayee()));
-
-        // Call & Check
-        BOOST_CHECK(!budget.IsTransactionValid(expected, blockStart + 2));
+        BOOST_CHECK(!budget.IsTransactionValid(wrong1, blockStart + 1));
+        BOOST_CHECK(!budget.IsTransactionValid(wrong2, blockStart + 1));
     }
 
     BOOST_AUTO_TEST_CASE(GetBudgetPayments)

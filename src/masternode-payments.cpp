@@ -202,7 +202,7 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
 
     if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything
         //super blocks will always be on these blocks, max 100 per budgeting
-        if(nHeight % GetBudgetPaymentCycleBlocks() < 100){
+        if(nHeight % GetBudgetPaymentCycleBlocks() == 0){
             return true;
         } else {
             if(block.vtx[0].GetValueOut() > nExpectedValue) return false;

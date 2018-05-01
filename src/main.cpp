@@ -1614,7 +1614,7 @@ double ConvertBitsToDouble(unsigned int nBits)
     return dDiff;
 }
 
-int64_t GetBlockValue(int nBits, int nHeight, const CAmount& nFees)
+int64_t GetBlockValue(int , int nHeight, const CAmount& nFees)
 {
     int64_t nSubsidy = 10 * COIN;
     int halvings = nHeight / Params().SubsidyHalvingInterval();

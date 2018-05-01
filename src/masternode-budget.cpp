@@ -1972,32 +1972,27 @@ bool CFinalizedBudget::IsTransactionValid(const CTransaction& txNew, int nBlockH
 {
     assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
 
-    int nCurrentBudgetPayment = nBlockHeight - GetBlockStart();
-    if(nCurrentBudgetPayment < 0) {
+    if(nBlockHeight != GetBlockStart()) {
         LogPrintf("CFinalizedBudget::IsTransactionValid - Invalid block - height: %d start: %d\n", nBlockHeight, GetBlockStart());
         return false;
     }
 
-    if(nCurrentBudgetPayment > (int)vecBudgetPayments.size() - 1) {
-        LogPrintf("CFinalizedBudget::IsTransactionValid - Invalid block - current budget payment: %d of %d\n", nCurrentBudgetPayment + 1, (int)vecBudgetPayments.size());
-        return false;
-    }
-
-    bool found = false;
-    BOOST_FOREACH(CTxOut out, txNew.vout)
+    BOOST_FOREACH(const CTxBudgetPayment& payment, vecBudgetPayments)
     {
-        if(vecBudgetPayments[nCurrentBudgetPayment].payee == out.scriptPubKey && vecBudgetPayments[nCurrentBudgetPayment].nAmount == out.nValue)
-            found = true;
+        bool found = false;
+        BOOST_FOREACH(const CTxOut& out, txNew.vout)
+        {
+            if(payment.payee == out.scriptPubKey && payment.nAmount == out.nValue)
+                found = true;
+        }
+        if(!found)
+        {
+            LogPrintf("CFinalizedBudget::IsTransactionValid - Missing required payment - %s: %d\n", ScriptToAddress(payment.payee).ToString(), payment.nAmount);
+            return false;
+        }
     }
-    if(!found) {
-        CTxDestination address1;
-        ExtractDestination(vecBudgetPayments[nCurrentBudgetPayment].payee, address1);
-        CBitcoinAddress address2(address1);
 
-        LogPrintf("CFinalizedBudget::IsTransactionValid - Missing required payment - %s: %d\n", address2.ToString(), vecBudgetPayments[nCurrentBudgetPayment].nAmount);
-    }
-    
-    return found;
+    return true;
 }
 
 const std::vector<CTxBudgetPayment>& CFinalizedBudget::GetBudgetPayments() const
