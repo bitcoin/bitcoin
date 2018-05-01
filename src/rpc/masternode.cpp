@@ -410,7 +410,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
         // Find possible candidates
         std::vector<COutput> vPossibleCoins;
-		// SYSCOIN include sys outputs
+		// SYSCOIN include sys alias balances
         pwalletMain->AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_1000, false, true);
 
         UniValue obj(UniValue::VOBJ);

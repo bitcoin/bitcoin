@@ -2568,7 +2568,7 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
     return nTotal;
 }
 
-void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue, AvailableCoinsType nCoinType, bool fUseInstantSend, bool fIncludeSyscoin) const
+void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue, AvailableCoinsType nCoinType, bool fUseInstantSend, bool fIncludeSyscoinAliasBalances, bool fIncludeSyscoinAliasOutputs) const
 {
     vCoins.clear();
 
@@ -2607,7 +2607,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed, 
 
             for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
 				// SYSCOIN
-				if (!fIncludeSyscoin) {
+				if (!fIncludeSyscoinAliasBalances || !fIncludeSyscoinAliasOutputs) {
 					if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint((*it).first, i)))
 						continue;
 					// SYSCOIN txs are unspendable by wallet unless using coincontrol(and the tx is selected)
@@ -2618,10 +2618,10 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed, 
 						{
 							int op;
 							std::vector<std::vector<unsigned char> > vvchArgs;
-							if (IsSyscoinScript(pcoin->tx->vout[i].scriptPubKey, op, vvchArgs))
+							if (IsSyscoinScript(pcoin->tx->vout[i].scriptPubKey, op, vvchArgs) && !fIncludeSyscoinAliasOutputs)
 								continue;
 							CSyscoinAddress address = CSyscoinAddress(sysdestination);
-							if (DoesAliasExist(address.ToString()))
+							if (DoesAliasExist(address.ToString()) && !fIncludeSyscoinAliasBalances)
 								continue;
 						}
 					}
@@ -3021,7 +3021,8 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     nValueRet = 0;
 
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, NULL, false, ONLY_DENOMINATED);
+	// SYSCOIN include syscoin alias balances
+    AvailableCoins(vCoins, true, NULL, false, ONLY_DENOMINATED, false, true);
 
     std::random_shuffle(vCoins.rbegin(), vCoins.rend(), GetRandInt);
 
@@ -3189,7 +3190,8 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
     nValueRet = 0;
 
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl, false, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
+	// SYSCOIN include syscoin alias balances
+    AvailableCoins(vCoins, true, coinControl, false, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED, false, true);
 
     //order the array so largest nondenom are first, then denominations, then very small inputs.
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
@@ -3222,8 +3224,8 @@ bool CWallet::GetCollateralTxDSIn(CTxDSIn& txdsinRet, CAmount& nValueRet) const
     LOCK2(cs_main, cs_wallet);
 
     std::vector<COutput> vCoins;
-
-    AvailableCoins(vCoins);
+	// SYSCOIN include syscoin alias balances
+	AvailableCoins(vCoins, true, NULL, false, ALL_COINS, false, true);
 
     for (const auto& out : vCoins)
     {
@@ -3245,7 +3247,7 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubK
 
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
-	// SYSCOIN include sys outputs
+	// SYSCOIN include sys alias balances
     AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_1000, false, true);
     if(vPossibleCoins.empty()) {
         LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate any valid masternode vin\n");
@@ -3327,7 +3329,8 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount)
 bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 {
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, fOnlyConfirmed, NULL, false, ONLY_PRIVATESEND_COLLATERAL);
+	// SYSCOIN include alias balances
+    AvailableCoins(vCoins, fOnlyConfirmed, NULL, false, ONLY_PRIVATESEND_COLLATERAL, false, true);
 
     return !vCoins.empty();
 }

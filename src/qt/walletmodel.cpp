@@ -77,7 +77,7 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
     {
         CAmount nBalance = 0;
         std::vector<COutput> vCoins;
-		// SYSCOIN include sys outputs
+		// SYSCOIN include sys alias balances
         wallet->AvailableCoins(vCoins, true, coinControl, false, ALL_COINS, false, true);
         BOOST_FOREACH(const COutput& out, vCoins)
             if(out.fSpendable)
@@ -669,7 +669,7 @@ bool WalletModel::isSpent(const COutPoint& outpoint) const
 void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const
 {
     std::vector<COutput> vCoins;
-	// SYSCOIN include sys outputs
+	// SYSCOIN include sys alias balances
     wallet->AvailableCoins(vCoins, true, NULL, false, ALL_COINS, false, true);
 
     LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet

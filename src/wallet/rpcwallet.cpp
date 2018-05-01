@@ -2799,8 +2799,8 @@ UniValue listunspent(const JSONRPCRequest& request)
     std::vector<COutput> vecOutputs;
     assert(pwalletMain != NULL);
     LOCK2(cs_main, pwalletMain->cs_wallet);
-	// SYSCOIN include sys outputs
-    pwalletMain->AvailableCoins(vecOutputs, !include_unsafe, NULL, true, ALL_COINS, false, true);
+	// SYSCOIN include sys alias balances and sys outputs
+    pwalletMain->AvailableCoins(vecOutputs, !include_unsafe, NULL, true, ALL_COINS, false, true, true);
     BOOST_FOREACH(const COutput& out, vecOutputs) {
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
             continue;
