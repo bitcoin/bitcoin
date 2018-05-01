@@ -833,7 +833,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
 		wtx.BindWallet(this);
 		wtxOrdered.insert(make_pair(wtx.nOrderPos, TxPair(&wtx, (CAccountingEntry*)0)));
 		AddToSpends(hash);
-		BOOST_FOREACH(const CTxIn& txin, wtx.vin) {
+		BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin) {
 			if (mapWallet.count(txin.prevout.hash)) {
 				CWalletTx& prevtx = mapWallet[txin.prevout.hash];
 				if (prevtx.nIndex == -1 && !prevtx.hashUnset()) {
@@ -986,11 +986,7 @@ bool CWallet::LoadToWallet(const CWalletTx& wtxIn)
     return true;
 }
 
-//**
-*Add a transaction to the wallet, or update it.
-* pblock is optional, but should be provided if the transaction is known to be in a block.
-* If fUpdate is true, existing transactions will be updated.
-* /
+
 bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate)
 {
 	{
