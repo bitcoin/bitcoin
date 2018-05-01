@@ -2534,16 +2534,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
             "  \"keys_left\": xxxx,          (numeric) how many new keys are left since last automatic backup\n"
             "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
             "  \"paytxfee\": x.xxxx,         (numeric) the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB\n"
-            "  \"hdchainid\": \"<hash>\",      (string) the ID of the HD chain\n"
-            "  \"hdaccountcount\": xxx,      (numeric) how many accounts of the HD chain are in this wallet\n"
-            "    [\n"
-            "      {\n"
-            "      \"hdaccountindex\": xxx,         (numeric) the index of the account\n"
-            "      \"hdexternalkeyindex\": xxxx,    (numeric) current external childkey index\n"
-            "      \"hdinternalkeyindex\": xxxx,    (numeric) current internal childkey index\n"
-            "      }\n"
-            "      ,...\n"
-            "    ]\n"
+			"  \"hdmasterkeyid\": \"<hash160>\", (string) the Hash160 of the HD master pubkey\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getwalletinfo", "")
@@ -2553,7 +2544,6 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     CHDChain hdChainCurrent;
-    bool fHDEnabled = pwalletMain->GetHDChain(hdChainCurrent);
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
@@ -2571,25 +2561,9 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     if (pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
-    if (fHDEnabled) {
-        obj.push_back(Pair("hdchainid", hdChainCurrent.GetID().GetHex()));
-        obj.push_back(Pair("hdaccountcount", (int64_t)hdChainCurrent.CountAccounts()));
-        UniValue accounts(UniValue::VARR);
-        for (size_t i = 0; i < hdChainCurrent.CountAccounts(); ++i)
-        {
-            CHDAccount acc;
-            UniValue account(UniValue::VOBJ);
-            account.push_back(Pair("hdaccountindex", (int64_t)i));
-            if(hdChainCurrent.GetAccount(i, acc)) {
-                account.push_back(Pair("hdexternalkeyindex", (int64_t)acc.nExternalChainCounter));
-                account.push_back(Pair("hdinternalkeyindex", (int64_t)acc.nInternalChainCounter));
-            } else {
-                account.push_back(Pair("error", strprintf("account %d is missing", i)));
-            }
-            accounts.push_back(account);
-        }
-        obj.push_back(Pair("hdaccounts", accounts));
-    }
+	CKeyID masterKeyID = pwalletMain->GetHDChain().masterKeyID;
+	if (!masterKeyID.IsNull())
+		obj.push_back(Pair("hdmasterkeyid", masterKeyID.GetHex()));
     return obj;
 }
 UniValue generate(const JSONRPCRequest& request)
@@ -3086,7 +3060,6 @@ extern UniValue importprunedfunds(const JSONRPCRequest& request);
 extern UniValue removeprunedfunds(const JSONRPCRequest& request);
 extern UniValue importmulti(const JSONRPCRequest& request);
 
-extern UniValue dumphdinfo(const JSONRPCRequest& request);
 extern UniValue importelectrumwallet(const JSONRPCRequest& request);
 
 static const CRPCCommand commands[] =
@@ -3143,7 +3116,6 @@ static const CRPCCommand commands[] =
 	{ "mining",             "getauxblock",                      &getauxblock, true, { "hash", "auxpow" } },
     { "wallet",             "keepass",                  &keepass,                  true,   {} },
     { "wallet",             "instantsendtoaddress",     &instantsendtoaddress,     false,  {"address","amount","comment","comment_to","subtractfeefromamount"} },
-    { "wallet",             "dumphdinfo",               &dumphdinfo,               true,   {} },
     { "wallet",             "importelectrumwallet",     &importelectrumwallet,     true,   {"filename", "index"} },
     { "hidden",             "setbip69enabled",          &setbip69enabled,          true,   {} },
 };

@@ -681,164 +681,96 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     return CSyscoinSecret(vchSecret).ToString();
 }
 
-UniValue dumphdinfo(const JSONRPCRequest& request)
+UniValue dumpwallet(const UniValue& params, bool fHelp)
 {
-    if (!EnsureWalletIsAvailable(request.fHelp))
-        return NullUniValue;
+	if (!EnsureWalletIsAvailable(fHelp))
+		return NullUniValue;
 
-    if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
-            "dumphdinfo\n"
-            "Returns an object containing sensitive private info about this HD wallet.\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"hdseed\": \"seed\",                    (string) The HD seed (bip32, in hex)\n"
-            "  \"mnemonic\": \"words\",                 (string) The mnemonic for this HD wallet (bip39, english words) \n"
-            "  \"mnemonicpassphrase\": \"passphrase\",  (string) The mnemonic passphrase for this HD wallet (bip39)\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("dumphdinfo", "")
-            + HelpExampleRpc("dumphdinfo", "")
-        );
+	if (fHelp || params.size() != 1)
+		throw runtime_error(
+			"dumpwallet \"filename\"\n"
+			"\nDumps all wallet keys in a human-readable format.\n"
+			"\nArguments:\n"
+			"1. \"filename\"    (string, required) The filename\n"
+			"\nExamples:\n"
+			+ HelpExampleCli("dumpwallet", "\"test\"")
+			+ HelpExampleRpc("dumpwallet", "\"test\"")
+		);
 
-    LOCK(pwalletMain->cs_wallet);
+	LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    EnsureWalletIsUnlocked();
+	EnsureWalletIsUnlocked();
 
-    // add the base58check encoded extended master if the wallet uses HD
-    CHDChain hdChainCurrent;
-    if (pwalletMain->GetHDChain(hdChainCurrent))
-    {
-        if (!pwalletMain->GetDecryptedHDChain(hdChainCurrent))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot decrypt HD seed");
+	ofstream file;
+	file.open(params[0].get_str().c_str());
+	if (!file.is_open())
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
-        SecureString ssMnemonic;
-        SecureString ssMnemonicPassphrase;
-        hdChainCurrent.GetMnemonic(ssMnemonic, ssMnemonicPassphrase);
+	std::map<CKeyID, int64_t> mapKeyBirth;
+	std::set<CKeyID> setKeyPool;
+	pwalletMain->GetKeyBirthTimes(mapKeyBirth);
+	pwalletMain->GetAllReserveKeys(setKeyPool);
 
-        UniValue obj(UniValue::VOBJ);
-        obj.push_back(Pair("hdseed", HexStr(hdChainCurrent.GetSeed())));
-        obj.push_back(Pair("mnemonic", ssMnemonic.c_str()));
-        obj.push_back(Pair("mnemonicpassphrase", ssMnemonicPassphrase.c_str()));
+	// sort time/key pairs
+	std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
+	for (std::map<CKeyID, int64_t>::const_iterator it = mapKeyBirth.begin(); it != mapKeyBirth.end(); it++) {
+		vKeyBirth.push_back(std::make_pair(it->second, it->first));
+	}
+	mapKeyBirth.clear();
+	std::sort(vKeyBirth.begin(), vKeyBirth.end());
 
-        return obj;
-    }
+	// produce output
+	file << strprintf("# Wallet dump created by Syscoin %s\n", CLIENT_BUILD);
+	file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
+	file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
+	file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));
+	file << "\n";
 
-    return NullUniValue;
-}
+	// add the base58check encoded extended master if the wallet uses HD 
+	CKeyID masterKeyID = pwalletMain->GetHDChain().masterKeyID;
+	if (!masterKeyID.IsNull())
+	{
+		CKey key;
+		if (pwalletMain->GetKey(masterKeyID, key))
+		{
+			CExtKey masterKey;
+			masterKey.SetMaster(key.begin(), key.size());
 
-UniValue dumpwallet(const JSONRPCRequest& request)
-{
-    if (!EnsureWalletIsAvailable(request.fHelp))
-        return NullUniValue;
-    
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            "dumpwallet \"filename\"\n"
-            "\nDumps all wallet keys in a human-readable format.\n"
-            "\nArguments:\n"
-            "1. \"filename\"    (string, required) The filename\n"
-            "\nExamples:\n"
-            + HelpExampleCli("dumpwallet", "\"test\"")
-            + HelpExampleRpc("dumpwallet", "\"test\"")
-        );
+			CSyscoinExtKey b58extkey;
+			b58extkey.SetKey(masterKey);
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
-    EnsureWalletIsUnlocked();
-
-    std::ofstream file;
-    file.open(request.params[0].get_str().c_str());
-    if (!file.is_open())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
-
-    std::map<CTxDestination, int64_t> mapKeyBirth;
-    std::set<CKeyID> setKeyPool;
-    pwalletMain->GetKeyBirthTimes(mapKeyBirth);
-    pwalletMain->GetAllReserveKeys(setKeyPool);
-
-    // sort time/key pairs
-    std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
-    for (const auto& entry : mapKeyBirth) {
-        if (const CKeyID* keyID = boost::get<CKeyID>(&entry.first)) { // set and test
-            vKeyBirth.push_back(std::make_pair(entry.second, *keyID));
-        }
-    }
-    mapKeyBirth.clear();
-    std::sort(vKeyBirth.begin(), vKeyBirth.end());
-
-    // produce output
-    file << strprintf("# Wallet dump created by Syscoin Core %s\n", CLIENT_BUILD);
-    file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
-    file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
-    file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));
-    file << "\n";
-
-    // add the base58check encoded extended master if the wallet uses HD
-    CHDChain hdChainCurrent;
-    if (pwalletMain->GetHDChain(hdChainCurrent))
-    {
-
-        if (!pwalletMain->GetDecryptedHDChain(hdChainCurrent))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot decrypt HD chain");
-
-        SecureString ssMnemonic;
-        SecureString ssMnemonicPassphrase;
-        hdChainCurrent.GetMnemonic(ssMnemonic, ssMnemonicPassphrase);
-        file << "# mnemonic: " << ssMnemonic << "\n";
-        file << "# mnemonic passphrase: " << ssMnemonicPassphrase << "\n\n";
-
-        SecureVector vchSeed = hdChainCurrent.GetSeed();
-        file << "# HD seed: " << HexStr(vchSeed) << "\n\n";
-
-        CExtKey masterKey;
-        masterKey.SetMaster(&vchSeed[0], vchSeed.size());
-
-        CSyscoinExtKey b58extkey;
-        b58extkey.SetKey(masterKey);
-
-        file << "# extended private masterkey: " << b58extkey.ToString() << "\n";
-
-        CExtPubKey masterPubkey;
-        masterPubkey = masterKey.Neuter();
-
-        CSyscoinExtPubKey b58extpubkey;
-        b58extpubkey.SetKey(masterPubkey);
-        file << "# extended public masterkey: " << b58extpubkey.ToString() << "\n\n";
-
-        for (size_t i = 0; i < hdChainCurrent.CountAccounts(); ++i)
-        {
-            CHDAccount acc;
-            if(hdChainCurrent.GetAccount(i, acc)) {
-                file << "# external chain counter: " << acc.nExternalChainCounter << "\n";
-                file << "# internal chain counter: " << acc.nInternalChainCounter << "\n\n";
-            } else {
-                file << "# WARNING: ACCOUNT " << i << " IS MISSING!" << "\n\n";
-            }
-        }
-    }
-
-    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
-        const CKeyID &keyid = it->second;
-        std::string strTime = EncodeDumpTime(it->first);
-        std::string strAddr = CSyscoinAddress(keyid).ToString();
-        CKey key;
-        if (pwalletMain->GetKey(keyid, key)) {
-            file << strprintf("%s %s ", CSyscoinSecret(key).ToString(), strTime);
-            if (pwalletMain->mapAddressBook.count(keyid)) {
-                file << strprintf("label=%s", EncodeDumpString(pwalletMain->mapAddressBook[keyid].name));
-            } else if (setKeyPool.count(keyid)) {
-                file << "reserve=1";
-            } else {
-                file << "change=1";
-            }
-            file << strprintf(" # addr=%s%s\n", strAddr, (pwalletMain->mapHdPubKeys.count(keyid) ? " hdkeypath="+pwalletMain->mapHdPubKeys[keyid].GetKeyPath() : ""));
-        }
-    }
-    file << "\n";
-    file << "# End of dump\n";
-    file.close();
-    return NullUniValue;
+			file << "# extended private masterkey: " << b58extkey.ToString() << "\n\n";
+		}
+	}
+	for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
+		const CKeyID &keyid = it->second;
+		std::string strTime = EncodeDumpTime(it->first);
+		std::string strAddr = CSyscoinAddress(keyid).ToString();
+		CKey key;
+		if (pwalletMain->GetKey(keyid, key)) {
+			file << strprintf("%s %s ", CSyscoinSecret(key).ToString(), strTime);
+			if (pwalletMain->mapAddressBook.count(keyid)) {
+				file << strprintf("label=%s", EncodeDumpString(pwalletMain->mapAddressBook[keyid].name));
+			}
+			else if (keyid == masterKeyID) {
+				file << "hdmaster=1";
+			}
+			else if (setKeyPool.count(keyid)) {
+				file << "reserve=1";
+			}
+			else if (pwalletMain->mapKeyMetadata[keyid].hdKeypath == "m") {
+				file << "inactivehdmaster=1";
+			}
+			else {
+				file << "change=1";
+			}
+			file << strprintf(" # addr=%s%s\n", strAddr, (pwalletMain->mapKeyMetadata[keyid].hdKeypath.size() > 0 ? " hdkeypath=" + pwalletMain->mapKeyMetadata[keyid].hdKeypath : ""));
+		}
+	}
+	file << "\n";
+	file << "# End of dump\n";
+	file.close();
+	return NullUniValue;
 }
 
 

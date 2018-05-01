@@ -75,7 +75,6 @@ static const bool DEFAULT_DISABLE_WALLET = false;
 
 extern const char * DEFAULT_WALLET_DAT;
 
-//! if set, all keys will be derived by using BIP39/BIP44
 static const bool DEFAULT_USE_HD_WALLET = true;
 
 bool AutoBackupWallet (CWallet* wallet, const std::string& strWalletFile_, std::string& strBackupWarningRet, std::string& strBackupErrorRet);
@@ -91,14 +90,13 @@ class CWalletTx;
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
 {
-    FEATURE_BASE = 10500, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
+	FEATURE_BASE = 10500, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
 
-    FEATURE_WALLETCRYPT = 40000, // wallet encryption
-    FEATURE_COMPRPUBKEY = 60000, // compressed public keys
-    FEATURE_HD = 120200,    // Hierarchical key derivation after BIP32 (HD Wallet), BIP44 (multi-coin), BIP39 (mnemonic)
-                            // which uses on-the-fly private key derivation
+	FEATURE_WALLETCRYPT = 40000, // wallet encryption
+	FEATURE_COMPRPUBKEY = 60000, // compressed public keys
 
-    FEATURE_LATEST = 61000
+	FEATURE_HD = 130000, // Hierarchical key derivation after BIP32 (HD Wallet)
+	FEATURE_LATEST = FEATURE_COMPRPUBKEY // HD is optional, use FEATURE_COMPRPUBKEY as latest version
 };
 
 enum AvailableCoinsType
@@ -599,8 +597,6 @@ private:
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
-    /* HD derive new child key (on internal or external chain) */
-    void DeriveNewChildKey(const CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/);
 
     bool fFileBacked;
 
@@ -705,11 +701,11 @@ public:
 
     std::map<CTxDestination, CAddressBookData> mapAddressBook;
 
+	CPubKey vchDefaultKey;
+
     std::set<COutPoint> setLockedCoins;
 
     int64_t nKeysLeftSinceAutoBackup;
-
-    std::map<CKeyID, CHDPubKey> mapHdPubKeys; //<! memory map of HD extended pubkeys
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
@@ -764,16 +760,10 @@ public:
      * Generate a new key
      */
     CPubKey GenerateNewKey(uint32_t nAccountIndex, bool fInternal /*= false*/);
-    //! HaveKey implementation that also checks the mapHdPubKeys
     bool HaveKey(const CKeyID &address) const override;
-    //! GetPubKey implementation that also checks the mapHdPubKeys
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
     //! GetKey implementation that can derive a HD private key on the fly
     bool GetKey(const CKeyID &address, CKey& keyOut) const override;
-    //! Adds a HDPubKey into the wallet(database)
-    bool AddHDPubKey(const CExtPubKey &extPubKey, bool fInternal);
-    //! loads a HDPubKey into the wallets memory
-    bool LoadHDPubKey(const CHDPubKey &hdPubKey);
     //! Adds a key to the store, and saves it to disk.
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
     //! Adds a key to the store, without saving it to disk (used by LoadWallet)
@@ -958,7 +948,7 @@ public:
         AssertLockHeld(cs_wallet); // set{Ex,In}ternalKeyPool
         return setInternalKeyPool.size() + setExternalKeyPool.size();
     }
-
+	bool SetDefaultKey(const CPubKey &vchPubKey);
 
     //! signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
     bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
@@ -1028,19 +1018,15 @@ public:
     static bool InitAutoBackup();
 
     bool BackupWallet(const std::string& strDest);
+	/* Set the HD chain model (chain child index counters) */
+	bool SetHDChain(const CHDChain& chain, bool memonly);
+	const CHDChain& GetHDChain() { return hdChain; }
 
-    /**
-     * HD Wallet Functions
-     */
+	/* Generates a new HD master key (will not be activated) */
+	CPubKey GenerateNewHDMasterKey();
 
-    /* Returns true if HD is enabled */
-    bool IsHDEnabled();
-    /* Generates a new HD chain */
-    void GenerateNewHDChain();
-    /* Set the HD chain model (chain child index counters) */
-    bool SetHDChain(const CHDChain& chain, bool memonly);
-    bool SetCryptedHDChain(const CHDChain& chain, bool memonly);
-    bool GetDecryptedHDChain(CHDChain& hdChainRet);
+	/* Set the current HD master key (will reset the chain child index counters) */
+	bool SetHDMasterKey(const CPubKey& key);
 };
 
 /** A key allocated from the key pool. */

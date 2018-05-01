@@ -142,6 +142,15 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight,  const CAmou
                 LogPrint("gobject", "IsBlockPayeeValid -- Valid superblock at height %d: %s", nBlockHeight, txNew.ToString());
                 return true;
             }
+			else {
+				// SYSCOIN
+				// payments should not exceed limit
+				CAmount nPaymentsLimit = CSuperBlock::GetPaymentsLimit(nBlockHeight);
+				if (txNew.GetValueOut() > nPaymentsLimit) {
+					LogPrintf("IsBlockPayeeValid -- Warning: Superblock invalid, payments limit exceeded: payments %lld, limit %lld\n", nPaymentsTotalAmount, nPaymentsLimit);
+					return
+				}
+			}
 
             LogPrintf("IsBlockPayeeValid -- ERROR: Invalid superblock detected at height %d: %s", nBlockHeight, txNew.ToString());
             // should NOT allow such superblocks, when superblocks are enabled

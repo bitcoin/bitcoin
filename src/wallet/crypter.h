@@ -114,118 +114,89 @@ bool DecryptAES256(const SecureString& sKey, const std::string& sCiphertext, con
 
 
 /** Keystore which keeps the private keys encrypted.
- * It derives from the basic key store, which is used if no encryption is active.
- */
+* It derives from the basic key store, which is used if no encryption is active.
+*/
 class CCryptoKeyStore : public CBasicKeyStore
 {
 private:
-    
-    CHDChain cryptedHDChain;
-
-    CKeyingMaterial vMasterKey;
-
-    //! if fUseCrypto is true, mapKeys must be empty
-    //! if fUseCrypto is false, vMasterKey must be empty
-    bool fUseCrypto;
-
-    //! keeps track of whether Unlock has run a thorough check before
-    bool fDecryptionThoroughlyChecked;
-
-    //! if fOnlyMixingAllowed is true, only mixing should be allowed in unlocked wallet
-    bool fOnlyMixingAllowed;
-
-protected:
-    bool SetCrypted();
-
-    //! will encrypt previously unencrypted keys
-    bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
-
-    bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn);
-    bool DecryptHDChain(CHDChain& hdChainRet) const;
-    bool SetHDChain(const CHDChain& chain);
-    bool SetCryptedHDChain(const CHDChain& chain);
-
-    bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false);
 	CryptedKeyMap mapCryptedKeys;
 
+	CKeyingMaterial vMasterKey;
+
+	//! if fUseCrypto is true, mapKeys must be empty
+	//! if fUseCrypto is false, vMasterKey must be empty
+	bool fUseCrypto;
+
+	//! keeps track of whether Unlock has run a thorough check before
+	bool fDecryptionThoroughlyChecked;
+
+protected:
+	bool SetCrypted();
+
+	//! will encrypt previously unencrypted keys
+	bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
+
+	bool Unlock(const CKeyingMaterial& vMasterKeyIn);
+
 public:
-    CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false), fOnlyMixingAllowed(false)
-    {
-    }
+	CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false)
+	{
+	}
 
-    bool IsCrypted() const
-    {
-        return fUseCrypto;
-    }
+	bool IsCrypted() const
+	{
+		return fUseCrypto;
+	}
 
-    // This function should be used in a different combinations to determine
-    // if CCryptoKeyStore is fully locked so that no operations requiring access
-    // to private keys are possible:
-    //      IsLocked(true)
-    // or if CCryptoKeyStore's private keys are available for mixing only:
-    //      !IsLocked(true) && IsLocked()
-    // or if they are available for everything:
-    //      !IsLocked()
-    bool IsLocked(bool fForMixing = false) const
-    {
-        if (!IsCrypted())
-            return false;
-        bool result;
-        {
-            LOCK(cs_KeyStore);
-            result = vMasterKey.empty();
-        }
-        // fForMixing   fOnlyMixingAllowed  return
-        // ---------------------------------------
-        // true         true                result
-        // true         false               result
-        // false        true                true
-        // false        false               result
+	bool IsLocked() const
+	{
+		if (!IsCrypted())
+			return false;
+		bool result;
+		{
+			LOCK(cs_KeyStore);
+			result = vMasterKey.empty();
+		}
+		return result;
+	}
 
-        if(!fForMixing && fOnlyMixingAllowed) return true;
+	bool Lock();
 
-        return result;
-    }
+	virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+	bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
+	bool HaveKey(const CKeyID &address) const
+	{
+		{
+			LOCK(cs_KeyStore);
+			if (!IsCrypted())
+				return CBasicKeyStore::HaveKey(address);
+			return mapCryptedKeys.count(address) > 0;
+		}
+		return false;
+	}
+	bool GetKey(const CKeyID &address, CKey& keyOut) const;
+	bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+	void GetKeys(std::set<CKeyID> &setAddress) const
+	{
+		if (!IsCrypted())
+		{
+			CBasicKeyStore::GetKeys(setAddress);
+			return;
+		}
+		setAddress.clear();
+		CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
+		while (mi != mapCryptedKeys.end())
+		{
+			setAddress.insert((*mi).first);
+			mi++;
+		}
+	}
 
-    bool Lock(bool fAllowMixing = false);
-
-    virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
-    bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
-    bool HaveKey(const CKeyID &address) const override
-    {
-        {
-            LOCK(cs_KeyStore);
-            if (!IsCrypted())
-                return CBasicKeyStore::HaveKey(address);
-            return mapCryptedKeys.count(address) > 0;
-        }
-        return false;
-    }
-    bool GetKey(const CKeyID &address, CKey& keyOut) const override;
-    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
-    void GetKeys(std::set<CKeyID> &setAddress) const override
-    {
-        if (!IsCrypted())
-        {
-            CBasicKeyStore::GetKeys(setAddress);
-            return;
-        }
-        setAddress.clear();
-        CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
-        while (mi != mapCryptedKeys.end())
-        {
-            setAddress.insert((*mi).first);
-            mi++;
-        }
-    }
-
-    virtual bool GetHDChain(CHDChain& hdChainRet) const override;
-
-    /**
-     * Wallet status (encrypted, locked) changed.
-     * Note: Called without locks held.
-     */
-    boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
+	/**
+	* Wallet status (encrypted, locked) changed.
+	* Note: Called without locks held.
+	*/
+	boost::signals2::signal<void(CCryptoKeyStore* wallet)> NotifyStatusChanged;
 };
 
 #endif // SYSCOIN_WALLET_CRYPTER_H

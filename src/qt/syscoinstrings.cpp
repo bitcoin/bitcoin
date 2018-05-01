@@ -245,7 +245,7 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Use UPnP to map the listening port (default: 1 when listening and no -proxy)"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
-"Use hierarchical deterministic key generation (HD) after bip39/bip44. Only "
+"Use hierarchical deterministic key generation (HD). Only "
 "has effect during wallet creation/first start"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: "
