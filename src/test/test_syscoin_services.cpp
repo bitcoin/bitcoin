@@ -71,7 +71,7 @@ void StartMainNetNodes()
 	CallRPC("mainnet1", "mnsync next", false, false);
 
 	StartNode("mainnet2", false);
-	StopNode("mainnet2", false);
+	StopNode("mainnet2");
 	StartNode("mainnet2", false);
 	CallRPC("mainnet2", "mnsync next", false, false);
 	MilliSleep(50);
