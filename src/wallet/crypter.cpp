@@ -200,17 +200,18 @@ bool CCryptoKeyStore::SetCrypted()
     return true;
 }
 
-bool CCryptoKeyStore::Lock(bool fAllowMixing)
+bool CCryptoKeyStore::Lock()
 {
-    if (!SetCrypted())
-        return false;
+	if (!SetCrypted())
+		return false;
 
-    if(!fAllowMixing) {
-        LOCK(cs_KeyStore);
-        vMasterKey.clear();
-    }
-    NotifyStatusChanged(this);
-    return true;
+	{
+		LOCK(cs_KeyStore);
+		vMasterKey.clear();
+	}
+
+	NotifyStatusChanged(this);
+	return true;
 }
 
 bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
