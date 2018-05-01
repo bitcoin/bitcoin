@@ -2113,8 +2113,8 @@ UniValue keypoolrefill(const JSONRPCRequest& request)
 
 	// 0 is interpreted by TopUpKeyPool() as the default keypool size given by -keypool
 	unsigned int kpSize = 0;
-	if (request.params.size() > 0) {
-		if (request.params[0].get_int() < 0)
+	if (params.size() > 0) {
+		if (params[0].get_int() < 0)
 			throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size.");
 		kpSize = (unsigned int)params[0].get_int();
 	}
