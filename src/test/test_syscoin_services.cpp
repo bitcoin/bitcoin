@@ -62,7 +62,7 @@ void StartMainNetNodes()
 	StopMainNetNodes();
 	printf("Starting 2 nodes in mainnet setup...\n");
 	StartNode("mainnet1", false);
-	GenerateMainNetBlocks("mainnet1", 2);
+	GenerateMainNetBlocks(2, "mainnet1");
 
 	StartNode("mainnet2", false);
 	StopNode("mainnet2");
