@@ -63,7 +63,6 @@ void StartMainNetNodes()
 	printf("Starting 2 nodes in mainnet setup...\n");
 	StartNode("mainnet1", false);
 	StartNode("mainnet2", false);
-	CallRPC("mainnet1", "addnode 127.0.0.1:19379 onetry", false, false);
 }
 void StopMainNetNodes()
 {
