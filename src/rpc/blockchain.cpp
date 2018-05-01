@@ -1823,7 +1823,9 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             for (const CTxIn& in : tx->vin) {
                 CTransactionRef tx_in;
                 uint256 hashBlock;
-                if (!GetTransaction(in.prevout.hash, tx_in, hashBlock, false)) {
+                int dummy_error_code;
+                std::string dummy_errmsg;
+                if (!GetTransaction(in.prevout.hash, tx_in, hashBlock, dummy_error_code, dummy_errmsg, false)) {
                     throw JSONRPCError(RPC_INTERNAL_ERROR, std::string("Unexpected internal error (tx index seems corrupt)"));
                 }
 

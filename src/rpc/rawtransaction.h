@@ -24,11 +24,13 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxs, CBas
  * @param[in]   tx_hash  The hash of the transaction to be returned.
  * @param[out]  tx  The transaction itself.
  * @param[out]  block_hash  The hash of the block the transaction is found in.
+ * @param[out]  error_code  RPC code explaining why transaction could not be found.
+ * @param[out]  errmsg  Reason why transaction could not be found.
  * @param[in]   allow_slow  An option to search a slow, unreliable source for transactions.
  * @return  true if transaction is found, false otherwise
  */
 bool GetTransaction(const uint256& tx_hash, CTransactionRef& tx, uint256& block_hash,
-                    bool allow_slow);
+                    int& error_code, std::string& errmsg, bool allow_slow);
 
 /**
  * Look up a raw transaction by hash within a specified block. This loads the

@@ -35,7 +35,8 @@
 
 #include <univalue.h>
 
-bool GetTransaction(const uint256& tx_hash, CTransactionRef& tx, uint256& block_hash, bool allow_slow)
+bool GetTransaction(const uint256& tx_hash, CTransactionRef& tx, uint256& block_hash,
+                    int& error_code, std::string& errmsg, bool allow_slow)
 {
     // First check for an unconfirmed transaction in the mempool.
     if (tx = mempool.get(tx_hash)) {
@@ -66,6 +67,16 @@ bool GetTransaction(const uint256& tx_hash, CTransactionRef& tx, uint256& block_
         }
     }
 
+    if (!g_txindex) {
+        error_code = RPC_DATA_UNAVAILABLE;
+        errmsg = "No such mempool transaction. Use -txindex to enable blockchain transaction queries.";
+    } else if (!f_txindex_ready) {
+        error_code = RPC_DATA_UNAVAILABLE;
+        errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed.";
+    } else {
+        error_code = RPC_INVALID_ADDRESS_OR_KEY;
+        errmsg = "No such mempool or blockchain transaction.";
+    }
     return false;
 }
 
@@ -218,11 +229,6 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
         in_active_chain = chainActive.Contains(blockindex);
     }
 
-    bool f_txindex_ready = false;
-    if (g_txindex && !blockindex) {
-        f_txindex_ready = g_txindex->BlockUntilSyncedToCurrentChain();
-    }
-
     CTransactionRef tx;
     uint256 hash_block;
     if (blockindex) {
@@ -235,16 +241,10 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
                                "No such transaction found in the provided block.");
         }
     } else {
-        if (!GetTransaction(hash, tx, hash_block, true)) {
-            std::string errmsg;
-            if (!g_txindex) {
-                errmsg = "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
-            } else if (!f_txindex_ready) {
-                errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
-            } else {
-                errmsg = "No such mempool or blockchain transaction";
-            }
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
+        int error_code;
+        std::string errmsg;
+        if (!GetTransaction(hash, tx, hash_block, error_code, errmsg, true)) {
+            throw JSONRPCError(error_code, errmsg + " Use gettransaction for wallet transactions.");
         }
     }
 
