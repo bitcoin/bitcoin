@@ -42,17 +42,20 @@ bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore)
     return true;
 }
 
+void Update(isminetype& val, isminetype update)
+{
+    if (val == ISMINE_NO) val = update;
+    if (val == ISMINE_WATCH_ONLY && update == ISMINE_SPENDABLE) val = update;
+}
+
 isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, IsMineSigVersion sigversion)
 {
+    isminetype ret = ISMINE_NO;
     isInvalid = false;
 
     std::vector<valtype> vSolutions;
     txnouttype whichType;
-    if (!Solver(scriptPubKey, whichType, vSolutions)) {
-        if (keystore.HaveWatchOnly(scriptPubKey)) {
-            return ISMINE_WATCH_ONLY;
-        }
-    }
+    Solver(scriptPubKey, whichType, vSolutions);
 
     CKeyID keyID;
     switch (whichType)
@@ -67,8 +70,9 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
             isInvalid = true;
             return ISMINE_NO;
         }
-        if (keystore.HaveKey(keyID))
-            return ISMINE_SPENDABLE;
+        if (keystore.HaveKey(keyID)) {
+            Update(ret, ISMINE_SPENDABLE);
+        }
         break;
     case TX_WITNESS_V0_KEYHASH:
     {
@@ -78,10 +82,7 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
             // This also applies to the P2WSH case.
             break;
         }
-        isminetype ret = IsMineInner(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), isInvalid, IsMineSigVersion::WITNESS_V0);
-        if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_ONLY || (ret == ISMINE_NO && isInvalid)) {
-            return ret;
-        }
+        Update(ret, IsMineInner(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), isInvalid, IsMineSigVersion::WITNESS_V0));
         break;
     }
     case TX_PUBKEYHASH:
@@ -93,18 +94,16 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
                 return ISMINE_NO;
             }
         }
-        if (keystore.HaveKey(keyID))
-            return ISMINE_SPENDABLE;
+        if (keystore.HaveKey(keyID)) {
+            Update(ret, ISMINE_SPENDABLE);
+        }
         break;
     case TX_SCRIPTHASH:
     {
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            isminetype ret = IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::P2SH);
-            if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_ONLY || (ret == ISMINE_NO && isInvalid)) {
-                return ret;
-            }
+            Update(ret, IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::P2SH));
         }
         break;
     }
@@ -118,10 +117,7 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
         CScriptID scriptID = CScriptID(hash);
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            isminetype ret = IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::WITNESS_V0);
-            if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_ONLY || (ret == ISMINE_NO && isInvalid)) {
-                return ret;
-            }
+            Update(ret, IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::WITNESS_V0));
         }
         break;
     }
@@ -129,7 +125,9 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
     case TX_MULTISIG:
     {
         // Never treat bare multisig outputs as ours (they can still be made watchonly-though)
-        if (sigversion == IsMineSigVersion::TOP) break;
+        if (sigversion == IsMineSigVersion::TOP) {
+            break;
+        }
 
         // Only consider transactions "mine" if we own ALL the
         // keys involved. Multi-signature transactions that are
@@ -146,23 +144,27 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
             }
         }
         if (HaveKeys(keys, keystore)) {
-            return ISMINE_SPENDABLE;
+            Update(ret, ISMINE_SPENDABLE);
         }
         break;
     }
     }
 
-    if (keystore.HaveWatchOnly(scriptPubKey)) {
+    if (ret == ISMINE_NO && keystore.HaveWatchOnly(scriptPubKey)) {
         return ISMINE_WATCH_ONLY;
     }
-    return ISMINE_NO;
+    return ret;
 }
 
 } // namespace
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid)
 {
-    return IsMineInner(keystore, scriptPubKey, isInvalid, IsMineSigVersion::TOP);
+    isminetype ret = IsMineInner(keystore, scriptPubKey, isInvalid, IsMineSigVersion::TOP);
+    if (isInvalid) {
+        ret = ISMINE_NO;
+    }
+    return ret;
 }
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey)
