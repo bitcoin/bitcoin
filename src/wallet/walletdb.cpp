@@ -58,7 +58,7 @@ bool CWalletDB::ErasePurpose(const string& strPurpose)
 bool CWalletDB::WriteTx(const CWalletTx& wtx)
 {
 	nWalletDBUpdated++;
-	return Write(std::make_pair(std::string("tx"), wtx.GetHash()), wtx);
+	return Write(std::make_pair(std::string("tx"), wtx.tx->GetHash()), wtx);
 }
 
 bool CWalletDB::EraseTx(uint256 hash)
@@ -374,10 +374,10 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 			CWalletTx wtx;
 			ssValue >> wtx;
 			CValidationState state;
-			if (!(CheckTransaction(wtx, state) && (wtx.GetHash() == hash) && state.IsValid()))
+			if (!(CheckTransaction(wtx->, state) && (wtx.tx->GetHash() == hash) && state.IsValid()))
 			{
 				// SYSCOIN
-				if (wtx.GetHash() != hash && wtx.nVersion == GetSyscoinTxVersion())
+				if (wtx.tx->GetHash() != hash && wtx.tx->nVersion == GetSyscoinTxVersion())
 					return true;
 				strErr = "Error reading wallet database. CheckTransaction failed, validation state: " + FormatStateMessage(state);
 				return false;
