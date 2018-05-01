@@ -64,8 +64,7 @@ void StartMainNetNodes()
 	StartNode("mainnet1", false);
 	GenerateMainNetBlocks(2, "mainnet1");
 
-	StartNode("mainnet2", false);
-	StopNode("mainnet2");
+	MilliSleep(1000);
 	StartNode("mainnet2", false);
 	CallRPC("mainnet1", "addnode 127.0.0.1:19379 onetry", false, false);
 }
