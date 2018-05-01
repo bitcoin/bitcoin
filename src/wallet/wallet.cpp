@@ -38,6 +38,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+using namespace std;
 // SYSCOIN services
 #include "alias.h"
 
