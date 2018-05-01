@@ -92,7 +92,7 @@ namespace
     struct FinalizedBudgetFixture
     {
         const std::string budgetName;
-        const int blockStart = 129600;
+        const int blockStart;
 
         const CKey keyPairA;
         const CKey keyPairB;
