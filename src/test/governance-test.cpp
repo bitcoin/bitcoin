@@ -927,6 +927,8 @@ namespace
             }
             chainActive.SetTip(&blocks[blockHeight-1]);
 
+            SetMockTime(GetTime());
+
             mnodeman.Add(mn1);
             mnodeman.Add(mn2);
             mnodeman.Add(mn3);
@@ -1140,6 +1142,35 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         budget.FillBlockPayee(actual, fees);
 
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
+    }
+
+    BOOST_AUTO_TEST_CASE(TransactionWithBudgetPaymentsIsValid)
+    {
+        // Set Up
+
+        // Create finalized budget
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(CreatePayment(keyPairA, 42));
+        txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
+        txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
+        CFinalizedBudgetBroadcast fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+
+        // Add finalized budget to budget manager
+        budget.AddFinalizedBudget(fb, false); // false = don't check collateral
+
+        // Vote for finalized buget
+        CFinalizedBudgetVote vote1(mn1.vin, fb.GetHash());
+        budget.UpdateFinalizedBudget(vote1, NULL, error);
+
+        BOOST_REQUIRE_EQUAL(chainActive.Tip()->nHeight + 1, blockHeight);
+
+        // Call & Check
+
+        CMutableTransaction actual;
+        actual.vout.push_back(CTxOut());
+        budget.FillBlockPayee(actual, fees);
+
+        BOOST_CHECK(budget.IsTransactionValid(actual, blockHeight));
     }
 
 BOOST_AUTO_TEST_SUITE_END()

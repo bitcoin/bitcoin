@@ -627,50 +627,26 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
 {
     LOCK(cs);
 
-    int nHighestCount = 0;
-    std::vector<CFinalizedBudget*> ret;
+    const CFinalizedBudget* bestBudget = GetMostVotedBudget(nBlockHeight);
+    const int mnodeCount = mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION);
 
-    // ------- Grab The Highest Count
-
-    std::map<uint256, CFinalizedBudget>::const_iterator it = mapFinalizedBudgets.begin();
-    while(it != mapFinalizedBudgets.end())
-    {
-        const CFinalizedBudget* pfinalizedBudget = &((*it).second);
-        if(pfinalizedBudget->GetVoteCount() > nHighestCount &&
-                nBlockHeight >= pfinalizedBudget->GetBlockStart() &&
-                nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
-                    nHighestCount = pfinalizedBudget->GetVoteCount();
-        }
-
-        ++it;
-    }
-
-    /*
-        If budget doesn't have 5% of the network votes, then we should pay a masternode instead
-    */
-
-    if(20 * nHighestCount < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
+    // If budget doesn't have 5% of the network votes, then we should not pay it
+    if (bestBudget == NULL || 20 * bestBudget->GetVoteCount() < mnodeCount)
         return false;
 
-    // check the highest finalized budgets (+/- 10% to assist in consensus)
-
-    it = mapFinalizedBudgets.begin();
-    while(it != mapFinalizedBudgets.end())
+    // Check the highest finalized budgets (+/- 10% to assist in consensus)
+    for (std::map<uint256, CFinalizedBudget>::const_iterator it = mapFinalizedBudgets.begin(); it != mapFinalizedBudgets.end(); ++it)
     {
-        const CFinalizedBudget* pfinalizedBudget = &((*it).second);
+        const CFinalizedBudget& pfinalizedBudget = it->second;
 
-        if(10 * (nHighestCount - pfinalizedBudget->GetVoteCount()) < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)){
-            if(nBlockHeight >= pfinalizedBudget->GetBlockStart() && nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
-                if(pfinalizedBudget->IsTransactionValid(txNew, nBlockHeight)){
-                    return true;
-                }
-            }
-        }
+        if (10 * (bestBudget->GetVoteCount() - pfinalizedBudget.GetVoteCount()) > mnodeCount)
+            continue;
 
-        ++it;
+        if(pfinalizedBudget.IsTransactionValid(txNew, nBlockHeight))
+            return true;
     }
 
-    //we looked through all of the known budgets
+    // We looked through all of the known budgets
     return false;
 }
 
