@@ -628,7 +628,7 @@ public:
 
     const std::string strWalletFile;
 
-	std::set<int64_t> setKeyPool;
+
     // Map from Key ID (for regular keys) or Script ID (for watch-only keys) to
     // key metadata.
     std::map<CTxDestination, CKeyMetadata> mapKeyMetadata;
