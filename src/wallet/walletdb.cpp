@@ -20,7 +20,7 @@
 #include <boost/foreach.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
-
+#include "alias.h"
 using namespace std;
 
 static uint64_t nAccountingEntryNumber = 0;
@@ -374,7 +374,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 			CWalletTx wtx;
 			ssValue >> wtx;
 			CValidationState state;
-			if (!(CheckTransaction(*wtx->tx, state) && (wtx.tx->GetHash() == hash) && state.IsValid()))
+			if (!(CheckTransaction(*wtx.tx, state) && (wtx.tx->GetHash() == hash) && state.IsValid()))
 			{
 				// SYSCOIN
 				if (wtx.tx->GetHash() != hash && wtx.tx->nVersion == SYSCOIN_TX_VERSION)
