@@ -24,7 +24,7 @@ public:
     boost::optional<OutputType> m_change_type;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
-    //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
+    //! Includes watch only addresses which are solvable
     bool fAllowWatchOnly;
     //! Override automatic min/max checks on fee, m_feerate must be set if true
     bool fOverrideFeeRate;
