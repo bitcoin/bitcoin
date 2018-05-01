@@ -775,40 +775,40 @@ bool CWallet::AccountMove(std::string strFrom, std::string strTo, CAmount nAmoun
 
 bool CWallet::GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bForceNew)
 {
-	CWalletDB walletdb(strWalletFile);
+    CWalletDB walletdb(strWalletFile);
 
-	CAccount account;
-	walletdb.ReadAccount(strAccount, account);
+    CAccount account;
+    walletdb.ReadAccount(strAccount, account);
 
-	if (!bForceNew) {
-		if (!account.vchPubKey.IsValid())
-			bForceNew = true;
-		else {
-			// Check if the current key has been used
-			CScript scriptPubKey = GetScriptForDestination(account.vchPubKey.GetID());
-			for (map<uint256, CWalletTx>::iterator it = mapWallet.begin();
-				it != mapWallet.end() && account.vchPubKey.IsValid();
-				++it)
-				BOOST_FOREACH(const CTxOut& txout, (*it).second.vout)
-				if (txout.scriptPubKey == scriptPubKey) {
-					bForceNew = true;
-					break;
-				}
-		}
-	}
+    if (!bForceNew) {
+        if (!account.vchPubKey.IsValid())
+            bForceNew = true;
+        else {
+            // Check if the current key has been used
+            CScript scriptPubKey = GetScriptForDestination(account.vchPubKey.GetID());
+            for (std::map<uint256, CWalletTx>::iterator it = mapWallet.begin();
+                 it != mapWallet.end() && account.vchPubKey.IsValid();
+                 ++it)
+                BOOST_FOREACH(const CTxOut& txout, (*it).second.tx->vout)
+                    if (txout.scriptPubKey == scriptPubKey) {
+                        bForceNew = true;
+                        break;
+                    }
+        }
+    }
 
-	// Generate a new key
-	if (bForceNew) {
-		if (!GetKeyFromPool(account.vchPubKey))
-			return false;
+    // Generate a new key
+    if (bForceNew) {
+        if (!GetKeyFromPool(account.vchPubKey, false))
+            return false;
 
-		SetAddressBook(account.vchPubKey.GetID(), strAccount, "receive");
-		walletdb.WriteAccount(strAccount, account);
-	}
+        SetAddressBook(account.vchPubKey.GetID(), strAccount, "receive");
+        walletdb.WriteAccount(strAccount, account);
+    }
 
-	pubKey = account.vchPubKey;
+    pubKey = account.vchPubKey;
 
-	return true;
+    return true;
 }
 
 void CWallet::MarkDirty()
@@ -4536,7 +4536,7 @@ bool CWallet::InitLoadWallet()
 
 		walletInstance->SetBestChain(chainActive.GetLocator());
 	}
-	else  {
+	else if (mapArgs.count("-usehd")) {
 		bool useHD = GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
 		if (!walletInstance->hdChain.masterKeyID.IsNull() && !useHD)
 			return InitError(strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"), walletFile));
