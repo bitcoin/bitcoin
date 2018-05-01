@@ -26,7 +26,7 @@
 //
 
 CDBEnv bitdb;
-
+unsigned int nWalletDBUpdated;
 void CDBEnv::EnvShutdown()
 {
     if (!fDbEnvInit)
