@@ -785,7 +785,7 @@ public:
     bool GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bForceNew = false);
 
     void MarkDirty();
-    bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
+    bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletDB* pwalletdb);
     bool LoadToWallet(const CWalletTx& wtxIn);
     void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock) override;
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
