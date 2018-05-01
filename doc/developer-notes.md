@@ -247,7 +247,7 @@ make cov
 
 **Sanitizers**
 
-Bitcoin can be compiled with various "sanitizers" enabled, which add
+Bitcoin Core can be compiled with various "sanitizers" enabled, which add
 instrumentation for issues regarding things like memory safety, thread race
 conditions, or undefined behavior. This is controlled with the
 `--with-sanitizers` configure flag, which should be a comma separated list of
@@ -381,19 +381,19 @@ pay attention to for reviewers of Bitcoin Core code.
 General Bitcoin Core
 ----------------------
 
-- New features should be exposed on RPC first, then can be made available in the GUI
+- New features should be exposed on RPC first, then can be made available in the GUI.
 
   - *Rationale*: RPC allows for better automatic testing. The test suite for
-    the GUI is very limited
+    the GUI is very limited.
 
-- Make sure pull requests pass Travis CI before merging
+- Make sure pull requests pass Travis CI before merging.
 
   - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
      on the master branch. Otherwise all new pull requests will start failing the tests, resulting in
-     confusion and mayhem
+     confusion and mayhem.
 
   - *Explanation*: If the test suite is to be updated for a change, this has to
-    be done first
+    be done first.
 
 Wallet
 -------
@@ -403,26 +403,26 @@ Wallet
   - *Rationale*: In RPC code that conditionally uses the wallet (such as
     `validateaddress`) it is easy to forget that global pointer `pwalletMain`
     can be nullptr. See `test/functional/disablewallet.py` for functional tests
-    exercising the API with `-disablewallet`
+    exercising the API with `-disablewallet`.
 
-- Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set
+- Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set.
 
-  - *Rationale*: Otherwise compilation of the disable-wallet build will fail in environments without BerkeleyDB
+  - *Rationale*: Otherwise compilation of the disable-wallet build will fail in environments without BerkeleyDB.
 
 General C++
 -------------
 
-- Assertions should not have side-effects
+- Assertions should not have side-effects.
 
   - *Rationale*: Even though the source code is set to refuse to compile
     with assertions disabled, having side-effects in assertions is unexpected and
-    makes the code harder to understand
+    makes the code harder to understand.
 
-- If you use the `.h`, you must link the `.cpp`
+- If you use the `.h`, you must link the `.cpp`.
 
   - *Rationale*: Include files define the interface for the code in implementation files. Including one but
       not linking the other is confusing. Please avoid that. Moving functions from
-      the `.h` to the `.cpp` should not result in build errors
+      the `.h` to the `.cpp` should not result in build errors.
 
 - Use the RAII (Resource Acquisition Is Initialization) paradigm where possible. For example by using
   `unique_ptr` for allocations in a function.
@@ -455,7 +455,7 @@ C++ data structures
   path), add an explicit comment about this
 
   - *Rationale*: Ensure determinism by avoiding accidental use of uninitialized
-    values. Also, static analyzers balk about this.
+    values. Also, static analyzers balk at this.
     Initializing the members in the declaration makes it easy to
     spot uninitialized ones.
 
@@ -476,12 +476,12 @@ class A
   `int8_t`. Do not use bare `char` unless it is to pass to a third-party API.
   This type can be signed or unsigned depending on the architecture, which can
   lead to interoperability problems or dangerous conditions such as
-  out-of-bounds array accesses
+  out-of-bounds array accesses.
 
-- Prefer explicit constructions over implicit ones that rely on 'magical' C++ behavior
+- Prefer explicit constructions over implicit ones that rely on 'magical' C++ behavior.
 
   - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
-  that are not language lawyers
+  that are not language lawyers.
 
 Strings and formatting
 ------------------------
@@ -489,21 +489,21 @@ Strings and formatting
 - Be careful of `LogPrint` versus `LogPrintf`. `LogPrint` takes a `category` argument, `LogPrintf` does not.
 
   - *Rationale*: Confusion of these can result in runtime exceptions due to
-    formatting mismatch, and it is easy to get wrong because of subtly similar naming
+    formatting mismatch, and it is easy to get wrong because of subtly similar naming.
 
-- Use `std::string`, avoid C string manipulation functions
+- Use `std::string`, avoid C string manipulation functions.
 
   - *Rationale*: C++ string handling is marginally safer, less scope for
-    buffer overflows and surprises with `\0` characters. Also some C string manipulations
-    tend to act differently depending on platform, or even the user locale
+    buffer overflows and fewer surprises with `\0` characters. Also some C string manipulations
+    tend to act differently depending on platform, or even the user locale.
 
-- Use `ParseInt32`, `ParseInt64`, `ParseUInt32`, `ParseUInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing
+- Use `ParseInt32`, `ParseInt64`, `ParseUInt32`, `ParseUInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing.
 
-  - *Rationale*: These functions do overflow checking, and avoid pesky locale issues
+  - *Rationale*: These functions do overflow checking, and avoid pesky locale issues.
 
-- For `strprintf`, `LogPrint`, `LogPrintf` formatting characters don't need size specifiers
+- For `strprintf`, `LogPrint`, `LogPrintf` formatting characters don't need size specifiers.
 
-  - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion
+  - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.
 
 Variable names
 --------------
@@ -535,11 +535,11 @@ Threads and synchronization
 
 - Build and run tests with `-DDEBUG_LOCKORDER` to verify that no potential
   deadlocks are introduced. As of 0.12, this is defined by default when
-  configuring with `--enable-debug`
+  configuring with `--enable-debug`.
 
 - When using `LOCK`/`TRY_LOCK` be aware that the lock exists in the context of
   the current scope, so surround the statement and the code that needs the lock
-  with braces
+  with braces.
 
   OK:
 
@@ -563,9 +563,9 @@ Source code organization
 --------------------------
 
 - Implementation code should go into the `.cpp` file and not the `.h`, unless necessary due to template usage or
-  when performance due to inlining is critical
+  when performance due to inlining is critical.
 
-  - *Rationale*: Shorter and simpler header files are easier to read, and reduce compile time
+  - *Rationale*: Shorter and simpler header files are easier to read, and reduce compile time.
 
 - Every `.cpp` and `.h` file should `#include` every header file it directly uses classes, functions or other
   definitions from, even if those headers are already included indirectly through other headers.
@@ -577,7 +577,7 @@ Source code organization
 - Don't import anything into the global namespace (`using namespace ...`). Use
   fully specified types such as `std::string`.
 
-  - *Rationale*: Avoids symbol conflicts
+  - *Rationale*: Avoids symbol conflicts.
 
 - Terminate namespaces with a comment (`// namespace mynamespace`). The comment
   should be placed on the same line as the brace closing the namespace, e.g.
@@ -592,7 +592,7 @@ namespace {
 } // namespace
 ```
 
-  - *Rationale*: Avoids confusion about the namespace context
+  - *Rationale*: Avoids confusion about the namespace context.
 
 - Prefer `#include <primitives/transaction.h>` bracket syntax instead of
   `#include "primitives/transactions.h"` quote syntax when possible.
@@ -615,7 +615,7 @@ namespace {
 GUI
 -----
 
-- Do not display or manipulate dialogs in model code (classes `*Model`)
+- Do not display or manipulate dialogs in model code (classes `*Model`).
 
   - *Rationale*: Model classes pass through events and data from the core, they
     should not interact with the user. That's where View classes come in. The converse also
@@ -643,7 +643,7 @@ Some of these are maintained by active developers of Bitcoin Core, in which case
 directly upstream without being PRed directly against the project.  They will be merged back in the next
 subtree merge.
 
-Others are external projects without a tight relationship with our project.  Changes to these should also
+Others are external projects without a tight relationship with our project. Changes to these should also
 be sent upstream but bugfixes may also be prudent to PR against Bitcoin Core so that they can be integrated
 quickly.  Cosmetic changes should be purely taken upstream.
 
@@ -743,8 +743,8 @@ Git and GitHub tips
   the diff algorithm ignore whitespace changes. This feature is also available on github.com, by adding `?w=1`
   at the end of any URL which shows a diff.
 
-- When reviewing patches that change symbol names in many places, use `git diff --word-diff`. This will instead
-  of showing the patch as deleted/added *lines*, show deleted/added *words*.
+- When reviewing patches that change symbol names in many places, use `git diff --word-diff`. Instead
+  of showing the patch as deleted/added *lines*, this will show deleted/added *words*.
 
 - When reviewing patches that move code around, try using
   `git diff --patience commit~:old/file.cpp commit:new/file/name.cpp`, and ignoring everything except the
@@ -787,11 +787,11 @@ RPC interface guidelines
 
 A few guidelines for introducing and reviewing new RPC interfaces:
 
-- Method naming: use consecutive lower-case names such as `getrawtransaction` and `submitblock`
+- Method naming: use consecutive lower-case names such as `getrawtransaction` and `submitblock`.
 
   - *Rationale*: Consistency with existing interface.
 
-- Argument naming: use snake case `fee_delta` (and not, e.g. camel case `feeDelta`)
+- Argument naming: use snake case `fee_delta` (and not, e.g. camel case `feeDelta`).
 
   - *Rationale*: Consistency with existing interface.
 
@@ -799,7 +799,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   arguments unless absolutely necessary.
 
   - *Rationale*: Introduces hand-rolled string manipulation code at both the caller and callee sites,
-    which is error prone, and it is easy to get things such as escaping wrong.
+    which is error prone, and it is easy to get things, such as escaping, wrong.
     JSON already supports nested data structures, no need to re-invent the wheel.
 
   - *Exception*: AmountFromValue can parse amounts as string. This was introduced because many JSON
@@ -810,7 +810,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     `prioritisetransaction` and `getblocktemplate` because their interface
     is specified as-is in BIP22.
 
-- Missing arguments and 'null' should be treated the same: as default values. If there is no
+- Missing arguments and 'null' should both be treated as default values. If there is no
   default value, both cases should fail in the same way. The easiest way to follow this
   guideline is detect unspecified arguments with `params[x].isNull()` instead of
   `params.size() <= x`. The former returns true if the argument is either null or missing,
@@ -849,8 +849,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   introduce new methods such as `signrawtransaction` that differ in behavior
   based on presence of a wallet.
 
-  - *Rationale*: as well as complicating the implementation and interfering
-    with the introduction of multi-wallet, wallet and non-wallet code should be
+  - *Rationale*: This interferes with and complicates the implementation of multi-wallet. Wallet and non-wallet code should be
     separated to avoid introducing circular dependencies between code units.
 
 - Try to make the RPC response a JSON object.
