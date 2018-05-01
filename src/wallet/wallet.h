@@ -602,8 +602,6 @@ private:
 
     bool fFileBacked;
 
-    std::set<int64_t> setInternalKeyPool;
-    std::set<int64_t> setExternalKeyPool;
 
     int64_t nTimeFirstKey;
 
@@ -630,21 +628,6 @@ public:
 
     const std::string strWalletFile;
 
-    void LoadKeyPool(int nIndex, const CKeyPool &keypool)
-    {
-        if (keypool.fInternal) {
-            setInternalKeyPool.insert(nIndex);
-        } else {
-            setExternalKeyPool.insert(nIndex);
-        }
-
-        // If no metadata exists yet, create a default with the pool key's
-        // creation time. Note that this may be overwritten by actually
-        // stored metadata for that key later, which is fine.
-        CKeyID keyid = keypool.vchPubKey.GetID();
-        if (mapKeyMetadata.count(keyid) == 0)
-            mapKeyMetadata[keyid] = CKeyMetadata(keypool.nTime);
-    }
 
     // Map from Key ID (for regular keys) or Script ID (for watch-only keys) to
     // key metadata.
@@ -881,8 +864,6 @@ public:
     static CAmount GetRequiredFee(unsigned int nTxBytes);
 
     bool NewKeyPool();
-    size_t KeypoolCountExternalKeys();
-    size_t KeypoolCountInternalKeys();
     bool TopUpKeyPool(unsigned int kpSize = 0);
     void ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fInternal);
     void KeepKey(int64_t nIndex);
@@ -945,11 +926,11 @@ public:
         mapRequestCount[hash] = 0;
     };
     
-    unsigned int GetKeyPoolSize()
-    {
-        AssertLockHeld(cs_wallet); // set{Ex,In}ternalKeyPool
-        return setInternalKeyPool.size() + setExternalKeyPool.size();
-    }
+	unsigned int GetKeyPoolSize()
+	{
+		AssertLockHeld(cs_wallet); // setKeyPool
+		return setKeyPool.size();
+	}
 	bool SetDefaultKey(const CPubKey &vchPubKey);
 
     //! signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
