@@ -406,7 +406,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 			if (wtx.nOrderPos == -1)
 				wss.fAnyUnordered = true;
 
-			pwallet->AddToWallet(wtx, true, NULL);
+			pwallet->AddToWallet(wtx, true);
 		}
 		else if (strType == "acentry")
 		{

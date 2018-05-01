@@ -306,8 +306,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     if (pwalletMain->IsMine(*wtx.tx)) {
-		CWalletDB walletdb(pwalletMain->strWalletFile, "r+", false);
-        pwalletMain->AddToWallet(wtx, false, &walletdb);
+        pwalletMain->AddToWallet(wtx, false);
         return NullUniValue;
     }
 
