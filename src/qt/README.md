@@ -16,7 +16,7 @@ To run:
 
 ### forms
 
-Contains [Designer UI](http://doc.qt.io/qt-5.9/designer-using-a-ui-file.html) files. They are created with [Qt Creator](#use-qt-Creator-as IDE), but can be edited using any text editor.
+Contains [Designer UI](http://doc.qt.io/qt-5.9/designer-using-a-ui-file.html) files. They are created with [Qt Creator](#using-qt-creator-as-ide), but can be edited using any text editor.
 
 ### locale
 
