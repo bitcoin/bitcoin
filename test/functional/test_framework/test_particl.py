@@ -18,6 +18,15 @@ def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     b = decimal.Decimal(b)
     return abs(a-b) <= max(decimal.Decimal(rel_tol) * decimal.Decimal(max(abs(a), abs(b))), abs_tol)
 
+def getIndexAtProperty(arr, name, value):
+    for i, o in enumerate(arr):
+        try:
+            if o[name] == value:
+                return i
+        except:
+            continue
+    return -1
+
 class ParticlTestFramework(BitcoinTestFramework):
     def start_node(self, i, *args, **kwargs):
         kwargs['legacymode'] = False

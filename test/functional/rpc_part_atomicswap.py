@@ -6,7 +6,7 @@
 # Test Decred atomic swap contracts
 
 from test_framework.test_particl import ParticlTestFramework
-from test_framework.test_particl import isclose
+from test_framework.test_particl import isclose, getIndexAtProperty
 from test_framework.util import *
 from test_framework.script import *
 from test_framework.messages import sha256
@@ -95,15 +95,6 @@ def getOutputByAddr(tx, addr):
     for i, vout in enumerate(tx['vout']):
         try:
             if addr in vout['scriptPubKey']['addresses']:
-                return i
-        except:
-            continue
-    return -1
-
-def getIndexAtProperty(arr, name, value):
-    for i, o in enumerate(arr):
-        try:
-            if o[name] == value:
                 return i
         except:
             continue

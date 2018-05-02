@@ -6,7 +6,7 @@
 import configparser
 
 from test_framework.test_particl import ParticlTestFramework
-from test_framework.test_particl import isclose
+from test_framework.test_particl import isclose, getIndexAtProperty
 from test_framework.test_framework import SkipTest
 from test_framework.util import *
 
@@ -79,6 +79,11 @@ class USBDeviceTest(ParticlTestFramework):
         assert(ro[0]['epkey'] == 'pparszKXPyRegWYwPacdPduNPNEryRbZDCAiSyo8oZYSsbTjc6FLP4TCPEX58kAeCB6YW9cSdR6fsbpeWDBTgjbkYjXCoD9CNoFVefbkg3exzpQE')
         assert(ro[0]['label'] == 'test_acc')
         assert(ro[0]['hardware_device'] == '0xffff 0x0001')
+
+        ro = nodes[1].extkey('account')
+        n = getIndexAtProperty(ro['chains'], 'use_type', 'stealth_spend')
+        assert(n > -1)
+        assert(ro['chains'][n]['path'] == "m/0h/444445h")
 
 
         addr1_0 = nodes[1].getnewaddress('lbl1_0')
@@ -187,6 +192,12 @@ class USBDeviceTest(ParticlTestFramework):
         ro = nodes[2].extkey('deriveaccount', 'test account')
         ro = nodes[2].extkey('setdefaultaccount', ro['account'])
         assert(ro['result'] == 'Success.')
+
+        ro = nodes[1].extkey('account')
+        n = getIndexAtProperty(ro['chains'], 'use_type', 'stealth_spend')
+        assert(n > -1)
+        assert(ro['chains'][n]['path'] == "m/0h/444445h")
+
         addrtest = nodes[2].getnewaddress()
         ro = nodes[1].getdevicepublickey('0/0')
         assert(addrtest == ro['address'])
