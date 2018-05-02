@@ -239,7 +239,7 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     return "Bitcoin server stopping";
 }
 
-UniValue uptime(const JSONRPCRequest& jsonRequest)
+static UniValue uptime(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
