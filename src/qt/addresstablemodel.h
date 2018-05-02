@@ -81,7 +81,7 @@ public:
     OutputType GetDefaultAddressType() const;
 
 private:
-    WalletModel *walletModel = nullptr;
+    WalletModel* const walletModel;
     AddressTablePriv *priv = nullptr;
     QStringList columns;
     EditStatus editStatus = OK;

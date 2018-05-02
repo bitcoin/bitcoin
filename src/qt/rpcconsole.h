@@ -145,13 +145,13 @@ private:
     };
 
     interfaces::Node& m_node;
-    Ui::RPCConsole *ui = nullptr;
+    Ui::RPCConsole* const ui;
     ClientModel *clientModel = nullptr;
     QStringList history;
     int historyPtr = 0;
     QString cmdBeforeBrowsing;
     QList<NodeId> cachedNodeids;
-    const PlatformStyle *platformStyle = nullptr;
+    const PlatformStyle* const platformStyle;
     RPCTimerInterface *rpcTimerInterface = nullptr;
     QMenu *peersTableContextMenu = nullptr;
     QMenu *banTableContextMenu = nullptr;
