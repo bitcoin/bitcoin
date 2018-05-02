@@ -81,10 +81,10 @@ public:
     EditStatus getEditStatus() const { return editStatus; }
 
 private:
-    WalletModel *walletModel;
-    AddressTablePriv *priv;
+    WalletModel* const walletModel;
+    AddressTablePriv *priv = nullptr;
     QStringList columns;
-    EditStatus editStatus;
+    EditStatus editStatus = OK;
 
     /** Look up address book data given an address string. */
     bool getAddressData(const QString &address, std::string* name, std::string* purpose) const;

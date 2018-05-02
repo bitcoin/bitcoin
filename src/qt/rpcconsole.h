@@ -171,18 +171,18 @@ private:
     };
 
     interfaces::Node& m_node;
-    Ui::RPCConsole *ui;
-    QButtonGroup* pageButtons;
-    ClientModel *clientModel;
+    Ui::RPCConsole* const ui;
+    ClientModel *clientModel = nullptr;
+    QButtonGroup* pageButtons = nullptr;
     QStringList history;
-    int historyPtr;
+    int historyPtr = 0;
     QString cmdBeforeBrowsing;
     QList<NodeId> cachedNodeids;
-    RPCTimerInterface *rpcTimerInterface;
-    QMenu *peersTableContextMenu;
-    QMenu *banTableContextMenu;
-    int consoleFontSize;
-    QCompleter *autoCompleter;
+    RPCTimerInterface *rpcTimerInterface = nullptr;
+    QMenu *peersTableContextMenu = nullptr;
+    QMenu *banTableContextMenu = nullptr;
+    int consoleFontSize = 0;
+    QCompleter *autoCompleter = nullptr;
     QThread thread;
     QString m_last_wallet_id;
 
