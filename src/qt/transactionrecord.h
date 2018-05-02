@@ -6,6 +6,7 @@
 #define BITCOIN_QT_TRANSACTIONRECORD_H
 
 #include <amount.h>
+#include <sync.h>
 #include <uint256.h>
 
 #include <QList>
@@ -17,6 +18,7 @@ class Wallet;
 struct WalletTx;
 struct WalletTxStatus;
 }
+extern CCriticalSection cs_main;
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -111,7 +113,7 @@ public:
     /** Decompose CWallet transaction to model transaction records.
      */
     static bool showTransaction();
-    static QList<TransactionRecord> decomposeTransaction(const interfaces::WalletTx& wtx);
+    static QList<TransactionRecord> decomposeTransaction(const interfaces::WalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -140,7 +142,7 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime);
+    void updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Return whether a status update is needed.
      */
