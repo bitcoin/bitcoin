@@ -267,7 +267,7 @@ bool CHDWallet::InitLoadWallet()
                 walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, true);
             }
             LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
-            pwallet->SetBestChain(chainActive.GetLocator());
+            pwallet->ChainStateFlushed(chainActive.GetLocator());
             pwallet->database->IncrementUpdateCounter();
         }
 
