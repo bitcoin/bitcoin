@@ -1,5 +1,5 @@
 // Copyright (c) 2015 The ShadowCoin developers
-// Copyright (c) 2017 The Particl developers
+// Copyright (c) 2017-2018 The Particl developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <util.h>
 #include <utilstrencodings.h>
+#include <rpc/util.h>
 #include <key.h>
 #include <key_io.h>
 #include <key/extkey.h>
@@ -90,7 +91,6 @@ UniValue mnemonic(const JSONRPCRequest &request)
     {
         int nLanguage = WLL_ENGLISH;
         int nBytesEntropy = 32;
-        bool fBip44 = true;
         std::string sPassword = "";
         std::string sError;
 
@@ -112,13 +112,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Num bytes entropy out of range [16,64].");
         };
 
-        if (request.params.size() > 4)
-        {
-            std::string s = request.params[4].get_str();
-
-            if (!part::GetStringBool(s, fBip44))
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown argument for bip44 flag.");
-        };
+        bool fBip44 = request.params.size() > 4 ? GetBool(request.params[4]) : true;
 
         if (request.params.size() > 5)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Too many parameters");
@@ -171,7 +165,6 @@ UniValue mnemonic(const JSONRPCRequest &request)
     } else
     if (mode == "decode")
     {
-        bool fBip44 = true;
         std::string sPassword;
         std::string sMnemonic;
         std::string sError;
@@ -186,11 +179,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Must specify mnemonic.");
 
-        if (request.params.size() > 3)
-        {
-            if (!part::GetStringBool(request.params[3].get_str(), fBip44))
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown argument for bip44 flag.");
-        };
+        bool fBip44 = request.params.size() > 3 ? GetBool(request.params[3]) : true;
 
         if (request.params.size() > 4)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Too many parameters");

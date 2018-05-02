@@ -161,7 +161,7 @@ bool GetBool(const UniValue &uv)
     std::string s = uv.get_str();
     bool rv;
     if (!part::GetStringBool(s, rv))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Not a bool value.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Not a boolean value.");
     return rv;
 };
 

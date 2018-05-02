@@ -760,6 +760,7 @@ UniValue smsginbox(const JSONRPCRequest &request)
             "  \"version\": \"str\"                  (string) The message version\n"
             "  \"received\": \"time\"                (string) Time the message was received\n"
             "  \"sent\": \"time\"                    (string) Time the message was sent\n"
+            "  \"daysretention\": int              (int) Number of days message will stay in the network for\n"
             "  \"from\": \"str\"                     (string) Address the message was sent from\n"
             "  \"to\": \"str\"                       (string) Address the message was sent to\n"
             "  \"text\": \"str\"                     (string) Message text\n"
@@ -839,6 +840,8 @@ UniValue smsginbox(const JSONRPCRequest &request)
 
                     PushTime(objM, "received", smsgStored.timeReceived);
                     PushTime(objM, "sent", msg.timestamp);
+                    uint32_t nDaysRetention = psmsg->IsPaidVersion() ? psmsg->nonce[0] : 2;
+                    objM.pushKV("daysretention", (int)nDaysRetention);
                     objM.pushKV("from", msg.sFromAddress);
                     objM.pushKV("to", sAddrTo);
                     objM.pushKV("text", sText);
