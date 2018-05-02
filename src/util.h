@@ -80,6 +80,7 @@ int LogPrintStr(const std::string &str, bool ix = false);
     template<TINYFORMAT_ARGTYPES(n)>                                          \
     static inline int IXLogPrint(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
     {                                                                         \
+        LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
         return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n)), true); \
     }                                                                         \
     /**   Log error and return false */                                        \
@@ -104,6 +105,7 @@ static inline int LogPrint(const char* category, const char* format)
 
 static inline int IXLogPrint(const char* category, const char* format)
 {
+    LogPrintStr(format);
     return LogPrintStr(format, true);
 }
 

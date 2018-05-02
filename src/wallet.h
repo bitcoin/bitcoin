@@ -140,7 +140,7 @@ private:
 
     int64_t nNextResend;
     int64_t nLastResend;
-    bool nUseIX;
+    bool m_useInstantSend;
 
     /**
      * Used to keep track of spent outpoints, and
@@ -212,7 +212,7 @@ public:
         nNextResend = 0;
         nLastResend = 0;
         nTimeFirstKey = 0;
-        nUseIX = true;
+        m_useInstantSend = true;
     }
 
     std::map<uint256, CWalletTx> mapWallet;

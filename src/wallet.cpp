@@ -1011,11 +1011,11 @@ void CWalletTx::RelayWalletTransaction(std::string strCommand)
             LogPrintf("Relaying wtx %s\n", hash.ToString());
 
             if(strCommand == "ix"){
-                CTxDestination address1;
                 if (this->vout.size() > 0)
                 {
-                    ExtractDestination(this->vout[0].scriptPubKey, address1);
-                    IXLogPrintf("CWalletTx::RelayWalletTransaction() - Instant send to address: %s\n", CBitcoinAddress(address1).ToString());
+                    CTxDestination address;
+                    ExtractDestination(this->vout[0].scriptPubKey, address);
+                    IXLogPrintf("CWalletTx::RelayWalletTransaction() - Instant send to address: %s\n", CBitcoinAddress(address).ToString());
                 }
                 mapTxLockReq.insert(make_pair(hash, (CTransaction)*this));
                 CreateNewLock(((CTransaction)*this));
@@ -1564,7 +1564,7 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAm
 bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                                 CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, CAmount nFeePay)
 {
-    nUseIX = true;
+    m_useInstantSend = true;
     CAmount nValue = 0;
 
     BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
@@ -1578,7 +1578,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
     }
     if(nValue > GetSporkValue(SPORK_5_MAX_VALUE) * COIN)
     {
-        nUseIX = false;
+        m_useInstantSend = false;
         IXLogPrintf("InstantX doesn't support sending values that high yet. Transactions are currently limited to %d CRW.",
                     GetSporkValue(SPORK_5_MAX_VALUE));
     }
@@ -1622,8 +1622,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
 
-                bool selected = SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, nUseIX);
-                if (nUseIX && !selected)
+                bool selected = SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, m_useInstantSend);
+                if (m_useInstantSend && !selected)
                 {
                     // If coin selection failed for InstantX try to select coins for ordinary transaction.
                     selected = SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, false);
@@ -1632,7 +1632,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                         // Proceed with ordinary transaction without instant send.
                         IXLogPrintf("CWallet::CreateTransaction() - InstantX requires inputs with at least 6 confirmations. "
                                     "Proceed as a regular transaction.\n");
-                        nUseIX = false;
+                        m_useInstantSend = false;
                     }
                 }
 
@@ -1728,7 +1728,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 *static_cast<CTransaction*>(&wtxNew) = CTransaction(txNew);
                 if (wtxNew.GetValueOut() > GetSporkValue(SPORK_5_MAX_VALUE) * COIN)
                 {
-                    nUseIX = false;
+                    m_useInstantSend = false;
                     IXLogPrintf("InstantX doesn't support sending values that high yet. Transactions are currently limited to %d CRW.",
                                 GetSporkValue(SPORK_5_MAX_VALUE));
                 }
@@ -1833,7 +1833,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
             LogPrintf("CommitTransaction() : Error: Transaction not valid\n");
             return false;
         }
-        wtxNew.RelayWalletTransaction(nUseIX ? "ix" : "tx");
+        wtxNew.RelayWalletTransaction(m_useInstantSend? "ix" : "tx");
     }
     return true;
 }
