@@ -13,12 +13,14 @@
 # ignored
 
 export LC_ALL=C
-UNTERMINATED_LOGS=$(git grep "LogPrintf(" -- "*.cpp" | \
+
+UNTERMINATED_LOGS=$(git grep --extended-regexp "LogPrintf?\(" -- "*.cpp" | \
     grep -v '\\n"' | \
     grep -v "/\* Continued \*/" | \
+    grep -v "LogPrint()" | \
     grep -v "LogPrintf()")
 if [[ ${UNTERMINATED_LOGS} != "" ]]; then
-    echo "All calls to LogPrintf() should be terminated with \\n"
+    echo "All calls to LogPrintf() and LogPrint() should be terminated with \\n"
     echo
     echo "${UNTERMINATED_LOGS}"
     exit 1
