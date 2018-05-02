@@ -48,7 +48,7 @@ const unsigned char MaxArray[] =
 const uint256 MaxL = uint256(std::vector<unsigned char>(MaxArray,MaxArray+32));
 const uint160 MaxS = uint160(std::vector<unsigned char>(MaxArray,MaxArray+20));
 
-std::string ArrayToString(const unsigned char A[], unsigned int width)
+static std::string ArrayToString(const unsigned char A[], unsigned int width)
 {
     std::stringstream Stream;
     Stream << std::hex;

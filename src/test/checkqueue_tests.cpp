@@ -146,7 +146,7 @@ typedef CCheckQueue<FrozenCleanupCheck> FrozenCleanup_Queue;
 /** This test case checks that the CCheckQueue works properly
  * with each specified size_t Checks pushed.
  */
-void Correct_Queue_range(std::vector<size_t> range)
+static void Correct_Queue_range(std::vector<size_t> range)
 {
     auto small_queue = std::unique_ptr<Correct_Queue>(new Correct_Queue {QUEUE_BATCH_SIZE});
     boost::thread_group tg;

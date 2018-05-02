@@ -540,7 +540,7 @@ const static auto FLAGS = {char(0), FRESH, DIRTY, char(DIRTY | FRESH)};
 const static auto CLEAN_FLAGS = {char(0), FRESH};
 const static auto ABSENT_FLAGS = {NO_ENTRY};
 
-void SetCoinsValue(CAmount value, Coin& coin)
+static void SetCoinsValue(CAmount value, Coin& coin)
 {
     assert(value != ABSENT);
     coin.Clear();
@@ -552,7 +552,7 @@ void SetCoinsValue(CAmount value, Coin& coin)
     }
 }
 
-size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
+static size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
 {
     if (value == ABSENT) {
         assert(flags == NO_ENTRY);
@@ -605,7 +605,7 @@ public:
     CCoinsViewCacheTest cache{&base};
 };
 
-void CheckAccessCoin(CAmount base_value, CAmount cache_value, CAmount expected_value, char cache_flags, char expected_flags)
+static void CheckAccessCoin(CAmount base_value, CAmount cache_value, CAmount expected_value, char cache_flags, char expected_flags)
 {
     SingleEntryCacheTest test(base_value, cache_value, cache_flags);
     test.cache.AccessCoin(OUTPOINT);
@@ -656,7 +656,7 @@ BOOST_AUTO_TEST_CASE(ccoins_access)
     CheckAccessCoin(VALUE1, VALUE2, VALUE2, DIRTY|FRESH, DIRTY|FRESH);
 }
 
-void CheckSpendCoins(CAmount base_value, CAmount cache_value, CAmount expected_value, char cache_flags, char expected_flags)
+static void CheckSpendCoins(CAmount base_value, CAmount cache_value, CAmount expected_value, char cache_flags, char expected_flags)
 {
     SingleEntryCacheTest test(base_value, cache_value, cache_flags);
     test.cache.SpendCoin(OUTPOINT);
@@ -707,7 +707,7 @@ BOOST_AUTO_TEST_CASE(ccoins_spend)
     CheckSpendCoins(VALUE1, VALUE2, ABSENT, DIRTY|FRESH, NO_ENTRY   );
 }
 
-void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount modify_value, CAmount expected_value, char cache_flags, char expected_flags, bool coinbase)
+static void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount modify_value, CAmount expected_value, char cache_flags, char expected_flags, bool coinbase)
 {
     SingleEntryCacheTest test(base_value, cache_value, cache_flags);
 
@@ -734,7 +734,7 @@ void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount modify_va
 // while still verifying that the CoinsViewCache::AddCoin implementation
 // ignores base values.
 template <typename... Args>
-void CheckAddCoin(Args&&... args)
+static void CheckAddCoin(Args&&... args)
 {
     for (CAmount base_value : {ABSENT, PRUNED, VALUE1})
         CheckAddCoinBase(base_value, std::forward<Args>(args)...);

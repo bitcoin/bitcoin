@@ -31,7 +31,7 @@ struct COrphanTx {
 };
 extern std::map<uint256, COrphanTx> mapOrphanTransactions;
 
-CService ip(uint32_t i)
+static CService ip(uint32_t i)
 {
     struct in_addr s;
     s.s_addr = i;
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     peerLogic->FinalizeNode(dummyNode1.GetId(), dummy);
 }
 
-void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidation &peerLogic)
+static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidation &peerLogic)
 {
     CAddress addr(ip(GetRandInt(0xffffffff)), NODE_NONE);
     vNodes.emplace_back(new CNode(id++, ServiceFlags(NODE_NETWORK|NODE_WITNESS), 0, INVALID_SOCKET, addr, 0, 0, CAddress(), "", /*fInboundIn=*/ false));
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     peerLogic->FinalizeNode(dummyNode.GetId(), dummy);
 }
 
-CTransactionRef RandomOrphan()
+static CTransactionRef RandomOrphan()
 {
     std::map<uint256, COrphanTx>::iterator it;
     LOCK(cs_main);
