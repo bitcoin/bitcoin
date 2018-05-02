@@ -262,8 +262,8 @@ public:
 		// Syscoin BIP32 prvkeys start with 'xprv' (Syscoin defaults)
 		base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
 
-        // Syscoin BIP44 coin type is '57'
-        nExtCoinType = 57;
+        // Syscoin BIP44 coin type is '5'
+        nExtCoinType = 5;
 
         //vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -280,7 +280,7 @@ public:
         strSporkAddress = "SSQEoqCdCTRL9qZfgWfoj6tVsBQysxQ2dN";
 		checkpointData = {
 			{
-				{ 0, uint256S("0x000006e5c08d6d2414435b294210266753b05a75f90e926dd5e6082306812622") },
+				{ 0, uint256S("00000cd4b4e6a465c66094bc7d18e828f0b8d56e6afc571fbe9e25e48338d441") },
 			}
 		};
 
