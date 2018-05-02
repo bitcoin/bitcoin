@@ -146,30 +146,20 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
 // the proof of work for that block. The further away they are the better, the furthest will win the election
 // and get paid this block
 //
-uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
+arith_uint256 CMasternode::CalculateScore(int64_t nBlockHeight)
 {
-    if(chainActive.Tip() == NULL) return uint256();
+    if(chainActive.Tip() == NULL) return arith_uint256();
 
     uint256 hash = uint256();
-    uint256 aux = ArithToUint256(UintToArith256(vin.prevout.hash) + vin.prevout.n);
 
     if(!GetBlockHash(hash, nBlockHeight)) {
         LogPrintf("CalculateScore ERROR - nHeight %d - Returned 0\n", nBlockHeight);
-        return uint256();
+        return arith_uint256();
     }
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << hash;
-    arith_uint256 hash2 = UintToArith256(ss.GetHash());
-
-    CHashWriter ss2(SER_GETHASH, PROTOCOL_VERSION);
-    ss2 << hash;
-    ss2 << aux;
-    arith_uint256 hash3 = UintToArith256(ss2.GetHash());
-
-    arith_uint256 r = (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
-
-    return ArithToUint256(r);
+    ss << vin.prevout << m_collateralMinConfBlockHash << hash;
+    return UintToArith256(ss.GetHash());
 }
 
 void CMasternode::Check(bool forceCheck)
@@ -620,6 +610,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
                       sigTime, addr.ToString(), vin.ToString(), MASTERNODE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
             return false;
         }
+        m_collateralMinConfBlockHash = chainActive[pMNIndex->nHeight + MASTERNODE_MIN_CONFIRMATIONS - 1]->GetBlockHash();
     }
 
     LogPrintf("mnb - Got NEW Masternode entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);

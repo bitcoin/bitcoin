@@ -135,6 +135,7 @@ public:
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
     CMasternodePing lastPing;
+    uint256 m_collateralMinConfBlockHash;
 
     CMasternode();
     CMasternode(const CMasternode& other);
@@ -154,6 +155,7 @@ public:
         swap(first.pubkey2, second.pubkey2);
         swap(first.sig, second.sig);
         swap(first.activeState, second.activeState);
+        swap(first.m_collateralMinConfBlockHash, second.m_collateralMinConfBlockHash);
         swap(first.sigTime, second.sigTime);
         swap(first.lastPing, second.lastPing);
         swap(first.cacheInputAge, second.cacheInputAge);
@@ -180,7 +182,7 @@ public:
         return !(a.vin == b.vin);
     }
 
-    uint256 CalculateScore(int mod=1, int64_t nBlockHeight=0);
+    arith_uint256 CalculateScore(int64_t nBlockHeight=0);
 
     ADD_SERIALIZE_METHODS;
 
@@ -196,6 +198,7 @@ public:
             READWRITE(sigTime);
             READWRITE(protocolVersion);
             READWRITE(activeState);
+            READWRITE(m_collateralMinConfBlockHash);
             READWRITE(lastPing);
             READWRITE(cacheInputAge);
             READWRITE(cacheInputAgeBlock);
