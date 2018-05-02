@@ -17,24 +17,27 @@ def generate_salt():
     salt_sequence = [cryptogen.randrange(256) for _ in range(16)]
     return ''.join([format(r, 'x') for r in salt_sequence])
 
-def generate_password(salt):
+def generate_password():
     """Create 32 byte b64 password"""
-    password = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8')
+    return base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8')
 
+def password_to_hmac(salt, password):
     m = hmac.new(bytearray(salt, 'utf-8'), bytearray(password, 'utf-8'), 'SHA256')
-    password_hmac = m.hexdigest()
-
-    return password, password_hmac
+    return m.hexdigest()
 
 def main():
     if len(sys.argv) < 2:
-        sys.stderr.write('Please include username as an argument.\n')
+        sys.stderr.write('Please include username (and an optional password, will generate one if not provided) as an argument.\n')
         sys.exit(0)
 
     username = sys.argv[1]
 
     salt = generate_salt()
-    password, password_hmac = generate_password(salt)
+    if len(sys.argv) > 2:
+        password = sys.argv[2]
+    else:
+        password = generate_password()
+    password_hmac = password_to_hmac(salt, password)
 
     print('String to be appended to bitcoin.conf:')
     print('rpcauth={0}:{1}${2}'.format(username, salt, password_hmac))
