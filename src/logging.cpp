@@ -222,8 +222,11 @@ int BCLog::Logger::LogPrintStr(const std::string &str)
             // reopen the log file, if requested
             if (m_reopen_file) {
                 m_reopen_file = false;
-                if (fsbridge::freopen(m_file_path,"a",m_fileout) != nullptr)
-                    setbuf(m_fileout, nullptr); // unbuffered
+                m_fileout = fsbridge::freopen(m_file_path, "a", m_fileout);
+                if (!m_fileout) {
+                    return ret;
+                }
+                setbuf(m_fileout, nullptr); // unbuffered
             }
 
             ret = FileWriteStr(strTimestamped, m_fileout);
