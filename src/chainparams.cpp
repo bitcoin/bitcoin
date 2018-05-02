@@ -262,8 +262,8 @@ public:
 		// Syscoin BIP32 prvkeys start with 'xprv' (Syscoin defaults)
 		base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
 
-        // Syscoin BIP44 coin type is '5'
-        nExtCoinType = 5;
+        // Syscoin BIP44 coin type is '57'
+        nExtCoinType = 57;
 
         //vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
