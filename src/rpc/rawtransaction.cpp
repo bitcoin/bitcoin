@@ -179,6 +179,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
     if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, true, blockindex)) {
         std::string errmsg;
         if (blockindex) {
+            LOCK(cs_main);
             if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
             }
@@ -266,13 +267,12 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    LOCK(cs_main);
-
     if (pblockindex == nullptr)
     {
         CTransactionRef tx;
         if (!GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock, false) || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
+        LOCK(cs_main);
         pblockindex = LookupBlockIndex(hashBlock);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");

@@ -173,7 +173,6 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
     const Consensus::Params& consensusParams = Params().GetConsensus();
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     {
-        LOCK(cs_main);
         CBlock block;
         if(!ReadBlockFromDisk(block, pindex, consensusParams))
         {

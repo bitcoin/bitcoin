@@ -1019,8 +1019,6 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
 {
     CBlockIndex* pindexSlow = blockIndex;
 
-    LOCK(cs_main);
-
     if (!blockIndex) {
         CTransactionRef ptx = mempool.get(hash);
         if (ptx) {
@@ -1032,6 +1030,7 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
             return g_txindex->FindTx(hash, hashBlock, txOut);
         }
 
+        LOCK(cs_main);
         if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
             const Coin& coin = AccessByTxid(*pcoinsTip, hash);
             if (!coin.IsSpent()) pindexSlow = chainActive[coin.nHeight];
