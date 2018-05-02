@@ -76,7 +76,7 @@ static const bool DEFAULT_DISABLE_WALLET = false;
 extern const char * DEFAULT_WALLET_DAT;
 
 //! if set, all keys will be derived by using BIP39/BIP44
-static const bool DEFAULT_USE_HD_WALLET = false;
+static const bool DEFAULT_USE_HD_WALLET = true;
 
 bool AutoBackupWallet (CWallet* wallet, const std::string& strWalletFile_, std::string& strBackupWarningRet, std::string& strBackupErrorRet);
 
@@ -94,11 +94,11 @@ enum WalletFeature
     FEATURE_BASE = 10500, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
 
     FEATURE_WALLETCRYPT = 40000, // wallet encryption
-    FEATURE_COMPRPUBKEY = 60000, // compressed public keys
-    FEATURE_HD = 120200,    // Hierarchical key derivation after BIP32 (HD Wallet), BIP44 (multi-coin), BIP39 (mnemonic)
+    FEATURE_COMPRPUBKEY = 2900000, // compressed public keys
+    FEATURE_HD = 3000000,    // Hierarchical key derivation after BIP32 (HD Wallet), BIP44 (multi-coin), BIP39 (mnemonic)
                             // which uses on-the-fly private key derivation
 
-    FEATURE_LATEST = 61000
+    FEATURE_LATEST = FEATURE_HD
 };
 
 enum AvailableCoinsType
