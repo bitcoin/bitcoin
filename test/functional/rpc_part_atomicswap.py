@@ -33,8 +33,10 @@ def b58decode(v, length=None):
     result = bytes((long_value,)) + result
     nPad = 0
     for c in v:
-        if c == __b58chars[0]: nPad += 1
-        else: break
+        if c == __b58chars[0]:
+            nPad += 1
+        else:
+            break
     pad = bytes((0,)) * nPad
     result = pad + result
     if length is not None and len(result) != length:
@@ -384,7 +386,7 @@ class AtomicSwapTest(ParticlTestFramework):
 
         rawtx1refund = createRefundTx(nodes[0], rawtxInitiate, scriptInitiate, lockTime, addrA_0, addrA_0)
 
-        txnid1 = nodes[0].sendrawtransaction(rawtxInitiate)
+        nodes[0].sendrawtransaction(rawtxInitiate)
         self.stakeBlocks(1)
 
         ro = nodes[0].getblockchaininfo()
@@ -406,7 +408,7 @@ class AtomicSwapTest(ParticlTestFramework):
         extractedSecretAHash = scriptInitiate[7:7+32]
         assert(extractedSecretAHash == secretAHash)
         tx1 = nodes[1].decoderawtransaction(rawtxInitiate)
-
+        self.log.info("Verify txn " + tx1['txid']) # TODO
 
         # Participate B -> A
         # needs address from A, amount and secretAHash

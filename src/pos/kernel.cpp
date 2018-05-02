@@ -254,7 +254,7 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
                     return state.DoS(100, error("%s: mixed-prevout-scripts %d", __func__, k), REJECT_INVALID, "mixed-prevout-scripts");
                 amount += outPrev->GetValue();
 
-                LogPrint(BCLog::POS, "%s: Input %d of coinstake %s is spent.", k, tx.GetHash().ToString());
+                LogPrint(BCLog::POS, "%s: Input %d of coinstake %s is spent.\n", k, tx.GetHash().ToString());
             } else
             {
                 if (coin.nType != OUTPUT_STANDARD)

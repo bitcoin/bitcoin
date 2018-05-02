@@ -4987,7 +4987,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             continue;
         };
 
-        LogPrint(BCLog::HDWALLET, "%s: Using %d inputs, ringsize %d.", __func__, setCoins.size(), nRingSize);
+        LogPrint(BCLog::HDWALLET, "%s: Using %d inputs, ringsize %d.\n", __func__, setCoins.size(), nRingSize);
 
         nValueOutPlain += nFeeRet;
 
@@ -11050,11 +11050,13 @@ bool CHDWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, i
                 nValueRet += vValue[i].first;
             }
 
-        LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: ");
-        for (unsigned int i = 0; i < vValue.size(); i++)
-            if (vfBest[i])
-                LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(vValue[i].first));
-        LogPrint(BCLog::SELECTCOINS, "total %s\n", FormatMoney(nBest));
+        if (LogAcceptCategory(BCLog::SELECTCOINS)) {
+            LogPrintf("SelectCoins() best subset: "); /* Continued */
+            for (unsigned int i = 0; i < vValue.size(); i++)
+                if (vfBest[i])
+                    LogPrintf("%s ", FormatMoney(vValue[i].first)); /* Continued */
+            LogPrintf("total %s\n", FormatMoney(nBest));
+        }
     }
 
     return true;
