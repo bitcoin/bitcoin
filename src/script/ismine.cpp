@@ -28,6 +28,19 @@ enum class IsMineSigVersion
     WITNESS_V0 = 2  //! P2WSH witness script execution
 };
 
+/**
+ * This is an internal representation of isminetype + invalidity.
+ * Its order is significant, as we return the max of all explored
+ * possibilities.
+ */
+enum class IsMineResult
+{
+    NO = 0,          //! Not ours
+    WATCH_ONLY = 1,  //! Included in watch-only balance
+    SPENDABLE = 2,   //! Included in all balances
+    INVALID = 3,     //! Not spendable by anyone
+};
+
 bool PermitsUncompressed(IsMineSigVersion sigversion)
 {
     return sigversion == IsMineSigVersion::TOP || sigversion == IsMineSigVersion::P2SH;
@@ -42,16 +55,9 @@ bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore)
     return true;
 }
 
-void Update(isminetype& val, isminetype update)
+IsMineResult IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, IsMineSigVersion sigversion)
 {
-    if (val == ISMINE_NO) val = update;
-    if (val == ISMINE_WATCH_ONLY && update == ISMINE_SPENDABLE) val = update;
-}
-
-isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, IsMineSigVersion sigversion)
-{
-    isminetype ret = ISMINE_NO;
-    isInvalid = false;
+    IsMineResult ret = IsMineResult::NO;
 
     std::vector<valtype> vSolutions;
     txnouttype whichType;
@@ -67,19 +73,17 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
         if (!PermitsUncompressed(sigversion) && vSolutions[0].size() != 33) {
-            isInvalid = true;
-            return ISMINE_NO;
+            return IsMineResult::INVALID;
         }
         if (keystore.HaveKey(keyID)) {
-            Update(ret, ISMINE_SPENDABLE);
+            ret = std::max(ret, IsMineResult::SPENDABLE);
         }
         break;
     case TX_WITNESS_V0_KEYHASH:
     {
         if (sigversion == IsMineSigVersion::WITNESS_V0) {
             // P2WPKH inside P2WSH is invalid.
-            isInvalid = true;
-            return ISMINE_NO;
+            return IsMineResult::INVALID;
         }
         if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
             // We do not support bare witness outputs unless the P2SH version of it would be
@@ -87,7 +91,7 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
             // This also applies to the P2WSH case.
             break;
         }
-        Update(ret, IsMineInner(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), isInvalid, IsMineSigVersion::WITNESS_V0));
+        ret = std::max(ret, IsMineInner(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), IsMineSigVersion::WITNESS_V0));
         break;
     }
     case TX_PUBKEYHASH:
@@ -95,25 +99,23 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
         if (!PermitsUncompressed(sigversion)) {
             CPubKey pubkey;
             if (keystore.GetPubKey(keyID, pubkey) && !pubkey.IsCompressed()) {
-                isInvalid = true;
-                return ISMINE_NO;
+                return IsMineResult::INVALID;
             }
         }
         if (keystore.HaveKey(keyID)) {
-            Update(ret, ISMINE_SPENDABLE);
+            ret = std::max(ret, IsMineResult::SPENDABLE);
         }
         break;
     case TX_SCRIPTHASH:
     {
         if (sigversion != IsMineSigVersion::TOP) {
             // P2SH inside P2WSH or P2SH is invalid.
-            isInvalid = true;
-            return ISMINE_NO;
+            return IsMineResult::INVALID;
         }
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            Update(ret, IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::P2SH));
+            ret = std::max(ret, IsMineInner(keystore, subscript, IsMineSigVersion::P2SH));
         }
         break;
     }
@@ -121,8 +123,7 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
     {
         if (sigversion == IsMineSigVersion::WITNESS_V0) {
             // P2WSH inside P2WSH is invalid.
-            isInvalid = true;
-            return ISMINE_NO;
+            return IsMineResult::INVALID;
         }
         if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
             break;
@@ -132,7 +133,7 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
         CScriptID scriptID = CScriptID(hash);
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            Update(ret, IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::WITNESS_V0));
+            ret = std::max(ret, IsMineInner(keystore, subscript, IsMineSigVersion::WITNESS_V0));
         }
         break;
     }
@@ -153,20 +154,19 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
         if (!PermitsUncompressed(sigversion)) {
             for (size_t i = 0; i < keys.size(); i++) {
                 if (keys[i].size() != 33) {
-                    isInvalid = true;
-                    return ISMINE_NO;
+                    return IsMineResult::INVALID;
                 }
             }
         }
         if (HaveKeys(keys, keystore)) {
-            Update(ret, ISMINE_SPENDABLE);
+            ret = std::max(ret, IsMineResult::SPENDABLE);
         }
         break;
     }
     }
 
-    if (ret == ISMINE_NO && keystore.HaveWatchOnly(scriptPubKey)) {
-        return ISMINE_WATCH_ONLY;
+    if (ret == IsMineResult::NO && keystore.HaveWatchOnly(scriptPubKey)) {
+        ret = std::max(ret, IsMineResult::WATCH_ONLY);
     }
     return ret;
 }
@@ -175,11 +175,18 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid)
 {
-    isminetype ret = IsMineInner(keystore, scriptPubKey, isInvalid, IsMineSigVersion::TOP);
-    if (isInvalid) {
-        ret = ISMINE_NO;
+    isInvalid = false;
+    switch (IsMineInner(keystore, scriptPubKey, IsMineSigVersion::TOP)) {
+    case IsMineResult::INVALID:
+        isInvalid = true;
+    case IsMineResult::NO:
+        return ISMINE_NO;
+    case IsMineResult::WATCH_ONLY:
+        return ISMINE_WATCH_ONLY;
+    case IsMineResult::SPENDABLE:
+        return ISMINE_SPENDABLE;
     }
-    return ret;
+    assert(false);
 }
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey)
