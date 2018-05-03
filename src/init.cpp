@@ -1233,10 +1233,10 @@ bool AppInitMain()
             // and because this needs to happen before any other debug.log printing
             g_logger->ShrinkDebugFile();
         }
-        if (!g_logger->OpenDebugLog()) {
-            return InitError(strprintf("Could not open debug log file %s",
-                                       g_logger->m_file_path.string()));
-        }
+    }
+    if (!g_logger->StartLogging()) {
+        return InitError(strprintf("Could not open debug log file %s",
+                                   g_logger->m_file_path.string()));
     }
 
     if (!g_logger->m_log_timestamps)
