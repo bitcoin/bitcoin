@@ -32,7 +32,7 @@ static int FileWriteStr(const std::string &str, FILE *fp)
 
 bool BCLog::Logger::StartLogging()
 {
-    std::lock_guard<std::mutex> scoped_lock(m_file_mutex);
+    LOCK(m_cs_log);
 
     assert(m_buffering);
     assert(m_fileout == nullptr);
@@ -214,7 +214,7 @@ std::string BCLog::Logger::LogTimestampStr(const std::string &str)
 
 void BCLog::Logger::LogPrintStr(const std::string &str)
 {
-    std::lock_guard<std::mutex> scoped_lock(m_file_mutex);
+    LOCK(m_cs_log);
     std::string strTimestamped = LogTimestampStr(str);
 
     if (m_buffering) {

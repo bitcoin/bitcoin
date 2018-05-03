@@ -7,7 +7,9 @@
 #define BITCOIN_LOGGING_H
 
 #include <fs.h>
+#include <sync.h>
 #include <tinyformat.h>
+#include <threadsafety.h>
 
 #include <atomic>
 #include <cstdint>
@@ -59,9 +61,9 @@ namespace BCLog {
     class Logger
     {
     private:
-        FILE* m_fileout = nullptr;
-        std::mutex m_file_mutex;
-        std::list<std::string> m_msgs_before_open;
+        CCriticalSection m_cs_log;
+        FILE* m_fileout GUARDED_BY(m_cs_log) = nullptr;
+        std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs_log);
         bool m_buffering = true;
 
         /**
