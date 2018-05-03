@@ -169,6 +169,7 @@ bool BerkeleyEnvironment::Open(bool retry)
                          S_IRUSR | S_IWUSR);
     if (ret != 0) {
         dbenv->close(0);
+        Reset();
         LogPrintf("BerkeleyEnvironment::Open: Error %d opening database environment: %s\n", ret, DbEnv::strerror(ret));
         if (retry) {
             // try moving the database env out of the way
