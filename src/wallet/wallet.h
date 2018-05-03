@@ -93,15 +93,24 @@ enum WalletFeature
 };
 
 enum class OutputType {
-    NONE,
     LEGACY,
     P2SH_SEGWIT,
     BECH32,
+
+    /**
+     * Special output type for change outputs only. Automatically choose type
+     * based on address type setting and the types other of non-change outputs
+     * (see -changetype option documentation and implementation in
+     * CWallet::TransactionChangeType for details).
+     */
+    CHANGE_AUTO,
 };
 
 //! Default for -addresstype
 constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::P2SH_SEGWIT};
 
+//! Default for -changetype
+constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::CHANGE_AUTO};
 
 /** A key pool entry */
 class CKeyPool
@@ -973,7 +982,7 @@ public:
     CFeeRate m_fallback_fee{DEFAULT_FALLBACK_FEE};
     CFeeRate m_discard_rate{DEFAULT_DISCARD_FEE};
     OutputType m_default_address_type{DEFAULT_ADDRESS_TYPE};
-    OutputType m_default_change_type{OutputType::NONE}; // Default to OutputType::NONE if not set by -changetype
+    OutputType m_default_change_type{DEFAULT_CHANGE_TYPE};
 
     bool NewKeyPool();
     size_t KeypoolCountExternalKeys();
@@ -1218,7 +1227,7 @@ public:
     }
 };
 
-OutputType ParseOutputType(const std::string& str, OutputType default_type);
+bool ParseOutputType(const std::string& str, OutputType& output_type);
 const std::string& FormatOutputType(OutputType type);
 
 /**
