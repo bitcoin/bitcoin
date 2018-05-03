@@ -312,7 +312,7 @@ void PrepareShutdown()
         fFeeEstimatesInitialized = false;
     }
 
-    // FlushStateToDisk generates a SetBestChain callback, which we should avoid missing
+    // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (pcoinsTip != nullptr) {
         FlushStateToDisk();
     }
