@@ -39,9 +39,10 @@ static int FileWriteStr(const std::string &str, FILE *fp)
     return fwrite(str.data(), 1, str.size(), fp);
 }
 
-bool BCLog::Logger::OpenDebugLog()
+bool BCLog::Logger::StartLogging()
 {
     std::lock_guard<std::mutex> scoped_lock(m_file_mutex);
+    if (!m_print_to_file) return true;
 
     assert(m_fileout == nullptr);
     assert(!m_file_path.empty());

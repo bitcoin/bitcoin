@@ -1249,10 +1249,10 @@ bool AppInitMain(InitInterfaces& interfaces)
             // and because this needs to happen before any other debug.log printing
             LogInstance().ShrinkDebugFile();
         }
-        if (!LogInstance().OpenDebugLog()) {
+    }
+    if (!LogInstance().StartLogging()) {
             return InitError(strprintf("Could not open debug log file %s",
                 LogInstance().m_file_path.string()));
-        }
     }
 
     if (!LogInstance().m_log_timestamps)
