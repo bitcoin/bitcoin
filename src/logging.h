@@ -63,6 +63,7 @@ namespace BCLog {
         FILE* m_fileout = nullptr;
         std::mutex m_file_mutex;
         std::list<std::string> m_msgs_before_open;
+        bool m_buffering = true; //!< Buffer messages before logging can be started
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
@@ -91,9 +92,11 @@ namespace BCLog {
         void LogPrintStr(const std::string &str);
 
         /** Returns whether logs will be written to any output */
-        bool Enabled() const { return m_print_to_console || m_print_to_file; }
+        bool Enabled() const { return m_buffering || m_print_to_console || m_print_to_file; }
 
+        /** Start logging (and flush all buffered messages) */
         bool StartLogging();
+
         void ShrinkDebugFile();
 
         uint32_t GetCategoryMask() const { return m_categories.load(); }
