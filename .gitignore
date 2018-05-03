@@ -79,7 +79,6 @@ src/qt/bitcoin-qt.includes
 
 # Compilation and Qt preprocessor part
 *.qm
-Makefile
 bitcoin-qt
 Bitcoin-Qt.app
 background.tiff*
@@ -121,5 +120,6 @@ Aithercoin-qt.pro.user
 src/aithercoind
 src/main.h.autosave
 .qmake.stash
-Makefile.*
+Makefile.Debug
+Makefile.Release
 object_script.*

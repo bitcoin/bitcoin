@@ -11,24 +11,25 @@ Download `mingw32-gcc-4.6.2-release-c,c++,objc,objc++,fortran-sjlj.7z` extract t
 ### QT SDK
 http://qt-project.org/downloads
 ### OpenSSL
+https://www.openssl.org/source/openssl-1.0.1b.tar.gz   
+and put it in `C:/deps`    
+then run `MSYS`
 ```
-wget https://www.openssl.org/source/openssl-1.0.1j.tar.gz
-tar xvfz openssl-1.0.1j.tar.gz
-cd openssl-1.0.1j
-./Configure no-zlib no-dso no-krb5 no-camellia no-capieng no-cast no-dtls1 no-gost no-gmp no-heartbeats no-idea no-jpake no-md2 no-mdc2 no-rc5 no-rdrand no-rfc3779 no-rsax no-sctp no-seed no-whirlpool mingw
-make depend
+tar xvfz openssl-1.0.1b.tar.gz
+cd openssl-1.0.1b
+./config
 make
-cd ..
 ```
 ### Berkeley DB
-```
-wget http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz
+http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz   
+and put it in `C:/deps`   
+then run `MSYS`
+````
 tar xvfz db-4.8.30.NC.tar.gz
 cd db-4.8.30.NC/build_unix 
-../dist/configure --enable-mingw --enable-cxx --disable-shared --disable-replication --disable-pthread_api
+sh ../dist/configure --enable-mingw --enable-cxx --disable-shared --disable-replication
 make
-cd ..
-```
+````
 ### Boost
 ```
 wget -O boost_1_55_0.7z http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.7z/download
@@ -36,7 +37,7 @@ wget -O boost_1_55_0.7z http://sourceforge.net/projects/boost/files/boost/1.55.0
 ```
 (From windows CMD shell)
 ```
-cd C:\deps\boost_1_55_0\tools\build\src\engine
+cd C:\deps\boost_1_55_0
 PATH=C:\MinGW\mingw32\bin;%PATH%
 bootstrap.bat mingw
 b2 --build-type=complete --with-chrono --with-filesystem --with-program_options --with-system --with-thread toolset=gcc variant=release link=static threading=multi runtime-link=static stage
@@ -69,7 +70,7 @@ cd ..
 cd $HOME
 git clone https://github.com/aithercoin/aithercoin.git
 cd aithercoin
-qmake aithercoin-qt-windows.pro -r -spec win32-g++ "CONFIG+=release" USE_UPNP=0 USE_QRCODE=1 USE_IPV6=1
+qmake Aithercoin-qt.pro -r -spec win32-g++ "CONFIG+=release" USE_UPNP=- USE_QRCODE=1 USE_IPV6=1
 make clean
 cd src/leveldb
 make TARGET_OS=OS_WINDOWS_CROSSCOMPILE clean
