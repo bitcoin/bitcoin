@@ -11,6 +11,7 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <fs.h>
+#include <init.h>
 #include <key.h>
 #include <key_io.h>
 #include <keystore.h>
@@ -1898,7 +1899,7 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
             dProgressTip = GuessVerificationProgress(chainParams.TxData(), tip);
         }
         double gvp = dProgressStart;
-        while (pindex && !fAbortRescan)
+        while (pindex && !fAbortRescan && !ShutdownRequested())
         {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0) {
                 ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((gvp - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
@@ -1951,6 +1952,8 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
         }
         if (pindex && fAbortRescan) {
             LogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, gvp);
+        } else if (pindex && ShutdownRequested()) {
+            LogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", pindex->nHeight, gvp);
         }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
     }
@@ -2865,7 +2868,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend)
 {
     // If -changetype is specified, always use that change type.
-    if (change_type != OutputType::NONE) {
+    if (change_type != OutputType::CHANGE_AUTO) {
         return change_type;
     }
 
@@ -4260,16 +4263,12 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         }
     }
 
-    walletInstance->m_default_address_type = ParseOutputType(gArgs.GetArg("-addresstype", ""), DEFAULT_ADDRESS_TYPE);
-    if (walletInstance->m_default_address_type == OutputType::NONE) {
+    if (!gArgs.GetArg("-addresstype", "").empty() && !ParseOutputType(gArgs.GetArg("-addresstype", ""), walletInstance->m_default_address_type)) {
         InitError(strprintf("Unknown address type '%s'", gArgs.GetArg("-addresstype", "")));
         return nullptr;
     }
 
-    // If changetype is set in config file or parameter, check that it's valid.
-    // Default to OutputType::NONE if not set.
-    walletInstance->m_default_change_type = ParseOutputType(gArgs.GetArg("-changetype", ""), OutputType::NONE);
-    if (walletInstance->m_default_change_type == OutputType::NONE && !gArgs.GetArg("-changetype", "").empty()) {
+    if (!gArgs.GetArg("-changetype", "").empty() && !ParseOutputType(gArgs.GetArg("-changetype", ""), walletInstance->m_default_change_type)) {
         InitError(strprintf("Unknown change type '%s'", gArgs.GetArg("-changetype", "")));
         return nullptr;
     }
@@ -4555,19 +4554,19 @@ static const std::string OUTPUT_TYPE_STRING_LEGACY = "legacy";
 static const std::string OUTPUT_TYPE_STRING_P2SH_SEGWIT = "p2sh-segwit";
 static const std::string OUTPUT_TYPE_STRING_BECH32 = "bech32";
 
-OutputType ParseOutputType(const std::string& type, OutputType default_type)
+bool ParseOutputType(const std::string& type, OutputType& output_type)
 {
-    if (type.empty()) {
-        return default_type;
-    } else if (type == OUTPUT_TYPE_STRING_LEGACY) {
-        return OutputType::LEGACY;
+    if (type == OUTPUT_TYPE_STRING_LEGACY) {
+        output_type = OutputType::LEGACY;
+        return true;
     } else if (type == OUTPUT_TYPE_STRING_P2SH_SEGWIT) {
-        return OutputType::P2SH_SEGWIT;
+        output_type = OutputType::P2SH_SEGWIT;
+        return true;
     } else if (type == OUTPUT_TYPE_STRING_BECH32) {
-        return OutputType::BECH32;
-    } else {
-        return OutputType::NONE;
+        output_type = OutputType::BECH32;
+        return true;
     }
+    return false;
 }
 
 const std::string& FormatOutputType(OutputType type)
