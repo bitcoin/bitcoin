@@ -80,7 +80,7 @@ class FullBlockTest(ComparisonTestFramework):
         block.vtx.extend(tx_list)
 
     # this is a little handier to use than the version in blocktools.py
-    def create_tx(self, spend_tx, n, value, script=CScript([OP_TRUE])):
+    def create_tx(self, spend_tx, n, value, script=CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])):
         tx = create_transaction(spend_tx, n, b"", value, script)
         return tx
 
@@ -1286,7 +1286,6 @@ class FullBlockTest(ComparisonTestFramework):
             yield accepted()
 
             chain1_tip += 2
-
 
 
 if __name__ == '__main__':
