@@ -1,3 +1,8 @@
+*.sublime-project
+*.sublime-workspace
+todo.txt
+reset-files.bash
+
 *.tar.gz
 
 *.exe
@@ -7,6 +12,7 @@ src/syscoin-cli
 src/syscoin-tx
 src/test/test_syscoin
 src/qt/test/test_syscoin-qt
+src/bench/bench_syscoin
 
 # autoreconf
 Makefile.in
@@ -42,6 +48,7 @@ src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
+libconftest.dylib*
 
 .deps
 .dirstamp
@@ -54,6 +61,7 @@ src/qt/test/moc*.cpp
 *.pyc
 *.o
 *.o-*
+*.patch
 .syscoin
 *.a
 *.pb.cc
@@ -106,11 +114,21 @@ qa/pull-tester/cache/*
 qa/pull-tester/test.*/*
 qa/tmp
 cache/
-share/BitcoindComparisonTool.jar
+share/SyscoindComparisonTool.jar
 
 !src/leveldb*/Makefile
 
+.cproject
+.project
+.autotools
 /doc/doxygen/
 
 libsyscoinconsensus.pc
-contrib/devtools/split-debug.sh
+src/qt/syscoin-qt.bash
+qa/pull-tester/tests-config.sh
+
+#development symlinks
+syscoin-cli
+syscoind
+syscoin-qt
+make

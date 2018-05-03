@@ -1,9 +1,14 @@
+// Copyright (c) 2016 The Syscoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "test/test_syscoin_services.h"
 #include "data/utxo.json.h"
 #include "utiltime.h"
 #include "rpc/server.h"
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
+using namespace std;
 int currentTx = 0;
 extern UniValue read_json(const std::string& jsondata);
 BOOST_FIXTURE_TEST_SUITE (syscoin_snapshot_tests, SyscoinMainNetSetup)
@@ -12,18 +17,27 @@ struct PaymentAmount
 	std::string address;
 	std::string amount;
 };
-void SendSnapShotPayment(const std::string &strSend)
+void SendSnapShotPayment(const std::string &strSend, const std::string &strSendAddress)
 {
 	currentTx++;
 	std::string strSendMany = "sendmany \"\" {" + strSend + "}";
-	UniValue r;
-	BOOST_CHECK_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("mainnet1", strSendMany, false), runtime_error);
+
+	string sendString = "sendtoaddress " + strSendAddress + " " + "10";
+	BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
+
+	sendString = "sendtoaddress " + strSendAddress + " " + "10";
+	BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
 	// generate snapshot payments and let it mature
 	printf("Generating 101 blocks to start the mainnet\n");
 	GenerateMainNetBlocks(101, "mainnet1");
+	UniValue r;
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet2", "getnewaddress", false, false));
+	string newaddress = r.get_str();
+	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 
 	int numberOfTxPerBlock = 250;
 	int totalTx = 0;
@@ -39,7 +53,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
 		{
 			printf("strSendMany #%d, total %f, num txs %d\n", currentTx, nTotal, totalTx);
-			SendSnapShotPayment(sendManyString);
+			SendSnapShotPayment(sendManyString, newaddress);
 			GenerateMainNetBlocks(1, "mainnet1");
 			sendManyString = "";
 			nTotal = 0;
@@ -48,10 +62,16 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 	if(sendManyString != "") 
 	{
 		printf("FINAL strSendMany #%d, total %f, num txs %d\n", currentTx, nTotal, totalTx);
-		SendSnapShotPayment(sendManyString);
+		SendSnapShotPayment(sendManyString, newaddress);
 		GenerateMainNetBlocks(1, "mainnet1");
 	}
-	
+
+	string sendString = "sendtoaddress " + newaddress + " 325000";
+	BOOST_CHECK_THROW(CallRPC("mainnet1", sendString, false), runtime_error);
+	GenerateMainNetBlocks(1, "mainnet1");
+	GenerateMainNetBlocks(1, "mainnet2");
+	GenerateMainNetBlocks(1, "mainnet2");
+	printf("done!\n");
 }
 void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
 {
@@ -70,7 +90,7 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
         payment.address  = test[0].get_str();
 		CAmount amountInSys1 = test[1].get_int64();
 		// don't transfer less than 1 coin utxo's
-		if(amountInSys1 <= COIN)
+		if(amountInSys1 <= 0.1*COIN)
 		{
 			rejectTx++;
 			continue;

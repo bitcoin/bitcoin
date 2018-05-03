@@ -6,18 +6,18 @@
 
 #include "clientversion.h"
 #include "primitives/transaction.h"
-#include "random.h"
 #include "sync.h"
 #include "utilstrencodings.h"
 #include "utilmoneystr.h"
 #include "test/test_syscoin.h"
+#include "test/test_random.h"
 
 #include <stdint.h>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
+extern std::map<std::string, std::string> mapArgs;
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
@@ -115,13 +115,13 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
     BOOST_CHECK(mapArgs.size() == 3 && mapMultiArgs.size() == 3);
-    BOOST_CHECK(mapArgs.count("-a") && mapArgs.count("-b") && mapArgs.count("-ccc")
-                && !mapArgs.count("f") && !mapArgs.count("-d"));
+    BOOST_CHECK(IsArgSet("-a") && IsArgSet("-b") && IsArgSet("-ccc")
+                && !IsArgSet("f") && !IsArgSet("-d"));
     BOOST_CHECK(mapMultiArgs.count("-a") && mapMultiArgs.count("-b") && mapMultiArgs.count("-ccc")
                 && !mapMultiArgs.count("f") && !mapMultiArgs.count("-d"));
 
     BOOST_CHECK(mapArgs["-a"] == "" && mapArgs["-ccc"] == "multiple");
-    BOOST_CHECK(mapMultiArgs["-ccc"].size() == 2);
+    BOOST_CHECK(mapMultiArgs.at("-ccc").size() == 2);
 }
 
 BOOST_AUTO_TEST_CASE(util_GetArg)
@@ -243,11 +243,7 @@ BOOST_AUTO_TEST_CASE(util_IsHex)
 
 BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
 {
-    int i;
-    int count=0;
-
     seed_insecure_rand(true);
-
     for (int mod=2;mod<11;mod++)
     {
         int mask = 1;
@@ -256,10 +252,9 @@ BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
         //mask is 2^ceil(log2(mod))-1
         while(mask<mod-1)mask=(mask<<1)+1;
 
-        count = 0;
+        int count = 0;
         //How often does it get a zero from the uniform range [0,mod)?
-        for (i=0;i<10000;i++)
-        {
+        for (int i = 0; i < 10000; i++) {
             uint32_t rval;
             do{
                 rval=insecure_rand()&mask;
@@ -569,6 +564,21 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("1.1e", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("1.1e-", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("1.", 8, &amount));
+}
+
+BOOST_AUTO_TEST_CASE(version_info_helper)
+{
+    BOOST_CHECK(StringVersionToInt("1.1.1") == 0x010101);
+    BOOST_CHECK(IntVersionToString(0x010101) == "1.1.1");
+
+    BOOST_CHECK_THROW(StringVersionToInt("1.1.hgdghfgf"), std::bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("1.1"), std::bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("1.1.1f"), std::bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("1.1.1000"), std::bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("10"), std::bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("1.1.1.1"), std::bad_cast);
+    BOOST_CHECK_THROW(IntVersionToString(0x01010101), std::bad_cast);
+    BOOST_CHECK_THROW(IntVersionToString(0), std::bad_cast);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

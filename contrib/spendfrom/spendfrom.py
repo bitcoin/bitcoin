@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-# Copyright (c) 2013 The Syscoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Use the raw transactions API to spend syscoins received on particular addresses,
 # and send any change back to that same address.
@@ -36,12 +33,12 @@ def check_json_precision():
         raise RuntimeError("JSON encode/decode loses precision")
 
 def determine_db_dir():
-    """Return the default location of the syscoin data directory"""
+    """Return the default location of the Syscoin Core data directory"""
     if platform.system() == "Darwin":
-        return os.path.expanduser("~/Library/Application Support/Syscoin/")
+        return os.path.expanduser("~/Library/Application Support/SyscoinCore/")
     elif platform.system() == "Windows":
-        return os.path.join(os.environ['APPDATA'], "Syscoin")
-    return os.path.expanduser("~/.syscoin")
+        return os.path.join(os.environ['APPDATA'], "SyscoinCore")
+    return os.path.expanduser("~/.syscoincore")
 
 def read_syscoin_config(dbdir):
     """Read the syscoin.conf file from dbdir, returns dictionary of settings"""
@@ -66,7 +63,7 @@ def read_syscoin_config(dbdir):
     return dict(config_parser.items("all"))
 
 def connect_JSON(config):
-    """Connect to a syscoin JSON-RPC server"""
+    """Connect to a Syscoin Core JSON-RPC server"""
     testnet = config.get('testnet', '0')
     testnet = (int(testnet) > 0)  # 0/1 in config file, convert to True/False
     if not 'rpcport' in config:
@@ -117,7 +114,7 @@ def list_available(syscoind):
         # or pay-to-script-hash outputs right now; anything exotic is ignored.
         if pk["type"] != "pubkeyhash" and pk["type"] != "scripthash":
             continue
-        
+
         address = pk["addresses"][0]
         if address in address_summary:
             address_summary[address]["total"] += vout["value"]
@@ -163,7 +160,7 @@ def create_tx(syscoind, fromaddresses, toaddress, amount, fee):
     # Python's json/jsonrpc modules have inconsistent support for Decimal numbers.
     # Instead of wrestling with getting json.dumps() (used by jsonrpc) to encode
     # Decimals, I'm casting amounts to float before sending them to syscoind.
-    #  
+    #
     outputs = { toaddress : float(amount) }
     (inputs, change_amount) = select_coins(needed, potential_inputs)
     if change_amount > BASE_FEE:  # don't bother with zero or tiny change

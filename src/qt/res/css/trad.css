@@ -1,0 +1,22 @@
+/* MODAL OVERLAY */
+
+QWidget#bgWidget { /* The 'frame' overlaying the overview-page */
+    background: rgba(0,0,0,220);
+}
+
+QWidget#contentWidget { /* The actual content with the text/buttons/etc... */
+    background: rgba(255,255,255,240);
+    border-radius: 6px;
+}
+
+/* SEND DIALOG */
+
+QDialog#SendCoinsDialog .QCheckBox#checkUseInstantSend { /* InstantSend Checkbox */
+margin-left:10px;
+margin-right:20px;
+}
+
+QDialog#SendCoinsDialog QLabel#labelBalance {
+margin-left:0px;
+padding-left:0px;
+}

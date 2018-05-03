@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Syscoin Core developers
+#!/usr/bin/env python2
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,15 +27,10 @@ def get_sub_array_from_array(object_array, to_match):
 
 class ReceivedByTest(SyscoinTestFramework):
 
-    def __init__(self):
-        super().__init__()
-        self.num_nodes = 4
-        self.setup_clean_chain = False
-
     def setup_nodes(self):
         #This test requires mocktime
         enable_mocktime()
-        return start_nodes(self.num_nodes, self.options.tmpdir)
+        return start_nodes(4, self.options.tmpdir)
 
     def run_test(self):
         '''
@@ -66,7 +61,7 @@ class ReceivedByTest(SyscoinTestFramework):
 
         #Empty Tx
         addr = self.nodes[1].getnewaddress()
-        assert_array_result(self.nodes[1].listreceivedbyaddress(0,True),
+        assert_array_result(self.nodes[1].listreceivedbyaddress(0, False, True),
                            {"address":addr},
                            {"address":addr, "account":"", "amount":0, "confirmations":0, "txids":[]})
 
@@ -133,7 +128,7 @@ class ReceivedByTest(SyscoinTestFramework):
 
         #Create a new account named "mynewaccount" that has a 0 balance
         self.nodes[1].getaccountaddress("mynewaccount")
-        received_by_account_json = get_sub_array_from_array(self.nodes[1].listreceivedbyaccount(0,True),{"account":"mynewaccount"})
+        received_by_account_json = get_sub_array_from_array(self.nodes[1].listreceivedbyaccount(0, False, True),{"account":"mynewaccount"})
         if len(received_by_account_json) == 0:
             raise AssertionError("No accounts found in node")
 

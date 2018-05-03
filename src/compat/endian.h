@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Syscoin developers
+// Copyright (c) 2014-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -108,10 +108,10 @@ inline uint64_t le64toh(uint64_t little_endian_64bits)
 #else // WORDS_BIGENDIAN
 
 #if HAVE_DECL_HTOBE16 == 0
-inline uint16_t htobe16(uint16_t host_16bits)
+/*inline uint16_t htobe16(uint16_t host_16bits)
 {
     return bswap_16(host_16bits);
-}
+} */
 #endif // HAVE_DECL_HTOBE16
 
 #if HAVE_DECL_HTOLE16 == 0

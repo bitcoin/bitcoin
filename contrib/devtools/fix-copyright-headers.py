@@ -16,7 +16,7 @@ import time
 import re
 
 year = time.gmtime()[0]
-CMD_GIT_DATE = 'git log --format=%%ad --date=short -1 %s | cut -d"-" -f 1'
+CMD_GIT_DATE = 'git log --format=@%%at -1 %s | date +"%%Y" -u -f -'
 CMD_REGEX= "perl -pi -e 's/(20\d\d)(?:-20\d\d)? The Syscoin/$1-%s The Syscoin/' %s"
 REGEX_CURRENT= re.compile("%s The Syscoin" % year)
 CMD_LIST_FILES= "find %s | grep %s"

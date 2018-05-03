@@ -13,8 +13,6 @@ class QValidatedLineEdit;
 
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
-// SYSCOIN
-class QNetworkReply;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -59,10 +57,6 @@ private Q_SLOTS:
     void updateProxyValidationState();
     /* query the networks, for which the default proxy is used */
     void updateDefaultProxyNets();
-	// SYSCOIN
-	void on_testZECButton_clicked();
-	void on_testBTCButton_clicked();
-	void slotConfirmedFinished(QNetworkReply *);
 
 Q_SIGNALS:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);

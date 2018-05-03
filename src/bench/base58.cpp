@@ -1,10 +1,10 @@
-// Copyright (c) 2016 the Syscoin Core developers
+// Copyright (c) 2016 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bench.h"
 
-#include "main.h"
+#include "validation.h"
 #include "base58.h"
 
 #include <vector>

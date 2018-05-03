@@ -1,7 +1,7 @@
 // This file contains source that originates from:
 // http://code.google.com/p/leveldbwin/source/browse/trunk/win32_impl_src/env_win32.h
 // http://code.google.com/p/leveldbwin/source/browse/trunk/win32_impl_src/port_win32.cc
-// Those files dont' have any explict license headers but the 
+// Those files don't have any explicit license headers but the 
 // project (http://code.google.com/p/leveldbwin/) lists the 'New BSD License'
 // as the license.
 #if defined(LEVELDB_PLATFORM_WINDOWS)
@@ -78,6 +78,7 @@ public:
     virtual Status Read(size_t n, Slice* result, char* scratch);
     virtual Status Skip(uint64_t n);
     BOOL isEnable();
+    virtual std::string GetName() const { return _filename; }
 private:
     BOOL _Init();
     void _CleanUp();
@@ -94,6 +95,7 @@ public:
     virtual ~Win32RandomAccessFile();
     virtual Status Read(uint64_t offset, size_t n, Slice* result,char* scratch) const;
     BOOL isEnable();
+    virtual std::string GetName() const { return _filename; }
 private:
     BOOL _Init(LPCWSTR path);
     void _CleanUp();
@@ -106,7 +108,7 @@ private:
 class Win32WritableFile : public WritableFile
 {
 public:
-    Win32WritableFile(const std::string& fname);
+    Win32WritableFile(const std::string& fname, bool append);
     ~Win32WritableFile();
 
     virtual Status Append(const Slice& data);
@@ -114,6 +116,7 @@ public:
     virtual Status Flush();
     virtual Status Sync();
     BOOL isEnable();
+    virtual std::string GetName() const { return filename_; }
 private:
     std::string filename_;
     ::HANDLE _hFile;
@@ -157,6 +160,8 @@ public:
     virtual Status NewRandomAccessFile(const std::string& fname,
         RandomAccessFile** result);
     virtual Status NewWritableFile(const std::string& fname,
+        WritableFile** result);
+    virtual Status NewAppendableFile(const std::string& fname,
         WritableFile** result);
 
     virtual bool FileExists(const std::string& fname);
@@ -353,11 +358,13 @@ BOOL Win32SequentialFile::_Init()
 	ToWidePath(_filename, path);
 	_hFile = CreateFileW(path.c_str(),
                          GENERIC_READ,
-                         FILE_SHARE_READ,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                          NULL,
                          OPEN_EXISTING,
-                         FILE_ATTRIBUTE_NORMAL,
+                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
                          NULL);
+    if (_hFile == INVALID_HANDLE_VALUE)
+        _hFile = NULL;
     return _hFile ? TRUE : FALSE;
 }
 
@@ -401,7 +408,7 @@ BOOL Win32RandomAccessFile::_Init( LPCWSTR path )
 {
     BOOL bRet = FALSE;
     if(!_hFile)
-        _hFile = ::CreateFileW(path,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,
+        _hFile = ::CreateFileW(path,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS,NULL);
     if(!_hFile || _hFile == INVALID_HANDLE_VALUE )
         _hFile = NULL;
@@ -423,17 +430,23 @@ void Win32RandomAccessFile::_CleanUp()
     }
 }
 
-Win32WritableFile::Win32WritableFile(const std::string& fname)
+Win32WritableFile::Win32WritableFile(const std::string& fname, bool append)
     : filename_(fname)
 {
     std::wstring path;
     ToWidePath(fname, path);
-    DWORD Flag = PathFileExistsW(path.c_str()) ? OPEN_EXISTING : CREATE_ALWAYS;
+    // NewAppendableFile: append to an existing file, or create a new one
+    //     if none exists - this is OPEN_ALWAYS behavior, with
+    //     FILE_APPEND_DATA to avoid having to manually position the file
+    //     pointer at the end of the file.
+    // NewWritableFile: create a new file, delete if it exists - this is
+    //     CREATE_ALWAYS behavior. This file is used for writing only so
+    //     use GENERIC_WRITE.
     _hFile = CreateFileW(path.c_str(),
-                         GENERIC_READ | GENERIC_WRITE,
+                         append ? FILE_APPEND_DATA : GENERIC_WRITE,
                          FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE,
                          NULL,
-                         Flag,
+                         append ? OPEN_ALWAYS : CREATE_ALWAYS,
                          FILE_ATTRIBUTE_NORMAL,
                          NULL);
     // CreateFileW returns INVALID_HANDLE_VALUE in case of error, always check isEnable() before use
@@ -661,7 +674,7 @@ Status Win32Env::GetFileSize( const std::string& fname, uint64_t* file_size )
 	ToWidePath(ModifyPath(path), wpath);
 
     HANDLE file = ::CreateFileW(wpath.c_str(),
-        GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+        GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
     LARGE_INTEGER li;
     if(::GetFileSizeEx(file,&li)){
         *file_size = (uint64_t)li.QuadPart;
@@ -823,7 +836,9 @@ Status Win32Env::NewLogger( const std::string& fname, Logger** result )
 {
     Status sRet;
     std::string path = fname;
-    Win32WritableFile* pMapFile = new Win32WritableFile(ModifyPath(path));
+    // Logs are opened with write semantics, not with append semantics
+    // (see PosixEnv::NewLogger)
+    Win32WritableFile* pMapFile = new Win32WritableFile(ModifyPath(path), false);
     if(!pMapFile->isEnable()){
         delete pMapFile;
         *result = NULL;
@@ -837,7 +852,20 @@ Status Win32Env::NewWritableFile( const std::string& fname, WritableFile** resul
 {
     Status sRet;
     std::string path = fname;
-    Win32WritableFile* pFile = new Win32WritableFile(ModifyPath(path));
+    Win32WritableFile* pFile = new Win32WritableFile(ModifyPath(path), false);
+    if(!pFile->isEnable()){
+        *result = NULL;
+        sRet = Status::IOError(fname,Win32::GetLastErrSz());
+    }else
+        *result = pFile;
+    return sRet;
+}
+
+Status Win32Env::NewAppendableFile( const std::string& fname, WritableFile** result )
+{
+    Status sRet;
+    std::string path = fname;
+    Win32WritableFile* pFile = new Win32WritableFile(ModifyPath(path), true);
     if(!pFile->isEnable()){
         *result = NULL;
         sRet = Status::IOError(fname,Win32::GetLastErrSz());

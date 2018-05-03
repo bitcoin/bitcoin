@@ -3,7 +3,7 @@
 Wrapper script for clang-format
 
 Copyright (c) 2015 MarcoFalke
-Copyright (c) 2015 The Syscoin Core developers
+Copyright (c) 2015 The Bitcoin Core developers
 Distributed under the MIT software license, see the accompanying
 file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -29,7 +29,7 @@ def check_clang_format_version(clang_format_exe):
 
 def check_command_line_args(argv):
     required_args = ['{clang-format-exe}', '{files}']
-    example_args = ['clang-format-3.x', 'src/main.cpp', 'src/wallet/*']
+    example_args = ['clang-format-3.x', 'src/validation.cpp', 'src/wallet/*']
 
     if(len(argv) < len(required_args) + 1):
         for word in (['Usage:', argv[0]] + required_args):

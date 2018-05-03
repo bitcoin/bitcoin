@@ -1,13 +1,13 @@
 ### SpendFrom ###
 
 Use the raw transactions API to send coins received on a particular
-address (or addresses). 
+address (or addresses).
 
 ### Usage: ###
 Depends on [jsonrpc](http://json-rpc.org/).
 
 	spendfrom.py --from=FROMADDRESS1[,FROMADDRESS2] --to=TOADDRESS --amount=amount \
-	             --fee=fee --datadir=/path/to/.syscoin --testnet --dry_run
+	             --fee=fee --datadir=/path/to/.syscoincore --testnet --dry_run
 
 With no arguments, outputs a list of amounts associated with addresses.
 

@@ -77,9 +77,6 @@ public:
     bool CorruptionPossible() const {
         return corruptionPossible;
     }
-    void SetCorruptionPossible() {
-        corruptionPossible = true;
-    }
     unsigned int GetRejectCode() const { return chRejectCode; }
     std::string GetRejectReason() const { return strRejectReason; }
     std::string GetDebugMessage() const { return strDebugMessage; }

@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Syscoin Core developers
+// Copyright (c) 2013-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,25 +9,51 @@
 #include "chainparams.h"
 #include "clientversion.h"
 #include "data/alertTests.raw.h"
-#include "main.h" // For PartitionCheck
 #include "serialize.h"
 #include "streams.h"
-#include "util.h"
 #include "utilstrencodings.h"
 
+#include "test/testutil.h"
 #include "test/test_syscoin.h"
 
 #include <fstream>
 
 #include <boost/filesystem/operations.hpp>
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
-#if 0
 //
-// alertTests contains 7 alerts, generated with this code:
-// (SignAndSave code not shown, alert signing key is secret)
+// Sign a CAlert and serialize it
 //
+bool SignAndSave(CAlert &alert)
+{
+    // Sign
+    if(!alert.Sign())
+    {
+        printf("SignAndSave() : could not sign alert:\n%s", alert.ToString().c_str());
+        return false;
+    }
+
+    std::string strFilePath = "src/test/data/alertTests.raw";
+    // open output file and associate it with CAutoFile
+    FILE *file = fopen(strFilePath.c_str(), "ab+");
+    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
+    if (fileout.IsNull())
+        return error("%s: Failed to open file %s", __func__, strFilePath);
+
+    try {
+        fileout << alert;
+    }
+    catch (std::exception &e) {
+        return error("%s: Serialize or I/O error - %s", __func__, e.what());
+    }
+    fileout.fclose();
+    return true;
+}
+
+//
+// alertTests contains 8 alerts, generated with this code
+//
+void GenerateAlertTests()
 {
     CAlert alert;
     alert.nRelayUntil   = 60;
@@ -40,51 +66,50 @@
     alert.strComment    = "Alert comment";
     alert.strStatusBar  = "Alert 1";
 
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     alert.setSubVer.insert(std::string("/Satoshi:0.1.0/"));
     alert.strStatusBar  = "Alert 1 for Satoshi 0.1.0";
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     alert.setSubVer.insert(std::string("/Satoshi:0.2.0/"));
     alert.strStatusBar  = "Alert 1 for Satoshi 0.1.0, 0.2.0";
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     alert.setSubVer.clear();
     ++alert.nID;
     alert.nCancel = 1;
     alert.nPriority = 100;
     alert.strStatusBar  = "Alert 2, cancels 1";
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     alert.nExpiration += 60;
     ++alert.nID;
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     ++alert.nID;
     alert.nMinVer = 11;
     alert.nMaxVer = 22;
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     ++alert.nID;
     alert.strStatusBar  = "Alert 2 for Satoshi 0.1.0";
     alert.setSubVer.insert(std::string("/Satoshi:0.1.0/"));
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     ++alert.nID;
     alert.nMinVer = 0;
     alert.nMaxVer = 999999;
     alert.strStatusBar  = "Evil Alert'; /bin/ls; echo '";
     alert.setSubVer.clear();
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 }
-#endif
 
 struct ReadAlerts : public TestingSetup
 {
     ReadAlerts()
     {
-        std::vector<unsigned char> vch(alert_tests::alertTests, alert_tests::alertTests + sizeof(alert_tests::alertTests));
+        std::vector<unsigned char> vch(raw_tests::alertTests, raw_tests::alertTests + sizeof(raw_tests::alertTests));
         CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
         try {
             while (!stream.eof())
@@ -115,13 +140,28 @@ struct ReadAlerts : public TestingSetup
 
 BOOST_FIXTURE_TEST_SUITE(Alert_tests, ReadAlerts)
 
+// Steps to generate alert tests:
+// - update alerts in GenerateAlertTests() (optional)
+// - enable code below (#if 1)
+// - replace "fffffffffffffffffffffffffffffffffffffffffffffffffff" with the actual MAINNET privkey
+// - recompile and run "/path/to/test_syscoin -t Alert_test"
+//
+// NOTE: make sure to disable code and remove alert privkey when you're done!
+//
+#if 0
+BOOST_AUTO_TEST_CASE(GenerateAlerts)
+{
+    SoftSetArg("-alertkey", "fffffffffffffffffffffffffffffffffffffffffffffffffff");
+    GenerateAlertTests();
+}
+#endif
 
 BOOST_AUTO_TEST_CASE(AlertApplies)
 {
     SetMockTime(11);
     const std::vector<unsigned char>& alertKey = Params(CBaseChainParams::MAIN).AlertKey();
 
-    BOOST_FOREACH(const CAlert& alert, alerts)
+    for (const auto& alert : alerts)
     {
         BOOST_CHECK(alert.CheckSignature(alertKey));
     }
@@ -165,9 +205,9 @@ BOOST_AUTO_TEST_CASE(AlertNotify)
     boost::filesystem::path temp = GetTempPath() /
         boost::filesystem::unique_path("alertnotify-%%%%.txt");
 
-    mapArgs["-alertnotify"] = std::string("echo %s >> ") + temp.string();
+    ForceSetArg("-alertnotify", std::string("echo %s >> ") + temp.string());
 
-    BOOST_FOREACH(CAlert alert, alerts)
+    for (const auto& alert : alerts)
         alert.ProcessAlert(alertKey, false);
 
     std::vector<std::string> r = read_lines(temp);
@@ -188,67 +228,6 @@ BOOST_AUTO_TEST_CASE(AlertNotify)
     BOOST_CHECK_EQUAL(r[3], "'Evil Alert; /bin/ls; echo ' ");
 #endif
     boost::filesystem::remove(temp);
-
-    SetMockTime(0);
-}
-
-static bool falseFunc() { return false; }
-
-BOOST_AUTO_TEST_CASE(PartitionAlert)
-{
-    // Test PartitionCheck
-    CCriticalSection csDummy;
-    CBlockIndex indexDummy[800];
-    CChainParams& params = Params(CBaseChainParams::MAIN);
-    int64_t nPowTargetSpacing = params.GetConsensus().nPowTargetSpacing;
-
-    // Generate fake blockchain timestamps relative to
-    // an arbitrary time:
-    int64_t now = 1427379054;
-    SetMockTime(now);
-    for (int i = 0; i < 800; i++)
-    {
-        indexDummy[i].phashBlock = NULL;
-        if (i == 0) indexDummy[i].pprev = NULL;
-        else indexDummy[i].pprev = &indexDummy[i-1];
-        indexDummy[i].nHeight = i;
-        indexDummy[i].nTime = now - (800-i)*nPowTargetSpacing;
-        // Other members don't matter, the partition check code doesn't
-        // use them
-    }
-
-    strMiscWarning = "";
-
-    // Test 1: chain with blocks every nPowTargetSpacing seconds,
-    // as normal, no worries:
-    PartitionCheck(falseFunc, csDummy, &indexDummy[799], nPowTargetSpacing);
-    BOOST_CHECK_MESSAGE(strMiscWarning.empty(), strMiscWarning);
-
-    // Test 2: go 3.5 hours without a block, expect a warning:
-    now += 3*60*60+30*60;
-    SetMockTime(now);
-    PartitionCheck(falseFunc, csDummy, &indexDummy[799], nPowTargetSpacing);
-    BOOST_CHECK(!strMiscWarning.empty());
-    BOOST_TEST_MESSAGE(std::string("Got alert text: ")+strMiscWarning);
-    strMiscWarning = "";
-
-    // Test 3: test the "partition alerts only go off once per day"
-    // code:
-    now += 60*10;
-    SetMockTime(now);
-    PartitionCheck(falseFunc, csDummy, &indexDummy[799], nPowTargetSpacing);
-    BOOST_CHECK(strMiscWarning.empty());
-
-    // Test 4: get 2.5 times as many blocks as expected:
-    now += 60*60*24; // Pretend it is a day later
-    SetMockTime(now);
-    int64_t quickSpacing = nPowTargetSpacing*2/5;
-    for (int i = 0; i < 800; i++) // Tweak chain timestamps:
-        indexDummy[i].nTime = now - (800-i)*quickSpacing;
-    PartitionCheck(falseFunc, csDummy, &indexDummy[799], nPowTargetSpacing);
-    BOOST_CHECK(!strMiscWarning.empty());
-    BOOST_TEST_MESSAGE(std::string("Got alert text: ")+strMiscWarning);
-    strMiscWarning = "";
 
     SetMockTime(0);
 }

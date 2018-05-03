@@ -1,10 +1,12 @@
 // Copyright (c) 2011-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "walletmodel.h"
 
 #include "addresstablemodel.h"
+#include "consensus/validation.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "paymentserver.h"
@@ -13,11 +15,17 @@
 
 #include "base58.h"
 #include "keystore.h"
-#include "main.h"
+#include "validation.h"
+#include "net.h" // for g_connman
 #include "sync.h"
 #include "ui_interface.h"
+#include "util.h" // for GetBoolArg
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h" // for BackupWallet
+
+#include "instantx.h"
+#include "spork.h"
+#include "privatesend-client.h"
 
 #include <stdint.h>
 
@@ -26,32 +34,22 @@
 #include <QTimer>
 
 #include <boost/foreach.hpp>
-// SYSCOIN
-#include "guiutil.h"
-#include "aliastablemodel.h"
-#include "messagetablemodel.h"
-#include "escrowtablemodel.h"
-#include "certtablemodel.h"
-#include "offertablemodel.h"
-#include "offeraccepttablemodel.h"
-#include <QSettings>
-using namespace std;
-extern bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool DecodeAndParseMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
-extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx, bool fTryNoWitness = false);
+
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
-	// SYSCOIN
-	aliasTableModelMine(0), aliasTableModelAll(0), certTableModelMine(0), certTableModelAll(0), offerTableModelMine(0), offerTableModelAll(0), offerTableModelAccept(0), offerTableModelMyAccept(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
-    cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
+    cachedBalance(0),
+    cachedUnconfirmedBalance(0),
+    cachedImmatureBalance(0),
+    cachedAnonymizedBalance(0),
+    cachedWatchOnlyBalance(0),
+    cachedWatchUnconfBalance(0),
+    cachedWatchImmatureBalance(0),
     cachedEncryptionStatus(Unencrypted),
-    cachedNumBlocks(0)
+    cachedNumBlocks(0),
+    cachedTxLocks(0),
+    cachedPrivateSendRounds(0)
 {
     fHaveWatchOnly = wallet->HaveWatchOnly();
     fForceCheckBalanceChanged = false;
@@ -59,19 +57,7 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(platformStyle, wallet, this);
     recentRequestsTableModel = new RecentRequestsTableModel(wallet, this);
-	// SYSCOIN
-	aliasTableModelMine = new AliasTableModel(wallet, this, MyAlias);
-	aliasTableModelAll = new AliasTableModel(wallet, this, AllAlias);
-	escrowTableModelMine = new EscrowTableModel(wallet, this, MyEscrow);
-	escrowTableModelAll = new EscrowTableModel(wallet, this, AllEscrow);
-	inMessageTableModel = new MessageTableModel(wallet, this, InMessage);
-	outMessageTableModel = new MessageTableModel(wallet, this, OutMessage);
-	certTableModelMine = new CertTableModel(wallet, this, MyCert);
-	certTableModelAll = new CertTableModel(wallet, this, AllCert);
-	offerTableModelMine = new OfferTableModel(wallet, this, MyOffer);
-	offerTableModelAll = new OfferTableModel(wallet, this, AllOffer);
-	offerTableModelAccept = new OfferAcceptTableModel(wallet, this, Accept);
-	offerTableModelMyAccept = new OfferAcceptTableModel(wallet, this, MyAccept);
+
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
@@ -84,67 +70,29 @@ WalletModel::~WalletModel()
 {
     unsubscribeFromCoreSignals();
 }
-// SYSCOIN
-void appendListAliases(UniValue& defaultAliasArray, bool allAliases)
-{
-	QSettings settings;
-	QString defaultListAlias = settings.value("defaultListAlias", "").toString();
-	if(allAliases || defaultListAlias == QObject::tr("All"))
-	{
-		string strMethod = string("aliaslist");
-		UniValue params(UniValue::VARR); 
-		UniValue result ;
-		string name_str;
-		
-		try {
 
-			result = tableRPC.execute(strMethod, params);
-
-			if (result.type() == UniValue::VARR)
-			{
-				name_str = "";
-				const UniValue &arr = result.get_array();
-				for (unsigned int idx = 0; idx < arr.size(); idx++) {
-					const UniValue& input = arr[idx];
-					if (input.type() != UniValue::VOBJ)
-						continue;
-					const UniValue& o = input.get_obj();
-					name_str = "";
-					const UniValue& name_value = find_value(o, "name");
-					if (name_value.type() == UniValue::VSTR)
-					{
-						name_str = name_value.get_str();
-						defaultAliasArray.push_back(name_str);
-					}
-				}
-			}
-		}
-		catch (UniValue& objError)
-		{
-		}
-		catch(std::exception& e)
-		{
-		}
-	}
-	else
-	{
-		defaultAliasArray.push_back(defaultListAlias.toStdString());
-	}
-}
 CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
 {
     if (coinControl)
     {
         CAmount nBalance = 0;
         std::vector<COutput> vCoins;
-        wallet->AvailableCoins(vCoins, true, coinControl);
+		// SYSCOIN include sys alias balances
+        wallet->AvailableCoins(vCoins, true, coinControl, false, ALL_COINS, false, true);
         BOOST_FOREACH(const COutput& out, vCoins)
-			if(out.fSpendable)
-				nBalance += out.tx->vout[out.i].nValue;
+            if(out.fSpendable)
+                nBalance += out.tx->tx->vout[out.i].nValue;
 
         return nBalance;
     }
+
     return wallet->GetBalance();
+}
+
+
+CAmount WalletModel::getAnonymizedBalance() const
+{
+    return wallet->GetAnonymizedBalance();
 }
 
 CAmount WalletModel::getUnconfirmedBalance() const
@@ -197,12 +145,13 @@ void WalletModel::pollBalanceChanged()
     if(!lockWallet)
         return;
 
-    if(fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks)
+    if(fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks || privateSendClient.nPrivateSendRounds != cachedPrivateSendRounds || cachedTxLocks != nCompleteTXLocks)
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         cachedNumBlocks = chainActive.Height();
+        cachedPrivateSendRounds = privateSendClient.nPrivateSendRounds;
 
         checkBalanceChanged();
         if(transactionTableModel)
@@ -215,6 +164,7 @@ void WalletModel::checkBalanceChanged()
     CAmount newBalance = getBalance();
     CAmount newUnconfirmedBalance = getUnconfirmedBalance();
     CAmount newImmatureBalance = getImmatureBalance();
+    CAmount newAnonymizedBalance = getAnonymizedBalance();
     CAmount newWatchOnlyBalance = 0;
     CAmount newWatchUnconfBalance = 0;
     CAmount newWatchImmatureBalance = 0;
@@ -226,15 +176,18 @@ void WalletModel::checkBalanceChanged()
     }
 
     if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance ||
+        cachedAnonymizedBalance != newAnonymizedBalance || cachedTxLocks != nCompleteTXLocks ||
         cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance)
     {
         cachedBalance = newBalance;
         cachedUnconfirmedBalance = newUnconfirmedBalance;
         cachedImmatureBalance = newImmatureBalance;
+        cachedAnonymizedBalance = newAnonymizedBalance;
+        cachedTxLocks = nCompleteTXLocks;
         cachedWatchOnlyBalance = newWatchOnlyBalance;
         cachedWatchUnconfBalance = newWatchUnconfBalance;
         cachedWatchImmatureBalance = newWatchImmatureBalance;
-        Q_EMIT balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance,
+        Q_EMIT balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance, newAnonymizedBalance,
                             newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance);
     }
 }
@@ -251,34 +204,7 @@ void WalletModel::updateAddressBook(const QString &address, const QString &label
     if(addressTableModel)
         addressTableModel->updateEntry(address, label, isMine, purpose, status);
 }
-// SYSCOIN
-void WalletModel::updateAlias() {
-	if (aliasTableModelMine)
-		aliasTableModelMine->refreshAliasTable();
-}
 
-void WalletModel::updateCert() {
-	if (certTableModelMine)
-		certTableModelMine->refreshCertTable();
-}
-void WalletModel::updateMessage() {
-	if (inMessageTableModel)
-		inMessageTableModel->refreshMessageTable();
-	if (outMessageTableModel)
-		outMessageTableModel->refreshMessageTable();
-}
-void WalletModel::updateEscrow() {
-	if (escrowTableModelMine)
-		escrowTableModelMine->refreshEscrowTable();
-}
-void WalletModel::updateOffer() {
-	if (offerTableModelMine)
-		offerTableModelMine->refreshOfferTable();
-	if (offerTableModelAccept)
-		offerTableModelAccept->refreshOfferTable();
-	if (offerTableModelMyAccept)
-		offerTableModelMyAccept->refreshOfferTable();
-}
 void WalletModel::updateWatchOnlyFlag(bool fHaveWatchonly)
 {
     fHaveWatchOnly = fHaveWatchonly;
@@ -303,6 +229,11 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return OK;
     }
 
+    // This should never really happen, yet another safety check, just in case.
+    if(wallet->IsLocked()) {
+        return TransactionCreationFailed;
+    }
+
     QSet<QString> setAddress; // Used to detect duplicates
     int nAddresses = 0;
 
@@ -311,6 +242,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     {
         if (rcp.fSubtractFeeFromAmount)
             fSubtractFeeFromAmount = true;
+
         if (rcp.paymentRequest.IsInitialized())
         {   // PaymentRequest...
             CAmount subtotal = 0;
@@ -359,12 +291,10 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
     CAmount nBalance = getBalance(coinControl);
 
-	// SYSCOIN
-	/*
     if(total > nBalance)
     {
         return AmountExceedsBalance;
-    }*/
+    }
 
     {
         LOCK2(cs_main, wallet->cs_wallet);
@@ -377,12 +307,30 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-		// SYSCOIN pass in false to not sign
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, false);
+
+        if(recipients[0].fUseInstantSend && total > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN){
+            Q_EMIT message(tr("Send Coins"), tr("InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 SYS.").arg(sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)),
+                         CClientUIInterface::MSG_ERROR);
+            return TransactionCreationFailed;
+        }
+
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, true, recipients[0].inputType, recipients[0].fUseInstantSend);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)
             transaction.reassignAmounts(nChangePosRet);
-		
+
+        if(recipients[0].fUseInstantSend) {
+            if(newTx->tx->GetValueOut() > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN) {
+                Q_EMIT message(tr("Send Coins"), tr("InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 SYS.").arg(sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)),
+                             CClientUIInterface::MSG_ERROR);
+                return TransactionCreationFailed;
+            }
+            if(newTx->tx->vin.size() > CTxLockRequest::WARN_MANY_INPUTS) {
+                Q_EMIT message(tr("Send Coins"), tr("Used way too many inputs (>%1) for this InstantSend transaction, fees could be huge.").arg(CTxLockRequest::WARN_MANY_INPUTS),
+                             CClientUIInterface::MSG_WARNING);
+            }
+        }
+
         if(!fCreated)
         {
             if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
@@ -399,56 +347,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         // belt-and-suspenders check)
         if (nFeeRequired > maxTxFee)
             return AbsurdFee;
-
-		// SYSCOIN
-		UniValue resSign;
-		UniValue signParams(UniValue::VARR);
-		signParams.push_back(EncodeHexTx(*newTx));
-		try
-		{
-			resSign = tableRPC.execute("signrawtransaction", signParams);
-		}
-		catch (UniValue& objError)
-		{
-			Q_EMIT message(tr("Send Coins"), QString("%1").arg(QString::fromStdString(find_value(objError, "message").get_str())),
-				CClientUIInterface::MSG_ERROR);
-			return InvalidMultisig;
-		}	
-		catch (const std::exception& e) {
-			Q_EMIT message(tr("Send Coins"), QString("%1").arg(QString::fromStdString(e.what())),
-				CClientUIInterface::MSG_ERROR);
-			return InvalidMultisig;
-		}
-		if (!resSign.isObject())
-		{
-			Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: Invalid response from signrawtransaction"),
-				CClientUIInterface::MSG_ERROR);
-			return InvalidMultisig;
-		}
-
-		const UniValue& so = resSign.get_obj();
-		string hex_str = "";
-
-		const UniValue& hex_value = find_value(so, "hex");
-		if (hex_value.isStr())
-			hex_str = hex_value.get_str();
-		const UniValue& complete_value = find_value(so, "complete");
-		bool bComplete = false;
-		if (complete_value.isBool())
-			bComplete = complete_value.get_bool();
-		if(!bComplete)
-		{
-			GUIUtil::setClipboard(QString::fromStdString(hex_str));
-			Q_EMIT message(tr("Send Coins"), tr("This transaction requires more signatures. Transaction hex has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed."),
-						 CClientUIInterface::MSG_INFORMATION);
-			return InvalidMultisig;
-		}
-		if(!DecodeHexTx(*newTx,hex_str))
-		{
-			Q_EMIT message(tr("Send Coins"), tr("Could not decode signed transaction!"),
-				CClientUIInterface::MSG_ERROR);
-			return InvalidMultisig;	
-		}
     }
 
     return SendCoinsReturn(OK);
@@ -461,8 +359,9 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     {
         LOCK2(cs_main, wallet->cs_wallet);
         CWalletTx *newTx = transaction.getTransaction();
+        QList<SendCoinsRecipient> recipients = transaction.getRecipients();
 
-        Q_FOREACH(const SendCoinsRecipient &rcp, transaction.getRecipients())
+        Q_FOREACH(const SendCoinsRecipient &rcp, recipients)
         {
             if (rcp.paymentRequest.IsInitialized())
             {
@@ -477,17 +376,19 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 rcp.paymentRequest.SerializeToString(&value);
                 newTx->vOrderForm.push_back(make_pair(key, value));
             }
-            else if (!rcp.message.isEmpty()) // Message from normal syscoin:URI (syscoin:123...?message=example)
+            else if (!rcp.message.isEmpty()) // Message from normal syscoin:URI (syscoin:XyZ...?message=example)
+            {
                 newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
+            }
         }
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        if(!wallet->CommitTransaction(*newTx, *keyChange))
-            return TransactionCommitFailed;
+        CValidationState state;
+        if(!wallet->CommitTransaction(*newTx, *keyChange, g_connman.get(), state, recipients[0].fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX))
+            return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(state.GetRejectReason()));
 
-        CTransaction* t = (CTransaction*)newTx;
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << *t;
+        ssTx << *newTx->tx;
         transaction_array.append(&(ssTx[0]), ssTx.size());
     }
 
@@ -538,43 +439,7 @@ TransactionTableModel *WalletModel::getTransactionTableModel()
 {
     return transactionTableModel;
 }
-// SYSCOIN
-AliasTableModel *WalletModel::getAliasTableModelMine() {
-	return aliasTableModelMine;
-}
-AliasTableModel *WalletModel::getAliasTableModelAll() {
-	return aliasTableModelAll;
-}
-EscrowTableModel *WalletModel::getEscrowTableModelMine() {
-	return escrowTableModelMine;
-}
-EscrowTableModel *WalletModel::getEscrowTableModelAll() {
-	return escrowTableModelAll;
-}
-MessageTableModel *WalletModel::getMessageTableModelIn() {
-	return inMessageTableModel;
-}
-MessageTableModel *WalletModel::getMessageTableModelOut() {
-	return outMessageTableModel;
-}
-CertTableModel *WalletModel::getCertTableModelMine() {
-	return certTableModelMine;
-}
-CertTableModel *WalletModel::getCertTableModelAll() {
-	return certTableModelAll;
-}
-OfferTableModel *WalletModel::getOfferTableModelMine() {
-	return offerTableModelMine;
-}
-OfferTableModel *WalletModel::getOfferTableModelAll() {
-	return offerTableModelAll;
-}
-OfferAcceptTableModel *WalletModel::getOfferTableModelAccept() {
-	return offerTableModelAccept;
-}
-OfferAcceptTableModel *WalletModel::getOfferTableModelMyAccept() {
-	return offerTableModelMyAccept;
-}
+
 RecentRequestsTableModel *WalletModel::getRecentRequestsTableModel()
 {
     return recentRequestsTableModel;
@@ -586,9 +451,13 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
     {
         return Unencrypted;
     }
-    else if(wallet->IsLocked())
+    else if(wallet->IsLocked(true))
     {
         return Locked;
+    }
+    else if (wallet->IsLocked())
+    {
+        return UnlockedForMixingOnly;
     }
     else
     {
@@ -610,17 +479,17 @@ bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphr
     }
 }
 
-bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
+bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase, bool fMixing)
 {
     if(locked)
     {
         // Lock
-        return wallet->Lock();
+        return wallet->Lock(fMixing);
     }
     else
     {
         // Unlock
-        return wallet->Unlock(passPhrase);
+        return wallet->Unlock(passPhrase, fMixing);
     }
 }
 
@@ -646,23 +515,7 @@ static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel, CCryptoKeyStor
     qDebug() << "NotifyKeyStoreStatusChanged";
     QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
 }
-// SYSCOIN
-static void NotifySyscoinTransactionChanged(WalletModel *walletmodel, const CTransaction &tx, ChangeType status)
-{
-	std::vector<std::vector<unsigned char> > vvchArgs;
-	int op, nOut;
-	// there should only be one service with data carrying output per tx, notify for that one
-	if (DecodeAndParseAliasTx(tx, op, nOut, vvchArgs))
-		QMetaObject::invokeMethod(walletmodel, "updateAlias", Qt::QueuedConnection);
-	else if (DecodeAndParseOfferTx(tx, op, nOut, vvchArgs))
-		QMetaObject::invokeMethod(walletmodel, "updateOffer", Qt::QueuedConnection);
-	else if (DecodeAndParseCertTx(tx, op, nOut, vvchArgs))
-		QMetaObject::invokeMethod(walletmodel, "updateCert", Qt::QueuedConnection);
-	else if (DecodeAndParseEscrowTx(tx, op, nOut, vvchArgs))
-		QMetaObject::invokeMethod(walletmodel, "updateEscrow", Qt::QueuedConnection);
-	else if (DecodeAndParseMessageTx(tx, op, nOut, vvchArgs))
-		QMetaObject::invokeMethod(walletmodel, "updateMessage", Qt::QueuedConnection);
-}
+
 static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
         const CTxDestination &address, const std::string &label, bool isMine,
         const std::string &purpose, ChangeType status)
@@ -686,11 +539,6 @@ static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, 
     Q_UNUSED(hash);
     Q_UNUSED(status);
     QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
-    // SYSCOIN
-    std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
-    bool inWallet = mi != wallet->mapWallet.end();
-	if(inWallet)
-		NotifySyscoinTransactionChanged(walletmodel, mi->second, status);
 }
 
 static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
@@ -728,33 +576,49 @@ void WalletModel::unsubscribeFromCoreSignals()
 }
 
 // WalletModel::UnlockContext implementation
-WalletModel::UnlockContext WalletModel::requestUnlock()
+WalletModel::UnlockContext WalletModel::requestUnlock(bool fForMixingOnly)
 {
-    bool was_locked = getEncryptionStatus() == Locked;
-    if(was_locked)
-    {
-        // Request UI to unlock wallet
-        Q_EMIT requireUnlock();
-    }
-    // If wallet is still locked, unlock was failed or cancelled, mark context as invalid
-    bool valid = getEncryptionStatus() != Locked;
+    EncryptionStatus encStatusOld = getEncryptionStatus();
 
-	// SYSCOIN
-    return UnlockContext(this, valid, false/*was_locked*/);
+    // Wallet was completely locked
+    bool was_locked = (encStatusOld == Locked);
+    // Wallet was unlocked for mixing
+    bool was_mixing = (encStatusOld == UnlockedForMixingOnly);
+    // Wallet was unlocked for mixing and now user requested to fully unlock it
+    bool fMixingToFullRequested = !fForMixingOnly && was_mixing;
+
+    if(was_locked || fMixingToFullRequested) {
+        // Request UI to unlock wallet
+        Q_EMIT requireUnlock(fForMixingOnly);
+    }
+
+    EncryptionStatus encStatusNew = getEncryptionStatus();
+
+    // Wallet was locked, user requested to unlock it for mixing and failed to do so
+    bool fMixingUnlockFailed = fForMixingOnly && !(encStatusNew == UnlockedForMixingOnly);
+    // Wallet was unlocked for mixing, user requested to fully unlock it and failed
+    bool fMixingToFullFailed = fMixingToFullRequested && !(encStatusNew == Unlocked);
+    // If wallet is still locked, unlock failed or was cancelled, mark context as invalid
+    bool fInvalid = (encStatusNew == Locked) || fMixingUnlockFailed || fMixingToFullFailed;
+    // Wallet was not locked in any way or user tried to unlock it for mixing only and succeeded, keep it unlocked
+    bool fKeepUnlocked = !was_locked || (fForMixingOnly && !fMixingUnlockFailed);
+
+    return UnlockContext(this, !fInvalid, !fKeepUnlocked, was_mixing);
 }
 
-WalletModel::UnlockContext::UnlockContext(WalletModel *_wallet, bool _valid, bool _relock):
+WalletModel::UnlockContext::UnlockContext(WalletModel *_wallet, bool _valid, bool _was_locked, bool _was_mixing):
         wallet(_wallet),
         valid(_valid),
-        relock(_relock)
+        was_locked(_was_locked),
+        was_mixing(_was_mixing)
 {
 }
 
 WalletModel::UnlockContext::~UnlockContext()
 {
-    if(valid && relock)
+    if(valid && (was_locked || was_mixing))
     {
-        wallet->setWalletLocked(true);
+        wallet->setWalletLocked(true, "", was_mixing);
     }
 }
 
@@ -762,7 +626,8 @@ void WalletModel::UnlockContext::CopyFrom(const UnlockContext& rhs)
 {
     // Transfer context; old object no longer relocks wallet
     *this = rhs;
-    rhs.relock = false;
+    rhs.was_locked = false;
+    rhs.was_mixing = false;
 }
 
 bool WalletModel::getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
@@ -773,6 +638,11 @@ bool WalletModel::getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
 bool WalletModel::havePrivKey(const CKeyID &address) const
 {
     return wallet->HaveKey(address);
+}
+
+bool WalletModel::getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const
+{
+    return wallet->GetKey(address, vchPrivKeyOut);
 }
 
 // returns a list of COutputs from COutPoints
@@ -799,7 +669,8 @@ bool WalletModel::isSpent(const COutPoint& outpoint) const
 void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const
 {
     std::vector<COutput> vCoins;
-    wallet->AvailableCoins(vCoins);
+	// SYSCOIN include sys alias balances
+    wallet->AvailableCoins(vCoins, true, NULL, false, ALL_COINS, false, true);
 
     LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
     std::vector<COutPoint> vLockedCoins;
@@ -812,7 +683,7 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
         int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
         if (nDepth < 0) continue;
         COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth, true, true);
-        if (outpoint.n < out.tx->vout.size() && wallet->IsMine(out.tx->vout[outpoint.n]) == ISMINE_SPENDABLE)
+        if (outpoint.n < out.tx->tx->vout.size() && wallet->IsMine(out.tx->tx->vout[outpoint.n]) == ISMINE_SPENDABLE)
             vCoins.push_back(out);
     }
 
@@ -820,31 +691,16 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
     {
         COutput cout = out;
 
-        while (wallet->IsChange(cout.tx->vout[cout.i]) && cout.tx->vin.size() > 0 && wallet->IsMine(cout.tx->vin[0]))
+        while (wallet->IsChange(cout.tx->tx->vout[cout.i]) && cout.tx->tx->vin.size() > 0 && wallet->IsMine(cout.tx->tx->vin[0]))
         {
-            if (!wallet->mapWallet.count(cout.tx->vin[0].prevout.hash)) break;
-            cout = COutput(&wallet->mapWallet[cout.tx->vin[0].prevout.hash], cout.tx->vin[0].prevout.n, 0, true, true);
+            if (!wallet->mapWallet.count(cout.tx->tx->vin[0].prevout.hash)) break;
+            cout = COutput(&wallet->mapWallet[cout.tx->tx->vin[0].prevout.hash], cout.tx->tx->vin[0].prevout.n, 0, true, true);
         }
-		// SYSCOIN txs are unspendable unless input to another syscoin tx (passed into createtransaction)
-		if(out.tx->nVersion == GetSyscoinTxVersion())
-		{
-			int op;
-			vector<vector<unsigned char> > vvchArgs;
-			// any sys tx thats not an alias payment shouldnt show up in listCoins (used by coin control)
-			if (out.tx->vout.size() >= out.i && IsSyscoinScript(out.tx->vout[out.i].scriptPubKey, op, vvchArgs) && op != OP_ALIAS_PAYMENT)
-				continue;
-		}
+
         CTxDestination address;
-		// SYSCOIN
-        if(/*!out.fSpendable || */!ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address))
+        if(!out.fSpendable || !ExtractDestination(cout.tx->tx->vout[cout.i].scriptPubKey, address))
             continue;
-		// SYSCOIN
-		CSyscoinAddress syscoinAddress = CSyscoinAddress(address);
-		syscoinAddress = CSyscoinAddress(syscoinAddress.ToString());
-		QString qStrAddress = QString::fromStdString(syscoinAddress.ToString());
-		if(syscoinAddress.isAlias)
-			qStrAddress = QString::fromStdString(syscoinAddress.aliasName);
-        mapCoins[qStrAddress].push_back(out);
+        mapCoins[QString::fromStdString(CSyscoinAddress(address).ToString())].push_back(out);
     }
 }
 
@@ -909,4 +765,19 @@ bool WalletModel::abandonTransaction(uint256 hash) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     return wallet->AbandonTransaction(hash);
+}
+
+bool WalletModel::isWalletEnabled()
+{
+   return !GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET);
+}
+
+bool WalletModel::hdEnabled() const
+{
+    return wallet->IsHDEnabled();
+}
+
+int WalletModel::getDefaultConfirmTarget() const
+{
+    return nTxConfirmTarget;
 }

@@ -5,8 +5,10 @@
 #ifndef SYSCOIN_QT_SPLASHSCREEN_H
 #define SYSCOIN_QT_SPLASHSCREEN_H
 
+#include <functional>
 #include <QSplashScreen>
 
+class CWallet;
 class NetworkStyle;
 
 /** Class for the splashscreen with information of the running client.
@@ -34,16 +36,27 @@ public Q_SLOTS:
     /** Show message and progress */
     void showMessage(const QString &message, int alignment, const QColor &color);
 
+    /** Sets the break action */
+    void setBreakAction(const std::function<void(void)> &action);
+protected:
+    bool eventFilter(QObject * obj, QEvent * ev);
+
 private:
     /** Connect core signals to splash screen */
     void subscribeToCoreSignals();
     /** Disconnect core signals to splash screen */
     void unsubscribeFromCoreSignals();
+    /** Connect wallet signals to splash screen */
+    void ConnectWallet(CWallet*);
 
     QPixmap pixmap;
     QString curMessage;
     QColor curColor;
     int curAlignment;
+
+    QList<CWallet*> connectedWallets;
+
+    std::function<void(void)> breakAction;	
 };
 
 #endif // SYSCOIN_QT_SPLASHSCREEN_H
