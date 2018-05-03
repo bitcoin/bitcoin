@@ -3245,10 +3245,11 @@ UniValue listunspent(const JSONRPCRequest& request)
         if (fValidAddress) {
             entry.pushKV("address", EncodeDestination(address));
 
-            if (pwallet->mapAddressBook.count(address)) {
-                entry.pushKV("label", pwallet->mapAddressBook[address].name);
+            auto i = pwallet->mapAddressBook.find(address);
+            if (i != pwallet->mapAddressBook.end()) {
+                entry.pushKV("label", i->second.name);
                 if (IsDeprecatedRPCEnabled("accounts")) {
-                    entry.pushKV("account", pwallet->mapAddressBook[address].name);
+                    entry.pushKV("account", i->second.name);
                 }
             }
 
