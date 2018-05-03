@@ -12,6 +12,8 @@
 #include <QString>
 #include <QTimer>
 
+static const int MAX_SEND_POPUP_ENTRIES = 10;
+
 class ClientModel;
 class OptionsModel;
 class PlatformStyle;
@@ -25,8 +27,6 @@ namespace Ui {
 QT_BEGIN_NAMESPACE
 class QUrl;
 QT_END_NAMESPACE
-
-const int defaultConfirmTarget = 25;
 
 /** Dialog for sending syscoins */
 class SendCoinsDialog : public QDialog
@@ -54,7 +54,7 @@ public Q_SLOTS:
     void accept();
     SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
-    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
 private:
@@ -62,6 +62,7 @@ private:
     ClientModel *clientModel;
     WalletModel *model;
     bool fNewRecipientAllowed;
+    void send(QList<SendCoinsRecipient> recipients, QString strFee, QString strFunds);
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
 
@@ -78,6 +79,7 @@ private Q_SLOTS:
     void on_buttonMinimizeFee_clicked();
     void removeEntry(SendCoinsEntry* entry);
     void updateDisplayUnit();
+    void updateInstantSend();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();
     void coinControlChangeChecked(int);
@@ -88,7 +90,6 @@ private Q_SLOTS:
     void coinControlClipboardFee();
     void coinControlClipboardAfterFee();
     void coinControlClipboardBytes();
-    void coinControlClipboardPriority();
     void coinControlClipboardLowOutput();
     void coinControlClipboardChange();
     void setMinimumFee();

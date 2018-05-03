@@ -6,16 +6,18 @@
 #ifndef SYSCOIN_CONSENSUS_CONSENSUS_H
 #define SYSCOIN_CONSENSUS_CONSENSUS_H
 
-#include <stdint.h>
-
-/** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
-static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
-/** The maximum allowed weight for a block, see BIP 141 (network rule) */
-static const unsigned int MAX_BLOCK_WEIGHT = 4000000;
-/** The maximum allowed size for a block excluding witness data, in bytes (network rule) */
-static const unsigned int MAX_BLOCK_BASE_SIZE = 1000000;
+/** The maximum allowed size for a serialized block, in bytes (network rule) */
+static const unsigned int MAX_LEGACY_BLOCK_SIZE = (10 * 1000 * 1000);
+static const unsigned int MAX_DIP0001_BLOCK_SIZE = (10 * 1000 * 1000);
+inline unsigned int MaxBlockSize(bool fDIP0001Active /*= false */)
+{
+    return fDIP0001Active ? MAX_DIP0001_BLOCK_SIZE : MAX_LEGACY_BLOCK_SIZE;
+}
 /** The maximum allowed number of signature check operations in a block (network rule) */
-static const int64_t MAX_BLOCK_SIGOPS_COST = 80000;
+inline unsigned int MaxBlockSigOps(bool fDIP0001Active /*= false */)
+{
+    return MaxBlockSize(fDIP0001Active) / 50;
+}
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
 

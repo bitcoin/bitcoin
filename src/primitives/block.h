@@ -6,13 +6,12 @@
 #ifndef SYSCOIN_PRIMITIVES_BLOCK_H
 #define SYSCOIN_PRIMITIVES_BLOCK_H
 
-// SYSCOIN auxpow
-#include "auxpow.h"
 #include "primitives/transaction.h"
 #include "primitives/pureheader.h"
 #include "serialize.h"
 #include "uint256.h"
 // SYSCOIN for auxpow
+#include "auxpow.h"
 #include <boost/shared_ptr.hpp>
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -21,48 +20,46 @@
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-// SYSCOIN depends on pureblockheader for auxpow
+ // SYSCOIN depends on pureblockheader for auxpow
 class CBlockHeader : public CPureBlockHeader
 {
 public:
-
-    // auxpow (if this is a merge-minded block)
-    boost::shared_ptr<CAuxPow> auxpow;
-
+	// auxpow (if this is a merge-minded block)
+	boost::shared_ptr<CAuxPow> auxpow;
     CBlockHeader()
     {
         SetNull();
     }
 
-    ADD_SERIALIZE_METHODS;
+	ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(*(CPureBlockHeader*)this);
-        nVersion = this->GetBaseVersion();
+	template <typename Stream, typename Operation>
+	inline void SerializationOp(Stream& s, Operation ser_action) {
+		READWRITE(*(CPureBlockHeader*)this);
 
-        if (this->IsAuxpow())
-        {
-            if (ser_action.ForRead())
-                auxpow.reset (new CAuxPow());
-            assert(auxpow);
-            READWRITE(*auxpow);
-        } else if (ser_action.ForRead())
-            auxpow.reset();
-    }
+		if (this->IsAuxpow())
+		{
+			if (ser_action.ForRead())
+				auxpow.reset(new CAuxPow());
+			assert(auxpow);
+			READWRITE(*auxpow);
+		}
+		else if (ser_action.ForRead())
+			auxpow.reset();
+	}
 
-    void SetNull()
-    {
-        CPureBlockHeader::SetNull();
-        auxpow.reset();
-    }
+	void SetNull()
+	{
+		CPureBlockHeader::SetNull();
+		auxpow.reset();
+	}
 
-    /**
-     * Set the block's auxpow (or unset it).  This takes care of updating
-     * the version accordingly.
-     * @param apow Pointer to the auxpow to use or NULL.
-     */
-    void SetAuxpow (CAuxPow* apow);
+	/**
+	* Set the block's auxpow (or unset it).  This takes care of updating
+	* the version accordingly.
+	* @param apow Pointer to the auxpow to use or NULL.
+	*/
+	void SetAuxpow(CAuxPow* apow);
 };
 
 
@@ -70,9 +67,11 @@ class CBlock : public CBlockHeader
 {
 public:
     // network and disk
-    std::vector<CTransaction> vtx;
+    std::vector<CTransactionRef> vtx;
 
     // memory only
+    mutable CTxOut txoutMasternode; // masternode payment
+    mutable std::vector<CTxOut> voutSuperblock; // superblock payment
     mutable bool fChecked;
 
     CBlock()
@@ -89,7 +88,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
     }
@@ -98,6 +97,8 @@ public:
     {
         CBlockHeader::SetNull();
         vtx.clear();
+        txoutMasternode = CTxOut();
+        voutSuperblock.clear();
         fChecked = false;
     }
 
@@ -111,7 +112,7 @@ public:
         block.nBits          = nBits;
         block.nNonce         = nNonce;
 		// SYSCOIN include auxpow in blockheader
-		block.auxpow         = auxpow;
+		block.auxpow = auxpow;
         return block;
     }
 
@@ -137,8 +138,9 @@ struct CBlockLocator
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH))
             READWRITE(nVersion);
         READWRITE(vHave);
     }
@@ -153,8 +155,5 @@ struct CBlockLocator
         return vHave.empty();
     }
 };
-
-/** Compute the consensus-critical block weight (see BIP 141). */
-int64_t GetBlockWeight(const CBlock& tx);
 
 #endif // SYSCOIN_PRIMITIVES_BLOCK_H

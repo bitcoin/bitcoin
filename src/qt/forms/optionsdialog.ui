@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>560</width>
-    <height>440</height>
+    <width>576</width>
+    <height>402</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>5</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabMain">
       <attribute name="title">
@@ -30,10 +30,10 @@
        <item>
         <widget class="QCheckBox" name="syscoinAtStartup">
          <property name="toolTip">
-          <string>Automatically start Syscoin Core after logging in to the system.</string>
+          <string>Automatically start %1 after logging in to the system.</string>
          </property>
          <property name="text">
-          <string>&amp;Start Syscoin Core on system login</string>
+          <string>&amp;Start %1 on system login</string>
          </property>
         </widget>
        </item>
@@ -154,9 +154,49 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="showMasternodesTab">
+            <property name="toolTip">
+             <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
+            </property>
+            <property name="text">
+             <string>Show Masternodes Tab</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="showAdvancedPSUI">
+            <property name="toolTip">
+             <string>Show additional information and buttons for PrivateSend on overview screen.</string>
+            </property>
+            <property name="text">
+             <string>Enable advanced PrivateSend interface</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="lowKeysWarning">
+            <property name="toolTip">
+             <string>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</string>
+            </property>
+            <property name="text">
+             <string>Warn if PrivateSend is running out of keys</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="privateSendMultiSession">
+            <property name="toolTip">
+             <string>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</string>
+            </property>
+            <property name="text">
+             <string>Enable PrivateSend &amp;multi-session</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="spendZeroConfChange">
             <property name="toolTip">
-             <string>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</string>
+             <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
             </property>
             <property name="text">
              <string>&amp;Spend unconfirmed change</string>
@@ -165,6 +205,75 @@
           </item>
          </layout>
         </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4_Wallet">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="toolTip">
+            <string>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</string>
+           </property>
+           <property name="text">
+            <string>PrivateSend rounds to use</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="privateSendRounds">
+           <property name="minimum">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <number>8</number>
+           </property>
+           <property name="value">
+            <number>4</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="toolTip">
+            <string>This amount acts as a threshold to turn off PrivateSend once it's reached.</string>
+           </property>
+           <property name="statusTip">
+            <string notr="true"/>
+           </property>
+           <property name="whatsThis">
+            <string notr="true"/>
+           </property>
+           <property name="accessibleName">
+            <string notr="true"/>
+           </property>
+           <property name="accessibleDescription">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string>Amount of Syscoin to keep anonymized</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="privateSendAmount">
+           <property name="minimum">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <number>2000</number>
+           </property>
+           <property name="singleStep">
+            <number>10</number>
+           </property>
+           <property name="value">
+            <number>1000</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <spacer name="verticalSpacer_Wallet">
@@ -189,7 +298,7 @@
        <item>
         <widget class="QCheckBox" name="mapPortUpnp">
          <property name="toolTip">
-          <string>Automatically open the Syscoin client port on the router. This only works when your router supports UPnP and it is enabled.</string>
+          <string>Automatically open the Syscoin Core client port on the router. This only works when your router supports UPnP and it is enabled.</string>
          </property>
          <property name="text">
           <string>Map port using &amp;UPnP</string>
@@ -572,11 +681,61 @@
          <item>
           <widget class="QValueComboBox" name="lang">
            <property name="toolTip">
-            <string>The user interface language can be set here. This setting will take effect after restarting Syscoin Core.</string>
+            <string>The user interface language can be set here. This setting will take effect after restarting %1.</string>
            </property>
           </widget>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
+         <property name="statusTip">
+          <string notr="true"/>
+         </property>
+         <property name="whatsThis">
+          <string notr="true"/>
+         </property>
+         <property name="accessibleName">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>Language missing or translation incomplete? Help contributing translations here:
+https://www.transifex.com/projects/p/syscoin/</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::TextBrowserInteraction</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4_Display" stretch="0,0">
+         <item>
+          <widget class="QLabel" name="themeLabel">
+           <property name="text">
+            <string>User Interface Theme:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QValueComboBox" name="theme"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2_Display">
@@ -603,11 +762,25 @@
         </layout>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5_Display">
+         <item>
+          <widget class="QLabel" name="digitsLabel">
+           <property name="text">
+            <string>Decimal digits</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QValueComboBox" name="digits"/>
+         </item>
+        </layout>
+       </item>
+       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3_Display">
          <item>
           <widget class="QLabel" name="thirdPartyTxUrlsLabel">
            <property name="toolTip">
-            <string>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
+            <string>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
            <property name="text">
             <string>Third party transaction URLs</string>
@@ -620,14 +793,14 @@
          <item>
           <widget class="QLineEdit" name="thirdPartyTxUrls">
            <property name="toolTip">
-            <string>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
+            <string>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
           </widget>
          </item>
         </layout>
        </item>
        <item>
-        <spacer name="verticalSpacer_Display">
+        <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -638,196 +811,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabSyscoin">
-      <attribute name="title">
-       <string>&amp;Preferences</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Pref">
-         <item>
-          <widget class="QLabel" name="themeLabel">
-           <property name="text">
-            <string>User Interface Theme:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="theme">
-           <property name="toolTip">
-            <string>The user interface theme can be set here. This setting will take effect after restarting Syscoin Core.</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_Pref">
-         <item>
-          <widget class="QLabel" name="labelDefaultAlias">
-           <property name="text">
-            <string>Default Alias:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="defaultAlias"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Pref_2">
-         <item>
-          <widget class="QLabel" name="labelDefaultPeg">
-           <property name="text">
-            <string>Default Peg Alias:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="defaultPegAlias"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_6_Pref">
-         <item>
-          <widget class="QLabel" name="labelSafeSearch">
-           <property name="text">
-            <string>Safe Search:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="safeSearch">
-           <item>
-            <property name="text">
-             <string>On</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Off</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabDirectBTC">
-      <attribute name="title">
-       <string>DirectBTC</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_Pref_3">
-         <item>
-          <widget class="QLabel" name="labelBTCEndPoint">
-           <property name="text">
-            <string>BTC End Point:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="btcEndPoint"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Pref_5">
-         <item>
-          <widget class="QLabel" name="labelBTCLogin">
-           <property name="text">
-            <string>BTC RPC Login:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="btcRPCLogin"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Pref_4">
-         <item>
-          <widget class="QLabel" name="labelBTCPassword">
-           <property name="text">
-            <string>BTC RPC Password:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="btcRPCPassword"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QPushButton" name="testBTCButton">
-         <property name="text">
-          <string>Test Connection</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabDirectZEC">
-      <attribute name="title">
-       <string>DirectZEC</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_Pref_4">
-         <item>
-          <widget class="QLabel" name="labelZECEndPoint">
-           <property name="text">
-            <string>ZEC End Point:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="zecEndPoint"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Pref_7">
-         <item>
-          <widget class="QLabel" name="labelZECLogin">
-           <property name="text">
-            <string>ZEC RPC Login:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="zecRPCLogin"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Pref_6">
-         <item>
-          <widget class="QLabel" name="labelZECRPCPassword">
-           <property name="text">
-            <string>ZEC RPC Password:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="zecRPCPassword"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QPushButton" name="testZECButton">
-         <property name="text">
-          <string>Test Connection</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>

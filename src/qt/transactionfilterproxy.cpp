@@ -21,7 +21,7 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     dateFrom(MIN_DATE),
     dateTo(MAX_DATE),
     addrPrefix(),
-    typeFilter(ALL_TYPES),
+    typeFilter(COMMON_TYPES),
     watchOnlyFilter(WatchOnlyFilter_All),
     minAmount(0),
     limitRows(-1),
@@ -66,9 +66,9 @@ void TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
+void TransactionFilterProxy::setAddressPrefix(const QString &_addrPrefix)
 {
-    this->addrPrefix = addrPrefix;
+    this->addrPrefix = _addrPrefix;
     invalidateFilter();
 }
 
@@ -95,9 +95,9 @@ void TransactionFilterProxy::setLimit(int limit)
     this->limitRows = limit;
 }
 
-void TransactionFilterProxy::setShowInactive(bool showInactive)
+void TransactionFilterProxy::setShowInactive(bool _showInactive)
 {
-    this->showInactive = showInactive;
+    this->showInactive = _showInactive;
     invalidateFilter();
 }
 

@@ -9,25 +9,23 @@
 #include "consensus/consensus.h"
 #include "utilstrencodings.h"
 
-using namespace std;
-
 CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter& filter)
 {
     header = block.GetBlockHeader();
 
-    vector<bool> vMatch;
-    vector<uint256> vHashes;
+    std::vector<bool> vMatch;
+    std::vector<uint256> vHashes;
 
     vMatch.reserve(block.vtx.size());
     vHashes.reserve(block.vtx.size());
 
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
-        const uint256& hash = block.vtx[i].GetHash();
-        if (filter.IsRelevantAndUpdate(block.vtx[i]))
+        const uint256& hash = block.vtx[i]->GetHash();
+        if (filter.IsRelevantAndUpdate(*block.vtx[i]))
         {
             vMatch.push_back(true);
-            vMatchedTxn.push_back(make_pair(i, hash));
+            vMatchedTxn.push_back(std::make_pair(i, hash));
         }
         else
             vMatch.push_back(false);
@@ -41,15 +39,15 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, const std::set<uint256>& txids)
 {
     header = block.GetBlockHeader();
 
-    vector<bool> vMatch;
-    vector<uint256> vHashes;
+    std::vector<bool> vMatch;
+    std::vector<uint256> vHashes;
 
     vMatch.reserve(block.vtx.size());
     vHashes.reserve(block.vtx.size());
 
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
-        const uint256& hash = block.vtx[i].GetHash();
+        const uint256& hash = block.vtx[i]->GetHash();
         if (txids.count(hash))
             vMatch.push_back(true);
         else
@@ -67,7 +65,7 @@ uint256 CPartialMerkleTree::CalcHash(int height, unsigned int pos, const std::ve
     } else {
         // calculate left hash
         uint256 left = CalcHash(height-1, pos*2, vTxid), right;
-        // calculate right hash if not beyond the end of the array - copy left hash otherwise1
+        // calculate right hash if not beyond the end of the array - copy left hash otherwise
         if (pos*2+1 < CalcTreeWidth(height-1))
             right = CalcHash(height-1, pos*2+1, vTxid);
         else
@@ -155,7 +153,7 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch, std::ve
     if (nTransactions == 0)
         return uint256();
     // check for excessively high numbers of transactions
-    if (nTransactions > MAX_BLOCK_BASE_SIZE / 60) // 60 is the lower bound for the size of a serialized CTransaction
+    if (nTransactions > MaxBlockSize(true) / 60) // 60 is the lower bound for the size of a serialized CTransaction
         return uint256();
     // there can never be more hashes provided than one for every txid
     if (vHash.size() > nTransactions)

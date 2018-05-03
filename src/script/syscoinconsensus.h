@@ -1,12 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_SYSCOINCONSENSUS_H
 #define SYSCOIN_SYSCOINCONSENSUS_H
-
-#include <stdint.h>
 
 #if defined(BUILD_SYSCOIN_INTERNAL) && defined(HAVE_CONFIG_H)
 #include "config/syscoin-config.h"
@@ -33,7 +31,7 @@
 extern "C" {
 #endif
 
-#define SYSCOINCONSENSUS_API_VER 1
+#define SYSCOINCONSENSUS_API_VER 0
 
 typedef enum syscoinconsensus_error_t
 {
@@ -41,7 +39,7 @@ typedef enum syscoinconsensus_error_t
     syscoinconsensus_ERR_TX_INDEX,
     syscoinconsensus_ERR_TX_SIZE_MISMATCH,
     syscoinconsensus_ERR_TX_DESERIALIZE,
-    syscoinconsensus_ERR_AMOUNT_REQUIRED,
+    syscoinconsensus_ERR_INVALID_FLAGS,
 } syscoinconsensus_error;
 
 /** Script verification flags */
@@ -53,7 +51,9 @@ enum
     syscoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY           = (1U << 4), // enforce NULLDUMMY (BIP147)
     syscoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9), // enable CHECKLOCKTIMEVERIFY (BIP65)
     syscoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10), // enable CHECKSEQUENCEVERIFY (BIP112)
-    syscoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS (BIP141)
+    syscoinconsensus_SCRIPT_FLAGS_VERIFY_ALL                 = syscoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH | syscoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG |
+                                                            syscoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY | syscoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY |
+                                                            syscoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY
 };
 
 /// Returns 1 if the input nIn of the serialized transaction pointed to by
@@ -61,10 +61,6 @@ enum
 /// the additional constraints specified by flags.
 /// If not NULL, err will contain an error/success code for the operation
 EXPORT_SYMBOL int syscoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
-                                                 const unsigned char *txTo        , unsigned int txToLen,
-                                                 unsigned int nIn, unsigned int flags, syscoinconsensus_error* err);
-
-EXPORT_SYMBOL int syscoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, syscoinconsensus_error* err);
 

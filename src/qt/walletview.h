@@ -6,6 +6,7 @@
 #define SYSCOIN_QT_WALLETVIEW_H
 
 #include "amount.h"
+#include "masternodelist.h"
 
 #include <QStackedWidget>
 
@@ -19,13 +20,9 @@ class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
 class AddressBookPage;
-// SYSCOIN
-class AliasView;
-class CertView;
-class OfferView;
-class EscrowView;
-class MessageView;
+
 QT_BEGIN_NAMESPACE
+class QLabel;
 class QModelIndex;
 class QProgressDialog;
 QT_END_NAMESPACE
@@ -62,17 +59,6 @@ public:
 private:
     ClientModel *clientModel;
     WalletModel *walletModel;
-	// SYSCOIN
-    AliasView *aliasView;
-	EscrowView *escrowView;
-	MessageView *messageView;
-	CertView *certView;
-    OfferView *offerView;
-    QStackedWidget* aliasListPage;
-	QStackedWidget* escrowListPage;
-    QStackedWidget* messageListPage;
-	QStackedWidget* offerListPage;
-    QStackedWidget *certListPage;
 
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
@@ -80,10 +66,12 @@ private:
     SendCoinsDialog *sendCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
+    MasternodeList *masternodeListPage;
 
     TransactionView *transactionView;
 
     QProgressDialog *progressDialog;
+    QLabel *transactionSum;
     const PlatformStyle *platformStyle;
 
 public Q_SLOTS:
@@ -91,16 +79,13 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch to masternode page */
+    void gotoMasternodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-	// SYSCOIN
-    void gotoAliasListPage();
-    void gotoEscrowListPage();
-    void gotoMessageListPage();
-    void gotoOfferListPage();
-    void gotoCertListPage();
+
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
@@ -118,7 +103,9 @@ public Q_SLOTS:
     /** Change encrypted wallet passphrase */
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
-    void unlockWallet();
+    void unlockWallet(bool fAnonymizeOnly=false);
+    /** Lock wallet */
+    void lockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();
@@ -131,7 +118,12 @@ public Q_SLOTS:
     /** Show progress dialog e.g. for rescan */
     void showProgress(const QString &title, int nProgress);
 
+    /** User has requested more information about the out of sync state */
+    void requestedSyncWarningInfo();
 
+
+    /** Update selected SYS amount from transactionview */
+    void trxAmount(QString amount);
 Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
@@ -139,8 +131,12 @@ Q_SIGNALS:
     void message(const QString &title, const QString &message, unsigned int style);
     /** Encryption status of wallet changed */
     void encryptionStatusChanged(int status);
+    /** HD-Enabled status of wallet changed (only possible during startup) */
+    void hdEnabledStatusChanged(int hdEnabled);
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
+    /** Notify that the out of sync warning icon has been pressed */
+    void outOfSyncWarningClicked();
 };
 
 #endif // SYSCOIN_QT_WALLETVIEW_H

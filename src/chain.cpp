@@ -1,37 +1,36 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chain.h"
 // SYSCOIN for auxpow
-#include "main.h"
+#include "validation.h"
 using namespace std;
 // SYSCOIN moved and added auxpow check
 CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParams) const
 {
-     CBlockHeader block;
+	CBlockHeader block;
 
-    block.nVersion       = nVersion;
+	block.nVersion = nVersion;
 
-    /* The CBlockIndex object's block header is missing the auxpow.
-       So if this is an auxpow block, read it from disk instead.  We only
-       have to read the actual *header*, not the full block.  */
-    if (block.IsAuxpow())
-    {
-        ReadBlockHeaderFromDisk(block, this, consensusParams);
-        return block;
-    }
+	/* The CBlockIndex object's block header is missing the auxpow.
+	So if this is an auxpow block, read it from disk instead.  We only
+	have to read the actual *header*, not the full block.  */
+	if (block.IsAuxpow())
+	{
+		ReadBlockHeaderFromDisk(block, this, consensusParams);
+		return block;
+	}
 
-    if (pprev)
-        block.hashPrevBlock = pprev->GetBlockHash();
-    block.hashMerkleRoot = hashMerkleRoot;
-    block.nTime          = nTime;
-    block.nBits          = nBits;
-    block.nNonce         = nNonce;
-    return block;
+	if (pprev)
+		block.hashPrevBlock = pprev->GetBlockHash();
+	block.hashMerkleRoot = hashMerkleRoot;
+	block.nTime = nTime;
+	block.nBits = nBits;
+	block.nNonce = nNonce;
+	return block;
 }
-
 /**
  * CChain implementation
  */
@@ -84,6 +83,13 @@ const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
     while (pindex && !Contains(pindex))
         pindex = pindex->pprev;
     return pindex;
+}
+
+CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime) const
+{
+    std::vector<CBlockIndex*>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), nTime,
+        [](CBlockIndex* pBlock, const int64_t& time) -> bool { return pBlock->GetBlockTimeMax() < time; });
+    return (lower == vChain.end() ? NULL : *lower);
 }
 
 /** Turn the lowest '1' bit in the binary representation of a number into a '0'. */

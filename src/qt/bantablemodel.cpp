@@ -48,7 +48,8 @@ public:
     void refreshBanlist()
     {
         banmap_t banMap;
-        CNode::GetBanned(banMap);
+        if(g_connman)
+            g_connman->GetBanned(banMap);
 
         cachedBanlist.clear();
 #if QT_VERSION >= 0x040700
@@ -63,7 +64,7 @@ public:
         }
 
         if (sortColumn >= 0)
-            // sort cachedBanlist (use stable sort to prevent rows jumping around unneceesarily)
+            // sort cachedBanlist (use stable sort to prevent rows jumping around unnecessarily)
             qStableSort(cachedBanlist.begin(), cachedBanlist.end(), BannedNodeLessThan(sortColumn, sortOrder));
     }
 

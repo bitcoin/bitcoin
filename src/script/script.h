@@ -43,35 +43,48 @@ std::vector<unsigned char> ToByteVector(const T& in)
 /** Script opcodes */
 enum opcodetype
 {
-    // push value
-    OP_0 = 0x00,
-   // SYSCOIN aliases
-    OP_ALIAS_PAYMENT = 0x01,
-    OP_ALIAS_ACTIVATE=0x02,
-    OP_ALIAS_UPDATE=0x03,
+	// push value
+	OP_0 = 0x00,
+	// SYSCOIN aliases
+	OP_ALIAS_ACTIVATE = 0x01,
+	OP_ALIAS_UPDATE = 0x02,
 
-    // distributed exchange
-    OP_OFFER_ACTIVATE=0x04,
-    OP_OFFER_UPDATE=0x05,
-    OP_OFFER_ACCEPT=0x06,
-	OP_OFFER_ACCEPT_FEEDBACK=0x07,
+	// distributed exchange
+	OP_OFFER_ACTIVATE = 0x01,
+	OP_OFFER_UPDATE = 0x02,
 
-    // distributed licensing system
-    OP_CERT_ACTIVATE=0x08,
-    OP_CERT_UPDATE=0x09,
-    OP_CERT_TRANSFER=0x0a,
+	// distributed licensing system
+	OP_CERT_ACTIVATE = 0x01,
+	OP_CERT_UPDATE = 0x02,
+	OP_CERT_TRANSFER = 0x03,
 
-    // distributed escrow system
-    OP_ESCROW_ACTIVATE=0x0b,
-    OP_ESCROW_RELEASE=0x0c,
-    OP_ESCROW_REFUND=0x0d,
-	OP_ESCROW_COMPLETE=0x0e,
+	// distributed escrow system
+	OP_ESCROW_ACTIVATE = 0x01,
+	OP_ESCROW_RELEASE = 0x02,
+	OP_ESCROW_REFUND = 0x03,
+	OP_ESCROW_REFUND_COMPLETE = 0x04,
+	OP_ESCROW_RELEASE_COMPLETE = 0x05,
+	OP_ESCROW_BID = 0x06,
+	OP_ESCROW_ACKNOWLEDGE = 0x07,
+	OP_ESCROW_ADD_SHIPPING = 0x08,
+	OP_ESCROW_FEEDBACK = 0x09,
 
-	// encrypted messaging
-	OP_MESSAGE_ACTIVATE=0x0f,
+	// distributed asset system
+	OP_ASSET_ACTIVATE = 0x01,
+	OP_ASSET_UPDATE = 0x02,
+	OP_ASSET_TRANSFER = 0x03,
+	OP_ASSET_SEND = 0x04,
 
-     // syscoin extended reserved 
-    OP_SYSCOIN_EXTENDED=0x10,
+	OP_ASSET_ALLOCATION_SEND = 0x01,
+	OP_ASSET_COLLECT_INTEREST = 0x02,
+
+	// syscoin extended reserved 
+	OP_SYSCOIN_ALIAS = 0x01,
+	OP_SYSCOIN_CERT = 0x02,
+	OP_SYSCOIN_ESCROW = 0x03,
+	OP_SYSCOIN_OFFER = 0x04,
+	OP_SYSCOIN_ASSET = 0x05,
+	OP_SYSCOIN_ASSET_ALLOCATION = 0x06,
     OP_FALSE = OP_0,
     OP_PUSHDATA1 = 0x4c,
     OP_PUSHDATA2 = 0x4d,
@@ -421,7 +434,6 @@ protected:
     }
 public:
     CScript() { }
-    CScript(const CScript& b) : CScriptBase(b.begin(), b.end()) { }
     CScript(const_iterator pbegin, const_iterator pend) : CScriptBase(pbegin, pend) { }
     CScript(std::vector<unsigned char>::const_iterator pbegin, std::vector<unsigned char>::const_iterator pend) : CScriptBase(pbegin, pend) { }
     CScript(const unsigned char* pbegin, const unsigned char* pend) : CScriptBase(pbegin, pend) { }
@@ -647,9 +659,12 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    bool IsPayToPublicKeyHash() const;
+
     bool IsPayToScriptHash() const;
-    bool IsPayToWitnessScriptHash() const;
-    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
+
+    /** Used for obsolete pay-to-pubkey addresses indexing. */
+    bool IsPayToPublicKey() const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
@@ -670,20 +685,6 @@ public:
         // The default std::vector::clear() does not release memory.
         CScriptBase().swap(*this);
     }
-};
-
-struct CScriptWitness
-{
-    // Note that this encodes the data elements being pushed, rather than
-    // encoding them as a CScript that pushes them.
-    std::vector<std::vector<unsigned char> > stack;
-
-    // Some compilers complain without a default constructor
-    CScriptWitness() { }
-
-    bool IsNull() const { return stack.empty(); }
-
-    std::string ToString() const;
 };
 
 class CReserveScript

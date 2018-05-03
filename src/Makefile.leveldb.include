@@ -1,15 +1,18 @@
-# Copyright (c) 2016 The Syscoin Core developers
+# Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 LIBLEVELDB_INT = leveldb/libleveldb.a
 LIBMEMENV_INT  = leveldb/libmemenv.a
+LIBLEVELDB_SSE42_INT  = leveldb/libleveldb_sse42.a
 
 EXTRA_LIBRARIES += $(LIBLEVELDB_INT)
 EXTRA_LIBRARIES += $(LIBMEMENV_INT)
+EXTRA_LIBRARIES += $(LIBLEVELDB_SSE42_INT)
 
 LIBLEVELDB += $(LIBLEVELDB_INT)
 LIBMEMENV += $(LIBMEMENV_INT)
+LIBLEVELDB_SSE42 = $(LIBLEVELDB_SSE42_INT)
 
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/helpers/memenv
@@ -74,6 +77,7 @@ leveldb_libleveldb_a_SOURCES += leveldb/table/merger.h
 leveldb_libleveldb_a_SOURCES += leveldb/table/format.h
 leveldb_libleveldb_a_SOURCES += leveldb/table/iterator_wrapper.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/crc32c.h
+leveldb_libleveldb_a_SOURCES += leveldb/util/env_posix_test_helper.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/arena.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/random.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/posix_logger.h
@@ -117,7 +121,6 @@ leveldb_libleveldb_a_SOURCES += leveldb/util/comparator.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/crc32c.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/env.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/env_posix.cc
-leveldb_libleveldb_a_SOURCES += leveldb/util/env_win.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/filter_policy.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/hash.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/histogram.cc
@@ -136,3 +139,11 @@ leveldb_libmemenv_a_CPPFLAGS = $(leveldb_libleveldb_a_CPPFLAGS)
 leveldb_libmemenv_a_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
 leveldb_libmemenv_a_SOURCES =  leveldb/helpers/memenv/memenv.cc
 leveldb_libmemenv_a_SOURCES += leveldb/helpers/memenv/memenv.h
+
+leveldb_libleveldb_sse42_a_CPPFLAGS = $(leveldb_libleveldb_a_CPPFLAGS)
+leveldb_libleveldb_sse42_a_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
+if ENABLE_HWCRC32
+leveldb_libleveldb_sse42_a_CPPFLAGS += -DLEVELDB_PLATFORM_POSIX_SSE
+leveldb_libleveldb_sse42_a_CXXFLAGS += $(SSE42_CXXFLAGS)
+endif
+leveldb_libleveldb_sse42_a_SOURCES =  leveldb/port/port_posix_sse.cc

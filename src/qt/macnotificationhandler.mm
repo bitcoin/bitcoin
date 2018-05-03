@@ -13,7 +13,7 @@
 - (NSString *)__bundleIdentifier
 {
     if (self == [NSBundle mainBundle]) {
-        return @"org.syscoinfoundation.Syscoin-Qt";
+        return @"org.syscoin.Syscoin-Qt";
     } else {
         return [self __bundleIdentifier];
     }

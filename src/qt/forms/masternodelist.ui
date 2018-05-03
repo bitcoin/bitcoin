@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MasternodeList</class>
+ <widget class="QWidget" name="MasternodeList">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>762</width>
+    <height>457</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="topLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <spacer name="horizontalSpacer0">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="tabMyMasternodes">
+        <attribute name="title">
+         <string>My Masternodes</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_note">
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="updateNote">
+               <property name="text">
+                <string>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see &quot;ENABLED&quot; in &quot;Status&quot; field.</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QTableWidget" name="tableWidgetMyMasternodes">
+             <property name="minimumSize">
+              <size>
+               <width>695</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+             <property name="alternatingRowColors">
+              <bool>true</bool>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::SingleSelection</enum>
+             </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <property name="sortingEnabled">
+              <bool>true</bool>
+             </property>
+             <attribute name="horizontalHeaderStretchLastSection">
+              <bool>true</bool>
+             </attribute>
+             <column>
+              <property name="text">
+               <string>Alias</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Address</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Protocol</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Active</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Last Seen</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Payee</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QPushButton" name="startButton">
+               <property name="text">
+                <string>S&amp;tart alias</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="startAllButton">
+               <property name="text">
+                <string>Start &amp;all</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="startMissingButton">
+               <property name="text">
+                <string>Start &amp;MISSING</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="UpdateButton">
+               <property name="text">
+                <string>&amp;Update status</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="QRButton">
+               <property name="toolTip">
+                <string>Show additional Masternode information</string>
+               </property>
+               <property name="text">
+                <string>Show &amp;Info...</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="autoupdate_label">
+               <property name="text">
+                <string>Status will be updated automatically in (sec):</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="secondsLabel">
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabAllMasternodes">
+        <attribute name="title">
+         <string>All Masternodes</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="1" column="0">
+          <widget class="QTableWidget" name="tableWidgetMasternodes">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <property name="sortingEnabled">
+            <bool>true</bool>
+           </property>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>Address</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Protocol</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Status</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Active</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Last Seen</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Payee</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="label_filter">
+             <property name="text">
+              <string>Filter List:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="filterLineEdit">
+             <property name="toolTip">
+              <string>Filter masternode list</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>10</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_count">
+             <property name="text">
+              <string>Node Count:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="countLabel">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

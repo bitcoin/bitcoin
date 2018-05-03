@@ -7,6 +7,6 @@
 
 class CRPCTable;
 
-void RegisterWalletRPCCommands(CRPCTable &tableRPC);
+void RegisterWalletRPCCommands(CRPCTable &t);
 
 #endif //SYSCOIN_WALLET_RPCWALLET_H

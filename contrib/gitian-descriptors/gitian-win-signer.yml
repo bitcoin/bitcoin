@@ -7,8 +7,9 @@ architectures:
 packages:
 - "libssl-dev"
 - "autoconf"
+reference_datetime: "2018-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/syscoin-core/syscoin-detached-sigs.git"
+- "url": "https://github.com/syscoin/syscoin-detached-sigs.git"
   "dir": "signature"
 files:
 - "osslsigncode-1.7.1.tar.gz"

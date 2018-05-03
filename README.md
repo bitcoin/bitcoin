@@ -1,22 +1,43 @@
-Syscoin Core integration/staging tree
-=====================================
+Syscoin Core staging tree 
+=========================
 
-[![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=master)](https://travis-ci.org/syscoin/syscoin)
+`master:` [![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=master)](https://travis-ci.org/syscoin/syscoin) 
 
-https://syscoincore.org
+http://www.syscoin.org
 
 What is Syscoin?
 ----------------
 
-Syscoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Syscoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Syscoin Core is the name of open source
-software which enables the use of this currency.
+Syscoin is a merge-minable SHA256 coin which provides an array of useful services
+which leverage the bitcoin protocol and blockchain technology.
+
+ - 1 minute block targets, diff retarget each block using Dark Gravity Wave(24) 
+ - Flexible rewards schedule paying 25% to miners and 75% to masternodes
+ - 888 million total coins (deflation 5 percent per year, deflation on all payouts)
+ - Block time: 60 seconds target
+ - Rewards: 38.5 Syscoins per block deflated 5 percent per year of which 10 percent is allocated to governance proposals (3.85 Syscoins per block). 75 percent of the result goes to masternode and 25 percent to miner.
+ - SHA256 Proof of Work
+ - Minable either exclusively or via merge-mining any PoW coin
+ - Syscoin data service fees burned
+ - Masternode collateral requirement: 100000 Syscoins
+ - Masternode seniority: 3 percent every 4 months until 27 percent over 3 years
+ - Governance proposals payout schedule: every month
+ - Governance funding per round (168630 Syscoins per month)
+
+Services include:
+
+- Layer 2 PoW/PoS hybrid consensus with bonded validator system (masternodes)
+- Decentralized governance (blockchain pays people for work by creating proposals and getting masternodes to vote on them)
+- Decentralized Identity reservation, ownership & exchange
+- Digital certificate storage, ownership & exchange
+- Distributed marketplate & exchange
+- Digital Services Provider marketplace & platform
+- Digital Asset Creation and Management
+- Decentralized Escrow service
 
 For more information, as well as an immediately useable, binary version of
-the Syscoin Core software, see https://syscoin.org/en/download, or read the
-[original whitepaper](https://syscoin.org/syscoin.pdf).
+the Syscoin client sofware, see https://www.syscoin.org.
+
 
 License
 -------
@@ -27,17 +48,11 @@ information or see https://opensource.org/licenses/MIT.
 Development Process
 -------------------
 
-The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/syscoin/syscoin2/tags) are created
-regularly to indicate new official, stable release versions of Syscoin Core.
+The `master` branch is meant to be stable. Development is normally done in separate branches.
+[Tags](https://github.com/syscoin/syscoin/tags) are created to indicate new official,
+stable release versions of Syscoin Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
-
-The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/syscoin-dev)
-should be used to discuss complicated or controversial changes before working
-on a patch set.
-
-Developer IRC can be found on Freenode at #syscoin-core-dev.
 
 Testing
 -------
@@ -57,7 +72,10 @@ There are also [regression and integration tests](/qa) of the RPC interface, wri
 in Python, that are run automatically on the build server.
 These tests can be run (if the [test dependencies](/qa) are installed) with: `qa/pull-tester/rpc-tests.py`
 
-The Travis CI system makes sure that every pull request is built for Windows, Linux, and OS X, and that unit/sanity tests are run automatically.
+Syscoin test suites can run by `cd src/test && ./test_syscoin`
+
+The Travis CI system makes sure that every pull request is built for Windows
+and Linux, OS X, and that unit and sanity tests are automatically run.
 
 ### Manual Quality Assurance (QA) Testing
 
@@ -78,4 +96,3 @@ Translations are periodically pulled from Transifex and merged into the git repo
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
 
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/syscoin-translators).

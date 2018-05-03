@@ -1,9 +1,10 @@
 // Copyright (c) 2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_TEST_TEST_SYSCOIN_H
-#define SYSCOIN_TEST_TEST_SYSCOIN_H
+#ifndef SYSCOIN_TEST_TEST_SYS_H
+#define SYSCOIN_TEST_TEST_SYS_H
 
 #include "chainparamsbase.h"
 #include "key.h"
@@ -27,10 +28,12 @@ struct BasicTestingSetup {
 /** Testing setup that configures a complete environment.
  * Included are data directory, coins database, script check threads setup.
  */
+class CConnman;
 struct TestingSetup: public BasicTestingSetup {
     CCoinsViewDB *pcoinsdbview;
     boost::filesystem::path pathTemp;
     boost::thread_group threadGroup;
+    CConnman* connman;
 
     TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
@@ -68,25 +71,23 @@ struct TestMemPoolEntryHelper
     int64_t nTime;
     double dPriority;
     unsigned int nHeight;
-    bool hadNoDependencies;
     bool spendsCoinbase;
-    unsigned int sigOpCost;
+    unsigned int sigOpCount;
     LockPoints lp;
 
     TestMemPoolEntryHelper() :
         nFee(0), nTime(0), dPriority(0.0), nHeight(1),
-        hadNoDependencies(false), spendsCoinbase(false), sigOpCost(4) { }
+        spendsCoinbase(false), sigOpCount(4) { }
     
-    CTxMemPoolEntry FromTx(CMutableTransaction &tx, CTxMemPool *pool = NULL);
-    CTxMemPoolEntry FromTx(CTransaction &tx, CTxMemPool *pool = NULL);
+    CTxMemPoolEntry FromTx(const CMutableTransaction &tx, CTxMemPool *pool = NULL);
+    CTxMemPoolEntry FromTx(const CTransaction &tx, CTxMemPool *pool = NULL);
 
     // Change the default value
     TestMemPoolEntryHelper &Fee(CAmount _fee) { nFee = _fee; return *this; }
     TestMemPoolEntryHelper &Time(int64_t _time) { nTime = _time; return *this; }
     TestMemPoolEntryHelper &Priority(double _priority) { dPriority = _priority; return *this; }
     TestMemPoolEntryHelper &Height(unsigned int _height) { nHeight = _height; return *this; }
-    TestMemPoolEntryHelper &HadNoDependencies(bool _hnd) { hadNoDependencies = _hnd; return *this; }
     TestMemPoolEntryHelper &SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
-    TestMemPoolEntryHelper &SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
+    TestMemPoolEntryHelper &SigOps(unsigned int _sigops) { sigOpCount = _sigops; return *this; }
 };
 #endif

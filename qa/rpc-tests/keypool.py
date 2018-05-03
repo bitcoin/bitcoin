@@ -1,9 +1,11 @@
-#!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Syscoin Core developers
+#!/usr/bin/env python2
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Exercise the wallet keypool, and interaction with wallet encryption/locking
+
+# Add python-syscoinrpc to module search path:
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
@@ -12,23 +14,15 @@ class KeyPoolTest(SyscoinTestFramework):
 
     def run_test(self):
         nodes = self.nodes
-        addr_before_encrypting = nodes[0].getnewaddress()
-        addr_before_encrypting_data = nodes[0].validateaddress(addr_before_encrypting)
-        wallet_info_old = nodes[0].getwalletinfo()
-        assert(addr_before_encrypting_data['hdmasterkeyid'] == wallet_info_old['hdmasterkeyid'])
-        
+
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
         syscoind_processes[0].wait()
         # Restart node 0
-        nodes[0] = start_node(0, self.options.tmpdir)
+        nodes[0] = start_node(0, self.options.tmpdir, ['-usehd=0'])
         # Keep creating keys
         addr = nodes[0].getnewaddress()
-        addr_data = nodes[0].validateaddress(addr)
-        wallet_info = nodes[0].getwalletinfo()
-        assert(addr_before_encrypting_data['hdmasterkeyid'] != wallet_info['hdmasterkeyid'])
-        assert(addr_data['hdmasterkeyid'] == wallet_info['hdmasterkeyid'])
-        
+
         try:
             addr = nodes[0].getnewaddress()
             raise AssertionError('Keypool should be exhausted after one address')
@@ -45,9 +39,8 @@ class KeyPoolTest(SyscoinTestFramework):
         addr.add(nodes[0].getrawchangeaddress())
         addr.add(nodes[0].getrawchangeaddress())
         addr.add(nodes[0].getrawchangeaddress())
-        addr.add(nodes[0].getrawchangeaddress())
-        # assert that four unique addresses were returned
-        assert(len(addr) == 4)
+        # assert that three unique addresses were returned
+        assert(len(addr) == 3)
         # the next one should fail
         try:
             addr = nodes[0].getrawchangeaddress()
@@ -66,20 +59,18 @@ class KeyPoolTest(SyscoinTestFramework):
         nodes[0].generate(1)
         nodes[0].generate(1)
         nodes[0].generate(1)
-        nodes[0].generate(1)
         try:
             nodes[0].generate(1)
             raise AssertionError('Keypool should be exhausted after three addesses')
         except JSONRPCException as e:
             assert(e.error['code']==-12)
 
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = False
-        self.num_nodes = 1
+    def setup_chain(self):
+        print("Initializing test directory "+self.options.tmpdir)
+        initialize_chain_clean(self.options.tmpdir, 1)
 
     def setup_network(self):
-        self.nodes = self.setup_nodes()
+        self.nodes = start_nodes(1, self.options.tmpdir, [['-usehd=0']])
 
 if __name__ == '__main__':
     KeyPoolTest().main()

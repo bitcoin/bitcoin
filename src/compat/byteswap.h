@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Syscoin developers
+// Copyright (c) 2014 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,23 @@
 #if defined(HAVE_BYTESWAP_H)
 #include <byteswap.h>
 #endif
+
+#if defined(__APPLE__)
+
+#if !defined(bswap_16)
+
+// Mac OS X / Darwin features; we include a check for bswap_16 because if it is already defined, protobuf has
+// defined these macros for us already; if it isn't, we do it ourselves. In either case, we get the exact same
+// result regardless which path was taken
+#include <libkern/OSByteOrder.h>
+#define bswap_16(x) OSSwapInt16(x)
+#define bswap_32(x) OSSwapInt32(x)
+#define bswap_64(x) OSSwapInt64(x)
+
+#endif // !defined(bswap_16)
+
+#else
+// Non-Mac OS X / non-Darwin
 
 #if HAVE_DECL_BSWAP_16 == 0
 inline uint16_t bswap_16(uint16_t x)
@@ -43,5 +60,7 @@ inline uint64_t bswap_64(uint64_t x)
           | ((x & 0x00000000000000ffull) << 56));
 }
 #endif // HAVE_DECL_BSWAP64
+
+#endif // defined(__APPLE__)
 
 #endif // SYSCOIN_COMPAT_BYTESWAP_H
