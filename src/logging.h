@@ -93,7 +93,7 @@ namespace BCLog {
         /** Returns whether logs will be written to any output */
         bool Enabled() const { return m_print_to_console || m_print_to_file; }
 
-        bool OpenDebugLog();
+        bool StartLogging();
         void ShrinkDebugFile();
 
         uint32_t GetCategoryMask() const { return m_categories.load(); }
