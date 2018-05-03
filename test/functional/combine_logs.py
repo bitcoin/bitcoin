@@ -13,7 +13,7 @@ import re
 import sys
 
 # Matches on the date format at the start of the log event
-TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z")
+TIMESTAMP_PATTERN = re.compile(r"(^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?Z) (.*)")
 
 LogEvent = namedtuple('LogEvent', ['timestamp', 'source', 'event'])
 
@@ -73,10 +73,12 @@ def get_log_events(source, logfile):
                 # if this line has a timestamp, it's the start of a new log event.
                 time_match = TIMESTAMP_PATTERN.match(line)
                 if time_match:
-                    if event:
-                        yield LogEvent(timestamp=timestamp, source=source, event=event.rstrip())
-                    event = line
-                    timestamp = time_match.group()
+                    if event or timestamp:
+                        yield LogEvent(timestamp=timestamp, source=source, event=event)
+                    event = time_match.group(3)
+                    timestamp = time_match.group(1)
+                    if not time_match.group(2): # add microseconds to timestamps that are missing it
+                        timestamp = timestamp[0:-1] + '.000000Z'
                 # if it doesn't have a timestamp, it's a continuation line of the previous log.
                 else:
                     event += "\n" + line
@@ -98,7 +100,7 @@ def print_logs(log_events, color=False, html=False):
             colors["reset"] = "\033[0m"     # Reset font color
 
         for event in log_events:
-            print("{0} {1: <5} {2} {3}".format(colors[event.source.rstrip()], event.source, event.event, colors["reset"]))
+            print("{0} {1: <5} {2} {3} {4}".format(colors[event.source.rstrip()], event.source, event.timestamp, event.event, colors["reset"]))
 
     else:
         try:
