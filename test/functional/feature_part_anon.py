@@ -34,10 +34,10 @@ class AnonTest(ParticlTestFramework):
         txnHashes = []
 
         ro = nodes[1].extkeyimportmaster('drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate')
-        sxAddrTo1_1 = nodes[1].getnewstealthaddress()
+        sxAddrTo1_1 = nodes[1].getnewstealthaddress('lblsx11')
         assert(sxAddrTo1_1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
 
-        sxAddrTo0_1 = nodes[0].getnewstealthaddress()
+        sxAddrTo0_1 = nodes[0].getnewstealthaddress('lblsx01')
 
 
         txnHash = nodes[0].sendparttoanon(sxAddrTo1_1, 1, '', '', False, 'node0 -> node1 p->a')
@@ -120,6 +120,7 @@ class AnonTest(ParticlTestFramework):
 
         # Test lockunspent
         unspent = nodes[1].listunspentanon()
+        assert(unspent[0]['label'] == 'lblsx11')
         assert(nodes[1].lockunspent(False, [unspent[0]]) == True)
         unspentCheck = nodes[1].listunspentanon()
         assert(len(unspentCheck) < len(unspent))

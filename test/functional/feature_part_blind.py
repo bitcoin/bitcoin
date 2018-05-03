@@ -36,7 +36,7 @@ class BlindTest(ParticlTestFramework):
         txnHashes = []
 
         ro = nodes[1].extkeyimportmaster('drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate')
-        sxAddrTo1_1 = nodes[1].getnewstealthaddress()
+        sxAddrTo1_1 = nodes[1].getnewstealthaddress('lblsx11')
         assert(sxAddrTo1_1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
 
         txnHash = nodes[0].sendparttoblind(sxAddrTo1_1, 3.4, '', '', False, 'node0 -> node1 p->b')
@@ -63,7 +63,7 @@ class BlindTest(ParticlTestFramework):
 
         mnemonic2 = nodes[2].mnemonic('new')
         ro = nodes[2].extkeyimportmaster(mnemonic2['master'])
-        sxAddrTo2_1 = nodes[2].getnewstealthaddress()
+        sxAddrTo2_1 = nodes[2].getnewstealthaddress('lblsx21')
 
         txnHash3 = nodes[1].sendblindtoblind(sxAddrTo2_1, 0.2, '', '', False, 'node1 -> node2 b->b')
 
@@ -95,7 +95,6 @@ class BlindTest(ParticlTestFramework):
         assert(e['stealth_address'] == sxAddrTo2_1)
 
 
-        sxAddrTo2_2 = nodes[2].getnewextaddress()
         txnHash4 = nodes[1].sendblindtopart(sxAddrTo2_1, 0.5, '', '', False, 'node1 -> node2 b->p')
 
         ro = nodes[1].getwalletinfo()
@@ -157,6 +156,9 @@ class BlindTest(ParticlTestFramework):
         ro = nodes[1].getwalletinfo()
         assert(isclose(ro['blind_balance'], 2.691068))
 
+        unspent = nodes[2].listunspentblind(minconf=0)
+        assert(len(unspent[0]['stealth_address']))
+        assert(len(unspent[0]['label']))
 
         # Test lockunspent
         unspent = nodes[1].listunspentblind(minconf=0)

@@ -3919,9 +3919,12 @@ UniValue listunspent(const JSONRPCRequest& request)
 
     UniValue results(UniValue::VARR);
     std::vector<COutput> vecOutputs;
-    LOCK2(cs_main, pwallet->cs_wallet);
+    {
+        LOCK2(cs_main, pwallet->cs_wallet);
+        pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);
+    }
 
-    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);
+    LOCK(pwallet->cs_wallet);
 
     for (const COutput& out : vecOutputs) {
 
@@ -3950,10 +3953,11 @@ UniValue listunspent(const JSONRPCRequest& request)
         if (fValidAddress) {
             entry.pushKV("address", EncodeDestination(address));
 
-            if (pwallet->mapAddressBook.count(address)) {
-                entry.pushKV("label", pwallet->mapAddressBook[address].name);
+            auto i = pwallet->mapAddressBook.find(address);
+            if (i != pwallet->mapAddressBook.end()) {
+                entry.pushKV("label", i->second.name);
                 if (IsDeprecatedRPCEnabled("accounts")) {
-                    entry.pushKV("account", pwallet->mapAddressBook[address].name);
+                    entry.pushKV("account", i->second.name);
                 }
             }
 
@@ -4854,7 +4858,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
                 CStealthAddress sx;
                 idk = boost::get<CKeyID>(dest);
                 if (phdw->GetStealthLinked(idk, sx))
-                ret.pushKV("from_stealth_address", sx.Encoded());
+                    ret.pushKV("from_stealth_address", sx.Encoded());
             };
         } else
         {

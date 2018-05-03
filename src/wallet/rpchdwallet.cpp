@@ -3992,7 +3992,6 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
 
     UniValue obj(UniValue::VOBJ);
 
-    LOCK2(cs_main, pwallet->cs_wallet);
     std::vector<COutput> vecOutputs;
 
     bool include_unsafe = false;
@@ -4003,11 +4002,16 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
     uint64_t nMaximumCount = 0;
     int nMinDepth = 0;
     int nMaxDepth = 0x7FFFFFFF;
+    int nHeight, nRequiredDepth;
 
-    int nHeight = chainActive.Tip()->nHeight;
-    int nRequiredDepth = std::min((int)(Params().GetStakeMinConfirmations()-1), (int)(nHeight / 2));
+    {
+        LOCK2(cs_main, pwallet->cs_wallet);
+        nHeight = chainActive.Tip()->nHeight;
+        nRequiredDepth = std::min((int)(Params().GetStakeMinConfirmations()-1), (int)(nHeight / 2));
+        pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);
+    }
 
-    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);
+    LOCK(pwallet->cs_wallet);
 
     CAmount nStakeable = 0;
     CAmount nColdStakeable = 0;
@@ -4128,7 +4132,7 @@ UniValue listunspentanon(const JSONRPCRequest &request)
             "    \"txid\" : \"txid\",          (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
             "    \"address\" : \"address\",    (string) the particl address\n"
-            "    \"account\" : \"account\",    (string) DEPRECATED. The associated account, or \"\" for the default account\n"
+            "    \"label\" : \"label\",        (string) The associated label, or \"\" for the default label\n"
             //"    \"scriptPubKey\" : \"key\",   (string) the script key\n"
             "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
             "    \"confirmations\" : n,      (numeric) The number of confirmations\n"
@@ -4220,10 +4224,14 @@ UniValue listunspentanon(const JSONRPCRequest &request)
     UniValue results(UniValue::VARR);
     std::vector<COutputR> vecOutputs;
     assert(pwallet != nullptr);
-    LOCK2(cs_main, pwallet->cs_wallet);
 
-    // TODO: filter on stealth address
-    pwallet->AvailableAnonCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);
+    {
+        LOCK2(cs_main, pwallet->cs_wallet);
+        // TODO: filter on stealth address
+        pwallet->AvailableAnonCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);
+    }
+
+    LOCK(pwallet->cs_wallet);
 
     for (const auto &out : vecOutputs)
     {
@@ -4254,8 +4262,14 @@ UniValue listunspentanon(const JSONRPCRequest &request)
                 uint32_t sidx;
                 memcpy(&sidx, &pout->vPath[1], 4);
                 CStealthAddress sx;
-                if (pwallet->GetStealthByIndex(sidx, sx))
+                if (pwallet->GetStealthByIndex(sidx, sx)) {
                     entry.pushKV("address", sx.Encoded());
+
+                    auto i = pwallet->mapAddressBook.find(sx);
+                    if (i != pwallet->mapAddressBook.end()) {
+                        entry.pushKV("label", i->second.name);
+                    }
+                }
             };
         };
 
@@ -4320,7 +4334,7 @@ UniValue listunspentblind(const JSONRPCRequest &request)
             "    \"txid\" : \"txid\",          (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
             "    \"address\" : \"address\",    (string) the particl address\n"
-            "    \"account\" : \"account\",    (string) DEPRECATED. The associated account, or \"\" for the default account\n"
+            "    \"label\" : \"label\",        (string) The associated label, or \"\" for the default label\n"
             "    \"scriptPubKey\" : \"key\",   (string) the script key\n"
             "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
             "    \"confirmations\" : n,      (numeric) The number of confirmations\n"
@@ -4408,9 +4422,13 @@ UniValue listunspentblind(const JSONRPCRequest &request)
     UniValue results(UniValue::VARR);
     std::vector<COutputR> vecOutputs;
     assert(pwallet != nullptr);
-    LOCK2(cs_main, pwallet->cs_wallet);
 
-    pwallet->AvailableBlindedCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+    {
+        LOCK2(cs_main, pwallet->cs_wallet);
+        pwallet->AvailableBlindedCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+    }
+
+    LOCK(pwallet->cs_wallet);
 
     for (const auto &out : vecOutputs)
     {
@@ -4442,8 +4460,25 @@ UniValue listunspentblind(const JSONRPCRequest &request)
         if (fValidAddress) {
             entry.pushKV("address", CBitcoinAddress(address).ToString());
 
-            if (pwallet->mapAddressBook.count(address))
-                entry.pushKV("account", pwallet->mapAddressBook[address].name);
+            auto i = pwallet->mapAddressBook.find(address);
+            if (i != pwallet->mapAddressBook.end()) {
+                entry.pushKV("label", i->second.name);
+            }
+
+            if (address.type() == typeid(CKeyID))
+            {
+                CStealthAddress sx;
+                CKeyID idk = boost::get<CKeyID>(address);
+                if (pwallet->GetStealthLinked(idk, sx)) {
+                    entry.pushKV("stealth_address", sx.Encoded());
+                    if (!entry.exists("label")) {
+                        auto i = pwallet->mapAddressBook.find(sx);
+                        if (i != pwallet->mapAddressBook.end()) {
+                            entry.pushKV("label", i->second.name);
+                        }
+                    }
+                }
+            };
 
             if (scriptPubKey->IsPayToScriptHash()) {
                 const CScriptID& hash = boost::get<CScriptID>(address);
