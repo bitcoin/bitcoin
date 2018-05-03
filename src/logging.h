@@ -111,7 +111,7 @@ namespace BCLog {
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        int LogPrintStr(const std::string &str);
+        void LogPrintStr(const std::string &str);
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const { return m_print_to_console || m_print_to_file; }
