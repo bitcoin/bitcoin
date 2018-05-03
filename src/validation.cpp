@@ -31,6 +31,7 @@
 #include <script/standard.h>
 #include <timedata.h>
 #include <tinyformat.h>
+#include <threadnames.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <ui_interface.h>
@@ -1651,7 +1652,7 @@ static bool WriteUndoDataForBlock(const CBlockUndo& blockundo, CValidationState&
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck() {
-    RenameThread("bitcoin-scriptch");
+    g_thread_names->Rename("scriptch", /*expect_multiple=*/ true);
     scriptcheckqueue.Thread();
 }
 
