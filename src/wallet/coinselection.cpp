@@ -92,7 +92,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
         bool backtrack = false;
         if (curr_value + curr_available_value < actual_target ||                // Cannot possibly reach target with the amount remaining in the curr_available_value.
             curr_value > actual_target + cost_of_change ||    // Selected value is out of range, go back and try other branch
-            (curr_waste > best_waste && (utxo_pool.at(0).fee - utxo_pool.at(0).long_term_fee) > 0)) { // Don't select things which we know will be more wasteful if the waste is increasing
+            (curr_waste > best_waste && (utxo_pool[0].fee - utxo_pool[0].long_term_fee) > 0)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
         } else if (curr_value >= actual_target) {       // Selected value is within range
             curr_waste += (curr_value - actual_target); // This is the excess value which is added to the waste for the below comparison
@@ -113,7 +113,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
             // Walk backwards to find the last included UTXO that still needs to have its omission branch traversed.
             while (curr_selection_size > 0 && !curr_selection[curr_selection_size - 1]) {
                 --curr_selection_size;
-                curr_available_value += utxo_pool.at(curr_selection_size).effective_value;
+                curr_available_value += utxo_pool[curr_selection_size].effective_value;
             };
 
             if (curr_selection_size == 0) { // We have walked back to the first utxo and no branch is untraversed. All solutions searched
@@ -122,11 +122,11 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
 
             // Output was included on previous iterations, try excluding now.
             curr_selection[curr_selection_size - 1] = false;
-            CInputCoin& utxo = utxo_pool.at(curr_selection_size - 1);
+            CInputCoin& utxo = utxo_pool[curr_selection_size - 1];
             curr_value -= utxo.effective_value;
             curr_waste -= utxo.fee - utxo.long_term_fee;
         } else { // Moving forwards, continuing down this branch
-            CInputCoin& utxo = utxo_pool.at(curr_selection_size);
+            CInputCoin& utxo = utxo_pool[curr_selection_size];
 
             // Remove this utxo from the curr_available_value utxo amount
             curr_available_value -= utxo.effective_value;
@@ -134,8 +134,8 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
             // Avoid searching a branch if the previous UTXO has the same value and same waste and was excluded. Since the ratio of fee to
             // long term fee is the same, we only need to check if one of those values match in order to know that the waste is the same.
             if (curr_selection_size > 0 && !curr_selection[curr_selection_size - 1] &&
-                utxo.effective_value == utxo_pool.at(curr_selection_size - 1).effective_value &&
-                utxo.fee == utxo_pool.at(curr_selection_size - 1).fee) {
+                utxo.effective_value == utxo_pool[curr_selection_size - 1].effective_value &&
+                utxo.fee == utxo_pool[curr_selection_size - 1].fee) {
                 curr_selection[curr_selection_size] = false;
             } else {
                 // Inclusion branch first (Largest First Exploration)
@@ -155,9 +155,9 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
     // Set output set
     value_ret = 0;
     for (size_t i = 0; i < best_selection.size(); ++i) {
-        if (best_selection.at(i)) {
-            out_set.insert(utxo_pool.at(i));
-            value_ret += utxo_pool.at(i).txout.nValue;
+        if (best_selection[i]) {
+            out_set.insert(utxo_pool[i]);
+            value_ret += utxo_pool[i].txout.nValue;
         }
     }
 
