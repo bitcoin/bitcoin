@@ -22,7 +22,7 @@
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
 
-void gobject_count_help()
+static void gobject_count_help()
 {
     throw std::runtime_error(
                 "gobject count (\"mode\")\n"
@@ -32,7 +32,7 @@ void gobject_count_help()
                 );
 }
 
-UniValue gobject_count(const JSONRPCRequest& request)
+static UniValue gobject_count(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2)
         gobject_count_help();
@@ -49,7 +49,7 @@ UniValue gobject_count(const JSONRPCRequest& request)
     return strMode == "json" ? governance.ToJson() : governance.ToString();
 }
 
-void gobject_deserialize_help()
+static void gobject_deserialize_help()
 {
     throw std::runtime_error(
                 "gobject deserialize \"hex_data\"\n"
@@ -59,7 +59,7 @@ void gobject_deserialize_help()
                 );
 }
 
-UniValue gobject_deserialize(const JSONRPCRequest& request)
+static UniValue gobject_deserialize(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         gobject_deserialize_help();
@@ -75,7 +75,7 @@ UniValue gobject_deserialize(const JSONRPCRequest& request)
     return u.write().c_str();
 }
 
-void gobject_check_help()
+static void gobject_check_help()
 {
     throw std::runtime_error(
                 "gobject check \"hex_data\"\n"
@@ -85,7 +85,7 @@ void gobject_check_help()
                 );
 }
 
-UniValue gobject_check(const JSONRPCRequest& request)
+static UniValue gobject_check(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         gobject_check_help();
@@ -118,7 +118,7 @@ UniValue gobject_check(const JSONRPCRequest& request)
 }
 
 #ifdef ENABLE_WALLET
-void gobject_prepare_help(CWallet* const pwallet)
+static void gobject_prepare_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
                 "gobject prepare <parent-hash> <revision> <time> <data-hex>\n"
@@ -135,7 +135,7 @@ void gobject_prepare_help(CWallet* const pwallet)
                 );
 }
 
-UniValue gobject_prepare(const JSONRPCRequest& request)
+static UniValue gobject_prepare(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -232,7 +232,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     return tx->GetHash().ToString();
 }
 
-void gobject_list_prepared_help(CWallet* const pwallet)
+static void gobject_list_prepared_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
                 "gobject list-prepared <count>\n"
@@ -243,7 +243,7 @@ void gobject_list_prepared_help(CWallet* const pwallet)
                 );
 }
 
-UniValue gobject_list_prepared(const JSONRPCRequest& request)
+static UniValue gobject_list_prepared(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -281,7 +281,7 @@ UniValue gobject_list_prepared(const JSONRPCRequest& request)
 }
 #endif // ENABLE_WALLET
 
-void gobject_submit_help()
+static void gobject_submit_help()
 {
     throw std::runtime_error(
                 "gobject submit <parent-hash> <revision> <time> <data-hex> <fee-txid>\n"
@@ -295,7 +295,7 @@ void gobject_submit_help()
                 );
 }
 
-UniValue gobject_submit(const JSONRPCRequest& request)
+static UniValue gobject_submit(const JSONRPCRequest& request)
 {
     if (request.fHelp || ((request.params.size() < 5) || (request.params.size() > 6)))
         gobject_submit_help();
@@ -388,7 +388,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     return govobj.GetHash().ToString();
 }
 
-void gobject_vote_conf_help()
+static void gobject_vote_conf_help()
 {
     throw std::runtime_error(
                 "gobject vote-conf <governance-hash> <vote> <vote-outcome>\n"
@@ -400,7 +400,7 @@ void gobject_vote_conf_help()
                 );
 }
 
-UniValue gobject_vote_conf(const JSONRPCRequest& request)
+static UniValue gobject_vote_conf(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 4)
         gobject_vote_conf_help();
@@ -491,7 +491,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     return returnObj;
 }
 
-UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
+static UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
                              vote_outcome_enum_t eVoteOutcome)
 {
@@ -557,7 +557,7 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
 }
 
 #ifdef ENABLE_WALLET
-void gobject_vote_many_help(CWallet* const pwallet)
+static void gobject_vote_many_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
                 "gobject vote-many <governance-hash> <vote> <vote-outcome>\n"
@@ -570,7 +570,7 @@ void gobject_vote_many_help(CWallet* const pwallet)
                 );
 }
 
-UniValue gobject_vote_many(const JSONRPCRequest& request)
+static UniValue gobject_vote_many(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -611,7 +611,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
 }
 
-void gobject_vote_alias_help(CWallet* const pwallet)
+static void gobject_vote_alias_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
                 "gobject vote-alias <governance-hash> <vote> <vote-outcome> <protx-hash>\n"
@@ -625,7 +625,7 @@ void gobject_vote_alias_help(CWallet* const pwallet)
                 );
 }
 
-UniValue gobject_vote_alias(const JSONRPCRequest& request)
+static UniValue gobject_vote_alias(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -671,7 +671,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
 }
 #endif
 
-UniValue ListObjects(const std::string& strCachedSignal, const std::string& strType, int nStartTime)
+static UniValue ListObjects(const std::string& strCachedSignal, const std::string& strType, int nStartTime)
 {
     UniValue objResult(UniValue::VOBJ);
 
@@ -726,7 +726,7 @@ UniValue ListObjects(const std::string& strCachedSignal, const std::string& strT
     return objResult;
 }
 
-void gobject_list_help()
+static void gobject_list_help()
 {
     throw std::runtime_error(
                 "gobject list ( <signal> <type> )\n"
@@ -737,7 +737,7 @@ void gobject_list_help()
                 );
 }
 
-UniValue gobject_list(const JSONRPCRequest& request)
+static UniValue gobject_list(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 3)
         gobject_list_help();
@@ -759,7 +759,7 @@ UniValue gobject_list(const JSONRPCRequest& request)
     return ListObjects(strCachedSignal, strType, 0);
 }
 
-void gobject_diff_help()
+static void gobject_diff_help()
 {
     throw std::runtime_error(
                 "gobject diff ( <signal> <type> )\n"
@@ -770,7 +770,7 @@ void gobject_diff_help()
                 );
 }
 
-UniValue gobject_diff(const JSONRPCRequest& request)
+static UniValue gobject_diff(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 3)
         gobject_diff_help();
@@ -792,7 +792,7 @@ UniValue gobject_diff(const JSONRPCRequest& request)
     return ListObjects(strCachedSignal, strType, governance.GetLastDiffTime());
 }
 
-void gobject_get_help()
+static void gobject_get_help()
 {
     throw std::runtime_error(
                 "gobject get <governance-hash>\n"
@@ -802,7 +802,7 @@ void gobject_get_help()
                 );
 }
 
-UniValue gobject_get(const JSONRPCRequest& request)
+static UniValue gobject_get(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         gobject_get_help();
@@ -878,7 +878,7 @@ UniValue gobject_get(const JSONRPCRequest& request)
     return objResult;
 }
 
-void gobject_getcurrentvotes_help()
+static void gobject_getcurrentvotes_help()
 {
     throw std::runtime_error(
                 "gobject getcurrentvotes <governance-hash> (<txid> <vout>)\n"
@@ -890,7 +890,7 @@ void gobject_getcurrentvotes_help()
                 );
 }
 
-UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
+static UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 2 && request.params.size() != 4))
         gobject_getcurrentvotes_help();
@@ -930,7 +930,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
     return bResult;
 }
 
-[[ noreturn ]] void gobject_help()
+[[ noreturn ]] static void gobject_help()
 {
     throw std::runtime_error(
             "gobject \"command\" ...\n"
@@ -958,7 +958,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
             );
 }
 
-UniValue gobject(const JSONRPCRequest& request)
+static UniValue gobject(const JSONRPCRequest& request)
 {
     std::string strCommand;
     if (!request.params[0].isNull())
@@ -1015,7 +1015,7 @@ UniValue gobject(const JSONRPCRequest& request)
     }
 }
 
-UniValue voteraw(const JSONRPCRequest& request)
+static UniValue voteraw(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 7)
         throw std::runtime_error(
@@ -1086,7 +1086,7 @@ UniValue voteraw(const JSONRPCRequest& request)
     }
 }
 
-UniValue getgovernanceinfo(const JSONRPCRequest& request)
+static UniValue getgovernanceinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
@@ -1123,7 +1123,7 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
     return obj;
 }
 
-UniValue getsuperblockbudget(const JSONRPCRequest& request)
+static UniValue getsuperblockbudget(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(

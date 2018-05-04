@@ -8,7 +8,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(cachemap_tests, BasicTestingSetup)
 
-bool Compare(const CacheMap<int,int>& cmap1, const CacheMap<int,int>& cmap2)
+static bool Compare(const CacheMap<int,int>& cmap1, const CacheMap<int,int>& cmap2)
 {
     if(cmap1.GetMaxSize() != cmap2.GetMaxSize()) {
         return false;

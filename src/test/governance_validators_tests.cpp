@@ -20,7 +20,7 @@ extern UniValue read_json(const std::string& jsondata);
 
 BOOST_FIXTURE_TEST_SUITE(governance_validators_tests, BasicTestingSetup)
 
-std::string CreateEncodedProposalObject(const UniValue& objJSON)
+static std::string CreateEncodedProposalObject(const UniValue& objJSON)
 {
     UniValue innerArray(UniValue::VARR);
     innerArray.push_back(UniValue("proposal"));

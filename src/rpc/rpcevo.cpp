@@ -34,7 +34,7 @@ extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 #endif//ENABLE_WALLET
 
-std::string GetHelpString(int nParamNum, std::string strParamName)
+static std::string GetHelpString(int nParamNum, std::string strParamName)
 {
     static const std::map<std::string, std::string> mapParamHelp = {
         {"collateralAddress",
@@ -296,7 +296,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx, bool fSub
     return sendrawtransaction(sendRequest).get_str();
 }
 
-void protx_register_fund_help(CWallet* const pwallet)
+static void protx_register_fund_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" submit )\n"
@@ -325,7 +325,7 @@ void protx_register_fund_help(CWallet* const pwallet)
     );
 }
 
-void protx_register_help(CWallet* const pwallet)
+static void protx_register_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx register \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" submit )\n"
@@ -353,7 +353,7 @@ void protx_register_help(CWallet* const pwallet)
     );
 }
 
-void protx_register_prepare_help()
+static void protx_register_prepare_help()
 {
     throw std::runtime_error(
             "protx register_prepare \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" )\n"
@@ -382,7 +382,7 @@ void protx_register_prepare_help()
     );
 }
 
-void protx_register_submit_help(CWallet* const pwallet)
+static void protx_register_submit_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx register_submit \"tx\" \"sig\"\n"
@@ -401,7 +401,7 @@ void protx_register_submit_help(CWallet* const pwallet)
 }
 
 // handles register, register_prepare and register_fund in one method
-UniValue protx_register(const JSONRPCRequest& request)
+static UniValue protx_register(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -563,7 +563,7 @@ UniValue protx_register(const JSONRPCRequest& request)
     }
 }
 
-UniValue protx_register_submit(const JSONRPCRequest& request)
+static UniValue protx_register_submit(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -597,7 +597,7 @@ UniValue protx_register_submit(const JSONRPCRequest& request)
     return SignAndSendSpecialTx(tx);
 }
 
-void protx_update_service_help(CWallet* const pwallet)
+static void protx_update_service_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx update_service \"proTxHash\" \"ipAndPort\" \"operatorKey\" (\"operatorPayoutAddress\" \"feeSourceAddress\" )\n"
@@ -618,7 +618,7 @@ void protx_update_service_help(CWallet* const pwallet)
     );
 }
 
-UniValue protx_update_service(const JSONRPCRequest& request)
+static UniValue protx_update_service(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -693,7 +693,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     return SignAndSendSpecialTx(tx);
 }
 
-void protx_update_registrar_help(CWallet* const pwallet)
+static void protx_update_registrar_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx update_registrar \"proTxHash\" \"operatorPubKey\" \"votingAddress\" \"payoutAddress\" ( \"feeSourceAddress\" )\n"
@@ -714,7 +714,7 @@ void protx_update_registrar_help(CWallet* const pwallet)
     );
 }
 
-UniValue protx_update_registrar(const JSONRPCRequest& request)
+static UniValue protx_update_registrar(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -782,7 +782,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     return SignAndSendSpecialTx(tx);
 }
 
-void protx_revoke_help(CWallet* const pwallet)
+static void protx_revoke_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx revoke \"proTxHash\" \"operatorKey\" ( reason \"feeSourceAddress\")\n"
@@ -803,7 +803,7 @@ void protx_revoke_help(CWallet* const pwallet)
     );
 }
 
-UniValue protx_revoke(const JSONRPCRequest& request)
+static UniValue protx_revoke(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -869,7 +869,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 }
 #endif//ENABLE_WALLET
 
-void protx_list_help()
+static void protx_list_help()
 {
     throw std::runtime_error(
             "protx list (\"type\" \"detailed\" \"height\")\n"
@@ -917,7 +917,7 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
 #endif
 }
 
-UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
+static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
 {
     if (!detailed) {
         return dmn->proTxHash.ToString();
@@ -960,7 +960,7 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bo
     return o;
 }
 
-UniValue protx_list(const JSONRPCRequest& request)
+static UniValue protx_list(const JSONRPCRequest& request)
 {
     if (request.fHelp) {
         protx_list_help();
@@ -1044,7 +1044,7 @@ UniValue protx_list(const JSONRPCRequest& request)
     return ret;
 }
 
-void protx_info_help()
+static void protx_info_help()
 {
     throw std::runtime_error(
             "protx info \"proTxHash\"\n"
@@ -1059,7 +1059,7 @@ void protx_info_help()
     );
 }
 
-UniValue protx_info(const JSONRPCRequest& request)
+static UniValue protx_info(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2) {
         protx_info_help();
@@ -1081,7 +1081,7 @@ UniValue protx_info(const JSONRPCRequest& request)
     return BuildDMNListEntry(pwallet, dmn, true);
 }
 
-void protx_diff_help()
+static void protx_diff_help()
 {
     throw std::runtime_error(
             "protx diff \"baseBlock\" \"block\"\n"
@@ -1106,7 +1106,7 @@ static uint256 ParseBlock(const UniValue& v, std::string strName)
     }
 }
 
-UniValue protx_diff(const JSONRPCRequest& request)
+static UniValue protx_diff(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3) {
         protx_diff_help();
@@ -1127,7 +1127,7 @@ UniValue protx_diff(const JSONRPCRequest& request)
     return ret;
 }
 
-[[ noreturn ]] void protx_help()
+[[ noreturn ]] static void protx_help()
 {
     throw std::runtime_error(
             "protx \"command\" ...\n"
@@ -1153,7 +1153,7 @@ UniValue protx_diff(const JSONRPCRequest& request)
     );
 }
 
-UniValue protx(const JSONRPCRequest& request)
+static UniValue protx(const JSONRPCRequest& request)
 {
     if (request.fHelp && request.params.empty()) {
         protx_help();
@@ -1188,7 +1188,7 @@ UniValue protx(const JSONRPCRequest& request)
     }
 }
 
-void bls_generate_help()
+static void bls_generate_help()
 {
     throw std::runtime_error(
             "bls generate\n"
@@ -1203,7 +1203,7 @@ void bls_generate_help()
     );
 }
 
-UniValue bls_generate(const JSONRPCRequest& request)
+static UniValue bls_generate(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
         bls_generate_help();
@@ -1218,7 +1218,7 @@ UniValue bls_generate(const JSONRPCRequest& request)
     return ret;
 }
 
-void bls_fromsecret_help()
+static void bls_fromsecret_help()
 {
     throw std::runtime_error(
             "bls fromsecret \"secret\"\n"
@@ -1235,7 +1235,7 @@ void bls_fromsecret_help()
     );
 }
 
-UniValue bls_fromsecret(const JSONRPCRequest& request)
+static UniValue bls_fromsecret(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2) {
         bls_fromsecret_help();
@@ -1252,7 +1252,7 @@ UniValue bls_fromsecret(const JSONRPCRequest& request)
     return ret;
 }
 
-[[ noreturn ]] void bls_help()
+[[ noreturn ]] static void bls_help()
 {
     throw std::runtime_error(
             "bls \"command\" ...\n"
@@ -1266,7 +1266,7 @@ UniValue bls_fromsecret(const JSONRPCRequest& request)
             );
 }
 
-UniValue _bls(const JSONRPCRequest& request)
+static UniValue _bls(const JSONRPCRequest& request)
 {
     if (request.fHelp && request.params.empty()) {
         bls_help();

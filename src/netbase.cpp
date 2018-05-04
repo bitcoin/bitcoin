@@ -304,7 +304,7 @@ struct ProxyCredentials
 };
 
 /** Convert SOCKS5 reply to an error message */
-std::string Socks5ErrorString(uint8_t err)
+static std::string Socks5ErrorString(uint8_t err)
 {
     switch(err) {
         case SOCKS5Reply::GENFAILURE:
