@@ -4896,6 +4896,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 			return NULL;
 		}
 
+
         walletInstance->SetBestChain(chainActive.GetLocator());
 
         // Try to create wallet backup right after new wallet was created

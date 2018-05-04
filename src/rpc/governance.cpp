@@ -180,13 +180,12 @@ UniValue gobject(const JSONRPCRequest& request)
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Watchdogs are deprecated");
         }
-
-        LOCK2(cs_main, pwalletMain->cs_wallet);
-
-        std::string strError = "";
-        if(!govobj.IsValidLocally(strError, false))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
-
+		{
+			LOCK(cs_main);
+			std::string strError = "";
+			if (!govobj.IsValidLocally(strError, false))
+				throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
+		}
         EnsureWalletIsUnlocked();
 
         CWalletTx wtx;
@@ -951,10 +950,14 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
             );
     }
 
-    LOCK(cs_main);
 
     int nLastSuperblock = 0, nNextSuperblock = 0;
-    int nBlockHeight = chainActive.Height();
+	// Get current block height
+	int nBlockHeight = 0;
+	{
+		LOCK(cs_main);
+		nBlockHeight = (int)chainActive.Height();
+	}
 
     CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);
 

@@ -7,7 +7,6 @@
 using namespace boost;
 using namespace std;
 typedef typename std::vector<int> container;
-extern CCriticalSection cs_main;
 bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
@@ -94,12 +93,11 @@ bool CreateGraphFromVTX(const std::vector<CTransactionRef>& blockVtx, Graph &gra
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
-				{
-					LOCK(cs_main);
-					if (!FindAliasInTx(tx, vvchAliasArgs)) {
-						continue;
-					}
+				
+				if (!FindAliasInTx(tx, vvchAliasArgs)) {
+					continue;
 				}
+				
 				const string& sender = stringFromVch(vvchAliasArgs[0]);
 				AliasMap::const_iterator it = mapAliasIndex.find(sender);
 				if (it == mapAliasIndex.end()) {

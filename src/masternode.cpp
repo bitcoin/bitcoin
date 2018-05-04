@@ -130,7 +130,6 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
 
 void CMasternode::Check(bool fForce)
 {
-    AssertLockHeld(cs_main);
     LOCK(cs);
 
     if(ShutdownRequested()) return;
@@ -145,6 +144,8 @@ void CMasternode::Check(bool fForce)
 
     int nHeight = 0;
     if(!fUnitTest) {
+		TRY_LOCK(cs_main, lockMain);
+		if (!lockMain) return;
         Coin coin;
         if(!GetUTXOCoin(outpoint, coin)) {
             nActiveState = MASTERNODE_OUTPOINT_SPENT;
@@ -315,8 +316,12 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
             mnpayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2, payee))
         {
             CBlock block;
-            if(!ReadBlockFromDisk(block, BlockReading, Params().GetConsensus()))
-                continue; // shouldn't really happen
+			if (!ReadBlockFromDisk(block, BlockReading, Params().GetConsensus())) {
+				if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
+				BlockReading = BlockReading->pprev;
+				LogPrint("mnpayments", "CMasternode::UpdateLastPaidBlock -- Could not read block from disk\n");
+				continue; // shouldn't really happen
+			}
 
 			const CAmount & nMasternodePayment = GetBlockSubsidy(BlockReading->nHeight, chainparams.GetConsensus(), nTotal, false, true, payee.nStartHeight);
 
@@ -415,8 +420,6 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
 {
     nDos = 0;
 
-    AssertLockHeld(cs_main);
-
     // make sure addr is valid
     if(!IsValidNetAddr()) {
         LogPrintf("CMasternodeBroadcast::SimpleCheck -- Invalid addr, rejected: masternode=%s  addr=%s\n",
@@ -472,7 +475,6 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos, CConnman& connman
 {
     nDos = 0;
 
-    AssertLockHeld(cs_main);
 
     if(pmn->sigTime == sigTime && !fRecovery) {
         // mapSeenMasternodeBroadcast in CMasternodeMan::CheckMnbAndUpdateMasternodeList should filter legit duplicates
@@ -530,8 +532,6 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
         return false;
     }
 
-    AssertLockHeld(cs_main);
-
     int nHeight;
     CollateralStatus err = CheckCollateral(outpoint, pubKeyCollateralAddress, nHeight);
     if (err == COLLATERAL_UTXO_NOT_FOUND) {
@@ -550,15 +550,23 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
         nDos = 33;
         return false;
     }
-
-    if(chainActive.Height() - nHeight + 1 < Params().GetConsensus().nMasternodeMinimumConfirmations) {
-        LogPrintf("CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO must have at least %d confirmations, masternode=%s\n",
-                Params().GetConsensus().nMasternodeMinimumConfirmations, outpoint.ToStringShort());
-        // UTXO is legit but has not enough confirmations.
-        // Maybe we miss few blocks, let this mnb be checked again later.
-        mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
-        return false;
-    }
+	{
+		TRY_LOCK(cs_main, lockMain);
+		if (!lockMain) {
+			// not mnb fault, let it to be checked again later
+			LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Failed to aquire lock, addr=%s", addr.ToString());
+			mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
+			return false;
+		}
+		if (chainActive.Height() - nHeight + 1 < Params().GetConsensus().nMasternodeMinimumConfirmations) {
+			LogPrintf("CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO must have at least %d confirmations, masternode=%s\n",
+				Params().GetConsensus().nMasternodeMinimumConfirmations, outpoint.ToStringShort());
+			// UTXO is legit but has not enough confirmations.
+			// Maybe we miss few blocks, let this mnb be checked again later.
+			mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
+			return false;
+		}
+	}
 
     LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO verified\n");
 
@@ -672,7 +680,7 @@ CMasternodePing::CMasternodePing(const COutPoint& outpoint)
     masternodeOutpoint = outpoint;
     blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
     sigTime = GetAdjustedTime();
-    nDaemonVersion = CLIENT_VERSION;
+    nDaemonVersion = CLIENT_MASTERNODE_VERSION;
 }
 
 bool CMasternodePing::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode)
@@ -744,7 +752,6 @@ bool CMasternodePing::SimpleCheck(int& nDos)
 
 bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, int& nDos, CConnman& connman)
 {
-    AssertLockHeld(cs_main);
 
     // don't ban by default
     nDos = 0;
