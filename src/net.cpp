@@ -160,7 +160,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
     return ret;
 }
 
-int GetnScore(const CService& addr)
+static int GetnScore(const CService& addr)
 {
     LOCK(cs_mapLocalHost);
     if (mapLocalHost.count(addr) == LOCAL_NONE)
@@ -1466,7 +1466,7 @@ void CConnman::WakeMessageHandler()
 #ifdef USE_UPNP
 static CThreadInterrupt g_upnp_interrupt;
 static std::thread g_upnp_thread;
-void ThreadMapPort()
+static void ThreadMapPort()
 {
     std::string port = strprintf("%u", GetListenPort());
     const char * multicastif = nullptr;
