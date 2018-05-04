@@ -132,8 +132,11 @@ public:
     bool AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
     void SubmitFinalBudget();
 
-    bool UpdateProposal(const CBudgetVote& vote, CNode* pfrom, std::string& strError);
+    // SubmitProposalVote is used when current node submits a vote. ReceiveProposalVote is used when
+    // a vote is received from a peer
     bool SubmitProposalVote(const CBudgetVote& vote, std::string& strError);
+    bool ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError);
+
     bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom, std::string& strError);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     std::string GetRequiredPaymentsString(int nBlockHeight);
