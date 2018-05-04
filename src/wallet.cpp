@@ -1013,9 +1013,9 @@ void CWalletTx::RelayWalletTransaction(std::string strCommand)
             if(strCommand == "ix"){
                 if (this->vout.size() > 0)
                 {
-                    CTxDestination address;
-                    ExtractDestination(this->vout[0].scriptPubKey, address);
-                    IXLogPrintf("CWalletTx::RelayWalletTransaction() - Instant send to address: %s\n", CBitcoinAddress(address).ToString());
+                    CTxDestination dest;
+                    ExtractDestination(this->vout[0].scriptPubKey, dest);
+                    IXLogPrintf("CWalletTx::RelayWalletTransaction() - Instant send to address: %s\n", CBitcoinAddress(dest).ToString());
                 }
                 mapTxLockReq.insert(make_pair(hash, (CTransaction)*this));
                 CreateNewLock(((CTransaction)*this));

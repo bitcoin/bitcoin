@@ -201,26 +201,38 @@ static FILE* fileout = NULL;
 static FILE* ixFileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
 
-static FILE* OpenFile(const std::string& fileName)
-{
-    FILE* fout = NULL;
-    boost::filesystem::path pathDebug = GetDataDir() / fileName;
-    fout = fopen(pathDebug.string().c_str(), "a");
-    if (fout) setbuf(fout, NULL); // unbuffered
-    return fout;
-}
+namespace {
+    FILE* OpenFile(const std::string& fileName)
+    {
+        FILE* fout = NULL;
+        boost::filesystem::path pathDebug = GetDataDir() / fileName;
+        fout = fopen(pathDebug.string().c_str(), "a");
+        if (fout) setbuf(fout, NULL); // unbuffered
+        return fout;
+    }
 
-static void DebugPrintInit()
-{
-    assert(fileout == NULL);
-    assert(ixFileout == NULL);
-    assert(mutexDebugLog == NULL);
+    void DebugPrintInit()
+    {
+        assert(fileout == NULL);
+        assert(ixFileout == NULL);
+        assert(mutexDebugLog == NULL);
 
-    fileout = OpenFile("debug.log");
-    ixFileout = OpenFile("instantsend.log");
+        fileout = OpenFile("debug.log");
+        ixFileout = OpenFile("instantsend.log");
 
-    mutexDebugLog = new boost::mutex();
-}
+        mutexDebugLog = new boost::mutex();
+    }
+
+    const std::string SelectFileName(bool ix)
+    {
+        return ix ? "instantsend.log" : "debug.log";
+    }
+
+    FILE* SelectFile(bool ix)
+    {
+        return ix ? ixFileout : fileout;
+    }
+} // anon namespace
 
 bool LogAcceptCategory(const char* category)
 {
@@ -261,13 +273,6 @@ bool LogAcceptCategory(const char* category)
 
 int LogPrintStr(const std::string &str, bool ix)
 {
-    FILE* fout = fileout;
-    std::string fileName = "debug.log";
-    if (ix)
-    {
-        fout = ixFileout;
-        fileName = "instantsend.log";
-    }
     int ret = 0; // Returns total number of characters written
     if (fPrintToConsole)
     {
@@ -277,6 +282,9 @@ int LogPrintStr(const std::string &str, bool ix)
     }
     else if (fPrintToDebugLog && AreBaseParamsConfigured())
     {
+        FILE* fout = SelectFile(ix);
+        const std::string fileName = SelectFileName(ix);
+
         static bool fStartedNewLine = true;
         boost::call_once(&DebugPrintInit, debugPrintInitFlag);
 
