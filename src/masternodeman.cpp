@@ -157,7 +157,8 @@ bool CMasternodeMan::PoSeBan(const COutPoint &outpoint)
 
 void CMasternodeMan::Check()
 {
-    LOCK2(cs_main, cs);
+	// SYSCOIN remove csmain lock
+    LOCK(cs);
 
     LogPrint("masternode", "CMasternodeMan::Check -- nLastSentinelPingTime=%d, IsSentinelPingActive()=%d\n", nLastSentinelPingTime, IsSentinelPingActive());
 
@@ -814,7 +815,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
             // use announced Masternode as a peer
             connman.AddNewAddress(CAddress(mnb.addr, NODE_NETWORK), pfrom->addr, 2*60*60);
         } else if(nDos > 0) {
-            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), nDos);
         }
 
@@ -934,11 +934,10 @@ void CMasternodeMan::SyncAll(CNode* pnode, CConnman& connman)
 
     // local network
     bool isLocal = (pnode->addr.IsRFC1918() || pnode->addr.IsLocal());
-
+	LOCK(cs);
     CService addrSquashed = Params().AllowMultiplePorts() ? (CService)pnode->addr : CService(pnode->addr, 0);
     // should only ask for this once
     if(!isLocal && Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        LOCK2(cs_main, cs);
         auto it = mAskedUsForMasternodeList.find(addrSquashed);
         if (it != mAskedUsForMasternodeList.end() && it->second > GetTime()) {
             Misbehaving(pnode->GetId(), 34);
@@ -951,7 +950,6 @@ void CMasternodeMan::SyncAll(CNode* pnode, CConnman& connman)
 
     int nInvCount = 0;
 
-    LOCK(cs);
 
     for (const auto& mnpair : mapMasternodes) {
         if (mnpair.second.addr.IsRFC1918() || mnpair.second.addr.IsLocal()) continue; // do not send local network masternode
@@ -1164,7 +1162,6 @@ void CMasternodeMan::ProcessPendingMnvRequests(CConnman& connman)
 
 void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman& connman)
 {
-    AssertLockHeld(cs_main);
 
     // only masternodes can sign this, why would someone ask regular node?
     if(!fMasternodeMode) {
@@ -1209,7 +1206,6 @@ void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv,
 
 void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv)
 {
-    AssertLockHeld(cs_main);
 
     std::string strError;
 
@@ -1330,7 +1326,6 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
 
 void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv)
 {
-    AssertLockHeld(cs_main);
 
     std::string strError;
 
@@ -1596,7 +1591,7 @@ void CMasternodeMan::RemoveGovernanceObject(uint256 nGovernanceObjectHash)
 
 void CMasternodeMan::CheckMasternode(const CPubKey& pubKeyMasternode, bool fForce)
 {
-    LOCK2(cs_main, cs);
+    LOCK(cs);
     for (auto& mnpair : mapMasternodes) {
         if (mnpair.second.pubKeyMasternode == pubKeyMasternode) {
             mnpair.second.Check(fForce);
@@ -1657,7 +1652,7 @@ void CMasternodeMan::WarnMasternodeDaemonUpdates()
     int nUpdatedMasternodes{0};
 
     for (const auto& mnpair : mapMasternodes) {
-        if (mnpair.second.lastPing.nDaemonVersion > CLIENT_VERSION) {
+        if (mnpair.second.lastPing.nDaemonVersion > CLIENT_MASTERNODE_VERSION) {
             ++nUpdatedMasternodes;
         }
     }

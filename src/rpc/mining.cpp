@@ -174,7 +174,7 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
         nMaxTries = request.params[2].get_int();
     }
 	CSyscoinAddress address(request.params[1].get_str());
-	if (address.IsValid()) {
+	if (!address.IsValid()) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
 	}
 

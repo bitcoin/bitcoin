@@ -16,7 +16,7 @@
 //! These need to be macros, as clientversion.cpp's and syscoin*-res.rc's voodoo requires it
 #define CLIENT_VERSION_MAJOR 3
 #define CLIENT_VERSION_MINOR 0
-#define CLIENT_VERSION_REVISION 0
+#define CLIENT_VERSION_REVISION 2
 #define CLIENT_VERSION_BUILD 0
 
 //! Set to true for release, false for prerelease or test build
@@ -64,12 +64,14 @@
 #include <vector>
  // SYSCOIN
 static const std::string SYSCOIN_CLIENT_VERSION = SYSCOIN_VERSION;
+
 static const int CLIENT_VERSION =
                            1000000 * CLIENT_VERSION_MAJOR
                          +   10000 * CLIENT_VERSION_MINOR
                          +     100 * CLIENT_VERSION_REVISION
                          +       1 * CLIENT_VERSION_BUILD;
 
+static const int CLIENT_MASTERNODE_VERSION = 3000000;
 extern const std::string CLIENT_NAME;
 extern const std::string CLIENT_BUILD;
 
