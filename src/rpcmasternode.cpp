@@ -406,7 +406,7 @@ Value masternode(const Array& params, bool fHelp)
             arith_uint256  nHigh = 0;
             CMasternode *pBestMasternode = NULL;
             BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-                arith_uint256  n = mn.CalculateScore(nHeight - 101);
+                arith_uint256  n = mn.CalculateScore(nHeight - 100);
                 if(n > nHigh){
                     nHigh = n;
                     pBestMasternode = &mn;
