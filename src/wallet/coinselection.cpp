@@ -64,7 +64,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
     out_set.clear();
     CAmount curr_value = 0;
 
-    std::vector<bool> curr_selection; // select the utxo at this index
+    std::vector<char> curr_selection; // select the utxo at this index
     curr_selection.reserve(utxo_pool.size());
     CAmount actual_target = not_input_fees + target_value;
 
@@ -83,7 +83,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
     std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
 
     CAmount curr_waste = 0;
-    std::vector<bool> best_selection;
+    std::vector<char> best_selection;
     CAmount best_waste = MAX_MONEY;
 
     // Depth First search loop for choosing the UTXOs
