@@ -64,8 +64,8 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
     out_set.clear();
     CAmount curr_value = 0;
 
-    std::vector<char> curr_selection; // select the utxo at this index
-    curr_selection.reserve(utxo_pool.size());
+    std::vector<char> curr_selection(utxo_pool.size(), false); // select the utxo at this index
+    size_t curr_selection_size = 0;
     CAmount actual_target = not_input_fees + target_value;
 
     // Calculate curr_available_value
@@ -102,7 +102,6 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
             // explore any more UTXOs to avoid burning money like that.
             if (curr_waste <= best_waste) {
                 best_selection = curr_selection;
-                best_selection.resize(utxo_pool.size());
                 best_waste = curr_waste;
             }
             curr_waste -= (curr_value - actual_target); // Remove the excess value as we will be selecting different coins now
@@ -112,38 +111,39 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
         // Backtracking, moving backwards
         if (backtrack) {
             // Walk backwards to find the last included UTXO that still needs to have its omission branch traversed.
-            while (!curr_selection.empty() && !curr_selection.back()) {
-                curr_selection.pop_back();
-                curr_available_value += utxo_pool.at(curr_selection.size()).effective_value;
+            while (curr_selection_size > 0 && !curr_selection[curr_selection_size - 1]) {
+                --curr_selection_size;
+                curr_available_value += utxo_pool.at(curr_selection_size).effective_value;
             };
 
-            if (curr_selection.empty()) { // We have walked back to the first utxo and no branch is untraversed. All solutions searched
+            if (curr_selection_size == 0) { // We have walked back to the first utxo and no branch is untraversed. All solutions searched
                 break;
             }
 
             // Output was included on previous iterations, try excluding now.
-            curr_selection.back() = false;
-            CInputCoin& utxo = utxo_pool.at(curr_selection.size() - 1);
+            curr_selection[curr_selection_size - 1] = false;
+            CInputCoin& utxo = utxo_pool.at(curr_selection_size - 1);
             curr_value -= utxo.effective_value;
             curr_waste -= utxo.fee - utxo.long_term_fee;
         } else { // Moving forwards, continuing down this branch
-            CInputCoin& utxo = utxo_pool.at(curr_selection.size());
+            CInputCoin& utxo = utxo_pool.at(curr_selection_size);
 
             // Remove this utxo from the curr_available_value utxo amount
             curr_available_value -= utxo.effective_value;
 
             // Avoid searching a branch if the previous UTXO has the same value and same waste and was excluded. Since the ratio of fee to
             // long term fee is the same, we only need to check if one of those values match in order to know that the waste is the same.
-            if (!curr_selection.empty() && !curr_selection.back() &&
-                utxo.effective_value == utxo_pool.at(curr_selection.size() - 1).effective_value &&
-                utxo.fee == utxo_pool.at(curr_selection.size() - 1).fee) {
-                curr_selection.push_back(false);
+            if (curr_selection_size > 0 && !curr_selection[curr_selection_size - 1] &&
+                utxo.effective_value == utxo_pool.at(curr_selection_size - 1).effective_value &&
+                utxo.fee == utxo_pool.at(curr_selection_size - 1).fee) {
+                curr_selection[curr_selection_size] = false;
             } else {
                 // Inclusion branch first (Largest First Exploration)
-                curr_selection.push_back(true);
+                curr_selection[curr_selection_size] = true;
                 curr_value += utxo.effective_value;
                 curr_waste += utxo.fee - utxo.long_term_fee;
             }
+            ++curr_selection_size;
         }
     }
 
