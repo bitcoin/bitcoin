@@ -47,6 +47,19 @@ int GetBudgetPaymentCycleBlocks()
         return 50; //for testing purposes
 }
 
+CAmount GetVotingThreshold()
+{
+    if (Params().NetworkID() == CBaseChainParams::MAIN)
+        return BlocksBeforeSuperblockToSubmitFinalBudget();
+    else
+        return BlocksBeforeSuperblockToSubmitFinalBudget() / 4; // 10 blocks for 50-block cycle
+}
+
+int GetNextSuperblock(int height)
+{
+    return height - height % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+}
+
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf)
 {
     CTransaction txCollateral;
@@ -117,7 +130,7 @@ void CBudgetManager::CheckOrphanVotes()
     std::string strError = "";
     std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
     while(it1 != mapOrphanMasternodeBudgetVotes.end()){
-        if(budget.UpdateProposal(((*it1).second), NULL, strError)){
+        if(budget.ReceiveProposalVote(((*it1).second), NULL, strError)){
             LogPrintf("CBudgetManager::CheckOrphanVotes - Proposal/Budget is known, activating and removing orphan vote\n");
             mapOrphanMasternodeBudgetVotes.erase(it1++);
         } else {
@@ -601,28 +614,6 @@ bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight)
     return false;
 }
 
-bool CBudgetManager::HasNextFinalizedBudget()
-{
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(!pindexPrev) return false;
-
-    if(masternodeSync.IsBudgetFinEmpty()) return true;
-
-    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    CAmount amount = 1440;
-    if (Params().NetworkID() == CBaseChainParams::TESTNET) {
-        // Relatively 43200 / 30 = 1440, for testnet 50 / 30 ~ 2
-        amount = 2;
-    }
-    if(nBlockStart - pindexPrev->nHeight > amount*2) return true; //we wouldn't have the budget yet
-
-    if(budget.IsBudgetPaymentBlock(nBlockStart)) return true;
-
-    LogPrintf("CBudgetManager::HasNextFinalizedBudget() - Client is missing budget - %lli\n", nBlockStart);
-
-    return false;
-}
-
 bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
 {
     LOCK(cs);
@@ -1045,7 +1036,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
         
         std::string strError = "";
-        if(UpdateProposal(vote, pfrom, strError)) {
+        if(ReceiveProposalVote(vote, pfrom, strError)) {
             vote.Relay();
             masternodeSync.AddedBudgetItem(vote.GetHash());
         }
@@ -1124,12 +1115,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             LogPrintf("fbvote - rejected finalized budget vote - %s - %s\n", vote.GetHash().ToString(), strError);
         }
     }
-}
-
-bool CBudgetManager::PropExists(uint256 nHash)
-{
-    if(mapProposals.count(nHash)) return true;
-    return false;
 }
 
 //mark that a full sync is needed
@@ -1254,9 +1239,34 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
 }
 
-bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError)
+bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& strError)
+{
+    map<uint256, CBudgetProposal>::iterator found = mapProposals.find(vote.nProposalHash);
+    if (found == mapProposals.end())
+    {
+        strError = "Proposal not found!";
+        return false;
+    }
+
+    CBudgetProposal& proposal = found->second;
+    int height = chainActive.Height();
+
+    if (proposal.nBlockStart <= GetNextSuperblock(height) &&
+        proposal.nBlockEnd > GetNextSuperblock(height) &&
+        GetNextSuperblock(height) - height <= GetVotingThreshold()
+        )
+    {
+        strError = "Vote is too close to superblock. Voting during budget finalziation is not allowed";
+        return false;
+    }
+
+    return proposal.AddOrUpdateVote(vote, strError);
+}
+
+bool CBudgetManager::ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError)
 {
     LOCK(cs);
+
 
     if(!mapProposals.count(vote.nProposalHash)){
         if(pfrom){
@@ -1264,7 +1274,7 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
             //   otherwise we'll think a full sync succeeded when they return a result
             if(!masternodeSync.IsSynced()) return false;
 
-            LogPrintf("CBudgetManager::UpdateProposal - Unknown proposal %d, asking for source proposal\n", vote.nProposalHash.ToString());
+            LogPrintf("CBudgetManager::ReceiveProposalVote - Unknown proposal %d, asking for source proposal\n", vote.nProposalHash.ToString());
             mapOrphanMasternodeBudgetVotes[vote.nProposalHash] = vote;
 
             if(!askedForSourceProposalOrBudget.count(vote.nProposalHash)){
@@ -1279,6 +1289,19 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
 
 
     CBudgetProposal& proposal = mapProposals[vote.nProposalHash];
+    int height = chainActive.Height();
+    if (proposal.nBlockStart <= GetNextSuperblock(height) && proposal.nBlockEnd > GetNextSuperblock(height))
+    {
+        const int votingThresholdTime = GetVotingThreshold() * Params().TargetSpacing() * 0.75;
+        const int superblockProjectedTime = GetAdjustedTime() + (GetNextSuperblock(height) - height) * Params().TargetSpacing();
+
+        if (superblockProjectedTime - vote.nTime <= votingThresholdTime)
+        {
+            strError = "Vote is too close to superblock.";
+            return false;
+        }
+    }
+
     if(!proposal.AddOrUpdateVote(vote, strError))
         return false;
 
@@ -1426,7 +1449,7 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral) cons
     return true;
 }
 
-bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
+bool CBudgetProposal::AddOrUpdateVote(const CBudgetVote& vote, std::string& strError)
 {
     LOCK(cs);
 

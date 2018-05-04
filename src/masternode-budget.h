@@ -113,20 +113,15 @@ public:
         mapSeenFinalizedBudgetVotes.clear();
     }
 
-    int sizeFinalized() {return (int)mapFinalizedBudgets.size();}
-    int sizeProposals() {return (int)mapProposals.size();}
-
     void ResetSync();
     void MarkSynced();
     void Sync(CNode* node, uint256 nProp, bool fPartial=false);
 
-    void Calculate();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
     CBudgetProposal *FindProposal(const std::string &strProposalName);
     CBudgetProposal *FindProposal(uint256 nHash);
     CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
-    std::pair<std::string, std::string> GetVotes(std::string strProposalName);
 
     CAmount GetTotalBudget(int nHeight);
     std::vector<CBudgetProposal*> GetBudget();
@@ -136,11 +131,13 @@ public:
     bool AddProposal(const CBudgetProposal& budgetProposal, bool checkCollateral = true);
     bool AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
     void SubmitFinalBudget();
-    bool HasNextFinalizedBudget();
 
-    bool UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError);
+    // SubmitProposalVote is used when current node submits a vote. ReceiveProposalVote is used when
+    // a vote is received from a peer
+    bool SubmitProposalVote(const CBudgetVote& vote, std::string& strError);
+    bool ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError);
+
     bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom, std::string& strError);
-    bool PropExists(uint256 nHash);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
@@ -429,7 +426,7 @@ public:
     CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn);
 
     void Calculate();
-    bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
+    bool AddOrUpdateVote(const CBudgetVote& vote, std::string& strError);
     bool HasMinimumRequiredSupport();
     std::pair<std::string, std::string> GetVotes();
 
@@ -578,7 +575,7 @@ public:
         return ret;
     }
 
-    uint256 GetHash(){
+    uint256 GetHash() const {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << vin;
         ss << nProposalHash;

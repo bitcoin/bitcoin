@@ -267,7 +267,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
 
             std::string strError = "";
-            if(budget.UpdateProposal(vote, NULL, strError)) {
+            if(budget.SubmitProposalVote(vote, strError)) {
                 budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
                 vote.Relay();
                 success++;
@@ -322,7 +322,7 @@ Value mnbudget(const Array& params, bool fHelp)
         }
 
         std::string strError = "";
-        if(budget.UpdateProposal(vote, NULL, strError)){
+        if(budget.SubmitProposalVote(vote, strError)){
             budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             return "Voted successfully";
@@ -548,7 +548,7 @@ Value mnbudgetvoteraw(const Array& params, bool fHelp)
     }
 
     std::string strError = "";
-    if(budget.UpdateProposal(vote, NULL, strError)){
+    if(budget.SubmitProposalVote(vote, strError)){
         budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         return "Voted successfully";
