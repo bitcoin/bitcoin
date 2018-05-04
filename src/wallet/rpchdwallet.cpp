@@ -2804,7 +2804,6 @@ static void ParseOutputs(
     } else {
         // sent
         if (!listSent.empty()) {
-            entry.pushKV("fee", ValueFromAmount(-nFee));
             for (const auto &s : listSent) {
                 UniValue output(UniValue::VOBJ);
                 if (!ParseOutput(output,
@@ -2877,6 +2876,12 @@ static void ParseOutputs(
             entry.pushKV("category", "internal_transfer");
         } else {
             entry.pushKV("category", "send");
+
+            // Handle txns partially funded by wallet
+            if (nFee < 0)
+                amount = wtx.GetCredit(ISMINE_ALL) - wtx.GetDebit(ISMINE_ALL);
+            else
+                entry.pushKV("fee", ValueFromAmount(-nFee));
         }
     };
 

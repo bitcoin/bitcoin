@@ -1794,7 +1794,7 @@ isminetype CHDWallet::IsMine(const CTxIn& txin) const
 };
 
 isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
-    const CEKAKey *&pak, const CEKASCKey *&pasc, CExtKeyAccount *&pa, bool &isInvalid, SigVersion sigversion)
+    const CEKAKey *&pak, const CEKASCKey *&pasc, CExtKeyAccount *&pa, bool &isInvalid, SigVersion sigversion) const
 {
     if (HasIsCoinstakeOp(scriptPubKey))
     {
@@ -2631,26 +2631,32 @@ CAmount CHDWallet::GetAvailableBlindBalance(const CCoinControl* coinControl) con
 
 bool CHDWallet::IsChange(const CTxOutBase *txout) const
 {
-    // TODO: fix handling of 'change' outputs. The assumption is that any
-    // payment to a script that is ours, but is not in the address book
-    // is change. That assumption is likely to break when we implement multisignature
-    // wallets that return change back into a multi-signature-protected address;
-    // a better way of identifying which outputs are 'the send' and which are
-    // 'the change' will need to be implemented (maybe extend CWalletTx to remember
-    // which output, if any, was change).
-    if (txout->IsStandardOutput())
+    const CScript *ps = txout->GetPScriptPubKey();
+    if (ps)
     {
-        const CScript &scriptPubKey = ((CTxOutStandard*)txout)->scriptPubKey;
-        if (::IsMine(*this, scriptPubKey))
-        {
-            CTxDestination address;
-            if (!ExtractDestination(scriptPubKey, address))
-                return true;
+        const CScript &scriptPubKey = *ps;
 
-            LOCK(cs_wallet);
-            if (!mapAddressBook.count(address))
-                return true;
-        };
+        CKeyID idk;
+        const CEKAKey *pak = nullptr;
+        const CEKASCKey *pasc = nullptr;
+        CExtKeyAccount *pa = nullptr;
+        bool isInvalid;
+        isminetype mine = IsMine(scriptPubKey, idk, pak, pasc, pa, isInvalid);
+        if (!mine)
+            return false;
+
+        // Change is sent to the internal change
+        if (pa && pak && pa->nActiveInternal == pak->nParent) // TODO: check EKVT_KEY_TYPE
+            return true;
+        /*
+        CTxDestination address;
+        if (!ExtractDestination(scriptPubKey, address))
+            return true;
+
+        LOCK(cs_wallet);
+        if (!mapAddressBook.count(address))
+            return true;
+        */
     };
     return false;
 };

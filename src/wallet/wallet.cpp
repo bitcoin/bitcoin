@@ -1730,7 +1730,6 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
     // Sent/received.
     if (tx->IsParticlVersion())
     {
-        bool fFoundChange = false;
         for (unsigned int i = 0; i < tx->vpout.size(); ++i)
         {
             const CTxOutBase *txout = tx->vpout[i].get();
@@ -1745,12 +1744,8 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
             if (nDebit > 0)
             {
                 // Don't report 'change' txouts
-                // Only hide one change output per txn
-                if (!fFoundChange && pwallet->IsChange(txout))
-                {
-                    fFoundChange = true;
+                if (pwallet->IsChange(txout))
                     continue;
-                };
             } else
             if (!(fIsMine & filter))
                 continue;
@@ -1779,7 +1774,6 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
             // If we are debited by the transaction, add the output as a "sent" entry
             if (nDebit > 0)
                 listSent.push_back(output);
-
 
             // If we are receiving the output, add it as a "received" entry
             if (fIsMine & filter)
