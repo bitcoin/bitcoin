@@ -3,8 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <sync.h>
+#include <tinyformat.h>
 
 #include <logging.h>
+#include <threadutil.h>
 #include <utilstrencodings.h>
 
 #include <stdio.h>
@@ -37,23 +39,23 @@ void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 //
 
 struct CLockLocation {
-    CLockLocation(const char* pszName, const char* pszFile, int nLine, bool fTryIn)
-    {
-        mutexName = pszName;
-        sourceFile = pszFile;
-        sourceLine = nLine;
-        fTry = fTryIn;
-    }
+    CLockLocation(
+        const char* pszName, const char* pszFile, int nLine, bool fTryIn, std::string thread_name_) :
+            mutexName(pszName), sourceFile(pszFile), sourceLine(nLine), fTry(fTryIn),
+            thread_name(std::move(thread_name_)) { }
 
     std::string ToString() const
     {
-        return mutexName + "  " + sourceFile + ":" + itostr(sourceLine) + (fTry ? " (TRY)" : "");
+        return tfm::format(
+            "%s %s:%s%s (in thread %s)",
+            mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), thread_name);
     }
 
 private:
     bool fTry;
     std::string mutexName;
     std::string sourceFile;
+    std::string thread_name;
     int sourceLine;
 };
 
@@ -132,7 +134,7 @@ static void pop_lock()
 
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry)
 {
-    push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry));
+    push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry, thread_util::GetInternalName()));
 }
 
 void LeaveCritical()
