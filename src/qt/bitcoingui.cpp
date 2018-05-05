@@ -217,6 +217,7 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(addressBookAction);
 
     multisigAction = new QAction(QIcon(":/icons/multisig"), tr("Multisig"), this);
+    multisigAction->setStatusTip(tr("UI to create multisig addresses"));
     tabGroup->addAction(multisigAction);
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
