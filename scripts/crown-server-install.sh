@@ -110,8 +110,7 @@ handle_arguments()
 }
 
 install_dependencies() {
-    sudo apt-get install ufw -y
-    sudo apt-get install unzip -y
+    sudo apt-get install ufw unzip -y
 }
 
 create_swap() {
@@ -184,12 +183,12 @@ configure_firewall() {
 }
 
 add_cron_job() {
-    (crontab -l 2>/dev/null; echo "@reboot sudo /usr/local/bin/crownd") | crontab -
+    (crontab -l 2>/dev/null; echo "@reboot /usr/local/bin/crownd") | crontab -
 }
 
 main() {
     # Stop crownd (in case it's running)
-    sudo crown-cli stop
+    /usr/local/bin/crown-cli stop
     # Install Packages
     install_dependencies
     # Download the latest release
@@ -210,7 +209,7 @@ main() {
         add_cron_job
     fi
     # Start Crownd to begin sync
-    sudo crownd
+    /usr/local/bin/crownd
 }
 
 handle_arguments "$@"
