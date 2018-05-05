@@ -5,6 +5,11 @@
 
 #include <logging.h>
 #include <utiltime.h>
+#include <utilstrencodings.h>
+#include <threadutil.h>
+
+#include <list>
+#include <mutex>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
@@ -168,7 +173,7 @@ std::vector<CLogCategoryActive> ListActiveLogCategories()
     return ret;
 }
 
-std::string BCLog::Logger::LogTimestampStr(const std::string &str)
+std::string BCLog::Logger::LogTimestampStr(std::string str)
 {
     std::string strStamped;
 
@@ -178,6 +183,7 @@ std::string BCLog::Logger::LogTimestampStr(const std::string &str)
     if (m_started_new_line) {
         int64_t nTimeMicros = GetTimeMicros();
         strStamped = FormatISO8601DateTime(nTimeMicros/1000000);
+
         if (m_log_time_micros) {
             strStamped.pop_back();
             strStamped += strprintf(".%06dZ", nTimeMicros%1000000);
@@ -190,21 +196,27 @@ std::string BCLog::Logger::LogTimestampStr(const std::string &str)
     } else
         strStamped = str;
 
-    if (!str.empty() && str[str.size()-1] == '\n')
-        m_started_new_line = true;
-    else
-        m_started_new_line = false;
-
     return strStamped;
+}
+
+std::string BCLog::Logger::LogThreadnameStr(const std::string& str)
+{
+    if (!m_log_threadnames || !m_started_new_line) {
+        return str;
+    }
+    std::string thread_name = thread_util::GetInternalName();
+    return "[" + std::move(thread_name) + "] " + str;
 }
 
 void BCLog::Logger::LogPrintStr(const std::string &str)
 {
-    std::string strTimestamped = LogTimestampStr(str);
+    std::string strPrefixed = LogTimestampStr(LogThreadnameStr(str));
+
+    m_started_new_line = (!str.empty() && str[str.size()-1] == '\n');
 
     if (m_print_to_console) {
         // print to console
-        fwrite(strTimestamped.data(), 1, strTimestamped.size(), stdout);
+        fwrite(strPrefixed.data(), 1, strPrefixed.size(), stdout);
         fflush(stdout);
     }
     if (m_print_to_file) {
@@ -212,7 +224,7 @@ void BCLog::Logger::LogPrintStr(const std::string &str)
 
         // buffer if we haven't opened the log yet
         if (m_fileout == nullptr) {
-            m_msgs_before_open.push_back(strTimestamped);
+            m_msgs_before_open.push_back(strPrefixed);
         }
         else
         {
@@ -226,7 +238,7 @@ void BCLog::Logger::LogPrintStr(const std::string &str)
                 setbuf(m_fileout, nullptr); // unbuffered
             }
 
-            FileWriteStr(strTimestamped, m_fileout);
+            FileWriteStr(strPrefixed, m_fileout);
         }
     }
 }
