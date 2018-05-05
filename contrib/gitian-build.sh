@@ -256,13 +256,13 @@ then
     if [[ -n "$USE_LXC" ]]
     then
         sudo apt-get install lxc
-        bin/make-base-vm --suite trusty --arch amd64 --lxc
+        bin/make-base-vm --suite bionic --arch amd64 --lxc
     elif [[ -n "$USE_DOCKER" ]]
     then
         sudo apt-get install docker-ce
-        bin/make-base-vm --suite trusty --arch amd64 --docker
+        bin/make-base-vm --suite bionic --arch amd64 --docker
     else
-        bin/make-base-vm --suite trusty --arch amd64
+        bin/make-base-vm --suite bionic --arch amd64
     fi
     popd
 fi
