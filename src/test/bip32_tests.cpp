@@ -91,7 +91,7 @@ TestVector test3 =
      "XPARHAtQKHvbP4WKKw4qFva64chi8Mns5h2Angkfd6pGbKDncgr8hPsaKtTRLk8TbumeNGL4Q8CQ6tnY1vekPusk6EtNZnu2fFgAXRS6MAQjzukJ",
       0);
 
-void RunTest(const TestVector &test) {
+static void RunTest(const TestVector &test) {
     std::vector<unsigned char> seed = ParseHex(test.strHexMaster);
     CExtKey key;
     CExtPubKey pubkey;

@@ -85,7 +85,7 @@ struct {
     {2, 0xbbbeb305}, {2, 0xfe1c810a},
 };
 
-CBlockIndex CreateBlockIndex(int nHeight)
+static CBlockIndex CreateBlockIndex(int nHeight)
 {
     CBlockIndex index;
     index.nHeight = nHeight;
@@ -93,7 +93,7 @@ CBlockIndex CreateBlockIndex(int nHeight)
     return index;
 }
 
-bool TestSequenceLocks(const CTransaction &tx, int flags)
+static bool TestSequenceLocks(const CTransaction &tx, int flags)
 {
     LOCK(mempool.cs);
     return CheckSequenceLocks(tx, flags);
@@ -102,7 +102,7 @@ bool TestSequenceLocks(const CTransaction &tx, int flags)
 // Test suite for ancestor feerate transaction selection.
 // Implemented as an additional function, rather than a separate test case,
 // to allow reusing the blockchain created in CreateNewBlock_validity.
-void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey, std::vector<CTransactionRef>& txFirst)
+static void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey, std::vector<CTransactionRef>& txFirst)
 {
     // Test the ancestor feerate transaction selection.
     TestMemPoolEntryHelper entry;

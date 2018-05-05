@@ -20,7 +20,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(multisig_tests, BasicTestingSetup)
 
-CScript
+static CScript
 sign_multisig(const CScript& scriptPubKey, const std::vector<CKey>& keys, const CTransaction& transaction, int whichIn)
 {
     CAmount amount = 0;

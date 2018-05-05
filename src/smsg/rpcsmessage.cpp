@@ -22,13 +22,13 @@
 
 #include <univalue.h>
 
-void EnsureSMSGIsEnabled()
+static void EnsureSMSGIsEnabled()
 {
     if (!smsg::fSecMsgEnabled)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Secure messaging is disabled.");
 };
 
-UniValue smsgenable(const JSONRPCRequest &request)
+static UniValue smsgenable(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -52,7 +52,7 @@ UniValue smsgenable(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsgdisable(const JSONRPCRequest &request)
+static UniValue smsgdisable(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -68,7 +68,7 @@ UniValue smsgdisable(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsgoptions(const JSONRPCRequest &request)
+static UniValue smsgoptions(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
@@ -181,7 +181,7 @@ UniValue smsgoptions(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsglocalkeys(const JSONRPCRequest &request)
+static UniValue smsglocalkeys(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
@@ -406,7 +406,7 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
     return result;
 };
 
-UniValue smsgscanchain(const JSONRPCRequest &request)
+static UniValue smsgscanchain(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -426,7 +426,7 @@ UniValue smsgscanchain(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsgscanbuckets(const JSONRPCRequest &request)
+static UniValue smsgscanbuckets(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -454,7 +454,7 @@ UniValue smsgscanbuckets(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsgaddaddress(const JSONRPCRequest &request)
+static UniValue smsgaddaddress(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
@@ -480,7 +480,7 @@ UniValue smsgaddaddress(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsgaddlocaladdress(const JSONRPCRequest &request)
+static UniValue smsgaddlocaladdress(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -506,7 +506,7 @@ UniValue smsgaddlocaladdress(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsgimportprivkey(const JSONRPCRequest &request)
+static UniValue smsgimportprivkey(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
@@ -543,7 +543,7 @@ UniValue smsgimportprivkey(const JSONRPCRequest &request)
     return NullUniValue;
 }
 
-UniValue smsggetpubkey(const JSONRPCRequest &request)
+static UniValue smsggetpubkey(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -612,7 +612,7 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsgsend(const JSONRPCRequest &request)
+static UniValue smsgsend(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 8)
         throw std::runtime_error(
@@ -711,7 +711,7 @@ UniValue smsgsend(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsgsendanon(const JSONRPCRequest &request)
+static UniValue smsgsendanon(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
@@ -744,7 +744,7 @@ UniValue smsgsendanon(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsginbox(const JSONRPCRequest &request)
+static UniValue smsginbox(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
@@ -879,7 +879,7 @@ UniValue smsginbox(const JSONRPCRequest &request)
     return result;
 };
 
-UniValue smsgoutbox(const JSONRPCRequest &request)
+static UniValue smsgoutbox(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
@@ -996,7 +996,7 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
 };
 
 
-UniValue smsgbuckets(const JSONRPCRequest &request)
+static UniValue smsgbuckets(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
@@ -1125,7 +1125,7 @@ static bool sortMsgDesc(const std::pair<int64_t, UniValue> &a, const std::pair<i
     return a.first > b.first;
 };
 
-UniValue smsgview(const JSONRPCRequest &request)
+static UniValue smsgview(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() > 6)
         throw std::runtime_error(
@@ -1409,7 +1409,7 @@ UniValue smsgview(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue smsgone(const JSONRPCRequest &request)
+static UniValue smsgone(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(

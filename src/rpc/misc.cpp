@@ -42,7 +42,7 @@
 
 #include <univalue.h>
 
-UniValue validateaddress(const JSONRPCRequest& request)
+static UniValue validateaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -103,7 +103,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
 // Needed even with !ENABLE_WALLET, to pass (ignored) pointers around
 class CWallet;
 
-UniValue createmultisig(const JSONRPCRequest& request)
+static UniValue createmultisig(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 2)
     {
@@ -157,7 +157,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue verifymessage(const JSONRPCRequest &request)
+static UniValue verifymessage(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3)
         throw std::runtime_error(
@@ -213,7 +213,7 @@ UniValue verifymessage(const JSONRPCRequest &request)
     return (pubkey.GetID() == *keyID);
 }
 
-UniValue signmessagewithprivkey(const JSONRPCRequest& request)
+static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
@@ -252,7 +252,7 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     return EncodeBase64(vchSig.data(), vchSig.size());
 }
 
-UniValue setmocktime(const JSONRPCRequest& request)
+static UniValue setmocktime(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -311,7 +311,7 @@ static std::string RPCMallocInfo()
 }
 #endif
 
-UniValue getmemoryinfo(const JSONRPCRequest& request)
+static UniValue getmemoryinfo(const JSONRPCRequest& request)
 {
     /* Please, avoid using the word "pool" here in the RPC interface or help,
      * as users will undoubtedly confuse it with the other "memory pool"
@@ -358,7 +358,7 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
     }
 }
 
-void EnableOrDisableLogCategories(UniValue cats, bool enable) {
+static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
     cats = cats.get_array();
     for (unsigned int i = 0; i < cats.size(); ++i) {
         std::string cat = cats[i].get_str();
@@ -445,7 +445,7 @@ UniValue logging(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue echo(const JSONRPCRequest& request)
+static UniValue echo(const JSONRPCRequest& request)
 {
     if (request.fHelp)
         throw std::runtime_error(

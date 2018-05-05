@@ -85,7 +85,7 @@ static std::vector<uint32_t> GetPath(std::vector<uint32_t> &vPath, const UniValu
     return vPath;
 };
 
-CUSBDevice *SelectDevice(std::vector<std::unique_ptr<CUSBDevice> > &vDevices)
+static CUSBDevice *SelectDevice(std::vector<std::unique_ptr<CUSBDevice> > &vDevices)
 {
     std::string sError;
     CUSBDevice *rv = SelectDevice(vDevices, sError);
@@ -94,7 +94,7 @@ CUSBDevice *SelectDevice(std::vector<std::unique_ptr<CUSBDevice> > &vDevices)
     return rv;
 };
 
-UniValue listdevices(const JSONRPCRequest &request)
+static UniValue listdevices(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() > 0)
         throw std::runtime_error(
@@ -135,7 +135,7 @@ UniValue listdevices(const JSONRPCRequest &request)
 };
 
 
-UniValue getdeviceinfo(const JSONRPCRequest &request)
+static UniValue getdeviceinfo(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() > 0)
         throw std::runtime_error(
@@ -159,7 +159,7 @@ UniValue getdeviceinfo(const JSONRPCRequest &request)
     return info;
 };
 
-UniValue getdevicepublickey(const JSONRPCRequest &request)
+static UniValue getdevicepublickey(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
@@ -203,7 +203,7 @@ UniValue getdevicepublickey(const JSONRPCRequest &request)
     return rv;
 };
 
-UniValue getdevicexpub(const JSONRPCRequest &request)
+static UniValue getdevicexpub(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
@@ -233,7 +233,7 @@ UniValue getdevicexpub(const JSONRPCRequest &request)
     return CBitcoinExtPubKey(ekp).ToString();
 };
 
-UniValue devicesignmessage(const JSONRPCRequest &request)
+static UniValue devicesignmessage(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw std::runtime_error(
@@ -268,7 +268,7 @@ UniValue devicesignmessage(const JSONRPCRequest &request)
     return EncodeBase64(vchSig.data(), vchSig.size());
 };
 
-UniValue devicesignrawtransaction(const JSONRPCRequest &request)
+static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
 {
     #ifdef ENABLE_WALLET
     CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
@@ -563,7 +563,7 @@ UniValue devicesignrawtransaction(const JSONRPCRequest &request)
 };
 
 #ifdef ENABLE_WALLET
-UniValue initaccountfromdevice(const JSONRPCRequest &request)
+static UniValue initaccountfromdevice(const JSONRPCRequest &request)
 {
     CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
@@ -806,7 +806,7 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
 };
 
 
-UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
+static UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
 {
     CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))

@@ -352,12 +352,12 @@ BOOL WINAPI ConsoleHandler(DWORD dwType)
 }
 #endif
 
-void OnRPCStarted()
+static void OnRPCStarted()
 {
     uiInterface.NotifyBlockTip.connect(&RPCNotifyBlockChange);
 }
 
-void OnRPCStopped()
+static void OnRPCStopped()
 {
     uiInterface.NotifyBlockTip.disconnect(&RPCNotifyBlockChange);
     RPCNotifyBlockChange(false, nullptr);
@@ -657,7 +657,7 @@ struct CImportingNow
 // rev files since they'll be rewritten by the reindex anyway.  This ensures that vinfoBlockFile
 // is in sync with what's actually on disk by the time we start downloading, so that pruning
 // works correctly.
-void CleanupBlockRevFiles()
+static void CleanupBlockRevFiles()
 {
     std::map<std::string, fs::path> mapBlockFiles;
 
@@ -692,7 +692,7 @@ void CleanupBlockRevFiles()
     }
 }
 
-void ThreadImport(std::vector<fs::path> vImportFiles)
+static void ThreadImport(std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
     RenameThread("particl-loadblk");
@@ -778,7 +778,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
  *  Ensure that Bitcoin is running in a usable environment with all
  *  necessary library support.
  */
-bool InitSanityCheck(void)
+static bool InitSanityCheck(void)
 {
     if(!ECC_InitSanityCheck()) {
         InitError("Elliptic curve cryptography sanity check failure. Aborting.");
@@ -796,7 +796,7 @@ bool InitSanityCheck(void)
     return true;
 }
 
-bool AppInitServers()
+static bool AppInitServers()
 {
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);

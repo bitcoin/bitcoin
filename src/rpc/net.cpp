@@ -23,7 +23,7 @@
 
 #include <univalue.h>
 
-UniValue getconnectioncount(const JSONRPCRequest& request)
+static UniValue getconnectioncount(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -42,7 +42,7 @@ UniValue getconnectioncount(const JSONRPCRequest& request)
     return (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL);
 }
 
-UniValue ping(const JSONRPCRequest& request)
+static UniValue ping(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -65,7 +65,7 @@ UniValue ping(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-std::string ServicesToString(ServiceFlags nSerivces)
+static std::string ServicesToString(ServiceFlags nSerivces)
 {
     std::string rv = "";
 
@@ -85,7 +85,7 @@ std::string ServicesToString(ServiceFlags nSerivces)
     return rv;
 };
 
-UniValue getpeerinfo(const JSONRPCRequest& request)
+static UniValue getpeerinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -214,7 +214,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue addnode(const JSONRPCRequest& request)
+static UniValue addnode(const JSONRPCRequest& request)
 {
     std::string strCommand;
     if (!request.params[1].isNull())
@@ -261,7 +261,7 @@ UniValue addnode(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue disconnectnode(const JSONRPCRequest& request)
+static UniValue disconnectnode(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() == 0 || request.params.size() >= 3)
         throw std::runtime_error(
@@ -304,7 +304,7 @@ UniValue disconnectnode(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue getaddednodeinfo(const JSONRPCRequest& request)
+static UniValue getaddednodeinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
@@ -371,7 +371,7 @@ UniValue getaddednodeinfo(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue getnettotals(const JSONRPCRequest& request)
+static UniValue getnettotals(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 0)
         throw std::runtime_error(
@@ -437,7 +437,7 @@ static UniValue GetNetworksInfo()
     return networks;
 }
 
-UniValue getnetworkinfo(const JSONRPCRequest& request)
+static UniValue getnetworkinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -517,7 +517,7 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
     return obj;
 }
 
-UniValue setban(const JSONRPCRequest& request)
+static UniValue setban(const JSONRPCRequest& request)
 {
     std::string strCommand;
     if (!request.params[1].isNull())
@@ -581,7 +581,7 @@ UniValue setban(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue listbanned(const JSONRPCRequest& request)
+static UniValue listbanned(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -614,7 +614,7 @@ UniValue listbanned(const JSONRPCRequest& request)
     return bannedAddresses;
 }
 
-UniValue clearbanned(const JSONRPCRequest& request)
+static UniValue clearbanned(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -632,7 +632,7 @@ UniValue clearbanned(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue setnetworkactive(const JSONRPCRequest& request)
+static UniValue setnetworkactive(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
