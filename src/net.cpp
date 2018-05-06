@@ -1208,11 +1208,13 @@ void MapPort(bool)
 static const char *strMainNetDNSSeed[][2] = {
     {"seedpeercoin", "seed.peercoin.net"},
     {"seed", "seed.ppcoin.net"},
+    {"seed2", "seed2.peercoin.net"},
     {NULL, NULL}
 };
 
 static const char *strTestNetDNSSeed[][2] = {
     {"tseedpeercoin", "tseed.peercoin.net"},
+    {"tseedpeercoin2", "t-seed2.peercoin.net"},
     {NULL, NULL}
 };
 
