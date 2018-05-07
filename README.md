@@ -16,38 +16,37 @@ CRW tokens are a type of cryptocurrency. Like bitcoins, CRW can be used to pay f
 
 The Crown Platform utilizes secure servers (incentivized nodes) to provide scalability and fault-tolerance for economy applications. Members of the Crown Community can set up their own incentivized nodes to earn CRW while helping to maintain the network.
 
-
 For more information, as well as an immediately useable, binary version Crown see http://crown.tech/wallet.
 
+## Community
 
-## License
+Crown is ultimately a community-driven platform. Its potential to bring social and echnological growth is contingent on the ideas and support its users provide. We invite you to lend your voice and imagination to this burgeoning platform and share in its success. Together, there’s no limit to what we can accomplish.
 
-Crown Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see http://opensource.org/licenses/MIT.
+* Crown Forum: https://forum.crown.tech/
+* Mattermost: https://mm.crownlab.eu/login
+* Discord: https://discordapp.com/invite/rB3Kr86
+* Telegram: https://t.me/crownplatform
 
-Development Process
--------------------
+## Governance
 
-****************************************
-**Bug Reporting**
-****************************************
-Bugs can be reported via the github issues page: https://github.com/Crowndev/crowncoin/issues
-or emailing support@crown.tech
+Crown’s governance system has two core functions: choosing platform direction and funding. Unlike blockchain projects that rely on donations and pre-mined endowments, Crown uses 10% of each block reward to fund its own development. This allocation of funds allows us to reward miners and node operators for their contributions without compromising the platform’s coding and optimization efforts.
 
-***************************************
-**Merging and Updating**
-***************************************
-1. A Pull request is submitted.
-2. It will then be reviewed and tested by the Crown development team.
-3. After initial code inspection and internal testing the update will be deployed to the testnet for public testing.
-4. A minimum of 15 days of testnet function per upgrade is required to fully validate and test the upgrade.
-5. Once tested and validated, the pull request will be merged to master code and included in the next update.
+Crown’s governance system also enables its community to vote on which changes (ranging from projects to network updates) will be implemented onto the blockchain. Any platform user can submit a proposal to grow or change the network. 
 
-******************************************
-**Procedures for bounty development**
-*****************************************
+* View proposals: http://crown.today/proposals
+* How to create proposal:https://forum.crown.tech/index.php?topic=11.0
+
+
+## Development
+
+### Report a bug
+
+Bugs can be reported via the github issues page: https://github.com/Crowndev/crowncoin/issues, [Mattermost](https://mm.crownlab.eu/crown/channels/tech-support) or emailing support@crown.tech
+
+### Procedures for bounty development
 The Crown team will  post a request for development and the requirements to receive the bounty reward and the size of the reward. 
-1.Developers at large can then post their interest in seeking the bounty on github and being developing on the change.
+
+1. Developers at large can then post their interest in seeking the bounty on github and being developing on the change.
 2. Once the at-large developer deems his code complete, they will submit a pull request via ionomy github with the label of the Bounty Feature.
 3. It will then be reviewed and tested by the internal development team at ionomy.com.
 4. After initial code inspection and internal testing the update will be deployed to the testnet.
@@ -55,7 +54,12 @@ The Crown team will  post a request for development and the requirements to rece
 6. Once tested and validated, the pull request will be merged to master code and included in the next update.
 7. When the version update is deployed Bounty funds will be released to the developer of the completed feature.
 
+## License
+
+Crown Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+information or see http://opensource.org/licenses/MIT.
 - - -
+
 Copyright © 2009-2015, Bitcoin Core Developers
 
 Copyright © 2014-2015, Dash Core Developers
