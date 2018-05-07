@@ -1,138 +1,213 @@
-Coding
-====================
+# Coding Style Guide
 
-Various coding styles have been used during the history of the codebase,
-and the result is not very consistent. However, we're now trying to converge to
-a single style, so please use it in new code. Old code will be converted
-gradually.
-- Basic rules specified in src/.clang-format. Use a recent clang-format-3.5 to format automatically.
-  - Braces on new lines for namespaces, classes, functions, methods.
-  - Braces on the same line for everything else.
-  - 4 space indentation (no tabs) for every block except namespaces.
-  - No indentation for public/protected/private or for namespaces.
-  - No extra spaces inside parenthesis; don't do ( this )
-  - No space after function names; one space after if, for and while.
+The rules and conventions described on this page must be followed in all new code. When modifying old code it's advisable to follow them within reason and with respect to style consistency.
 
-Block style example:
+# Style
+
+## File organization
+
+### Copyright header
+
+Every file must have a typical copyright header. Files inherited from Bitcoin and Dash must include respective copyrights as well.
+
 ```c++
-namespace foo
-{
-class Class
-{
-    bool Function(char* psz, int n)
-    {
-        // Comment summarising what this section of code does
-        for (int i = 0; i < n; i++) {
-            // When something fails, return early
-            if (!Something())
-                return false;
-            ...
-        }
+// Copyright (c) 2014-<this year> Crown developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php
+```
 
-        // Success return is usually at the end
-        return true;
+### File Names
+
+Filenames should be all lowercase and can include dashes (`-`). C++ files should end in `.cpp` and header files should end in `.h`.
+
+### Header Guards
+
+All header files should have `#define` guards to prevent multiple inclusion. The format of the symbol name should be `<PATH>_<FILE>_H`. To guarantee uniqueness, they should be based on the full path in a project's source tree. 
+
+```c++
+#ifndef FOO_BAR_BAZ_H
+#define FOO_BAR_BAZ_H
+
+...
+
+#endif
+```
+
+## Formatting
+
+### Braces placement
+
+Braces in namespaces, classes, functions, enums, unions, try-catch blocks, loops and if statements are always placed on the next line. When there is an if statement with a single line in the conditional branch, no braces are required. However, statements that follow the condition must be on a separate line.
+In loops braces are always required.
+
+```c++
+namespace MyNamespace
+{
+    class MyClass
+    {
+    };
+
+    void MyFunction()
+    {
+        if (...)
+            return;
+            
+        for (auto element: container)
+        {
+            DoSomethingWith(element);
+        }
     }
 }
+```
+
+
+
+### Indentation
+
+Indentation step is 4 spaces; spaces must be used instead of tabs.
+
+### Class sections
+
+Sections in class definition should be in the following order: `public` - `protected` - `private`. Make separate sections for member functions and data members. Within each section, generally prefer grouping similar kinds of declarations together, and generally prefer the following order: types (including `typedef`,
+`using`, and nested structs and classes), constants, factory functions, constructors, assignment operators, destructor, all other methods, data members.
+
+```c++
+class MyClass
+{
+public:
+    void PublicMethod();
+    
+protected:
+	void ProtectedMethod();
+	
+private:
+    void PrivateMethod();
+    
+private:
+    std::string m_dataMember;
 }
 ```
 
-Doxygen comments
------------------
+### Line length
 
-To facilitate the generation of documentation, use doxygen-compatible comment blocks for functions, methods and fields.
+Break long lines of code. Try to keep them inside reasonable bounds, say, 100-120 chars per line.
 
-For example, to describe a function use:
+## Naming
+
+Give as descriptive a name as possible, within reason.
+
+Names of all identifiers are spelled in camel case (except for the cases where all capitals are used). Abbreviations are spelled with first upper case letter and the rest in lower case.
+
+Prefixing conventions such as putting "C" in front of each class or using Hungarian notation are discouraged.
+
 ```c++
-/**
- * ... text ...
- * @param[in] arg1    A description
- * @param[in] arg2    Another argument description
- * @pre Precondition for function...
- */
-bool function(int arg1, const char *arg2)
+class XmlParser
+{ 
+    ... 
+};
+void DisplayRtfmMessage();
 ```
-A complete list of `@xxx` commands can be found at http://www.stack.nl/~dimitri/doxygen/manual/commands.html.
-As Doxygen recognizes the comments by the delimiters (`/**` and `*/` in this case), you don't
-*need* to provide any commands for a comment to be valid, just a description text is fine.
 
-To describe a class use the same construct above the class definition:
+
+
+### Variables
+
+| Visibility          | Variable      | Constant                      | Compile-time constant (`constexpr`) |
+| ------------------- | ------------- | ----------------------------- | ----------------------------------- |
+| Local               | `camelCase`   | `camelCase`                   | `camelCase`                         |
+| Static              | `s_camelCase` | `camelCase`                   | `camelCase`                         |
+| Class member        | `m_camelCase` | `m_camelCase`                 | `m_camelCase`                       |
+| Static class member | `m_camelCase` | `m_camelCase`                 | `m_camelCase`                       |
+| Global              | `g_camelCase` | `ALL_CAPITALS` or `camelCase` | `ALL_CAPITALS` or `camelCase`       |
+
+### Enums
+
+Enum types are named in camel case with first capital letter. Enum values follow constant naming conventions: either camel case or all capitals in case of globally visible 
+
 ```c++
-/**
- * Alerts are for notifying old versions if they become too obsolete and
- * need to upgrade. The message is displayed in the status bar.
- * @see GetWarnings()
- */
-class CAlert
+class SystemnodeDb
 {
+    enum ReadResult {
+        Ok,
+        ...
+    };
+};
+
+enum Network
+{
+    NET_UNROUTABLE = 0,
+    ...
+};
 ```
 
-To describe a member or variable use:
+
+
+### Macros
+
+Macros are named in all capitals with underscores.
+
 ```c++
-int var; //!< Detailed description after the member
+#define DO_NOT_USE_ME true
 ```
 
-Also OK:
+### Functions
+
+Both free functions and class member functions are named in camel case with first uppercase letter. The only exception is inheriting from a third-party class which follows a different naming convention, for example, when working with Qt
+
 ```c++
-///
-/// ... text ...
-///
-bool function2(int arg1, const char *arg2)
+class SomeClass
+{
+    void SomeMethod()
+    {
+    }
+};
+
+class ExceptionalCase: public QObject
+{
+  virtual void redefinedQtMethod() override
+  {
+  }
+  
+  void myBrandNewMethod() 
+  {
+  }
+}
 ```
 
-Not OK (used plenty in the current source, but not picked up):
+### Classes and Structures
+
+Classes are named in camel case with first uppercase letter.
+
+### Namespaces
+
+Namespaces are named in camel case with first uppercase letter. When declaring nested namespaces C++17-style nested namespace declaration is preferred.
+
 ```c++
-//
-// ... text ...
-//
+namespace Crw::Net
+{
+    class Node
+    {};
+};
 ```
 
-A full list of comment syntaxes picked up by doxygen can be found at http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html,
-but if possible use one of the above styles.
+# Rules and Best Practices
 
-Locking/mutex usage notes
--------------------------
+More rules TBD
 
-The code is multi-threaded, and uses mutexes and the
-LOCK/TRY_LOCK macros to protect data structures.
+### Namespaces
 
-Deadlocks due to inconsistent lock ordering (thread 1 locks cs_main
-and then cs_wallet, while thread 2 locks them in the opposite order:
-result, deadlock as each waits for the other to release its lock) are
-a problem. Compile with -DDEBUG_LOCKORDER to get lock order
-inconsistencies reported in the debug.log file.
+Do not use *using-directives* (e.g.`using namespace foo`) in `.h` files. It's acceptable to use it in `.cpp` files, especially with `std::literals`, but try to keep those directives as local as possible.
 
-Re-architecting the core code so there are better-defined interfaces
-between the various components is a goal, with any necessary locking
-done by the components (e.g. see the self-contained CKeyStore class
-and its cs_KeyStore lock for example).
+### Unnamed Namespaces and StaticVariables
 
-Threads
--------
+When definitions in a `.cpp` file do not need to be referenced outside that file, place them in an unnamed namespace. Prefere unnamed namespaces to declaring them `static`. Do not use either of these constructs in `.h` files
 
-- ThreadScriptCheck : Verifies block scripts.
+### Preprocessor Macros
 
-- ThreadImport : Loads blocks from blk*.dat files or bootstrap.dat.
+Avoid using macros; prefer inline functions, enums, `const` and `constexpr` variables.
 
-- StartNode : Starts other threads.
-
-- ThreadDNSAddressSeed : Loads addresses of peers from the DNS.
-
-- ThreadMapPort : Universal plug-and-play startup/shutdown
-
-- ThreadSocketHandler : Sends/Receives data from peers on port 9340.
-
-- ThreadOpenAddedConnections : Opens network connections to added nodes.
-
-- ThreadOpenConnections : Initiates new connections to peers.
-
-- ThreadMessageHandler : Higher-level message handling (sending and receiving).
-
-- DumpAddresses : Dumps IP addresses of nodes to peers.dat.
-
-- ThreadFlushWalletDB : Close the wallet.dat file if it hasn't been used in 500ms.
-
-- ThreadRPCServer : Remote procedure call handler, listens on port 9998 for connections and services them.
-
-- CrowncoinMiner : Generates bitcoins (if wallet is enabled).
-
-- Shutdown : Does an orderly shutdown of everything.
+# Further Reading
+These are books and resources that considered to be good advice on coding style and best practices. It's preferable to follow their advice when it's reasonable:
+1. Herb Sutter, Andrei Alexandrescu "C++ Coding Standards: 101 Rules, Guidelines, and Best Practices "
+2. Scott Meyers "Effective Modern C++"
+3. Bjarne Stroustrup, Herb Sutter ["C++ Core Guidelines"](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
