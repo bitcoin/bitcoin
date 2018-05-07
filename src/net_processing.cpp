@@ -1789,6 +1789,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
             LogPrint(BCLog::NET, "Reject %s\n", SanitizeString(ss.str()));
         }
+        return true;
     }
 
     if (strCommand == NetMsgType::VERSION) {
