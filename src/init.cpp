@@ -318,6 +318,7 @@ void Shutdown()
  * The execution context the handler is invoked in is not guaranteed,
  * so we restrict handler operations to just touching variables:
  */
+#ifndef WIN32
 static void HandleSIGTERM(int)
 {
     fRequestShutdown = true;
@@ -327,6 +328,14 @@ static void HandleSIGHUP(int)
 {
     g_logger->m_reopen_file = true;
 }
+#else
+static BOOL WINAPI consoleCtrlHandler(DWORD dwCtrlType)
+{
+    fRequestShutdown = true;
+    Sleep(INFINITE);
+    return true;
+}
+#endif
 
 #ifndef WIN32
 static void registerSignalHandler(int signal, void(*handler)(int))
@@ -336,19 +345,6 @@ static void registerSignalHandler(int signal, void(*handler)(int))
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(signal, &sa, nullptr);
-}
-#else
-BOOL WINAPI ConsoleHandler(DWORD dwType)
-{
-    switch(dwType)
-    {
-        case CTRL_C_EVENT:
-            HandleSIGTERM(1);
-            return TRUE;
-        default:
-            break;
-    }
-    return FALSE;
 }
 #endif
 
@@ -982,8 +978,7 @@ bool AppInitBasicSetup()
     // Ignore SIGPIPE, otherwise it will bring the daemon down if the client closes unexpectedly
     signal(SIGPIPE, SIG_IGN);
 #else
-    if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler, TRUE))
-        return InitError("SetConsoleCtrlHandler failed");
+    SetConsoleCtrlHandler(consoleCtrlHandler, true);
 #endif
 
     std::set_new_handler(new_handler_terminate);
