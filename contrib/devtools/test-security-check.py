@@ -43,18 +43,28 @@ class TestSecurityChecks(unittest.TestCase):
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE']), 
                 (0, ''))
 
-    def test_PE(self):
+    def test_32bit_PE(self):
         source = 'test1.c'
         executable = 'test1.exe'
         cc = 'i686-w64-mingw32-gcc'
         write_testcode(source)
 
         self.assertEqual(call_security_check(cc, source, executable, []), 
-                (1, executable+': failed PIE NX'))
+                (1, executable+': failed DYNAMIC_BASE NX'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat']), 
-                (1, executable+': failed PIE'))
+                (1, executable+': failed DYNAMIC_BASE'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase']), 
                 (0, ''))
+    def test_64bit_PE(self):
+        source = 'test1.c'
+        executable = 'test1.exe'
+        cc = 'x86_64-w64-mingw32-gcc'
+        write_testcode(source)
+
+        self.assertEqual(call_security_check(cc, source, executable, []), (1, executable+': failed DYNAMIC_BASE NX\n'+executable+': warning HIGH_ENTROPY_VA'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat']), (1, executable+': failed DYNAMIC_BASE\n'+executable+': warning HIGH_ENTROPY_VA'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase']), (0, executable+': warning HIGH_ENTROPY_VA'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va']), (0, ''))
 
 if __name__ == '__main__':
     unittest.main()
