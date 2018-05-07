@@ -299,6 +299,8 @@ __attribute__((weak))
 #endif
 int main(int argc, char **argv)
 {
+    // TODO:FIX
+#if 0
     initialize();
 #ifdef __AFL_INIT
     // Enable AFL deferred forkserver mode. Requires compilation using
@@ -324,5 +326,8 @@ int main(int argc, char **argv)
         return 0;
     }
     return test_one_input(buffer);
+#endif
+#else
+    return 0;
 #endif
 }
