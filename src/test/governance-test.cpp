@@ -712,7 +712,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
         SetMockTime(superblockProjectedTime - 2 * Params().TargetSpacing());
 
         // Call & Check
-        const bool isSubmitted = budget.UpdateProposal(vote, NULL, error);
+        const bool isSubmitted = budget.ReceiveProposalVote(vote, NULL, error);
 
         BOOST_CHECK(isSubmitted);
         BOOST_CHECK(error.empty());
@@ -745,7 +745,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
         SetMockTime(superblockProjectedTime - 2 * Params().TargetSpacing());
 
         // Call & Check
-        const bool isSubmitted = budget.UpdateProposal(vote, NULL, error);
+        const bool isSubmitted = budget.ReceiveProposalVote(vote, NULL, error);
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());
@@ -777,7 +777,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
         SetMockTime(superblockProjectedTime - 2 * Params().TargetSpacing());
 
         // Call & Check
-        const bool isSubmitted = budget.UpdateProposal(vote, NULL, error);
+        const bool isSubmitted = budget.ReceiveProposalVote(vote, NULL, error);
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());

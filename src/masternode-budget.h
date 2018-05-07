@@ -138,8 +138,11 @@ public:
     void SubmitFinalBudget();
 
     bool AddProposal(const CBudgetProposal &budgetProposal, bool checkCollateral = true);
-    bool UpdateProposal(const CBudgetVote &vote, CNode *pfrom, std::string &strError);
-    bool SubmitProposalVote(const CBudgetVote &vote, std::string &strError);
+
+    // SubmitProposalVote is used when current node submits a vote. ReceiveProposalVote is used when
+    // a vote is received from a peer
+    bool SubmitProposalVote(const CBudgetVote& vote, std::string& strError);
+    bool ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError);
 
     bool IsBudgetPaymentBlock(int nBlockHeight) const;
     bool IsTransactionValid(const CTransaction &txNew, int nBlockHeight) const;

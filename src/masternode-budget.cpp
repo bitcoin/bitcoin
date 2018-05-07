@@ -70,15 +70,6 @@ int GetNextSuperblock(int height)
     return height - height % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
 }
 
-int GetBlockHeight()
-{
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if (!pindexPrev)
-        return 0;
-
-    return pindexPrev->nHeight;
-}
-
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf)
 {
     CTransaction txCollateral;
@@ -149,7 +140,7 @@ void CBudgetManager::CheckOrphanVotes()
     std::string strError = "";
     std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
     while(it1 != mapOrphanMasternodeBudgetVotes.end()){
-        if(budget.UpdateProposal(((*it1).second), NULL, strError)){
+        if(budget.ReceiveProposalVote(((*it1).second), NULL, strError)){
             LogPrintf("CBudgetManager::CheckOrphanVotes - Proposal/Budget is known, activating and removing orphan vote\n");
             mapOrphanMasternodeBudgetVotes.erase(it1++);
         } else {
@@ -1014,7 +1005,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
         
         std::string strError = "";
-        if(UpdateProposal(vote, pfrom, strError)) {
+        if(ReceiveProposalVote(vote, pfrom, strError)) {
             vote.Relay();
             masternodeSync.AddedBudgetItem(vote.GetHash());
         }
@@ -1228,7 +1219,7 @@ bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& st
     }
 
     CBudgetProposal& proposal = found->second;
-    int height = GetBlockHeight();
+    int height = chainActive.Height();
 
     if (proposal.nBlockStart <= GetNextSuperblock(height) &&
         proposal.nBlockEnd > GetNextSuperblock(height) &&
@@ -1242,7 +1233,7 @@ bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& st
     return proposal.AddOrUpdateVote(vote, strError);
 }
 
-bool CBudgetManager::UpdateProposal(const CBudgetVote& vote, CNode* pfrom, std::string& strError)
+bool CBudgetManager::ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError)
 {
     LOCK(cs);
 
@@ -1253,7 +1244,7 @@ bool CBudgetManager::UpdateProposal(const CBudgetVote& vote, CNode* pfrom, std::
             //   otherwise we'll think a full sync succeeded when they return a result
             if(!masternodeSync.IsSynced()) return false;
 
-            LogPrintf("CBudgetManager::UpdateProposal - Unknown proposal %d, asking for source proposal\n", vote.nProposalHash.ToString());
+            LogPrintf("CBudgetManager::ReceiveProposalVote - Unknown proposal %d, asking for source proposal\n", vote.nProposalHash.ToString());
             mapOrphanMasternodeBudgetVotes[vote.nProposalHash] = vote;
 
             if(!askedForSourceProposalOrBudget.count(vote.nProposalHash)){
@@ -1268,7 +1259,7 @@ bool CBudgetManager::UpdateProposal(const CBudgetVote& vote, CNode* pfrom, std::
 
 
     CBudgetProposal& proposal = mapProposals[vote.nProposalHash];
-    int height = GetBlockHeight();
+    int height = chainActive.Height();
     if (proposal.nBlockStart <= GetNextSuperblock(height) && proposal.nBlockEnd > GetNextSuperblock(height))
     {
         const int votingThresholdTime = GetVotingThreshold() * Params().TargetSpacing() * 0.75;
