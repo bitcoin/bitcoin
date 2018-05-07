@@ -379,7 +379,7 @@ void CSystemnodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
         }
     }
 
-    CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
+    CAmount blockValue = GetBlockValue(pindexPrev->nHeight, nFees);
     CAmount systemnodePayment = GetSystemnodePayment(pindexPrev->nHeight+1, blockValue);
 
     // This is already done in masternode

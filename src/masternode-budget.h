@@ -89,7 +89,7 @@ private:
 public:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
-    
+
     // keep track of the scanning errors I've seen
     map<uint256, CBudgetProposal> mapProposals;
     map<uint256, CFinalizedBudget> mapFinalizedBudgets;
@@ -101,12 +101,14 @@ public:
     std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
     std::map<uint256, CFinalizedBudgetVote> mapOrphanFinalizedBudgetVotes;
 
-    CBudgetManager() {
+    CBudgetManager()
+    {
         mapProposals.clear();
         mapFinalizedBudgets.clear();
     }
 
-    void ClearSeen() {
+    void ClearSeen()
+    {
         mapSeenMasternodeBudgetProposals.clear();
         mapSeenMasternodeBudgetVotes.clear();
         mapSeenFinalizedBudgets.clear();
@@ -115,35 +117,45 @@ public:
 
     void ResetSync();
     void MarkSynced();
-    void Sync(CNode* node, uint256 nProp, bool fPartial=false);
+    void Sync(CNode *node, uint256 nProp, bool fPartial = false) const;
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode *pfrom, std::string &strCommand, CDataStream &vRecv);
+
     void NewBlock();
+
     CBudgetProposal *FindProposal(const std::string &strProposalName);
     CBudgetProposal *FindProposal(uint256 nHash);
     CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
 
     CAmount GetTotalBudget(int nHeight);
-    std::vector<CBudgetProposal*> GetBudget();
-    std::vector<CBudgetProposal*> GetAllProposals();
-    std::vector<CFinalizedBudget*> GetFinalizedBudgets();
-    bool IsBudgetPaymentBlock(int nBlockHeight);
-    bool AddProposal(const CBudgetProposal& budgetProposal, bool checkCollateral = true);
-    bool AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
+
+    std::vector<CBudgetProposal *> GetBudget();
+    std::vector<CBudgetProposal *> GetAllProposals();
+    std::vector<CFinalizedBudget *> GetFinalizedBudgets();
+
+    bool AddFinalizedBudget(CFinalizedBudget &finalizedBudget, bool checkCollateral = true);
+    bool UpdateFinalizedBudget(CFinalizedBudgetVote &vote, CNode *pfrom, std::string &strError);
     void SubmitFinalBudget();
+
+    bool AddProposal(const CBudgetProposal &budgetProposal, bool checkCollateral = true);
 
     // SubmitProposalVote is used when current node submits a vote. ReceiveProposalVote is used when
     // a vote is received from a peer
     bool SubmitProposalVote(const CBudgetVote& vote, std::string& strError);
     bool ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError);
 
-    bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom, std::string& strError);
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    std::string GetRequiredPaymentsString(int nBlockHeight);
-    void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
+    bool IsBudgetPaymentBlock(int nBlockHeight) const;
+    bool IsTransactionValid(const CTransaction &txNew, int nBlockHeight) const;
+    void FillBlockPayee(CMutableTransaction &txNew, CAmount nFees) const;
+
+    std::string GetRequiredPaymentsString(int nBlockHeight) const;
+    std::string ToString() const;
 
     void CheckOrphanVotes();
-    void Clear(){
+    void CheckAndRemove();
+
+    void Clear()
+    {
         LOCK(cs);
 
         LogPrintf("Budget object cleared\n");
@@ -156,14 +168,12 @@ public:
         mapOrphanMasternodeBudgetVotes.clear();
         mapOrphanFinalizedBudgetVotes.clear();
     }
-    void CheckAndRemove();
-    std::string ToString() const;
-
 
     ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(mapSeenMasternodeBudgetProposals);
         READWRITE(mapSeenMasternodeBudgetVotes);
         READWRITE(mapSeenFinalizedBudgets);
@@ -174,8 +184,10 @@ public:
         READWRITE(mapProposals);
         READWRITE(mapFinalizedBudgets);
     }
-};
 
+private:
+    const CFinalizedBudget *GetMostVotedBudget(int height) const;
+};
 
 class CTxBudgetPayment
 {
@@ -258,11 +270,10 @@ public:
     const std::map<uint256, CFinalizedBudgetVote>& GetVotes() const { return mapVotes; }
     std::string GetProposals() const;
     int GetBlockStart() const {return nBlockStart;}
-    int GetBlockEnd() const {return nBlockStart + (int)(vecBudgetPayments.size() - 1);}
+    int GetBlockEnd() const {return nBlockStart;} // Paid in single block
     int GetVoteCount() const {return (int)mapVotes.size();}
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    bool GetBudgetPaymentByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment) const;
-    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, CAmount& nAmount) const;
+    const std::vector<CTxBudgetPayment>& GetBudgetPayments() const;
+    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const;
 
     //check to see if we should vote on this
     bool AutoCheck();
@@ -273,7 +284,7 @@ public:
     void SubmitVote();
 
     void MarkSynced();
-    int Sync(CNode* pfrom, bool fPartial);
+    int Sync(CNode* pfrom, bool fPartial) const;
     void ResetSync();
 
     //checks the hashes to make sure we know about them
