@@ -321,23 +321,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
         // Ignore any payments messages until masternode list is synced
         if(!masternodeSync.IsMasternodeListSynced()) return;
 
-        {
-            LOCK(cs_mapMasternodePaymentVotes);
-
-            auto res = mapMasternodePaymentVotes.emplace(nHash, vote);
-
-            // Avoid processing same vote multiple times
-            if(!res.second) {
-                LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nBlockHeight=%d/%d seen\n",
-                            nHash.ToString(), vote.nBlockHeight, nCachedBlockHeight);
-                return;
-            }
-
-            // Mark vote as non-verified when it's seen for the first time,
-            // AddOrUpdatePaymentVote() below should take care of it if vote is actually ok
-            res.first->second.MarkAsNotVerified();
-        }
-
         int nFirstBlock = nCachedBlockHeight - GetStorageLimit();
         if(vote.nBlockHeight < nFirstBlock || vote.nBlockHeight > nCachedBlockHeight+20) {
             LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- vote out of range: nFirstBlock=%d, nBlockHeight=%d, nHeight=%d\n", nFirstBlock, vote.nBlockHeight, nCachedBlockHeight);
@@ -347,11 +330,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
         std::string strError = "";
         if(!vote.IsValid(pfrom, nCachedBlockHeight, strError, connman)) {
             LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- invalid message, error: %s\n", strError);
-            return;
-        }
-
-        if(!UpdateLastVote(vote)) {
-            LogPrintf("MASTERNODEPAYMENTVOTE -- masternode already voted, masternode=%s\n", vote.masternodeOutpoint.ToStringShort());
             return;
         }
 
@@ -380,13 +358,35 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
             // so just quit here.
             return;
         }
+		// SYSCOIN update last vote after sig check
+		if (!UpdateLastVote(vote)) {
+			LogPrintf("MASTERNODEPAYMENTVOTE -- masternode already voted, masternode=%s\n", vote.masternodeOutpoint.ToStringShort());
+			return;
+		}
+		// SYSCOIN
+		{
+			LOCK(cs_mapMasternodePaymentVotes);
+
+			auto res = mapMasternodePaymentVotes.emplace(nHash, vote);
+
+			// Avoid processing same vote multiple times
+			if (!res.second) {
+				LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nBlockHeight=%d/%d vote=%s, seen\n",
+					nHash.ToString(), vote.nBlockHeight, nCachedBlockHeight, vote.ToString());
+				return;
+			}
+
+			// Mark vote as non-verified when it's seen for the first time,
+			// AddOrUpdatePaymentVote() below should take care of it if vote is actually ok
+			res.first->second.MarkAsNotVerified();
+		}
 
         CTxDestination address1;
         ExtractDestination(vote.payee, address1);
         CSyscoinAddress address2(address1);
 
-        LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- vote: address=%s, nBlockHeight=%d, nHeight=%d, prevout=%s, hash=%s new\n",
-                    address2.ToString(), vote.nBlockHeight, nCachedBlockHeight, vote.masternodeOutpoint.ToStringShort(), nHash.ToString());
+		LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nBlockHeight=%d/%d vote=%s, new\n",
+			nHash.ToString(), vote.nBlockHeight, nCachedBlockHeight, vote.ToString());
 
         if(AddOrUpdatePaymentVote(vote)){
             vote.Relay(connman);
@@ -428,7 +428,9 @@ bool CMasternodePaymentVote::Sign()
             LogPrintf("CMasternodePaymentVote::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
+		LogPrint("mnpayments", "CMasternodePayments::Sign -- signed, hash=%s, vote=%s\n", GetHash().GetHex(), ToString());
     }
+	
 
     return true;
 }
@@ -908,8 +910,8 @@ bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int
             if(masternodeSync.IsMasternodeListSynced() && nBlockHeight > nValidationHeight) {
                 nDos = 20;
             }
-            return error("CMasternodePaymentVote::CheckSignature -- Got bad Masternode payment signature, masternode=%s, error: %s",
-                        masternodeOutpoint.ToStringShort(), strError);
+            return error("CMasternodePaymentVote::CheckSignature -- Got bad Masternode payment signature, signaturehash=%s, hash=%s, vote=%s, error: %s",
+                        hash.GetHex(), GetHash().GetHex(), ToString(), strError);
             
         }
     } 
@@ -920,9 +922,9 @@ bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int
 std::string CMasternodePaymentVote::ToString() const
 {
     std::ostringstream info;
-
-    info << masternodeOutpoint.ToStringShort() <<
+	    info << masternodeOutpoint.ToStringShort() <<
             ", " << nBlockHeight <<
+			", " << nStartHeight <<
             ", " << ScriptToAsmStr(payee) <<
             ", " << (int)vchSig.size();
 
