@@ -1,32 +1,26 @@
-Crown Core staging tree 0.12
-===============================
-Travis:  
-`master:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=master)](https://travis-ci.org/crownpay/crown) `v0.12.0.x:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=0.12.0.x)](https://travis-ci.org/Crowndev/crowncoin/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=0.12.1.x)](https://travis-ci.org/Crowndev/crowncoin/branches)  
-Gitlab:  
-`master:` [![pipeline status](http://gitlab.crown.tech/crown/crown-core/badges/master/pipeline.svg)](http://gitlab.crown.tech/crown/crown-core/commits/master)
+# Crown Platform 0.12.4
+
+[![pipeline status](http://gitlab.crown.tech/crown/crown-core/badges/master/pipeline.svg)](http://gitlab.crown.tech/crown/crown-core/commits/master)
 
 http://www.crown.tech
 
-Copyright (c) 2009-2015 Bitcoin Core Developers
-Copyright (c) 2014-2015 Dash Core Developers
-Copyright (c) 2014-2018 Crown Core Developers
+## What is Crown?
+
+Crown is both a leading digital token (known as CRW) and a self-sustainable blockchain platform for building and running economy applications. Our community uses the Crown Platform as a payment service, proof of data integrity and a support structure for projects ranging from cloud businesses to apps. As more users lend their talents and passion to the platform, Crown’s potential to promote innovation grows exponentially. 
+
+###  A Digital Token
+
+CRW tokens are a type of cryptocurrency. Like bitcoins, CRW can be used to pay for a wide variety of products and services. CRW can also be traded against other altcoins through an online exchange.
+
+### Blockchain Application Platform
+
+The Crown Platform utilizes secure servers (incentivized nodes) to provide scalability and fault-tolerance for economy applications. Members of the Crown Community can set up their own incentivized nodes to earn CRW while helping to maintain the network.
 
 
-What is Crown?
-----------------
-
-Crown is an experimental new digital currency that enables anonymous, instant
-payments to anyone, anywhere in the world. Crown uses peer-to-peer technology
-to operate with no central authority: managing transactions and issuing money
-are carried out collectively by the network. Crown Core is the name of open
-source software which enables the use of this currency.
-
-For more information, as well as an immediately useable, binary version of
-the Crown Core software, see http://crown.tech/wallet.
+For more information, as well as an immediately useable, binary version Crown see http://crown.tech/wallet.
 
 
-License
--------
+## License
 
 Crown Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see http://opensource.org/licenses/MIT.
@@ -60,3 +54,10 @@ The Crown team will  post a request for development and the requirements to rece
 5. A minimum of 15 days of testnet function per upgrade is required to fully validate and test the upgrade.
 6. Once tested and validated, the pull request will be merged to master code and included in the next update.
 7. When the version update is deployed Bounty funds will be released to the developer of the completed feature.
+
+- - -
+Copyright © 2009-2015, Bitcoin Core Developers
+
+Copyright © 2014-2015, Dash Core Developers
+
+Copyright © 2014-2018, Crown Developers
