@@ -75,11 +75,16 @@ void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, C
         // Ignore any InstantSend messages until masternode list is synced
         if(!masternodeSync.IsMasternodeListSynced()) return;
 
-        {
-            LOCK(cs_instantsend);
-            auto ret = mapTxLockVotes.emplace(nVoteHash, vote);
-            if (!ret.second) return;
-        }
+		LOCK(cs_main);
+#ifdef ENABLE_WALLET
+		if (pwalletMain)
+			LOCK(pwalletMain->cs_wallet);
+#endif
+		LOCK(cs_instantsend);
+           
+        auto ret = mapTxLockVotes.emplace(nVoteHash, vote);
+        if (!ret.second) return;
+        
 
         ProcessNewTxLockVote(pfrom, vote, connman);
 
@@ -204,8 +209,7 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
     if(!fMasternodeMode) return;
     if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
 
-    AssertLockHeld(cs_main);
-    AssertLockHeld(cs_instantsend);
+    LOCK2(cs_main, cs_instantsend);
 
     uint256 txHash = txLockCandidate.GetHash();
     // We should never vote on a Transaction Lock Request that was not (yet) accepted by the mempool
@@ -388,12 +392,13 @@ bool CInstantSend::ProcessNewTxLockVote(CNode* pfrom, const CTxLockVote& vote, C
 
 bool CInstantSend::ProcessOrphanTxLockVote(const CTxLockVote& vote)
 {
-	LOCK(cs_main);
+	// cs_main, cs_wallet and cs_instantsend should be already locked
+	AssertLockHeld(cs_main);
 #ifdef ENABLE_WALLET
 	if (pwalletMain)
-		LOCK(pwalletMain->cs_wallet);
+		AssertLockHeld(pwalletMain->cs_wallet);
 #endif
-	LOCK(cs_instantsend);
+	AssertLockHeld(cs_instantsend);
 
     uint256 txHash = vote.GetTxHash();
 
@@ -466,6 +471,10 @@ void CInstantSend::UpdateVotedOutpoints(const CTxLockVote& vote, CTxLockCandidat
 void CInstantSend::ProcessOrphanTxLockVotes()
 {
 	LOCK(cs_main);
+#ifdef ENABLE_WALLET
+	if (pwalletMain)
+		LOCK(pwalletMain->cs_wallet);
+#endif
 	LOCK(cs_instantsend);
 
     std::map<uint256, CTxLockVote>::iterator it = mapTxLockVotesOrphan.begin();
@@ -483,6 +492,10 @@ void CInstantSend::TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCand
     if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
 
 	LOCK(cs_main);
+#ifdef ENABLE_WALLET
+	if (pwalletMain)
+		LOCK(pwalletMain->cs_wallet);
+#endif
 	LOCK(cs_instantsend);
 
     uint256 txHash = txLockCandidate.txLockRequest.tx->GetHash();

@@ -987,7 +987,7 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
     rank_pair_vec_t vecMasternodeRanks;
     GetMasternodeRanks(vecMasternodeRanks, nCachedBlockHeight - 1, MIN_POSE_PROTO_VERSION);
 
-    LOCK(cs);
+	LOCK(cs);
 
     int nCount = 0;
 
