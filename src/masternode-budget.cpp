@@ -553,7 +553,7 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees) c
 
     // Pay the miner
 
-    txNew.vout[0].nValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
+    txNew.vout[0].nValue = GetBlockValue(pindexPrev->nHeight, nFees);
 
     // Find finalized budgets with the most votes
 
