@@ -136,14 +136,15 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
         // include them, and update their setMemPoolParents to include this tx.
         for (; iter != mapNextTx.end() && iter->first->hash == hash; ++iter) {
             const uint256 &childHash = iter->second->GetHash();
+            // We can skip updating entries that are in the block (which are
+            // already accounted for).
+            if (setAlreadyIncluded.count(childHash)) continue;
             txiter childIter = mapTx.find(childHash);
             assert(childIter != mapTx.end());
-            // We can skip updating entries we've encountered before or that
-            // are in the block (which are already accounted for).
-            if (setChildren.insert(childIter).second && !setAlreadyIncluded.count(childHash)) {
-                UpdateChild(it, childIter, true);
-                UpdateParent(childIter, it, true);
-            }
+            // We can skip updating entries we've encountered before.
+            if (!setChildren.insert(childIter).second) continue;
+            UpdateChild(it, childIter, true);
+            UpdateParent(childIter, it, true);
         }
         UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded);
     }
