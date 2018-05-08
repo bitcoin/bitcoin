@@ -457,6 +457,7 @@ void SetupServerArgs()
     gArgs.AddArg("-logips", strprintf(_("Include IP addresses in debug output (default: %u)"), DEFAULT_LOGIPS), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-logtimestamps", strprintf(_("Prepend debug output with timestamp (default: %u)"), DEFAULT_LOGTIMESTAMPS), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-logtimemicros", strprintf("Add microsecond precision to debug timestamps (default: %u)", DEFAULT_LOGTIMEMICROS), true, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-logasync", strprintf(_("Buffer debug output and flush it to file asynchronously (default: %u)"), DEFAULT_LOGASYNC), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-mocktime=<n>", "Replace actual time with <n> seconds since epoch (default: 0)", true, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-maxsigcachesize=<n>", strprintf("Limit sum of signature cache and script execution cache sizes to <n> MiB (default: %u)", DEFAULT_MAX_SIG_CACHE_SIZE), true, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-maxtipage=<n>", strprintf("Maximum tip age in seconds to consider node in initial block download (default: %u)", DEFAULT_MAX_TIP_AGE), true, OptionsCategory::DEBUG_TEST);
@@ -808,7 +809,7 @@ void InitLogging()
     // Add newlines to the logfile to distinguish this execution from the last
     // one; called before console logging is set up, so this is only sent to
     // debug.log.
-    LogPrintf("\n\n\n\n\n");
+    g_logger->LogPrintStr("\n\n\n\n\n");
 
     g_logger->m_print_to_console = gArgs.GetBoolArg("-printtoconsole", !gArgs.GetBoolArg("-daemon", false));
     g_logger->m_log_timestamps = gArgs.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
@@ -1214,6 +1215,10 @@ bool AppInitMain()
         if (!g_logger->OpenDebugLog()) {
             return InitError(strprintf("Could not open debug log file %s",
                                        g_logger->m_file_path.string()));
+        }
+
+        if (gArgs.GetBoolArg("-logasync", DEFAULT_LOGASYNC)) {
+            async_logging::Init();
         }
     }
 

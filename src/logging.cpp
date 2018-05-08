@@ -5,6 +5,12 @@
 
 #include <logging.h>
 #include <utiltime.h>
+#include <reverselock.h>
+
+#include <chrono>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
@@ -231,6 +237,11 @@ void BCLog::Logger::LogPrintStr(const std::string &str)
     }
 }
 
+void BCLog::Logger::FlushFile()
+{
+    fflush(m_fileout);
+}
+
 void BCLog::Logger::ShrinkDebugFile()
 {
     // Amount of debug.log to save at end when shrinking (must fit in memory)
@@ -270,4 +281,137 @@ void BCLog::Logger::ShrinkDebugFile()
     }
     else if (file != nullptr)
         fclose(file);
+}
+
+/**
+ * Queues log messages in a buffer and then writes them to output streams
+ * in a separate thread.
+ */
+class AsyncLogger
+{
+public:
+    AsyncLogger() : m_buffer_accumulating(m_capacity), m_buffer_flushing(m_capacity), m_active(false) {}
+    ~AsyncLogger() {
+        Stop();
+    }
+
+    void Start()
+    {
+        std::unique_lock<std::mutex> l(m_lock);
+        if (!m_active) {
+            m_active = true;
+            m_flusher = std::thread(&AsyncLogger::Thread, this);
+        }
+    }
+
+    void Stop()
+    {
+        bool do_join = false;
+
+        {
+            std::unique_lock<std::mutex> l(m_lock);
+            if (m_active) {
+                m_active = false;
+                do_join = true;
+            }
+        }
+
+        if (do_join) {
+            m_cv.notify_one();
+            m_flusher.join();
+        }
+    }
+
+    void Push(std::string&& line)
+    {
+        // If we're not active, flush the logline immediately.
+        if (!m_active) {
+            g_logger->LogPrintStr(line);
+            return;
+        }
+
+        std::unique_lock<std::mutex> l(m_lock);
+        m_buffer_accumulating[m_insert_pos()] = std::forward<std::string>(line);
+        ++m_messages_queued;
+    }
+
+    /** Flush logs every `m_flush_interval_ms` ms until we're instructed to shutdown. */
+    void Thread(void)
+    {
+        std::unique_lock<std::mutex> l(m_lock);
+        while (true) {
+            if (!m_active) {
+                break;
+            }
+
+            // Only sleep if there isn't much left to do.
+            if (m_messages_queued < (m_capacity * 0.1)) {
+                // sleep until there's a lot to do or some time has passed
+                m_cv.wait_for(l, std::chrono::milliseconds(m_flush_interval_ms));
+            }
+
+            if (!m_messages_queued) {
+                continue;
+            }
+
+            // Swap the buffers here so that we can release the lock as soon as possible.
+            // Holding the lock slows down producers, i.e. non-log code.
+            std::swap(m_buffer_accumulating, m_buffer_flushing);
+            buffer::size_type size = m_messages_queued;
+            m_messages_queued = 0;
+
+            {
+                // Drop the lock while flushing to
+                reverse_lock<std::unique_lock<std::mutex>> release(l);
+
+                if (size > m_capacity) {
+                    g_logger->LogPrintStr(strprintf(
+                        "WARNING: %d log messages were discarded\n", size - m_capacity));
+                }
+
+                buffer::size_type n_to_flush = std::min(size, (buffer::size_type)m_capacity);
+                buffer::size_type flush_idx = size > m_capacity ? size % m_capacity : 0;
+
+                for (; n_to_flush > 0; --n_to_flush) {
+                    g_logger->LogPrintStr(std::move(m_buffer_flushing[flush_idx]));
+                    flush_idx = (flush_idx + 1) % m_capacity;
+                }
+                g_logger->FlushFile();
+            }
+        }
+    }
+
+private:
+    bool m_active;
+
+    std::mutex m_lock;
+    std::condition_variable m_cv;
+    std::thread m_flusher;
+
+    const unsigned long int m_capacity = 1024;
+    const unsigned int m_flush_interval_ms = 50;
+
+    using buffer = std::vector<std::string>;
+
+    // Use two buffers so that when we're ready to flush, we can just swap them and
+    // won't have to hold the lock while flushing.
+    buffer m_buffer_accumulating;
+    buffer m_buffer_flushing;
+
+    buffer::size_type m_messages_queued;
+    inline buffer::size_type m_insert_pos() { return m_messages_queued % m_capacity; }
+};
+
+namespace async_logging {
+    AsyncLogger log_buffer;
+
+    void Init(void)
+    {
+        log_buffer.Start();
+    }
+
+    void Queue(std::string&& str)
+    {
+        log_buffer.Push(std::forward<std::string>(str));
+    }
 }

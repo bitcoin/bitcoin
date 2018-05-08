@@ -19,6 +19,7 @@
 static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS        = false;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
+static const bool DEFAULT_LOGASYNC      = true;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
@@ -93,6 +94,7 @@ namespace BCLog {
 
         bool OpenDebugLog();
         void ShrinkDebugFile();
+        void FlushFile();
 
         uint32_t GetCategoryMask() const { return m_categories.load(); }
 
@@ -152,7 +154,7 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
             /* Original format string will have newline so don't add one here */ \
             _log_msg_ = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + FormatStringFromLogArgs(__VA_ARGS__); \
         } \
-        g_logger->LogPrintStr(_log_msg_); \
+        async_logging::Queue(std::move(_log_msg_));     \
     } \
 } while(0)
 
@@ -162,5 +164,12 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
     } \
 } while(0)
 #endif
+
+namespace async_logging {
+    void Init(void);
+
+    /** Queue a log message to be written. */
+    void Queue(std::string&& str);
+}
 
 #endif // BITCOIN_LOGGING_H
