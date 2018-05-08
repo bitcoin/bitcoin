@@ -712,7 +712,7 @@ public:
             // Data as of block 0xe5ab909fc029b253bad300ccf859eb509e03897e7853e8bfdde2710dbf248dd1 (height 127620)
             1522324288,
             135043,
-            0.009
+            0.005
         };
 
         /* enable fallback fee on testnet */

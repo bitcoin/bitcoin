@@ -394,6 +394,14 @@ bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase, b
     }
 }
 
+bool WalletModel::setUnlockedForStaking()
+{
+    if (!m_wallet->setUnlockedForStaking())
+        return false;
+    updateStatus();
+    return true;
+}
+
 bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureString &newPass)
 {
     m_wallet->lock(); // Make sure wallet is locked before attempting pass change
@@ -492,6 +500,7 @@ void WalletModel::unsubscribeFromCoreSignals()
 WalletModel::UnlockContext WalletModel::requestUnlock()
 {
     bool was_locked = getEncryptionStatus() == Locked || getEncryptionStatus() == UnlockedForStaking;
+    bool was_unlocked_for_staking = getEncryptionStatus() == UnlockedForStaking;
     if(was_locked)
     {
         // Request UI to unlock wallet
@@ -502,13 +511,14 @@ WalletModel::UnlockContext WalletModel::requestUnlock()
     EncryptionStatus newStatus = getEncryptionStatus();
     bool valid = newStatus == Unlocked || newStatus == Unencrypted;
 
-    return UnlockContext(this, valid, was_locked);
+    return UnlockContext(this, valid, was_locked, was_unlocked_for_staking);
 }
 
-WalletModel::UnlockContext::UnlockContext(WalletModel *_wallet, bool _valid, bool _relock):
+WalletModel::UnlockContext::UnlockContext(WalletModel *_wallet, bool _valid, bool _relock, bool _was_unlocked_for_staking):
         wallet(_wallet),
         valid(_valid),
-        relock(_relock)
+        relock(_relock),
+        was_unlocked_for_staking(_was_unlocked_for_staking)
 {
 }
 
@@ -516,7 +526,10 @@ WalletModel::UnlockContext::~UnlockContext()
 {
     if(valid && relock)
     {
-        wallet->setWalletLocked(true);
+        if (was_unlocked_for_staking)
+            wallet->setUnlockedForStaking();
+        else
+            wallet->setWalletLocked(true);
     }
 }
 

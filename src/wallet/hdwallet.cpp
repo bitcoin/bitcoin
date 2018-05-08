@@ -119,7 +119,7 @@ const COutputRecord *CTransactionRecord::GetChangeOutput() const
 
 int CHDWallet::Finalise()
 {
-    LogPrint(BCLog::HDWALLET, "%s\n", __func__);
+    LogPrint(BCLog::HDWALLET, "%s, %s\n", __func__, GetName());
 
     FreeExtKeyMaps();
     mapAddressBook.clear();
@@ -128,7 +128,7 @@ int CHDWallet::Finalise()
 
 int CHDWallet::FreeExtKeyMaps()
 {
-    LogPrint(BCLog::HDWALLET, "%s\n", __func__);
+    LogPrint(BCLog::HDWALLET, "%s, %s\n", __func__, GetName());
 
     ExtKeyAccountMap::iterator it = mapExtAccounts.begin();
     for (it = mapExtAccounts.begin(); it != mapExtAccounts.end(); ++it)
@@ -665,7 +665,7 @@ bool CHDWallet::LoadJson(const UniValue &inj, std::string &sError)
 
 bool CHDWallet::LoadAddressBook(CHDWalletDB *pwdb)
 {
-    LogPrint(BCLog::HDWALLET, _("Loading address book.\n").c_str());
+    LogPrint(BCLog::HDWALLET, _("Loading address book for %s.\n").c_str(), GetName());
 
     assert(pwdb);
     LOCK(cs_wallet);
@@ -723,7 +723,7 @@ bool CHDWallet::LoadAddressBook(CHDWalletDB *pwdb)
 
 bool CHDWallet::LoadVoteTokens(CHDWalletDB *pwdb)
 {
-    LogPrint(BCLog::HDWALLET, "Loading vote tokens.\n");
+    LogPrint(BCLog::HDWALLET, "Loading vote tokens for %s.\n", GetName());
 
     LOCK(cs_wallet);
 
@@ -780,7 +780,7 @@ bool CHDWallet::GetVote(int nHeight, uint32_t &token)
 
 bool CHDWallet::LoadTxRecords(CHDWalletDB *pwdb)
 {
-    LogPrint(BCLog::HDWALLET, _("Loading transaction records.\n").c_str());
+    LogPrint(BCLog::HDWALLET, _("Loading transaction records for %s.\n").c_str(), GetName());
 
     assert(pwdb);
     LOCK(cs_wallet);
@@ -877,7 +877,7 @@ bool CHDWallet::IsLocked() const
 
 bool CHDWallet::EncryptWallet(const SecureString &strWalletPassphrase)
 {
-    LogPrint(BCLog::HDWALLET, "%s\n", __func__);
+    LogPrint(BCLog::HDWALLET, "%s %s\n", __func__, GetName());
 
     if (IsCrypted())
         return false;
@@ -903,7 +903,7 @@ bool CHDWallet::EncryptWallet(const SecureString &strWalletPassphrase)
     if (kMasterKey.nDeriveIterations < 25000)
         kMasterKey.nDeriveIterations = 25000;
 
-    LogPrintf("Encrypting Wallet with an nDeriveIterations of %i\n", kMasterKey.nDeriveIterations);
+    LogPrintf("Encrypting Wallet %s with an nDeriveIterations of %i\n", GetName(), kMasterKey.nDeriveIterations);
 
     if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod))
         return false;
@@ -985,12 +985,12 @@ bool CHDWallet::EncryptWallet(const SecureString &strWalletPassphrase)
 
 bool CHDWallet::Lock()
 {
-    LogPrint(BCLog::HDWALLET, "CHDWallet::Lock()\n");
+    LogPrint(BCLog::HDWALLET, "%s, %s\n", __func__, GetName());
 
     if (IsLocked())
         return true;
 
-    LogPrintf("Locking wallet.\n");
+    LogPrintf("Locking wallet %s.\n", GetName());
 
     {
         LOCK(cs_wallet);
@@ -1002,21 +1002,25 @@ bool CHDWallet::Lock()
 
 bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
 {
-    LogPrint(BCLog::HDWALLET, "CHDWallet::Unlock()\n");
+    LogPrint(BCLog::HDWALLET, "%s, %s\n", __func__, GetName());
 
     if (!IsCrypted())
-        return error("%s: Wallet is not encrypted.\n", __func__);
+        return error("%s, %s: Wallet is not encrypted.\n", __func__, GetName());
 
+    bool fWasUnlocked = false;
+    CKeyingMaterial vMasterKeyOld;
     if (!IsLocked())
     {
-        LogPrintf("%s: Wallet is already unlocked.\n", __func__);
-        return true; // TODO: Reunlock?
+        LogPrint(BCLog::HDWALLET, "%s, %s: Wallet is already unlocked.\n", __func__, GetName());
+        // Possibly unlocked for staking
+        fWasUnlocked = true;
+        vMasterKeyOld = vMasterKey;
     };
 
     CCrypter crypter;
-    CKeyingMaterial vMasterKey;
+    CKeyingMaterial vMasterKeyNew;
 
-    LogPrintf("Unlocking wallet.\n");
+    LogPrintf("Unlocking wallet %s.\n", GetName());
 
     {
         bool fFoundKey = false;
@@ -1025,18 +1029,25 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
         {
             if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
-            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
+            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKeyNew))
                 continue; // try another master key
-            if (!CCryptoKeyStore::Unlock(vMasterKey))
+            if (!CCryptoKeyStore::Unlock(vMasterKeyNew))
                 return false;
-            if (0 != ExtKeyUnlock(vMasterKey))
+            if (0 != ExtKeyUnlock(vMasterKeyNew))
+            {
+                if (fWasUnlocked)
+                    CCryptoKeyStore::Unlock(vMasterKeyOld);
                 return false;
+            }
             fFoundKey = true;
             break;
         };
 
         if (!fFoundKey)
             return false;
+
+        if (fWasUnlocked)
+            return true;
 
         ProcessLockedStealthOutputs();
         ProcessLockedBlindedOutputs();
@@ -6009,7 +6020,7 @@ int CHDWallet::ExtKeyNewMaster(CHDWalletDB *pwdb, CKeyID &idMaster, bool fAutoGe
 
 int CHDWallet::ExtKeyCreateAccount(CStoredExtKey *sekAccount, CKeyID &idMaster, CExtKeyAccount &ekaOut, const std::string &sLabel)
 {
-    LogPrint(BCLog::HDWALLET, "%s.\n", __func__);
+    LogPrint(BCLog::HDWALLET, "%s, %s\n", __func__, GetName());
     AssertLockHeld(cs_wallet);
 
     std::vector<uint8_t> vAccountPath, vSubKeyPath, v;
@@ -6192,7 +6203,7 @@ int CHDWallet::ExtKeySetDefaultAccount(CHDWalletDB *pwdb, CKeyID &idNewDefault)
     // add account to maps if not already there
     // run in a db transaction
 
-    LogPrint(BCLog::HDWALLET, "%s\n", __func__);
+    LogPrint(BCLog::HDWALLET, "%s, %s\n", __func__, GetName());
     AssertLockHeld(cs_wallet);
     assert(pwdb);
 
@@ -6303,7 +6314,7 @@ int CHDWallet::ExtKeyEncrypt(CExtKeyAccount *sea, const CKeyingMaterial &vMKey, 
 
 int CHDWallet::ExtKeyEncryptAll(CHDWalletDB *pwdb, const CKeyingMaterial &vMKey)
 {
-    LogPrintf("%s\n", __func__);
+    LogPrintf("%s, %s\n", __func__, GetName());
 
     // Encrypt loose and account extkeys stored in wallet
     // skip invalid private keys
@@ -6423,14 +6434,16 @@ int CHDWallet::ExtKeyUnlock(CStoredExtKey *sek, const CKeyingMaterial &vMKey)
         return errorN(1, "Failed decrypting ext key %s", sek->GetIDString58().c_str());
     };
 
-    sek->kp.key.Set(vchSecret.begin(), vchSecret.end(), true);
+    CKey key;
+    key.Set(vchSecret.begin(), vchSecret.end(), true);
 
-    if (!sek->kp.IsValidV())
+    if (!key.IsValid())
         return errorN(1, "Failed decrypting ext key %s", sek->GetIDString58().c_str());
 
-    if (sek->kp.key.GetPubKey() != sek->kp.pubkey)
+    if (key.GetPubKey() != sek->kp.pubkey)
         return errorN(1, "Decrypted ext key mismatch %s", sek->GetIDString58().c_str());
 
+    sek->kp.key = key;
     sek->fLocked = 0;
     return 0;
 };
@@ -9838,7 +9851,7 @@ bool CHDWallet::ProcessPlaceholder(CHDWalletDB *pwdb, const CTransaction &tx, CT
 bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
     const CBlockIndex *pIndex, int posInBlock, bool fFlushOnClose)
 {
-    if (LogAcceptCategory(BCLog::HDWALLET)) LogPrintf("%s: %s, %p, %d\n", __func__, tx.GetHash().ToString(), pIndex, posInBlock);
+    if (LogAcceptCategory(BCLog::HDWALLET)) LogPrintf("%s, %s: %s, %p, %d\n", __func__, GetName(), tx.GetHash().ToString(), pIndex, posInBlock);
 
     AssertLockHeld(cs_wallet);
     CHDWalletDB wdb(*database, "r+", fFlushOnClose);

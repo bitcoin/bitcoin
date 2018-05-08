@@ -171,11 +171,7 @@ class WalletParticlTest(ParticlTestFramework):
         except JSONRPCException as e:
             assert('Wallet locked' in e.error['message'])
 
-        try:
-            ro = nodes[0].walletpassphrase('qwerty123', 300)
-        except JSONRPCException as e:
-            print('error', e.error['message'])
-            assert(False)
+        ro = nodes[0].walletpassphrase('qwerty123', 300)
 
         ro = nodes[0].extkey('list')
         assert(len(ro) == 3) # 1 loose key (master) + 2 accounts
@@ -234,8 +230,12 @@ class WalletParticlTest(ParticlTestFramework):
             ro = nodes[1].walletpassphrase('qwerty123', 300)
         except JSONRPCException as e:
             assert('passphrase entered was incorrect' in e.error['message'])
+        assert(nodes[1].getwalletinfo()['encryptionstatus'] == 'Locked')
 
         nodes[1].walletpassphrase('qwerty234', 300)
+        ro = nodes[1].getwalletinfo()
+        assert(ro['encryptionstatus'] == 'Unlocked')
+        assert(ro['unlocked_until'] > int(time.time()) and ro['unlocked_until'] < int(time.time()) + 500)
 
         ro = nodes[1].mnemonic('decode', '', 'abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb', 'false')
         decodedRoot = ro['master']
@@ -408,17 +408,31 @@ class WalletParticlTest(ParticlTestFramework):
         assert(evkPartOut == evkPart)
 
 
+        nodes[1].walletpassphrase('changedPass', 100, True)
+        ro = nodes[1].getwalletinfo()
+        assert(ro['encryptionstatus'] == 'Unlocked, staking only')
+        assert(ro['unlocked_until'] != 0)
 
+        try:
+            nodes[1].sendtoaddress(address1, 0.01)
+            assert(False), 'Should be unlocked for staking only.'
+        except JSONRPCException as e:
+            assert('Wallet is unlocked for staking only' in e.error['message'])
 
-        ro = nodes[1].walletpassphrase('changedPass', 0, True)
+        try:
+            nodes[1].walletpassphrase('wrongPass', 0, True)
+            assert(False), 'Should notify wrong password used.'
+        except JSONRPCException as e:
+            assert('The wallet passphrase entered was incorrect' in e.error['message'])
 
+        nodes[1].walletpassphrase('changedPass', 0, True)
         ro = nodes[1].getwalletinfo()
         assert(ro['encryptionstatus'] == 'Unlocked, staking only')
         assert(ro['unlocked_until'] == 0)
 
+
         ro = nodes[0].filteraddresses(0, 100, '0', '', '2')
         assert(len(ro) == 0)
-
 
 
         # Test manageaddressbook

@@ -209,9 +209,11 @@ public:
     bool lock() override { return m_wallet.Lock(); }
     bool unlock(const SecureString& wallet_passphrase, bool for_staking_only) override
     {
+        if (!m_wallet.Unlock(wallet_passphrase))
+            return false;
         if (m_wallet_part)
             m_wallet_part->fUnlockForStakingOnly = for_staking_only;
-        return m_wallet.Unlock(wallet_passphrase);
+        return true;
     }
     bool isLocked() override { return m_wallet.IsLocked(); }
     bool changeWalletPassphrase(const SecureString& old_wallet_passphrase,
@@ -688,6 +690,16 @@ public:
             return;
         ::LockWallet(m_wallet_part);
     }
+
+    bool setUnlockedForStaking() override
+    {
+        if (!m_wallet_part)
+            return false;
+        if (m_wallet_part->IsLocked())
+            return false;
+        m_wallet_part->fUnlockForStakingOnly = true;
+        return true;
+    };
 
     bool isDefaultAccountSet() override
     {
