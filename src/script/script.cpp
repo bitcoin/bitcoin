@@ -209,6 +209,17 @@ bool CScript::IsPayToScriptHash() const
             (*this)[22] == OP_EQUAL);
 }
 
+bool CScript::IsNewAsset() const
+{
+    // Extra-fast test for new-asset CScripts:
+    return (this->size() > 39 &&
+            (*this)[25] == OP_RETURN &&
+            (*this)[27] == 114 &&
+            (*this)[28] == 118 &&
+            (*this)[29] == 110 &&
+            (*this)[30] == 113);
+}
+
 bool CScript::IsPayToWitnessScriptHash() const
 {
     // Extra-fast test for pay-to-witness-script-hash CScripts:

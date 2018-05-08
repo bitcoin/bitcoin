@@ -29,8 +29,10 @@ public:
  */
 static const CRPCConvertParam vRPCConvertParams[] =
 {
-    { "issue", 2, "qty" },
+    { "issue", 1, "qty" },
+    { "issue", 3, "units" },
     { "issue", 4, "reissuable" },
+    { "issue", 5, "has_ipfs" },
     { "getaddressbalances", 1, "minconf" },
     { "setmocktime", 0, "timestamp" },
     { "generate", 0, "nblocks" },

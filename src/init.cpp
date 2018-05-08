@@ -45,6 +45,8 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validationinterface.h"
+#include "assets/assets.h"
+#include "assets/assetdb.h"
 #ifdef ENABLE_WALLET
 #include "wallet/init.h"
 #endif
@@ -1422,6 +1424,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReset);
 
+                passetsdb = new CAssetsDB(nBlockTreeDBCache, false, fReset);
+                passets = new CAssets();
+
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
@@ -1536,6 +1541,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                         break;
                     }
                 }
+
+                if (!passetsdb->LoadAssets()) {
+                    strLoadError = _("Failed to load Assets Database");
+                    break;
+                }
+                std::cout << std::endl << "Loaded Assets without error" << std::endl << "set of assets size: " << passets->setAssets.size() << std::endl  << "number of assets I have: " << passets->mapMyUnspentAssets.size() << std::endl;
+
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
                 strLoadError = _("Error opening block database");

@@ -43,6 +43,9 @@ class CTxMemPool;
 class CValidationState;
 struct ChainTxData;
 
+class CAssetsDB;
+class CAssets;
+
 struct PrecomputedTransactionData;
 struct LockPoints;
 
@@ -451,6 +454,11 @@ extern CCoinsViewCache *pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
+
+/** Global variable that point to the active assets (protexted by cs_main) */
+extern CAssetsDB *passetsdb;
+
+extern CAssets *passets;
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
