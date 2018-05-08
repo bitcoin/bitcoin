@@ -3,7 +3,28 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <validation_layer.h>
-#include <validation.h>
+
+/**
+ * Process an incoming block. This only returns after the best known valid
+ * block is made active. Note that it does not, however, guarantee that the
+ * specific block passed to it has been checked for validity!
+ *
+ * If you want to *possibly* get feedback on whether pblock is valid, you must
+ * install a CValidationInterface (see validationinterface.h) - this will have
+ * its BlockChecked method called whenever *any* block completes validation.
+ *
+ * Note that we guarantee that either the proof-of-work is valid on pblock, or
+ * (and possibly also) BlockChecked will have been called.
+ *
+ * May not be called in a
+ * validationinterface callback.
+ *
+ * @param[in]   pblock  The block we want to process.
+ * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
+ * @param[out]  fNewBlock A boolean which is set to indicate if the block was first received via this call
+ * @return True if state.IsValid()
+ */
+bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock);
 
 void BlockValidationRequest::operator()()
 {
