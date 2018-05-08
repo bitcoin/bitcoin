@@ -320,7 +320,22 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 
         // Ignore any payments messages until masternode list is synced
         if(!masternodeSync.IsMasternodeListSynced()) return;
+		{
+			LOCK(cs_mapMasternodePaymentVotes);
 
+			auto res = mapMasternodePaymentVotes.emplace(nHash, vote);
+
+			// Avoid processing same vote multiple times if it was already verified earlier
+			if (!res.second && res.first->second.IsVerified()) {
+				LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nBlockHeight=%d/%d vote=%s, seen\n",
+					nHash.ToString(), vote.nBlockHeight, nCachedBlockHeight, vote.ToString());
+				return;
+			}
+
+			// Mark vote as non-verified when it's seen for the first time,
+			// AddOrUpdatePaymentVote() below should take care of it if vote is actually ok
+			res.first->second.MarkAsNotVerified();
+		}
         int nFirstBlock = nCachedBlockHeight - GetStorageLimit();
         if(vote.nBlockHeight < nFirstBlock || vote.nBlockHeight > nCachedBlockHeight+20) {
             LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- vote out of range: nFirstBlock=%d, nBlockHeight=%d, nHeight=%d\n", nFirstBlock, vote.nBlockHeight, nCachedBlockHeight);
@@ -332,7 +347,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
             LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- invalid message, error: %s\n", strError);
             return;
         }
-
         masternode_info_t mnInfo;
         if(!mnodeman.GetMasternodeInfo(vote.masternodeOutpoint, mnInfo)) {
             // mn was not found, so we can't check vote, some info is probably missing
@@ -363,27 +377,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 			LogPrintf("MASTERNODEPAYMENTVOTE -- masternode already voted, masternode=%s\n", vote.masternodeOutpoint.ToStringShort());
 			return;
 		}
-		// SYSCOIN
-		{
-			LOCK(cs_mapMasternodePaymentVotes);
-
-			auto res = mapMasternodePaymentVotes.emplace(nHash, vote);
-
-			// Avoid processing same vote multiple times
-			if (!res.second) {
-				LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nBlockHeight=%d/%d vote=%s, seen\n",
-					nHash.ToString(), vote.nBlockHeight, nCachedBlockHeight, vote.ToString());
-				return;
-			}
-
-			// Mark vote as non-verified when it's seen for the first time,
-			// AddOrUpdatePaymentVote() below should take care of it if vote is actually ok
-			res.first->second.MarkAsNotVerified();
-		}
-
-        CTxDestination address1;
-        ExtractDestination(vote.payee, address1);
-        CSyscoinAddress address2(address1);
 
 		LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nBlockHeight=%d/%d vote=%s, new\n",
 			nHash.ToString(), vote.nBlockHeight, nCachedBlockHeight, vote.ToString());
