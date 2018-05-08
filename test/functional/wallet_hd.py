@@ -18,7 +18,7 @@ class WalletHDTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [[], ['-keypool=0']]
+        self.extra_args = [[], ['-keypool=1']]
 
     def run_test(self):
         # Make sure can't switch off usehd after wallet creation
@@ -59,13 +59,23 @@ class WalletHDTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(non_hd_add, 1)
         self.nodes[0].generate(1)
 
+        # Self-send to test hdsplit change detection after wallet restore
+        self.nodes[1].sendtoaddress(self.nodes[1].getnewaddress(), 1, "", "", True)
+        # Note that this coinbase key will be seen *before* the address key above
+        self.nodes[1].generate(1)
+        self.sync_all()
+        self.nodes[0].generate(100)
+        self.sync_all()
+
         # create an internal key (again)
         change_addr = self.nodes[1].getrawchangeaddress()
         change_addrV= self.nodes[1].getaddressinfo(change_addr)
         assert_equal(change_addrV["hdkeypath"], "m/0'/1'/1'") #second internal child key
 
-        self.sync_all()
-        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
+        # Transaction list with address book filled
+        previous_list = self.nodes[1].listtransactions("*", 100)
+
+        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1 + 50)
 
         self.log.info("Restore backup ...")
         self.stop_node(1)
@@ -85,30 +95,37 @@ class WalletHDTest(BitcoinTestFramework):
             assert_equal(hd_info_2["hdmasterkeyid"], masterkeyid)
         assert_equal(hd_add, hd_add_2)
         connect_nodes_bi(self.nodes, 0, 1)
+        self.nodes[1].getnewaddress()
         self.sync_all()
 
         # Needs rescan
         self.stop_node(1)
         self.start_node(1, extra_args=self.extra_args[1] + ['-rescan'])
-        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
+        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1 + 50)
 
         # Try a RPC based rescan
         self.stop_node(1)
         shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "blocks"))
         shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "chainstate"))
         shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat"))
-        self.start_node(1, extra_args=self.extra_args[1])
+        # keypool=2 required to "see" the coinbase output, which is logically before the previous
+        # key's output in the block, but was generated after by the wallet.
+        self.start_node(1, extra_args=self.extra_args[1]+['-keypool=2'])
         connect_nodes_bi(self.nodes, 0, 1)
         self.sync_all()
-        # Wallet automatically scans blocks older than key on startup
-        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
+        # Wallet automatically scans blocks newer than latest key on startup
+        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1 + 50)
         out = self.nodes[1].rescanblockchain(0, 1)
         assert_equal(out['start_height'], 0)
         assert_equal(out['stop_height'], 1)
         out = self.nodes[1].rescanblockchain()
         assert_equal(out['start_height'], 0)
         assert_equal(out['stop_height'], self.nodes[1].getblockcount())
-        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
+        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1 + 50)
+
+        # Lists used to be able to diverge because of pre-hdsplit IsChange detection.
+        # A self-send where nDebit > 0, and nothing in address book.
+        assert_equal(len(previous_list), len(self.nodes[1].listtransactions("*", 100)))
 
         # send a tx and make sure its using the internal chain for the changeoutput
         txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)

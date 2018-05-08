@@ -1351,22 +1351,32 @@ CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) cons
 
 bool CWallet::IsChange(const CTxOut& txout) const
 {
-    // TODO: fix handling of 'change' outputs. The assumption is that any
-    // payment to a script that is ours, but is not in the address book
-    // is change. That assumption is likely to break when we implement multisignature
-    // wallets that return change back into a multi-signature-protected address;
-    // a better way of identifying which outputs are 'the send' and which are
-    // 'the change' will need to be implemented (maybe extend CWalletTx to remember
-    // which output, if any, was change).
     if (::IsMine(*this, txout.scriptPubKey))
     {
-        CTxDestination address;
-        if (!ExtractDestination(txout.scriptPubKey, address))
+        CTxDestination dest;
+        if (!ExtractDestination(txout.scriptPubKey, dest))
             return true;
 
         LOCK(cs_wallet);
-        if (!mapAddressBook.count(address))
+        // HD Split assumes keypath of m/.../1(')/k
+        // We allow fall-through since some imported
+        // keys may be considered change, and wallets
+        // may have been upgraded to HD split after
+        // creating change previously.
+        CKeyID key_id = GetKeyForDestination(*this, dest);
+        if (!key_id.IsNull()) {
+            auto it = mapKeyMetadata.find(key_id);
+            if (it != mapKeyMetadata.end()) {
+                // Check for path
+                if (it->second.hdKeypath.find("m/0'/1'/") != std::string::npos) {
+                    return true;
+                }
+            }
+        }
+        // Legacy IsChange check
+        if (!mapAddressBook.count(dest)) {
             return true;
+        }
     }
     return false;
 }
