@@ -23,6 +23,7 @@
 #include <txmempool.h>
 #include <util.h>
 #include <utilstrencodings.h>
+#include <validation_layer.h>
 #include <validationinterface.h>
 #include <warnings.h>
 
@@ -137,7 +138,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             continue;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
+        if (!g_validation_layer->Validate(shared_pblock, true).block_valid)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
@@ -749,10 +750,10 @@ static UniValue submitblock(const JSONRPCRequest& request)
     bool new_block;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool accepted = ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
+    BlockValidationResponse resp = g_validation_layer->Validate(blockptr, true);
     UnregisterValidationInterface(&sc);
-    if (!new_block) {
-        if (!accepted) {
+    if (!resp.is_new) {
+        if (!resp.block_valid) {
             // TODO Maybe pass down fNewBlock to AcceptBlockHeader, so it is properly set to true in this case?
             return "invalid";
         }

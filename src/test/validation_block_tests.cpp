@@ -11,7 +11,7 @@
 #include <pow.h>
 #include <random.h>
 #include <test/test_bitcoin.h>
-#include <validation.h>
+#include <validation_layer.h>
 #include <validationinterface.h>
 
 struct RegtestingSetup : public TestingSetup {
@@ -128,7 +128,6 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
         BuildChain(Params().GenesisBlock().GetHash(), 100, 15, 10, 500, blocks);
     }
 
-    bool ignored;
     CValidationState state;
     std::vector<CBlockHeader> headers;
     std::transform(blocks.begin(), blocks.end(), std::back_inserter(headers), [](std::shared_ptr<const CBlock> b) { return b->GetBlockHeader(); });
@@ -137,7 +136,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     BOOST_CHECK(ProcessNewBlockHeaders(headers, state, Params()));
 
     // Connect the genesis block and drain any outstanding events
-    ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), true, &ignored);
+    g_validation_layer->Validate(std::make_shared<CBlock>(Params().GenesisBlock()), true);
     SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -154,17 +153,16 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     // will subscribe to events generated during block validation and assert on ordering invariance
     boost::thread_group threads;
     for (int i = 0; i < 10; i++) {
-        threads.create_thread([&blocks]() {
-            bool ignored;
+        threads.create_thread([this, &blocks]() {
             for (int i = 0; i < 1000; i++) {
                 auto block = blocks[GetRand(blocks.size() - 1)];
-                ProcessNewBlock(Params(), block, true, &ignored);
+                g_validation_layer->SubmitForValidation(block, true);
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (auto block : blocks) {
                 if (block->vtx.size() == 1) {
-                    bool processed = ProcessNewBlock(Params(), block, true, &ignored);
+                    bool processed = g_validation_layer->Validate(block, true).block_valid;
                     assert(processed);
                 }
             }
