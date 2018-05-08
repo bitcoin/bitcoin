@@ -47,7 +47,7 @@ bool CNewAsset::IsNull() const
 bool CAssets::GetAssetsOutPoints(const std::string& strName, std::set<COutPoint>& outpoints)
 {
     if (mapMyUnspentAssets.count(strName)) {
-        outpoints = mapMyUnspentAssets[strName];
+        outpoints = mapMyUnspentAssets.at(strName);
         return true;
     }
 
@@ -219,7 +219,7 @@ bool CAssets::AddToAssetBalance(const std::string& strName, const std::string& a
 
 void CAssets::TrySpendCoin(const COutPoint& out, const Coin& coin)
 {
-    std::cout << "Trying to spend coin " << out.ToString() << std::endl;
+    std::pair<std::string, COutPoint> pairToRemove = std::make_pair("", COutPoint());
     for (auto setOuts : mapMyUnspentAssets) {
         // If we own one of the assets, we need to update our databases and memory
         if (setOuts.second.count(out)) {
@@ -249,10 +249,9 @@ void CAssets::TrySpendCoin(const COutPoint& out, const Coin& coin)
                 setOuts.second.erase(out);
                 if (!passetsdb->EraseMyOutPoints(assetName) || !passetsdb->WriteMyAssetsData(assetName, setOuts.second))
                     LogPrintf("%s : ERROR Failed databasing asset spend OutPoint: %s\n", __func__, out.ToString());
-
-                std::cout << "Spent one of my coins: OutPoint: " << out.ToString() << std::endl;
+                
                 mapAssetsAddressAmount.erase(make_pair(assetName, address));
-                mapMyUnspentAssets.at(assetName) = setOuts.second;
+                pairToRemove = std::make_pair(assetName, out);
                 mapAssetsAddresses.at(assetName).erase(address);
             } else {
                 LogPrintf("%s : ERROR Failed get the asset from the OutPoint: %s\n", __func__, out.ToString());
@@ -260,6 +259,11 @@ void CAssets::TrySpendCoin(const COutPoint& out, const Coin& coin)
             break;
         }
     }
+
+    if (pairToRemove.first != "" && !pairToRemove.second.IsNull() && mapMyUnspentAssets.count(pairToRemove.first)) {
+        mapMyUnspentAssets.at(pairToRemove.first).erase(pairToRemove.second);
+    }
+
 }
 
 bool CAssets::AddToMyUpspentOutPoints(const std::string& strName, const COutPoint& out)

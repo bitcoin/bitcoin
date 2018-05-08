@@ -6,6 +6,7 @@
 //#include <base58.h>
 #include <assets/assets.h>
 #include <assets/assetdb.h>
+#include <tinyformat.h>
 //#include <rpc/server.h>
 //#include <script/standard.h>
 //#include <utilstrencodings.h>
@@ -189,34 +190,48 @@ UniValue getaddressbalances(const JSONRPCRequest& request)
             "2. \"minconf\"               (integer, optional, default=1) the minimum required confirmations\n"
 
             "\nResult:\n"
-            "TBD\n"
+            "{\n"
+            "  (asset_name) : (quantity),\n"
+            "  ...\n"
+            "}\n"
 
             "\nExamples:\n"
             + HelpExampleCli("getaddressbalances", "\"myaddress\"")
             + HelpExampleCli("getaddressbalances", "\"myaddress\" 5")
         );
 
-    std::string address_ = request.params[0].get_str();
-    CTxDestination destination = DecodeDestination(address_);
+    std::string address = request.params[0].get_str();
+    CTxDestination destination = DecodeDestination(address);
     if (!IsValidDestination(destination)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address_);
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
     }
 
     int minconf = 1;
     if (!request.params[1].isNull()) {
+        if (request.params[1].get_int() != 1) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("TODO: implement miniconf != 1"));
+        }
         minconf = request.params[1].get_int();
         if (minconf < 1) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid minconf: ") + std::to_string(minconf));
         }
     }
 
-    UniValue result(UniValue::VARR);
+    LOCK(cs_main);
+    UniValue result(UniValue::VOBJ);
+
+    if (!passets)
+        return NullUniValue;
+
+    for (auto it : passets->mapAssetsAddressAmount) {
+        if (address.compare(it.first.second) == 0) {
+            result.push_back(Pair(it.first.first, it.second));
+        }
+    }
+
     return result;
 }
 
-
-//getaddressbalances(address, minconf=1)
-//Returns a list of all the asset balances for address in this node’s wallet, with at least minconf confirmations.
 UniValue getallassets(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 0)
@@ -262,8 +277,6 @@ UniValue getallassets(const JSONRPCRequest& request)
     return result;
 }
 
-//getaddressbalances(address, minconf=1)
-//Returns a list of all the asset balances for address in this node’s wallet, with at least minconf confirmations.
 UniValue getmyassets(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 0)
@@ -344,11 +357,17 @@ UniValue getassetaddresses(const JSONRPCRequest& request)
     if (!passets->mapAssetsAddresses.count(asset_name))
         return NullUniValue;
 
-    UniValue addresses(UniValue::VARR);
+    UniValue addresses(UniValue::VOBJ);
 
     auto setAddresses = passets->mapAssetsAddresses.at(asset_name);
-    for (auto it : setAddresses)
-        addresses.push_back(it);
+    for (auto it : setAddresses) {
+        auto pair = std::make_pair(asset_name, it);
+        if (passets->mapAssetsAddressAmount.count(pair)) {
+            addresses.push_back(Pair(it, passets->mapAssetsAddressAmount.at(pair)));
+        } else {
+            addresses.push_back(Pair(it, 0));
+        }
+    }
 
     return addresses;
 }
@@ -401,6 +420,9 @@ UniValue transfer(const JSONRPCRequest& request)
 
     std::set<COutPoint> myAssetOutPoints;
     if (!passets->GetAssetsOutPoints(asset_name, myAssetOutPoints))
+        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name);
+
+    if (myAssetOutPoints.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name);
 
     CAmount curBalance = pwallet->GetBalance();
