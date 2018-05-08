@@ -19,6 +19,11 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 #endif
 #endif
 
+namespace sha256d64_sse41
+{
+void Transform_4way(unsigned char* out, const unsigned char* in);
+}
+
 // Internal implementation code.
 namespace
 {
@@ -465,22 +470,28 @@ bool SelfTest(TransformType tr) {
 
 TransformType Transform = sha256::Transform;
 TransformD64Type TransformD64 = sha256::TransformD64;
+TransformD64Type TransformD64_4way = nullptr;
 } // namespace
 
 std::string SHA256AutoDetect()
 {
+    std::string ret = "standard";
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__))
     uint32_t eax, ebx, ecx, edx;
     if (__get_cpuid(1, &eax, &ebx, &ecx, &edx) && (ecx >> 19) & 1) {
         Transform = sha256_sse4::Transform;
         TransformD64 = TransformD64Wrapper<sha256_sse4::Transform>;
-        assert(SelfTest(Transform));
-        return "sse4";
+#if defined(ENABLE_SSE41) && !defined(BUILD_BITCOIN_INTERNAL)
+        TransformD64_4way = sha256d64_sse41::Transform_4way;
+        ret = "sse4(1way+4way)";
+#else
+        ret = "sse4";
+#endif
     }
 #endif
 
     assert(SelfTest(Transform));
-    return "standard";
+    return ret;
 }
 
 ////// SHA-256
@@ -542,6 +553,14 @@ CSHA256& CSHA256::Reset()
 
 void SHA256D64(unsigned char* out, const unsigned char* in, size_t blocks)
 {
+    if (TransformD64_4way) {
+        while (blocks >= 4) {
+            TransformD64_4way(out, in);
+            out += 128;
+            in += 256;
+            blocks -= 4;
+        }
+    }
     while (blocks) {
         TransformD64(out, in);
         out += 32;
