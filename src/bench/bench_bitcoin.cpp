@@ -9,7 +9,7 @@
 #include <random.h>
 #include <util.h>
 #include <utilstrencodings.h>
-#include <validation.h>
+#include <validation_layer.h>
 
 #include <memory>
 
@@ -20,6 +20,8 @@ static const char* DEFAULT_BENCH_PRINTER = "console";
 static const char* DEFAULT_PLOT_PLOTLYURL = "https://cdn.plot.ly/plotly-latest.min.js";
 static const int64_t DEFAULT_PLOT_WIDTH = 1024;
 static const int64_t DEFAULT_PLOT_HEIGHT = 768;
+
+std::unique_ptr<ValidationLayer> g_validation_layer;
 
 static void SetupBenchArgs()
 {
@@ -68,6 +70,9 @@ int main(int argc, char** argv)
     RandomInit();
     ECC_Start();
     SetupEnvironment();
+
+    g_validation_layer.reset(new ValidationLayer(Params()));
+    g_validation_layer->Start();
 
     int64_t evaluations = gArgs.GetArg("-evals", DEFAULT_BENCH_EVALUATIONS);
     std::string regex_filter = gArgs.GetArg("-filter", DEFAULT_BENCH_FILTER);

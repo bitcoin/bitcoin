@@ -14,7 +14,7 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <utiltime.h>
-#include <validation.h>
+#include <validation_layer.h>
 #include <validationinterface.h>
 
 #include <boost/thread.hpp>
@@ -44,7 +44,7 @@ static CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
         assert(++block->nNonce);
     }
 
-    bool processed{ProcessNewBlock(Params(), block, true, nullptr)};
+    bool processed{g_validation_layer->Validate(block, true).block_valid};
     assert(processed);
 
     return CTxIn{block->vtx[0]->GetHash(), 0};
