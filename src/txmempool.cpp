@@ -563,24 +563,22 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
 {
     LOCK(cs);
     std::vector<const CTxMemPoolEntry*> entries;
+    setEntries stage;
     for (const auto& tx : vtx)
     {
         uint256 hash = tx->GetHash();
 
         indexed_transaction_set::iterator i = mapTx.find(hash);
-        if (i != mapTx.end())
+        if (i != mapTx.end()) {
             entries.push_back(&*i);
+            stage.insert(i);
+        }
     }
     // Before the txs in the new block have been removed from the mempool, update policy estimates
     if (minerPolicyEstimator) {minerPolicyEstimator->processBlock(nBlockHeight, entries);}
+    RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
     for (const auto& tx : vtx)
     {
-        txiter it = mapTx.find(tx->GetHash());
-        if (it != mapTx.end()) {
-            setEntries stage;
-            stage.insert(it);
-            RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
-        }
         removeConflicts(*tx);
         ClearPrioritisation(tx->GetHash());
     }
