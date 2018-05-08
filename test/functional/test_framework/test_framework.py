@@ -98,8 +98,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                           help="Leave bitcoinds and test.* datadir on exit or error")
         parser.add_option("--noshutdown", dest="noshutdown", default=False, action="store_true",
                           help="Don't stop bitcoinds after the test execution")
-        parser.add_option("--srcdir", dest="srcdir", default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../../src"),
-                          help="Source directory containing bitcoind/bitcoin-cli (default: %default)")
         parser.add_option("--cachedir", dest="cachedir", default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
                           help="Directory for caching pregenerated datadirs (default: %default)")
         parser.add_option("--tmpdir", dest="tmpdir", help="Root directory for datadirs")
@@ -123,10 +121,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         PortSeed.n = self.options.port_seed
 
-        os.environ['PATH'] = self.options.srcdir + os.pathsep + \
-                             self.options.srcdir + os.path.sep + "qt" + os.pathsep + \
-                             os.environ['PATH']
-
         check_json_precision()
 
         self.options.cachedir = os.path.abspath(self.options.cachedir)
@@ -135,6 +129,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         config.read_file(open(self.options.configfile))
         self.options.bitcoind = os.getenv("BITCOIND", default=config["environment"]["BUILDDIR"] + '/src/bitcoind' + config["environment"]["EXEEXT"])
         self.options.bitcoincli = os.getenv("BITCOINCLI", default=config["environment"]["BUILDDIR"] + '/src/bitcoin-cli' + config["environment"]["EXEEXT"])
+
+        os.environ['PATH'] = config['environment']['BUILDDIR'] + os.pathsep + \
+                             config['environment']['BUILDDIR'] + os.path.sep + "qt" + os.pathsep + \
+                             os.environ['PATH']
 
         # Set up temp directory and start logging
         if self.options.tmpdir:
