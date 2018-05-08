@@ -6,6 +6,10 @@ find_package(Boost COMPONENTS thread program_options unit_test_framework REQUIRE
 find_package(OpenSSL REQUIRED)
 find_package(BDB REQUIRED)
 find_package(CURL REQUIRED)
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Network REQUIRED)
+find_package(Qt5LinguistTools REQUIRED)
+find_package(Protobuf REQUIRED)
 
 add_definitions(-DHAVE_ENDIAN_H=1)
 add_definitions(-DHAVE_DECL_HTOBE16=1)
@@ -20,6 +24,9 @@ add_definitions(-DHAVE_DECL_HTOBE64=1)
 add_definitions(-DHAVE_DECL_HTOLE64=1)
 add_definitions(-DHAVE_DECL_BE64TOH=1)
 add_definitions(-DHAVE_DECL_LE64TOH=1)
+add_definitions(-DHAVE_DECL_BSWAP_16=1)
+add_definitions(-DHAVE_DECL_BSWAP_32=1)
+add_definitions(-DHAVE_DECL_BSWAP_64=1)
 
 add_definitions(-DHAVE_WORKING_BOOST_SLEEP_FOR=1)
 
@@ -37,4 +44,5 @@ add_subdirectory(src/univalue)
 add_subdirectory(src/secp256k1)
 add_subdirectory(src/test)
 add_subdirectory(src)
+add_subdirectory(src/qt)
 
