@@ -84,6 +84,7 @@ AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
 AC_PATH_TOOL(READELF, readelf)
 AC_PATH_TOOL(CPPFILT, c++filt)
+AC_PATH_TOOL(OBJCOPY, objcopy)
 
 dnl pkg-config check.
 PKG_PROG_PKG_CONFIG
@@ -1154,6 +1155,7 @@ AC_SUBST(MINIUPNPC_LIBS)
 AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
 AC_CONFIG_FILES([qa/pull-tester/run-syscoind-for-test.sh],[chmod +x qa/pull-tester/run-syscoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/tests_config.py],[chmod +x qa/pull-tester/tests_config.py])
+AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
