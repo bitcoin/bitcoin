@@ -836,7 +836,7 @@ static std::string ResolveErrMsg(const char * const optname, const std::string& 
 void InitLogging()
 {
     g_logger->m_print_to_file = !gArgs.IsArgNegated("-debuglogfile");
-    g_logger->m_file_path = AbsPathForConfigVal(gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
+    g_logger->m_file_path = AbsPathForConfigVal(fsbridge::U8Path(gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE)));
 
     // Add newlines to the logfile to distinguish this execution from the last
     // one; called before console logging is set up, so this is only sent to
@@ -1668,7 +1668,7 @@ bool AppInitMain()
 
     std::vector<fsbridge::Path> vImportFiles;
     for (const std::string& strFile : gArgs.GetArgs("-loadblock")) {
-        vImportFiles.push_back(strFile);
+        vImportFiles.push_back(fsbridge::U8Path(strFile));
     }
 
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
