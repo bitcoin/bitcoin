@@ -666,7 +666,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
             {
                 WCHAR pwsz[MAX_PATH];
                 // Ensure that the string is ANSI.
-                MultiByteToWideChar(CP_ACP, 0, StartupShortcutPath().string().c_str(), -1, pwsz, MAX_PATH);
+                MultiByteToWideChar(CP_ACP, 0, StartupShortcutPath().u8string().c_str(), -1, pwsz, MAX_PATH);
                 // Save the link by calling IPersistFile::Save.
                 hres = ppf->Save(pwsz, TRUE);
                 ppf->Release();

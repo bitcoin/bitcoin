@@ -152,7 +152,7 @@ bool LockDirectory(const fsbridge::Path& directory, const std::string lockfile_n
     fsbridge::Path pathLockFile = directory / lockfile_name;
 
     // If a lock for this directory already exists in the map, don't try to re-lock it
-    if (dir_locks.count(pathLockFile.string())) {
+    if (dir_locks.count(pathLockFile.u8string())) {
         return true;
     }
 
@@ -161,16 +161,16 @@ bool LockDirectory(const fsbridge::Path& directory, const std::string lockfile_n
     if (file) fclose(file);
 
     try {
-        auto lock = MakeUnique<boost::interprocess::file_lock>(pathLockFile.string().c_str());
+        auto lock = MakeUnique<boost::interprocess::file_lock>(pathLockFile.u8string().c_str());
         if (!lock->try_lock()) {
             return false;
         }
         if (!probe_only) {
             // Lock successful and we're not just probing, put it into the map
-            dir_locks.emplace(pathLockFile.string(), std::move(lock));
+            dir_locks.emplace(pathLockFile.u8string(), std::move(lock));
         }
     } catch (const boost::interprocess::interprocess_exception& e) {
-        return error("Error while attempting to lock directory %s: %s", directory.string(), e.what());
+        return error("Error while attempting to lock directory %s: %s", directory.u8string(), e.what());
     }
     return true;
 }
@@ -761,10 +761,10 @@ void CreatePidFile(const fsbridge::Path &path, pid_t pid)
 bool RenameOver(fsbridge::Path src, fsbridge::Path dest)
 {
 #ifdef WIN32
-    return MoveFileExA(src.string().c_str(), dest.string().c_str(),
+    return MoveFileExA(src.u8string().c_str(), dest.u8string().c_str(),
                        MOVEFILE_REPLACE_EXISTING) != 0;
 #else
-    int rc = std::rename(src.string().c_str(), dest.string().c_str());
+    int rc = std::rename(src.u8string().c_str(), dest.u8string().c_str());
     return (rc == 0);
 #endif /* WIN32 */
 }
