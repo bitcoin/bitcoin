@@ -21,7 +21,7 @@
 #include <rpc/mining.h>
 #include <rpc/server.h>
 #include <txmempool.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilstrencodings.h>
 #include <validationinterface.h>
 #include <warnings.h>

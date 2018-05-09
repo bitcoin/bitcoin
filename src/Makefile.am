@@ -372,7 +372,9 @@ libbitcoin_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
-  util.cpp \
+  util/platform_common.cpp \
+	util/platform_posix.cpp \
+	util/platform_windows.cpp \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
   utiltime.cpp \

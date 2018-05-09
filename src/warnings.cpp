@@ -5,7 +5,7 @@
 
 #include <sync.h>
 #include <clientversion.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <warnings.h>
 
 CCriticalSection cs_warnings;

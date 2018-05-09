@@ -12,7 +12,7 @@
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utiltime.h>
 #include <wallet/wallet.h>
 

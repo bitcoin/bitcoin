@@ -9,7 +9,7 @@
 #include <pubkey.h>
 #include <random.h>
 #include <uint256.h>
-#include <util.h>
+#include <util/platform_common.h>
 
 #include <cuckoocache.h>
 #include <boost/thread.hpp>

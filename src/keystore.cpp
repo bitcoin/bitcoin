@@ -5,7 +5,7 @@
 
 #include <keystore.h>
 
-#include <util.h>
+#include <util/platform_common.h>
 
 void CBasicKeyStore::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
 {

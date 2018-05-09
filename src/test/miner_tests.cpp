@@ -15,7 +15,7 @@
 #include <script/standard.h>
 #include <txmempool.h>
 #include <uint256.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilstrencodings.h>
 
 #include <test/test_bitcoin.h>

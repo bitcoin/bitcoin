@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/coinselection.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilmoneystr.h>
 
 // Descending order comparator

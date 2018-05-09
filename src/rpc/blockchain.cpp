@@ -21,7 +21,7 @@
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilstrencodings.h>
 #include <hash.h>
 #include <validationinterface.h>

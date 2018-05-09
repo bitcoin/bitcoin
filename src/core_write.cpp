@@ -12,7 +12,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
 

@@ -13,7 +13,7 @@
 #include <validation.h> //for mempool access
 #include <txmempool.h>
 #include <utilmoneystr.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <net.h>
 
 //! Check whether transaction has descendant in wallet or mempool, or has been
