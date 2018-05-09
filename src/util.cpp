@@ -146,13 +146,13 @@ static std::map<std::string, std::unique_ptr<boost::interprocess::file_lock>> di
 /** Mutex to protect dir_locks. */
 static std::mutex cs_dir_locks;
 
-bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only)
+bool LockDirectory(const fsbridge::Path& directory, const std::string lockfile_name, bool probe_only)
 {
     std::lock_guard<std::mutex> ulock(cs_dir_locks);
-    fs::path pathLockFile = directory / lockfile_name;
+    fsbridge::Path pathLockFile = directory / lockfile_name;
 
     // If a lock for this directory already exists in the map, don't try to re-lock it
-    if (dir_locks.count(pathLockFile.string())) {
+    if (dir_locks.count(pathLockFile.u8string())) {
         return true;
     }
 
@@ -161,16 +161,16 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
     if (file) fclose(file);
 
     try {
-        auto lock = MakeUnique<boost::interprocess::file_lock>(pathLockFile.string().c_str());
+        auto lock = MakeUnique<boost::interprocess::file_lock>(pathLockFile.u8string().c_str());
         if (!lock->try_lock()) {
             return false;
         }
         if (!probe_only) {
             // Lock successful and we're not just probing, put it into the map
-            dir_locks.emplace(pathLockFile.string(), std::move(lock));
+            dir_locks.emplace(pathLockFile.u8string(), std::move(lock));
         }
     } catch (const boost::interprocess::interprocess_exception& e) {
-        return error("Error while attempting to lock directory %s: %s", directory.string(), e.what());
+        return error("Error while attempting to lock directory %s: %s", directory.u8string(), e.what());
     }
     return true;
 }
@@ -181,9 +181,9 @@ void ReleaseDirectoryLocks()
     dir_locks.clear();
 }
 
-bool DirIsWritable(const fs::path& directory)
+bool DirIsWritable(const fsbridge::Path& directory)
 {
-    fs::path tmpFile = directory / fs::unique_path();
+    fsbridge::Path tmpFile = directory / fs::unique_path();
 
     FILE* file = fsbridge::fopen(tmpFile, "a");
     if (!file) return false;
@@ -418,7 +418,7 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
     m_override_args.clear();
 
     for (int i = 1; i < argc; i++) {
-        std::string key(argv[i]);
+        std::string key(NativeToUtf8(argv[i]));
         std::string val;
         size_t is_index = key.find('=');
         if (is_index != std::string::npos) {
@@ -639,7 +639,7 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
     fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
 }
 
-fs::path GetDefaultDataDir()
+fsbridge::Path GetDefaultDataDir()
 {
     // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
     // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
@@ -649,12 +649,12 @@ fs::path GetDefaultDataDir()
     // Windows
     return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
 #else
-    fs::path pathRet;
+    fsbridge::Path pathRet;
     char* pszHome = getenv("HOME");
     if (pszHome == nullptr || strlen(pszHome) == 0)
-        pathRet = fs::path("/");
+        pathRet = fsbridge::Path("/");
     else
-        pathRet = fs::path(pszHome);
+        pathRet = fsbridge::Path(pszHome);
 #ifdef MAC_OSX
     // Mac
     return pathRet / "Library/Application Support/Bitcoin";
@@ -665,18 +665,18 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-static fs::path g_blocks_path_cached;
-static fs::path g_blocks_path_cache_net_specific;
-static fs::path pathCached;
-static fs::path pathCachedNetSpecific;
+static fsbridge::Path g_blocks_path_cached;
+static fsbridge::Path g_blocks_path_cache_net_specific;
+static fsbridge::Path pathCached;
+static fsbridge::Path pathCachedNetSpecific;
 static CCriticalSection csPathCached;
 
-const fs::path &GetBlocksDir(bool fNetSpecific)
+const fsbridge::Path &GetBlocksDir(bool fNetSpecific)
 {
 
     LOCK(csPathCached);
 
-    fs::path &path = fNetSpecific ? g_blocks_path_cache_net_specific : g_blocks_path_cached;
+    fsbridge::Path &path = fNetSpecific ? g_blocks_path_cache_net_specific : g_blocks_path_cached;
 
     // This can be called during exceptions by LogPrintf(), so we cache the
     // value so we don't have to do memory allocations after that.
@@ -700,12 +700,12 @@ const fs::path &GetBlocksDir(bool fNetSpecific)
     return path;
 }
 
-const fs::path &GetDataDir(bool fNetSpecific)
+const fsbridge::Path &GetDataDir(bool fNetSpecific)
 {
 
     LOCK(csPathCached);
 
-    fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
+    fsbridge::Path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
 
     // This can be called during exceptions by LogPrintf(), so we cache the
     // value so we don't have to do memory allocations after that.
@@ -736,15 +736,15 @@ void ClearDatadirCache()
 {
     LOCK(csPathCached);
 
-    pathCached = fs::path();
-    pathCachedNetSpecific = fs::path();
-    g_blocks_path_cached = fs::path();
-    g_blocks_path_cache_net_specific = fs::path();
+    pathCached = fsbridge::Path();
+    pathCachedNetSpecific = fsbridge::Path();
+    g_blocks_path_cached = fsbridge::Path();
+    g_blocks_path_cache_net_specific = fsbridge::Path();
 }
 
-fs::path GetConfigFile(const std::string& confPath)
+fsbridge::Path GetConfigFile(const std::string& confPath)
 {
-    return AbsPathForConfigVal(fs::path(confPath), false);
+    return AbsPathForConfigVal(fsbridge::Path(confPath), false);
 }
 
 void ArgsManager::ReadConfigStream(std::istream& stream)
@@ -824,12 +824,12 @@ std::string ArgsManager::GetChainName() const
 }
 
 #ifndef WIN32
-fs::path GetPidFile()
+fsbridge::Path GetPidFile()
 {
-    return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
+    return AbsPathForConfigVal(fsbridge::Path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
 }
 
-void CreatePidFile(const fs::path &path, pid_t pid)
+void CreatePidFile(const fsbridge::Path &path, pid_t pid)
 {
     FILE* file = fsbridge::fopen(path, "w");
     if (file)
@@ -840,13 +840,13 @@ void CreatePidFile(const fs::path &path, pid_t pid)
 }
 #endif
 
-bool RenameOver(fs::path src, fs::path dest)
+bool RenameOver(fsbridge::Path src, fsbridge::Path dest)
 {
 #ifdef WIN32
-    return MoveFileExA(src.string().c_str(), dest.string().c_str(),
+    return MoveFileExA(src.u8string().c_str(), dest.u8string().c_str(),
                        MOVEFILE_REPLACE_EXISTING) != 0;
 #else
-    int rc = std::rename(src.string().c_str(), dest.string().c_str());
+    int rc = std::rename(src.u8string().c_str(), dest.u8string().c_str());
     return (rc == 0);
 #endif /* WIN32 */
 }
@@ -856,7 +856,7 @@ bool RenameOver(fs::path src, fs::path dest)
  * Specifically handles case where path p exists, but it wasn't possible for the user to
  * write to the parent directory.
  */
-bool TryCreateDirectories(const fs::path& p)
+bool TryCreateDirectories(const fsbridge::Path& p)
 {
     try
     {
@@ -983,17 +983,17 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
 }
 
 #ifdef WIN32
-fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
+fsbridge::Path GetSpecialFolderPath(int nFolder, bool fCreate)
 {
     char pszPath[MAX_PATH] = "";
 
     if(SHGetSpecialFolderPathA(nullptr, pszPath, nFolder, fCreate))
     {
-        return fs::path(pszPath);
+        return fsbridge::Path(pszPath);
     }
 
     LogPrintf("SHGetSpecialFolderPathA() failed, could not obtain requested path.\n");
-    return fs::path("");
+    return fsbridge::Path("");
 }
 #endif
 
@@ -1045,9 +1045,9 @@ void SetupEnvironment()
     // The path locale is lazy initialized and to avoid deinitialization errors
     // in multithreading environments, it is set explicitly by the main thread.
     // A dummy locale is used to extract the internal default locale, used by
-    // fs::path, which is then used to explicitly imbue the path.
-    std::locale loc = fs::path::imbue(std::locale::classic());
-    fs::path::imbue(loc);
+    // fsbridge::Path, which is then used to explicitly imbue the path.
+    std::locale loc = fsbridge::Path::imbue(std::locale::classic());
+    fsbridge::Path::imbue(loc);
 }
 
 bool SetupNetworking()
@@ -1084,7 +1084,7 @@ int64_t GetStartupTime()
     return nStartupTime;
 }
 
-fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
+fsbridge::Path AbsPathForConfigVal(const fsbridge::Path& path, bool net_specific)
 {
     return fs::absolute(path, GetDataDir(net_specific));
 }

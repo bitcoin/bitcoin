@@ -12,6 +12,10 @@
 #include <errno.h>
 #include <limits>
 
+#ifdef WIN32
+#include <stringapiset.h>
+#endif
+
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 static const std::string SAFE_CHARS[] =
@@ -544,3 +548,34 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
     return true;
 }
 
+std::string NativeToUtf8(const std::string& source)
+{
+#ifdef WIN32
+    wchar_t wide[MAX_PATH];
+    char utf8[MAX_PATH];
+    if (source.size() == 0) return source;
+    int size = MultiByteToWideChar(CP_ACP, 0, source.c_str(), source.size(), wide, MAX_PATH);
+    assert(size);
+    size = WideCharToMultiByte(CP_UTF8, 0, wide, size, utf8, MAX_PATH, nullptr, nullptr);
+    assert(size);
+    return std::string(utf8, 0, size);
+#else
+    return source;
+#endif
+}
+
+std::string Utf8ToNative(const std::string& source)
+{
+#ifdef WIN32
+    wchar_t wide[MAX_PATH];
+    char native[MAX_PATH];
+    if (source.size() == 0) return source;
+    int size = MultiByteToWideChar(CP_UTF8, 0, source.c_str(), source.size(), wide, MAX_PATH);
+    assert(size);
+    size = WideCharToMultiByte(CP_ACP, 0, wide, size, native, MAX_PATH, nullptr, nullptr);
+    assert(size);
+    return std::string(native, 0, size);
+#else
+    return source;
+#endif
+}

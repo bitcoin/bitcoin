@@ -173,4 +173,8 @@ bool ConvertBits(const O& outfn, I it, I end) {
     return true;
 }
 
+std::string NativeToUtf8(const std::string& source);
+
+std::string Utf8ToNative(const std::string& source);
+
 #endif // BITCOIN_UTILSTRENCODINGS_H

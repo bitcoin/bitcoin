@@ -80,7 +80,7 @@ typedef std::map<CSubNet, CBanEntry> banmap_t;
 class CAddrDB
 {
 private:
-    fs::path pathAddr;
+    fsbridge::Path pathAddr;
 public:
     CAddrDB();
     bool Write(const CAddrMan& addr);
@@ -92,7 +92,7 @@ public:
 class CBanDB
 {
 private:
-    fs::path pathBanlist;
+    fsbridge::Path pathBanlist;
 public:
     CBanDB();
     bool Write(const banmap_t& banSet);

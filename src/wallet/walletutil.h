@@ -9,6 +9,6 @@
 #include <util.h>
 
 //! Get the path of the wallet directory.
-fs::path GetWalletDir();
+fsbridge::Path GetWalletDir();
 
 #endif // BITCOIN_WALLET_WALLETUTIL_H

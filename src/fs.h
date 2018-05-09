@@ -19,6 +19,20 @@ namespace fs = boost::filesystem;
 namespace fsbridge {
     FILE *fopen(const fs::path& p, const char *mode);
     FILE *freopen(const fs::path& p, const char *mode, FILE *stream);
+
+    class Path : public fs::path
+    {
+    public:
+        Path();
+        template<typename Source>
+        Path(const Source & source) : fs::path(source){}
+        template<typename Source>
+        Path(const Source & source, const codecvt_type& cvt) : fs::path(source, cvt){}
+        Path(const fs::path& p);
+        std::string u8string() const;
+    };
+
+    Path U8Path(const std::string& source);
 };
 
 #endif // BITCOIN_FS_H

@@ -67,7 +67,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         ClearDatadirCache();
         pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30)));
         fs::create_directories(pathTemp);
-        gArgs.ForceSetArg("-datadir", pathTemp.string());
+        gArgs.ForceSetArg("-datadir", pathTemp.u8string());
 
         // We have to run a scheduler thread to prevent ActivateBestChain
         // from blocking due to queue overrun.

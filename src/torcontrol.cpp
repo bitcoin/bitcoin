@@ -364,7 +364,7 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
  * @param maxsize Puts a maximum size limit on the file that is read. If the file is larger than this, truncated data
  *         (with len > maxsize) will be returned.
  */
-static std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize=std::numeric_limits<size_t>::max())
+static std::pair<bool,std::string> ReadBinaryFile(const fsbridge::Path &filename, size_t maxsize=std::numeric_limits<size_t>::max())
 {
     FILE *f = fsbridge::fopen(filename, "rb");
     if (f == nullptr)
@@ -390,7 +390,7 @@ static std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size
 /** Write contents of std::string to a file.
  * @return true on success.
  */
-static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
+static bool WriteBinaryFile(const fsbridge::Path &filename, const std::string &data)
 {
     FILE *f = fsbridge::fopen(filename, "wb");
     if (f == nullptr)
@@ -415,7 +415,7 @@ public:
     ~TorController();
 
     /** Get name fo file to store private key in */
-    fs::path GetPrivateKeyFile();
+    fsbridge::Path GetPrivateKeyFile();
 
     /** Reconnect, after getting disconnected */
     void Reconnect();
@@ -467,7 +467,7 @@ TorController::TorController(struct event_base* _base, const std::string& _targe
     // Read service private key if cached
     std::pair<bool,std::string> pkf = ReadBinaryFile(GetPrivateKeyFile());
     if (pkf.first) {
-        LogPrint(BCLog::TOR, "tor: Reading cached private key from %s\n", GetPrivateKeyFile().string());
+        LogPrint(BCLog::TOR, "tor: Reading cached private key from %s\n", GetPrivateKeyFile().u8string());
         private_key = pkf.second;
     }
 }
@@ -505,9 +505,9 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
         service = LookupNumeric(std::string(service_id+".onion").c_str(), GetListenPort());
         LogPrintf("tor: Got service ID %s, advertising service %s\n", service_id, service.ToString());
         if (WriteBinaryFile(GetPrivateKeyFile(), private_key)) {
-            LogPrint(BCLog::TOR, "tor: Cached service private key to %s\n", GetPrivateKeyFile().string());
+            LogPrint(BCLog::TOR, "tor: Cached service private key to %s\n", GetPrivateKeyFile().u8string());
         } else {
-            LogPrintf("tor: Error writing service private key to %s\n", GetPrivateKeyFile().string());
+            LogPrintf("tor: Error writing service private key to %s\n", GetPrivateKeyFile().u8string());
         }
         AddLocal(service, LOCAL_MANUAL);
         // ... onion requested - keep connection open
@@ -657,7 +657,7 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
         } else if (methods.count("SAFECOOKIE")) {
             // Cookie: hexdump -e '32/1 "%02x""\n"'  ~/.tor/control_auth_cookie
             LogPrint(BCLog::TOR, "tor: Using SAFECOOKIE authentication, reading cookie authentication from %s\n", cookiefile);
-            std::pair<bool,std::string> status_cookie = ReadBinaryFile(cookiefile, TOR_COOKIE_SIZE);
+            std::pair<bool,std::string> status_cookie = ReadBinaryFile(fsbridge::U8Path(cookiefile), TOR_COOKIE_SIZE);
             if (status_cookie.first && status_cookie.second.size() == TOR_COOKIE_SIZE) {
                 // _conn.Command("AUTHENTICATE " + HexStr(status_cookie.second), boost::bind(&TorController::auth_cb, this, _1, _2));
                 cookie = std::vector<uint8_t>(status_cookie.second.begin(), status_cookie.second.end());
@@ -718,7 +718,7 @@ void TorController::Reconnect()
     }
 }
 
-fs::path TorController::GetPrivateKeyFile()
+fsbridge::Path TorController::GetPrivateKeyFile()
 {
     return GetDataDir() / "onion_private_key";
 }

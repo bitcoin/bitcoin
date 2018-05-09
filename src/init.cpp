@@ -233,12 +233,12 @@ void Shutdown()
     if (fFeeEstimatesInitialized)
     {
         ::feeEstimator.FlushUnconfirmed();
-        fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
+        fsbridge::Path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
         CAutoFile est_fileout(fsbridge::fopen(est_path, "wb"), SER_DISK, CLIENT_VERSION);
         if (!est_fileout.IsNull())
             ::feeEstimator.Write(est_fileout);
         else
-            LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
+            LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.u8string());
         fFeeEstimatesInitialized = false;
     }
 
@@ -573,21 +573,21 @@ struct CImportingNow
 // works correctly.
 static void CleanupBlockRevFiles()
 {
-    std::map<std::string, fs::path> mapBlockFiles;
+    std::map<std::string, fsbridge::Path> mapBlockFiles;
 
     // Glob all blk?????.dat and rev?????.dat files from the blocks directory.
     // Remove the rev files immediately and insert the blk file paths into an
     // ordered map keyed by block file index.
     LogPrintf("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
-    fs::path blocksdir = GetBlocksDir();
+    fsbridge::Path blocksdir = GetBlocksDir();
     for (fs::directory_iterator it(blocksdir); it != fs::directory_iterator(); it++) {
         if (fs::is_regular_file(*it) &&
-            it->path().filename().string().length() == 12 &&
-            it->path().filename().string().substr(8,4) == ".dat")
+            it->path().filename().u8string().length() == 12 &&
+            it->path().filename().u8string().substr(8,4) == ".dat")
         {
-            if (it->path().filename().string().substr(0,3) == "blk")
-                mapBlockFiles[it->path().filename().string().substr(3,5)] = it->path();
-            else if (it->path().filename().string().substr(0,3) == "rev")
+            if (it->path().filename().u8string().substr(0,3) == "blk")
+                mapBlockFiles[it->path().filename().u8string().substr(3,5)] = it->path();
+            else if (it->path().filename().u8string().substr(0,3) == "rev")
                 remove(it->path());
         }
     }
@@ -597,7 +597,7 @@ static void CleanupBlockRevFiles()
     // keeping a separate counter.  Once we hit a gap (or if 0 doesn't exist)
     // start removing block files.
     int nContigCounter = 0;
-    for (const std::pair<std::string, fs::path>& item : mapBlockFiles) {
+    for (const std::pair<std::string, fsbridge::Path>& item : mapBlockFiles) {
         if (atoi(item.first) == nContigCounter) {
             nContigCounter++;
             continue;
@@ -606,7 +606,7 @@ static void CleanupBlockRevFiles()
     }
 }
 
-static void ThreadImport(std::vector<fs::path> vImportFiles)
+static void ThreadImport(std::vector<fsbridge::Path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
     RenameThread("bitcoin-loadblk");
@@ -637,27 +637,27 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     }
 
     // hardcoded $DATADIR/bootstrap.dat
-    fs::path pathBootstrap = GetDataDir() / "bootstrap.dat";
+    fsbridge::Path pathBootstrap = GetDataDir() / "bootstrap.dat";
     if (fs::exists(pathBootstrap)) {
         FILE *file = fsbridge::fopen(pathBootstrap, "rb");
         if (file) {
-            fs::path pathBootstrapOld = GetDataDir() / "bootstrap.dat.old";
+            fsbridge::Path pathBootstrapOld = GetDataDir() / "bootstrap.dat.old";
             LogPrintf("Importing bootstrap.dat...\n");
             LoadExternalBlockFile(chainparams, file);
             RenameOver(pathBootstrap, pathBootstrapOld);
         } else {
-            LogPrintf("Warning: Could not open bootstrap file %s\n", pathBootstrap.string());
+            LogPrintf("Warning: Could not open bootstrap file %s\n", pathBootstrap.u8string());
         }
     }
 
     // -loadblock=
-    for (const fs::path& path : vImportFiles) {
+    for (const fsbridge::Path& path : vImportFiles) {
         FILE *file = fsbridge::fopen(path, "rb");
         if (file) {
-            LogPrintf("Importing blocks file %s...\n", path.string());
+            LogPrintf("Importing blocks file %s...\n", path.u8string());
             LoadExternalBlockFile(chainparams, file);
         } else {
-            LogPrintf("Warning: Could not open blocks file %s\n", path.string());
+            LogPrintf("Warning: Could not open blocks file %s\n", path.u8string());
         }
     }
 
@@ -803,7 +803,7 @@ static std::string ResolveErrMsg(const char * const optname, const std::string& 
 void InitLogging()
 {
     g_logger->m_print_to_file = !gArgs.IsArgNegated("-debuglogfile");
-    g_logger->m_file_path = AbsPathForConfigVal(gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
+    g_logger->m_file_path = AbsPathForConfigVal(fsbridge::U8Path(gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE)));
 
     // Add newlines to the logfile to distinguish this execution from the last
     // one; called before console logging is set up, so this is only sent to
@@ -1155,12 +1155,12 @@ bool AppInitParameterInteraction()
 static bool LockDataDirectory(bool probeOnly)
 {
     // Make sure only a single Bitcoin process is using the data directory.
-    fs::path datadir = GetDataDir();
+    fsbridge::Path datadir = GetDataDir();
     if (!DirIsWritable(datadir)) {
-        return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), datadir.string()));
+        return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), datadir.u8string()));
     }
     if (!LockDirectory(datadir, ".lock", probeOnly)) {
-        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), datadir.string(), _(PACKAGE_NAME)));
+        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), datadir.u8string(), _(PACKAGE_NAME)));
     }
     return true;
 }
@@ -1213,24 +1213,24 @@ bool AppInitMain()
         }
         if (!g_logger->OpenDebugLog()) {
             return InitError(strprintf("Could not open debug log file %s",
-                                       g_logger->m_file_path.string()));
+                                       g_logger->m_file_path.u8string()));
         }
     }
 
     if (!g_logger->m_log_timestamps)
         LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
-    LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
-    LogPrintf("Using data directory %s\n", GetDataDir().string());
-    LogPrintf("Using config file %s\n", GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string());
+    LogPrintf("Default data directory %s\n", GetDefaultDataDir().u8string());
+    LogPrintf("Using data directory %s\n", GetDataDir().u8string());
+    LogPrintf("Using config file %s\n", GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).u8string());
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
     // Warn about relative -datadir path.
-    if (gArgs.IsArgSet("-datadir") && !fs::path(gArgs.GetArg("-datadir", "")).is_absolute()) {
+    if (gArgs.IsArgSet("-datadir") && !fsbridge::Path(gArgs.GetArg("-datadir", "")).is_absolute()) {
         LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the " /* Continued */
                   "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
                   "also be data loss if bitcoin is started while in a temporary directory.\n",
-            gArgs.GetArg("-datadir", ""), fs::current_path().string());
+            gArgs.GetArg("-datadir", ""), fs::current_path().u8string());
     }
 
     InitSignatureCache();
@@ -1578,7 +1578,7 @@ bool AppInitMain()
         LogPrintf(" block index %15dms\n", GetTimeMillis() - nStart);
     }
 
-    fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
+    fsbridge::Path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_filein(fsbridge::fopen(est_path, "rb"), SER_DISK, CLIENT_VERSION);
     // Allowed to fail as this file IS missing on first startup.
     if (!est_filein.IsNull())
@@ -1633,9 +1633,9 @@ bool AppInitMain()
     if (gArgs.IsArgSet("-blocknotify"))
         uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
 
-    std::vector<fs::path> vImportFiles;
+    std::vector<fsbridge::Path> vImportFiles;
     for (const std::string& strFile : gArgs.GetArgs("-loadblock")) {
-        vImportFiles.push_back(strFile);
+        vImportFiles.push_back(fsbridge::U8Path(strFile));
     }
 
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));

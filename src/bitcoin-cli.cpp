@@ -365,7 +365,7 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
         if (failedToGetAuthCookie) {
             throw std::runtime_error(strprintf(
                 _("Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)"),
-                GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string().c_str()));
+                GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).u8string().c_str()));
         } else {
             throw std::runtime_error("Authorization failed: Incorrect rpcuser or rpcpassword");
         }
@@ -402,7 +402,10 @@ static int CommandLineRPC(int argc, char *argv[])
             }
             gArgs.ForceSetArg("-rpcpassword", rpcPass);
         }
-        std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
+        std::vector<std::string> args;
+        for(char ** i = &argv[1]; i != &argv[argc]; i++) {
+            args.push_back(NativeToUtf8(*i));
+        }
         if (gArgs.GetBoolArg("-stdin", false)) {
             // Read one arg per line from stdin and append
             std::string line;

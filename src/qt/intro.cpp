@@ -71,14 +71,14 @@ FreespaceChecker::FreespaceChecker(Intro *_intro)
 void FreespaceChecker::check()
 {
     QString dataDirStr = intro->getPathToCheck();
-    fs::path dataDir = GUIUtil::qstringToBoostPath(dataDirStr);
+    fsbridge::Path dataDir = GUIUtil::qstringToBoostPath(dataDirStr);
     uint64_t freeBytesAvailable = 0;
     int replyStatus = ST_OK;
     QString replyMessage = tr("A new data directory will be created.");
 
     /* Find first parent that exists, so that fs::space does not fail */
-    fs::path parentDir = dataDir;
-    fs::path parentDirOld = fs::path();
+    fsbridge::Path parentDir = dataDir;
+    fsbridge::Path parentDirOld = fsbridge::Path();
     while(parentDir.has_parent_path() && !fs::exists(parentDir))
     {
         parentDir = parentDir.parent_path();
@@ -235,7 +235,7 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
      * (to be consistent with bitcoind behavior)
      */
     if(dataDir != getDefaultDataDirectory()) {
-        node.softSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
+        node.softSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).u8string()); // use OS locale for path setting
     }
     return true;
 }

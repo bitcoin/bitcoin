@@ -710,7 +710,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    boost::filesystem::path filepath = request.params[0].get_str();
+    fsbridge::Path filepath = request.params[0].get_str();
     filepath = boost::filesystem::absolute(filepath);
 
     /* Prevent arbitrary files from being overwritten. There have been reports
@@ -719,11 +719,11 @@ UniValue dumpwallet(const JSONRPCRequest& request)
      * It may also avoid other security issues.
      */
     if (boost::filesystem::exists(filepath)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want, move it out of the way first");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.u8string() + " already exists. If you are sure this is what you want, move it out of the way first");
     }
 
     std::ofstream file;
-    file.open(filepath.string().c_str());
+    file.open(filepath.u8string().c_str());
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
@@ -805,7 +805,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file.close();
 
     UniValue reply(UniValue::VOBJ);
-    reply.pushKV("filename", filepath.string());
+    reply.pushKV("filename", filepath.u8string());
 
     return reply;
 }

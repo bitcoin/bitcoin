@@ -184,10 +184,10 @@ namespace GUIUtil
     bool SetStartOnSystemStartup(bool fAutoStart);
 
     /* Convert QString to OS specific boost path through UTF-8 */
-    fs::path qstringToBoostPath(const QString &path);
+    fsbridge::Path qstringToBoostPath(const QString &path);
 
     /* Convert OS specific boost path to QString through UTF-8 */
-    QString boostPathToQString(const fs::path &path);
+    QString boostPathToQString(const fsbridge::Path &path);
 
     /* Convert seconds into a QString with days, hours, mins, secs */
     QString formatDurationStr(int secs);

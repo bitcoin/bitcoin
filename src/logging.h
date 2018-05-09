@@ -82,7 +82,7 @@ namespace BCLog {
         bool m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
         bool m_log_time_micros = DEFAULT_LOGTIMEMICROS;
 
-        fs::path m_file_path;
+        fsbridge::Path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */

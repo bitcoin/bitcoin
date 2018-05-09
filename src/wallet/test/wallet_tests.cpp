@@ -139,7 +139,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
         JSONRPCRequest request;
         request.params.setArray();
-        request.params.push_back((pathTemp / "wallet.backup").string());
+        request.params.push_back((pathTemp / "wallet.backup").u8string());
         AddWallet(&wallet);
         ::dumpwallet(request);
         RemoveWallet(&wallet);
@@ -152,7 +152,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
         JSONRPCRequest request;
         request.params.setArray();
-        request.params.push_back((pathTemp / "wallet.backup").string());
+        request.params.push_back((pathTemp / "wallet.backup").u8string());
         AddWallet(&wallet);
         ::importwallet(request);
         RemoveWallet(&wallet);

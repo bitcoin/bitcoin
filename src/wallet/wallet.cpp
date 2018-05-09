@@ -3955,7 +3955,7 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
-CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& path)
+CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fsbridge::Path& path)
 {
     const std::string& walletFile = name;
 

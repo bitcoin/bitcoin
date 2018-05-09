@@ -1039,7 +1039,7 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("1.", 8, &amount));
 }
 
-static void TestOtherThread(fs::path dirname, std::string lockname, bool *result)
+static void TestOtherThread(fsbridge::Path dirname, std::string lockname, bool *result)
 {
     *result = LockDirectory(dirname, lockname);
 }
@@ -1049,7 +1049,7 @@ static constexpr char LockCommand = 'L';
 static constexpr char UnlockCommand = 'U';
 static constexpr char ExitCommand = 'X';
 
-static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
+static void TestOtherProcess(fsbridge::Path dirname, std::string lockname, int fd)
 {
     char ch;
     while (true) {
@@ -1078,7 +1078,7 @@ static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
 
 BOOST_AUTO_TEST_CASE(test_LockDirectory)
 {
-    fs::path dirname = fs::temp_directory_path() / fs::unique_path();
+    fsbridge::Path dirname = fs::temp_directory_path() / fs::unique_path();
     const std::string lockname = ".lock";
 #ifndef WIN32
     // Revert SIGCHLD to default, otherwise boost.test will catch and fail on
@@ -1167,7 +1167,7 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
 BOOST_AUTO_TEST_CASE(test_DirIsWritable)
 {
     // Should be able to write to the system tmp dir.
-    fs::path tmpdirname = fs::temp_directory_path();
+    fsbridge::Path tmpdirname = fs::temp_directory_path();
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
 
     // Should not be able to write to a non-existent dir.

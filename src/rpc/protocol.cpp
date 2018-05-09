@@ -66,13 +66,13 @@ static const std::string COOKIEAUTH_USER = "__cookie__";
 static const std::string COOKIEAUTH_FILE = ".cookie";
 
 /** Get name of RPC authentication cookie file */
-static fs::path GetAuthCookieFile(bool temp=false)
+static fsbridge::Path GetAuthCookieFile(bool temp=false)
 {
     std::string arg = gArgs.GetArg("-rpccookiefile", COOKIEAUTH_FILE);
     if (temp) {
         arg += ".tmp";
     }
-    return AbsPathForConfigVal(fs::path(arg));
+    return AbsPathForConfigVal(fsbridge::Path(arg));
 }
 
 bool GenerateAuthCookie(std::string *cookie_out)
@@ -86,21 +86,21 @@ bool GenerateAuthCookie(std::string *cookie_out)
      * these are set to 077 in init.cpp unless overridden with -sysperms.
      */
     std::ofstream file;
-    fs::path filepath_tmp = GetAuthCookieFile(true);
-    file.open(filepath_tmp.string().c_str());
+    fsbridge::Path filepath_tmp = GetAuthCookieFile(true);
+    file.open(filepath_tmp.u8string().c_str());
     if (!file.is_open()) {
-        LogPrintf("Unable to open cookie authentication file %s for writing\n", filepath_tmp.string());
+        LogPrintf("Unable to open cookie authentication file %s for writing\n", filepath_tmp.u8string());
         return false;
     }
     file << cookie;
     file.close();
 
-    fs::path filepath = GetAuthCookieFile(false);
+    fsbridge::Path filepath = GetAuthCookieFile(false);
     if (!RenameOver(filepath_tmp, filepath)) {
-        LogPrintf("Unable to rename cookie authentication file %s to %s\n", filepath_tmp.string(), filepath.string());
+        LogPrintf("Unable to rename cookie authentication file %s to %s\n", filepath_tmp.u8string(), filepath.u8string());
         return false;
     }
-    LogPrintf("Generated RPC authentication cookie %s\n", filepath.string());
+    LogPrintf("Generated RPC authentication cookie %s\n", filepath.u8string());
 
     if (cookie_out)
         *cookie_out = cookie;
@@ -111,8 +111,8 @@ bool GetAuthCookie(std::string *cookie_out)
 {
     std::ifstream file;
     std::string cookie;
-    fs::path filepath = GetAuthCookieFile();
-    file.open(filepath.string().c_str());
+    fsbridge::Path filepath = GetAuthCookieFile();
+    file.open(filepath.u8string().c_str());
     if (!file.is_open())
         return false;
     std::getline(file, cookie);
