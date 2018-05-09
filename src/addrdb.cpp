@@ -33,7 +33,7 @@ bool SerializeDB(Stream& stream, const Data& data)
 }
 
 template <typename Data>
-bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data& data)
+bool SerializeFileDB(const std::string& prefix, const fsbridge::Path& path, const Data& data)
 {
     // Generate random temporary filename
     unsigned short randv = 0;
@@ -41,7 +41,7 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
     std::string tmpfn = strprintf("%s.%04x", prefix, randv);
 
     // open temp output file, and associate with CAutoFile
-    fs::path pathTmp = GetDataDir() / tmpfn;
+    fsbridge::Path pathTmp = GetDataDir() / tmpfn;
     FILE *file = fsbridge::fopen(pathTmp, "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull())
@@ -92,7 +92,7 @@ bool DeserializeDB(Stream& stream, Data& data, bool fCheckSum = true)
 }
 
 template <typename Data>
-bool DeserializeFileDB(const fs::path& path, Data& data)
+bool DeserializeFileDB(const fsbridge::Path& path, Data& data)
 {
     // open input file, and associate with CAutoFile
     FILE *file = fsbridge::fopen(path, "rb");

@@ -3701,7 +3701,7 @@ static FILE* OpenDiskFile(const CDiskBlockPos &pos, const char *prefix, bool fRe
 {
     if (pos.IsNull())
         return nullptr;
-    fs::path path = GetBlockPosFilename(pos, prefix);
+    fsbridge::Path path = GetBlockPosFilename(pos, prefix);
     fs::create_directories(path.parent_path());
     FILE* file = fsbridge::fopen(path, fReadOnly ? "rb": "rb+");
     if (!file && !fReadOnly)
@@ -3729,7 +3729,7 @@ static FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
     return OpenDiskFile(pos, "rev", fReadOnly);
 }
 
-fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix)
+fsbridge::Path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix)
 {
     return GetBlocksDir() / strprintf("%s%05u.dat", prefix, pos.nFile);
 }

@@ -30,7 +30,7 @@ class BerkeleyEnvironment
 private:
     bool fDbEnvInit;
     bool fMockDb;
-    // Don't change into fs::path, as that can result in
+    // Don't change into fsbridge::Path, as that can result in
     // shutdown problems/crashes caused by a static initialized internal pointer.
     std::string strPath;
 
@@ -39,14 +39,14 @@ public:
     std::map<std::string, int> mapFileUseCount;
     std::map<std::string, Db*> mapDb;
 
-    BerkeleyEnvironment(const fs::path& env_directory);
+    BerkeleyEnvironment(const fsbridge::Path& env_directory);
     ~BerkeleyEnvironment();
     void Reset();
 
     void MakeMock();
     bool IsMock() const { return fMockDb; }
     bool IsInitialized() const { return fDbEnvInit; }
-    fs::path Directory() const { return strPath; }
+    fsbridge::Path Directory() const { return strPath; }
 
     /**
      * Verify that database file strFile is OK. If it is not,
@@ -57,7 +57,7 @@ public:
     enum class VerifyResult { VERIFY_OK,
                         RECOVER_OK,
                         RECOVER_FAIL };
-    typedef bool (*recoverFunc_type)(const fs::path& file_path, std::string& out_backup_filename);
+    typedef bool (*recoverFunc_type)(const fsbridge::Path& file_path, std::string& out_backup_filename);
     VerifyResult Verify(const std::string& strFile, recoverFunc_type recoverFunc, std::string& out_backup_filename);
     /**
      * Salvage data from a file that Verify says is bad.
@@ -87,7 +87,7 @@ public:
 };
 
 /** Get BerkeleyEnvironment and database filename given a wallet path. */
-BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
+BerkeleyEnvironment* GetWalletEnv(const fsbridge::Path& wallet_path, std::string& database_filename);
 
 /** An instance of this class represents one database.
  * For BerkeleyDB this is just a (env, strFile) tuple.
@@ -102,7 +102,7 @@ public:
     }
 
     /** Create DB handle to real database */
-    BerkeleyDatabase(const fs::path& wallet_path, bool mock = false) :
+    BerkeleyDatabase(const fsbridge::Path& wallet_path, bool mock = false) :
         nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0)
     {
         env = GetWalletEnv(wallet_path, strFile);
@@ -114,7 +114,7 @@ public:
     }
 
     /** Return object for accessing database at specified path. */
-    static std::unique_ptr<BerkeleyDatabase> Create(const fs::path& path)
+    static std::unique_ptr<BerkeleyDatabase> Create(const fsbridge::Path& path)
     {
         return MakeUnique<BerkeleyDatabase>(path);
     }
@@ -183,15 +183,15 @@ public:
 
     void Flush();
     void Close();
-    static bool Recover(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
+    static bool Recover(const fsbridge::Path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
 
     /* flush the wallet passively (TRY_LOCK)
        ideal to be called periodically */
     static bool PeriodicFlush(BerkeleyDatabase& database);
     /* verifies the database environment */
-    static bool VerifyEnvironment(const fs::path& file_path, std::string& errorStr);
+    static bool VerifyEnvironment(const fsbridge::Path& file_path, std::string& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const fs::path& file_path, std::string& warningStr, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc);
+    static bool VerifyDatabaseFile(const fsbridge::Path& file_path, std::string& warningStr, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc);
 
 public:
     template <typename K, typename T>

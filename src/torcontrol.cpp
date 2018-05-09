@@ -364,7 +364,7 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
  * @param maxsize Puts a maximum size limit on the file that is read. If the file is larger than this, truncated data
  *         (with len > maxsize) will be returned.
  */
-static std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize=std::numeric_limits<size_t>::max())
+static std::pair<bool,std::string> ReadBinaryFile(const fsbridge::Path &filename, size_t maxsize=std::numeric_limits<size_t>::max())
 {
     FILE *f = fsbridge::fopen(filename, "rb");
     if (f == nullptr)
@@ -390,7 +390,7 @@ static std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size
 /** Write contents of std::string to a file.
  * @return true on success.
  */
-static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
+static bool WriteBinaryFile(const fsbridge::Path &filename, const std::string &data)
 {
     FILE *f = fsbridge::fopen(filename, "wb");
     if (f == nullptr)
@@ -415,7 +415,7 @@ public:
     ~TorController();
 
     /** Get name fo file to store private key in */
-    fs::path GetPrivateKeyFile();
+    fsbridge::Path GetPrivateKeyFile();
 
     /** Reconnect, after getting disconnected */
     void Reconnect();
@@ -718,7 +718,7 @@ void TorController::Reconnect()
     }
 }
 
-fs::path TorController::GetPrivateKeyFile()
+fsbridge::Path TorController::GetPrivateKeyFile()
 {
     return GetDataDir() / "onion_private_key";
 }

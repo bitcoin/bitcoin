@@ -779,12 +779,12 @@ void MaybeCompactWalletDB()
 //
 // Try to (very carefully!) recover wallet file if there is a problem.
 //
-bool WalletBatch::Recover(const fs::path& wallet_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename)
+bool WalletBatch::Recover(const fsbridge::Path& wallet_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename)
 {
     return BerkeleyBatch::Recover(wallet_path, callbackDataIn, recoverKVcallback, out_backup_filename);
 }
 
-bool WalletBatch::Recover(const fs::path& wallet_path, std::string& out_backup_filename)
+bool WalletBatch::Recover(const fsbridge::Path& wallet_path, std::string& out_backup_filename)
 {
     // recover without a key filter callback
     // results in recovering all record types
@@ -814,12 +814,12 @@ bool WalletBatch::RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, C
     return true;
 }
 
-bool WalletBatch::VerifyEnvironment(const fs::path& wallet_path, std::string& errorStr)
+bool WalletBatch::VerifyEnvironment(const fsbridge::Path& wallet_path, std::string& errorStr)
 {
     return BerkeleyBatch::VerifyEnvironment(wallet_path, errorStr);
 }
 
-bool WalletBatch::VerifyDatabaseFile(const fs::path& wallet_path, std::string& warningStr, std::string& errorStr)
+bool WalletBatch::VerifyDatabaseFile(const fsbridge::Path& wallet_path, std::string& warningStr, std::string& errorStr)
 {
     return BerkeleyBatch::VerifyDatabaseFile(wallet_path, warningStr, errorStr, WalletBatch::Recover);
 }

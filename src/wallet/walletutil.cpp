@@ -4,9 +4,9 @@
 
 #include <wallet/walletutil.h>
 
-fs::path GetWalletDir()
+fsbridge::Path GetWalletDir()
 {
-    fs::path path;
+    fsbridge::Path path;
 
     if (gArgs.IsArgSet("-walletdir")) {
         path = gArgs.GetArg("-walletdir", "");

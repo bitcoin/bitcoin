@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (bool obfuscate : {false, true}) {
-        fs::path ph = fs::temp_directory_path() / fs::unique_path();
+        fsbridge::Path ph = fs::temp_directory_path() / fs::unique_path();
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
         char key = 'k';
         uint256 in = InsecureRand256();
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (bool obfuscate : {false, true}) {
-        fs::path ph = fs::temp_directory_path() / fs::unique_path();
+        fsbridge::Path ph = fs::temp_directory_path() / fs::unique_path();
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
         char key = 'i';
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (bool obfuscate : {false, true}) {
-        fs::path ph = fs::temp_directory_path() / fs::unique_path();
+        fsbridge::Path ph = fs::temp_directory_path() / fs::unique_path();
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
         // The two keys are intentionally chosen for ordering
@@ -122,8 +122,8 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 // Test that we do not obfuscation if there is existing data.
 BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 {
-    // We're going to share this fs::path between two wrappers
-    fs::path ph = fs::temp_directory_path() / fs::unique_path();
+    // We're going to share this fsbridge::Path between two wrappers
+    fsbridge::Path ph = fs::temp_directory_path() / fs::unique_path();
     create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
@@ -163,8 +163,8 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 // Ensure that we start obfuscating during a reindex.
 BOOST_AUTO_TEST_CASE(existing_data_reindex)
 {
-    // We're going to share this fs::path between two wrappers
-    fs::path ph = fs::temp_directory_path() / fs::unique_path();
+    // We're going to share this fsbridge::Path between two wrappers
+    fsbridge::Path ph = fs::temp_directory_path() / fs::unique_path();
     create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
 
 BOOST_AUTO_TEST_CASE(iterator_ordering)
 {
-    fs::path ph = fs::temp_directory_path() / fs::unique_path();
+    fsbridge::Path ph = fs::temp_directory_path() / fs::unique_path();
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
     for (int x=0x00; x<256; ++x) {
         uint8_t key = x;
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
 {
     char buf[10];
 
-    fs::path ph = fs::temp_directory_path() / fs::unique_path();
+    fsbridge::Path ph = fs::temp_directory_path() / fs::unique_path();
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
     for (int x=0x00; x<10; ++x) {
         for (int y = 0; y < 10; y++) {

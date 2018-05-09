@@ -183,7 +183,7 @@ bool WalletInit::Verify() const
     }
 
     if (gArgs.IsArgSet("-walletdir")) {
-        fs::path wallet_dir = gArgs.GetArg("-walletdir", "");
+        fsbridge::Path wallet_dir = gArgs.GetArg("-walletdir", "");
         if (!fs::exists(wallet_dir)) {
             return InitError(strprintf(_("Specified -walletdir \"%s\" does not exist"), wallet_dir.string()));
         } else if (!fs::is_directory(wallet_dir)) {
@@ -198,7 +198,7 @@ bool WalletInit::Verify() const
     uiInterface.InitMessage(_("Verifying wallet(s)..."));
 
     // Keep track of each wallet absolute path to detect duplicates.
-    std::set<fs::path> wallet_paths;
+    std::set<fsbridge::Path> wallet_paths;
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
         // Do some checking on wallet path. It should be either a:
@@ -207,11 +207,11 @@ bool WalletInit::Verify() const
         // 2. Path to an existing directory.
         // 3. Path to a symlink to a directory.
         // 4. For backwards compatibility, the name of a data file in -walletdir.
-        fs::path wallet_path = fs::absolute(walletFile, GetWalletDir());
+        fsbridge::Path wallet_path = fs::absolute(walletFile, GetWalletDir());
         fs::file_type path_type = fs::symlink_status(wallet_path).type();
         if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
               (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
-              (path_type == fs::regular_file && fs::path(walletFile).filename() == walletFile))) {
+              (path_type == fs::regular_file && fsbridge::Path(walletFile).filename() == walletFile))) {
             return InitError(strprintf(
                 _("Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
                   "database/log.?????????? files can be stored, a location where such a directory could be created, "

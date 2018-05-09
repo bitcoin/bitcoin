@@ -56,9 +56,9 @@ CCriticalSection cs_db;
 std::map<std::string, BerkeleyEnvironment> g_dbenvs; //!< Map from directory name to open db environment.
 } // namespace
 
-BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
+BerkeleyEnvironment* GetWalletEnv(const fsbridge::Path& wallet_path, std::string& database_filename)
 {
-    fs::path env_directory;
+    fsbridge::Path env_directory;
     if (fs::is_regular_file(wallet_path)) {
         // Special case for backwards compatibility: if wallet path points to an
         // existing file, treat it as the path to a BDB data file in a parent
@@ -114,7 +114,7 @@ void BerkeleyEnvironment::Reset()
     fMockDb = false;
 }
 
-BerkeleyEnvironment::BerkeleyEnvironment(const fs::path& dir_path) : strPath(dir_path.string())
+BerkeleyEnvironment::BerkeleyEnvironment(const fsbridge::Path& dir_path) : strPath(dir_path.string())
 {
     Reset();
 }
@@ -131,16 +131,16 @@ bool BerkeleyEnvironment::Open(bool retry)
 
     boost::this_thread::interruption_point();
 
-    fs::path pathIn = strPath;
+    fsbridge::Path pathIn = strPath;
     TryCreateDirectories(pathIn);
     if (!LockDirectory(pathIn, ".walletlock")) {
         LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.\n", strPath);
         return false;
     }
 
-    fs::path pathLogDir = pathIn / "database";
+    fsbridge::Path pathLogDir = pathIn / "database";
     TryCreateDirectories(pathLogDir);
-    fs::path pathErrorFile = pathIn / "db.log";
+    fsbridge::Path pathErrorFile = pathIn / "db.log";
     LogPrintf("BerkeleyEnvironment::Open: LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
 
     unsigned int nEnvFlags = 0;
@@ -172,7 +172,7 @@ bool BerkeleyEnvironment::Open(bool retry)
         LogPrintf("BerkeleyEnvironment::Open: Error %d opening database environment: %s\n", ret, DbEnv::strerror(ret));
         if (retry) {
             // try moving the database env out of the way
-            fs::path pathDatabaseBak = pathIn / strprintf("database.%d.bak", GetTime());
+            fsbridge::Path pathDatabaseBak = pathIn / strprintf("database.%d.bak", GetTime());
             try {
                 fs::rename(pathLogDir, pathDatabaseBak);
                 LogPrintf("Moved old %s to %s. Retrying.\n", pathLogDir.string(), pathDatabaseBak.string());
@@ -239,11 +239,11 @@ BerkeleyEnvironment::VerifyResult BerkeleyEnvironment::Verify(const std::string&
         return VerifyResult::RECOVER_FAIL;
 
     // Try to recover:
-    bool fRecovered = (*recoverFunc)(fs::path(strPath) / strFile, out_backup_filename);
+    bool fRecovered = (*recoverFunc)(fsbridge::Path(strPath) / strFile, out_backup_filename);
     return (fRecovered ? VerifyResult::RECOVER_OK : VerifyResult::RECOVER_FAIL);
 }
 
-bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& newFilename)
+bool BerkeleyBatch::Recover(const fsbridge::Path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& newFilename)
 {
     std::string filename;
     BerkeleyEnvironment* env = GetWalletEnv(file_path, filename);
@@ -312,11 +312,11 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
     return fSuccess;
 }
 
-bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& errorStr)
+bool BerkeleyBatch::VerifyEnvironment(const fsbridge::Path& file_path, std::string& errorStr)
 {
     std::string walletFile;
     BerkeleyEnvironment* env = GetWalletEnv(file_path, walletFile);
-    fs::path walletDir = env->Directory();
+    fsbridge::Path walletDir = env->Directory();
 
     LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
     LogPrintf("Using wallet %s\n", walletFile);
@@ -336,11 +336,11 @@ bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& er
     return true;
 }
 
-bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::string& warningStr, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc)
+bool BerkeleyBatch::VerifyDatabaseFile(const fsbridge::Path& file_path, std::string& warningStr, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc)
 {
     std::string walletFile;
     BerkeleyEnvironment* env = GetWalletEnv(file_path, walletFile);
-    fs::path walletDir = env->Directory();
+    fsbridge::Path walletDir = env->Directory();
 
     if (fs::exists(walletDir / walletFile))
     {
@@ -691,7 +691,7 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
                 dbenv->log_archive(&listp, DB_ARCH_REMOVE);
                 Close();
                 if (!fMockDb)
-                    fs::remove_all(fs::path(strPath) / "database");
+                    fs::remove_all(fsbridge::Path(strPath) / "database");
             }
         }
     }
@@ -762,8 +762,8 @@ bool BerkeleyDatabase::Backup(const std::string& strDest)
                 env->mapFileUseCount.erase(strFile);
 
                 // Copy wallet file
-                fs::path pathSrc = GetWalletDir() / strFile;
-                fs::path pathDest(strDest);
+                fsbridge::Path pathSrc = GetWalletDir() / strFile;
+                fsbridge::Path pathDest(strDest);
                 if (fs::is_directory(pathDest))
                     pathDest /= strFile;
 
