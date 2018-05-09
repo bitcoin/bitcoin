@@ -418,7 +418,7 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
     m_override_args.clear();
 
     for (int i = 1; i < argc; i++) {
-        std::string key(argv[i]);
+        std::string key(NativeToUtf8(argv[i]));
         std::string val;
         size_t is_index = key.find('=');
         if (is_index != std::string::npos) {
