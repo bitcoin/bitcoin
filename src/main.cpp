@@ -868,7 +868,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-int GetInputAge(CTxIn& vin)
+int GetInputHeight(const CTxIn& vin)
 {
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
@@ -879,16 +879,23 @@ int GetInputAge(CTxIn& vin)
 
         const CCoins* coins = view.AccessCoins(vin.prevout.hash);
 
-        if (coins){
-            if(coins->nHeight < 0) return 0;
-            return (chainActive.Tip()->nHeight+1) - coins->nHeight;
+        if (coins) {
+            return coins->nHeight;
         }
         else
             return -1;
     }
 }
 
-int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
+int GetInputAge(const CTxIn& vin)
+{
+    int height = GetInputHeight(vin);
+    if (height < 0)
+        return 0;
+    return (chainActive.Tip()->nHeight + 1) - height;
+}
+
+int GetInputAgeIX(uint256 nTXHash, const CTxIn& vin)
 {    
     int sigs = 0;
     int nResult = GetInputAge(vin);
