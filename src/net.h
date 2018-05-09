@@ -375,7 +375,7 @@ private:
     uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
     uint64_t nMaxOutboundTimeframe GUARDED_BY(cs_totalBytesSent);
 
-    // Whitelisted ranges. Any node connecting from these is automatically
+    // Whitelisted ranges. Any node communicating using these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
     std::vector<CSubNet> vWhitelistedRange;
 
