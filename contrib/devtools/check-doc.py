@@ -17,7 +17,7 @@ import sys
 FOLDER_GREP = 'src'
 FOLDER_TEST = 'src/test/'
 REGEX_ARG = '(?:ForceSet|SoftSet|Get|Is)(?:Bool)?Args?(?:Set)?\("(-[^"]+)"'
-REGEX_DOC = 'HelpMessageOpt\("(-[^"=]+?)(?:=|")'
+REGEX_DOC = 'AddArg\("(-[^"=]+?)(?:=|")'
 CMD_ROOT_DIR = '`git rev-parse --show-toplevel`/{}'.format(FOLDER_GREP)
 CMD_GREP_ARGS = r"git grep --perl-regexp '{}' -- {} ':(exclude){}'".format(REGEX_ARG, CMD_ROOT_DIR, FOLDER_TEST)
 CMD_GREP_DOCS = r"git grep --perl-regexp '{}' {}".format(REGEX_DOC, CMD_ROOT_DIR)
