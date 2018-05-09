@@ -102,7 +102,7 @@ public:
     virtual bool softSetBoolArg(const std::string& arg, bool value) = 0;
 
     //! Load settings from configuration file.
-    virtual void readConfigFile(const std::string& conf_path) = 0;
+    virtual void readConfigFiles() = 0;
 
     //! Choose network parameters.
     virtual void selectParams(const std::string& network) = 0;

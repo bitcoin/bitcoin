@@ -187,7 +187,7 @@ public:
     void SelectConfigNetwork(const std::string& network);
 
     void ParseParameters(int argc, const char*const argv[]);
-    void ReadConfigFile(const std::string& confPath);
+    void ReadConfigFiles();
 
     /**
      * Log warnings for options in m_section_only_args when
