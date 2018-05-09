@@ -168,21 +168,6 @@ target_link_libraries(leveldb
     ${Pthread_LIBRARY}
 )
 
-add_executable(leveldbutil
-    db/leveldb_main.cc)
-
-target_link_libraries(leveldbutil
-    leveldb)
-
-set_target_properties(leveldbutil PROPERTIES
-    DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
-
-# we distribute the leveldbutil as it might be useful
-install(TARGETS leveldbutil
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib)
-
 ##################################### TESTS #######################################
 # Every leveldb test file has to be compiled as an independant binary
 # because of the test framework used by leveldb.
@@ -195,60 +180,3 @@ add_library(leveldb_test_rt
 target_include_directories(leveldb_test_rt
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-
-add_custom_target(RUN_LEVELDB_UNIT_TESTS
-    COMMAND ${CMAKE_CTEST_COMMAND}
-        --build-config ${CMAKE_CFG_INTDIR}
-        --output-log LevelDB_test_${CMAKE_CFG_INTDIR}.log
-        --output-on-failure
-        --tests-regex leveldb
-    COMMENT "Running all LevelDB unit tests"
-)
-
-function(LEVELDB_ADD_TEST TESTNAME TESTFILE)
-    if(NOT TESTNAME)
-        message(SEND_ERROR "Error: LEVELDB_ADD_TEST called without test name")
-        return()
-    endif(NOT TESTNAME)
-
-    if(NOT TESTFILE)
-        message(SEND_ERROR "Error: LEVELDB_ADD_TEST called without test file")
-        return()
-    endif(NOT TESTFILE)
-
-    add_executable(leveldb_${TESTNAME}_test
-        ${TESTFILE})
-
-    target_link_libraries(leveldb_${TESTNAME}_test
-        leveldb_test_rt
-        leveldb)
-
-    set_target_properties(leveldb_${TESTNAME}_test PROPERTIES
-        DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
-
-    add_test(NAME leveldb_${TESTNAME}_test COMMAND leveldb_${TESTNAME}_test)
-
-    add_dependencies(RUN_LEVELDB_UNIT_TESTS leveldb_${TESTNAME}_test)
-endfunction(LEVELDB_ADD_TEST)
-
-LEVELDB_ADD_TEST(env          util/env_test.cc)
-LEVELDB_ADD_TEST(crc32        util/crc32c_test.cc)
-LEVELDB_ADD_TEST(coding       util/coding_test.cc)
-LEVELDB_ADD_TEST(arena        util/arena_test.cc)
-LEVELDB_ADD_TEST(cache        util/cache_test.cc)
-LEVELDB_ADD_TEST(table        table/table_test.cc)
-# IMPORTANT: Commented a test that fails randomly.
-# LEVELDB_ADD_TEST(autocompact  db/autocompact_test.cc)
-LEVELDB_ADD_TEST(corruption   db/corruption_test.cc)
-LEVELDB_ADD_TEST(dbformat     db/dbformat_test.cc)
-LEVELDB_ADD_TEST(filename     db/filename_test.cc)
-LEVELDB_ADD_TEST(log          db/log_test.cc)
-LEVELDB_ADD_TEST(skiplist     db/skiplist_test.cc)
-LEVELDB_ADD_TEST(version_edit db/version_edit_test.cc)
-LEVELDB_ADD_TEST(write_batch  db/write_batch_test.cc)
-LEVELDB_ADD_TEST(version_set  db/version_set_test.cc)
-LEVELDB_ADD_TEST(filter_block table/filter_block_test.cc)
-LEVELDB_ADD_TEST(bloom        util/bloom_test.cc)
-LEVELDB_ADD_TEST(hash         util/hash_test.cc)
-LEVELDB_ADD_TEST(db_bench     db/db_bench.cc)
-LEVELDB_ADD_TEST(db           db/db_test.cc)
