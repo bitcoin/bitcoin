@@ -13,7 +13,7 @@ class CRPCTable;
 class WalletInitInterface {
 public:
     /** Get wallet help string */
-    virtual std::string GetHelpString(bool showDebug) const = 0;
+    virtual void AddWalletOptions() const = 0;
     /** Check wallet parameter interaction */
     virtual bool ParameterInteraction() const = 0;
     /** Register wallet RPC*/

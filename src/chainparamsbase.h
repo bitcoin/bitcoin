@@ -40,10 +40,9 @@ private:
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain);
 
 /**
- * Append the help messages for the chainparams options to the
- * parameter string.
+ *Set the arguments for chainparams
  */
-void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp=true);
+void SetupChainParamsBaseOptions();
 
 /**
  * Return the currently selected parameters. This won't change after app
