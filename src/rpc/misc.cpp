@@ -348,6 +348,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
     ret.push_back(Pair("isvalid", isValid));
     if (isValid)
     {
+		CTxDestination dest = address.Get();
 		CSyscoinAddress saddr;
 		saddr.Set(dest, CChainParams::ADDRESS_SYS);
 		ret.push_back(Pair("address", saddr.ToString()));
