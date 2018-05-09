@@ -73,11 +73,15 @@ class TestP2PConn(P2PInterface):
         for inv in message.inv:
             self.getdataset.add(inv.hash)
 
-    def announce_tx_and_wait_for_getdata(self, tx, timeout=60):
+    def announce_tx_and_wait_for_getdata(self, tx, timeout=60, success=True):
         with mininode_lock:
             self.last_message.pop("getdata", None)
         self.send_message(msg_inv(inv=[CInv(1, tx.sha256)]))
-        self.wait_for_getdata(timeout)
+        if success:
+            self.wait_for_getdata(timeout)
+        else:
+            time.sleep(timeout)
+            assert not self.last_message.get("getdata")
 
     def announce_block_and_wait_for_getdata(self, block, use_header, timeout=60):
         with mininode_lock:
@@ -908,12 +912,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Since we haven't delivered the tx yet, inv'ing the same tx from
         # a witness transaction ought not result in a getdata.
-        try:
-            self.test_node.announce_tx_and_wait_for_getdata(tx, timeout=2)
-            self.log.error("Error: duplicate tx getdata!")
-            assert(False)
-        except AssertionError:
-            pass
+        self.test_node.announce_tx_and_wait_for_getdata(tx, timeout=2, success=False)
 
         # Delivering this transaction with witness should fail (no matter who
         # its from)
