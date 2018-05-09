@@ -57,6 +57,15 @@ std::string CTxOut::ToString() const
 CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
 CMutableTransaction::CMutableTransaction(const CTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime) {}
 
+CMutableTransaction& CMutableTransaction::operator=(CTransaction&& tx) {
+    // ugly const cast - but since tx can be consumed, it's ok to move the data out.
+    vin = std::move(const_cast<std::vector<CTxIn>&>(tx.vin));
+    vout = std::move(const_cast<std::vector<CTxOut>&>(tx.vout));
+    nVersion = tx.nVersion;
+    nLockTime = tx.nLockTime;
+    return *this;
+}
+
 uint256 CMutableTransaction::GetHash() const
 {
     return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);

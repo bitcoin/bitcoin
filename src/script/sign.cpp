@@ -209,11 +209,15 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 {
     assert(nIn < txTo.vin.size());
 
-    CTransaction txToConst(txTo);
+    // moves txTo's in & outputs so they are not copied - txTo not needed here
+    CTransaction txToConst(std::move(txTo));
     TransactionSignatureCreator creator(&txToConst, nIn, amount, nHashType);
 
     SignatureData sigdata;
     bool ret = ProduceSignature(provider, creator, fromPubKey, sigdata);
+    
+    // txToConst not needed any more - move the data back
+    txTo = std::move(txToConst);
     UpdateTransaction(txTo, nIn, sigdata);
     return ret;
 }
