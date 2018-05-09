@@ -77,6 +77,10 @@ public:
         return out.IsNull();
     }
 
+    bool IsAsset() const {
+        return out.scriptPubKey.IsTransferAsset() || out.scriptPubKey.IsNewAsset();
+    }
+
     size_t DynamicMemoryUsage() const {
         return memusage::DynamicUsage(out.scriptPubKey);
     }
@@ -260,7 +264,7 @@ public:
      * If no unspent output exists for the passed outpoint, this call
      * has no effect.
      */
-    bool SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr);
+    bool SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr, bool fJustCheck = false);
 
     /**
      * Push the modifications applied to this cache to its base.
@@ -304,7 +308,7 @@ private:
 // an overwrite.
 // TODO: pass in a boolean to limit these possible overwrites to known
 // (pre-BIP34) cases.
-void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool check = false);
+void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool check = false, bool fJustCheck = false);
 
 //! Utility function to find any unspent output with a given txid.
 // This function can be quite expensive because in the event of a transaction

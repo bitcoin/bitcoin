@@ -353,6 +353,104 @@ UniValue getassetaddresses(const JSONRPCRequest& request)
     return addresses;
 }
 
+// TODO Used to test database, remove before release
+UniValue transfer(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 3)
+        throw std::runtime_error(
+                "transfer asset_name address amount\n"
+                "\nReturns a list of all address that own the given asset"
+
+                "\nArguments:\n"
+                "1. \"asset_name\"               (string, required) name of asset\n"
+                "2. \"address\"                  (string, required) address to send the asset to\n"
+                "3. \"amount\"                   (number, required) number of assets you want to send to the address\n"
+
+                "\nResult:\n"
+                "txid"
+                "[ \n"
+                "txid\n"
+                "]\n"
+
+                "\nExamples:\n"
+                + HelpExampleCli("transfer", "\"asset_name\" \"address\" \"20\"")
+                + HelpExampleCli("transfer", "\"asset_name\" \"address\" \"20\"")
+        );
+
+    ObserveSafeMode();
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    std::string asset_name = request.params[0].get_str();
+
+    std::string address = request.params[1].get_str();
+
+    CAmount nAmount = AmountFromValue(request.params[2]);
+
+    if (!IsValidDestinationString(address))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
+
+    if (!passets)
+        throw JSONRPCError(RPC_DATABASE_ERROR, std::string("passets isn't initialized"));
+
+    std::set<COutPoint> myAssetOutPoints;
+    if (!passets->GetAssetsOutPoints(asset_name, myAssetOutPoints))
+        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name);
+
+    CAmount curBalance = pwallet->GetBalance();
+
+    if (curBalance < Params().IssueAssetBurnAmount()) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+    }
+
+    if (pwallet->GetBroadcastTransactions() && !g_connman) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    }
+
+    // Get the script for the burn address
+    CScript scriptPubKey = GetScriptForDestination(DecodeDestination(address));
+
+    // Update the scriptPubKey with the transfer asset information
+    CAssetTransfer assetTransfer(asset_name, nAmount);
+    assetTransfer.ConstructTransaction(scriptPubKey);
+
+    CMutableTransaction mutTx;
+
+    CWalletTx wtxNew;
+    CCoinControl coin_control;
+
+    // Create and send the transaction
+    CReserveKey reservekey(pwallet);
+    CAmount nFeeRequired;
+    std::string strTxError;
+    std::vector<CRecipient> vecSend;
+    int nChangePosRet = -1;
+    bool fSubtractFeeFromAmount = false;
+    CRecipient recipient = {scriptPubKey, 0, fSubtractFeeFromAmount};
+    vecSend.push_back(recipient);
+    if (!pwallet->CreateTransactionWithTransferAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, myAssetOutPoints)) {
+        if (!fSubtractFeeFromAmount && Params().IssueAssetBurnAmount() + nFeeRequired > curBalance)
+            strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
+    }
+
+    CValidationState state;
+    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
+        strTxError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
+        throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
+    }
+
+    UniValue result(UniValue::VARR);
+    result.push_back(wtxNew.GetHash().GetHex());
+    return result;
+}
+
 //issuefrom(from_address, to_address, qty, units, units=1, reissuable=false)
 //Issue an asset with unique name from a specific address -- allows control of which address/private_key is used to issue the asset. Unit as 1 for whole units, or 0.00000001 for satoshi-like units. Qty should be whole number. Reissuable is true/false for whether additional units can be issued by the original issuer.
 
@@ -393,7 +491,8 @@ static const CRPCCommand commands[] =
     { "assets",   "getaddressbalances",     &getaddressbalances,     {"address", "minconf"} },
     { "assets",   "getallassets",           &getallassets,           {}},
     { "assets",   "getmyassets",            &getmyassets,            {}},
-    { "assets",   "getassetaddresses",      &getassetaddresses,      {"asset_name"}}
+    { "assets",   "getassetaddresses",      &getassetaddresses,      {"asset_name"}},
+    { "assets",   "transfer",               &transfer,               {"asset_name, address, amount"}}
 };
 
 void RegisterAssetRPCCommands(CRPCTable &t)

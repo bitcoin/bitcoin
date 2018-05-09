@@ -80,6 +80,30 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
     {
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
+    /** RVN START */
+    case TX_NEW_ASSET:
+        keyID = CKeyID(uint160(vSolutions[0]));
+        if (!Sign1(keyID, creator, scriptPubKey, ret, sigversion))
+            return false;
+        else
+        {
+            CPubKey vch;
+            creator.KeyStore().GetPubKey(keyID, vch);
+            ret.push_back(ToByteVector(vch));
+        }
+        return true;
+    case TX_TRANSFER_ASSET:
+        keyID = CKeyID(uint160(vSolutions[0]));
+        if (!Sign1(keyID, creator, scriptPubKey, ret, sigversion))
+            return false;
+        else
+        {
+            CPubKey vch;
+            creator.KeyStore().GetPubKey(keyID, vch);
+            ret.push_back(ToByteVector(vch));
+        }
+        return true;
+    /** RVN END */
     case TX_WITNESS_UNKNOWN:
         return false;
     case TX_PUBKEY:

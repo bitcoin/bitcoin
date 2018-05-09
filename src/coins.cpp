@@ -8,8 +8,12 @@
 #include "consensus/consensus.h"
 #include "memusage.h"
 #include "random.h"
+#include "util.h"
+#include "validation.h"
+#include "tinyformat.h"
 
 #include <assert.h>
+#include <assets/assets.h>
 
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
@@ -88,7 +92,7 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
 }
 
-void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check) {
+void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check, bool fJustCheck) {
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
@@ -96,10 +100,29 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
         // Always set the possible_overwrite flag to AddCoin for coinbase txn, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
         cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
+
+        /** RVN START */
+        if (!fJustCheck) {
+            if (tx.vout[i].scriptPubKey.IsTransferAsset() && !tx.vout[i].scriptPubKey.IsUnspendable()) {
+                CAssetTransfer assetTransfer;
+                std::string address;
+                if (!TransferAssetFromScript(tx.vout[i].scriptPubKey, assetTransfer, address))
+                    LogPrintf(
+                            "%s : ERROR - Received a coin that was a Transfer Asset but failed to get the transfer object from the scriptPubKey. CTxOut: %s\n",
+                            __func__, tx.vout[i].ToString());
+
+                if (!passets->AddTransferAsset(assetTransfer, address, COutPoint(txid, i), tx.vout[i]))
+                    LogPrintf("%s : ERROR - Failed to add transfer asset CTxOut: %s\n", __func__,
+                              tx.vout[i].ToString());
+
+            }
+        }
+        /** RVN END */
     }
 }
 
-bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
+bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout,  bool fJustCheck) {
+
     CCoinsMap::iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) return false;
     cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
@@ -112,6 +135,13 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
         it->second.flags |= CCoinsCacheEntry::DIRTY;
         it->second.coin.Clear();
     }
+
+    /** RVN START */
+    if (!fJustCheck) {
+        passets->TrySpendCoin(outpoint, *moveout);
+    }
+    /** RVN END */
+
     return true;
 }
 

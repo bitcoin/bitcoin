@@ -14,6 +14,8 @@
 #include <base58.h>
 #include <validation.h>
 #include <txmempool.h>
+#include <tinyformat.h>
+#include <wallet/wallet.h>
 #include "assets.h"
 #include "assetdb.h"
 
@@ -21,6 +23,7 @@
 #define RVN_V 118
 #define RVN_N 110
 #define RVN_Q 113
+#define RVN_T 116
 
 
 static const std::regex ASSET_NAME_REGEX("[A-Za-z_]{3,}");
@@ -39,6 +42,16 @@ bool IsAssetNameSizeValid(const std::string& name)
 bool CNewAsset::IsNull() const
 {
     return strName == "";
+}
+
+bool CAssets::GetAssetsOutPoints(const std::string& strName, std::set<COutPoint>& outpoints)
+{
+    if (mapMyUnspentAssets.count(strName)) {
+        outpoints = mapMyUnspentAssets[strName];
+        return true;
+    }
+
+    return false;
 }
 
 bool CNewAsset::IsValid(std::string& strError, bool fCheckMempool)
@@ -133,7 +146,7 @@ bool IssueNewAsset(const std::string& name, const CAmount& nAmount, CNewAsset& a
     return true;
 }
 
-bool CAssets::AddNewAsset(const CNewAsset& asset, const std::string& address)
+bool CAssets::AddNewAsset(const CNewAsset& asset, const std::string& address, const COutPoint& out)
 {
     LOCK(cs_main);
 
@@ -166,17 +179,100 @@ bool CAssets::AddNewAsset(const CNewAsset& asset, const std::string& address)
     return true;
 }
 
+bool CAssets::AddTransferAsset(const CAssetTransfer& transferAsset, const std::string& address, const COutPoint& out, const CTxOut& txOut)
+{
+        // TODO when we are ready. Make sure to only database after we are done validating everything
+        if (vpwallets[0]->IsMine(txOut) == ISMINE_SPENDABLE) {
+            if (!AddToMyUpspentOutPoints(transferAsset.strName, out))
+                return error("%s: Failed to add an asset I own to my Unspent Asset Database. Asset Name: %s, OutPoint: %s",
+                             __func__, transferAsset.strName, out.ToString());
+
+            if (!AddToAssetBalance(transferAsset.strName, address, transferAsset.nAmount))
+                return error("%s: Failed to Update Asset Balance. Asset Name: %s, OutPoint: %s",
+                             __func__, transferAsset.strName, out.ToString());
+        }
+
+    return true;
+}
+
+bool CAssets::AddToAssetBalance(const std::string& strName, const std::string& address, const CAmount& nAmount)
+{
+    auto pair = std::make_pair(strName, address);
+    // Add to map address -> amount map
+    if (mapAssetsAddressAmount.count(pair)) {
+        mapAssetsAddressAmount.at(pair) += nAmount;
+    } else {
+        mapAssetsAddressAmount.insert(std::make_pair(pair, nAmount));
+    }
+
+    // Add to map of addresses
+    if (!mapAssetsAddresses.count(strName)) {
+        mapAssetsAddresses.insert(std::make_pair(strName, std::set<std::string>()));
+    }
+    mapAssetsAddresses.at(strName).insert(address);
+
+    if (!passetsdb->WriteAssetAddressQuantity(strName, address, mapAssetsAddressAmount.at(pair)))
+        return error("%s : Failed to write to asset address quantity database, Asset Name: %s, Address: %s, Amount: %d", __func__, strName, address, mapAssetsAddressAmount.at(pair));
+
+    return true;
+}
+
+void CAssets::TrySpendCoin(const COutPoint& out, const Coin& coin)
+{
+    std::cout << "Trying to spend coin " << out.ToString() << std::endl;
+    for (auto setOuts : mapMyUnspentAssets) {
+        // If we own one of the assets, we need to update our databases and memory
+        if (setOuts.second.count(out)) {
+
+            // Placeholder strings that will get set if you successfully get the transfer or asset from the script
+            std::string address = "";
+            std::string assetName = "";
+
+            // Get the New Asset or Transfer Asset from the scriptPubKey
+            if (coin.out.scriptPubKey.IsNewAsset()) {
+                CNewAsset asset;
+                if (AssetFromScript(coin.out.scriptPubKey, asset, address))
+                    assetName = asset.strName;
+            } else if (coin.out.scriptPubKey.IsTransferAsset()) {
+                CAssetTransfer transfer;
+                if (TransferAssetFromScript(coin.out.scriptPubKey, transfer, address))
+                    assetName = transfer.strName;
+            }
+
+            // If we got the address and the assetName, proceed to remove it from the database, and in memory objects
+            if (address != "" && assetName != "") {
+                if (!passetsdb->EraseAssetAddressQuantity(assetName, address))
+                    LogPrintf(
+                            "%s : ERROR Failed erasing address quantity from database, Asset Name: %s, Address : %s\n",
+                            __func__, assetName, address);
+
+                setOuts.second.erase(out);
+                if (!passetsdb->EraseMyOutPoints(assetName) || !passetsdb->WriteMyAssetsData(assetName, setOuts.second))
+                    LogPrintf("%s : ERROR Failed databasing asset spend OutPoint: %s\n", __func__, out.ToString());
+
+                std::cout << "Spent one of my coins: OutPoint: " << out.ToString() << std::endl;
+                mapAssetsAddressAmount.erase(make_pair(assetName, address));
+                mapMyUnspentAssets.at(assetName) = setOuts.second;
+                mapAssetsAddresses.at(assetName).erase(address);
+            } else {
+                LogPrintf("%s : ERROR Failed get the asset from the OutPoint: %s\n", __func__, out.ToString());
+            }
+            break;
+        }
+    }
+}
+
 bool CAssets::AddToMyUpspentOutPoints(const std::string& strName, const COutPoint& out)
 {
     LOCK(cs_main);
 
-    if (!passets->mapMyUnspentAssets.count(strName)) {
+    if (!mapMyUnspentAssets.count(strName)) {
         std::set<COutPoint> setOuts;
         setOuts.insert(out);
-        passets->mapMyUnspentAssets.insert(std::make_pair(strName, setOuts));
+        mapMyUnspentAssets.insert(std::make_pair(strName, setOuts));
 
     } else {
-        if (!passets->mapMyUnspentAssets[strName].insert(out).second)
+        if (!mapMyUnspentAssets[strName].insert(out).second)
             return error("%s: Tried adding an asset to my map of upspent assets, but it already exsisted in the set of assets: %s, COutPoint: %s", __func__, strName, out.ToString());
     }
 
@@ -198,12 +294,12 @@ bool CAssets::RemoveAssetAndOutPoints(const CNewAsset& asset, const std::string&
 {
     if (setAssets.count(asset)) {
         setAssets.erase(asset);
-        if (!passetsdb->EraseAssetData(asset))
+        if (!passetsdb->EraseAssetData(asset.strName))
             return error("%s : Failed Erasing Asset Data from database. Asset Name: %s", __func__, asset.strName);
     }
 
     if (mapMyUnspentAssets.count(asset.strName)) {
-        if (!passetsdb->EraseMyOutPoints(asset))
+        if (!passetsdb->EraseMyOutPoints(asset.strName))
             return error("%s : Failed Erasing My Asset Data OutPoints from database. Asset Name: %s", __func__, asset.strName);
         mapMyUnspentAssets.erase(asset.strName);
     }
@@ -250,7 +346,7 @@ void CNewAsset::ConstructTransaction(CScript& script) const
     vchMessage.push_back(RVN_Q); // q
 
     vchMessage.insert(vchMessage.end(), ssAsset.begin(), ssAsset.end());
-    script << OP_RETURN << vchMessage << OP_DROP;
+    script << OP_15 << vchMessage << OP_DROP;
 }
 
 bool AssetFromTransaction(const CTransaction& tx, CNewAsset& asset, std::string& strAddress)
@@ -262,17 +358,49 @@ bool AssetFromTransaction(const CTransaction& tx, CNewAsset& asset, std::string&
     // Get the scriptPubKey from the last tx in vout
     CScript scriptPubKey = tx.vout[tx.vout.size() - 1].scriptPubKey;
 
+    return AssetFromScript(scriptPubKey, asset, strAddress);
+}
+
+bool TransferAssetFromScript(const CScript& scriptPubKey, CAssetTransfer& assetTransfer, std::string& strAddress)
+{
+    if (!IsScriptTransferAsset(scriptPubKey))
+        return false;
+
     CTxDestination destination;
     ExtractDestination(scriptPubKey, destination);
 
     strAddress = EncodeDestination(destination);
 
-    std::vector<unsigned char> vchAsset;
-    vchAsset.insert(vchAsset.end(), scriptPubKey.begin() + 31, scriptPubKey.end());
-    CDataStream ssAsset(vchAsset, SER_NETWORK, PROTOCOL_VERSION);
+    std::vector<unsigned char> vchTransferAsset;
+    vchTransferAsset.insert(vchTransferAsset.end(), scriptPubKey.begin() + 31, scriptPubKey.end());
+    CDataStream ssAsset(vchTransferAsset, SER_NETWORK, PROTOCOL_VERSION);
 
     try {
-        ssAsset >> asset;
+        ssAsset >> assetTransfer;
+    } catch(std::exception& e) {
+        std::cout << "Failed to get the transfer asset from the stream: " << e.what() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool AssetFromScript(const CScript& scriptPubKey, CNewAsset& assetTransfer, std::string& strAddress)
+{
+    if (!IsScriptNewAsset(scriptPubKey))
+        return false;
+
+    CTxDestination destination;
+    ExtractDestination(scriptPubKey, destination);
+
+    strAddress = EncodeDestination(destination);
+
+    std::vector<unsigned char> vchTransferAsset;
+    vchTransferAsset.insert(vchTransferAsset.end(), scriptPubKey.begin() + 31, scriptPubKey.end());
+    CDataStream ssAsset(vchTransferAsset, SER_NETWORK, PROTOCOL_VERSION);
+
+    try {
+        ssAsset >> assetTransfer;
     } catch(std::exception& e) {
         std::cout << "Failed to get the asset from the stream: " << e.what() << std::endl;
         return false;
@@ -332,12 +460,44 @@ bool CheckIssueDataTx(const CTxOut& txOut)
 bool IsScriptNewAsset(const CScript& scriptPubKey)
 {
     if (scriptPubKey.size() > 39) {
-        if (scriptPubKey[25] == OP_RETURN && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_Q) {
+        if (scriptPubKey[25] == OP_15 && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_Q) {
             return true;
         }
     }
 
     return false;
+}
+
+bool IsScriptTransferAsset(const CScript& scriptPubKey)
+{
+    if (scriptPubKey.size() > 30) {
+        if (scriptPubKey[25] == OP_15 && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_T) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+CAssetTransfer::CAssetTransfer(const std::string& strAssetName, const CAmount& nAmount)
+{
+    this->strName = strAssetName;
+    this->nAmount = nAmount;
+}
+
+void CAssetTransfer::ConstructTransaction(CScript& script) const
+{
+    CDataStream ssTransfer(SER_NETWORK, PROTOCOL_VERSION);
+    ssTransfer << *this;
+
+    std::vector<unsigned char> vchMessage;
+    vchMessage.push_back(RVN_R); // r
+    vchMessage.push_back(RVN_V); // v
+    vchMessage.push_back(RVN_N); // n
+    vchMessage.push_back(RVN_T); // t
+
+    vchMessage.insert(vchMessage.end(), ssTransfer.begin(), ssTransfer.end());
+    script << OP_15 << vchMessage << OP_DROP;
 }
 
 
