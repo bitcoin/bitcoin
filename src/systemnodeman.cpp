@@ -192,8 +192,7 @@ std::vector<pair<int, CSystemnode> > CSystemnodeMan::GetSystemnodeRanks(int64_t 
             continue;
         }
 
-        uint256 n = mn.CalculateScore(1, nBlockHeight);
-        int64_t n2 = UintToArith256(n).GetCompact(false);
+        int64_t n2 = mn.CalculateScore(nBlockHeight).GetCompact(false);
 
         vecSystemnodeScores.push_back(make_pair(n2, mn));
     }
@@ -483,7 +482,7 @@ CSystemnode* CSystemnodeMan::GetNextSystemnodeInQueueForPayment(int nBlockHeight
         CSystemnode* pmn = Find(s.second);
         if(!pmn) break;
 
-        arith_uint256 n = UintToArith256(pmn->CalculateScore(1, nBlockHeight-100));
+        arith_uint256 n = pmn->CalculateScore(nBlockHeight-100);
         if(n > nHigh){
             nHigh = n;
             pBestSystemnode = pmn;
@@ -652,8 +651,7 @@ CSystemnode* CSystemnodeMan::GetCurrentSystemNode(int mod, int64_t nBlockHeight,
         if(mn.protocolVersion < minProtocol || !mn.IsEnabled()) continue;
 
         // calculate the score for each Systemnode
-        uint256 n = mn.CalculateScore(mod, nBlockHeight);
-        int64_t n2 = UintToArith256(n).GetCompact(false);
+        int64_t n2 = mn.CalculateScore(nBlockHeight).GetCompact(false);
 
         // determine the winner
         if(n2 > score){
@@ -680,8 +678,7 @@ int CSystemnodeMan::GetSystemnodeRank(const CTxIn& vin, int64_t nBlockHeight, in
             sn.Check();
             if(!sn.IsEnabled()) continue;
         }
-        uint256 n = sn.CalculateScore(1, nBlockHeight);
-        int64_t n2 = UintToArith256(n).GetCompact(false);
+        int64_t n2 = sn.CalculateScore(nBlockHeight).GetCompact(false);
 
         vecSystemnodeScores.push_back(make_pair(n2, sn.vin));
     }

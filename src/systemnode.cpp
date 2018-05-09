@@ -217,30 +217,26 @@ bool CSystemnode::IsValidNetAddr()
 // the proof of work for that block. The further away they are the better, the furthest will win the election
 // and get paid this block
 //
-uint256 CSystemnode::CalculateScore(int mod, int64_t nBlockHeight)
+arith_uint256 CSystemnode::CalculateScore(int64_t nBlockHeight)
 {
-    if(chainActive.Tip() == NULL) return uint256();
+    if(chainActive.Tip() == NULL)
+        return arith_uint256();
+
+    // Find the block hash where tx got SYSTEMNODE_MIN_CONFIRMATIONS
+    CBlockIndex *pblockIndex = chainActive[GetInputHeight(vin) + SYSTEMNODE_MIN_CONFIRMATIONS - 1];
+    assert(pblockIndex);
+    uint256 collateralMinConfBlockHash = pblockIndex->GetBlockHash();
 
     uint256 hash = uint256();
-    uint256 aux = ArithToUint256(UintToArith256(vin.prevout.hash) + vin.prevout.n);
 
     if(!GetBlockHash(hash, nBlockHeight)) {
         LogPrintf("CalculateScore ERROR - nHeight %d - Returned 0\n", nBlockHeight);
-        return uint256();
+        return arith_uint256();
     }
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << hash;
-    arith_uint256 hash2 = UintToArith256(ss.GetHash());
-
-    CHashWriter ss2(SER_GETHASH, PROTOCOL_VERSION);
-    ss2 << hash;
-    ss2 << aux;
-    arith_uint256 hash3 = UintToArith256(ss2.GetHash());
-
-    arith_uint256 r = (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
-
-    return ArithToUint256(r);
+    ss << vin.prevout << collateralMinConfBlockHash << hash;
+    return UintToArith256(ss.GetHash());
 }
 
 //
