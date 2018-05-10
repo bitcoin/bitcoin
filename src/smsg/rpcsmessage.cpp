@@ -672,14 +672,10 @@ static UniValue smsgsend(const JSONRPCRequest &request)
 
     CKeyID kiFrom, kiTo;
     CBitcoinAddress coinAddress(addrFrom);
-    if (!coinAddress.IsValid())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid from address.");
-    if (!coinAddress.GetKeyID(kiFrom))
+    if (!coinAddress.IsValid() || !coinAddress.GetKeyID(kiFrom))
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid from address.");
     coinAddress.SetString(addrTo);
-    if (!coinAddress.IsValid())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid to address.");
-    if (!coinAddress.GetKeyID(kiTo))
+    if (!coinAddress.IsValid() || !coinAddress.GetKeyID(kiTo))
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid to address.");
 
 
@@ -696,6 +692,7 @@ static UniValue smsgsend(const JSONRPCRequest &request)
 
         if (!fTestFee)
             result.pushKV("msgid", HexStr(smsgModule.GetMsgID(smsgOut)));
+
         if (fPaid)
         {
             if (!fTestFee)
@@ -1075,10 +1072,11 @@ static UniValue smsgbuckets(const JSONRPCRequest &request)
         std::string snMessages = std::to_string(nMessages);
 
         UniValue objM(UniValue::VOBJ);
-        objM.pushKV("buckets", arrBuckets);
         objM.pushKV("numbuckets", snBuckets);
+        objM.pushKV("numpurged", smsgModule.setPurged.size());
         objM.pushKV("messages", snMessages);
         objM.pushKV("size", part::BytesReadable(nBytes));
+        result.pushKV("buckets", arrBuckets);
         result.pushKV("total", objM);
 
     } else
@@ -1566,7 +1564,36 @@ static UniValue smsgone(const JSONRPCRequest &request)
     return result;
 }
 
+static UniValue smsgpurge(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "smsgpurge \"msgid\"\n"
+            "Purge smsg by msgid.\n"
+            "\nArguments:\n"
+            "1. \"msgid\"              (string, required) The id of the message to purge.\n"
+            "\nResult:\n"
+            "\nExamples:\n"
+            + HelpExampleCli("smsgpurge", "\"msgid\"")
+            + HelpExampleRpc("smsgpurge", "\"msgid\""));
 
+    EnsureSMSGIsEnabled();
+
+    if (!request.params[0].isStr())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "msgid must be a string.");
+
+    std::string sMsgId = request.params[0].get_str();
+
+    if (!IsHex(sMsgId) || sMsgId.size() != 56)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "msgid must be 28 bytes in hex string.");
+    std::vector<uint8_t> vMsgId = ParseHex(sMsgId.c_str());
+
+    std::string sError;
+    if (smsg::SMSG_NO_ERROR != smsgModule.Purge(vMsgId, sError))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: " + sError);
+
+    return NullUniValue;
+}
 
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -1588,6 +1615,7 @@ static const CRPCCommand commands[] =
     { "smsg",               "smsgbuckets",            &smsgbuckets,            {"mode"} },
     { "smsg",               "smsgview",               &smsgview,               {}},
     { "smsg",               "smsg",                   &smsgone,                {"msgid","options"}},
+    { "smsg",               "smsgpurge",              &smsgpurge,              {"msgid"}},
 };
 
 void RegisterSmsgRPCCommands(CRPCTable &tableRPC)

@@ -29,8 +29,7 @@ class SmsgTest(ParticlTestFramework):
         address1 = nodes[1].getnewaddress()
         assert(address1 == 'pX9N6S76ZtA5BfsiJmqBbjaEgLMHpt58it')
 
-        ro = nodes[1].getnetworkinfo()
-        assert('SMSG' in ro['localservices_str'])
+        assert('SMSG' in nodes[1].getnetworkinfo()['localservices_str'])
 
         ro = nodes[0].smsglocalkeys()
         assert(len(ro['wallet_keys']) == 1)

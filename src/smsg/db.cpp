@@ -20,6 +20,7 @@ prefixes
     im      - inbox message
     sm      - sent message
     qm      - queued message
+    pm      - purged message token
 */
 
 CCriticalSection cs_smsgDB;
@@ -320,7 +321,7 @@ bool SecMsgDB::NextSmesg(leveldb::Iterator *it, const std::string &prefix, uint8
     if (!pdb)
         return false;
 
-    if (!it->Valid()) // first run
+    if (!it->Valid()) // First run
         it->Seek(prefix);
     else
         it->Next();
@@ -348,7 +349,7 @@ bool SecMsgDB::NextSmesgKey(leveldb::Iterator *it, const std::string &prefix, ui
     if (!pdb)
         return false;
 
-    if (!it->Valid()) // first run
+    if (!it->Valid()) // First run
         it->Seek(prefix);
     else
         it->Next();
@@ -470,12 +471,112 @@ bool SecMsgDB::EraseSmesg(const uint8_t *chKey)
     return error("SecMsgDB erase failed: %s\n", s.ToString());
 };
 
+bool SecMsgDB::ReadPurged(const uint8_t *chKey, SecMsgPurged &smsgPurged)
+{
+    if (!pdb)
+        return false;
+
+    CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    ssKey.write((const char*)chKey, 30);
+    std::string strValue;
+
+    bool readFromDb = true;
+    if (activeBatch)
+    {
+        // Check activeBatch first
+        bool deleted = false;
+        readFromDb = ScanBatch(ssKey, &strValue, &deleted) == false;
+        if (deleted)
+            return false;
+    };
+
+    if (readFromDb)
+    {
+        leveldb::Status s = pdb->Get(leveldb::ReadOptions(), ssKey.str(), &strValue);
+        if (!s.ok())
+        {
+            if (s.IsNotFound())
+                return false;
+            return error("LevelDB read failure: %s\n", s.ToString());
+        };
+    };
+
+    try {
+        CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
+        ssValue >> smsgPurged;
+    } catch (std::exception &e) {
+        LogPrintf("%s unserialize threw: %s.\n", __func__, e.what());
+        return false;
+    };
+
+    return true;
+};
+
+bool SecMsgDB::WritePurged(const uint8_t *chKey, SecMsgPurged &smsgPurged)
+{
+    if (!pdb)
+        return false;
+
+    CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    ssKey.write((const char*)chKey, 30);
+    CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+    ssValue << smsgPurged;
+
+    if (activeBatch)
+    {
+        activeBatch->Put(ssKey.str(), ssValue.str());
+        return true;
+    };
+
+    leveldb::WriteOptions writeOptions;
+    writeOptions.sync = true;
+    leveldb::Status s = pdb->Put(writeOptions, ssKey.str(), ssValue.str());
+    if (!s.ok())
+        return error("SecMsgDB write failed: %s\n", s.ToString());
+
+    return true;
+};
+
+bool SecMsgDB::ErasePurged(const uint8_t *chKey)
+{
+    return EraseSmesg(chKey);
+};
+
+
+bool SecMsgDB::NextPurged(leveldb::Iterator *it, const std::string &prefix, uint8_t *chKey, SecMsgPurged &smsgPurged)
+{
+    if (!pdb)
+        return false;
+
+    if (!it->Valid()) // First run
+        it->Seek(prefix);
+    else
+        it->Next();
+
+    if (!(it->Valid()
+        && it->key().size() == 30
+        && memcmp(it->key().data(), prefix.data(), 2) == 0))
+        return false;
+
+    memcpy(chKey, it->key().data(), 30);
+
+    try {
+        CDataStream ssValue(it->value().data(), it->value().data() + it->value().size(), SER_DISK, CLIENT_VERSION);
+        ssValue >> smsgPurged;
+    } catch (std::exception &e) {
+        LogPrintf("%s unserialize threw: %s.\n", __func__, e.what());
+        return false;
+    };
+
+    return true;
+};
+
 bool SecMsgDB::NextPrivKey(leveldb::Iterator *it, const std::string &prefix, CKeyID &idk, SecMsgKey &key)
 {
     if (!pdb)
         return false;
 
-    if (!it->Valid()) // first run
+    if (!it->Valid()) // First run
         it->Seek(prefix);
     else
         it->Next();

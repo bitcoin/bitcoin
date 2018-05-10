@@ -22,7 +22,6 @@ class SmsgPaidTest(ParticlTestFramework):
         self.is_network_split = False
         self.sync_all()
 
-
     def run_test (self):
         tmpdir = self.options.tmpdir
         nodes = self.nodes
@@ -34,7 +33,7 @@ class SmsgPaidTest(ParticlTestFramework):
         nodes[0].extkeyimportmaster(nodes[0].mnemonic('new')['master'])
         nodes[1].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
 
-        address0 = nodes[0].getnewaddress() # will be different each run
+        address0 = nodes[0].getnewaddress()  # Will be different each run
         address1 = nodes[1].getnewaddress()
         assert(address1 == 'pX9N6S76ZtA5BfsiJmqBbjaEgLMHpt58it')
 
@@ -94,7 +93,7 @@ class SmsgPaidTest(ParticlTestFramework):
         ro = nodes[0].encryptwallet("qwerty234")
         assert("wallet encrypted" in ro)
 
-        nodes[0].wait_until_stopped() # wait until encryptwallet has shut down node
+        nodes[0].wait_until_stopped()  # Wait until encryptwallet has shut down node
         self.start_node(0, self.extra_args[0])
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
@@ -189,7 +188,7 @@ class SmsgPaidTest(ParticlTestFramework):
                 break
             except:
                 time.sleep(1)
-        assert(msg == bytes.fromhex(ro['hex'][:-2])) # extra null byte gets tacked on
+        assert(msg == bytes.fromhex(ro['hex'][:-2]))  # Extra null byte gets tacked on
 
         for i in range(5):
             try:
@@ -215,7 +214,7 @@ class SmsgPaidTest(ParticlTestFramework):
         ro = nodes[1].smsgaddaddress(addr, pubkey)
         assert('Public key added to db' in json.dumps(ro))
 
-        # wait for sync
+        # Wait for sync
         i = 0
         for i in range(10):
             ro = nodes[0].smsginbox('all')

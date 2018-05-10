@@ -18,6 +18,8 @@ namespace smsg
 
 class SecMsgStored;
 
+class SecMsgPurged;
+
 extern CCriticalSection cs_smsgDB;
 extern leveldb::DB *smsgDB;
 
@@ -51,16 +53,22 @@ public:
     bool ReadKey(const CKeyID &idk, SecMsgKey &key);
     bool WriteKey(const CKeyID &idk, const SecMsgKey &key);
 
-    bool NextSmesg(leveldb::Iterator *it, const std::string &prefix, uint8_t *vchKey, SecMsgStored &smsgStored);
-    bool NextSmesgKey(leveldb::Iterator *it, const std::string &prefix, uint8_t *vchKey);
+    bool NextSmesg(leveldb::Iterator *it, const std::string &prefix, uint8_t *chKey, SecMsgStored &smsgStored);
+    bool NextSmesgKey(leveldb::Iterator *it, const std::string &prefix, uint8_t *chKey);
     bool ReadSmesg(const uint8_t *chKey, SecMsgStored &smsgStored);
     bool WriteSmesg(const uint8_t *chKey, SecMsgStored &smsgStored);
     bool ExistsSmesg(const uint8_t *chKey);
     bool EraseSmesg(const uint8_t *chKey);
 
+
+    bool ReadPurged(const uint8_t *chKey, SecMsgPurged &smsgPurged);
+    bool WritePurged(const uint8_t *chKey, SecMsgPurged &smsgPurged);
+    bool ErasePurged(const uint8_t *chKey);
+    bool NextPurged(leveldb::Iterator *it, const std::string &prefix, uint8_t *chKey, SecMsgPurged &smsgPurged);
+
     bool NextPrivKey(leveldb::Iterator *it, const std::string &prefix, CKeyID &idk, SecMsgKey &key);
 
-    leveldb::DB *pdb;       // points to the global instance
+    leveldb::DB *pdb; // points to the global instance
     leveldb::WriteBatch *activeBatch;
 };
 
