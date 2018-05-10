@@ -66,7 +66,6 @@ private:
     bool fNewRecipientAllowed;
     void send(const QList<SendCoinsRecipient> &recipients, QStringList formatted);
     bool fFeeMinimized;
-    virtual bool instantXChecked();
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in emit message().
@@ -80,7 +79,6 @@ private slots:
     void on_buttonMinimizeFee_clicked();
     void removeEntry(SendCoinsEntry* entry);
     void updateDisplayUnit();
-    void updateInstantX();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();
     void coinControlChangeChecked(int);

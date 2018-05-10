@@ -1011,6 +1011,12 @@ void CWalletTx::RelayWalletTransaction(std::string strCommand)
             LogPrintf("Relaying wtx %s\n", hash.ToString());
 
             if(strCommand == "ix"){
+                if (this->vout.size() > 0)
+                {
+                    CTxDestination dest;
+                    ExtractDestination(this->vout[0].scriptPubKey, dest);
+                    IXLogPrintf("CWalletTx::RelayWalletTransaction() - Instant send to address: %s\n", CBitcoinAddress(dest).ToString());
+                }
                 mapTxLockReq.insert(make_pair(hash, (CTransaction)*this));
                 CreateNewLock(((CTransaction)*this));
                 RelayTransactionLockReq((CTransaction)*this, true);
@@ -1505,17 +1511,17 @@ bool CWallet::GetVinAndKeysFromOutput(COutput out, CTxIn& vinRet, CPubKey& pubKe
     return true;
 }
 
-bool CWallet::GetBudgetSystemCollateralTX(CTransaction& tx, uint256 hash, bool useIX)
+bool CWallet::GetBudgetSystemCollateralTX(CTransaction& tx, uint256 hash)
 {
     CWalletTx wtx;
-    if(GetBudgetSystemCollateralTX(wtx, hash, useIX)){
+    if(GetBudgetSystemCollateralTX(wtx, hash)){
         tx = (CTransaction)wtx;
         return true;
     }
     return false;
 }
 
-bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool useIX)
+bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash)
 {
     // make our change address
     CReserveKey reservekey(pwalletMain);
@@ -1529,7 +1535,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool useI
     vecSend.push_back(make_pair(scriptChange, BUDGET_FEE_TX));
 
     CCoinControl *coinControl=NULL;
-    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, strFail, coinControl, ALL_COINS, useIX, (CAmount)0);
+    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, strFail, coinControl, ALL_COINS, (CAmount)0);
     if(!success){
         LogPrintf("GetBudgetSystemCollateralTX: Error - %s\n", strFail);
         return false;
@@ -1556,10 +1562,9 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAm
 }
 
 bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX, CAmount nFeePay)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, CAmount nFeePay)
 {
-    if(useIX && nFeePay < CENT) nFeePay = CENT;
-
+    m_useInstantSend = true;
     CAmount nValue = 0;
 
     BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
@@ -1571,6 +1576,13 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
         }
         nValue += s.second;
     }
+    if(nValue > GetSporkValue(SPORK_5_MAX_VALUE) * COIN)
+    {
+        m_useInstantSend = false;
+        IXLogPrintf("InstantX doesn't support sending values that high yet. Transactions are currently limited to %d CRW.",
+                    GetSporkValue(SPORK_5_MAX_VALUE));
+    }
+
     if (vecSend.empty() || nValue < 0)
     {
         strFailReason = _("Transaction amounts must be positive");
@@ -1610,21 +1622,29 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
 
-                if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, useIX))
+                bool selected = SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, m_useInstantSend);
+                if (m_useInstantSend && !selected)
+                {
+                    // If coin selection failed for InstantX try to select coins for ordinary transaction.
+                    selected = SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, false);
+                    if (selected)
+                    {
+                        // Proceed with ordinary transaction without instant send.
+                        IXLogPrintf("CWallet::CreateTransaction() - InstantX requires inputs with at least 6 confirmations. "
+                                    "Proceed as a regular transaction.\n");
+                        m_useInstantSend = false;
+                    }
+                }
+
+                if (!selected)
                 {
                     if(coin_type == ALL_COINS) {
                         strFailReason = _("Insufficient funds.");
                     } else if (coin_type == ONLY_NOT10000IFMN) {
                         strFailReason = _("Unable to locate enough funds for this transaction that are not equal 10000 CRW.");
                     }
-
-                    if(useIX){
-                        strFailReason += " " + _("InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.");
-                    }
-
                     return false;
                 }
-
 
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
                 {
@@ -1706,6 +1726,12 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 
                 // Embed the constructed transaction data in wtxNew.
                 *static_cast<CTransaction*>(&wtxNew) = CTransaction(txNew);
+                if (wtxNew.GetValueOut() > GetSporkValue(SPORK_5_MAX_VALUE) * COIN)
+                {
+                    m_useInstantSend = false;
+                    IXLogPrintf("InstantX doesn't support sending values that high yet. Transactions are currently limited to %d CRW.",
+                                GetSporkValue(SPORK_5_MAX_VALUE));
+                }
 
                 // Limit size
                 unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK, PROTOCOL_VERSION);
@@ -1753,17 +1779,17 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 }
 
 bool CWallet::CreateTransaction(CScript scriptPubKey, const CAmount& nValue,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX, CAmount nFeePay)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, CAmount nFeePay)
 {
     vector< pair<CScript, CAmount> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, nValue));
-    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl, coin_type, useIX, nFeePay);
+    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl, coin_type, nFeePay);
 }
 
 /**
  * Call after CreateTransaction unless you want to abort
  */
-bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, std::string strCommand)
+bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 {
     {
         LOCK2(cs_main, cs_wallet);
@@ -1807,7 +1833,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, std:
             LogPrintf("CommitTransaction() : Error: Transaction not valid\n");
             return false;
         }
-        wtxNew.RelayWalletTransaction(strCommand);
+        wtxNew.RelayWalletTransaction(m_useInstantSend? "ix" : "tx");
     }
     return true;
 }
