@@ -23,6 +23,12 @@ For more information, as well as an immediately useable, binary version of
 the MicroBitcoin software, see https://microbitcoin.org, or read the
 [whitepaper](https://microbitcoin.org/assets/MBC_Whitepaper_v1.pdf).
 
+Building MicroBitcoin
+================
+
+See doc/build-*.md for instructions on building the various
+elements of the MicroBitcoin Core reference implementation of Bitcoin.
+
 License
 -------
 
