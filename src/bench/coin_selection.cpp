@@ -96,7 +96,7 @@ static void BnBExhaustion(benchmark::State& state)
     while (state.KeepRunning()) {
         // Benchmark
         CAmount target = make_hard_case(17, utxo_pool);
-        SelectCoinsBnB(utxo_pool, target, 0, selection, value_ret, not_input_fees); // Should exhaust
+        SelectCoinsBnB(utxo_pool, target, 0, 0, selection, value_ret, not_input_fees); // Should exhaust
 
         // Cleanup
         utxo_pool.clear();
