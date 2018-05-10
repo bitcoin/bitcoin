@@ -15,7 +15,6 @@ from test_framework.util import (
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
-        self.extra_args = [['-deprecatedrpc=accounts']] * 4
 
     def add_options(self, parser):
         parser.add_option("--mineblock", dest="mine_block", default=False, action="store_true",
@@ -39,28 +38,27 @@ class TxnMallTest(BitcoinTestFramework):
         starting_balance = 1250
         for i in range(4):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
-            self.nodes[i].getnewaddress("")  # bug workaround, coins generated assigned to first getnewaddress!
+            self.nodes[i].getnewaddress()  # bug workaround, coins generated assigned to first getnewaddress!
 
-        # Assign coins to foo and bar accounts:
         self.nodes[0].settxfee(.001)
 
-        node0_address_foo = self.nodes[0].getnewaddress("foo", output_type)
-        fund_foo_txid = self.nodes[0].sendfrom("", node0_address_foo, 1219)
-        fund_foo_tx = self.nodes[0].gettransaction(fund_foo_txid)
+        node0_address1 = self.nodes[0].getnewaddress(address_type=output_type)
+        node0_txid1 = self.nodes[0].sendtoaddress(node0_address1, 1219)
+        node0_tx1 = self.nodes[0].gettransaction(node0_txid1)
 
-        node0_address_bar = self.nodes[0].getnewaddress("bar", output_type)
-        fund_bar_txid = self.nodes[0].sendfrom("", node0_address_bar, 29)
-        fund_bar_tx = self.nodes[0].gettransaction(fund_bar_txid)
+        node0_address2 = self.nodes[0].getnewaddress(address_type=output_type)
+        node0_txid2 = self.nodes[0].sendtoaddress(node0_address2, 29)
+        node0_tx2 = self.nodes[0].gettransaction(node0_txid2)
 
-        assert_equal(self.nodes[0].getbalance(""),
-                     starting_balance - 1219 - 29 + fund_foo_tx["fee"] + fund_bar_tx["fee"])
+        assert_equal(self.nodes[0].getbalance(),
+                     starting_balance + node0_tx1["fee"] + node0_tx2["fee"])
 
         # Coins are sent to node1_address
-        node1_address = self.nodes[1].getnewaddress("from0")
+        node1_address = self.nodes[1].getnewaddress()
 
         # Send tx1, and another transaction tx2 that won't be cloned
-        txid1 = self.nodes[0].sendfrom("foo", node1_address, 40, 0)
-        txid2 = self.nodes[0].sendfrom("bar", node1_address, 20, 0)
+        txid1 = self.nodes[0].sendtoaddress(node1_address, 40)
+        txid2 = self.nodes[0].sendtoaddress(node1_address, 20)
 
         # Construct a clone of tx1, to be malleated
         rawtx1 = self.nodes[0].getrawtransaction(txid1, 1)
@@ -96,28 +94,22 @@ class TxnMallTest(BitcoinTestFramework):
 
         # Node0's balance should be starting balance, plus 50BTC for another
         # matured block, minus tx1 and tx2 amounts, and minus transaction fees:
-        expected = starting_balance + fund_foo_tx["fee"] + fund_bar_tx["fee"]
+        expected = starting_balance + node0_tx1["fee"] + node0_tx2["fee"]
         if self.options.mine_block:
             expected += 50
         expected += tx1["amount"] + tx1["fee"]
         expected += tx2["amount"] + tx2["fee"]
         assert_equal(self.nodes[0].getbalance(), expected)
 
-        # foo and bar accounts should be debited:
-        assert_equal(self.nodes[0].getbalance("foo", 0), 1219 + tx1["amount"] + tx1["fee"])
-        assert_equal(self.nodes[0].getbalance("bar", 0), 29 + tx2["amount"] + tx2["fee"])
-
         if self.options.mine_block:
             assert_equal(tx1["confirmations"], 1)
             assert_equal(tx2["confirmations"], 1)
-            # Node1's "from0" balance should be both transaction amounts:
-            assert_equal(self.nodes[1].getbalance("from0"), -(tx1["amount"] + tx2["amount"]))
         else:
             assert_equal(tx1["confirmations"], 0)
             assert_equal(tx2["confirmations"], 0)
 
         # Send clone and its parent to miner
-        self.nodes[2].sendrawtransaction(fund_foo_tx["hex"])
+        self.nodes[2].sendrawtransaction(node0_tx1["hex"])
         txid1_clone = self.nodes[2].sendrawtransaction(tx1_clone["hex"])
         if self.options.segwit:
             assert_equal(txid1, txid1_clone)
@@ -128,7 +120,7 @@ class TxnMallTest(BitcoinTestFramework):
 
         # Reconnect the split network, and sync chain:
         connect_nodes(self.nodes[1], 2)
-        self.nodes[2].sendrawtransaction(fund_bar_tx["hex"])
+        self.nodes[2].sendrawtransaction(node0_tx2["hex"])
         self.nodes[2].sendrawtransaction(tx2["hex"])
         self.nodes[2].generate(1)  # Mine another block to make sure we sync
         sync_blocks(self.nodes)
@@ -149,19 +141,6 @@ class TxnMallTest(BitcoinTestFramework):
         if (self.options.mine_block):
             expected -= 50
         assert_equal(self.nodes[0].getbalance(), expected)
-        assert_equal(self.nodes[0].getbalance("*", 0), expected)
-
-        # Check node0's individual account balances.
-        # "foo" should have been debited by the equivalent clone of tx1
-        assert_equal(self.nodes[0].getbalance("foo"), 1219 + tx1["amount"] + tx1["fee"])
-        # "bar" should have been debited by (possibly unconfirmed) tx2
-        assert_equal(self.nodes[0].getbalance("bar", 0), 29 + tx2["amount"] + tx2["fee"])
-        # "" should have starting balance, less funding txes, plus subsidies
-        assert_equal(self.nodes[0].getbalance("", 0),
-                     starting_balance - 1219 + fund_foo_tx["fee"] - 29 + fund_bar_tx["fee"] + 100)
-
-        # Node1's "from0" account balance
-        assert_equal(self.nodes[1].getbalance("from0", 0), -(tx1["amount"] + tx2["amount"]))
 
 if __name__ == '__main__':
     TxnMallTest().main()
