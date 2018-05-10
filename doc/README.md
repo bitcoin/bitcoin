@@ -1,50 +1,46 @@
-Crown Core 0.12.0
-=====================
+# Crown Platform 0.12.4
 
-Setup
----------------------
-[Crown Core](http://crown.tech/wallet) is the original Crown client and it builds the backbone of the network. However, it downloads and stores the entire history of Crowncoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more. Thankfully you only have to do this once. If you would like the process to go faster you can [download the blockchain directly](http://txexplorer.infernopool.com/CRWbootstrap.zip).
+[Crown software](http://crown.tech/wallet) is an implementation of a full Crown Platform node, which can be used both locally, as a wallet for CRW and for running Masternodes and Systemnodes. It is a full node:  it downloads and stores the entire history of Crown transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more. If you would like the process to go faster you can _download the blockchain directly_ **(BOOSTRAP LINK NEEDED)**.
 
-Running
----------------------
-The following are some helpful notes on how to run Crown on your native platform.
+## Install and Run Crown Wallet
 
-### Unix
-
-You need the Qt5 run-time libraries to run Crown-Qt. On Debian or Ubuntu:
-
-	sudo apt-get install libqtgui5
-
-Unpack the files into a directory and run:
-
-- bin/32/crown-qt (GUI, 32-bit) or bin/32/crownd (headless, 32-bit)
-- bin/64/crown-qt (GUI, 64-bit) or bin/64/crownd (headless, 64-bit)
-
-
+Here are some helpful notes on how to run Crown on your native platform.
 
 ### Windows
 
-Unpack the files into a directory, and then run crown-qt.exe.
+Unpack the files into a directory, and then run `crown-qt.exe`.
 
 ### OSX
 
-Drag Crown-Qt to your applications folder, and then run Crown-Qt.
+Drag Crown-Qt to your applications folder, and then run `Crown-Qt`.
+
+### Unix
+
+Unpack the files into a directory and run: `bin/crown-qt` or `bin/crownd`. You need the Qt5 run-time libraries to run Crown-Qt. On Debian or Ubuntu:
+
+	sudo apt-get install libqtgui5
 
 ### Need Help?
 
-* Ask for help on [#crowncoin](http://webchat.freenode.net?channels=crowncoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=crowncoin).
+* Ask for help on Mattermost: https://mm.crownlab.eu
+* Or at Crown Forum: https://forum.crown.tech
+* Or write a mail to [support@crown.tech](email:support@crown.tech)
 
-Building
----------------------
+## Run Masternode or Systemnode
+
+TBD
+
+## Build Crown From Source
+
 The following are developer notes on how to build Crown on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [OSX Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
 - [Windows build notes](build-msw.md)
 
-Development
----------------------
-The Crown repo's [root README](https://github.com/Crowndev/crowncoin/blob/master/README.md) contains relevant information on the development process and automated testing.
+## Development Documentation
+
+The Crown repo's [root README](https://gitlab.crown.tech/crown/crown-core/blob/master/README.md) contains relevant information on the development process.
 
 - [Coding Guidelines](coding-style.md)
 - [Multiwallet Qt Development](multiwallet-qt.md)
@@ -61,8 +57,15 @@ The Crown repo's [root README](https://github.com/Crowndev/crowncoin/blob/master
 - [Tor Support](tor.md)
 - [Init Scripts (systemd/upstart/openrc)](init.md)
 
-License
----------------------
-Distributed under the [MIT/X11 software license](http://www.opensource.org/licenses/mit-license.php).
-This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](https://www.openssl.org/). This product includes
-cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.
+## License
+
+Crown is distributed under the terms of the [MIT/X11 software license](http://www.opensource.org/licenses/mit-license.php). 
+
+This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](https://www.openssl.org/). This product includes cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.
+- - -
+
+Copyright © 2009-2018, Bitcoin Core Developers
+
+Copyright © 2014-2016, Dash Core Developers
+
+Copyright © 2014-2018, Crown Developers
