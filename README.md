@@ -8,7 +8,7 @@ Gitlab:
 http://www.crown.tech
 
 Copyright (c) 2009-2015 Bitcoin Core Developers
-
+Copyright (c) 2014-2015 Dash Core Developers
 Copyright (c) 2014-2018 Crown Core Developers
 
 
