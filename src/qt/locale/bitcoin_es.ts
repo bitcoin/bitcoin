@@ -502,6 +502,11 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>Cifrar las claves privadas de su monedero</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Decrypt wallet only for minting. Sending coins will still require the password.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+7"/>
         <source>Sign messages with your Peercoin addresses to prove you own them</source>
         <translation>Firmar mensajes con sus direcciones Peercoin para demostrar la propiedad</translation>

@@ -499,6 +499,11 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Encriptar as chaves privadas que pertencem à sua carteira</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Decrypt wallet only for minting. Sending coins will still require the password.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+7"/>
         <source>Sign messages with your Peercoin addresses to prove you own them</source>
         <translation>Assine mensagens com os seus endereços Peercoin para provar que os controla</translation>

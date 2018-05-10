@@ -499,6 +499,11 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <translation>Crittografa le chiavi private che appartengono al tuo portafoglio</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Decrypt wallet only for minting. Sending coins will still require the password.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+7"/>
         <source>Sign messages with your Peercoin addresses to prove you own them</source>
         <translation>Firma i messaggi con il tuo indirizzo Peercoin per dimostrare di possederli</translation>
