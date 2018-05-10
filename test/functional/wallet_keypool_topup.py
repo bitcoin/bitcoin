@@ -25,7 +25,7 @@ class KeypoolRestoreTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [['-deprecatedrpc=accounts', '-usehd=0'], ['-deprecatedrpc=accounts', '-usehd=1', '-keypool=100', '-keypoolmin=20']]
+        self.extra_args = [['-usehd=0'], ['-usehd=1', '-keypool=100', '-keypoolmin=20']]
         self.stderr = sys.stdout
 
     def run_test(self):
