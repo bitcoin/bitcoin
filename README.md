@@ -72,8 +72,8 @@ Crown Core is released under the terms of the MIT license. See [COPYING](COPYING
 information or see http://opensource.org/licenses/MIT.
 - - -
 
-Copyright © 2009-2015, Bitcoin Core Developers
+Copyright © 2009-2018, Bitcoin Core Developers
 
-Copyright © 2014-2015, Dash Core Developers
+Copyright © 2014-2016, Dash Core Developers
 
 Copyright © 2014-2018, Crown Developers
