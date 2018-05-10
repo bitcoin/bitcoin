@@ -371,7 +371,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 		string strResponseEnglish = "";
 		string strResponseGUID = "";
-		string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, ASSET, strResponseGUID);
+		CTransaction txTmp;
+		GetSyscoinTransactionDescription(txTmp, op, strResponseEnglish, ASSET, strResponseGUID);
 		CAsset dbAsset;
 		if (!GetAsset(op == OP_ASSET_SEND ? theAssetAllocation.vchAsset : theAsset.vchAsset, dbAsset))
 		{
@@ -493,7 +494,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2034 - " + _("Failed to write to asset allocation DB");
 							continue;
 						}
-						if (strResponse != "") {
+						if (strResponseEnglish != "") {
 							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
@@ -565,7 +566,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 							return error(errorMessage.c_str());
 						}
 
-						if (strResponse != "") {
+						if (strResponseEnglish != "") {
 							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
@@ -617,7 +618,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				theAsset.nPrecision = 0;
 		}
 		if (!bSanityCheck) {
-			if (strResponse != "") {
+			if (strResponseEnglish != "") {
 				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset));
 			}
 		}
