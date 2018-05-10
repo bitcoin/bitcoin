@@ -14,7 +14,7 @@ CRW tokens are a type of cryptocurrency. Like bitcoins, CRW can be used to pay f
 
 ### Blockchain Application Platform
 
-The Crown Platform utilizes secure servers (incentivized nodes) to provide scalability and fault-tolerance for economy applications. Members of the Crown Community can set up their own incentivized nodes to earn CRW while helping to maintain the network.
+The Crown Platform utilizes two additional tiers of nodes that offer different roles: Masternodes process instant transactions while Systemnodes will host applications via the CrownPlatform. Members of the Crown Community can set up their own incentivized nodes to earn CRW while helping to maintain the network.
 
 For more information, as well as an immediately useable, binary version Crown see http://crown.tech/wallet.
 
@@ -22,10 +22,11 @@ For more information, as well as an immediately useable, binary version Crown se
 
 Crown is ultimately a community-driven platform. Its potential to bring social and echnological growth is contingent on the ideas and support its users provide. We invite you to lend your voice and imagination to this burgeoning platform and share in its success. Together, there’s no limit to what we can accomplish.
 
-* Crown Forum: https://forum.crown.tech/
-* Mattermost: https://mm.crownlab.eu/login
-* Discord: https://discordapp.com/invite/rB3Kr86
+* Crown Forum: https://forum.crown.tech
+* Mattermost: https://mm.crownlab.eu
+* Discord: https://discord.gg/Tcrkazc
 * Telegram: https://t.me/crownplatform
+* Guides & How-to: https://forum.crown.tech/index.php?board=5.0
 
 ## Governance
 
@@ -36,12 +37,23 @@ Crown’s governance system also enables its community to vote on which changes 
 * View proposals: http://crown.today/proposals
 * How to create proposal:https://forum.crown.tech/index.php?topic=11.0
 
+## Server Nodes
+
+Crown uses two types of server nodes to build and protect its network — Systemnodes and Masternodes. Each of these dedicated servers are unique and provide vital infrastructure. By creating and running them, you can help our community grow while consistently earning Crown tokens as a reward. Here’s a brief description of each:
+
+### Masternodes
+
+Masternodes supply substantial computing power to the Crown Platform, and have copies of the ledger stored and ready to distribute to the network if needed. Think of Masternodes as the stabilizing force behind Crown; they help us keep the network secure and running smoothly by tracking the ledger and confirming transactions at lightning speed with Instant Send. A Masternode requires 10,000 CRW collateral to run.
+
+### Systemnodes
+
+Systemnodes are empty-shell servers that are tasked with hosting specific services for the Crown network other than transaction verification. The Crown Platform will use Systemnodes to host new economy applications created by members of the community, connecting them to the Crown Platform through an API. A Systemnode requires 500 CRW collateral to run. 
 
 ## Development
 
 ### Report a bug
 
-Bugs can be reported via the github issues page: https://github.com/Crowndev/crowncoin/issues, [Mattermost](https://mm.crownlab.eu/crown/channels/tech-support) or emailing support@crown.tech
+Bugs can be reported via the github issues page: https://github.com/Crowndev/crowncoin/issues, tech support channel in [Mattermost](https://mm.crownlab.eu/crown/channels/tech-support) or emailing [support@crown.tech](email:support@crown.tech)
 
 ### Procedures for bounty development
 The Crown team will  post a request for development and the requirements to receive the bounty reward and the size of the reward. 
