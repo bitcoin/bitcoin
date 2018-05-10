@@ -2,7 +2,7 @@ OpenBSD build guide
 ======================
 (updated for OpenBSD 6.2)
 
-This guide describes how to build bitcoind and command-line utilities on OpenBSD.
+This guide describes how to build microbitcoind and command-line utilities on OpenBSD.
 
 OpenBSD is most commonly used as a server OS, so this guide does not contain instructions for building the GUI.
 

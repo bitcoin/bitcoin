@@ -3,7 +3,7 @@
 
 A new 'label' API has been introduced for the wallet. This is intended as a
 replacement for the deprecated 'account' API. The 'account' can continue to
-be used in V0.17 by starting bitcoind with the '-deprecatedrpc=accounts'
+be used in V0.17 by starting microbitcoind with the '-deprecatedrpc=accounts'
 argument, and will be fully removed in V0.18.
 
 The label RPC methods mirror the account functionality, with the following functional differences:

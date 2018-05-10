@@ -25,7 +25,7 @@ make
 make install # optional
 ```
 
-This will build bitcoin-qt as well if the dependencies are met.
+This will build microbitcoin-qt as well if the dependencies are met.
 
 Dependencies
 ---------------------
@@ -112,7 +112,7 @@ ZMQ dependencies (provides ZMQ API 4.x):
 
 #### Dependencies for the GUI
 
-If you want to build Bitcoin-Qt, make sure that the required packages for Qt development
+If you want to build microbitcoin-qt, make sure that the required packages for Qt development
 are installed. Either Qt 5 or Qt 4 are necessary to build the GUI.
 If both Qt 4 and Qt 5 are installed, Qt 5 will be used. Pass `--with-gui=qt4` to configure to choose Qt4.
 To build without GUI pass `--without-gui`.
@@ -129,7 +129,7 @@ libqrencode (optional) can be installed with:
 
     sudo apt-get install libqrencode-dev
 
-Once these are installed, they will be found by configure and a bitcoin-qt executable will be
+Once these are installed, they will be found by configure and a microbitcoin-qt executable will be
 built by default.
 
 
@@ -155,7 +155,7 @@ libqrencode (optional) can be installed with:
 
 Notes
 -----
-The release is built with GCC and then "strip bitcoind" to strip the debug
+The release is built with GCC and then "strip microbitcoind" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
 
