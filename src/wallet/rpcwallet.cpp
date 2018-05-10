@@ -485,6 +485,55 @@ static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &
     return tx;
 }
 
+/**
+ * Validate and return a COutPoint based on a UniValue txid/vout dictionary
+ *
+ * @param  pwallet      The wallet.
+ * @param  outpoint     The outpoint in dictionary form with keys txid and vout.
+ * @param  allow_locked Whether or not locked outputs should throw a JSONRPCError
+ */
+COutPoint ValidateOutPointReference(CWallet* const pwallet, const UniValue& outpoint, bool allow_locked = false)
+{
+    RPCTypeCheckObj(outpoint,
+        {
+            {"txid", UniValueType(UniValue::VSTR)},
+            {"vout", UniValueType(UniValue::VNUM)},
+        });
+
+    const std::string& txid = find_value(outpoint, "txid").get_str();
+    if (!IsHex(txid)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected hex txid");
+    }
+
+    const int output = find_value(outpoint, "vout").get_int();
+    if (output < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
+    }
+
+    const COutPoint outpt(uint256S(txid), output);
+
+    const auto it = pwallet->mapWallet.find(outpt.hash);
+    if (it == pwallet->mapWallet.end()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, unknown transaction");
+    }
+
+    const CWalletTx& trans = it->second;
+
+    if (outpt.n >= trans.tx->vout.size()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds");
+    }
+
+    if (pwallet->IsSpent(outpt.hash, outpt.n)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected unspent output");
+    }
+
+    if (!allow_locked && pwallet->IsLockedCoin(outpt.hash, outpt.n)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output is locked");
+    }
+
+    return outpt;
+}
+
 static UniValue sendtoaddress(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
