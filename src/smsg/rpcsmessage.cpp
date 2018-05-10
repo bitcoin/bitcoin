@@ -1068,13 +1068,10 @@ static UniValue smsgbuckets(const JSONRPCRequest &request)
             };
         }; // cs_smsg
 
-        std::string snBuckets = std::to_string(nBuckets);
-        std::string snMessages = std::to_string(nMessages);
-
         UniValue objM(UniValue::VOBJ);
-        objM.pushKV("numbuckets", snBuckets);
-        objM.pushKV("numpurged", smsgModule.setPurged.size());
-        objM.pushKV("messages", snMessages);
+        objM.pushKV("numbuckets", (int)nBuckets);
+        objM.pushKV("numpurged", (int)smsgModule.setPurged.size());
+        objM.pushKV("messages", (int)nMessages);
         objM.pushKV("size", part::BytesReadable(nBytes));
         result.pushKV("buckets", arrBuckets);
         result.pushKV("total", objM);

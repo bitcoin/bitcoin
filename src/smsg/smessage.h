@@ -366,7 +366,7 @@ public:
     };
 };
 
-std::string GetHelpString(bool showDebug);
+void AddOptions();
 const char *GetString(size_t errorCode);
 
 extern bool fSecMsgEnabled;

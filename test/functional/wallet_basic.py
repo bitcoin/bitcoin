@@ -22,10 +22,9 @@ class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
-        self.extra_args = [['-deprecatedrpc=accounts']] * 4
 
     def setup_network(self):
-        self.add_nodes(4, self.extra_args)
+        self.add_nodes(4)
         self.start_node(0)
         self.start_node(1)
         self.start_node(2)
@@ -151,7 +150,7 @@ class WalletTest(BitcoinTestFramework):
             inputs = []
             outputs = {}
             inputs.append({"txid": utxo["txid"], "vout": utxo["vout"]})
-            outputs[self.nodes[2].getnewaddress("from1")] = utxo["amount"] - 3
+            outputs[self.nodes[2].getnewaddress()] = utxo["amount"] - 3
             raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
             txns_to_send.append(self.nodes[0].signrawtransactionwithwallet(raw_tx))
 
@@ -165,7 +164,6 @@ class WalletTest(BitcoinTestFramework):
 
         assert_equal(self.nodes[0].getbalance(), 0)
         assert_equal(self.nodes[2].getbalance(), 94)
-        assert_equal(self.nodes[2].getbalance("from1"), 94 - 21)
 
         # Verify that a spent output cannot be locked anymore
         spent_0 = {"txid": node0utxos[0]["txid"], "vout": node0utxos[0]["vout"]}
@@ -190,7 +188,7 @@ class WalletTest(BitcoinTestFramework):
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), Decimal('20'), fee_per_byte, self.get_vsize(self.nodes[2].getrawtransaction(txid)))
 
         # Sendmany 10 BTC
-        txid = self.nodes[2].sendmany('from1', {address: 10}, 0, "", [])
+        txid = self.nodes[2].sendmany('', {address: 10}, 0, "", [])
         self.nodes[2].generate(1)
         self.sync_all([self.nodes[0:3]])
         node_0_bal += Decimal('10')
@@ -198,7 +196,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
         # Sendmany 10 BTC with subtract fee from amount
-        txid = self.nodes[2].sendmany('from1', {address: 10}, 0, "", [address])
+        txid = self.nodes[2].sendmany('', {address: 10}, 0, "", [address])
         self.nodes[2].generate(1)
         self.sync_all([self.nodes[0:3]])
         node_2_bal -= Decimal('10')
@@ -365,14 +363,14 @@ class WalletTest(BitcoinTestFramework):
         #   - True: unicode escaped as \u....
         #   - False: unicode directly as UTF-8
         for mode in [True, False]:
-            self.nodes[0].ensure_ascii = mode
+            self.nodes[0].rpc.ensure_ascii = mode
             # unicode check: Basic Multilingual Plane, Supplementary Plane respectively
-            for s in [u'рыба', u'𝅘𝅥𝅯']:
-                addr = self.nodes[0].getaccountaddress(s)
-                label = self.nodes[0].getaccount(addr)
-                assert_equal(label, s)
-                assert(s in self.nodes[0].listaccounts().keys())
-        self.nodes[0].ensure_ascii = True  # restore to default
+            for label in [u'рыба', u'𝅘𝅥𝅯']:
+                addr = self.nodes[0].getnewaddress()
+                self.nodes[0].setlabel(addr, label)
+                assert_equal(self.nodes[0].getaddressinfo(addr)['label'], label)
+                assert(label in self.nodes[0].listlabels())
+        self.nodes[0].rpc.ensure_ascii = True  # restore to default
 
         # maintenance tests
         maintenance = [
@@ -388,9 +386,9 @@ class WalletTest(BitcoinTestFramework):
             self.log.info("check " + m)
             self.stop_nodes()
             # set lower ancestor limit for later
-            self.start_node(0, [m, "-deprecatedrpc=accounts", "-limitancestorcount=" + str(chainlimit)])
-            self.start_node(1, [m, "-deprecatedrpc=accounts", "-limitancestorcount=" + str(chainlimit)])
-            self.start_node(2, [m, "-deprecatedrpc=accounts", "-limitancestorcount=" + str(chainlimit)])
+            self.start_node(0, [m, "-limitancestorcount=" + str(chainlimit)])
+            self.start_node(1, [m, "-limitancestorcount=" + str(chainlimit)])
+            self.start_node(2, [m, "-limitancestorcount=" + str(chainlimit)])
             if m == '-reindex':
                 # reindex will leave rpc warm up "early"; Wait for it to finish
                 wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
@@ -438,7 +436,7 @@ class WalletTest(BitcoinTestFramework):
         # Try with walletrejectlongchains
         # Double chain limit but require combining inputs, so we pass SelectCoinsMinConf
         self.stop_node(0)
-        self.start_node(0, extra_args=["-deprecatedrpc=accounts", "-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)])
+        self.start_node(0, extra_args=["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)])
 
         # wait for loadmempool
         timeout = 10

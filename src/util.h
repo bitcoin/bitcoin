@@ -162,6 +162,25 @@ namespace part
     bool endsWith(const std::string &str, const std::string &suffix);
 }
 
+enum class OptionsCategory
+{
+    OPTIONS,
+    CONNECTION,
+    WALLET,
+    WALLET_DEBUG_TEST,
+    ZMQ,
+    DEBUG_TEST,
+    CHAINPARAMS,
+    NODE_RELAY,
+    BLOCK_CREATION,
+    RPC,
+    GUI,
+    COMMANDS,
+    REGISTER_COMMANDS,
+    SMSG,
+    PART_WALLET,
+    PART_STAKING,
+};
 
 class ArgsManager
 {
@@ -173,6 +192,7 @@ public:
     std::map<std::string, std::vector<std::string>> m_config_args;
     std::string m_network;
     std::set<std::string> m_network_only_args;
+    std::map<std::pair<OptionsCategory, std::string>, std::pair<std::string, bool>> m_available_args;
 
     void ReadConfigStream(std::istream& stream);
 
@@ -274,6 +294,16 @@ public:
      * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
      */
     std::string GetChainName() const;
+
+    /**
+     * Add argument
+     */
+    void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
+
+    /**
+     * Get the help string
+     */
+    std::string GetHelpMessage();
 };
 
 extern ArgsManager gArgs;

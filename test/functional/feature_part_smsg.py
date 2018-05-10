@@ -38,7 +38,7 @@ class SmsgTest(ParticlTestFramework):
         assert(ro['result'] == 'Public key added to db.')
 
         ro = nodes[1].smsgbuckets()
-        assert(ro['total']['numbuckets'] == '0')
+        assert(ro['total']['numbuckets'] == 0)
 
         ro = nodes[1].smsgsend(address1, address0, "Test 1->0.")
         assert(ro['result'] == 'Sent.')
@@ -46,9 +46,9 @@ class SmsgTest(ParticlTestFramework):
         self.waitForSmsgExchange(1, 1, 0)
 
         ro = nodes[1].smsgbuckets()
-        assert(ro['total']['numbuckets'] == '1')
+        assert(ro['total']['numbuckets'] == 1)
         ro = nodes[0].smsgbuckets()
-        assert(ro['total']['numbuckets'] == '1')
+        assert(ro['total']['numbuckets'] == 1)
 
         ro = nodes[0].smsginbox()
         assert(len(ro['messages']) == 1)

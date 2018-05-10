@@ -114,7 +114,7 @@ void SecMsgBucket::hashBucket()
             continue;
 
         XXH32_update(state, it->sample, 8);
-        if (nLeastTTL == 0 || it->ttl < nLeastTTL)
+        if (it->ttl > 0 && (nLeastTTL == 0 || it->ttl < nLeastTTL))
             nLeastTTL = it->ttl;
         nActive++;
     };
@@ -414,18 +414,15 @@ void ThreadSecureMsgPow()
     return;
 };
 
-std::string GetHelpString(bool showDebug)
+void AddOptions()
 {
-    std::string strUsage;
+    gArgs.AddArg("-smsg", _("Enable secure messaging. (default: true)"), false, OptionsCategory::SMSG);
+    gArgs.AddArg("-smsgscanchain", _("Scan the block chain for public key addresses on startup. (default: false)"), false, OptionsCategory::SMSG);
+    gArgs.AddArg("-smsgscanincoming", _("Scan incoming blocks for public key addresses. (default: false)"), false, OptionsCategory::SMSG);
+    gArgs.AddArg("-smsgnotify=<cmd>", _("Execute command when a message is received. (%s in cmd is replaced by receiving address)"), false, OptionsCategory::SMSG);
+    gArgs.AddArg("-smsgsaddnewkeys", _("Scan for incoming messages on new wallet keys. (default: false)"), false, OptionsCategory::SMSG);
 
-    strUsage += HelpMessageGroup(_("Secure messaging options:"));
-    strUsage += HelpMessageOpt("-smsg", _("Enable secure messaging. (default: true)"));
-    strUsage += HelpMessageOpt("-smsgscanchain", _("Scan the block chain for public key addresses on startup. (default: false)"));
-    strUsage += HelpMessageOpt("-smsgscanincoming", _("Scan incoming blocks for public key addresses. (default: false)"));
-    strUsage += HelpMessageOpt("-smsgnotify=<cmd>", _("Execute command when a message is received. (%s in cmd is replaced by receiving address)"));
-    strUsage += HelpMessageOpt("-smsgsaddnewkeys", _("Scan for incoming messages on new wallet keys. (default: false)"));
-
-    return strUsage;
+    return;
 };
 
 const char *GetString(size_t errorCode)
@@ -575,8 +572,7 @@ int CSMSG::BuildBucketSet()
                     : smsg.version[0] < 3 ? 2 : smsg.nonce[0];
 
                 token.ttl = nDaysToLive;
-                if (nDaysToLive > 0 &&
-                    bucket.nLeastTTL == 0 || nDaysToLive < bucket.nLeastTTL)
+                if (nDaysToLive > 0 && (bucket.nLeastTTL == 0 || nDaysToLive < bucket.nLeastTTL))
                     bucket.nLeastTTL = nDaysToLive;
 
                 if (smsg.nPayload < 8)
@@ -3063,7 +3059,7 @@ int CSMSG::Store(const uint8_t *pHeader, const uint8_t *pPayload, uint32_t nPayl
 
     tokenSet.insert(token);
 
-    if (bucket.nLeastTTL == 0 || nDaysToLive < bucket.nLeastTTL)
+    if (nDaysToLive > 0 && (bucket.nLeastTTL == 0 || nDaysToLive < bucket.nLeastTTL))
         bucket.nLeastTTL = nDaysToLive;
 
     if (fHashBucket)

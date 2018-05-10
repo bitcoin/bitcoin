@@ -384,8 +384,7 @@ public:
     int Finalise();
     int FreeExtKeyMaps();
 
-    /** Returns the wallets help message */
-    static std::string GetWalletHelpString(bool showDebug);
+    static void AddOptions();
 
     static bool InitLoadWallet();
 
