@@ -155,6 +155,12 @@ private:
      */
     CCriticalSection m_cs_chainstate;
 
+    /**
+     * the ChainState CriticalSection
+     * A lock that must be held when modifying this ChainState - held in ActivateBestChain()
+     */
+    CCriticalSection m_cs_chainstate;
+
 public:
     CChain chainActive;
     BlockMap mapBlockIndex;
