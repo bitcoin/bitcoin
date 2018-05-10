@@ -7,6 +7,8 @@
 #include <support/allocators/secure.h>
 #include <test/test_bitcoin.h>
 
+#include <memory>
+
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(allocator_tests, BasicTestingSetup)
@@ -62,10 +64,10 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     BOOST_CHECK(b.stats().used == 128);
     b.free(a3);
     BOOST_CHECK(b.stats().used == 0);
-    BOOST_CHECK_EQUAL(b.stats().chunks_used, 0);
+    BOOST_CHECK_EQUAL(b.stats().chunks_used, 0U);
     BOOST_CHECK(b.stats().total == synth_size);
     BOOST_CHECK(b.stats().free == synth_size);
-    BOOST_CHECK_EQUAL(b.stats().chunks_free, 1);
+    BOOST_CHECK_EQUAL(b.stats().chunks_free, 1U);
 
     std::vector<void*> addr;
     BOOST_CHECK(b.alloc(0) == nullptr); // allocating 0 always returns nullptr

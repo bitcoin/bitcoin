@@ -239,7 +239,7 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     return "Bitcoin server stopping";
 }
 
-UniValue uptime(const JSONRPCRequest& jsonRequest)
+static UniValue uptime(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
@@ -367,7 +367,11 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     if (!valMethod.isStr())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
-    LogPrint(BCLog::RPC, "ThreadRPCServer method=%s\n", SanitizeString(strMethod));
+    if (fLogIPs)
+        LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s peeraddr=%s\n", SanitizeString(strMethod),
+            this->authUser, this->peerAddr);
+    else
+        LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
 
     // Parse params
     UniValue valParams = find_value(request, "params");

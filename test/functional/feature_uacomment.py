@@ -7,6 +7,7 @@
 import re
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_node import ErrorMatch
 from test_framework.util import assert_equal
 
 
@@ -27,12 +28,12 @@ class UacommentTest(BitcoinTestFramework):
         self.log.info("test -uacomment max length")
         self.stop_node(0)
         expected = "Error: Total length of network version string \([0-9]+\) exceeds maximum length \(256\). Reduce the number or size of uacomments."
-        self.nodes[0].assert_start_raises_init_error(["-uacomment=" + 'a' * 256], expected)
+        self.nodes[0].assert_start_raises_init_error(["-uacomment=" + 'a' * 256], expected, match=ErrorMatch.FULL_REGEX)
 
         self.log.info("test -uacomment unsafe characters")
         for unsafe_char in ['/', ':', '(', ')']:
             expected = "Error: User Agent comment \(" + re.escape(unsafe_char) + "\) contains unsafe characters."
-            self.nodes[0].assert_start_raises_init_error(["-uacomment=" + unsafe_char], expected)
+            self.nodes[0].assert_start_raises_init_error(["-uacomment=" + unsafe_char], expected, match=ErrorMatch.FULL_REGEX)
 
 
 if __name__ == '__main__':

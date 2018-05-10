@@ -66,12 +66,12 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
     if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
-        if (witnessversion == 0 && witnessprogram.size() == 20) {
+        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE) {
             typeRet = TX_WITNESS_V0_KEYHASH;
             vSolutionsRet.push_back(witnessprogram);
             return true;
         }
-        if (witnessversion == 0 && witnessprogram.size() == 32) {
+        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
             typeRet = TX_WITNESS_V0_SCRIPTHASH;
             vSolutionsRet.push_back(witnessprogram);
             return true;
@@ -132,7 +132,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
             // Template matching opcodes:
             if (opcode2 == OP_PUBKEYS)
             {
-                while (vch1.size() >= 33 && vch1.size() <= 65)
+                while (CPubKey::ValidSize(vch1))
                 {
                     vSolutionsRet.push_back(vch1);
                     if (!script1.GetOp(pc1, opcode1, vch1))
@@ -146,7 +146,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
 
             if (opcode2 == OP_PUBKEY)
             {
-                if (vch1.size() < 33 || vch1.size() > 65)
+                if (!CPubKey::ValidSize(vch1))
                     break;
                 vSolutionsRet.push_back(vch1);
             }

@@ -61,17 +61,17 @@ static inline void popstack(std::vector<valtype>& stack)
 }
 
 bool static IsCompressedOrUncompressedPubKey(const valtype &vchPubKey) {
-    if (vchPubKey.size() < 33) {
+    if (vchPubKey.size() < CPubKey::COMPRESSED_PUBLIC_KEY_SIZE) {
         //  Non-canonical public key: too short
         return false;
     }
     if (vchPubKey[0] == 0x04) {
-        if (vchPubKey.size() != 65) {
+        if (vchPubKey.size() != CPubKey::PUBLIC_KEY_SIZE) {
             //  Non-canonical public key: invalid length for uncompressed key
             return false;
         }
     } else if (vchPubKey[0] == 0x02 || vchPubKey[0] == 0x03) {
-        if (vchPubKey.size() != 33) {
+        if (vchPubKey.size() != CPubKey::COMPRESSED_PUBLIC_KEY_SIZE) {
             //  Non-canonical public key: invalid length for compressed key
             return false;
         }
@@ -83,7 +83,7 @@ bool static IsCompressedOrUncompressedPubKey(const valtype &vchPubKey) {
 }
 
 bool static IsCompressedPubKey(const valtype &vchPubKey) {
-    if (vchPubKey.size() != 33) {
+    if (vchPubKey.size() != CPubKey::COMPRESSED_PUBLIC_KEY_SIZE) {
         //  Non-canonical public key: invalid length for compressed key
         return false;
     }
@@ -219,7 +219,7 @@ bool static CheckPubKeyEncoding(const valtype &vchPubKey, unsigned int flags, co
         return set_error(serror, SCRIPT_ERR_PUBKEYTYPE);
     }
     // Only compressed keys are accepted in segwit
-    if ((flags & SCRIPT_VERIFY_WITNESS_PUBKEYTYPE) != 0 && sigversion == SIGVERSION_WITNESS_V0 && !IsCompressedPubKey(vchPubKey)) {
+    if ((flags & SCRIPT_VERIFY_WITNESS_PUBKEYTYPE) != 0 && sigversion == SigVersion::WITNESS_V0 && !IsCompressedPubKey(vchPubKey)) {
         return set_error(serror, SCRIPT_ERR_WITNESS_PUBKEYTYPE);
     }
     return true;
@@ -248,6 +248,34 @@ bool static CheckMinimalPush(const valtype& data, opcodetype opcode) {
         return opcode == OP_PUSHDATA2;
     }
     return true;
+}
+
+int FindAndDelete(CScript& script, const CScript& b)
+{
+    int nFound = 0;
+    if (b.empty())
+        return nFound;
+    CScript result;
+    CScript::const_iterator pc = script.begin(), pc2 = script.begin(), end = script.end();
+    opcodetype opcode;
+    do
+    {
+        result.insert(result.end(), pc2, pc);
+        while (static_cast<size_t>(end - pc) >= b.size() && std::equal(b.begin(), b.end(), pc))
+        {
+            pc = pc + b.size();
+            ++nFound;
+        }
+        pc2 = pc;
+    }
+    while (script.GetOp(pc, opcode));
+
+    if (nFound > 0) {
+        result.insert(result.end(), pc2, end);
+        script = std::move(result);
+    }
+
+    return nFound;
 }
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror)
@@ -443,7 +471,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         if (stack.size() < 1)
                             return set_error(serror, SCRIPT_ERR_UNBALANCED_CONDITIONAL);
                         valtype& vch = stacktop(-1);
-                        if (sigversion == SIGVERSION_WITNESS_V0 && (flags & SCRIPT_VERIFY_MINIMALIF)) {
+                        if (sigversion == SigVersion::WITNESS_V0 && (flags & SCRIPT_VERIFY_MINIMALIF)) {
                             if (vch.size() > 1)
                                 return set_error(serror, SCRIPT_ERR_MINIMALIF);
                             if (vch.size() == 1 && vch[0] != 1)
@@ -890,8 +918,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     CScript scriptCode(pbegincodehash, pend);
 
                     // Drop the signature in pre-segwit scripts but not segwit scripts
-                    if (sigversion == SIGVERSION_BASE) {
-                        scriptCode.FindAndDelete(CScript(vchSig));
+                    if (sigversion == SigVersion::BASE) {
+                        FindAndDelete(scriptCode, CScript(vchSig));
                     }
 
                     if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, sigversion, serror)) {
@@ -954,8 +982,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     for (int k = 0; k < nSigsCount; k++)
                     {
                         valtype& vchSig = stacktop(-isig-k);
-                        if (sigversion == SIGVERSION_BASE) {
-                            scriptCode.FindAndDelete(CScript(vchSig));
+                        if (sigversion == SigVersion::BASE) {
+                            FindAndDelete(scriptCode, CScript(vchSig));
                         }
                     }
 
@@ -1182,7 +1210,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 {
     assert(nIn < txTo.vin.size());
 
-    if (sigversion == SIGVERSION_WITNESS_V0) {
+    if (sigversion == SigVersion::WITNESS_V0) {
         uint256 hashPrevouts;
         uint256 hashSequence;
         uint256 hashOutputs;
@@ -1361,7 +1389,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     CScript scriptPubKey;
 
     if (witversion == 0) {
-        if (program.size() == 32) {
+        if (program.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
             // Version 0 segregated witness program: SHA256(CScript) inside the program, CScript + inputs in witness
             if (witness.stack.size() == 0) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
@@ -1373,7 +1401,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             if (memcmp(hashScriptPubKey.begin(), program.data(), 32)) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
-        } else if (program.size() == 20) {
+        } else if (program.size() == WITNESS_V0_KEYHASH_SIZE) {
             // Special case for pay-to-pubkeyhash; signature + pubkey in witness
             if (witness.stack.size() != 2) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH); // 2 items in witness
@@ -1396,13 +1424,13 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
     }
 
-    if (!EvalScript(stack, scriptPubKey, flags, checker, SIGVERSION_WITNESS_V0, serror)) {
+    if (!EvalScript(stack, scriptPubKey, flags, checker, SigVersion::WITNESS_V0, serror)) {
         return false;
     }
 
     // Scripts inside witness implicitly require cleanstack behaviour
     if (stack.size() != 1)
-        return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
+        return set_error(serror, SCRIPT_ERR_CLEANSTACK);
     if (!CastToBool(stack.back()))
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
     return true;
@@ -1423,12 +1451,12 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     }
 
     std::vector<std::vector<unsigned char> > stack, stackCopy;
-    if (!EvalScript(stack, scriptSig, flags, checker, SIGVERSION_BASE, serror))
+    if (!EvalScript(stack, scriptSig, flags, checker, SigVersion::BASE, serror))
         // serror is set
         return false;
     if (flags & SCRIPT_VERIFY_P2SH)
         stackCopy = stack;
-    if (!EvalScript(stack, scriptPubKey, flags, checker, SIGVERSION_BASE, serror))
+    if (!EvalScript(stack, scriptPubKey, flags, checker, SigVersion::BASE, serror))
         // serror is set
         return false;
     if (stack.empty())
@@ -1474,7 +1502,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
         popstack(stack);
 
-        if (!EvalScript(stack, pubKey2, flags, checker, SIGVERSION_BASE, serror))
+        if (!EvalScript(stack, pubKey2, flags, checker, SigVersion::BASE, serror))
             // serror is set
             return false;
         if (stack.empty())
@@ -1530,10 +1558,10 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
 size_t static WitnessSigOps(int witversion, const std::vector<unsigned char>& witprogram, const CScriptWitness& witness, int flags)
 {
     if (witversion == 0) {
-        if (witprogram.size() == 20)
+        if (witprogram.size() == WITNESS_V0_KEYHASH_SIZE)
             return 1;
 
-        if (witprogram.size() == 32 && witness.stack.size() > 0) {
+        if (witprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE && witness.stack.size() > 0) {
             CScript subscript(witness.stack.back().begin(), witness.stack.back().end());
             return subscript.GetSigOpCount(true);
         }

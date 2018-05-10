@@ -11,6 +11,7 @@
 
 #include <compat.h>
 #include <serialize.h>
+#include <span.h>
 
 #include <stdint.h>
 #include <string>
@@ -37,15 +38,16 @@ class CNetAddr
     public:
         CNetAddr();
         explicit CNetAddr(const struct in_addr& ipv4Addr);
-        void Init();
         void SetIP(const CNetAddr& ip);
 
+    private:
         /**
          * Set raw IPv4 or IPv6 address (in network byte order)
          * @note Only NET_IPV4 and NET_IPV6 are allowed for network.
          */
         void SetRaw(Network network, const uint8_t *data);
 
+    public:
         /**
           * Transform an arbitrary string into a non-routable ipv6 address.
           * Useful for mapping resolved addresses back to their source.
@@ -86,14 +88,14 @@ class CNetAddr
         bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);
-        friend bool operator!=(const CNetAddr& a, const CNetAddr& b);
+        friend bool operator!=(const CNetAddr& a, const CNetAddr& b) { return !(a == b); }
         friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
         ADD_SERIALIZE_METHODS;
 
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action) {
-            READWRITE(FLATDATA(ip));
+            READWRITE(ip);
         }
 
         friend class CSubNet;
@@ -123,7 +125,7 @@ class CSubNet
         bool IsValid() const;
 
         friend bool operator==(const CSubNet& a, const CSubNet& b);
-        friend bool operator!=(const CSubNet& a, const CSubNet& b);
+        friend bool operator!=(const CSubNet& a, const CSubNet& b) { return !(a == b); }
         friend bool operator<(const CSubNet& a, const CSubNet& b);
 
         ADD_SERIALIZE_METHODS;
@@ -131,8 +133,8 @@ class CSubNet
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action) {
             READWRITE(network);
-            READWRITE(FLATDATA(netmask));
-            READWRITE(FLATDATA(valid));
+            READWRITE(netmask);
+            READWRITE(valid);
         }
 };
 
@@ -140,19 +142,18 @@ class CSubNet
 class CService : public CNetAddr
 {
     protected:
-        unsigned short port; // host order
+        uint16_t port; // host order
 
     public:
         CService();
         CService(const CNetAddr& ip, unsigned short port);
         CService(const struct in_addr& ipv4Addr, unsigned short port);
         explicit CService(const struct sockaddr_in& addr);
-        void Init();
         unsigned short GetPort() const;
         bool GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const;
         bool SetSockAddr(const struct sockaddr* paddr);
         friend bool operator==(const CService& a, const CService& b);
-        friend bool operator!=(const CService& a, const CService& b);
+        friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
         friend bool operator<(const CService& a, const CService& b);
         std::vector<unsigned char> GetKey() const;
         std::string ToString() const;
@@ -166,11 +167,8 @@ class CService : public CNetAddr
 
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action) {
-            READWRITE(FLATDATA(ip));
-            unsigned short portN = htons(port);
-            READWRITE(FLATDATA(portN));
-            if (ser_action.ForRead())
-                 port = ntohs(portN);
+            READWRITE(ip);
+            READWRITE(WrapBigEndian(port));
         }
 };
 

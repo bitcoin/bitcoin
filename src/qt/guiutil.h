@@ -20,6 +20,11 @@
 class QValidatedLineEdit;
 class SendCoinsRecipient;
 
+namespace interfaces
+{
+    class Node;
+}
+
 QT_BEGIN_NAMESPACE
 class QAbstractItemView;
 class QDateTime;
@@ -40,9 +45,8 @@ namespace GUIUtil
     // Return a monospace font
     QFont fixedPitchFont();
 
-    // Set up widgets for address and amounts
+    // Set up widget for address
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
-    void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
     // Parse "bitcoin:" URI into recipient object, return true on successful parsing
     bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
@@ -50,7 +54,7 @@ namespace GUIUtil
     QString formatBitcoinURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
-    bool isDust(const QString& address, const CAmount& amount);
+    bool isDust(interfaces::Node& node, const QString& address, const CAmount& amount);
 
     // HTML escaping for rich text controls
     QString HtmlEscape(const QString& str, bool fMultiLine=false);

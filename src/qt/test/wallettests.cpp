@@ -1,5 +1,7 @@
 #include <qt/test/wallettests.h>
+#include <qt/test/util.h>
 
+#include <interfaces/node.h>
 #include <qt/bitcoinamountfield.h>
 #include <qt/callback.h>
 #include <qt/optionsmodel.h>
@@ -19,6 +21,8 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/receiverequestdialog.h>
 
+#include <memory>
+
 #include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
@@ -32,21 +36,6 @@
 
 namespace
 {
-//! Press "Ok" button in message box dialog.
-void ConfirmMessage(QString* text = nullptr)
-{
-    QTimer::singleShot(0, makeCallback([text](Callback* callback) {
-        for (QWidget* widget : QApplication::topLevelWidgets()) {
-            if (widget->inherits("QMessageBox")) {
-                QMessageBox* messageBox = qobject_cast<QMessageBox*>(widget);
-                if (text) *text = messageBox->text();
-                messageBox->defaultButton()->click();
-            }
-        }
-        delete callback;
-    }), SLOT(call()));
-}
-
 //! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
 void ConfirmSend(QString* text = nullptr, bool cancel = false)
 {
@@ -155,7 +144,7 @@ void TestGUI()
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
-    CWallet wallet("mock", CWalletDBWrapper::CreateMock());
+    CWallet wallet("mock", WalletDatabase::CreateMock());
     bool firstRun;
     wallet.LoadWallet(firstRun);
     {
@@ -175,8 +164,11 @@ void TestGUI()
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
     SendCoinsDialog sendCoinsDialog(platformStyle.get());
     TransactionView transactionView(platformStyle.get());
-    OptionsModel optionsModel;
-    WalletModel walletModel(platformStyle.get(), &wallet, &optionsModel);
+    auto node = interfaces::MakeNode();
+    OptionsModel optionsModel(*node);
+    AddWallet(&wallet);
+    WalletModel walletModel(std::move(node->getWallets().back()), *node, platformStyle.get(), &optionsModel);
+    RemoveWallet(&wallet);
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
@@ -201,7 +193,7 @@ void TestGUI()
     QLabel* balanceLabel = overviewPage.findChild<QLabel*>("labelBalance");
     QString balanceText = balanceLabel->text();
     int unit = walletModel.getOptionsModel()->getDisplayUnit();
-    CAmount balance = walletModel.getBalance();
+    CAmount balance = walletModel.wallet().getBalance();
     QString balanceComparison = BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways);
     QCOMPARE(balanceText, balanceComparison);
 
@@ -258,7 +250,7 @@ void TestGUI()
     QCOMPARE(requestTableModel->rowCount({}), currentRowCount-1);
 }
 
-}
+} // namespace
 
 void WalletTests::walletTests()
 {

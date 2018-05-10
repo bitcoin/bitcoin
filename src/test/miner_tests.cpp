@@ -82,7 +82,7 @@ struct {
     {2, 0xbbbeb305}, {2, 0xfe1c810a},
 };
 
-CBlockIndex CreateBlockIndex(int nHeight)
+static CBlockIndex CreateBlockIndex(int nHeight)
 {
     CBlockIndex index;
     index.nHeight = nHeight;
@@ -90,7 +90,7 @@ CBlockIndex CreateBlockIndex(int nHeight)
     return index;
 }
 
-bool TestSequenceLocks(const CTransaction &tx, int flags)
+static bool TestSequenceLocks(const CTransaction &tx, int flags)
 {
     LOCK(mempool.cs);
     return CheckSequenceLocks(tx, flags);
@@ -99,7 +99,7 @@ bool TestSequenceLocks(const CTransaction &tx, int flags)
 // Test suite for ancestor feerate transaction selection.
 // Implemented as an additional function, rather than a separate test case,
 // to allow reusing the blockchain created in CreateNewBlock_validity.
-void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey, std::vector<CTransactionRef>& txFirst)
+static void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey, std::vector<CTransactionRef>& txFirst)
 {
     // Test the ancestor feerate transaction selection.
     TestMemPoolEntryHelper entry;
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // it into the template because we still check IsFinalTx in CreateNewBlock,
     // but relative locked txs will if inconsistently added to mempool.
     // For now these will still generate a valid template until BIP68 soft fork
-    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3U);
     // However if we advance height by 1 and time by 512, all of them should be mined
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
         chainActive.Tip()->GetAncestor(chainActive.Tip()->nHeight - i)->nTime += 512; //Trick the MedianTimePast
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     SetMockTime(chainActive.Tip()->GetMedianTimePast() + 1);
 
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
-    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 5);
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 5U);
 
     chainActive.Tip()->nHeight--;
     SetMockTime(0);

@@ -14,12 +14,9 @@ Test the following RPCs:
 
 from collections import OrderedDict
 from io import BytesIO
+from test_framework.messages import CTransaction, ToHex
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import (
-    CTransaction,
-)
 from test_framework.util import *
-
 
 class multidict(dict):
     """Dictionary that allows duplicate keys.
@@ -289,7 +286,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx2 = self.nodes[2].createrawtransaction(inputs, outputs)
         rawTxPartialSigned1 = self.nodes[1].signrawtransactionwithwallet(rawTx2, inputs)
         self.log.debug(rawTxPartialSigned1)
-        assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
+        assert_equal(rawTxPartialSigned1['complete'], False) #node1 only has one key, can't comp. sign the tx
 
         rawTxPartialSigned2 = self.nodes[2].signrawtransactionwithwallet(rawTx2, inputs)
         self.log.debug(rawTxPartialSigned2)
@@ -362,6 +359,24 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
         decrawtx= self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['vin'][0]['sequence'], 4294967294)
+
+        ####################################
+        # TRANSACTION VERSION NUMBER TESTS #
+        ####################################
+
+        # Test the minimum transaction version number that fits in a signed 32-bit integer.
+        tx = CTransaction()
+        tx.nVersion = -0x80000000
+        rawtx = ToHex(tx)
+        decrawtx = self.nodes[0].decoderawtransaction(rawtx)
+        assert_equal(decrawtx['version'], -0x80000000)
+
+        # Test the maximum transaction version number that fits in a signed 32-bit integer.
+        tx = CTransaction()
+        tx.nVersion = 0x7fffffff
+        rawtx = ToHex(tx)
+        decrawtx = self.nodes[0].decoderawtransaction(rawtx)
+        assert_equal(decrawtx['version'], 0x7fffffff)
 
 if __name__ == '__main__':
     RawTransactionsTest().main()

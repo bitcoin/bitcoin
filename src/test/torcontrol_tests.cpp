@@ -10,7 +10,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(torcontrol_tests, BasicTestingSetup)
 
-void CheckSplitTorReplyLine(std::string input, std::string command, std::string args)
+static void CheckSplitTorReplyLine(std::string input, std::string command, std::string args)
 {
     BOOST_TEST_MESSAGE(std::string("CheckSplitTorReplyLine(") + input + ")");
     auto ret = SplitTorReplyLine(input);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(util_SplitTorReplyLine)
     CheckSplitTorReplyLine("COMMAND   EVEN+more  ARGS", "COMMAND", "  EVEN+more  ARGS");
 }
 
-void CheckParseTorReplyMapping(std::string input, std::map<std::string,std::string> expected)
+static void CheckParseTorReplyMapping(std::string input, std::map<std::string,std::string> expected)
 {
     BOOST_TEST_MESSAGE(std::string("CheckParseTorReplyMapping(") + input + ")");
     auto ret = ParseTorReplyMapping(input);
@@ -167,10 +167,10 @@ BOOST_AUTO_TEST_CASE(util_ParseTorReplyMapping)
     // (needed because string comparison reads the null as end-of-string)
     BOOST_TEST_MESSAGE(std::string("CheckParseTorReplyMapping(Null=\"\\0\")"));
     auto ret = ParseTorReplyMapping("Null=\"\\0\"");
-    BOOST_CHECK_EQUAL(ret.size(), 1);
+    BOOST_CHECK_EQUAL(ret.size(), 1U);
     auto r_it = ret.begin();
     BOOST_CHECK_EQUAL(r_it->first, "Null");
-    BOOST_CHECK_EQUAL(r_it->second.size(), 1);
+    BOOST_CHECK_EQUAL(r_it->second.size(), 1U);
     BOOST_CHECK_EQUAL(r_it->second[0], '\0');
 
     // A more complex valid grammar. PROTOCOLINFO accepts a VersionLine that

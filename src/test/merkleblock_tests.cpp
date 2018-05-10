@@ -35,20 +35,20 @@ BOOST_AUTO_TEST_CASE(merkleblock_construct_from_txids_found)
     BOOST_CHECK_EQUAL(merkleBlock.header.GetHash().GetHex(), block.GetHash().GetHex());
 
     // vMatchedTxn is only used when bloom filter is specified.
-    BOOST_CHECK_EQUAL(merkleBlock.vMatchedTxn.size(), 0);
+    BOOST_CHECK_EQUAL(merkleBlock.vMatchedTxn.size(), 0U);
 
     std::vector<uint256> vMatched;
     std::vector<unsigned int> vIndex;
 
     BOOST_CHECK_EQUAL(merkleBlock.txn.ExtractMatches(vMatched, vIndex).GetHex(), block.hashMerkleRoot.GetHex());
-    BOOST_CHECK_EQUAL(vMatched.size(), 2);
+    BOOST_CHECK_EQUAL(vMatched.size(), 2U);
 
     // Ordered by occurrence in depth-first tree traversal.
     BOOST_CHECK_EQUAL(vMatched[0].ToString(), txhash2.ToString());
-    BOOST_CHECK_EQUAL(vIndex[0], 1);
+    BOOST_CHECK_EQUAL(vIndex[0], 1U);
 
     BOOST_CHECK_EQUAL(vMatched[1].ToString(), txhash1.ToString());
-    BOOST_CHECK_EQUAL(vIndex[1], 8);
+    BOOST_CHECK_EQUAL(vIndex[1], 8U);
 }
 
 
@@ -65,14 +65,14 @@ BOOST_AUTO_TEST_CASE(merkleblock_construct_from_txids_not_found)
     CMerkleBlock merkleBlock(block, txids2);
 
     BOOST_CHECK_EQUAL(merkleBlock.header.GetHash().GetHex(), block.GetHash().GetHex());
-    BOOST_CHECK_EQUAL(merkleBlock.vMatchedTxn.size(), 0);
+    BOOST_CHECK_EQUAL(merkleBlock.vMatchedTxn.size(), 0U);
 
     std::vector<uint256> vMatched;
     std::vector<unsigned int> vIndex;
 
     BOOST_CHECK_EQUAL(merkleBlock.txn.ExtractMatches(vMatched, vIndex).GetHex(), block.hashMerkleRoot.GetHex());
-    BOOST_CHECK_EQUAL(vMatched.size(), 0);
-    BOOST_CHECK_EQUAL(vIndex.size(), 0);
+    BOOST_CHECK_EQUAL(vMatched.size(), 0U);
+    BOOST_CHECK_EQUAL(vIndex.size(), 0U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

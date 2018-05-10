@@ -33,6 +33,7 @@
 
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
 
+#include <memory>
 #include <mutex>
 #include <condition_variable>
 
@@ -45,8 +46,6 @@ struct CUpdatedBlock
 static std::mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock;
-
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 
 /* Calculate the difficulty for a given block index,
  * or the block index of the given chain.
@@ -158,7 +157,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     return result;
 }
 
-UniValue getblockcount(const JSONRPCRequest& request)
+static UniValue getblockcount(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -175,7 +174,7 @@ UniValue getblockcount(const JSONRPCRequest& request)
     return chainActive.Height();
 }
 
-UniValue getbestblockhash(const JSONRPCRequest& request)
+static UniValue getbestblockhash(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -202,7 +201,7 @@ void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
     cond_blockchange.notify_all();
 }
 
-UniValue waitfornewblock(const JSONRPCRequest& request)
+static UniValue waitfornewblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
@@ -240,7 +239,7 @@ UniValue waitfornewblock(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue waitforblock(const JSONRPCRequest& request)
+static UniValue waitforblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
@@ -282,7 +281,7 @@ UniValue waitforblock(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue waitforblockheight(const JSONRPCRequest& request)
+static UniValue waitforblockheight(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
@@ -324,7 +323,7 @@ UniValue waitforblockheight(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue syncwithvalidationinterfacequeue(const JSONRPCRequest& request)
+static UniValue syncwithvalidationinterfacequeue(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 0) {
         throw std::runtime_error(
@@ -339,7 +338,7 @@ UniValue syncwithvalidationinterfacequeue(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue getdifficulty(const JSONRPCRequest& request)
+static UniValue getdifficulty(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -356,20 +355,26 @@ UniValue getdifficulty(const JSONRPCRequest& request)
     return GetDifficulty();
 }
 
-std::string EntryDescriptionString()
+static std::string EntryDescriptionString()
 {
     return "    \"size\" : n,             (numeric) virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted.\n"
-           "    \"fee\" : n,              (numeric) transaction fee in " + CURRENCY_UNIT + "\n"
-           "    \"modifiedfee\" : n,      (numeric) transaction fee with fee deltas used for mining priority\n"
+           "    \"fee\" : n,              (numeric) transaction fee in " + CURRENCY_UNIT + " (DEPRECATED)\n"
+           "    \"modifiedfee\" : n,      (numeric) transaction fee with fee deltas used for mining priority (DEPRECATED)\n"
            "    \"time\" : n,             (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
            "    \"height\" : n,           (numeric) block height when transaction entered pool\n"
            "    \"descendantcount\" : n,  (numeric) number of in-mempool descendant transactions (including this one)\n"
            "    \"descendantsize\" : n,   (numeric) virtual transaction size of in-mempool descendants (including this one)\n"
-           "    \"descendantfees\" : n,   (numeric) modified fees (see above) of in-mempool descendants (including this one)\n"
+           "    \"descendantfees\" : n,   (numeric) modified fees (see above) of in-mempool descendants (including this one) (DEPRECATED)\n"
            "    \"ancestorcount\" : n,    (numeric) number of in-mempool ancestor transactions (including this one)\n"
            "    \"ancestorsize\" : n,     (numeric) virtual transaction size of in-mempool ancestors (including this one)\n"
-           "    \"ancestorfees\" : n,     (numeric) modified fees (see above) of in-mempool ancestors (including this one)\n"
+           "    \"ancestorfees\" : n,     (numeric) modified fees (see above) of in-mempool ancestors (including this one) (DEPRECATED)\n"
            "    \"wtxid\" : hash,         (string) hash of serialized transaction, including witness data\n"
+           "    \"fees\" : {\n"
+           "        \"base\" : n,         (numeric) transaction fee in " + CURRENCY_UNIT + "\n"
+           "        \"modified\" : n,     (numeric) transaction fee with fee deltas used for mining priority in " + CURRENCY_UNIT + "\n"
+           "        \"ancestor\" : n,     (numeric) modified fees (see above) of in-mempool ancestors (including this one) in " + CURRENCY_UNIT + "\n"
+           "        \"descendant\" : n,   (numeric) modified fees (see above) of in-mempool descendants (including this one) in " + CURRENCY_UNIT + "\n"
+           "    }\n"
            "    \"depends\" : [           (array) unconfirmed transactions used as inputs for this transaction\n"
            "        \"transactionid\",    (string) parent transaction id\n"
            "       ... ]\n"
@@ -378,9 +383,16 @@ std::string EntryDescriptionString()
            "       ... ]\n";
 }
 
-void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
+static void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCKS_REQUIRED(::mempool.cs)
 {
     AssertLockHeld(mempool.cs);
+
+    UniValue fees(UniValue::VOBJ);
+    fees.pushKV("base", ValueFromAmount(e.GetFee()));
+    fees.pushKV("modified", ValueFromAmount(e.GetModifiedFee()));
+    fees.pushKV("ancestor", ValueFromAmount(e.GetModFeesWithAncestors()));
+    fees.pushKV("descendant", ValueFromAmount(e.GetModFeesWithDescendants()));
+    info.pushKV("fees", fees);
 
     info.pushKV("size", (int)e.GetTxSize());
     info.pushKV("fee", ValueFromAmount(e.GetFee()));
@@ -448,7 +460,7 @@ UniValue mempoolToJSON(bool fVerbose)
     }
 }
 
-UniValue getrawmempool(const JSONRPCRequest& request)
+static UniValue getrawmempool(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
@@ -480,7 +492,7 @@ UniValue getrawmempool(const JSONRPCRequest& request)
     return mempoolToJSON(fVerbose);
 }
 
-UniValue getmempoolancestors(const JSONRPCRequest& request)
+static UniValue getmempoolancestors(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
         throw std::runtime_error(
@@ -544,7 +556,7 @@ UniValue getmempoolancestors(const JSONRPCRequest& request)
     }
 }
 
-UniValue getmempooldescendants(const JSONRPCRequest& request)
+static UniValue getmempooldescendants(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
         throw std::runtime_error(
@@ -608,7 +620,7 @@ UniValue getmempooldescendants(const JSONRPCRequest& request)
     }
 }
 
-UniValue getmempoolentry(const JSONRPCRequest& request)
+static UniValue getmempoolentry(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
@@ -641,7 +653,7 @@ UniValue getmempoolentry(const JSONRPCRequest& request)
     return info;
 }
 
-UniValue getblockhash(const JSONRPCRequest& request)
+static UniValue getblockhash(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -666,7 +678,7 @@ UniValue getblockhash(const JSONRPCRequest& request)
     return pblockindex->GetBlockHash().GetHex();
 }
 
-UniValue getblockheader(const JSONRPCRequest& request)
+static UniValue getblockheader(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
@@ -725,7 +737,7 @@ UniValue getblockheader(const JSONRPCRequest& request)
     return blockheaderToJSON(pblockindex);
 }
 
-UniValue getblock(const JSONRPCRequest& request)
+static UniValue getblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
@@ -887,7 +899,7 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     return true;
 }
 
-UniValue pruneblockchain(const JSONRPCRequest& request)
+static UniValue pruneblockchain(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -928,7 +940,7 @@ UniValue pruneblockchain(const JSONRPCRequest& request)
     else if (height > chainHeight)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Blockchain is shorter than the attempted prune height.");
     else if (height > chainHeight - MIN_BLOCKS_TO_KEEP) {
-        LogPrint(BCLog::RPC, "Attempt to prune blocks close to the tip.  Retaining the minimum number of blocks.");
+        LogPrint(BCLog::RPC, "Attempt to prune blocks close to the tip.  Retaining the minimum number of blocks.\n");
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
@@ -936,7 +948,7 @@ UniValue pruneblockchain(const JSONRPCRequest& request)
     return uint64_t(height);
 }
 
-UniValue gettxoutsetinfo(const JSONRPCRequest& request)
+static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -946,9 +958,9 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"height\":n,     (numeric) The current block height (index)\n"
-            "  \"bestblock\": \"hex\",   (string) the best block hash hex\n"
-            "  \"transactions\": n,      (numeric) The number of transactions\n"
-            "  \"txouts\": n,            (numeric) The number of output transactions\n"
+            "  \"bestblock\": \"hex\",   (string) The hash of the block at the tip of the chain\n"
+            "  \"transactions\": n,      (numeric) The number of transactions with unspent outputs\n"
+            "  \"txouts\": n,            (numeric) The number of unspent transaction outputs\n"
             "  \"bogosize\": n,          (numeric) A meaningless metric for UTXO set size\n"
             "  \"hash_serialized_2\": \"hash\", (string) The serialized hash\n"
             "  \"disk_size\": n,         (numeric) The estimated size of the chainstate on disk\n"
@@ -991,7 +1003,7 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     Note that an unspent output that is spent in the mempool won't appear.\n"
             "\nResult:\n"
             "{\n"
-            "  \"bestblock\" : \"hash\",    (string) the block hash\n"
+            "  \"bestblock\":  \"hash\",    (string) The hash of the block at the tip of the chain\n"
             "  \"confirmations\" : n,       (numeric) The number of confirmations\n"
             "  \"value\" : x.xxx,           (numeric) The transaction value in " + CURRENCY_UNIT + "\n"
             "  \"scriptPubKey\" : {         (json object)\n"
@@ -1057,7 +1069,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue verifychain(const JSONRPCRequest& request)
+static UniValue verifychain(const JSONRPCRequest& request)
 {
     int nCheckLevel = gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL);
     int nCheckDepth = gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
@@ -1120,20 +1132,20 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     UniValue rv(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
     switch (thresholdState) {
-    case THRESHOLD_DEFINED: rv.pushKV("status", "defined"); break;
-    case THRESHOLD_STARTED: rv.pushKV("status", "started"); break;
-    case THRESHOLD_LOCKED_IN: rv.pushKV("status", "locked_in"); break;
-    case THRESHOLD_ACTIVE: rv.pushKV("status", "active"); break;
-    case THRESHOLD_FAILED: rv.pushKV("status", "failed"); break;
+    case ThresholdState::DEFINED: rv.pushKV("status", "defined"); break;
+    case ThresholdState::STARTED: rv.pushKV("status", "started"); break;
+    case ThresholdState::LOCKED_IN: rv.pushKV("status", "locked_in"); break;
+    case ThresholdState::ACTIVE: rv.pushKV("status", "active"); break;
+    case ThresholdState::FAILED: rv.pushKV("status", "failed"); break;
     }
-    if (THRESHOLD_STARTED == thresholdState)
+    if (ThresholdState::STARTED == thresholdState)
     {
         rv.pushKV("bit", consensusParams.vDeployments[id].bit);
     }
     rv.pushKV("startTime", consensusParams.vDeployments[id].nStartTime);
     rv.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
     rv.pushKV("since", VersionBitsTipStateSinceHeight(consensusParams, id));
-    if (THRESHOLD_STARTED == thresholdState)
+    if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
         BIP9Stats statsStruct = VersionBitsTipStatistics(consensusParams, id);
@@ -1147,7 +1159,7 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     return rv;
 }
 
-void BIP9SoftForkDescPushBack(UniValue& bip9_softforks, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
+static void BIP9SoftForkDescPushBack(UniValue& bip9_softforks, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     // Deployments with timeout value of 0 are hidden.
     // A timeout value of 0 guarantees a softfork will never be activated.
@@ -1273,7 +1285,7 @@ struct CompareBlocksByHeight
     }
 };
 
-UniValue getchaintips(const JSONRPCRequest& request)
+static UniValue getchaintips(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -1390,7 +1402,7 @@ UniValue mempoolInfoToJSON()
     return ret;
 }
 
-UniValue getmempoolinfo(const JSONRPCRequest& request)
+static UniValue getmempoolinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -1413,7 +1425,7 @@ UniValue getmempoolinfo(const JSONRPCRequest& request)
     return mempoolInfoToJSON();
 }
 
-UniValue preciousblock(const JSONRPCRequest& request)
+static UniValue preciousblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -1451,7 +1463,7 @@ UniValue preciousblock(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue invalidateblock(const JSONRPCRequest& request)
+static UniValue invalidateblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -1490,7 +1502,7 @@ UniValue invalidateblock(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue reconsiderblock(const JSONRPCRequest& request)
+static UniValue reconsiderblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -1528,7 +1540,7 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue getchaintxstats(const JSONRPCRequest& request)
+static UniValue getchaintxstats(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
@@ -1602,16 +1614,20 @@ UniValue getchaintxstats(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue savemempool(const JSONRPCRequest& request)
+static UniValue savemempool(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
             "savemempool\n"
-            "\nDumps the mempool to disk.\n"
+            "\nDumps the mempool to disk. It will fail until the previous dump is fully loaded.\n"
             "\nExamples:\n"
             + HelpExampleCli("savemempool", "")
             + HelpExampleRpc("savemempool", "")
         );
+    }
+
+    if (!g_is_mempool_loaded) {
+        throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
     }
 
     if (!DumpMempool()) {

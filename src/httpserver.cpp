@@ -13,6 +13,7 @@
 #include <sync.h>
 #include <ui_interface.h>
 
+#include <memory>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -363,8 +364,8 @@ bool InitHTTPServer()
     // Update libevent's log handling. Returns false if our version of
     // libevent doesn't support debug logging, in which case we should
     // clear the BCLog::LIBEVENT flag.
-    if (!UpdateHTTPServerLogging(logCategories & BCLog::LIBEVENT)) {
-        logCategories &= ~BCLog::LIBEVENT;
+    if (!UpdateHTTPServerLogging(g_logger->WillLogCategory(BCLog::LIBEVENT))) {
+        g_logger->DisableCategory(BCLog::LIBEVENT);
     }
 
 #ifdef WIN32

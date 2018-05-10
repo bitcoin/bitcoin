@@ -129,7 +129,7 @@ class BIP68Test(BitcoinTestFramework):
 
             # Track whether any sequence locks used should fail
             should_pass = True
-            
+
             # Track whether this transaction was built with sequence locks
             using_sequence_locks = False
 
@@ -343,7 +343,7 @@ class BIP68Test(BitcoinTestFramework):
         tx2.rehash()
 
         self.nodes[0].sendrawtransaction(ToHex(tx2))
-        
+
         # Now make an invalid spend of tx2 according to BIP68
         sequence_value = 100 # 100 block relative locktime
 

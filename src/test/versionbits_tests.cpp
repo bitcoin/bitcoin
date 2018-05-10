@@ -12,7 +12,7 @@
 #include <boost/test/unit_test.hpp>
 
 /* Define a virtual block time, one block per 10 minutes after Nov 14 2014, 0:55:36am */
-int32_t TestTime(int nHeight) { return 1415926536 + 600 * nHeight; }
+static int32_t TestTime(int nHeight) { return 1415926536 + 600 * nHeight; }
 
 static const Consensus::Params paramsDummy = Consensus::Params();
 
@@ -101,8 +101,8 @@ public:
     VersionBitsTester& TestDefined() {
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_DEFINED, strprintf("Test %i for DEFINED", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
+                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::DEFINED, strprintf("Test %i for DEFINED", num));
+                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
             }
         }
         num++;
@@ -112,8 +112,8 @@ public:
     VersionBitsTester& TestStarted() {
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_STARTED, strprintf("Test %i for STARTED", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
+                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::STARTED, strprintf("Test %i for STARTED", num));
+                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
             }
         }
         num++;
@@ -123,8 +123,8 @@ public:
     VersionBitsTester& TestLockedIn() {
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_LOCKED_IN, strprintf("Test %i for LOCKED_IN", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
+                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::LOCKED_IN, strprintf("Test %i for LOCKED_IN", num));
+                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
             }
         }
         num++;
@@ -134,8 +134,8 @@ public:
     VersionBitsTester& TestActive() {
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_ACTIVE, strprintf("Test %i for ACTIVE", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
+                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE", num));
+                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
             }
         }
         num++;
@@ -145,8 +145,8 @@ public:
     VersionBitsTester& TestFailed() {
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_FAILED, strprintf("Test %i for FAILED", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
+                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::FAILED, strprintf("Test %i for FAILED", num));
+                BOOST_CHECK_MESSAGE(checker_always[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE (always active)", num));
             }
         }
         num++;

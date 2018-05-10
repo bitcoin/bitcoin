@@ -18,6 +18,7 @@
 #include <httpserver.h>
 #include <httprpc.h>
 #include <utilstrencodings.h>
+#include <walletinitinterface.h>
 
 #include <boost/thread.hpp>
 
@@ -39,14 +40,11 @@
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
  */
 
-void WaitForShutdown()
+static void WaitForShutdown()
 {
-    bool fShutdown = ShutdownRequested();
-    // Tell the main threads to shutdown.
-    while (!fShutdown)
+    while (!ShutdownRequested())
     {
         MilliSleep(200);
-        fShutdown = ShutdownRequested();
     }
     Interrupt();
 }
@@ -55,7 +53,7 @@ void WaitForShutdown()
 //
 // Start
 //
-bool AppInit(int argc, char* argv[])
+static bool AppInit(int argc, char* argv[])
 {
     bool fRet = false;
 
@@ -63,11 +61,14 @@ bool AppInit(int argc, char* argv[])
     // Parameters
     //
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
+    SetupServerArgs();
+#if HAVE_DECL_DAEMON
+    gArgs.AddArg("-daemon", _("Run in the background as a daemon and accept commands"), false, OptionsCategory::OPTIONS);
+#endif
     gArgs.ParseParameters(argc, argv);
 
     // Process help and version before taking care about datadir
-    if (gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") ||  gArgs.IsArgSet("-help") || gArgs.IsArgSet("-version"))
-    {
+    if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
         std::string strUsage = strprintf(_("%s Daemon"), _(PACKAGE_NAME)) + " " + _("version") + " " + FormatFullVersion() + "\n";
 
         if (gArgs.IsArgSet("-version"))
@@ -79,7 +80,7 @@ bool AppInit(int argc, char* argv[])
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  bitcoind [options]                     " + strprintf(_("Start %s Daemon"), _(PACKAGE_NAME)) + "\n";
 
-            strUsage += "\n" + HelpMessage(HMM_BITCOIND);
+            strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
         fprintf(stdout, "%s", strUsage.c_str());
@@ -95,14 +96,14 @@ bool AppInit(int argc, char* argv[])
         }
         try
         {
-            gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
+            gArgs.ReadConfigFiles();
         } catch (const std::exception& e) {
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
-            SelectParams(ChainNameFromCommandLine());
+            SelectParams(gArgs.GetChainName());
         } catch (const std::exception& e) {
             fprintf(stderr, "Error: %s\n", e.what());
             return false;
@@ -139,6 +140,10 @@ bool AppInit(int argc, char* argv[])
         if (gArgs.GetBoolArg("-daemon", false))
         {
 #if HAVE_DECL_DAEMON
+#if defined(MAC_OSX)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
             fprintf(stdout, "Bitcoin server starting\n");
 
             // Daemonize
@@ -146,6 +151,9 @@ bool AppInit(int argc, char* argv[])
                 fprintf(stderr, "Error: daemon() failed: %s\n", strerror(errno));
                 return false;
             }
+#if defined(MAC_OSX)
+#pragma GCC diagnostic pop
+#endif
 #else
             fprintf(stderr, "Error: -daemon is not supported on this operating system\n");
             return false;

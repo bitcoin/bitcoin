@@ -12,10 +12,9 @@
 #include <streams.h>
 
 
-RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel *parent) :
+RecentRequestsTableModel::RecentRequestsTableModel(WalletModel *parent) :
     QAbstractTableModel(parent), walletModel(parent)
 {
-    Q_UNUSED(wallet);
     nReceiveRequestsMaxId = 0;
 
     // Load entries from wallet
@@ -139,10 +138,9 @@ bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex 
 
     if(count > 0 && row >= 0 && (row+count) <= list.size())
     {
-        const RecentRequestEntry *rec;
         for (int i = 0; i < count; ++i)
         {
-            rec = &list[row+i];
+            const RecentRequestEntry* rec = &list[row+i];
             if (!walletModel->saveReceiveRequest(rec->recipient.address.toStdString(), rec->id, ""))
                 return false;
         }

@@ -19,11 +19,15 @@ protected:
     int intval;
     bool boolval;
     std::string stringval;
-    const char* charstrval;
+    char charstrval[16];
     CTransactionRef txval;
 public:
     CSerializeMethodsTestSingle() = default;
-    CSerializeMethodsTestSingle(int intvalin, bool boolvalin, std::string stringvalin, const char* charstrvalin, CTransaction txvalin) : intval(intvalin), boolval(boolvalin), stringval(std::move(stringvalin)), charstrval(charstrvalin), txval(MakeTransactionRef(txvalin)){}
+    CSerializeMethodsTestSingle(int intvalin, bool boolvalin, std::string stringvalin, const char* charstrvalin, const CTransactionRef& txvalin) : intval(intvalin), boolval(boolvalin), stringval(std::move(stringvalin)), txval(txvalin)
+    {
+        memcpy(charstrval, charstrvalin, sizeof(charstrval));
+    }
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -31,7 +35,7 @@ public:
         READWRITE(intval);
         READWRITE(boolval);
         READWRITE(stringval);
-        READWRITE(FLATDATA(charstrval));
+        READWRITE(charstrval);
         READWRITE(txval);
     }
 
@@ -53,7 +57,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(intval, boolval, stringval, FLATDATA(charstrval), txval);
+        READWRITE(intval, boolval, stringval, charstrval, txval);
     }
 };
 
@@ -74,18 +78,18 @@ BOOST_AUTO_TEST_CASE(sizes)
     BOOST_CHECK_EQUAL(sizeof(char), GetSerializeSize(bool(0), 0));
 
     // Sanity-check GetSerializeSize and c++ type matching
-    BOOST_CHECK_EQUAL(GetSerializeSize(char(0), 0), 1);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int8_t(0), 0), 1);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint8_t(0), 0), 1);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int16_t(0), 0), 2);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint16_t(0), 0), 2);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int32_t(0), 0), 4);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint32_t(0), 0), 4);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int64_t(0), 0), 8);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint64_t(0), 0), 8);
-    BOOST_CHECK_EQUAL(GetSerializeSize(float(0), 0), 4);
-    BOOST_CHECK_EQUAL(GetSerializeSize(double(0), 0), 8);
-    BOOST_CHECK_EQUAL(GetSerializeSize(bool(0), 0), 1);
+    BOOST_CHECK_EQUAL(GetSerializeSize(char(0), 0), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int8_t(0), 0), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint8_t(0), 0), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int16_t(0), 0), 2U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint16_t(0), 0), 2U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int32_t(0), 0), 4U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint32_t(0), 0), 4U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int64_t(0), 0), 8U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint64_t(0), 0), 8U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(float(0), 0), 4U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(double(0), 0), 8U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(bool(0), 0), 1U);
 }
 
 BOOST_AUTO_TEST_CASE(floats_conversion)
@@ -99,12 +103,12 @@ BOOST_AUTO_TEST_CASE(floats_conversion)
     BOOST_CHECK_EQUAL(ser_uint32_to_float(0x40800000), 4.0F);
     BOOST_CHECK_EQUAL(ser_uint32_to_float(0x44444444), 785.066650390625F);
 
-    BOOST_CHECK_EQUAL(ser_float_to_uint32(0.0F), 0x00000000);
-    BOOST_CHECK_EQUAL(ser_float_to_uint32(0.5F), 0x3f000000);
-    BOOST_CHECK_EQUAL(ser_float_to_uint32(1.0F), 0x3f800000);
-    BOOST_CHECK_EQUAL(ser_float_to_uint32(2.0F), 0x40000000);
-    BOOST_CHECK_EQUAL(ser_float_to_uint32(4.0F), 0x40800000);
-    BOOST_CHECK_EQUAL(ser_float_to_uint32(785.066650390625F), 0x44444444);
+    BOOST_CHECK_EQUAL(ser_float_to_uint32(0.0F), 0x00000000U);
+    BOOST_CHECK_EQUAL(ser_float_to_uint32(0.5F), 0x3f000000U);
+    BOOST_CHECK_EQUAL(ser_float_to_uint32(1.0F), 0x3f800000U);
+    BOOST_CHECK_EQUAL(ser_float_to_uint32(2.0F), 0x40000000U);
+    BOOST_CHECK_EQUAL(ser_float_to_uint32(4.0F), 0x40800000U);
+    BOOST_CHECK_EQUAL(ser_float_to_uint32(785.066650390625F), 0x44444444U);
 }
 
 BOOST_AUTO_TEST_CASE(doubles_conversion)
@@ -295,39 +299,39 @@ BOOST_AUTO_TEST_CASE(insert_delete)
 {
     // Test inserting/deleting bytes.
     CDataStream ss(SER_DISK, 0);
-    BOOST_CHECK_EQUAL(ss.size(), 0);
+    BOOST_CHECK_EQUAL(ss.size(), 0U);
 
     ss.write("\x00\x01\x02\xff", 4);
-    BOOST_CHECK_EQUAL(ss.size(), 4);
+    BOOST_CHECK_EQUAL(ss.size(), 4U);
 
     char c = (char)11;
 
     // Inserting at beginning/end/middle:
     ss.insert(ss.begin(), c);
-    BOOST_CHECK_EQUAL(ss.size(), 5);
+    BOOST_CHECK_EQUAL(ss.size(), 5U);
     BOOST_CHECK_EQUAL(ss[0], c);
     BOOST_CHECK_EQUAL(ss[1], 0);
 
     ss.insert(ss.end(), c);
-    BOOST_CHECK_EQUAL(ss.size(), 6);
+    BOOST_CHECK_EQUAL(ss.size(), 6U);
     BOOST_CHECK_EQUAL(ss[4], (char)0xff);
     BOOST_CHECK_EQUAL(ss[5], c);
 
     ss.insert(ss.begin()+2, c);
-    BOOST_CHECK_EQUAL(ss.size(), 7);
+    BOOST_CHECK_EQUAL(ss.size(), 7U);
     BOOST_CHECK_EQUAL(ss[2], c);
 
     // Delete at beginning/end/middle
     ss.erase(ss.begin());
-    BOOST_CHECK_EQUAL(ss.size(), 6);
+    BOOST_CHECK_EQUAL(ss.size(), 6U);
     BOOST_CHECK_EQUAL(ss[0], 0);
 
     ss.erase(ss.begin()+ss.size()-1);
-    BOOST_CHECK_EQUAL(ss.size(), 5);
+    BOOST_CHECK_EQUAL(ss.size(), 5U);
     BOOST_CHECK_EQUAL(ss[4], (char)0xff);
 
     ss.erase(ss.begin()+1);
-    BOOST_CHECK_EQUAL(ss.size(), 4);
+    BOOST_CHECK_EQUAL(ss.size(), 4U);
     BOOST_CHECK_EQUAL(ss[0], 0);
     BOOST_CHECK_EQUAL(ss[1], 1);
     BOOST_CHECK_EQUAL(ss[2], 2);
@@ -336,7 +340,7 @@ BOOST_AUTO_TEST_CASE(insert_delete)
     // Make sure GetAndClear does the right thing:
     CSerializeData d;
     ss.GetAndClear(d);
-    BOOST_CHECK_EQUAL(ss.size(), 0);
+    BOOST_CHECK_EQUAL(ss.size(), 0U);
 }
 
 BOOST_AUTO_TEST_CASE(class_methods)
@@ -344,10 +348,11 @@ BOOST_AUTO_TEST_CASE(class_methods)
     int intval(100);
     bool boolval(true);
     std::string stringval("testing");
-    const char* charstrval("testing charstr");
+    const char charstrval[16] = "testing charstr";
     CMutableTransaction txval;
-    CSerializeMethodsTestSingle methodtest1(intval, boolval, stringval, charstrval, txval);
-    CSerializeMethodsTestMany methodtest2(intval, boolval, stringval, charstrval, txval);
+    CTransactionRef tx_ref{MakeTransactionRef(txval)};
+    CSerializeMethodsTestSingle methodtest1(intval, boolval, stringval, charstrval, tx_ref);
+    CSerializeMethodsTestMany methodtest2(intval, boolval, stringval, charstrval, tx_ref);
     CSerializeMethodsTestSingle methodtest3;
     CSerializeMethodsTestMany methodtest4;
     CDataStream ss(SER_DISK, PROTOCOL_VERSION);
@@ -360,7 +365,7 @@ BOOST_AUTO_TEST_CASE(class_methods)
     BOOST_CHECK(methodtest2 == methodtest3);
     BOOST_CHECK(methodtest3 == methodtest4);
 
-    CDataStream ss2(SER_DISK, PROTOCOL_VERSION, intval, boolval, stringval, FLATDATA(charstrval), txval);
+    CDataStream ss2(SER_DISK, PROTOCOL_VERSION, intval, boolval, stringval, charstrval, txval);
     ss2 >> methodtest3;
     BOOST_CHECK(methodtest3 == methodtest4);
 }

@@ -46,10 +46,10 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
         if self.call == Call.single:
             if self.data == Data.address:
                 response = self.try_rpc(self.node.importaddress, self.address["address"], self.label,
-                                               self.rescan == Rescan.yes)
+                                        self.rescan == Rescan.yes)
             elif self.data == Data.pub:
                 response = self.try_rpc(self.node.importpubkey, self.address["pubkey"], self.label,
-                                               self.rescan == Rescan.yes)
+                                        self.rescan == Rescan.yes)
             elif self.data == Data.priv:
                 response = self.try_rpc(self.node.importprivkey, self.key, self.label, self.rescan == Rescan.yes)
             assert_equal(response, None)
@@ -119,7 +119,7 @@ class ImportRescanTest(BitcoinTestFramework):
         self.num_nodes = 2 + len(IMPORT_NODES)
 
     def setup_network(self):
-        extra_args = [["-addresstype=legacy"] for _ in range(self.num_nodes)]
+        extra_args = [["-addresstype=legacy", '-deprecatedrpc=accounts'] for _ in range(self.num_nodes)]
         for i, import_node in enumerate(IMPORT_NODES, 2):
             if import_node.prune:
                 extra_args[i] += ["-prune=1"]

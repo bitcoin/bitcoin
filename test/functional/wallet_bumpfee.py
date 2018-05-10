@@ -17,13 +17,11 @@ make assumptions about execution order.
 from test_framework.blocktools import send_to_witness
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework import blocktools
+from test_framework.messages import BIP125_SEQUENCE_NUMBER
 from test_framework.mininode import CTransaction
 from test_framework.util import *
 
 import io
-
-# Sequence number that is BIP 125 opt-in and BIP 68-compliant
-BIP125_SEQUENCE_NUMBER = 0xfffffffd
 
 WALLET_PASSPHRASE = "test"
 WALLET_PASSPHRASE_TIMEOUT = 3600
@@ -181,7 +179,10 @@ def test_dust_to_fee(rbf_node, dest_address):
     # the bumped tx sets fee=49,900, but it converts to 50,000
     rbfid = spend_one_input(rbf_node, dest_address)
     fulltx = rbf_node.getrawtransaction(rbfid, 1)
-    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 49900})
+    # (32-byte p2sh-pwpkh output size + 148 p2pkh spend estimate) * 10k(discard_rate) / 1000 = 1800
+    # P2SH outputs are slightly "over-discarding" due to the IsDust calculation assuming it will
+    # be spent as a P2PKH.
+    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000-1800})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)

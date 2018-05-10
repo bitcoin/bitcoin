@@ -22,8 +22,8 @@ bool SerializeDB(Stream& stream, const Data& data)
     // Write and commit header, data
     try {
         CHashWriter hasher(SER_DISK, CLIENT_VERSION);
-        stream << FLATDATA(Params().MessageStart()) << data;
-        hasher << FLATDATA(Params().MessageStart()) << data;
+        stream << Params().MessageStart() << data;
+        hasher << Params().MessageStart() << data;
         stream << hasher.GetHash();
     } catch (const std::exception& e) {
         return error("%s: Serialize or I/O error - %s", __func__, e.what());
@@ -49,7 +49,8 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
 
     // Serialize
     if (!SerializeDB(fileout, data)) return false;
-    FileCommit(fileout.Get());
+    if (!FileCommit(fileout.Get()))
+        return error("%s: Failed to flush file %s", __func__, pathTmp.string());
     fileout.fclose();
 
     // replace existing file, if any, with new file
@@ -66,7 +67,7 @@ bool DeserializeDB(Stream& stream, Data& data, bool fCheckSum = true)
         CHashVerifier<Stream> verifier(&stream);
         // de-serialize file header (network specific magic number) and ..
         unsigned char pchMsgTmp[4];
-        verifier >> FLATDATA(pchMsgTmp);
+        verifier >> pchMsgTmp;
         // ... verify the network matches ours
         if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
             return error("%s: Invalid network magic number", __func__);

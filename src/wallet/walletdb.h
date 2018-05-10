@@ -20,16 +20,13 @@
 /**
  * Overview of wallet database classes:
  *
- * - CDBEnv is an environment in which the database exists (has no analog in dbwrapper.h)
- * - CWalletDBWrapper represents a wallet database (similar to CDBWrapper in dbwrapper.h)
- * - CDB is a low-level database transaction (similar to CDBBatch in dbwrapper.h)
- * - CWalletDB is a modifier object for the wallet, and encapsulates a database
- *   transaction as well as methods to act on the database (no analog in
- *   dbwrapper.h)
+ * - WalletBatch is an abstract modifier object for the wallet database, and encapsulates a database
+ *   batch update as well as methods to act on the database. It should be agnostic to the database implementation.
  *
- * The latter two are named confusingly, in contrast to what the names CDB
- * and CWalletDB suggest they are transient transaction objects and don't
- * represent the database itself.
+ * The following classes are implementation specific:
+ * - BerkeleyEnvironment is an environment in which the database exists.
+ * - BerkeleyDatabase represents a wallet database.
+ * - BerkeleyBatch is a low-level database batch update.
  */
 
 static const bool DEFAULT_FLUSHWALLET = true;
@@ -45,15 +42,18 @@ class CWalletTx;
 class uint160;
 class uint256;
 
+/** Backend-agnostic database type. */
+using WalletDatabase = BerkeleyDatabase;
+
 /** Error statuses for the wallet database */
-enum DBErrors
+enum class DBErrors
 {
-    DB_LOAD_OK,
-    DB_CORRUPT,
-    DB_NONCRITICAL_ERROR,
-    DB_TOO_NEW,
-    DB_LOAD_FAIL,
-    DB_NEED_REWRITE
+    LOAD_OK,
+    CORRUPT,
+    NONCRITICAL_ERROR,
+    TOO_NEW,
+    LOAD_FAIL,
+    NEED_REWRITE
 };
 
 /* simple HD chain data model */
@@ -134,41 +134,41 @@ public:
 };
 
 /** Access to the wallet database.
- * This should really be named CWalletDBBatch, as it represents a single transaction at the
+ * This represents a single transaction at the
  * database. It will be committed when the object goes out of scope.
  * Optionally (on by default) it will flush to disk as well.
  */
-class CWalletDB
+class WalletBatch
 {
 private:
     template <typename K, typename T>
     bool WriteIC(const K& key, const T& value, bool fOverwrite = true)
     {
-        if (!batch.Write(key, value, fOverwrite)) {
+        if (!m_batch.Write(key, value, fOverwrite)) {
             return false;
         }
-        m_dbw.IncrementUpdateCounter();
+        m_database.IncrementUpdateCounter();
         return true;
     }
 
     template <typename K>
     bool EraseIC(const K& key)
     {
-        if (!batch.Erase(key)) {
+        if (!m_batch.Erase(key)) {
             return false;
         }
-        m_dbw.IncrementUpdateCounter();
+        m_database.IncrementUpdateCounter();
         return true;
     }
 
 public:
-    explicit CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) :
-        batch(dbw, pszMode, _fFlushOnClose),
-        m_dbw(dbw)
+    explicit WalletBatch(WalletDatabase& database, const char* pszMode = "r+", bool _fFlushOnClose = true) :
+        m_batch(database, pszMode, _fFlushOnClose),
+        m_database(database)
     {
     }
-    CWalletDB(const CWalletDB&) = delete;
-    CWalletDB& operator=(const CWalletDB&) = delete;
+    WalletBatch(const WalletBatch&) = delete;
+    WalletBatch& operator=(const WalletBatch&) = delete;
 
     bool WriteName(const std::string& strAddress, const std::string& strName);
     bool EraseName(const std::string& strAddress);
@@ -204,6 +204,7 @@ public:
     bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
+    bool EraseAccount(const std::string& strAccount);
 
     /// Write destination data key,value tuple to database
     bool WriteDestData(const std::string &address, const std::string &key, const std::string &value);
@@ -244,8 +245,8 @@ public:
     //! Write wallet version
     bool WriteVersion(int nVersion);
 private:
-    CDB batch;
-    CWalletDBWrapper& m_dbw;
+    BerkeleyBatch m_batch;
+    WalletDatabase& m_database;
 };
 
 //! Compacts BDB state so that wallet.dat is self-contained (if there are changes)

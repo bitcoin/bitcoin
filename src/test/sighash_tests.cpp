@@ -35,7 +35,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
 
     // In case concatenating two scripts ends up with two codeseparators,
     // or an extra one at the end, this prevents all those possible incompatibilities.
-    scriptCode.FindAndDelete(CScript(OP_CODESEPARATOR));
+    FindAndDelete(scriptCode, CScript(OP_CODESEPARATOR));
 
     // Blank out other inputs' signatures
     for (unsigned int i = 0; i < txTmp.vin.size(); i++)
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
 
         uint256 sh, sho;
         sho = SignatureHashOld(scriptCode, txTo, nIn, nHashType);
-        sh = SignatureHash(scriptCode, txTo, nIn, nHashType, 0, SIGVERSION_BASE);
+        sh = SignatureHash(scriptCode, txTo, nIn, nHashType, 0, SigVersion::BASE);
         #if defined(PRINT_SIGHASH_JSON)
         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
         ss << txTo;
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           continue;
         }
 
-        sh = SignatureHash(scriptCode, *tx, nIn, nHashType, 0, SIGVERSION_BASE);
+        sh = SignatureHash(scriptCode, *tx, nIn, nHashType, 0, SigVersion::BASE);
         BOOST_CHECK_MESSAGE(sh.GetHex() == sigHashHex, strTest);
     }
 }

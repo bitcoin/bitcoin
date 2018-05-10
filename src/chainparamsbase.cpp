@@ -14,14 +14,11 @@ const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
 
-void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
+void SetupChainParamsBaseOptions()
 {
-    strUsage += HelpMessageGroup(_("Chain selection options:"));
-    if (debugHelp) {
-        strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
-                                   "This is intended for regression testing tools and app development.");
-    }
-    strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
+    gArgs.AddArg("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
+                                   "This is intended for regression testing tools and app development.", true, OptionsCategory::CHAINPARAMS);
+    gArgs.AddArg("-testnet", _("Use the test chain"), false, OptionsCategory::CHAINPARAMS);
 }
 
 static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
@@ -47,18 +44,5 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
 void SelectBaseParams(const std::string& chain)
 {
     globalChainBaseParams = CreateBaseChainParams(chain);
-}
-
-std::string ChainNameFromCommandLine()
-{
-    bool fRegTest = gArgs.GetBoolArg("-regtest", false);
-    bool fTestNet = gArgs.GetBoolArg("-testnet", false);
-
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
-    if (fRegTest)
-        return CBaseChainParams::REGTEST;
-    if (fTestNet)
-        return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
+    gArgs.SelectConfigNetwork(chain);
 }

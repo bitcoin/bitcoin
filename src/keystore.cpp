@@ -7,10 +7,6 @@
 
 #include <util.h>
 
-bool CKeyStore::AddKey(const CKey &key) {
-    return AddKeyPubKey(key, key.GetPubKey());
-}
-
 void CBasicKeyStore::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
 {
     AssertLockHeld(cs_KeyStore);
@@ -131,7 +127,7 @@ static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
     CScript::const_iterator pc = dest.begin();
     opcodetype opcode;
     std::vector<unsigned char> vch;
-    if (!dest.GetOp(pc, opcode, vch) || vch.size() < 33 || vch.size() > 65)
+    if (!dest.GetOp(pc, opcode, vch) || !CPubKey::ValidSize(vch))
         return false;
     pubKeyOut = CPubKey(vch);
     if (!pubKeyOut.IsFullyValid())

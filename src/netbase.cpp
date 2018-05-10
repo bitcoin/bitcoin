@@ -9,6 +9,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <random.h>
+#include <tinyformat.h>
 #include <util.h>
 #include <utilstrencodings.h>
 
@@ -288,7 +289,7 @@ struct ProxyCredentials
 };
 
 /** Convert SOCKS5 reply to an error message */
-std::string Socks5ErrorString(uint8_t err)
+static std::string Socks5ErrorString(uint8_t err)
 {
     switch(err) {
         case SOCKS5Reply::GENFAILURE:
@@ -468,7 +469,17 @@ SOCKET CreateSocket(const CService &addrConnect)
     return hSocket;
 }
 
-bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, int nTimeout)
+template<typename... Args>
+static void LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args) {
+    std::string error_message = tfm::format(fmt, args...);
+    if (manual_connection) {
+        LogPrintf("%s\n", error_message);
+    } else {
+        LogPrint(BCLog::NET, "%s\n", error_message);
+    }
+}
+
+bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, int nTimeout, bool manual_connection)
 {
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
@@ -502,18 +513,14 @@ bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, i
                 return false;
             }
             socklen_t nRetSize = sizeof(nRet);
-#ifdef WIN32
-            if (getsockopt(hSocket, SOL_SOCKET, SO_ERROR, (char*)(&nRet), &nRetSize) == SOCKET_ERROR)
-#else
-            if (getsockopt(hSocket, SOL_SOCKET, SO_ERROR, &nRet, &nRetSize) == SOCKET_ERROR)
-#endif
+            if (getsockopt(hSocket, SOL_SOCKET, SO_ERROR, (sockopt_arg_type)&nRet, &nRetSize) == SOCKET_ERROR)
             {
                 LogPrintf("getsockopt() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
                 return false;
             }
             if (nRet != 0)
             {
-                LogPrintf("connect() to %s failed after select(): %s\n", addrConnect.ToString(), NetworkErrorString(nRet));
+                LogConnectFailure(manual_connection, "connect() to %s failed after select(): %s", addrConnect.ToString(), NetworkErrorString(nRet));
                 return false;
             }
         }
@@ -523,7 +530,7 @@ bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, i
         else
 #endif
         {
-            LogPrintf("connect() to %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
+            LogConnectFailure(manual_connection, "connect() to %s failed: %s", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
             return false;
         }
     }
@@ -581,7 +588,7 @@ bool IsProxy(const CNetAddr &addr) {
 bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, const SOCKET& hSocket, int nTimeout, bool *outProxyConnectionFailed)
 {
     // first connect to proxy server
-    if (!ConnectSocketDirectly(proxy.proxy, hSocket, nTimeout)) {
+    if (!ConnectSocketDirectly(proxy.proxy, hSocket, nTimeout, true)) {
         if (outProxyConnectionFailed)
             *outProxyConnectionFailed = true;
         return false;
@@ -601,6 +608,7 @@ bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int
     }
     return true;
 }
+
 bool LookupSubNet(const char* pszName, CSubNet& ret)
 {
     std::string strSubnet(pszName);

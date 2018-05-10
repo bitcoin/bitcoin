@@ -339,7 +339,7 @@ CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator) :
     nCheckFrequency = 0;
 }
 
-bool CTxMemPool::isSpent(const COutPoint& outpoint)
+bool CTxMemPool::isSpent(const COutPoint& outpoint) const
 {
     LOCK(cs);
     return mapNextTx.count(outpoint);
@@ -447,7 +447,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 // Also assumes that if an entry is in setDescendants already, then all
 // in-mempool descendants of it are already in setDescendants as well, so that we
 // can save time by not iterating over those entries.
-void CTxMemPool::CalculateDescendants(txiter entryit, setEntries &setDescendants)
+void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
 {
     setEntries stage;
     if (setDescendants.count(entryit) == 0) {

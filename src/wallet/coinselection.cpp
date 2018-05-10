@@ -286,10 +286,10 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins
             }
 
         if (LogAcceptCategory(BCLog::SELECTCOINS)) {
-            LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: ");
+            LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: "); /* Continued */
             for (unsigned int i = 0; i < vValue.size(); i++) {
                 if (vfBest[i]) {
-                    LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(vValue[i].txout.nValue));
+                    LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(vValue[i].txout.nValue)); /* Continued */
                 }
             }
             LogPrint(BCLog::SELECTCOINS, "total %s\n", FormatMoney(nBest));

@@ -14,7 +14,7 @@
 #include <boost/test/unit_test.hpp>
 #include <random>
 
-BOOST_FIXTURE_TEST_SUITE(coin_selection_tests, WalletTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(coinselector_tests, WalletTestingSetup)
 
 // how many times to run all the tests to have a chance to catch errors that only show up with particular random shuffles
 #define RUN_TESTS 100
@@ -28,7 +28,7 @@ std::vector<std::unique_ptr<CWalletTx>> wtxn;
 typedef std::set<CInputCoin> CoinSet;
 
 static std::vector<COutput> vCoins;
-static CWallet testWallet("dummy", CWalletDBWrapper::CreateDummy());
+static CWallet testWallet("dummy", WalletDatabase::CreateDummy());
 static CAmount balance = 0;
 
 CoinEligibilityFilter filter_standard(1, 6, 0);

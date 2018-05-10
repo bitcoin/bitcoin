@@ -9,10 +9,18 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
+#include <span.h>
 
 class CKeyID;
 class CPubKey;
 class CScriptID;
+
+bool CompressScript(const CScript& script, std::vector<unsigned char> &out);
+unsigned int GetSpecialScriptSize(unsigned int nSize);
+bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<unsigned char> &out);
+
+uint64_t CompressAmount(uint64_t nAmount);
+uint64_t DecompressAmount(uint64_t nAmount);
 
 /** Compact serializer for scripts.
  *
@@ -37,34 +45,19 @@ private:
     static const unsigned int nSpecialScripts = 6;
 
     CScript &script;
-protected:
-    /**
-     * These check for scripts for which a special case with a shorter encoding is defined.
-     * They are implemented separately from the CScript test, as these test for exact byte
-     * sequence correspondences, and are more strict. For example, IsToPubKey also verifies
-     * whether the public key is valid (as invalid ones cannot be represented in compressed
-     * form).
-     */
-    bool IsToKeyID(CKeyID &hash) const;
-    bool IsToScriptID(CScriptID &hash) const;
-    bool IsToPubKey(CPubKey &pubkey) const;
-
-    bool Compress(std::vector<unsigned char> &out) const;
-    unsigned int GetSpecialSize(unsigned int nSize) const;
-    bool Decompress(unsigned int nSize, const std::vector<unsigned char> &out);
 public:
     explicit CScriptCompressor(CScript &scriptIn) : script(scriptIn) { }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
         std::vector<unsigned char> compr;
-        if (Compress(compr)) {
-            s << CFlatData(compr);
+        if (CompressScript(script, compr)) {
+            s << MakeSpan(compr);
             return;
         }
         unsigned int nSize = script.size() + nSpecialScripts;
         s << VARINT(nSize);
-        s << CFlatData(script);
+        s << MakeSpan(script);
     }
 
     template<typename Stream>
@@ -72,9 +65,9 @@ public:
         unsigned int nSize = 0;
         s >> VARINT(nSize);
         if (nSize < nSpecialScripts) {
-            std::vector<unsigned char> vch(GetSpecialSize(nSize), 0x00);
-            s >> CFlatData(vch);
-            Decompress(nSize, vch);
+            std::vector<unsigned char> vch(GetSpecialScriptSize(nSize), 0x00);
+            s >> MakeSpan(vch);
+            DecompressScript(script, nSize, vch);
             return;
         }
         nSize -= nSpecialScripts;
@@ -84,7 +77,7 @@ public:
             s.ignore(nSize);
         } else {
             script.resize(nSize);
-            s >> CFlatData(script);
+            s >> MakeSpan(script);
         }
     }
 };
@@ -96,9 +89,6 @@ private:
     CTxOut &txout;
 
 public:
-    static uint64_t CompressAmount(uint64_t nAmount);
-    static uint64_t DecompressAmount(uint64_t nAmount);
-
     explicit CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
 
     ADD_SERIALIZE_METHODS;

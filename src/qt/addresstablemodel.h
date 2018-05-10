@@ -13,7 +13,9 @@ enum class OutputType;
 class AddressTablePriv;
 class WalletModel;
 
-class CWallet;
+namespace interfaces {
+class Wallet;
+}
 
 /**
    Qt model of the address book in the core. This allows views to access and modify the address book.
@@ -23,7 +25,7 @@ class AddressTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit AddressTableModel(CWallet *wallet, WalletModel *parent = 0);
+    explicit AddressTableModel(WalletModel *parent = 0);
     ~AddressTableModel();
 
     enum ColumnIndex {
@@ -65,9 +67,11 @@ public:
      */
     QString addRow(const QString &type, const QString &label, const QString &address, const OutputType address_type);
 
-    /* Look up label for address in address book, if not found return empty string.
-     */
+    /** Look up label for address in address book, if not found return empty string. */
     QString labelForAddress(const QString &address) const;
+
+    /** Look up purpose for address in address book, if not found return empty string. */
+    QString purposeForAddress(const QString &address) const;
 
     /* Look up row index of an address in the model.
        Return -1 if not found.
@@ -79,11 +83,13 @@ public:
     OutputType GetDefaultAddressType() const;
 
 private:
-    WalletModel *walletModel;
-    CWallet *wallet;
-    AddressTablePriv *priv;
+    WalletModel* const walletModel;
+    AddressTablePriv *priv = nullptr;
     QStringList columns;
-    EditStatus editStatus;
+    EditStatus editStatus = OK;
+
+    /** Look up address book data given an address string. */
+    bool getAddressData(const QString &address, std::string* name, std::string* purpose) const;
 
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
