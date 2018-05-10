@@ -617,7 +617,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			if(theAsset.bUseInputRanges)
 				theAsset.nPrecision = 0;
 		}
-		if (!bSanityCheck) {
+		if (!bSanityCheck  && op != OP_ASSET_SEND) {
 			if (strResponseEnglish != "") {
 				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset));
 			}
