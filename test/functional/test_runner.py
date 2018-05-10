@@ -101,6 +101,7 @@ BASE_SCRIPTS = [
     'interface_http.py',
     'rpc_users.py',
     'feature_proxy.py',
+    'feature_send_constraints.py',
     'rpc_signrawtransaction.py',
     'p2p_disconnect_ban.py',
     'rpc_decodescript.py',
