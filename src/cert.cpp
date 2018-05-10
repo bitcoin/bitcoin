@@ -385,7 +385,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 	}
 	string strResponseEnglish = "";
 	string strResponseGUID = "";
-	string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, CERT, strResponseGUID);
+	CTransaction txTmp;
+	GetSyscoinTransactionDescription(txTmp, op, strResponseEnglish, CERT, strResponseGUID);
 	// if not an certnew, load the cert data from the DB
 	CCert dbCert;
 	if (!GetCert(theCert.vchCert, dbCert))
@@ -460,7 +461,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 		}
 	}
 	if(!bSanityCheck) {
-		if (strResponse != "") {
+		if (strResponseEnglish != "") {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert));
 		}
 	}

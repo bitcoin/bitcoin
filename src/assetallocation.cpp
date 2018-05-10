@@ -360,7 +360,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 	const string &user1 = stringFromVch(vchAlias);
 	string strResponseEnglish = "";
 	string strResponseGUID = "";
-	string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, ASSETALLOCATION, strResponseGUID);
+	CTransaction txTmp;
+	GetSyscoinTransactionDescription(txTmp, op, strResponseEnglish, ASSETALLOCATION, strResponseGUID);
 	CAssetAllocation dbAssetAllocation;
 	CAsset dbAsset;
 	bool bRevert = false;
@@ -402,7 +403,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			theAssetAllocation = dbAssetAllocation;
 		else {
 			if (fJustCheck) {
-				if (strResponse != "") {
+				if (strResponseEnglish != "") {
 					paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString());
 				}
 			}
@@ -539,7 +540,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 					}
 
 					if (fJustCheck) {
-						if (strResponse != "") {
+						if (strResponseEnglish != "") {
 							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
@@ -643,7 +644,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 					}
 
 					if (fJustCheck) {
-						if (strResponse != "") {
+						if (strResponseEnglish != "") {
 							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}

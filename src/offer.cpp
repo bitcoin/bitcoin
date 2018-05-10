@@ -532,7 +532,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	}
 	string strResponseEnglish = "";
 	string strResponseGUID = "";
-	string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, OFFER, strResponseGUID);
+	CTransaction txTmp;
+	GetSyscoinTransactionDescription(txTmp, op, strResponseEnglish, OFFER, strResponseGUID);
 	COffer dbOffer;
 	// load the offer data from the DB
 	if (!GetOffer(theOffer.vchOffer, dbOffer))
@@ -671,7 +672,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 	}
 	if(!bSanityCheck) {
-		if (strResponse != "") {
+		if (strResponseEnglish != "") {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer));
 		}
 	}

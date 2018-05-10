@@ -558,7 +558,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 		CEscrow serializedEscrow = theEscrow;
 		string strResponseEnglish = "";
 		string strResponseGUID = "";
-		string strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, ESCROW, strResponseGUID);
+		CTransaction txTmp;
+		GetSyscoinTransactionDescription(txTmp, op, strResponseEnglish, ESCROW, strResponseGUID);
 		string user1 = "";
 		string user2 = "";
 		string user3 = "";
@@ -986,7 +987,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 		}
 
 		if (!bSanityCheck) {
-			if (strResponse != "") {
+			if (strResponseEnglish != "") {
 				user1 = stringFromVch(theEscrow.vchBuyerAlias);
 				user2 = stringFromVch(theEscrow.vchSellerAlias);
 				user3 = stringFromVch(theEscrow.vchArbiterAlias);
