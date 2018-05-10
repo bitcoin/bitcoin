@@ -131,16 +131,25 @@ static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 //
 
 std::atomic<bool> fRequestShutdown(false);
+CSemaphore shutdown_barrier(0);
 
 void StartShutdown()
 {
     fRequestShutdown = true;
+    shutdown_barrier.post();
 }
 bool ShutdownRequested()
 {
     return fRequestShutdown;
 }
+void BlockUntilShutdown()
+{
+    shutdown_barrier.wait();
 
+    // we don't know how many other threads are also waiting
+    // so we let the next thread (if any) wake up too
+    shutdown_barrier.post();
+}
 /**
  * This is a minimally invasive approach to shutdown on LevelDB read errors from the
  * chainstate, while keeping user interface out of the common library, which is shared
