@@ -68,7 +68,7 @@ The Crown team will  post a request for development and the requirements to rece
 
 ## License
 
-Crown Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Crown Core is released under the terms of the MIT license. See [LICENSE](LICENSE) for more
 information or see http://opensource.org/licenses/MIT.
 - - -
 
