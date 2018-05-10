@@ -2505,7 +2505,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
         // Calculate the fees for things that aren't inputs
         CAmount not_input_fees = coin_selection_params.effective_fee.GetFee(coin_selection_params.tx_noinputs_size);
         bnb_used = true;
-        return SelectCoinsBnB(utxo_pool, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees);
+        return SelectCoinsBnB(utxo_pool, nTargetValue, cost_of_change, coin_selection_params.max_inputs, setCoinsRet, nValueRet, not_input_fees);
     } else {
         // Filter by the min conf specs and add to utxo_pool
         for (const COutput &output : vCoins)
@@ -2517,7 +2517,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
             utxo_pool.push_back(coin);
         }
         bnb_used = false;
-        return KnapsackSolver(nTargetValue, utxo_pool, setCoinsRet, nValueRet);
+        return KnapsackSolver(nTargetValue, utxo_pool, coin_selection_params.max_inputs, setCoinsRet, nValueRet);
     }
 }
 
@@ -2770,6 +2770,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, &coin_control);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
+            if (coin_control.m_max_inputs) coin_selection_params.max_inputs = *coin_control.m_max_inputs;
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservekey so

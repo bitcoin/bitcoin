@@ -59,11 +59,12 @@ struct {
 
 static const size_t TOTAL_TRIES = 100000;
 
-bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees)
+bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, const size_t& max_inputs, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees)
 {
     out_set.clear();
     CAmount curr_value = 0;
 
+    size_t selected_count = 0;
     std::vector<bool> curr_selection; // select the utxo at this index
     curr_selection.reserve(utxo_pool.size());
     CAmount actual_target = not_input_fees + target_value;
@@ -107,6 +108,9 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
             }
             curr_waste -= (curr_value - actual_target); // Remove the excess value as we will be selecting different coins now
             backtrack = true;
+        } else if (max_inputs && selected_count == max_inputs) {
+            // We are not allowed to select any more inputs, so we look at other solutions
+            backtrack = true;
         }
 
         // Backtracking, moving backwards
@@ -122,6 +126,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
             }
 
             // Output was included on previous iterations, try excluding now.
+            selected_count--;
             curr_selection.back() = false;
             CInputCoin& utxo = utxo_pool.at(curr_selection.size() - 1);
             curr_value -= utxo.effective_value;
@@ -140,6 +145,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
                 curr_selection.push_back(false);
             } else {
                 // Inclusion branch first (Largest First Exploration)
+                selected_count++;
                 curr_selection.push_back(true);
                 curr_value += utxo.effective_value;
                 curr_waste += utxo.fee - utxo.long_term_fee;
@@ -165,23 +171,30 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
 }
 
 static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
-                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
+                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000, size_t max_inputs = 0)
 {
     std::vector<char> vfIncluded;
 
     vfBest.assign(vValue.size(), true);
     nBest = nTotalLower;
+    // for input count constricted, we peel off from end; it's shuffled, so it
+    // should be fine
+    for (size_t i = vValue.size(); max_inputs && i > max_inputs; --i) {
+        vfBest[i-1] = false;
+        nBest -= vValue[i-1].txout.nValue;
+    }
 
     FastRandomContext insecure_rand;
 
     for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
     {
+        size_t selected_count = 0;
         vfIncluded.assign(vValue.size(), false);
         CAmount nTotal = 0;
         bool fReachedTarget = false;
-        for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
+        for (int nPass = 0; nPass < 2 && !fReachedTarget && (!max_inputs || selected_count < max_inputs); nPass++)
         {
-            for (unsigned int i = 0; i < vValue.size(); i++)
+            for (unsigned int i = 0; i < vValue.size() && (!max_inputs || selected_count < max_inputs); i++)
             {
                 //The solver here uses a randomized algorithm,
                 //the randomness serves no real security purpose but is just
@@ -193,15 +206,17 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
                 {
                     nTotal += vValue[i].txout.nValue;
                     vfIncluded[i] = true;
+                    selected_count++;
                     if (nTotal >= nTargetValue)
                     {
                         fReachedTarget = true;
-                        if (nTotal < nBest)
+                        if (nTotal < nBest || nBest < nTargetValue)
                         {
                             nBest = nTotal;
                             vfBest = vfIncluded;
                         }
                         nTotal -= vValue[i].txout.nValue;
+                        selected_count--;
                         vfIncluded[i] = false;
                     }
                 }
@@ -210,7 +225,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
     }
 }
 
-bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet)
+bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins, const size_t& max_inputs, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet)
 {
     setCoinsRet.clear();
     nValueRet = 0;
@@ -241,7 +256,7 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins
         }
     }
 
-    if (nTotalLower == nTargetValue)
+    if (nTotalLower == nTargetValue && vValue.size() <= max_inputs)
     {
         for (const auto& input : vValue)
         {
@@ -265,17 +280,22 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins
     std::vector<char> vfBest;
     CAmount nBest;
 
-    ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest);
+    ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest, 1000, max_inputs);
     if (nBest != nTargetValue && nTotalLower >= nTargetValue + MIN_CHANGE)
-        ApproximateBestSubset(vValue, nTotalLower, nTargetValue + MIN_CHANGE, vfBest, nBest);
+        ApproximateBestSubset(vValue, nTotalLower, nTargetValue + MIN_CHANGE, vfBest, nBest, 1000, max_inputs);
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
     if (coinLowestLarger &&
         ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger->txout.nValue <= nBest))
     {
+        setCoinsRet.clear();
+        nValueRet = 0;
         setCoinsRet.insert(coinLowestLarger.get());
         nValueRet += coinLowestLarger->txout.nValue;
+    } else if (nBest < nTargetValue) {
+        // No coinLowestLarger, and best is < target value
+        return false;
     }
     else {
         for (unsigned int i = 0; i < vValue.size(); i++)

@@ -641,8 +641,9 @@ struct CoinSelectionParams
     size_t change_spend_size = 0;
     CFeeRate effective_fee = CFeeRate(0);
     size_t tx_noinputs_size = 0;
+    size_t max_inputs = 0; //!< if non-zero, puts a cap on number of inputs may be spent
 
-    CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_fee, size_t tx_noinputs_size) : use_bnb(use_bnb), change_output_size(change_output_size), change_spend_size(change_spend_size), effective_fee(effective_fee), tx_noinputs_size(tx_noinputs_size) {}
+    CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_fee, size_t tx_noinputs_size, size_t max_inputs_in = 0) : use_bnb(use_bnb), change_output_size(change_output_size), change_spend_size(change_spend_size), effective_fee(effective_fee), tx_noinputs_size(tx_noinputs_size), max_inputs(max_inputs_in) {}
     CoinSelectionParams() {}
 };
 
