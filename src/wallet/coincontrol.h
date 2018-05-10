@@ -34,6 +34,8 @@ public:
     boost::optional<bool> m_signal_bip125_rbf;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
+    //! The maximum number of inputs that may be used (unset means infinity)
+    boost::optional<unsigned int> m_max_inputs;
 
     CCoinControl()
     {
@@ -52,6 +54,7 @@ public:
         m_confirm_target.reset();
         m_signal_bip125_rbf.reset();
         m_fee_mode = FeeEstimateMode::UNSET;
+        m_max_inputs.reset();
     }
 
     bool HasSelected() const
