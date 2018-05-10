@@ -2,7 +2,7 @@
 # Copyright (c) 2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Class for bitcoind node under test"""
+"""Class for microbitcoind node under test"""
 
 import decimal
 import errno
@@ -43,7 +43,7 @@ class ErrorMatch(Enum):
 
 
 class TestNode():
-    """A class for representing a bitcoind node under test.
+    """A class for representing a microbitcoind node under test.
 
     This class contains:
 
@@ -56,7 +56,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, rpchost, timewait, bitcoind, bitcoin_cli, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
+    def __init__(self, i, datadir, rpchost, timewait, microbitcoind, bitcoin_cli, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
         self.index = i
         self.datadir = datadir
         self.stdout_dir = os.path.join(self.datadir, "stdout")
@@ -67,7 +67,7 @@ class TestNode():
         else:
             # Wait for up to 60 seconds for the RPC server to respond
             self.rpc_timeout = 60
-        self.binary = bitcoind
+        self.binary = microbitcoind
         self.coverage_dir = coverage_dir
         if extra_conf != None:
             append_config(datadir, extra_conf)
@@ -108,7 +108,7 @@ class TestNode():
         raise AssertionError(self._node_msg(msg))
 
     def __del__(self):
-        # Ensure that we don't leave any bitcoind processes lying around after
+        # Ensure that we don't leave any microbitcoind processes lying around after
         # the test ends
         if self.process and self.cleanup_on_exit:
             # Should only happen on test failure
@@ -130,7 +130,7 @@ class TestNode():
         if extra_args is None:
             extra_args = self.extra_args
 
-        # Add a new stdout and stderr file each time bitcoind is started
+        # Add a new stdout and stderr file each time microbitcoind is started
         if stderr is None:
             stderr = tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False)
         if stdout is None:
@@ -139,7 +139,7 @@ class TestNode():
         self.stdout = stdout
 
         # Delete any existing cookie file -- if such a file exists (eg due to
-        # unclean shutdown), it will get overwritten anyway by bitcoind, and
+        # unclean shutdown), it will get overwritten anyway by microbitcoind, and
         # potentially interfere with our attempt to authenticate
         delete_cookie_file(self.datadir)
 
@@ -149,16 +149,16 @@ class TestNode():
         self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, *args, **kwargs)
 
         self.running = True
-        self.log.debug("bitcoind started, waiting for RPC to come up")
+        self.log.debug("microbitcoind started, waiting for RPC to come up")
 
     def wait_for_rpc_connection(self):
-        """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
+        """Sets up an RPC connection to the microbitcoind process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
                 raise FailedToStartError(self._node_msg(
-                    'bitcoind exited with status {} during initialization'.format(self.process.returncode)))
+                    'microbitcoind exited with status {} during initialization'.format(self.process.returncode)))
             try:
                 self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
                 self.rpc.getblockcount()
@@ -173,11 +173,11 @@ class TestNode():
             except JSONRPCException as e:  # Initialization phase
                 if e.error['code'] != -28:  # RPC in warmup?
                     raise  # unknown JSON RPC exception
-            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. bitcoind still starting
+            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. microbitcoind still starting
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)
-        self._raise_assertion_error("Unable to connect to bitcoind")
+        self._raise_assertion_error("Unable to connect to microbitcoind")
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
@@ -232,11 +232,11 @@ class TestNode():
     def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, match=ErrorMatch.FULL_TEXT, *args, **kwargs):
         """Attempt to start the node and expect it to raise an error.
 
-        extra_args: extra arguments to pass through to bitcoind
-        expected_msg: regex that stderr should match when bitcoind fails
+        extra_args: extra arguments to pass through to microbitcoind
+        expected_msg: regex that stderr should match when microbitcoind fails
 
-        Will throw if bitcoind starts without an error.
-        Will throw if an expected_msg is provided and it does not match bitcoind's stdout."""
+        Will throw if microbitcoind starts without an error.
+        Will throw if an expected_msg is provided and it does not match microbitcoind's stdout."""
         with tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False) as log_stderr, \
              tempfile.NamedTemporaryFile(dir=self.stdout_dir, delete=False) as log_stdout:
             try:
@@ -245,7 +245,7 @@ class TestNode():
                 self.stop_node()
                 self.wait_until_stopped()
             except FailedToStartError as e:
-                self.log.debug('bitcoind failed to start: %s', e)
+                self.log.debug('microbitcoind failed to start: %s', e)
                 self.running = False
                 self.process = None
                 # Check stderr for expected message
@@ -266,15 +266,15 @@ class TestNode():
                                 'Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
             else:
                 if expected_msg is None:
-                    assert_msg = "bitcoind should have exited with an error"
+                    assert_msg = "microbitcoind should have exited with an error"
                 else:
-                    assert_msg = "bitcoind should have exited with expected error " + expected_msg
+                    assert_msg = "microbitcoind should have exited with expected error " + expected_msg
                 self._raise_assertion_error(assert_msg)
 
     def node_encrypt_wallet(self, passphrase):
         """"Encrypts the wallet.
 
-        This causes bitcoind to shutdown, so this method takes
+        This causes microbitcoind to shutdown, so this method takes
         care of cleaning up resources."""
         self.encryptwallet(passphrase)
         self.wait_until_stopped()
