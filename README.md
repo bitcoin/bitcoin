@@ -39,7 +39,7 @@ Crown’s governance system also enables its community to vote on which changes 
 
 ## Server Nodes
 
-Crown uses two types of server nodes to build and protect its network — Systemnodes and Masternodes. Each of these dedicated servers are unique and provide vital infrastructure. By creating and running them, you can help our community grow while consistently earning Crown tokens as a reward. Here’s a brief description of each:
+Crown uses two types of server nodes to build and protect its network — Systemnodes and Masternodes. Each of these dedicated servers are unique and provide vital infrastructure. By creating and running them, you can help our community grow while consistently earning CRW as a reward. 
 
 ### Masternodes
 
@@ -47,7 +47,7 @@ Masternodes supply substantial computing power to the Crown Platform, and have c
 
 ### Systemnodes
 
-Systemnodes are empty-shell servers that are tasked with hosting specific services for the Crown network other than transaction verification. The Crown Platform will use Systemnodes to host new economy applications created by members of the community, connecting them to the Crown Platform through an API. A Systemnode requires 500 CRW collateral to run. 
+Systemnodes are empty-shell servers that are tasked with hosting specific services for the Crown network. The Crown Platform will use Systemnodes to host new economy applications created by members of the community, connecting them to the Crown Platform through an API. A Systemnode requires 500 CRW collateral to run. 
 
 ## Development
 
