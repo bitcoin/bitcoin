@@ -48,7 +48,7 @@ extern bool fMasternodeMode;
 extern bool fUnitTest;
 extern bool fLiteMode;
 extern int nWalletBackups;
-
+extern std::vector<unsigned char> vchReceiverAliasName;
 static const bool DEFAULT_LOGTIMEMICROS  = false;
 static const bool DEFAULT_LOGIPS         = false;
 static const bool DEFAULT_LOGTIMESTAMPS  = true;
