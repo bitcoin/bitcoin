@@ -19,9 +19,9 @@ The following are some helpful notes on how to run Ravencoin on your native plat
 
 3) Run the GUI wallet or only the Ravencoin core deamon
 
-a. GUI wallet: `./raven-qt`
+   a. GUI wallet: `./raven-qt`
 
-b. Core deamon: `./ravend -deamon`
+   b. Core deamon: `./ravend -deamon`
 
 #### Ubuntu 16.04, 17.04 and 18.04
 
