@@ -5,22 +5,65 @@ Setup
 ---------------------
 Ravencoin Core is the original Ravencoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Ravencoin transactions; depending on the speed of your computer and network connection, the synchronization process is typically complete in under an hour.
 
-To download Ravencion Core code, visit [GitHub](https://github.com/RavenProject/Ravencoin/releases).
+To download Ravencoin Core, visit [GitHub](https://github.com/RavenProject/Ravencoin/releases).
 
 Running
 ---------------------
 The following are some helpful notes on how to run Ravencoin on your native platform.
 
-### Unix
+### Linux
 
-Unpack the files into a directory and run:
+1) Download and extract binaries to desired folder.
 
-- `raven-qt` (GUI) or
-- `ravend` (headless)
+2) Install distribution-specific dependencies listed below.
+
+3 a) To run the GUI wallet:
+
+`./raven-qt`
+
+3 b) To run only the Ravencoin core deamon:
+
+`./ravend -deamon`
+
+# Ubuntu 16.04, 17.04 and 18.04
+
+Update apt cache and install general dependencies:
+
+```
+sudo apt-get update
+sudo apt-get -y install libevent-dev libboost-all-dev libminiupnpc10 libzmq5 software-properties-common
+```
+
+The wallet requires version 4.8 of the Berkeley DB. The easiest way to get it is from the bitcoin repository: 
+
+```
+sudo add-apt-repository ppa:bitcoin/bitcoin
+sudo apt-get update
+sudo apt-get -y install libdb4.8-dev libdb4.8++-dev
+```
+
+The GUI wallet requires the QR Code encoding library library. Install with `sudo apt install libqrencode3`
+
+# CentOS -- HAS ANYONE ACTUALLY TESTED THIS? 
+
+Add the EPEL repository and install general depencencies:
+
+```
+yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum -y install zeromq libevent boost libdb4-cxx miniupnpc
+```
+
+# Fedora -- HAS ANYONE ACTUALLY TESTED THIS?
+
+Install general dependencies:
+
+`sudo dnf install zeromq libevent boost libdb4-cxx miniupnpc`
 
 ### Windows
 
-Unpack the files into a directory, and then run raven-qt.exe.
+1) Download windows-x86_64.zip and unpack executables to desired folder.
+
+2) Double click the raven-qt.exe to launch it.
 
 ### OS X
 
