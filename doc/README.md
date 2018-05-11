@@ -27,7 +27,7 @@ The following are some helpful notes on how to run Ravencoin on your native plat
    
    `./ravend -deamon`
 
-#### Ubuntu 16.04, 17.04 and 18.04
+#### Ubuntu 16.04, 17.04/17.10 and 18.04
 
 Update apt cache and install general dependencies:
 
