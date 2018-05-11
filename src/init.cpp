@@ -1898,7 +1898,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         std::string strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()) {
             if(!CMessageSigner::GetKeysFromSecret(strMasterNodePrivKey, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
-                return InitError(_("Invalid masternodeprivkey. Please see documenation."));
+                return InitError(_("Invalid masternodeprivkey. Please see documentation."));
 
             LogPrintf("  pubKeyMasternode: %s\n", CSyscoinAddress(activeMasternode.pubKeyMasternode.GetID()).ToString());
         } else {
