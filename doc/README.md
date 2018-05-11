@@ -30,38 +30,42 @@ Unpack the files into a directory and run: `bin/crown-qt` or `bin/crownd`. You n
 
 TBD
 
+* [Masternode Configuration](masternode-config.md)
+* [Running Multiple Masternodes](guide-starmany.md)
+
+## Participate in Crown Decentralized Governance
+
+TBD
+
 ## Build Crown From Source
 
-The following are developer notes on how to build Crown on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
-
-- [OSX Build Notes](build-osx.md)
-- [Unix Build Notes](build-unix.md)
-- [Windows build notes](build-msw.md)
+The following are developer notes on how to build Crown on your native platform. Right now Crown Core Development only supports building on [Unix](build-unix.md). Binaries for Windows and MacOS are generated via cross-compilation. However building under those systems natively is possible in theory. If you have successful experience building Crown under those platforms, please contribute the instructions. 
 
 ## Development Documentation
 
 The Crown repo's [root README](https://gitlab.crown.tech/crown/crown-core/blob/master/README.md) contains relevant information on the development process.
 
-- [Coding Guidelines](coding-style.md)
+- [Coding Style Guide](coding-style.md)
 - [Multiwallet Qt Development](multiwallet-qt.md)
 - [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
 - [Unit Tests](unit-tests.md)
 
 ### Resources
-* Discuss on [#crowncoin](http://webchat.freenode.net/?channels=crowncoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=crowncoin).
-
-### Miscellaneous
-- [Assets Attribution](assets-attribution.md)
-- [Files](files.md)
-- [Tor Support](tor.md)
-- [Init Scripts (systemd/upstart/openrc)](init.md)
+* Crown Forum: https://forum.crown.tech
+* Mattermost: https://mm.crownlab.eu
+* Discord: https://discord.gg/Tcrkazc
+* Telegram: https://t.me/crownplatform
+* Guides & How-to: https://forum.crown.tech/index.php?board=5.0
 
 ## License
 
 Crown is distributed under the terms of the [MIT/X11 software license](http://www.opensource.org/licenses/mit-license.php). 
 
-This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](https://www.openssl.org/). This product includes cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.
+This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](https://www.openssl.org/). This product includes cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard. 
+
+Also see [Assets Attribution](assets-attribution.md)
+
 - - -
 
 Copyright © 2009-2018, Bitcoin Core Developers
