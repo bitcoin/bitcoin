@@ -13,8 +13,7 @@ https://microbitcoin.org
 What is MicroBitcoin?
 ----------------
 
-MicroBitcoin is an experimental digital currency forked from [Bitcoin](https://github.com/bitcoin/bitcoin) that enables instant payments to
-anyone, anywhere in the world. MicroBitcoin uses peer-to-peer technology to operate
+MicroBitcoin is a digital currency forked from [Bitcoin](https://github.com/bitcoin/bitcoin) that enables micro-payments to anyone, anywhere in the world. MicroBitcoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
 out collectively by the network. MicroBitcoin is the name of open source
 software which enables the use of this currency.
