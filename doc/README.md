@@ -17,15 +17,11 @@ The following are some helpful notes on how to run Ravencoin on your native plat
 
 2) Install distribution-specific dependencies listed below.
 
-3 a) To run the GUI wallet:
+3) Run the GUI wallet or only the Ravencoin core deamon
+a. GUI wallet: `./raven-qt` 
+b. Core deamon: `./ravend -deamon`
 
-`./raven-qt`
-
-3 b) To run only the Ravencoin core deamon:
-
-`./ravend -deamon`
-
-# Ubuntu 16.04, 17.04 and 18.04
+#### Ubuntu 16.04, 17.04 and 18.04
 
 Update apt cache and install general dependencies:
 
@@ -44,7 +40,7 @@ sudo apt-get -y install libdb4.8-dev libdb4.8++-dev
 
 The GUI wallet requires the QR Code encoding library library. Install with `sudo apt install libqrencode3`
 
-# CentOS -- HAS ANYONE ACTUALLY TESTED THIS? 
+#### CentOS -- HAS ANYONE ACTUALLY TESTED THIS? 
 
 Add the EPEL repository and install general depencencies:
 
@@ -53,17 +49,11 @@ yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarc
 yum -y install zeromq libevent boost libdb4-cxx miniupnpc
 ```
 
-# Fedora -- HAS ANYONE ACTUALLY TESTED THIS?
+#### Fedora -- HAS ANYONE ACTUALLY TESTED THIS?
 
 Install general dependencies:
 
 `sudo dnf install zeromq libevent boost libdb4-cxx miniupnpc`
-
-### Windows
-
-1) Download windows-x86_64.zip and unpack executables to desired folder.
-
-2) Double click the raven-qt.exe to launch it.
 
 ### OS X
 
@@ -86,7 +76,13 @@ Dyld Error Message:
   Referenced from: /Applications/Raven-Qt.app/Contents/Frameworks/libboost_thread-mt.dylib
   Reason: image not found
 ```
-To resolve, you will need to copy libboost_system.dylib to libboost_system-mt.dylib in the /Applications/Raven-Qt.app/Contents/Frameworks folder  
+To resolve, you will need to copy libboost_system.dylib to libboost_system-mt.dylib in the /Applications/Raven-Qt.app/Contents/Frameworks folder
+
+### Windows
+
+1) Download windows-x86_64.zip and unpack executables to desired folder.
+
+2) Double click the raven-qt.exe to launch it.
 
 ### Need Help?
 
