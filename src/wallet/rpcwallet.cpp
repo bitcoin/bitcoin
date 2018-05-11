@@ -473,8 +473,11 @@ static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &
     vecSend.push_back(recipient);
     CTransactionRef tx;
     if (!pwallet->CreateTransaction(vecSend, tx, reservekey, nFeeRequired, nChangePosRet, strError, coin_control)) {
-        if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
+        if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance) {
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
+        } else if (coin_control.m_max_inputs) {
+            strError += " (constraints may be causing this error; consider lessening or removing them)";
+        }
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     CValidationState state;
@@ -485,6 +488,55 @@ static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &
     return tx;
 }
 
+/**
+ * Validate and return a COutPoint based on a UniValue txid/vout dictionary
+ *
+ * @param  pwallet      The wallet.
+ * @param  outpoint     The outpoint in dictionary form with keys txid and vout.
+ * @param  allow_locked Whether or not locked outputs should throw a JSONRPCError
+ */
+COutPoint ValidateOutPointReference(CWallet* const pwallet, const UniValue& outpoint, bool allow_locked = false)
+{
+    RPCTypeCheckObj(outpoint,
+        {
+            {"txid", UniValueType(UniValue::VSTR)},
+            {"vout", UniValueType(UniValue::VNUM)},
+        });
+
+    const std::string& txid = find_value(outpoint, "txid").get_str();
+    if (!IsHex(txid)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected hex txid");
+    }
+
+    const int output = find_value(outpoint, "vout").get_int();
+    if (output < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
+    }
+
+    const COutPoint outpt(uint256S(txid), output);
+
+    const auto it = pwallet->mapWallet.find(outpt.hash);
+    if (it == pwallet->mapWallet.end()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, unknown transaction");
+    }
+
+    const CWalletTx& trans = it->second;
+
+    if (outpt.n >= trans.tx->vout.size()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds");
+    }
+
+    if (pwallet->IsSpent(outpt.hash, outpt.n)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected unspent output");
+    }
+
+    if (!allow_locked && pwallet->IsLockedCoin(outpt.hash, outpt.n)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output is locked");
+    }
+
+    return outpt;
+}
+
 static UniValue sendtoaddress(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -492,7 +544,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 9)
         throw std::runtime_error(
             "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount replaceable conf_target \"estimate_mode\")\n"
             "\nSend an amount to a given address.\n"
@@ -513,6 +565,14 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
+            "9. \"constraints\": {       (object, optional) Add additional constraints to the coin selection:\n"
+            "     \"inputs\": [        (array, optional) List of inputs which must be used. No other inputs are allowed.\n"
+            "       {                  (object) An input in the form of a transaction id and index.\n"
+            "         \"txid\":\"hex\"   (string) The transaction id.\n"
+            "         \"vout\":n         (numeric) The index.\n"
+            "       }, ... ]\n"
+            "     \"max_inputs\": n,     (numeric, optional) Restrict the maximum number of inputs which may be used.\n"
+            "   }\n"
             "\nResult:\n"
             "\"txid\"                  (string) The transaction id.\n"
             "\nExamples:\n"
@@ -565,6 +625,27 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
         }
     }
 
+    if (!request.params[8].isNull()) {
+        const UniValue& constraints = request.params[8].get_obj();
+        const auto& keys = constraints.getKeys();
+        for (size_t i = 0; i < keys.size(); ++i) {
+            const UniValue& c = constraints[keys[i]];
+            if (keys[i] == "inputs") {
+                coin_control.fAllowOtherInputs = false;
+                for (size_t j = 0; j < c.size(); ++j) {
+                    coin_control.Select(ValidateOutPointReference(pwallet, c[j].get_obj()));
+                }
+            } else if (keys[i] == "max_inputs") {
+                int n = c.get_int();
+                if (n < 1) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid constraint: max_inputs must be greater than 0");
+                }
+                coin_control.m_max_inputs = n;
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid constraint: unknown key %s", keys[i]));
+            }
+        }
+    }
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -1069,7 +1150,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
 
     std::string help_text;
     if (!IsDeprecatedRPCEnabled("accounts")) {
-        help_text = "sendmany \"\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] replaceable conf_target \"estimate_mode\")\n"
+        help_text = "sendmany \"\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] replaceable conf_target \"estimate_mode\" \"constraints\" )\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers.\n"
             "Note that the \"fromaccount\" argument has been removed in V0.17. To use this RPC with a \"fromaccount\" argument, restart\n"
             "bitcoind with -deprecatedrpc=accounts\n"
@@ -1097,6 +1178,14 @@ static UniValue sendmany(const JSONRPCRequest& request)
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
+            "9. \"constraints\": {       (object, optional) Add additional constraints to the coin selection:\n"
+            "     \"inputs\": [        (array, optional) List of inputs which must be used. No other inputs are allowed.\n"
+            "       {                  (object) An input in the form of a transaction id and index.\n"
+            "         \"txid\":\"hex\"   (string) The transaction id.\n"
+            "         \"vout\":n         (numeric) The index.\n"
+            "       }, ... ]\n"
+            "     \"max_inputs\": n,     (numeric, optional) Restrict the maximum number of inputs which may be used.\n"
+            "   }\n"
              "\nResult:\n"
             "\"txid\"                   (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
@@ -1110,7 +1199,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
             "\nAs a json rpc call\n"
             + HelpExampleRpc("sendmany", "\"\", {\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\":0.01,\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\":0.02}, 6, \"testing\"");
     } else {
-        help_text = "sendmany \"\" \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] replaceable conf_target \"estimate_mode\")\n"
+        help_text = "sendmany \"\" \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] replaceable conf_target \"estimate_mode\" \"constraints\" )\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
@@ -1150,7 +1239,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
             + HelpExampleRpc("sendmany", "\"\", {\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\":0.01,\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\":0.02}, 6, \"testing\"");
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8) throw std::runtime_error(help_text);
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 9) throw std::runtime_error(help_text);
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -1191,6 +1280,28 @@ static UniValue sendmany(const JSONRPCRequest& request)
     if (!request.params[7].isNull()) {
         if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
+        }
+    }
+
+    if (!request.params[8].isNull()) {
+        const UniValue& constraints = request.params[8].get_obj();
+        const auto& keys = constraints.getKeys();
+        for (size_t i = 0; i < keys.size(); ++i) {
+            const UniValue& c = constraints[keys[i]];
+            if (keys[i] == "inputs") {
+                coin_control.fAllowOtherInputs = false;
+                for (size_t j = 0; j < c.size(); ++j) {
+                    coin_control.Select(ValidateOutPointReference(pwallet, c[j].get_obj()));
+                }
+            } else if (keys[i] == "max_inputs") {
+                int n = c.get_int();
+                if (n < 1) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid constraint: max_inputs must be greater than 0");
+                }
+                coin_control.m_max_inputs = n;
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid constraint: unknown key %s", keys[i]));
+            }
         }
     }
 
@@ -1244,8 +1355,10 @@ static UniValue sendmany(const JSONRPCRequest& request)
     std::string strFailReason;
     CTransactionRef tx;
     bool fCreated = pwallet->CreateTransaction(vecSend, tx, keyChange, nFeeRequired, nChangePosRet, strFailReason, coin_control);
-    if (!fCreated)
+    if (!fCreated) {
+        if (!request.params[8].isNull()) strFailReason += " (constraints may be causing this error; consider lessening or removing them)";
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
+    }
     CValidationState state;
     if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */, std::move(strAccount), keyChange, g_connman.get(), state)) {
         strFailReason = strprintf("Transaction commit failed:: %s", FormatStateMessage(state));
@@ -2764,40 +2877,7 @@ static UniValue lockunspent(const JSONRPCRequest& request)
     outputs.reserve(output_params.size());
 
     for (unsigned int idx = 0; idx < output_params.size(); idx++) {
-        const UniValue& o = output_params[idx].get_obj();
-
-        RPCTypeCheckObj(o,
-            {
-                {"txid", UniValueType(UniValue::VSTR)},
-                {"vout", UniValueType(UniValue::VNUM)},
-            });
-
-        const std::string& txid = find_value(o, "txid").get_str();
-        if (!IsHex(txid)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected hex txid");
-        }
-
-        const int nOutput = find_value(o, "vout").get_int();
-        if (nOutput < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
-        }
-
-        const COutPoint outpt(uint256S(txid), nOutput);
-
-        const auto it = pwallet->mapWallet.find(outpt.hash);
-        if (it == pwallet->mapWallet.end()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, unknown transaction");
-        }
-
-        const CWalletTx& trans = it->second;
-
-        if (outpt.n >= trans.tx->vout.size()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds");
-        }
-
-        if (pwallet->IsSpent(outpt.hash, outpt.n)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected unspent output");
-        }
+        COutPoint outpt = ValidateOutPointReference(pwallet, output_params[idx].get_obj(), true);
 
         const bool is_locked = pwallet->IsLockedCoin(outpt.hash, outpt.n);
 
@@ -4129,8 +4209,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "listwallets",                      &listwallets,                   {} },
     { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
     { "wallet",             "sendfrom",                         &sendfrom,                      {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },
-    { "wallet",             "sendmany",                         &sendmany,                      {"fromaccount|dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sendmany",                         &sendmany,                      {"fromaccount|dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode","constraints"} },
+    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode","constraints"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
     { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
