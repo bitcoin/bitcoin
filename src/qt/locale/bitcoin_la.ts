@@ -513,6 +513,11 @@ Hoc productum continet programmata composita ab OpenSSL Project pro utendo in Op
         <translation>Verifica nuntios ut certus sis eos signatos esse cum specificatis inscriptionibus Peercoin</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Plica</translation>

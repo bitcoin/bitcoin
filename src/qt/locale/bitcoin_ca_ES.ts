@@ -509,6 +509,11 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Verificar els missatges per assegurar-te que han estat signades amb una adreça Peercoin específica.</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Arxiu</translation>

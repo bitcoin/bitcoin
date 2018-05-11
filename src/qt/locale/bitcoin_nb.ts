@@ -514,6 +514,11 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
         <translation>Bekreft meldinger for å være sikker på at de ble signert av en angitt Peercoin-adresse</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation>Brukergrensesnitt for å lage multisig-adresser</translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Fil</translation>

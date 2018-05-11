@@ -514,6 +514,11 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>驗證訊息來確認是用指定的位元幣位址簽署的</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation>檔案</translation>

@@ -514,6 +514,11 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Vérifier les messages pour vous assurer qu&apos;ils ont bien été signés avec les adresses Peercoin spécifiées</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Fichier</translation>
