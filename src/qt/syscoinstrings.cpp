@@ -400,7 +400,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Invalid amount for -minrelaytxfee=<amount>: '
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid amount for -mintxfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid amount for -paytxfee=<amount>: '%s'"),
-QT_TRANSLATE_NOOP("syscoin-core", "Invalid masternodeprivkey. Please see documenation."),
+QT_TRANSLATE_NOOP("syscoin-core", "Invalid masternodeprivkey. Please see documentation."),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid netmask specified in -whitelist: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid port detected in masternode.conf"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid script detected."),
