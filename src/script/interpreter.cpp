@@ -5,12 +5,15 @@
 
 #include <script/interpreter.h>
 
+#include <primitives/transaction.h>
+#include <consensus/merkle.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <uint256.h>
+#include <streams.h>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -453,7 +456,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     break;
                 }
 
-                case OP_NOP1: case OP_NOP4: case OP_NOP5:
+                case OP_NOP1: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 {
                     if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
@@ -1048,6 +1051,146 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                             popstack(stack);
                         else
                             return set_error(serror, SCRIPT_ERR_CHECKMULTISIGVERIFY);
+                    }
+                }
+                break;
+
+                case OP_MERKLEBRANCHVERIFY:
+                {
+                    if (!(flags & SCRIPT_VERIFY_MERKLEBRANCHVERIFY)) {
+                        // not enabled; treat as a NOP4
+                        if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS) {
+                            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                        }
+                        break;
+                    }
+
+                    // ([...verify hashes...] proof root {2*count+prehash})
+                    if (stack.size() < 3) {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+
+                    valtype& vchCount = stacktop(-1);
+                    valtype& vchRoot  = stacktop(-2);
+                    valtype& vchProof = stacktop(-3);
+
+                    // vchCount is a minimally encoded CScriptNum
+                    // encoding 2*N plus a Boolean value in the low
+                    // order bit encoding whether the leaf elements
+                    // are pre-hashed.
+                    bool prehashed = false;
+                    std::size_t count = 0;
+                    try {
+                        // MAX_STACK_SIZE prevents count from ever
+                        // being more than 997, which also means the
+                        // first parameter can never be more than two
+                        // bytes, when minimally serialized.
+                        auto param = CScriptNum(vchCount, true, 2).getint();
+                        if (param < 0) {
+                            return set_error(serror, SCRIPT_ERR_BAD_DECODE_ARG1);
+                        }
+                        prehashed = param & 1;
+                        count = param >> 1;
+                    } catch (scriptnum_error e) {
+                        // param is more than 2 bytes or not minimally encoded
+                        return set_error(serror, SCRIPT_ERR_BAD_DECODE_ARG1);
+                    } catch (...) {
+                        // Belt and suspenders. It should not be
+                        // possible for other exceptions to be thrown,
+                        // but in case that assessment is wrong or
+                        // ever changes, let's not mask other
+                        // exceptions.
+                        throw;
+                    }
+
+                    // There are count=N many leaf objects passed on
+                    // the stack after the first three parameters
+                    // which are always present.
+                    if (stack.size() < (3 + count)) {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+
+                    // vchRoot is a standard 32-byte hash. Note that
+                    // this hash is pushed as data and not minimally
+                    // encoded.
+                    if (vchRoot.size() != 32) {
+                        return set_error(serror, SCRIPT_ERR_BAD_DECODE_ARG2);
+                    }
+                    const uint256 root = uint256(vchRoot);
+
+                    // The third argument is a MerkleProof, which we
+                    // deserialize as part of the MerkleTree structure
+                    // we are building to validate the entire root.
+                    MerkleTree branch;
+                    CDataStream proofStream(vchProof, SER_NETWORK, PROTOCOL_VERSION);
+                    try {
+                        Unserialize(proofStream, branch.m_proof);
+                    } catch (const std::bad_alloc e) {
+                        throw; // Don't mask a transient out-of-memory exception
+                    } catch (...) {
+                        return set_error(serror, SCRIPT_ERR_BAD_DECODE_ARG3);
+                    }
+                    if (!proofStream.empty()) {
+                        // Extra bytes remaining after the MerkleProof
+                        // was deserialized, which could be a source
+                        // of witness malleability.
+                        return set_error(serror, SCRIPT_ERR_BAD_DECODE_ARG3);
+                    }
+                    if (branch.m_proof.m_path.dirty()) {
+                        // Extra bits in the final byte of the packed
+                        // serialization of the Merkle branch's path,
+                        // which would otherwise be another source of
+                        // witness malleability.
+                        return set_error(serror, SCRIPT_ERR_BAD_DECODE_ARG3);
+                    }
+                    if ((!branch.m_proof.m_path.empty() || count || !branch.m_proof.m_skip.empty()) &&
+                        ((count + branch.m_proof.m_skip.size()) != (branch.m_proof.m_path.size() + 1)))
+                    {
+                        // It is a property of any binary tree that
+                        // the number of leaf nodes is precisely one
+                        // more than the number of internal nodes.
+                        // This acts as an early-out check of whether
+                        // this is a well-formed proof. Note that the
+                        // special case of a 0-node, 0-verify, 0-skip
+                        // tree is exempted from this requirement.
+                        return set_error(serror, SCRIPT_ERR_BAD_DECODE_ARG3);
+                    }
+
+                    // The remaining _count_ items on the stack are
+                    // the verify hashes, or the actual leaf values
+                    // which are hashed with double-SHA256 to get the
+                    // verify hashes if _prehashed_ is clear.
+                    branch.m_verify.reserve(count);
+                    for (int i = 0; i < (int)count; ++i) {
+                        // -1 through -3 are the count+prehashed, root
+                        // hash, and MerkleProof we already extracted.
+                        valtype& vchLeaf = stacktop(-4 - i);
+                        if (prehashed) {
+                            // Require 32-byte hash values, no
+                            // truncation of ending bytes.
+                            if (vchLeaf.size() != 32) {
+                                return set_error(serror, SCRIPT_ERR_BAD_DECODE_ARG);
+                            }
+                            branch.m_verify.emplace_back(uint256(vchLeaf));
+                        } else {
+                            branch.m_verify.emplace_back();
+                            CHash256().Write(vchLeaf.data(), vchLeaf.size()).Finalize(branch.m_verify.back().begin());
+                        }
+                    }
+
+                    // Compute Merkle root hash
+                    bool invalid;
+                    uint256 result = branch.GetHash(&invalid);
+                    if (invalid) {
+                        return set_error(serror, SCRIPT_ERR_BAD_DECODE_ARG);
+                    }
+
+                    // Do not pop arguments from the stack as we
+                    // retain soft- fork compatibility. Scripts must
+                    // use [2DROP 2DROP ... DROP] themselves to remove
+                    // the arguments from the stack, if necessary.
+                    if (result != root) {
+                        return set_error(serror, SCRIPT_ERR_MERKLEBRANCHVERIFY);
                     }
                 }
                 break;
