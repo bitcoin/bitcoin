@@ -48,7 +48,7 @@ The GUI wallet requires the QR Code encoding library. Install with:
 
 `sudo apt install libqrencode3`
 
-#### Fedora
+#### Fedora 27
 
 Install general dependencies:
 
@@ -58,7 +58,7 @@ The GUI wallet requires the QR Code encoding library and Google's data interchan
 
 `sudo dnf install qrencode protobuf`
 
-#### CentOS -- 2018-05-11 -- Breaks because of issues with EPEL repos  
+#### CentOS 7 -- 2018-05-11 -- Breaks because of issues with EPEL repos  
 
 Add the EPEL repository and install general depencencies:
 
