@@ -2094,7 +2094,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         return state.DoS(0, error("ConnectBlock(CHAINCOIN): %s", strError), REJECT_INVALID, "bad-cb-amount");
     }
 
-    if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
+    if (!IsBlockPayeeValid(MakeTransactionRef (std::move(*block.vtx[0])), pindex->nHeight, blockReward)) {
         return state.DoS(0, error("ConnectBlock(CHAINCOIN): couldn't find masternode or superblock payments"),
                                 REJECT_INVALID, "bad-cb-payee");
     }
