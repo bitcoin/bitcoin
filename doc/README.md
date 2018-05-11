@@ -40,22 +40,24 @@ sudo apt-get update
 sudo apt-get -y install libdb4.8-dev libdb4.8++-dev
 ```
 
-The GUI wallet requires the QR Code encoding library library. Install with `sudo apt install libqrencode3`
+The GUI wallet requires the QR Code encoding library. Install with `sudo apt install libqrencode3`
+
+#### Fedora
+
+Install general dependencies:
+
+`sudo dnf install zeromq libevent boost libdb4-cxx miniupnpc`
+
+The GUI wallet requires the QR Code encoding library and Google's data interchange format Protocol Buffers. Install with `sudo dnf install qrencode protobuf`
 
 #### CentOS -- HAS ANYONE ACTUALLY TESTED THIS? 
 
 Add the EPEL repository and install general depencencies:
 
 ```
-yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-yum -y install zeromq libevent boost libdb4-cxx miniupnpc
+sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+sudo yum -y install zeromq libevent boost libdb4-cxx miniupnpc
 ```
-
-#### Fedora -- HAS ANYONE ACTUALLY TESTED THIS?
-
-Install general dependencies:
-
-`sudo dnf install zeromq libevent boost libdb4-cxx miniupnpc`
 
 ### OS X
 
