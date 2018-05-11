@@ -121,7 +121,7 @@ Ravencoin repo's [root README](https://github.com/RavenProject/Ravencoin/blob/ma
 - [Developer Notes](https://github.com/RavenProject/Ravencoin/blob/master/doc/developer-notes.md)
 - [Release Notes](https://github.com/RavenProject/Ravencoin/blob/master/doc/release-notes.md)
 - [Release Process](https://github.com/RavenProject/Ravencoin/blob/master/doc/release-process.md)
-- [Source Code Documentation (External Link)](https://dev.visucore.com/raven/doxygen/)
+- [Source Code Documentation (External Link)](https://dev.visucore.com/raven/doxygen/) -- 2018-05-11 -- Broken link
 - [Translation Process](https://github.com/RavenProject/Ravencoin/blob/master/doc/translation_process.md)
 - [Translation Strings Policy](https://github.com/RavenProject/Ravencoin/blob/master/doc/translation_strings_policy.md)
 - [Travis CI](https://github.com/RavenProject/Ravencoin/blob/master/doc/travis-ci.md)
@@ -148,6 +148,6 @@ Ravencoin repo's [root README](https://github.com/RavenProject/Ravencoin/blob/ma
 
 License
 ---------------------
-Distributed under the [MIT software license](/COPYING).
+Distributed under the [MIT software license](https://github.com/RavenProject/Ravencoin/blob/master/COPYING).
 This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](https://www.openssl.org/). This product includes
 cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.
