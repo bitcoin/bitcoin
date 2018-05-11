@@ -1873,6 +1873,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 11a: setup PrivateSend
     fMasternodeMode = GetBoolArg("-masternode", false);
+    vchReceiverAliasName = vchFromString(GetArg("-receiveralias", ""));
+    LogPrintf("TPS TEST: Receiver Alias - %s\n", stringFromVch(vchReceiverAliasName).c_str());
 	fUnitTest = GetBoolArg("-unittest", false);
     // TODO: masternode should have no wallet
 

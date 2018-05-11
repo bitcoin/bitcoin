@@ -111,6 +111,7 @@ namespace boost {
 
 //Syscoin only features
 bool fMasternodeMode = false;
+std::vector<unsigned char> vchReceiverAliasName;
 bool fUnitTest = false;
 bool fLiteMode = false;
 /**
