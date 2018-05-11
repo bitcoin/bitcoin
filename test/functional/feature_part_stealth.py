@@ -111,12 +111,9 @@ class StealthTest(ParticlTestFramework):
         assert(ro['stealth_address'] == sxAddrTo2_2)
 
 
-        ro = nodes[2].encryptwallet('qwerty234')
-        assert('wallet encrypted' in ro)
+        nodes[2].node_encrypt_wallet('qwerty234')
+        self.start_node(2)
 
-        self.nodes[2].wait_until_stopped() # wait until encryptwallet has shut down nodes[0]
-        # Restart nodes[0] 2
-        self.start_node(2, self.extra_args[2])
         ro = nodes[2].walletpassphrase('qwerty234', 300)
         ro = nodes[2].reservebalance(True, 10000000)
         ro = nodes[2].walletlock()

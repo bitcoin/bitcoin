@@ -154,12 +154,8 @@ class WalletParticlTest(ParticlTestFramework):
         ro = nodes[0].getwalletinfo()
         assert(ro['encryptionstatus'] == 'Unencrypted')
 
-        ro = nodes[0].encryptwallet('qwerty123')
-        assert('wallet encrypted' in ro)
-
-        # restart node
-        self.stop_node(0)
-        self.start_node(0, self.extra_args[0])
+        nodes[0].node_encrypt_wallet('qwerty123')
+        self.start_node(0)
 
 
         ro = nodes[0].getwalletinfo()
@@ -214,12 +210,8 @@ class WalletParticlTest(ParticlTestFramework):
         assert(len(o['loose_extkeys']) == 0)
         assert(len(o['accounts']) == 0)
 
-        ro = nodes[1].encryptwallet('qwerty234')
-        assert('wallet encrypted' in ro)
-
-        # restart node
-        self.nodes[1].wait_until_stopped() # wait until encryptwallet has shut down node
-        self.start_node(1, self.extra_args[1])
+        nodes[1].node_encrypt_wallet('qwerty234')
+        self.start_node(1)
 
         try:
             ro = nodes[1].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')

@@ -90,11 +90,9 @@ class SmsgPaidTest(ParticlTestFramework):
 
 
 
-        ro = nodes[0].encryptwallet("qwerty234")
-        assert("wallet encrypted" in ro)
+        nodes[0].node_encrypt_wallet('qwerty234')
+        self.start_node(0)
 
-        nodes[0].wait_until_stopped()  # Wait until encryptwallet has shut down node
-        self.start_node(0, self.extra_args[0])
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         ro = nodes[0].getwalletinfo()
