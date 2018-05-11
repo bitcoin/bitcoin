@@ -270,6 +270,23 @@ class SmsgPaidTest(ParticlTestFramework):
         assert(ro['wallet_keys'][n]['receive'] == '0')
         assert(ro['wallet_keys'][n]['anon'] == '0')
 
+        # Test smsgpurge
+        ro = nodes[0].smsg(msgid, {'encoding':'hex'})
+        assert(ro['msgid'] == msgid)
+
+        nodes[0].smsgpurge(msgid)
+
+        try:
+            nodes[0].smsg(msgid, {'encoding':'hex'})
+            assert(False), 'Purged message in inbox'
+        except JSONRPCException as e:
+            assert('Unknown message id' in e.error['message'])
+
+        ro = nodes[0].smsgbuckets()
+        assert(int(ro['total']['numpurged']) == 1)
+        assert(int(ro['buckets'][0]['no. messages']) == int(ro['buckets'][0]['active messages']) + 1)
+
+
 
 
 

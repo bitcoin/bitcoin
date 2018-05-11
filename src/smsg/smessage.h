@@ -458,6 +458,8 @@ public:
     std::set<int64_t> setPurgedTimestamps;
     SecMsgOptions options;
     CWallet *pwallet = nullptr;
+
+    int64_t nLastProcessedPurged = 0;
 };
 
 } // namespace smsg

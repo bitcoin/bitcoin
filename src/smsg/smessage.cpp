@@ -228,6 +228,11 @@ void ThreadSecureMsg()
                     ++it;
                 };
             };
+
+            if (smsgModule.nLastProcessedPurged + SMSGGetSecondsInDay() < now)
+            {
+                smsgModule.BuildPurgedSets();
+            };
         } // cs_smsg
 
         for (std::vector<std::pair<int64_t, NodeId> >::iterator it(vTimedOutLocks.begin()); it != vTimedOutLocks.end(); it++)
@@ -613,6 +618,9 @@ int CSMSG::BuildPurgedSets()
     LogPrint(BCLog::SMSG, "%s\n", __func__);
     LOCK2(cs_smsg, cs_smsgDB);
 
+    setPurged.clear();
+    setPurgedTimestamps.clear();
+
     SecMsgDB db;
     if (!db.Open("cr+"))
         return SMSG_GENERAL_ERROR;
@@ -637,6 +645,8 @@ int CSMSG::BuildPurgedSets()
     delete it;
 
     LogPrint(BCLog::SMSG, "Loaded %u purged tokens from database.\n", nPurged);
+
+    nLastProcessedPurged = now;
 
     return SMSG_NO_ERROR;
 };
