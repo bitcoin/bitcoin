@@ -16,6 +16,7 @@ static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 
 class CInputCoin {
 public:
+    CInputCoin() = delete;
     CInputCoin(const CTransactionRef& tx, unsigned int i)
     {
         if (!tx)
@@ -25,14 +26,10 @@ public:
 
         outpoint = COutPoint(tx->GetHash(), i);
         txout = tx->vout[i];
-        effective_value = txout.nValue;
     }
 
     COutPoint outpoint;
     CTxOut txout;
-    CAmount effective_value;
-    CAmount fee = 0;
-    CAmount long_term_fee = 0;
 
     bool operator<(const CInputCoin& rhs) const {
         return outpoint < rhs.outpoint;
@@ -47,7 +44,22 @@ public:
     }
 };
 
-bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees);
+class InputCoinWithFee
+{
+public:
+    InputCoinWithFee() = delete;
+    InputCoinWithFee(const CInputCoin&& coin_in, const CAmount& fee_in, const CAmount& long_term_fee)
+        : coin(coin_in), fee(fee_in), effective_value(coin.txout.nValue - fee), waste(fee - long_term_fee)
+    {
+    }
+
+    CInputCoin coin;
+    CAmount fee;
+    CAmount effective_value;
+    CAmount waste;
+};
+
+bool SelectCoinsBnB(std::vector<InputCoinWithFee>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees);
 
 // Original coin selection algorithm as a fallback
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);

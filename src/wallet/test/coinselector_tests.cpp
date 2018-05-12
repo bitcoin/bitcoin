@@ -36,12 +36,12 @@ CoinEligibilityFilter filter_confirmed(1, 1, 0);
 CoinEligibilityFilter filter_standard_extra(6, 6, 0);
 CoinSelectionParams coin_selection_params(false, 0, 0, CFeeRate(0), 0);
 
-static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>& set)
+static void add_coin(const CAmount& nValue, int nInput, std::vector<InputCoinWithFee>& set)
 {
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    set.emplace_back(MakeTransactionRef(tx), nInput);
+    set.emplace_back(CInputCoin(MakeTransactionRef(tx), nInput), 0, 0);
 }
 
 static void add_coin(const CAmount& nValue, int nInput, CoinSet& set)
@@ -90,7 +90,7 @@ static bool equal_sets(CoinSet a, CoinSet b)
     return ret.first == a.end() && ret.second == b.end();
 }
 
-static CAmount make_hard_case(int utxos, std::vector<CInputCoin>& utxo_pool)
+static CAmount make_hard_case(int utxos, std::vector<InputCoinWithFee>& utxo_pool)
 {
     utxo_pool.clear();
     CAmount target = 0;
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     LOCK(testWallet.cs_wallet);
 
     // Setup
-    std::vector<CInputCoin> utxo_pool;
+    std::vector<InputCoinWithFee> utxo_pool;
     CoinSet selection;
     CoinSet actual_selection;
     CAmount value_ret = 0;
