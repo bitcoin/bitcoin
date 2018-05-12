@@ -24,10 +24,8 @@ UniValue anonoutput(const JSONRPCRequest &request)
 
     if (request.params.size() == 0)
     {
-        int64_t nLastRCTOutIndex;
-        if (!pblocktree->ReadLastRCTOutput(nLastRCTOutIndex))
-            nLastRCTOutIndex = 0;
-        result.push_back(Pair("lastindex", (int)nLastRCTOutIndex));
+        LOCK(cs_main);
+        result.push_back(Pair("lastindex", (int)chainActive.Tip()->nAnonOutputs));
         return result;
     };
 

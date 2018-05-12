@@ -4637,7 +4637,10 @@ int CHDWallet::PickHidingOutputs(std::vector<std::vector<int64_t> > &vMI, size_t
     size_t nInputs = vMI.size();
 
     int64_t nLastRCTOutIndex = 0;
-    pblocktree->ReadLastRCTOutput(nLastRCTOutIndex);
+    {
+        AssertLockHeld(cs_main);
+        nLastRCTOutIndex = chainActive.Tip()->nAnonOutputs;
+    }
 
     if (nLastRCTOutIndex < (int64_t)(nInputs * nRingSize))
         return errorN(1, sError, __func__, _("Not enough anon outputs exist, last: %d, required: %d").c_str(), nLastRCTOutIndex, nInputs * nRingSize);

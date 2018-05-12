@@ -1943,13 +1943,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
 
                 if (view.nLastRCTOutput == 0)
                 {
-                    pblocktree->ReadLastRCTOutput(view.nLastRCTOutput);
-                    if (view.nLastRCTOutput == 0) {
-                        error("%s: RCT index missing, txn %s, %d.", __func__, hash.ToString(), k);
-                        if (!view.fForceDisconnect)
-                            return DISCONNECT_FAILED;
-                    };
-
+                    view.nLastRCTOutput = pindex->nAnonOutputs;
                     // Verify data matches
                     CAnonOutput ao;
                     if (!pblocktree->ReadRCTOutput(view.nLastRCTOutput, ao)) {
@@ -2637,17 +2631,11 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             nMoneyCreated += tx.GetValueOut();
         };
 
+        if (view.nLastRCTOutput == 0)
+            view.nLastRCTOutput = pindex->pprev ? pindex->pprev->nAnonOutputs : 0;
         // Index rct outputs and keyimages
         if (state.fHasAnonOutput || state.fHasAnonInput)
         {
-            if (view.nLastRCTOutput == 0)
-            {
-                if (!pblocktree->ReadLastRCTOutput(view.nLastRCTOutput))
-                {
-                    //LogPrint(BCLog::RINGCT, "%s: Writing 0 to LastRCTOutput\n", __func__);
-                    //pblocktree->WriteLastRCTOutput(0);
-                };
-            };
 
             COutPoint op(txhash, 0);
             for (const auto &txin : tx.vin)
@@ -2681,25 +2669,27 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 CTxOutRingCT *txout = (CTxOutRingCT*)tx.vpout[k].get();
 
                 int64_t nTestExists;
-                if (!fVerifyingDB
-                    && (pblocktree->ReadRCTOutputLink(txout->pk, nTestExists)
-                        || view.ReadRCTOutputLink(txout->pk, nTestExists))) {
+                if (!fVerifyingDB && pblocktree->ReadRCTOutputLink(txout->pk, nTestExists)) {
                     control.Wait();
 
-                    if (!fTriedRewind &&
-                        (GetNumPeers() < 1 || chainActive.Tip()->nHeight < GetNumBlocksOfPeers()-1)) // IsInitialBlockDownload()
+                    if (nTestExists > pindex->pprev->nAnonOutputs)
                     {
-                        LogPrintf("%s: Duplicate anon-output %s, index %d.\n", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists);
-                        LogPrintf("Rewinding to last checkpoint.\n");
-                        fTriedRewind = true;
-                        int nBlocks = 0;
-                        std::string sError;
-                        int nLastRCTCheckpointHeight = ((nHeightAtStartup-1) / 250) * 250;
-                        RewindToCheckpoint(nLastRCTCheckpointHeight, nBlocks, sError);
+                        // The anon index can diverge from the chain index if shutdown does not complete
+                        LogPrintf("%s: Duplicate anon-output %s, index %d, above last index %d.\n", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists, pindex->pprev->nAnonOutputs);
+                        LogPrintf("Attempting to repair anon index.\n");
+                        std::set<CCmpPubKey> setKi; // unused
+                        RollBackRCTIndex(pindex->pprev->nAnonOutputs, nTestExists, setKi);
                         return false;
-                    };
-                    return error("%s: Duplicate anon-output %s, index %d.", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists);
+                    }
+
+                    return error("%s: Duplicate anon-output (db) %s, index %d.", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists);
                 };
+                if (!fVerifyingDB && view.ReadRCTOutputLink(txout->pk, nTestExists)) {
+                    control.Wait();
+                    return error("%s: Duplicate anon-output (view) %s, index %d.", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists);
+                };
+
+
 
                 op.n = k;
                 view.nLastRCTOutput++;
@@ -2846,7 +2836,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     if (fJustCheck)
         return true;
 
-    pindex->nMoneySupply = (pindex->pprev? pindex->pprev->nMoneySupply : 0) + nMoneyCreated;
+    pindex->nMoneySupply = (pindex->pprev ? pindex->pprev->nMoneySupply : 0) + nMoneyCreated;
+    pindex->nAnonOutputs = view.nLastRCTOutput;
     setDirtyBlockIndex.insert(pindex); // pindex has changed, must save to disk
 
     if (!fIsGenesisBlock
@@ -3083,28 +3074,10 @@ bool FlushView(CCoinsViewCache *view, CValidationState& state, bool fDisconnecti
                     return error("%s: EraseRCTOutput failed.", __func__);
             };
 
-            if (!view->fForceDisconnect)
-            if (!pblocktree->WriteLastRCTOutput(view->nLastRCTOutput))
-                return error("%s: WriteLastRCTOutput failed.", __func__);
         };
     } else
     {
         CDBBatch batch(*pblocktree);
-
-        if (view->anonOutputs.size() > 0)
-        {
-            batch.Write(DB_RCTOUTPUT_LAST, view->nLastRCTOutput);
-
-            if (view->nBlockHeight % 250 == 0)
-                batch.Write(std::make_pair(DB_RCTOUTPUT_CHECKPOINT, view->nBlockHeight), view->nLastRCTOutput);
-        } else
-        if (view->nBlockHeight % 250 == 0)
-        {
-
-            // TODO: Move nLastRCTOutput to chainindex
-            if (pblocktree->ReadLastRCTOutput(view->nLastRCTOutput))
-                batch.Write(std::make_pair(DB_RCTOUTPUT_CHECKPOINT, view->nBlockHeight), view->nLastRCTOutput);
-        };
 
         for (auto &it : view->keyImages)
             batch.Write(std::make_pair(DB_RCTKEYIMAGE, it.first), it.second);
@@ -3343,14 +3316,8 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime3;
 
     LogPrint(BCLog::BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
-    int64_t nLastValidRCTOutput = 0;
     setConnectKi.clear();
     {
-        if (!pblocktree->ReadLastRCTOutput(nLastValidRCTOutput))
-        {
-            LogPrint(BCLog::RINGCT, "%s: Writing 0 to LastRCTOutput\n", __func__);
-            pblocktree->WriteLastRCTOutput(0);
-        };
 
         CCoinsViewCache view(pcoinsTip.get());
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
@@ -5267,8 +5234,8 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     if(fReindexing) fReindex = true;
 
     // Check whether we have a transaction index
-    pblocktree->ReadFlag("txindex", fTxIndex);
-    LogPrintf("%s: transaction index %s\n", __func__, fTxIndex ? "enabled" : "disabled");
+    //pblocktree->ReadFlag("txindex", fTxIndex);
+    //LogPrintf("%s: transaction index %s\n", __func__, fTxIndex ? "enabled" : "disabled");
 
     // Check whether we have an address index
     pblocktree->ReadFlag("addressindex", fAddressIndex);
@@ -5660,10 +5627,21 @@ void UnloadBlockIndex()
     g_chainstate.UnloadBlockIndex();
 }
 
+bool TryAutoReindex()
+{
+    // Force reindex to update version
+    bool nV1 = false;
+    if (!pblocktree->ReadFlag("v1", nV1) || !nV1)
+        return true;
+    LogPrintf("%s: v1 Marker not detected, attempting reindex.\n", __func__);
+    return false;
+};
+
 bool LoadBlockIndex(const CChainParams& chainparams)
 {
     // Load block index from databases
     bool needs_init = fReindex;
+
     if (!fReindex) {
         bool ret = LoadBlockIndexDB(chainparams);
         if (!ret) return false;
@@ -5678,6 +5656,7 @@ bool LoadBlockIndex(const CChainParams& chainparams)
         // needs_init.
 
         LogPrintf("Initializing databases...\n");
+        pblocktree->WriteFlag("v1", true);
 
         // Use the provided setting for -addressindex in the new database
         fAddressIndex = gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX);

@@ -287,29 +287,37 @@ bool AllAnonOutputsUnknown(const CTransaction &tx, CValidationState &state)
 };
 
 
-bool RollBackRCTIndex(int64_t nLastValidRCTOutput, std::set<CCmpPubKey> &setKi)
+bool RollBackRCTIndex(int64_t nLastValidRCTOutput, int64_t nExpectErase, std::set<CCmpPubKey> &setKi)
 {
-    LogPrint(BCLog::RINGCT, "%s: Last valid %d, num ki %d\n", __func__, nLastValidRCTOutput, setKi.size());
+    LogPrintf("%s: Last valid %d, expect to erase %d, num ki %d\n", __func__, nLastValidRCTOutput, nExpectErase, setKi.size());
     // This should hardly happen, if ever
 
     AssertLockHeld(cs_main);
 
-    int64_t nLastRCTOutput = 0;
-    if (!pblocktree->ReadLastRCTOutput(nLastRCTOutput))
-        return error("%s: ReadLastRCTOutput failed.", __func__);
-
-    if (nLastRCTOutput == nLastValidRCTOutput)
-        return true;
-
-    while (nLastRCTOutput > nLastValidRCTOutput)
+    int64_t nRemRCTOutput = nLastValidRCTOutput;
+    CAnonOutput ao;
+    while (true)
     {
-        CAnonOutput ao;
-        if (!pblocktree->ReadRCTOutput(nLastRCTOutput, ao))
+        nRemRCTOutput++;
+        if (!pblocktree->ReadRCTOutput(nRemRCTOutput, ao))
             break;
-        pblocktree->EraseRCTOutput(nLastRCTOutput);
+        pblocktree->EraseRCTOutput(nRemRCTOutput);
         pblocktree->EraseRCTOutputLink(ao.pubkey);
+    };
 
-        nLastRCTOutput--;
+    LogPrintf("%s: Removed up to %d\n", __func__, nRemRCTOutput);
+    if (nExpectErase > nRemRCTOutput)
+    {
+        nRemRCTOutput = nExpectErase;
+        while (nRemRCTOutput > nLastValidRCTOutput)
+        {
+            if (!pblocktree->ReadRCTOutput(nRemRCTOutput, ao))
+                break;
+            pblocktree->EraseRCTOutput(nRemRCTOutput);
+            pblocktree->EraseRCTOutputLink(ao.pubkey);
+            nRemRCTOutput--;
+        };
+        LogPrintf("%s: Removed down to %d\n", __func__, nRemRCTOutput);
     };
 
     for (const auto &ki : setKi)
@@ -317,19 +325,14 @@ bool RollBackRCTIndex(int64_t nLastValidRCTOutput, std::set<CCmpPubKey> &setKi)
         pblocktree->EraseRCTKeyImage(ki);
     };
 
-    if (!pblocktree->WriteLastRCTOutput(nLastValidRCTOutput))
-        return error("%s: WriteLastRCTOutput failed.", __func__);
-
     return true;
 };
 
 bool RewindToCheckpoint(int nCheckPointHeight, int &nBlocks, std::string &sError)
 {
-    LogPrintf("%s: At height %d\n", nCheckPointHeight);
+    LogPrintf("%s: At height %d\n", __func__, nCheckPointHeight);
     nBlocks = 0;
     int64_t nLastRCTOutput = 0;
-    if (!pblocktree->ReadRCTOutputCheckpoint(nCheckPointHeight, nLastRCTOutput))
-        return errorN(false, sError, __func__, "ReadRCTOutputCheckpoint failed, suggest reindex.");
 
     const CChainParams& chainparams = Params();
     CCoinsViewCache view(pcoinsTip.get());
@@ -357,6 +360,7 @@ bool RewindToCheckpoint(int nCheckPointHeight, int &nBlocks, std::string &sError
         chainActive.SetTip(pindex->pprev);
         UpdateTip(pindex->pprev, chainparams);
     };
+    nLastRCTOutput = chainActive.Tip()->nAnonOutputs;
 
     int nRemoveOutput = nLastRCTOutput+1;
     CAnonOutput ao;
@@ -366,10 +370,5 @@ bool RewindToCheckpoint(int nCheckPointHeight, int &nBlocks, std::string &sError
         pblocktree->EraseRCTOutputLink(ao.pubkey);
         nRemoveOutput++;
     };
-
-    std::set<CCmpPubKey> setKi; // unused
-    if (!RollBackRCTIndex(nLastRCTOutput, setKi))
-        return errorN(false, sError, __func__, "RollBackRCTIndex failed.");
-
     return true;
 };

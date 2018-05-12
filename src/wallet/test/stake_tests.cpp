@@ -343,9 +343,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
         CCoinControl coinControl;
         BOOST_CHECK(30 * COIN == pwallet->GetAvailableAnonBalance(&coinControl));
 
-        int64_t nLastRCTOutIndex = 0;
-        pblocktree->ReadLastRCTOutput(nLastRCTOutIndex);
-        BOOST_CHECK(nLastRCTOutIndex == 4);
+        BOOST_CHECK(chainActive.Tip()->nAnonOutputs == 4);
 
         for (size_t i = 0; i < 2; ++i)
         {
@@ -363,9 +361,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
             BOOST_CHECK(prevTipHash == chainActive.Tip()->GetBlockHash());
         }
 
-        pblocktree->ReadLastRCTOutput(nLastRCTOutIndex);
-        BOOST_CHECK(nLastRCTOutIndex == 0);
-
+        BOOST_CHECK(chainActive.Tip()->nAnonOutputs == 0);
         BOOST_CHECK(chainActive.Tip()->nMoneySupply == 12500000153511);
     }
 

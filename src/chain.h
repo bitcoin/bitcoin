@@ -220,6 +220,7 @@ public:
     COutPoint prevoutStake;
     //uint256 hashProof;
     CAmount nMoneySupply;
+    int64_t nAnonOutputs; // last index
 
     //! Verification status of this block. See enum BlockStatus
     uint32_t nStatus;
@@ -260,6 +261,7 @@ public:
         //hashProof = uint256();
 
         nMoneySupply = 0;
+        nAnonOutputs = 0;
 
         nVersion                = 0;
         hashMerkleRoot          = uint256();
@@ -464,9 +466,9 @@ public:
         READWRITE(nFlags);
         READWRITE(bnStakeModifier);
         READWRITE(prevoutStake);
-        //READWRITE(nStakeTime);
         //READWRITE(hashProof);
         READWRITE(nMoneySupply);
+        READWRITE(nAnonOutputs);
 
 
         // block header

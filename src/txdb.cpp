@@ -39,9 +39,7 @@ static const char DB_LAST_BLOCK = 'l';
 
 /*
 static const char DB_RCTOUTPUT = 'A';
-static const char DB_RCTOUTPUT_LAST = 'I';
 static const char DB_RCTOUTPUT_LINK = 'L';
-static const char DB_RCTOUTPUT_CHECKPOINT = 'H';
 static const char DB_RCTKEYIMAGE = 'K';
 */
 
@@ -465,6 +463,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 //pindexNew->hashProof                = diskindex.hashProof;
 
                 pindexNew->nMoneySupply             = diskindex.nMoneySupply;
+                pindexNew->nAnonOutputs             = diskindex.nAnonOutputs;
 
 
                 if (pindexNew->nHeight == 0
@@ -494,24 +493,6 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
 
     return true;
 }
-
-bool CBlockTreeDB::ReadLastRCTOutput(int64_t &rv)
-{
-    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-
-    if (!Read(DB_RCTOUTPUT_LAST, rv))
-        rv = 0;
-
-    return true;
-};
-
-
-bool CBlockTreeDB::WriteLastRCTOutput(int64_t i)
-{
-    CDBBatch batch(*this);
-    batch.Write(DB_RCTOUTPUT_LAST, i);
-    return WriteBatch(batch);
-};
 
 bool CBlockTreeDB::ReadRCTOutput(int64_t i, CAnonOutput &ao)
 {
@@ -551,12 +532,6 @@ bool CBlockTreeDB::EraseRCTOutputLink(const CCmpPubKey &pk)
     batch.Erase(std::make_pair(DB_RCTOUTPUT_LINK, pk));
     return WriteBatch(batch);
 };
-
-bool CBlockTreeDB::ReadRCTOutputCheckpoint(int nBlock, int64_t &i)
-{
-    return Read(std::make_pair(DB_RCTOUTPUT_CHECKPOINT, nBlock), i);
-};
-
 
 bool CBlockTreeDB::ReadRCTKeyImage(const CCmpPubKey &ki, uint256 &txhash)
 {

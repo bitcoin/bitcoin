@@ -26,9 +26,7 @@ class CCoinsViewDBCursor;
 class uint256;
 
 const char DB_RCTOUTPUT = 'A';
-const char DB_RCTOUTPUT_LAST = 'I';
 const char DB_RCTOUTPUT_LINK = 'L';
-const char DB_RCTOUTPUT_CHECKPOINT = 'H';
 const char DB_RCTKEYIMAGE = 'K';
 
 
@@ -151,8 +149,6 @@ public:
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
 
-    bool ReadLastRCTOutput(int64_t &rv);
-    bool WriteLastRCTOutput(int64_t i);
 
     bool ReadRCTOutput(int64_t i, CAnonOutput &ao);
     bool WriteRCTOutput(int64_t i, const CAnonOutput &ao);
@@ -162,7 +158,6 @@ public:
     bool WriteRCTOutputLink(const CCmpPubKey &pk, int64_t i);
     bool EraseRCTOutputLink(const CCmpPubKey &pk);
 
-    bool ReadRCTOutputCheckpoint(int nBlock, int64_t &i);
 
 
     bool ReadRCTKeyImage(const CCmpPubKey &ki, uint256 &txhash);
