@@ -6,6 +6,8 @@
 #include <util.h>
 #include <utilmoneystr.h>
 
+#include <stdexcept>
+
 // Descending order comparator
 struct {
     bool operator()(const OutputGroup& a, const OutputGroup& b) const
@@ -55,6 +57,7 @@ struct {
  *        that were selected.
  * @param CAmount not_input_fees -> The fees that need to be paid for the outputs and fixed size
  *        overhead (version, locktime, marker and flag)
+ * @throws std::domain_error if utxo_pool includes utxos with negative or zero effective_value
  */
 
 static const size_t TOTAL_TRIES = 100000;
@@ -71,8 +74,10 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
     // Calculate curr_available_value
     CAmount curr_available_value = 0;
     for (const OutputGroup& utxo : utxo_pool) {
-        // Assert that this utxo is not negative. It should never be negative, effective value calculation should have removed it
-        assert(utxo.effective_value > 0);
+        if (utxo.effective_value <= 0) {
+            // It should never be negative or zero, effective value calculation should have removed it
+            throw std::domain_error("utxo effective_value should be positive");
+        }
         curr_available_value += utxo.effective_value;
     }
     if (curr_available_value < actual_target) {
