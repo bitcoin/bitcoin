@@ -59,7 +59,7 @@ def parseline(line):
     else:
         # Do IPv4 sanity check
         ip = 0
-        for i in range(0,4):
+        for i in range(4):
             if int(m.group(i+2)) < 0 or int(m.group(i+2)) > 255:
                 return None
             ip = ip + (int(m.group(i+2)) << (8*(3-i)))

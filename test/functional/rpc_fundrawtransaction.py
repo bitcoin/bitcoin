@@ -540,7 +540,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
-        for i in range(0,20):
+        for i in range(20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
         self.nodes[0].generate(1)
         self.sync_all()
@@ -570,7 +570,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
-        for i in range(0,20):
+        for i in range(20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
         self.nodes[0].generate(1)
         self.sync_all()
