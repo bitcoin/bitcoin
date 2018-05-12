@@ -1753,7 +1753,7 @@
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>支払要求のための形式を使用してください。すべてのフィールドは&lt;b&gt;おプション&lt;/b&gt; です。</translation>
+        <translation>支払要求のための形式を使用してください。すべてのフィールドは&lt;b&gt;オプション&lt;/b&gt; です。</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
