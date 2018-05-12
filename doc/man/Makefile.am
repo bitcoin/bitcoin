@@ -1,6 +1,6 @@
 dist_man1_MANS=
 
-if BUILD_microbitcoind
+if BUILD_BITCOIND
   dist_man1_MANS+=microbitcoind.1
 endif
 
