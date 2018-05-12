@@ -9,5 +9,5 @@ if ENABLE_QT
 endif
 
 if BUILD_BITCOIN_UTILS
-  dist_man1_MANS+=microbitcoin-cli.1 bitcoin-tx.1
+  dist_man1_MANS+=microbitcoin-cli.1 microbitcoin-tx.1
 endif
