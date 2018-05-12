@@ -64,6 +64,10 @@ typedef enum ScriptError_t
     /* softfork safeness */
     SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS,
 
+    /* Constant scriptCode */
+    SCRIPT_ERR_OP_CODESEPARATOR,
+    SCRIPT_ERR_SIG_FINDANDDELETE,
+
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 

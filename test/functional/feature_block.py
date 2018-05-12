@@ -31,6 +31,7 @@ from test_framework.script import (
     OP_ELSE,
     OP_ENDIF,
     OP_EQUAL,
+    OP_DROP,
     OP_FALSE,
     OP_HASH160,
     OP_IF,
@@ -1219,7 +1220,7 @@ class FullBlockTest(BitcoinTestFramework):
         block.vtx.extend(tx_list)
 
     # this is a little handier to use than the version in blocktools.py
-    def create_tx(self, spend_tx, n, value, script=CScript([OP_TRUE])):
+    def create_tx(self, spend_tx, n, value, script=CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])):
         return create_transaction(spend_tx, n, b"", value, script)
 
     # sign a transaction, using the key we know about
