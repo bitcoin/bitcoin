@@ -1880,7 +1880,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     fLiteMode = GetBoolArg("-litemode", false);
 
     if(fLiteMode) {
-        InitWarning(_("You are starting in lite mode, all Syscoin-specific functionality is disabled."));
+        InitWarning(_("You are starting in lite mode, all masternode-specific functionality is disabled."));
     }
 
     if((!fLiteMode && fTxIndex == false)
