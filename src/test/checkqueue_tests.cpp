@@ -203,8 +203,8 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Max)
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Random)
 {
     std::vector<size_t> range;
-    range.reserve(100000/1000);
-    for (size_t i = 2; i < 100000; i += std::max((size_t)1, (size_t)InsecureRandRange(std::min((size_t)1000, ((size_t)100000) - i))))
+    range.reserve(40);
+    for (size_t i = 2; i < 100000; i += InsecureRandRange(5000) + 1)
         range.push_back(i);
     Correct_Queue_range(range);
 }
@@ -442,4 +442,3 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
-
