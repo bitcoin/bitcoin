@@ -39,10 +39,10 @@ CInstantSend instantsend;
 
 // Transaction Locks
 //
-// step 1) Some node announces intention to lock transaction inputs via "txlreg" message
-// step 2) Top COutPointLock::SIGNATURES_TOTAL masternodes per each spent outpoint push "txvote" message
-// step 3) Once there are COutPointLock::SIGNATURES_REQUIRED valid "txvote" messages per each spent outpoint
-//         for a corresponding "txlreg" message, all outpoints from that tx are treated as locked
+// step 1) Some node announces intention to lock transaction inputs via "txlockrequest" message (ix)
+// step 2) Top COutPointLock::SIGNATURES_TOTAL masternodes per each spent outpoint push "txlockvote" message (txlvote)
+// step 3) Once there are COutPointLock::SIGNATURES_REQUIRED valid "txlockvote" messages (txlvote) per each spent outpoint
+//         for a corresponding "txlockrequest" message (ix), all outpoints from that tx are treated as locked
 
 //
 // CInstantSend
