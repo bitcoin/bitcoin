@@ -236,8 +236,6 @@ std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fSkipRangeproof = false;
 bool fBusyImporting = false;        // covers ActivateBestChain too
-bool fTriedRewind = false;
-int nHeightAtStartup = 0;
 bool fTxIndex = true;
 bool fAddressIndex = false;
 bool fTimestampIndex = false;

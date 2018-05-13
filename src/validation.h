@@ -215,7 +215,6 @@ extern std::atomic_bool fImporting;
 extern bool fSkipRangeproof;
 extern bool fBusyImporting;
 extern std::atomic_bool fReindex;
-extern int nHeightAtStartup;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern bool fAddressIndex;

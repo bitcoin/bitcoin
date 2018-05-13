@@ -1660,8 +1660,6 @@ bool AppInitMain()
                     }
 
                     CBlockIndex* tip = chainActive.Tip();
-                    if (tip)
-                        nHeightAtStartup = tip->nHeight;
                     RPCNotifyBlockChange(true, tip);
 
                     if (tip
