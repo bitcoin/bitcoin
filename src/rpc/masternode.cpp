@@ -770,9 +770,6 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             EnsureWalletIsUnlocked();
         }
 
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
         int nSuccessful = 0;
         int nFailed = 0;
 
