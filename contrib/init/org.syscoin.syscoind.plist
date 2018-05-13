@@ -7,7 +7,6 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/usr/local/bin/syscoind</string>
-		<string>-daemon</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

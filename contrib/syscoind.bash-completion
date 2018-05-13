@@ -1,102 +1,21 @@
-# bash programmable completion for syscoind(1) and syscoin-cli(1)
-# Copyright (c) 2012,2014 Christian von Roques <roques@mti.ag>
+# bash programmable completion for syscoind(1) and syscoin-qt(1)
+# Copyright (c) 2012-2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-have syscoind && {
-
-# call $syscoind for RPC
-_syscoin_rpc() {
-    # determine already specified args necessary for RPC
-    local rpcargs=()
-    for i in ${COMP_LINE}; do
-        case "$i" in
-            -conf=*|-proxy*|-rpc*)
-                rpcargs=( "${rpcargs[@]}" "$i" )
-                ;;
-        esac
-    done
-    $syscoind "${rpcargs[@]}" "$@"
-}
-
-# Add syscoin accounts to COMPREPLY
-_syscoin_accounts() {
-    local accounts
-    accounts=$(_syscoin_rpc listaccounts | awk '/".*"/ { a=$1; gsub(/"/, "", a); print a}')
-    COMPREPLY=( "${COMPREPLY[@]}" $( compgen -W "$accounts" -- "$cur" ) )
-}
 
 _syscoind() {
     local cur prev words=() cword
     local syscoind
 
-    # save and use original argument to invoke syscoind
-    # syscoind might not be in $PATH
+    # save and use original argument to invoke syscoind for -help
+    # it might not be in $PATH
     syscoind="$1"
 
     COMPREPLY=()
     _get_comp_words_by_ref -n = cur prev words cword
 
-    if ((cword > 4)); then
-        case ${words[cword-4]} in
-            listtransactions)
-                COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
-                return 0
-                ;;
-            signrawtransaction)
-                COMPREPLY=( $( compgen -W "ALL NONE SINGLE ALL|ANYONECANPAY NONE|ANYONECANPAY SINGLE|ANYONECANPAY" -- "$cur" ) )
-                return 0
-                ;;
-        esac
-    fi
-
-    if ((cword > 3)); then
-        case ${words[cword-3]} in
-            addmultisigaddress)
-                _syscoin_accounts
-                return 0
-                ;;
-            getbalance|gettxout|importaddress|importprivkey|listreceivedbyaccount|listreceivedbyaddress|listsinceblock)
-                COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
-                return 0
-                ;;
-        esac
-    fi
-
-    if ((cword > 2)); then
-        case ${words[cword-2]} in
-            addnode)
-                COMPREPLY=( $( compgen -W "add remove onetry" -- "$cur" ) )
-                return 0
-                ;;
-            getblock|getrawtransaction|gettransaction|listaccounts|listreceivedbyaccount|listreceivedbyaddress|sendrawtransaction)
-                COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
-                return 0
-                ;;
-            move|setaccount)
-                _syscoin_accounts
-                return 0
-                ;;
-        esac
-    fi
-
-    case "$prev" in
-        backupwallet|dumpwallet|importwallet)
-            _filedir
-            return 0
-            ;;
-        getmempool|lockunspent|setgenerate)
-            COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
-            return 0
-            ;;
-        getaccountaddress|getaddressesbyaccount|getbalance|getnewaddress|getreceivedbyaccount|listtransactions|move|sendfrom|sendmany)
-            _syscoin_accounts
-            return 0
-            ;;
-    esac
-
     case "$cur" in
-        -conf=*|-pid=*|-loadblock=*|-wallet=*)
+        -conf=*|-pid=*|-loadblock=*|-rootcertificates=*|-rpccookiefile=*|-wallet=*)
             cur="${cur#*=}"
             _filedir
             return 0
@@ -110,19 +29,13 @@ _syscoind() {
             return 0
             ;;
         *)
-            local helpopts commands
 
-            # only parse --help if senseful
+            # only parse -help if sensible
             if [[ -z "$cur" || "$cur" =~ ^- ]]; then
-                helpopts=$($syscoind --help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
+                local helpopts
+                helpopts=$($syscoind -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
+                COMPREPLY=( $( compgen -W "$helpopts" -- "$cur" ) )
             fi
-
-            # only parse help if senseful
-            if [[ -z "$cur" || "$cur" =~ ^[a-z] ]]; then
-                commands=$(_syscoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
-            fi
-
-            COMPREPLY=( $( compgen -W "$helpopts $commands" -- "$cur" ) )
 
             # Prevent space if an argument is desired
             if [[ $COMPREPLY == *= ]]; then
@@ -131,10 +44,8 @@ _syscoind() {
             return 0
             ;;
     esac
-}
-
-complete -F _syscoind syscoind syscoin-cli
-}
+} &&
+complete -F _syscoind syscoind syscoin-qt
 
 # Local variables:
 # mode: shell-script
