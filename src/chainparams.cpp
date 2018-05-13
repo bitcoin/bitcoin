@@ -40,12 +40,12 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     return genesis;
 }
 
-static CBlock CreateDevNetGenesisBlock(const uint256 &prevBlockHash, const std::string& devNetName, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateDevNetGenesisBlock(const uint256 &prevBlockHash, const std::string& devNetName, uint32_t nTime, uint32_t nNonce, uint32_t nBits, const CAmount& genesisReward)
 {
     assert(!devNetName.empty());
 
     CMutableTransaction txNew;
-    txNew.nVersion = 4;
+    txNew.nVersion = 1;
     txNew.vin.resize(1);
     txNew.vout.resize(1);
     // put height (BIP34) and devnet name into coinbase
@@ -57,7 +57,7 @@ static CBlock CreateDevNetGenesisBlock(const uint256 &prevBlockHash, const std::
     genesis.nTime    = nTime;
     genesis.nBits    = nBits;
     genesis.nNonce   = nNonce;
-    genesis.nVersion = nVersion;
+    genesis.nVersion = 4;
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
     genesis.hashPrevBlock = prevBlockHash;
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
@@ -87,7 +87,7 @@ static CBlock FindDevNetGenesisBlock(const Consensus::Params& params, const CBlo
     std::string devNetName = GetDevNetName();
     assert(!devNetName.empty());
 
-    CBlock block = CreateDevNetGenesisBlock(prevBlock.GetHash(), devNetName.c_str(), prevBlock.nTime + 1, 0, prevBlock.nBits, prevBlock.nVersion, reward);
+    CBlock block = CreateDevNetGenesisBlock(prevBlock.GetHash(), devNetName.c_str(), prevBlock.nTime + 1, 0, prevBlock.nBits, reward);
 
     arith_uint256 bnTarget;
     bnTarget.SetCompact(block.nBits);
