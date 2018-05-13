@@ -52,6 +52,9 @@ static uint64_t GolombRiceDecode(BitStreamReader<IStream>& bitreader, uint8_t P)
 // See: https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
 static uint64_t MapIntoRange(uint64_t x, uint64_t n)
 {
+#ifdef __SIZEOF_INT128__
+    return (static_cast<unsigned __int128>(x) * static_cast<unsigned __int128>(n)) >> 64;
+#else
     // To perform the calculation on 64-bit numbers without losing the
     // result to overflow, split the numbers into the most significant and
     // least significant 32 bits and perform multiplication piece-wise.
@@ -70,6 +73,7 @@ static uint64_t MapIntoRange(uint64_t x, uint64_t n)
     uint64_t mid34 = (bd >> 32) + (bc & 0xFFFFFFFF) + (ad & 0xFFFFFFFF);
     uint64_t upper64 = ac + (bc >> 32) + (ad >> 32) + (mid34 >> 32);
     return upper64;
+#endif
 }
 
 uint64_t GCSFilter::HashToRange(const Element& element) const
