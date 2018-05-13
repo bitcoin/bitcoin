@@ -291,7 +291,14 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
 
         if (!CMessageSigner::VerifyMessage(pubKeyId, vchSig, strMessage, strError)){
             LogPrintf("CSporkMessage::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
-            return false;
+            // Note: unlike for other messages we have to check for new format even with SPORK_6_NEW_SIGS
+            // inactive because SPORK_6_NEW_SIGS default is OFF and it is not the first spork to sync
+            // (and even if it would, spork order can't be guaranteed anyway).
+            uint256 hash = GetSignatureHash();
+            if (!CHashSigner::VerifyHash(hash, pubKeyId, vchSig, strError)) {
+                LogPrintf("CSporkMessage::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
+                return false;
+            }
         }
     }
 
