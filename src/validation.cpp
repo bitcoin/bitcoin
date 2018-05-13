@@ -4212,8 +4212,10 @@ bool InitBlockIndex(const CChainParams& chainparams)
                 return false;
 
             if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
-                if (!AddGenesisBlock(chainparams, chainparams.DevNetGenesisBlock(), state))
-                    return false;
+                // We can't continue if devnet genesis block is invalid
+                std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(chainparams.DevNetGenesisBlock());
+                bool fProcessDevnetGenesisBlock = ProcessNewBlock(chainparams, shared_pblock, true, NULL);
+                assert(fProcessDevnetGenesisBlock);
             }
 
             // Force a chainstate write so that when we VerifyDB in a moment, it doesn't check stale data
