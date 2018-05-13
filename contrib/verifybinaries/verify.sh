@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,8 +23,8 @@ TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test"
-HOST1="https://syscoincore.org"
-HOST2="https://syscoin.org"
+HOST1="https://syscoin.org"
+HOST2="https://syscoincore.org"
 BASEDIR="/bin/"
 VERSIONPREFIX="syscoin-core-"
 RCVERSIONSTRING="rc"
@@ -123,7 +123,7 @@ if [ $RET -ne 0 ]; then
       echo "Bad signature."
    elif [ $RET -eq 2 ]; then
       #or if a gpg error has occurred
-      echo "gpg error. Do you have the Bitcoin Core binary release signing key installed?"
+      echo "gpg error. Do you have the Syscoin Core binary release signing key installed?"
    fi
 
    echo "gpg output:"

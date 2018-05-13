@@ -5,10 +5,10 @@
 Make sure you obtain the proper release signing key and verify the fingerprint with several independent sources.
 
 ```sh
-$ gpg --fingerprint "Bitcoin Core binary release signing key"
+$ gpg --fingerprint "Syscoin Core binary release signing key"
 pub   4096R/36C2E964 2015-06-24 [expires: 2017-02-13]
       Key fingerprint = 01EA 5486 DE18 A882 D4C2  6845 90C8 019E 36C2 E964
-uid                  Wladimir J. van der Laan (Bitcoin Core binary release signing key) <laanwj@gmail.com>
+uid                  Wladimir J. van der Laan (Syscoin Core binary release signing key) <laanwj@gmail.com>
 ```
 
 #### Usage:
