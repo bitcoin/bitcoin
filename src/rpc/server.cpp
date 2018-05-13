@@ -161,7 +161,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 
     for (const auto& entry : mapCommands)
         vCommands.push_back(make_pair(entry.second->category + entry.first, entry.second));
-    sort(vCommands.begin(), vCommands.end());
+    std::sort(vCommands.begin(), vCommands.end());
 
     JSONRPCRequest jreq(helpreq);
     jreq.fHelp = true;
