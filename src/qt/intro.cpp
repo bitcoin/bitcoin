@@ -13,6 +13,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 
+#include <chainparamsbase.h>
 #include <interfaces/node.h>
 #include <util.h>
 
@@ -130,7 +131,7 @@ Intro::Intro(QWidget *parent) :
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(tr(PACKAGE_NAME)));
 
     uint64_t pruneTarget = std::max<int64_t>(0, gArgs.GetArg("-prune", 0));
-    requiredSpace = BLOCK_CHAIN_SIZE;
+    requiredSpace = gArgs.GetChainName() == CBaseChainParams::MAIN ? BLOCK_CHAIN_SIZE : BLOCK_CHAIN_SIZE_TESTNET;
     QString storageRequiresMsg = tr("At least %1 GB of data will be stored in this directory, and it will grow over time.");
     if (pruneTarget) {
         uint64_t prunedGBs = std::ceil(pruneTarget * 1024 * 1024.0 / GB_BYTES);
@@ -142,7 +143,7 @@ Intro::Intro(QWidget *parent) :
     } else {
         ui->lblExplanation3->setVisible(false);
     }
-    requiredSpace += CHAIN_STATE_SIZE;
+    requiredSpace += gArgs.GetChainName() == CBaseChainParams::MAIN ? CHAIN_STATE_SIZE : CHAIN_STATE_SIZE_TESTNET;
     ui->sizeWarningLabel->setText(
         tr("%1 will download and store a copy of the Bitcoin block chain.").arg(tr(PACKAGE_NAME)) + " " +
         storageRequiresMsg.arg(requiredSpace) + " " +

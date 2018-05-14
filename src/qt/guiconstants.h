@@ -55,7 +55,9 @@ static const int MAX_URI_LENGTH = 255;
 
 /* Minimum free space (in GB) needed for data directory */
 static const uint64_t BLOCK_CHAIN_SIZE = 200;
+static const uint64_t BLOCK_CHAIN_SIZE_TESTNET = 20;
 /* Minimum free space (in GB) needed for data directory when pruned; Does not include prune target */
 static const uint64_t CHAIN_STATE_SIZE = 3;
+static const uint64_t CHAIN_STATE_SIZE_TESTNET = 2;
 
 #endif // BITCOIN_QT_GUICONSTANTS_H
