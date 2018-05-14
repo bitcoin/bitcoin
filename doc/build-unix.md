@@ -71,7 +71,7 @@ tuned to conserve memory with additional CXXFLAGS:
 
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils python3
+    sudo apt-get install -y build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils python3
 
 Options when installing required Boost library files:
 
@@ -79,21 +79,21 @@ Options when installing required Boost library files:
 individual boost development packages, so the following can be used to only
 install necessary parts of boost:
 
-        sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libboost-graph-dev
+        sudo apt-get install -y libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libboost-graph-dev
 
 2. If that doesn't work, you can install all boost development packages with:
 
-        sudo apt-get install libboost-all-dev
+        sudo apt-get install -y libboost-all-dev
 
 BerkeleyDB is required for the wallet.
 
 **For Ubuntu only:** db4.8 packages are available [here](https://launchpad.net/~syscoin/+archive/syscoin).
 You can add the repository and install using the following commands:
 
-    sudo apt-get install software-properties-common
-    sudo add-apt-repository ppa:bitcoin/bitcoin
+    sudo apt-get install -y software-properties-common
+    sudo add-apt-repository -y ppa:bitcoin/bitcoin
     sudo apt-get update
-    sudo apt-get install libdb4.8-dev libdb4.8++-dev
+    sudo apt-get install -y libdb4.8-dev libdb4.8++-dev
 
 Ubuntu and Debian have their own libdb-dev and libdb++-dev packages, but these will install
 BerkeleyDB 5.1 or later, which break binary wallet compatibility with the distributed executables which
@@ -104,11 +104,11 @@ See the section "Disable-wallet mode" to build Syscoin Core without wallet.
 
 Optional (see --with-miniupnpc and --enable-upnp-default):
 
-    sudo apt-get install libminiupnpc-dev
+    sudo apt-get install -y libminiupnpc-dev
 
 ZMQ dependencies (provides ZMQ API 4.x):
 
-    sudo apt-get install libzmq3-dev
+    sudo apt-get install -y libzmq3-dev
 
 #### Dependencies for the GUI
 
@@ -119,15 +119,15 @@ To build without GUI pass `--without-gui`.
 
 To build with Qt 5 (recommended) you need the following:
 
-    sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
+    sudo apt-get install -y libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
 
 Alternatively, to build with Qt 4 you need the following:
 
-    sudo apt-get install libqt4-dev libprotobuf-dev protobuf-compiler
+    sudo apt-get install -y libqt4-dev libprotobuf-dev protobuf-compiler
 
 libqrencode (optional) can be installed with:
 
-    sudo apt-get install libqrencode-dev
+    sudo apt-get install -y libqrencode-dev
 
 Once these are installed, they will be found by configure and a syscoin-qt executable will be
 built by default.
