@@ -120,7 +120,10 @@ struct PrecomputedTransactionData
     uint256 hashPrevouts, hashSequence, hashOutputs;
     bool ready = false;
 
-    explicit PrecomputedTransactionData(const CTransaction& tx);
+    explicit PrecomputedTransactionData(const CTransaction& tx) { ComputeHashes(tx); }
+    PrecomputedTransactionData() {}
+
+    void ComputeHashes(const CTransaction& tx);
 };
 
 enum class SigVersion

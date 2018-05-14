@@ -1195,10 +1195,10 @@ uint256 GetOutputsHash(const CTransaction& txTo) {
 
 } // namespace
 
-PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo)
+void PrecomputedTransactionData::ComputeHashes(const CTransaction& txTo)
 {
     // Cache is calculated only for transactions with witness
-    if (txTo.HasWitness()) {
+    if (!ready && txTo.HasWitness()) {
         hashPrevouts = GetPrevoutHash(txTo);
         hashSequence = GetSequenceHash(txTo);
         hashOutputs = GetOutputsHash(txTo);
