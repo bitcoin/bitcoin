@@ -965,6 +965,14 @@ void BitcoinGUI::changeEvent(QEvent *e)
             QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
             if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
             {
+                if (wsevt->oldState() & Qt::WindowMaximized)
+                {
+                    QTimer::singleShot(0, this, SLOT(showMaximized()));
+                }
+                else
+                {
+                    QTimer::singleShot(0, this, SLOT(showNormal()));
+                }
                 QTimer::singleShot(0, this, SLOT(hide()));
                 e->ignore();
             }
