@@ -1445,9 +1445,17 @@ enum DisconnectResult
  * @param out The out point that corresponds to the tx input.
  * @return A DisconnectResult as an int
  */
-int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
+int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out, CAssetsCache* assetCache = nullptr)
 {
     bool fClean = true;
+
+    // This is needed because undo, is going to be cleared and moved when AddCoin is called. We need this for undo assets
+    Coin tempCoin;
+    bool fIsAsset = false;
+    if (undo.IsAsset()) {
+        fIsAsset = true;
+        tempCoin = undo;
+    }
 
     if (view.HaveCoin(out)) fClean = false; // overwriting transaction output
 
@@ -1469,12 +1477,20 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
     // it is an overwrite.
     view.AddCoin(out, std::move(undo), !fClean);
 
+    /** RVN START */
+    if (assetCache && fIsAsset) {
+        std::cout << "I AM HERE Undoing an input of an asset" << std::endl;
+        if (!assetCache->UndoAssetCoin(tempCoin, out))
+            fClean = false;
+    }
+    /** RVN END */
+
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
 
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
-static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
+static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, CAssetsCache* assetsCache = nullptr)
 {
     LogPrintf("%s\n", __func__);
     bool fClean = true;
@@ -1501,27 +1517,57 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
         uint256 hash = tx.GetHash();
         bool is_coinbase = tx.IsCoinBase();
 
+        std::vector<int> vAssetTxIndex;
+
         // Check that all outputs are available and match the outputs in the block itself
         // exactly.
         for (size_t o = 0; o < tx.vout.size(); o++) {
             if (!tx.vout[o].scriptPubKey.IsUnspendable()) {
                 COutPoint out(hash, o);
                 Coin coin;
-                bool is_spent = view.SpendCoin(out, &coin);
+                bool is_spent = view.SpendCoin(out, &coin, true); /** RVN START */ /** Added the boolean true, as we don't need to try and spend the asset */ /** RVN END */
                 if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
                     fClean = false; // transaction output mismatch
                 }
+
+                /** RVN START */
+                if (assetsCache) {
+                    if (IsScriptTransferAsset(tx.vout[o].scriptPubKey))
+                        vAssetTxIndex.emplace_back(o);
+                }
+                /** RVN START */
             }
         }
 
         /** RVN START */
-        if (tx.IsNewAsset()) {
-            CNewAsset asset;
-            std::string strAddress;
-            AssetFromTransaction(tx, asset, strAddress);
-            if (passets->ContainsAsset(asset)) {
-                if (!passets->RemoveAssetAndOutPoints(asset, strAddress)) {
-                    error("%s : Failed to Remove Asset and OutPoints. Asset Name : %s", __func__, asset.strName);
+        if (assetsCache) {
+            if (tx.IsNewAsset()) {
+                CNewAsset asset;
+                std::string strAddress;
+                AssetFromTransaction(tx, asset, strAddress);
+                if (assetsCache->ContainsAsset(asset)) {
+                    if (!assetsCache->RemoveNewAsset(asset, strAddress)) {
+                        error("%s : Failed to Remove Asset. Asset Name : %s", __func__, asset.strName);
+                        return DISCONNECT_FAILED;
+                    }
+                }
+            }
+
+            for (auto index : vAssetTxIndex) {
+                CAssetTransfer transfer;
+                std::string strAddress;
+                if (!TransferAssetFromScript(tx.vout[index].scriptPubKey, transfer, strAddress)) {
+                    LogPrintf(
+                            "%s : Failed getting transfer asset from Script, Even though it was marked as a transfer Tx: %s\n",
+                            __func__, tx.vout[index].ToString());
+                    // TODO should we disconnect_failed here????
+                    continue;
+                }
+
+                COutPoint out(hash, index);
+                if (!assetsCache->RemoveTransfer(transfer, strAddress, out)) {
+                    error("%s : Failed to Remove the transfer of an asset. Asset Name : %s, COutPoint : %s", __func__,
+                          transfer.strName, out.ToString());
                     return DISCONNECT_FAILED;
                 }
             }
@@ -1537,14 +1583,12 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
             }
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
                 const COutPoint &out = tx.vin[j].prevout;
-                int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
+                int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out, assetsCache);
                 if (res == DISCONNECT_FAILED) return DISCONNECT_FAILED;
                 fClean = fClean && res != DISCONNECT_UNCLEAN;
             }
             // At this point, all of txundo.vprevout should have been moved out.
         }
-
-
     }
 
     // move best block pointer to prevout block
@@ -2147,11 +2191,18 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     int64_t nStart = GetTimeMicros();
     {
         CCoinsViewCache view(pcoinsTip);
+
+        CAssetsCache assetCache(*passets);
+        assert(assetCache.setAssets.size() == passets->setAssets.size());
+
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
-        if (DisconnectBlock(block, pindexDelete, view) != DISCONNECT_OK)
+        if (DisconnectBlock(block, pindexDelete, view, &assetCache) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         bool flushed = view.Flush();
         assert(flushed);
+
+        bool assetsFlushed = assetCache.Flush();
+        assert(assetsFlushed);
     }
     LogPrint(BCLog::BENCH, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
     // Write the chain state to disk, if necessary.

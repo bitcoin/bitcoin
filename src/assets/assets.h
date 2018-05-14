@@ -12,11 +12,11 @@
 #include <set>
 #include <map>
 #include "serialize.h"
+#include "primitives/transaction.h"
 
 class CScript;
 class CDataStream;
 class CTransaction;
-class COutPoint;
 class CTxOut;
 class Coin;
 
@@ -115,12 +115,23 @@ private:
 public:
     std::set<CNewAsset, AssetComparator> setAssets;
     std::map<std::string, std::set<COutPoint> > mapMyUnspentAssets; // Asset Name -> COutPoint
-    std::map<std::string, std::set<COutPoint> > mapMySpentAssets;
     std::map<std::string, std::set<std::string> > mapAssetsAddresses; // Asset Name -> set <Addresses>
     std::map<std::pair<std::string, std::string>, CAmount> mapAssetsAddressAmount; // pair < Asset Name , Address > -> Quantity of tokens in the address
 
-    std::set<COutPoint> setUnspent;
+    CAssets(const CAssets& assets) {
+        this->mapMyUnspentAssets = assets.mapMyUnspentAssets;
+        this->mapAssetsAddressAmount = assets.mapAssetsAddressAmount;
+        this->mapAssetsAddresses = assets.mapAssetsAddresses;
+        this->setAssets = assets.setAssets;
+    }
 
+    CAssets& operator=(const CAssets& other) {
+        mapMyUnspentAssets = other.mapMyUnspentAssets;
+        mapAssetsAddressAmount = other.mapAssetsAddressAmount;
+        mapAssetsAddresses = other.mapAssetsAddresses;
+        setAssets = other.setAssets;
+        return *this;
+    }
 
     CAssets() {
         SetNull();
@@ -129,23 +140,91 @@ public:
     void SetNull() {
         setAssets.clear();
         mapMyUnspentAssets.clear();
-        mapMySpentAssets.clear();
         mapAssetsAddresses.clear();
         mapAssetsAddressAmount.clear();
-        setUnspent.clear();
     }
 
     bool AddNewAsset(const CNewAsset& asset, const std::string& address, const COutPoint& out);
     bool AddTransferAsset(const CAssetTransfer& transferAsset, const std::string& address, const COutPoint& out, const CTxOut& txOut);
-    bool AddToMyUpspentOutPoints(const std::string& strName, const COutPoint& out);
+    bool AddToMyUpspentOutPoints(const std::string& strName, const COutPoint& out, bool fMemoryOnly = false);
 
     bool ContainsAsset(const CNewAsset& asset);
-    bool RemoveAssetAndOutPoints(const CNewAsset& asset, const std::string& address);
+    bool RemoveAssetAndOutPoints(const CNewAsset& asset, const std::string& address, const bool fMemoryOnly);
 
     bool GetAssetsOutPoints(const std::string& strName, std::set<COutPoint>& outpoints);
 
     void TrySpendCoin(const COutPoint& out, const Coin& coin);
+
+//    bool Flush(const CAssetsDB* db);
 };
+
+struct CUndoAssetTransfer {
+    CAssetTransfer transfer;
+    std::string address;
+    COutPoint out;
+
+    CUndoAssetTransfer(const CAssetTransfer& transfer, const std::string& address, const COutPoint& out)
+    {
+        this->transfer = transfer;
+        this->address = address;
+        this->out = out;
+    }
+};
+
+struct CUndoAssetAmount {
+    std::string assetName;
+    std::string address;
+    CAmount nAmount;
+
+    CUndoAssetAmount(const std::string& assetName, const std::string& address, const CAmount& nAmount)
+    {
+        this->assetName = assetName;
+        this->address = address;
+        this->nAmount = nAmount;
+    }
+};
+
+class CAssetsCache : public CAssets
+{
+private:
+    bool AddBackSpentAsset(const Coin& coin, const std::string& assetName, const std::string& address, const CAmount& nAmount, const COutPoint& out);
+
+public :
+    std::vector<std::pair<CNewAsset, std::string> > vNewAssetsToRemove;
+    std::vector<std::pair<CNewAsset, std::string> > vNewAssetsToAdd;
+
+    std::vector<CUndoAssetTransfer> vUndoTransfer;
+
+    std::vector<CUndoAssetAmount> vUndoAssetAmount;
+
+    std::set<std::string> setChangeOwnedOutPoints;
+
+
+    CAssetsCache(const CAssets& assets) {
+        mapMyUnspentAssets = assets.mapMyUnspentAssets;
+        mapAssetsAddressAmount = assets.mapAssetsAddressAmount;
+        mapAssetsAddresses = assets.mapAssetsAddresses;
+        setAssets = assets.setAssets;
+    }
+
+    CAssetsCache& operator=(const CAssets& other) {
+        mapMyUnspentAssets = other.mapMyUnspentAssets;
+        mapAssetsAddressAmount = other.mapAssetsAddressAmount;
+        mapAssetsAddresses = other.mapAssetsAddresses;
+        setAssets = other.setAssets;
+        return *this;
+    }
+
+    bool RemoveNewAsset(const CNewAsset& asset, const std::string address);
+    bool AddNewAsset(const CNewAsset& asset, const std::string address);
+
+    bool RemoveTransfer(const CAssetTransfer& transfer, const std::string& address, const COutPoint& out);
+    bool UndoTransfer(const CAssetTransfer& transfer, const std::string& address, const COutPoint& outToRemove);
+    bool UndoAssetCoin(const Coin& coin, const COutPoint& out);
+
+    bool Flush();
+};
+
 
 bool IsAssetNameValid(const std::string& name);
 
@@ -167,5 +246,4 @@ bool CheckIssueDataTx(const CTxOut& txOut);
 
 bool IsScriptNewAsset(const CScript& scriptPubKey);
 bool IsScriptTransferAsset(const CScript& scriptPubKey);
-
 #endif //RAVENCOIN_ASSET_PROTOCOL_H
