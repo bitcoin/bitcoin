@@ -7,7 +7,7 @@
 #include <streams.h>
 #include <zmq/zmqpublishnotifier.h>
 #include <validation.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <rpc/server.h>
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;

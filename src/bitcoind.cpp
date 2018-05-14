@@ -14,7 +14,7 @@
 #include <rpc/server.h>
 #include <init.h>
 #include <noui.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <httpserver.h>
 #include <httprpc.h>
 #include <utilstrencodings.h>

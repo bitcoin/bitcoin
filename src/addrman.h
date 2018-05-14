@@ -11,7 +11,7 @@
 #include <random.h>
 #include <sync.h>
 #include <timedata.h>
-#include <util.h>
+#include <util/platform_common.h>
 
 #include <map>
 #include <set>

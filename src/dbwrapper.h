@@ -9,7 +9,7 @@
 #include <fs.h>
 #include <serialize.h>
 #include <streams.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilstrencodings.h>
 #include <version.h>
 

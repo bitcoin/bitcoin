@@ -5,7 +5,7 @@
 #include <index/txindex.h>
 #include <script/standard.h>
 #include <test/test_bitcoin.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utiltime.h>
 #include <validation.h>
 

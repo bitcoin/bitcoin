@@ -22,7 +22,7 @@
 #include <primitives/transaction.h>
 #include <script/standard.h>
 #include <timedata.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilmoneystr.h>
 #include <validationinterface.h>
 

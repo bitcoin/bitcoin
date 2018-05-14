@@ -9,7 +9,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <sync.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utiltime.h>
 #include <wallet/wallet.h>
 #include <merkleblock.h>

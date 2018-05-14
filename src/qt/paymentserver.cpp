@@ -13,7 +13,7 @@
 #include <policy/policy.h>
 #include <key_io.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <wallet/wallet.h>
 
 #include <cstdlib>

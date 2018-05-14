@@ -11,7 +11,7 @@
 #include <streams.h>
 #include <txmempool.h>
 #include <validation.h>
-#include <util.h>
+#include <util/platform_common.h>
 
 #include <unordered_map>
 

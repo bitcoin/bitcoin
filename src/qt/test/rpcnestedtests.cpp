@@ -14,7 +14,7 @@
 #include <qt/rpcconsole.h>
 #include <test/test_bitcoin.h>
 #include <univalue.h>
-#include <util.h>
+#include <util/platform_common.h>
 
 #include <QDir>
 #include <QtGlobal>

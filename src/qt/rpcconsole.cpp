@@ -18,7 +18,7 @@
 #include <netbase.h>
 #include <rpc/server.h>
 #include <rpc/client.h>
-#include <util.h>
+#include <util/platform_common.h>
 
 #include <openssl/crypto.h>
 

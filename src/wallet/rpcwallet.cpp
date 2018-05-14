@@ -21,7 +21,7 @@
 #include <rpc/util.h>
 #include <script/sign.h>
 #include <timedata.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilmoneystr.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>

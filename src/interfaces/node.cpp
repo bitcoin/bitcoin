@@ -24,7 +24,7 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <validation.h>
 #include <warnings.h>
 

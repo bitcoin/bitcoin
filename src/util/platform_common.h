@@ -7,8 +7,8 @@
  * Server/client environment: argument handling, config file parsing,
  * thread wrappers, startup time
  */
-#ifndef BITCOIN_UTIL_H
-#define BITCOIN_UTIL_H
+#ifndef BITCOIN_UTIL_PLATFORM_COMMON_H
+#define BITCOIN_UTIL_PLATFORM_COMMON_H
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
@@ -90,6 +90,7 @@ const fs::path &GetBlocksDir(bool fNetSpecific = true);
 const fs::path &GetDataDir(bool fNetSpecific = true);
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
+
 #ifndef WIN32
 fs::path GetPidFile();
 void CreatePidFile(const fs::path &path, pid_t pid);
@@ -97,6 +98,7 @@ void CreatePidFile(const fs::path &path, pid_t pid);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
+
 void runCommand(const std::string& strCommand);
 
 /**
@@ -109,14 +111,7 @@ void runCommand(const std::string& strCommand);
  */
 fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
 
-inline bool IsSwitchChar(char c)
-{
-#ifdef WIN32
-    return c == '-' || c == '/';
-#else
-    return c == '-';
-#endif
-}
+bool IsSwitchChar(char c);
 
 enum class OptionsCategory
 {
@@ -337,4 +332,4 @@ std::unique_ptr<T> MakeUnique(Args&&... args)
  */
 int ScheduleBatchPriority(void);
 
-#endif // BITCOIN_UTIL_H
+#endif // BITCOIN_UTIL_PLATFORM_COMMON_H

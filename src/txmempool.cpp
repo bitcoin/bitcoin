@@ -14,7 +14,7 @@
 #include <reverse_iterator.h>
 #include <streams.h>
 #include <timedata.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilmoneystr.h>
 #include <utiltime.h>
 

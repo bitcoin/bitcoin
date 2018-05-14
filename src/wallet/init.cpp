@@ -6,7 +6,7 @@
 #include <chainparams.h>
 #include <init.h>
 #include <net.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilmoneystr.h>
 #include <validation.h>
 #include <walletinitinterface.h>

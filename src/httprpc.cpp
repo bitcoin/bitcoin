@@ -11,7 +11,7 @@
 #include <rpc/server.h>
 #include <random.h>
 #include <sync.h>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilstrencodings.h>
 #include <ui_interface.h>
 #include <crypto/hmac_sha256.h>

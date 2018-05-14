@@ -6,7 +6,7 @@
 
 #include <memory>
 #include <set>
-#include <util.h>
+#include <util/platform_common.h>
 #include <utilstrencodings.h>
 
 #include <stdio.h>
