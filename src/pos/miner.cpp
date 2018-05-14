@@ -355,7 +355,7 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
         size_t nWaitFor = 60000;
         for (size_t i = nStart; i < nEnd; ++i)
         {
-            auto pwallet = GetHDWallet(vpwallets[i]);
+            auto pwallet = GetParticlWallet(vpwallets[i]);
 
             if (nSearchTime <= pwallet->nLastCoinStakeSearchTime)
             {

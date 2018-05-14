@@ -57,10 +57,10 @@ CHDWallet *GetHDWalletForJSONRPCRequest(const JSONRPCRequest &request)
 
         CWallet* pwallet = GetWallet(requestedWallet);
         if (!pwallet) throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
-        return GetHDWallet(pwallet);
+        return GetParticlWallet(pwallet);
     }
     std::vector<CWallet*> wallets = GetWallets();
-    return wallets.size() == 1 || (request.fHelp && wallets.size() > 0) ? GetHDWallet(wallets[0]) : nullptr;
+    return wallets.size() == 1 || (request.fHelp && wallets.size() > 0) ? GetParticlWallet(wallets[0]) : nullptr;
 }
 
 static inline uint32_t reversePlace(const uint8_t *p)
@@ -2081,6 +2081,7 @@ static UniValue importstealthaddress(const JSONRPCRequest &request)
 
             if (!pwallet->HaveKey(sid))
             {
+                LOCK(pwallet->cs_wallet);
                 CPubKey pk = skSpend.GetPubKey();
                 if (!pwallet->AddKeyPubKey(skSpend, pk))
                     throw JSONRPCError(RPC_WALLET_ERROR, _("Import failed - AddKeyPubKey failed."));
@@ -7114,6 +7115,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
 
     for (const CTxIn& txin : tx.vin) {
         if (lockUnspents) {
+            LOCK(pwallet->cs_wallet);
             pwallet->LockCoin(txin.prevout);
         };
     };

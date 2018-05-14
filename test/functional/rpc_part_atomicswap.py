@@ -704,12 +704,5 @@ class AtomicSwapTest(ParticlTestFramework):
         self.test_cttx()
 
 
-
-
-
-
-
-
-
 if __name__ == '__main__':
     AtomicSwapTest().main()

@@ -210,7 +210,7 @@ UniValue abortrescan(const JSONRPCRequest& request)
 }
 
 static void ImportAddress(CWallet*, const CTxDestination& dest, const std::string& strLabel);
-static void ImportScript(CWallet* const pwallet, const CScript& script, const std::string& strLabel, bool isRedeemScript)
+static void ImportScript(CWallet* const pwallet, const CScript& script, const std::string& strLabel, bool isRedeemScript) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     if (!isRedeemScript && ::IsMine(*pwallet, script) == ISMINE_SPENDABLE) {
         throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
@@ -236,7 +236,7 @@ static void ImportScript(CWallet* const pwallet, const CScript& script, const st
     }
 }
 
-static void ImportAddress(CWallet* const pwallet, const CTxDestination& dest, const std::string& strLabel)
+static void ImportAddress(CWallet* const pwallet, const CTxDestination& dest, const std::string& strLabel) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     CScript script = GetScriptForDestination(dest);
     ImportScript(pwallet, script, strLabel, false);
@@ -578,9 +578,9 @@ UniValue importwallet(const JSONRPCRequest& request)
                     UniValue inj;
                     inj.read(sJson);
 
-                    if (!IsHDWallet(pwallet))
+                    if (!IsParticlWallet(pwallet))
                         throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallet");
-                    if (!GetHDWallet(pwallet)->LoadJson(inj, sError))
+                    if (!GetParticlWallet(pwallet)->LoadJson(inj, sError))
                         throw JSONRPCError(RPC_WALLET_ERROR, "LoadJson failed " + sError);
                 };
 
@@ -701,11 +701,11 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl address");
     }
 
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
         if (dest.type() == typeid(CExtKeyPair))
         {
-            CHDWallet *phdw = GetHDWallet(pwallet);
+            CHDWallet *phdw = GetParticlWallet(pwallet);
             CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
             CKeyID id = ek.GetID();
             CStoredExtKey sek;
@@ -841,13 +841,13 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         }
     }
 
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
         std::string sError;
         file << "\n# --- Begin JSON --- \n";
 
         UniValue rv(UniValue::VOBJ);
-        if (!GetHDWallet(pwallet)->DumpJson(rv, sError))
+        if (!GetParticlWallet(pwallet)->DumpJson(rv, sError))
             throw JSONRPCError(RPC_WALLET_ERROR, "DumpJson failed " + sError);
         file << rv.write(1);
 
@@ -882,7 +882,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 }
 
 
-static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int64_t timestamp)
+static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     try {
         bool success = false;

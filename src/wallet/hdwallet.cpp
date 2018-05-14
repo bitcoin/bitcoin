@@ -8564,7 +8564,7 @@ bool CHDWallet::GetStealthLinked(const CKeyID &idK, CStealthAddress &sx)
 
 bool CHDWallet::ProcessLockedStealthOutputs()
 {
-    AssertLockHeld(cs_wallet);
+    LOCK(cs_wallet);
     LogPrint(BCLog::HDWALLET, "%s\n", __func__);
 
     CHDWalletDB wdb(*database);
@@ -8879,6 +8879,7 @@ inline bool MatchPrefix(uint32_t nAddrBits, uint32_t addrPrefix, uint32_t output
 bool CHDWallet::ProcessStealthOutput(const CTxDestination &address,
     std::vector<uint8_t> &vchEphemPK, uint32_t prefix, bool fHavePrefix, CKey &sShared, bool fNeedShared)
 {
+    LOCK(cs_wallet);
     ec_point pkExtracted;
     CKey sSpend;
 
@@ -10474,6 +10475,7 @@ bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const C
 
 void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t& nMaximumCount, const int& nMinDepth, const int& nMaxDepth, bool fIncludeImmature) const
 {
+    LOCK2(cs_main, cs_wallet);
     vCoins.clear();
 
     if (coinControl && coinControl->HasSelected())
@@ -10503,7 +10505,6 @@ void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyS
 
     CAmount nTotal = 0;
 
-    LOCK2(cs_main, cs_wallet);
     for (MapRecords_t::const_iterator it = mapRecords.begin(); it != mapRecords.end(); ++it)
     {
         const uint256 &txid = it->first;
@@ -12236,12 +12237,12 @@ int LoopExtAccountsInDB(CHDWallet *pwallet, bool fInactive, LoopExtKeyCallback &
     return 0;
 };
 
-bool IsHDWallet(const CKeyStore *win)
+bool IsParticlWallet(const CKeyStore *win)
 {
     return win && dynamic_cast<const CHDWallet*>(win);
 };
 
-CHDWallet *GetHDWallet(CKeyStore *win)
+CHDWallet *GetParticlWallet(CKeyStore *win)
 {
     CHDWallet *rv;
     if (!win)
@@ -12251,7 +12252,7 @@ CHDWallet *GetHDWallet(CKeyStore *win)
     return rv;
 };
 
-const CHDWallet *GetHDWallet(const CKeyStore *win)
+const CHDWallet *GetParticlWallet(const CKeyStore *win)
 {
     const CHDWallet *rv;
     if (!win)

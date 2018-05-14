@@ -85,8 +85,8 @@ void EnsureWalletIsUnlocked(CWallet * const pwallet)
     if (pwallet->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-    if (IsHDWallet(pwallet)
-        && GetHDWallet(pwallet)->fUnlockForStakingOnly)
+    if (IsParticlWallet(pwallet)
+        && GetParticlWallet(pwallet)->fUnlockForStakingOnly)
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet is unlocked for staking only.");
 }
 
@@ -223,7 +223,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
     if (!request.params[0].isNull())
         label = LabelFromValue(request.params[0]);
 
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
         bool fBech32 = false;
         if (request.params.size() > 1)
@@ -247,7 +247,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
         };
 
         CPubKey newKey;
-        CHDWallet *phdw = GetHDWallet(pwallet);
+        CHDWallet *phdw = GetParticlWallet(pwallet);
         {
             //LOCK2(cs_main, pwallet->cs_wallet);
             LOCK(cs_main);
@@ -389,9 +389,9 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
-        CHDWallet *phdw = GetHDWallet(pwallet);
+        CHDWallet *phdw = GetParticlWallet(pwallet);
         CPubKey pkOut;
 
         if (0 != phdw->NewKeyFromAccount(pkOut, true))
@@ -693,7 +693,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
         }
     }
 
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
         JSONRPCRequest newRequest;
         newRequest.fHelp = false;
@@ -1411,7 +1411,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
         }
     }
 
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
         JSONRPCRequest newRequest;
         newRequest.fHelp = false;
@@ -2136,7 +2136,7 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
                 {
                     CStealthAddress sx;
                     CKeyID idK = boost::get<CKeyID>(r.destination);
-                    if (GetHDWallet(pwallet)->GetStealthLinked(idK, sx))
+                    if (GetParticlWallet(pwallet)->GetStealthLinked(idK, sx))
                     {
                         entry.pushKV("stealth_address", sx.Encoded());
                     };
@@ -2544,11 +2544,11 @@ UniValue listtransactions(const JSONRPCRequest& request)
         ret.push_back(retReversed[i]);
     };
 
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
         LOCK2(cs_main, pwallet->cs_wallet);
 
-        CHDWallet *phdw = GetHDWallet(pwallet);
+        CHDWallet *phdw = GetParticlWallet(pwallet);
         const RtxOrdered_t &txOrdered = phdw->rtxOrdered;
 
         // TODO: Combine finding and inserting into ret loops
@@ -2795,9 +2795,9 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
         }
     }
 
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
-        CHDWallet *phdw = GetHDWallet(pwallet);
+        CHDWallet *phdw = GetParticlWallet(pwallet);
 
         for (const auto &ri : phdw->mapRecords)
         {
@@ -2825,8 +2825,8 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
                 // even negative confirmation ones, hence the big negative.
                 ListTransactions(pwallet, it->second, "*", -100000000, true, removed, filter);
             } else
-            if (IsHDWallet(pwallet)) {
-                CHDWallet *phdw = GetHDWallet(pwallet);
+            if (IsParticlWallet(pwallet)) {
+                CHDWallet *phdw = GetParticlWallet(pwallet);
                 const uint256 &txhash = tx->GetHash();
                 MapRecords_t::const_iterator mri = phdw->mapRecords.find(txhash);
                 if (mri != phdw->mapRecords.end()) {
@@ -2919,9 +2919,9 @@ UniValue gettransaction(const JSONRPCRequest& request)
     UniValue entry(UniValue::VOBJ);
     auto it = pwallet->mapWallet.find(hash);
     if (it == pwallet->mapWallet.end()) {
-        if (IsHDWallet(pwallet))
+        if (IsParticlWallet(pwallet))
         {
-            CHDWallet *phdw = GetHDWallet(pwallet);
+            CHDWallet *phdw = GetParticlWallet(pwallet);
             MapRecords_t::const_iterator mri = phdw->mapRecords.find(hash);
 
             if (mri != phdw->mapRecords.end())
@@ -3004,7 +3004,7 @@ static UniValue abandontransaction(const JSONRPCRequest& request)
 
     if (!pwallet->mapWallet.count(hash))
     {
-        if (!IsHDWallet(pwallet) || !GetHDWallet(pwallet)->HaveTransaction(hash))
+        if (!IsParticlWallet(pwallet) || !GetParticlWallet(pwallet)->HaveTransaction(hash))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     };
     if (!pwallet->AbandonTransaction(hash)) {
@@ -3172,9 +3172,9 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
     if (request.params.size() > 2)
         fWalletUnlockStakingOnly = request.params[2].get_bool();
 
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
-        CHDWallet *phdw = GetHDWallet(pwallet);
+        CHDWallet *phdw = GetParticlWallet(pwallet);
         LOCK(phdw->cs_wallet);
         phdw->fUnlockForStakingOnly = fWalletUnlockStakingOnly;
     };
@@ -3432,11 +3432,11 @@ static UniValue lockunspent(const JSONRPCRequest& request)
 
         const COutPoint outpt(uint256S(txid), nOutput);
 
-        if (IsHDWallet(pwallet))
+        if (IsParticlWallet(pwallet))
         {
             const auto it = pwallet->mapWallet.find(outpt.hash);
             if (it == pwallet->mapWallet.end()) {
-                CHDWallet *phdw = GetHDWallet(pwallet);
+                CHDWallet *phdw = GetParticlWallet(pwallet);
                 const auto it = phdw->mapRecords.find(outpt.hash);
                 if (it == phdw->mapRecords.end())
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, unknown transaction");
@@ -3659,9 +3659,9 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     obj.pushKV("txcount",       (int)nTxCount);
 
     CKeyID masterKeyID;
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
-        CHDWallet *pwhd = GetHDWallet(pwallet);
+        CHDWallet *pwhd = GetParticlWallet(pwallet);
 
         obj.pushKV("keypoololdest", pwhd->GetOldestActiveAccountTime());
         obj.pushKV("keypoolsize",   pwhd->CountActiveAccountKeys());
@@ -3757,9 +3757,9 @@ static UniValue resendwallettransactions(const JSONRPCRequest& request)
     std::vector<uint256> txids = pwallet->ResendWalletTransactionsBefore(GetTime(), g_connman.get());
 
     UniValue result(UniValue::VARR);
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
-        CHDWallet *phdw = GetHDWallet(pwallet);
+        CHDWallet *phdw = GetParticlWallet(pwallet);
         std::vector<uint256> txidsRec;
         txidsRec = phdw->ResendRecordTransactionsBefore(GetTime(), g_connman.get());
 
@@ -4001,9 +4001,9 @@ static UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("solvable", out.fSolvable);
         entry.pushKV("safe", out.fSafe);
 
-        if (IsHDWallet(pwallet))
+        if (IsParticlWallet(pwallet))
         {
-            CHDWallet *phdw = GetHDWallet(pwallet);
+            CHDWallet *phdw = GetParticlWallet(pwallet);
             CKeyID stakingKeyID;
             bool fStakeable = ExtractStakingKeyID(*scriptPubKey, stakingKeyID);
             if (fStakeable)
@@ -4196,7 +4196,7 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
 
-    size_t nOutputs = IsHDWallet(pwallet) ? tx.vpout.size() : tx.vout.size();
+    size_t nOutputs = IsParticlWallet(pwallet) ? tx.vpout.size() : tx.vout.size();
     if (nOutputs == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
@@ -4808,9 +4808,9 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
 
     isminetype mine = ISMINE_NO;
-    if (IsHDWallet(pwallet))
+    if (IsParticlWallet(pwallet))
     {
-        CHDWallet *phdw = GetHDWallet(pwallet);
+        CHDWallet *phdw = GetParticlWallet(pwallet);
         if (dest.type() == typeid(CExtKeyPair))
         {
             CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
@@ -5007,6 +5007,79 @@ static UniValue listlabels(const JSONRPCRequest& request)
     return ret;
 }
 
+UniValue sethdseed(const JSONRPCRequest& request)
+{
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 2) {
+        throw std::runtime_error(
+            "sethdseed ( \"newkeypool\" \"seed\" )\n"
+            "\nSet or generate a new HD wallet seed. Non-HD wallets will not be upgraded to being a HD wallet. Wallets that are already\n"
+            "HD will have a new HD seed set so that new keys added to the keypool will be derived from this new seed.\n"
+            "\nNote that you will need to MAKE A NEW BACKUP of your wallet after setting the HD wallet seed.\n"
+            + HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. \"newkeypool\"         (boolean, optional, default=true) Whether to flush old unused addresses, including change addresses, from the keypool and regenerate it.\n"
+            "                             If true, the next address from getnewaddress and change address from getrawchangeaddress will be from this new seed.\n"
+            "                             If false, addresses (including change addresses if the wallet already had HD Chain Split enabled) from the existing\n"
+            "                             keypool will be used until it has been depleted.\n"
+            "2. \"seed\"               (string, optional) The WIF private key to use as the new HD seed; if not provided a random seed will be used.\n"
+            "                             The seed value can be retrieved using the dumpwallet command. It is the private key marked hdmaster=1\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sethdseed", "")
+            + HelpExampleCli("sethdseed", "false")
+            + HelpExampleCli("sethdseed", "true \"wifkey\"")
+            + HelpExampleRpc("sethdseed", "true, \"wifkey\"")
+            );
+    }
+
+    if (IsInitialBlockDownload()) {
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Cannot set a new HD seed while still in Initial Block Download");
+    }
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    // Do not do anything to non-HD wallets
+    if (!pwallet->IsHDEnabled()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set a HD seed on a non-HD wallet. Start with -upgradewallet in order to upgrade a non-HD wallet to HD");
+    }
+
+    if (IsParticlWallet(pwallet))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Not necessary in Particl mode.");
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    bool flush_key_pool = true;
+    if (!request.params[0].isNull()) {
+        flush_key_pool = request.params[0].get_bool();
+    }
+
+    CPubKey master_pub_key;
+    if (request.params[1].isNull()) {
+        master_pub_key = pwallet->GenerateNewHDMasterKey();
+    } else {
+        CKey key = DecodeSecret(request.params[1].get_str());
+        if (!key.IsValid()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+        }
+
+        if (HaveKey(*pwallet, key)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Already have this key (either as an HD seed or as a loose private key)");
+        }
+
+        master_pub_key = pwallet->DeriveNewMasterHDKey(key);
+    }
+
+    pwallet->SetHDMasterKey(master_pub_key);
+    if (flush_key_pool) pwallet->NewKeyPool();
+
+    return NullUniValue;
+}
+
 extern UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
@@ -5067,6 +5140,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout","stakingonly"} },
     { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
     { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
+    { "wallet",             "sethdseed",                        &sethdseed,                     {"newkeypool","seed"} },
 
     /** Account functions (deprecated) */
     { "wallet",             "getaccountaddress",                &getlabeladdress,               {"account"} },

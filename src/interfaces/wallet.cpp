@@ -197,8 +197,8 @@ class WalletImpl : public Wallet
 public:
     WalletImpl(CWallet& wallet) : m_wallet(wallet)
     {
-        if (IsHDWallet(&m_wallet))
-            m_wallet_part = GetHDWallet(&m_wallet);
+        if (::IsParticlWallet(&m_wallet))
+            m_wallet_part = GetParticlWallet(&m_wallet);
     }
 
     bool encryptWallet(const SecureString& wallet_passphrase) override

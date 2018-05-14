@@ -800,9 +800,9 @@ bool CheckOutputValue(const CTempRecipient &r, const CTxOutBase *txbout, CAmount
 void SetCTOutVData(std::vector<uint8_t> &vData, CPubKey &pkEphem, uint32_t nStealthPrefix);
 int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError);
 
-bool IsHDWallet(const CKeyStore *win);
-CHDWallet *GetHDWallet(CKeyStore *win);
-const CHDWallet *GetHDWallet(const CKeyStore *win);
+bool IsParticlWallet(const CKeyStore *win);
+CHDWallet *GetParticlWallet(CKeyStore *win);
+const CHDWallet *GetParticlWallet(const CKeyStore *win);
 
 #endif // PARTICL_WALLET_HDWALLET_H
 
