@@ -824,6 +824,14 @@ void ArgsManager::ReadConfigFiles()
                 includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
             }
 
+            // Remove -includeconf from configuration, so we can warn about recursion
+            // later
+            {
+                LOCK(cs_args);
+                m_config_args.erase("-includeconf");
+                m_config_args.erase(std::string("-") + GetChainName() + ".includeconf");
+            }
+
             for (const std::string& to_include : includeconf) {
                 fsbridge::ifstream include_config(GetConfigFile(to_include));
                 if (include_config.good()) {
@@ -832,6 +840,16 @@ void ArgsManager::ReadConfigFiles()
                 } else {
                     fprintf(stderr, "Failed to include configuration file %s\n", to_include.c_str());
                 }
+            }
+
+            // Warn about recursive -includeconf
+            includeconf = GetArgs("-includeconf");
+            {
+                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + GetChainName() + ".includeconf"));
+                includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
+            }
+            for (const std::string& to_include : includeconf) {
+                fprintf(stderr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", to_include.c_str());
             }
         }
     } else {
