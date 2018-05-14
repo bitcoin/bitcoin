@@ -53,7 +53,7 @@ void CheckUniqueFileid(const BerkeleyEnvironment& env, const std::string& filena
 }
 
 CCriticalSection cs_db;
-std::map<std::string, BerkeleyEnvironment> g_dbenvs; //!< Map from directory name to open db environment.
+std::map<std::string, BerkeleyEnvironment> g_dbenvs GUARDED_BY(cs_db); //!< Map from directory name to open db environment.
 } // namespace
 
 BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
