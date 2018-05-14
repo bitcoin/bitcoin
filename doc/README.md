@@ -39,11 +39,11 @@ TBD
 
 ## Build Crown From Source
 
-The following are developer notes on how to build Crown on your native platform. Right now Crown Core Development only supports building on [Unix](build-unix.md). Binaries for Windows and MacOS are generated via cross-compilation. However building under those systems natively is possible in theory. If you have successful experience building Crown under those platforms, please contribute the instructions. 
+The following are developer notes on how to build Crown on your native platform. Right now Crown Core Development Team officially supports building only on [Unix](build-unix.md). Binaries for Windows and MacOS are generated via cross-compilation. Building under those systems natively is possible in theory - it's just not documented. If you have successful experience building Crown under those platforms, please contribute the instructions. 
 
 ## Development Documentation
 
-The Crown repo's [root README](https://gitlab.crown.tech/crown/crown-core/blob/master/README.md) contains relevant information on the development process.
+The Crown repo's [root README](../README.md) contains relevant information on the development process.
 
 - [Coding Style Guide](coding-style.md)
 - [Multiwallet Qt Development](multiwallet-qt.md)
