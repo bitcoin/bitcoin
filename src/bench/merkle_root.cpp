@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
+#include <bench/bench.h>
 
-#include "uint256.h"
-#include "random.h"
-#include "consensus/merkle.h"
+#include <uint256.h>
+#include <random.h>
+#include <consensus/merkle.h>
 
 static void MerkleRoot(benchmark::State& state)
 {
