@@ -45,9 +45,13 @@ Crown uses two types of server nodes to build and protect its network — System
 
 Masternodes supply substantial computing power to the Crown Platform, and have copies of the ledger stored and ready to distribute to the network if needed. Think of Masternodes as the stabilizing force behind Crown; they help us keep the network secure and running smoothly by tracking the ledger and confirming transactions at lightning speed with Instant Send. A Masternode requires 10,000 CRW collateral to run.
 
+See also: [Masternode Setup Guide](https://forum.crown.tech/index.php?topic=1241.0).
+
 ### Systemnodes
 
 Systemnodes are empty-shell servers that are tasked with hosting specific services for the Crown network. The Crown Platform will use Systemnodes to host new economy applications created by members of the community, connecting them to the Crown Platform through an API. A Systemnode requires 500 CRW collateral to run. 
+
+See also: [Systemnode Setup Guide](https://forum.crown.tech/index.php?topic=1240.0).
 
 ## Development
 

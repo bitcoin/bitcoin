@@ -28,7 +28,9 @@ Unpack the files into a directory and run: `bin/crown-qt` or `bin/crownd`. You n
 
 ## Run Masternode or Systemnode
 
-TBD
+* [Masternode Setup Guide](https://forum.crown.tech/index.php?topic=1241.0)
+* [Systemnode Setup Guide](https://forum.crown.tech/index.php?topic=1240.0)
+
 
 * [Masternode Configuration](masternode-config.md)
 * [Running Multiple Masternodes](guide-starmany.md)
