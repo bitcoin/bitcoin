@@ -167,19 +167,19 @@ built by default.
 ##### Build requirements:
 
 ```shell
-sudo dnf install git gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3
+sudo dnf install -y git gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3
 ```
 
 ##### MiniUPNP / Optional:
 
 ```shell
-sudo dnf install miniupnpc-devel
+sudo dnf install -y miniupnpc-devel
 ```
 
 ##### ZMQ dependencies / Optional:
 
 ```shell
-sudo dnf install czmq-devel
+sudo dnf install -y czmq-devel
 ```
 
 #### Dependencies for the GUI
@@ -187,13 +187,13 @@ sudo dnf install czmq-devel
 To build with Qt 5 (recommended) you need the following:
 
 ```shell
-sudo dnf install qt5-qttools-devel qt5-qtbase-devel protobuf-devel
+sudo dnf install -y qt5-qttools-devel qt5-qtbase-devel protobuf-devel
 ```
 
 libqrencode (optional) can be installed with:
 
 ```shell
-sudo dnf install qrencode-devel
+sudo dnf install -y qrencode-devel
 ```
 
 
@@ -221,6 +221,7 @@ curl -sL https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.
 tar -xvf boost_1_65_1.tar.gz && cd boost_1_65_1
 ./bootstrap.sh
 sudo ./b2 install --with=all toolset=gcc link=static runtime-link=static
+sudo ldconfig
 LD_LIBRARY_PATH=/usr/local/lib
 export LD_LIBRARY_PATH
 ```
