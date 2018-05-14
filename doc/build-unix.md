@@ -39,7 +39,7 @@ These dependencies are required:
 Library     | Purpose          | Description
 ------------|------------------|----------------------
 libssl      | Crypto           | Random Number Generation, Elliptic Curve Cryptography
-libboost    | Utility          | Library for threading, data structures, etc
+libboost    | Utility          | Library for threading, data structures, etc. >= v1.55
 libevent    | Networking       | OS independent asynchronous networking
 
 Optional dependencies:
@@ -52,7 +52,7 @@ qt          | GUI              | GUI toolkit (only needed when GUI enabled)
 protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
 libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
 univalue    | Utility          | JSON parsing and encoding (bundled version will be used unless --with-system-univalue passed to configure)
-libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.x)
+libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= v4.x)
 
 For the versions used, see [dependencies.md](dependencies.md)
 
@@ -204,6 +204,17 @@ sudo dnf install qrencode-devel
 
 ```shell
 sudo yum install -y git gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3 patch
+```
+
+##### Boost:
+
+The version of Boost that ships with CentOS is too old to work with Syscoin - version 1.55+ is required.
+
+```shell
+curl -sL https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.gz -o boost_1_65_1.tar.gz
+tar -xvf boost_1_65_1.tar.gz && cd boost_1_65_1
+./bootstrap.sh
+sudo ./b2 install --with=all
 ```
 
 ##### BerkeleyDB 4.8:
