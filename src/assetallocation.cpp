@@ -897,8 +897,9 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 
 	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
-UniValue tpstestinfo(const UniValue& params, bool fHelp) {
-	if (fHelp || 0 != params.size())
+UniValue tpstestinfo(const JSONRPCRequest& request) {
+        const UniValue &params = request.params;
+	if (request.fHelp || 0 != params.size())
 		throw runtime_error("tpstestinfo\n"
 			"Gets TPS Test information for receivers of assetallocation transfers\n");
 
