@@ -203,7 +203,7 @@ sudo dnf install qrencode-devel
 ##### Build requirements:
 
 ```shell
-sudo yum install -y git gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3 patch
+sudo yum install -y git gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3 python-devel patch
 ```
 
 ##### Boost:
