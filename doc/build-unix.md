@@ -133,9 +133,10 @@ sudo apt-get install -y libzmq-dev
 
 #### Dependencies for the GUI
 
-If you want to build Syscoin-Qt, make sure that the required packages for Qt development are installed. 
-Either Qt 5 or Qt 4 are necessary to build the GUI. If both Qt 4 and Qt 5 are installed, Qt 5 will be used. Pass `--with-gui=qt4` to configure to choose Qt4.
-To build without GUI pass `--without-gui`.
+If you want to build Syscoin-Qt, make sure that the required packages for Qt development are 
+installed. Either Qt 5 or Qt 4 are necessary to build the GUI. If both Qt 4 and Qt 5 are installed,
+Qt 5 will be used. Pass `--with-gui=qt4` to configure to choose Qt4. To build without GUI pass 
+`--without-gui`.
 
 To build with Qt 5 (recommended) you need the following:
 
@@ -208,13 +209,20 @@ sudo yum install -y git gcc-c++ libtool make autoconf automake openssl-devel lib
 
 ##### Boost:
 
-The version of Boost that ships with CentOS is too old to work with Syscoin - version 1.55+ is required.
+The version of Boost that ships with CentOS is too old to work with Syscoin - version 1.55+ 
+is required. You will also need to pass the argument `--with-boot-libdir="/usr/local/lib"` 
+to `./configure`. You may want to consider adding `LD_LIBRARY_PATH=/usr/local/lib` and 
+`export LD_LIBRARY_PATH`  to your `.bashrc` as well to configure this variable on when 
+starting `syscoind`.
+
 
 ```shell
 curl -sL https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.gz -o boost_1_65_1.tar.gz
 tar -xvf boost_1_65_1.tar.gz && cd boost_1_65_1
 ./bootstrap.sh
-sudo ./b2 install --with=all
+sudo ./b2 install --with=all toolset=gcc link=static runtime-link=static
+LD_LIBRARY_PATH=/usr/local/lib
+export LD_LIBRARY_PATH
 ```
 
 ##### BerkeleyDB 4.8:
@@ -254,15 +262,16 @@ sudo yum install -y qrencode-devel
 
 Notes
 -----
-The release is built with GCC and then "strip syscoind" to strip the debug symbols, which reduces the executable size by about 90%.
+The release is built with GCC and then "strip syscoind" to strip the debug symbols, 
+which reduces the executable size by about 90%.
 
 
 miniupnpc
 ---------
 
-[miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping.  It can be downloaded from [here](
-http://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
-turned off by default.  See the configure options for upnp behavior desired:
+[miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping.  It can be 
+downloaded from [here](http://miniupnp.tuxfamily.org/files/).  UPnP support is com piled 
+in and turned off by default.  See the configure options for upnp behavior desired:
 
     --without-miniupnpc      No UPnP support miniupnp not required
     --disable-upnp-default   (the default) UPnP support turned off by default at runtime
@@ -271,9 +280,9 @@ turned off by default.  See the configure options for upnp behavior desired:
 
 Berkeley DB
 -----------
-It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
-you can use the installation script included in [contrib/install_db4.sh](/contrib/install_db4.sh)
-like so from the root of the Syscoin repository.
+It is recommended to use Berkeley DB 4.8. If you have to build it yourself, you can use 
+the installation script included in [contrib/install_db4.sh](/contrib/install_db4.sh) like 
+so from the root of the Syscoin repository.
 
 ```shell
 ./contrib/install_db4.sh `pwd`
@@ -356,7 +365,8 @@ Hardening enables the following features:
 
 Disable-wallet mode
 --------------------
-When the intention is to run only a P2P node without a wallet, syscoin may be compiled in disable-wallet mode with:
+When the intention is to run only a P2P node without a wallet, syscoin may be compiled in 
+disable-wallet mode with:
 
 ```shell
 ./configure --disable-wallet
@@ -364,7 +374,8 @@ When the intention is to run only a P2P node without a wallet, syscoin may be co
 
 In this case there is no dependency on Berkeley DB 4.8.
 
-Mining is also possible in disable-wallet mode, but only using the `getblocktemplate` RPC call not `getwork`.
+Mining is also possible in disable-wallet mode, but only using the `getblocktemplate` RPC 
+call not `getwork`.
 
 
 Additional Configure Flags
