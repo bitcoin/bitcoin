@@ -107,6 +107,7 @@ private Q_SLOTS:
     void buttonBoxClicked(QAbstractButton*);
     void buttonSelectAllClicked();
     void updateLabelLocked();
+    void updateLabelSelected();
 };
 
 #endif // BITCOIN_QT_COINCONTROLDIALOG_H

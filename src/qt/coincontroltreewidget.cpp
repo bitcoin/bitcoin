@@ -8,17 +8,17 @@
 CoinControlTreeWidget::CoinControlTreeWidget(QWidget *parent) :
     QTreeWidget(parent)
 {
-
+    setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 
 void CoinControlTreeWidget::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Space) // press spacebar -> select checkbox
+    if (event->key() == Qt::Key_Space) // press spacebar -> toggle checkbox
     {
         event->ignore();
-        if (this->currentItem()) {
+        for (QTreeWidgetItem* item : selectedItems()) {
             int COLUMN_CHECKBOX = 0;
-            this->currentItem()->setCheckState(COLUMN_CHECKBOX, ((this->currentItem()->checkState(COLUMN_CHECKBOX) == Qt::Checked) ? Qt::Unchecked : Qt::Checked));
+            item->setCheckState(COLUMN_CHECKBOX, ((item->checkState(COLUMN_CHECKBOX) == Qt::Checked) ? Qt::Unchecked : Qt::Checked));
         }
     }
     else if (event->key() == Qt::Key_Escape) // press esc -> close dialog
