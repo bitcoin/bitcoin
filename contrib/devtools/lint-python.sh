@@ -8,11 +8,13 @@
 
 export LC_ALL=C
 
+# E101 indentation contains mixed spaces and tabs
 # E112 expected an indented block
 # E113 unexpected indentation
 # E115 expected an indented block (comment)
 # E116 unexpected indentation (comment)
 # E125 continuation line with same indent as next logical line
+# E129 visually indented line with same indent as next logical line
 # E131 continuation line unaligned for hanging indent
 # E133 closing bracket is missing indentation
 # E223 tab before operator
@@ -74,4 +76,4 @@ export LC_ALL=C
 # W605 invalid escape sequence "x" # disabled
 # W606 'async' and 'await' are reserved keywords starting with Python 3.7
 
-git ls-files "*.py" | xargs flake8 --ignore=B,C,E,F,I,N,W --select=E112,E113,E115,E116,E125,E131,E133,E223,E224,E242,E266,E271,E272,E273,E274,E275,E304,E306,E401,E402,E502,E701,E702,E703,E714,E721,E742,E743,F401,E901,E902,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F821,F822,F823,F831,W191,W291,W292,W601,W602,W603,W604,W606 #,E741,W504,W605
+git ls-files "*.py" | xargs flake8 --ignore=B,C,E,F,I,N,W --select=E101,E112,E113,E115,E116,E125,E129,E131,E133,E223,E224,E242,E266,E271,E272,E273,E274,E275,E304,E306,E401,E402,E502,E701,E702,E703,E714,E721,E742,E743,F401,E901,E902,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F821,F822,F823,F831,W191,W291,W292,W601,W602,W603,W604,W606 #,E741,W504,W605
