@@ -19,8 +19,8 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 
-#include "governance-object.h"
-#include "governance-vote.h"
+#include <governance-object.h>
+#include <governance-vote.h>
 
 void zmqError(const char *str);
 

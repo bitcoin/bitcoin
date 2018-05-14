@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "proposalfilterproxy.h"
-#include "proposaltablemodel.h"
+#include <qt/proposalfilterproxy.h>
+#include <qt/proposaltablemodel.h>
 
 #include <cstdlib>
 
