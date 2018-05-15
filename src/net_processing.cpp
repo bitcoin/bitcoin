@@ -1252,7 +1252,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             const CInv &inv = *it;
             it++;
 
-            if (inv.type == MSG_TX || it->type == MSG_WITNESS_TX) {
+            if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) {
                 // Send stream from tx relay memory
                 auto mi = mapRelay.find(inv.hash);
                 int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
