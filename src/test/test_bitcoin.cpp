@@ -11,8 +11,8 @@
 #include <validation.h>
 #include <miner.h>
 #include <net_processing.h>
-#include <pubkey.h>
 #include <txdb.h>
+#include <pow.h>
 #include <ui_interface.h>
 #include <rpc/server.h>
 #include <rpc/register.h>

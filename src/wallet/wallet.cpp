@@ -4264,6 +4264,49 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         walletInstance->SetMaxVersion(nMaxVersion);
     }
 
+    // Upgrade to HD if explicit upgrade
+    if (gArgs.GetBoolArg("-upgradewallet", false) && !walletInstanceIn) {
+        LOCK(walletInstance->cs_wallet);
+
+        // Do not upgrade versions to any version between HD_SPLIT and FEATURE_PRE_SPLIT_KEYPOOL unless already supporting HD_SPLIT
+        int max_version = walletInstance->nWalletVersion;
+        if (!walletInstance->CanSupportFeature(FEATURE_HD_SPLIT) && max_version >=FEATURE_HD_SPLIT && max_version < FEATURE_PRE_SPLIT_KEYPOOL) {
+            InitError(_("Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified."));
+            return nullptr;
+        }
+
+        bool hd_upgrade = false;
+        bool split_upgrade = false;
+        if (walletInstance->CanSupportFeature(FEATURE_HD) && !walletInstance->IsHDEnabled()) {
+            LogPrintf("Upgrading wallet to HD\n");
+            walletInstance->SetMinVersion(FEATURE_HD);
+
+            // generate a new master key
+            CPubKey masterPubKey = walletInstance->GenerateNewHDMasterKey();
+            if (!walletInstance->SetHDMasterKey(masterPubKey)) {
+                throw std::runtime_error(std::string(__func__) + ": Storing master key failed");
+            }
+            hd_upgrade = true;
+        }
+        // Upgrade to HD chain split if necessary
+        if (walletInstance->CanSupportFeature(FEATURE_HD_SPLIT)) {
+            LogPrintf("Upgrading wallet to use HD chain split\n");
+            walletInstance->SetMinVersion(FEATURE_PRE_SPLIT_KEYPOOL);
+            split_upgrade = FEATURE_HD_SPLIT > prev_version;
+        }
+        // Mark all keys currently in the keypool as pre-split
+        if (split_upgrade) {
+            walletInstance->MarkPreSplitKeys();
+        }
+        // Regenerate the keypool if upgraded to HD
+        if (hd_upgrade) {
+            if (!walletInstance->TopUpKeyPool()) {
+                InitError(_("Unable to generate keys") += "\n");
+                return nullptr;
+            }
+        }
+    }
+
     if (fFirstRun && !walletInstanceIn)
     {
         // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
