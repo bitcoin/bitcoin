@@ -28,11 +28,9 @@ static void FatalError(const char* fmt, const Args&... args)
     StartShutdown();
 }
 
-TxIndex::TxIndex(std::unique_ptr<TxIndexDB> db) :
-    m_db(std::move(db)), m_synced(false), m_best_block_index(nullptr)
-{}
+TxIndex::TxIndex(std::unique_ptr<TxIndexDB> db) : m_db(std::move(db)) {}
 
-TxIndex::~TxIndex()
+BaseIndex::~BaseIndex()
 {
     Interrupt();
     Stop();
@@ -49,11 +47,17 @@ bool TxIndex::Init()
         return false;
     }
 
+    return BaseIndex::Init();
+}
+
+bool BaseIndex::Init()
+{
     CBlockLocator locator;
-    if (!m_db->ReadBestBlock(locator)) {
+    if (!GetDB().ReadBestBlock(locator)) {
         locator.SetNull();
     }
 
+    LOCK(cs_main);
     m_best_block_index = FindForkInGlobalIndex(chainActive, locator);
     m_synced = m_best_block_index.load() == chainActive.Tip();
     return true;
@@ -75,7 +79,7 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev)
     return chainActive.Next(chainActive.FindFork(pindex_prev));
 }
 
-void TxIndex::ThreadSync()
+void BaseIndex::ThreadSync()
 {
     const CBlockIndex* pindex = m_best_block_index.load();
     if (!m_synced) {
@@ -145,17 +149,19 @@ bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
     return m_db->WriteTxs(vPos);
 }
 
-bool TxIndex::WriteBestBlock(const CBlockIndex* block_index)
+BaseIndexDB& TxIndex::GetDB() const { return *m_db; }
+
+bool BaseIndex::WriteBestBlock(const CBlockIndex* block_index)
 {
     LOCK(cs_main);
-    if (!m_db->WriteBestBlock(chainActive.GetLocator(block_index))) {
+    if (!GetDB().WriteBestBlock(chainActive.GetLocator(block_index))) {
         return error("%s: Failed to write locator to disk", __func__);
     }
     return true;
 }
 
-void TxIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
-                    const std::vector<CTransactionRef>& txn_conflicted)
+void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
+                               const std::vector<CTransactionRef>& txn_conflicted)
 {
     if (!m_synced) {
         return;
@@ -192,7 +198,7 @@ void TxIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const C
     }
 }
 
-void TxIndex::ChainStateFlushed(const CBlockLocator& locator)
+void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
 {
     if (!m_synced) {
         return;
@@ -225,12 +231,12 @@ void TxIndex::ChainStateFlushed(const CBlockLocator& locator)
         return;
     }
 
-    if (!m_db->WriteBestBlock(locator)) {
+    if (!GetDB().WriteBestBlock(locator)) {
         error("%s: Failed to write locator to disk", __func__);
     }
 }
 
-bool TxIndex::BlockUntilSyncedToCurrentChain()
+bool BaseIndex::BlockUntilSyncedToCurrentChain()
 {
     AssertLockNotHeld(cs_main);
 
@@ -282,12 +288,12 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
     return true;
 }
 
-void TxIndex::Interrupt()
+void BaseIndex::Interrupt()
 {
     m_interrupt();
 }
 
-void TxIndex::Start()
+void BaseIndex::Start()
 {
     // Need to register this ValidationInterface before running Init(), so that
     // callbacks are not missed if Init sets m_synced to true.
@@ -298,10 +304,10 @@ void TxIndex::Start()
     }
 
     m_thread_sync = std::thread(&TraceThread<std::function<void()>>, "txindex",
-                                std::bind(&TxIndex::ThreadSync, this));
+                                std::bind(&BaseIndex::ThreadSync, this));
 }
 
-void TxIndex::Stop()
+void BaseIndex::Stop()
 {
     UnregisterValidationInterface(this);
 
