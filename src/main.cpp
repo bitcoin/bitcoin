@@ -891,15 +891,11 @@ int GetInputAge(CTxIn& vin)
 
 int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
 {    
-    int sigs = 0;
     int nResult = GetInputAge(vin);
     if(nResult < 0) nResult = 0;
 
     if (nResult < 6){
-        std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
-        if (i != mapTxLocks.end()){
-            sigs = (*i).second.CountSignatures();
-        }
+        int sigs = instantSend.GetSignaturesCount(nTXHash);
         if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
             return nInstantXDepth+nResult;
         }
@@ -910,12 +906,8 @@ int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
 
 int GetIXConfirmations(uint256 nTXHash)
 {    
-    int sigs = 0;
+    int sigs = instantSend.GetSignaturesCount(nTXHash);
 
-    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
-    if (i != mapTxLocks.end()){
-        sigs = (*i).second.CountSignatures();
-    }
     if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
         return nInstantXDepth;
     }
@@ -1040,13 +1032,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     // ----------- instantX transaction scanning -----------
 
-    BOOST_FOREACH(const CTxIn& in, tx.vin){
-        if(mapLockedInputs.count(in.prevout)){
-            if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                return state.DoS(0,
-                                 error("AcceptToMemoryPool : conflicts with existing transaction lock: %s", reason),
-                                 REJECT_INVALID, "tx-lock-conflict");
-            }
+    BOOST_FOREACH(const CTxIn& in, tx.vin)
+    {
+        boost::optional<uint256> txHash = instantSend.GetLockedTx(in.prevout);
+        if (txHash && txHash.get() != tx.GetHash())
+        {
+            return state.DoS(0, error("AcceptToMemoryPool : conflicts with existing transaction lock: %s", reason),
+                             REJECT_INVALID, "tx-lock-conflict");
         }
     }
 
@@ -1232,13 +1224,13 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransact
 
     // ----------- instantX transaction scanning -----------
 
-    BOOST_FOREACH(const CTxIn& in, tx.vin){
-        if(mapLockedInputs.count(in.prevout)){
-            if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                return state.DoS(0,
-                                 error("AcceptableInputs : conflicts with existing transaction lock: %s", reason),
-                                 REJECT_INVALID, "tx-lock-conflict");
-            }
+    BOOST_FOREACH(const CTxIn& in, tx.vin)
+    {
+        boost::optional<uint256> txHash = instantSend.GetLockedTx(in.prevout);
+        if (txHash && txHash.get() != tx.GetHash())
+        {
+            return state.DoS(0, error("AcceptableInputs : conflicts with existing transaction lock: %s", reason),
+                             REJECT_INVALID, "tx-lock-conflict");
         }
     }
 
@@ -3026,14 +3018,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         BOOST_FOREACH(const CTransaction& tx, block.vtx){
             if (!tx.IsCoinBase()){
                 //only reject blocks when it's based on complete consensus
-                BOOST_FOREACH(const CTxIn& in, tx.vin){
-                    if(mapLockedInputs.count(in.prevout)){
-                        if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                            mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-                            LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString(), tx.GetHash().ToString());
-                            return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
-                                             REJECT_INVALID, "conflicting-tx-ix");
-                        }
+                BOOST_FOREACH(const CTxIn& in, tx.vin)
+                {
+                    boost::optional<uint256> txHash = instantSend.GetLockedTx(in.prevout);
+                    if (txHash && txHash.get() != tx.GetHash())
+                    {
+                        mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
+                        LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n",
+                                  txHash.get().ToString(), tx.GetHash().ToString());
+                        return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
+                                         REJECT_INVALID, "conflicting-tx-ix");
                     }
                 }
             }
@@ -4058,10 +4052,9 @@ bool static AlreadyHave(const CInv& inv)
     case MSG_BLOCK:
         return mapBlockIndex.count(inv.hash);
     case MSG_TXLOCK_REQUEST:
-        return mapTxLockReq.count(inv.hash) ||
-               mapTxLockReqRejected.count(inv.hash);
+        return instantSend.TxLockRequested(inv.hash);
     case MSG_TXLOCK_VOTE:
-        return mapTxLockVote.count(inv.hash);
+        return instantSend.AlreadyHave(inv.hash);
     case MSG_SPORK:
         return mapSporks.count(inv.hash);
     case MSG_MASTERNODE_WINNER:
@@ -4227,19 +4220,23 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
                 if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
-                    if(mapTxLockVote.count(inv.hash)){
+                    boost::optional<CConsensusVote> vote = instantSend.GetLockVote(inv.hash);
+                    if (vote)
+                    {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapTxLockVote[inv.hash];
+                        ss << vote.get();
                         pfrom->PushMessage("txlvote", ss);
                         pushed = true;
                     }
                 }
                 if (!pushed && inv.type == MSG_TXLOCK_REQUEST) {
-                    if(mapTxLockReq.count(inv.hash)){
+                    boost::optional<CTransaction> lockedTx = instantSend.GetLockReq(inv.hash);
+                    if (lockedTx)
+                    {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapTxLockReq[inv.hash];
+                        ss << lockedTx.get();
                         pfrom->PushMessage("ix", ss);
                         pushed = true;
                     }
@@ -5197,7 +5194,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         budget.ProcessMessage(pfrom, strCommand, vRecv);
         masternodePayments.ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
         systemnodePayments.ProcessMessageSystemnodePayments(pfrom, strCommand, vRecv);
-        ProcessMessageInstantX(pfrom, strCommand, vRecv);
+        instantSend.ProcessMessage(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
         masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
         systemnodeSync.ProcessMessage(pfrom, strCommand, vRecv);
