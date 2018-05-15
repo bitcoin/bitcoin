@@ -50,6 +50,8 @@ public:
         Language,               // QString
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int
+        Prune,                  // bool
+        PruneSize,              // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
         Listen,                 // bool
