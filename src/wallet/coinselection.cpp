@@ -10,6 +10,11 @@
 struct {
     bool operator()(const CInputCoin& a, const CInputCoin& b) const
     {
+        return a.txout.nValue > b.txout.nValue;
+    }
+
+    bool operator()(const InputCoinWithFee& a, const InputCoinWithFee& b) const
+    {
         return a.effective_value > b.effective_value;
     }
 } descending;
@@ -59,7 +64,7 @@ struct {
 
 static const size_t TOTAL_TRIES = 100000;
 
-bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees)
+bool SelectCoinsBnB(std::vector<InputCoinWithFee>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees)
 {
     out_set.clear();
     CAmount curr_value = 0;
@@ -70,7 +75,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
 
     // Calculate curr_available_value
     CAmount curr_available_value = 0;
-    for (const CInputCoin& utxo : utxo_pool) {
+    for (const InputCoinWithFee& utxo : utxo_pool) {
         // Assert that this utxo is not negative. It should never be negative, effective value calculation should have removed it
         assert(utxo.effective_value > 0);
         curr_available_value += utxo.effective_value;
@@ -92,7 +97,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
         bool backtrack = false;
         if (curr_value + curr_available_value < actual_target ||                // Cannot possibly reach target with the amount remaining in the curr_available_value.
             curr_value > actual_target + cost_of_change ||    // Selected value is out of range, go back and try other branch
-            (curr_waste > best_waste && (utxo_pool.at(0).fee - utxo_pool.at(0).long_term_fee) > 0)) { // Don't select things which we know will be more wasteful if the waste is increasing
+            (curr_waste > best_waste && utxo_pool.at(0).waste > 0)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
         } else if (curr_value >= actual_target) {       // Selected value is within range
             curr_waste += (curr_value - actual_target); // This is the excess value which is added to the waste for the below comparison
@@ -123,11 +128,11 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
 
             // Output was included on previous iterations, try excluding now.
             curr_selection.back() = false;
-            CInputCoin& utxo = utxo_pool.at(curr_selection.size() - 1);
+            InputCoinWithFee& utxo = utxo_pool.at(curr_selection.size() - 1);
             curr_value -= utxo.effective_value;
-            curr_waste -= utxo.fee - utxo.long_term_fee;
+            curr_waste -= utxo.waste;
         } else { // Moving forwards, continuing down this branch
-            CInputCoin& utxo = utxo_pool.at(curr_selection.size());
+            InputCoinWithFee& utxo = utxo_pool.at(curr_selection.size());
 
             // Remove this utxo from the curr_available_value utxo amount
             curr_available_value -= utxo.effective_value;
@@ -142,7 +147,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
                 // Inclusion branch first (Largest First Exploration)
                 curr_selection.push_back(true);
                 curr_value += utxo.effective_value;
-                curr_waste += utxo.fee - utxo.long_term_fee;
+                curr_waste += utxo.waste;
             }
         }
     }
@@ -156,8 +161,8 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
     value_ret = 0;
     for (size_t i = 0; i < best_selection.size(); ++i) {
         if (best_selection.at(i)) {
-            out_set.insert(utxo_pool.at(i));
-            value_ret += utxo_pool.at(i).txout.nValue;
+            out_set.insert(utxo_pool.at(i).coin);
+            value_ret += utxo_pool.at(i).coin.txout.nValue;
         }
     }
 

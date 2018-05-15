@@ -2479,7 +2479,6 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     setCoinsRet.clear();
     nValueRet = 0;
 
-    std::vector<CInputCoin> utxo_pool;
     if (coin_selection_params.use_bnb) {
 
         // Get long term estimate
@@ -2491,19 +2490,19 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
         // Calculate cost of change
         CAmount cost_of_change = GetDiscardRate(*this, ::feeEstimator).GetFee(coin_selection_params.change_spend_size) + coin_selection_params.effective_fee.GetFee(coin_selection_params.change_output_size);
 
+        std::vector<InputCoinWithFee> utxo_pool;
         // Filter by the min conf specs and add to utxo_pool and calculate effective value
         for (const COutput &output : vCoins)
         {
             if (!OutputEligibleForSpending(output, eligibility_filter))
                 continue;
 
+            CAmount fee = (output.nInputBytes < 0 ? 0 : coin_selection_params.effective_fee.GetFee(output.nInputBytes));
             CInputCoin coin(output.tx->tx, output.i);
-            coin.effective_value = coin.txout.nValue - (output.nInputBytes < 0 ? 0 : coin_selection_params.effective_fee.GetFee(output.nInputBytes));
             // Only include outputs that are positive effective value (i.e. not dust)
-            if (coin.effective_value > 0) {
-                coin.fee = output.nInputBytes < 0 ? 0 : coin_selection_params.effective_fee.GetFee(output.nInputBytes);
-                coin.long_term_fee = output.nInputBytes < 0 ? 0 : long_term_feerate.GetFee(output.nInputBytes);
-                utxo_pool.push_back(coin);
+            if (coin.txout.nValue > fee) {
+                CAmount long_term_fee = output.nInputBytes < 0 ? 0 : long_term_feerate.GetFee(output.nInputBytes);
+                utxo_pool.push_back(InputCoinWithFee(std::move(coin), fee, long_term_fee));
             }
         }
         // Calculate the fees for things that aren't inputs
@@ -2511,13 +2510,14 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
         bnb_used = true;
         return SelectCoinsBnB(utxo_pool, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees);
     } else {
+        std::vector<CInputCoin> utxo_pool;
         // Filter by the min conf specs and add to utxo_pool
         for (const COutput &output : vCoins)
         {
             if (!OutputEligibleForSpending(output, eligibility_filter))
                 continue;
 
-            CInputCoin coin = CInputCoin(output.tx->tx, output.i);
+            CInputCoin coin(output.tx->tx, output.i);
             utxo_pool.push_back(coin);
         }
         bnb_used = false;

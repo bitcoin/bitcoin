@@ -65,15 +65,15 @@ static void CoinSelection(benchmark::State& state)
 typedef std::set<CInputCoin> CoinSet;
 
 // Copied from src/wallet/test/coinselector_tests.cpp
-static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>& set)
+static void add_coin(const CAmount& nValue, int nInput, std::vector<InputCoinWithFee>& set)
 {
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    set.emplace_back(MakeTransactionRef(tx), nInput);
+    set.emplace_back(CInputCoin(MakeTransactionRef(tx), nInput), 0, 0);
 }
 // Copied from src/wallet/test/coinselector_tests.cpp
-static CAmount make_hard_case(int utxos, std::vector<CInputCoin>& utxo_pool)
+static CAmount make_hard_case(int utxos, std::vector<InputCoinWithFee>& utxo_pool)
 {
     utxo_pool.clear();
     CAmount target = 0;
@@ -88,7 +88,7 @@ static CAmount make_hard_case(int utxos, std::vector<CInputCoin>& utxo_pool)
 static void BnBExhaustion(benchmark::State& state)
 {
     // Setup
-    std::vector<CInputCoin> utxo_pool;
+    std::vector<InputCoinWithFee> utxo_pool;
     CoinSet selection;
     CAmount value_ret = 0;
     CAmount not_input_fees = 0;
