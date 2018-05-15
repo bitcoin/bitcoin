@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 #include <unordered_map>
+#include <assets/assets.h>
 
 /**
  * A UTXO entry.
@@ -264,7 +265,7 @@ public:
      * If no unspent output exists for the passed outpoint, this call
      * has no effect.
      */
-    bool SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr, bool fJustCheck = false);
+    bool SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr, CAssetsCache* assetsCache = nullptr);
 
     /**
      * Push the modifications applied to this cache to its base.
@@ -308,7 +309,7 @@ private:
 // an overwrite.
 // TODO: pass in a boolean to limit these possible overwrites to known
 // (pre-BIP34) cases.
-void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool check = false, bool fJustCheck = false);
+void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool check = false, CAssetsCache* assetsCache = nullptr);
 
 //! Utility function to find any unspent output with a given txid.
 // This function can be quite expensive because in the event of a transaction

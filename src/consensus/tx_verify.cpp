@@ -6,6 +6,7 @@
 #include <assets/assets.h>
 #include <script/standard.h>
 #include <util.h>
+#include <validation.h>
 #include "tx_verify.h"
 
 #include "consensus.h"
@@ -214,7 +215,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-asset");
 
         std::string strError = "";
-        if (!asset.IsValid(strError, fMemPoolCheck))
+        if (!asset.IsValid(strError, *passets, fMemPoolCheck, fCheckDuplicateInputs))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
     }
     /** RVN END */

@@ -92,7 +92,7 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
 }
 
-void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check, bool fJustCheck) {
+void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check, CAssetsCache* assetCache) {
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
@@ -102,7 +102,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
         cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
 
         /** RVN START */
-        if (!fJustCheck) {
+        if (assetCache) {
             if (tx.vout[i].scriptPubKey.IsTransferAsset() && !tx.vout[i].scriptPubKey.IsUnspendable()) {
                 CAssetTransfer assetTransfer;
                 std::string address;
@@ -111,17 +111,16 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
                             "%s : ERROR - Received a coin that was a Transfer Asset but failed to get the transfer object from the scriptPubKey. CTxOut: %s\n",
                             __func__, tx.vout[i].ToString());
 
-                if (!passets->AddTransferAsset(assetTransfer, address, COutPoint(txid, i), tx.vout[i]))
+                if (!assetCache->AddTransferAsset(assetTransfer, address, COutPoint(txid, i), tx.vout[i]))
                     LogPrintf("%s : ERROR - Failed to add transfer asset CTxOut: %s\n", __func__,
                               tx.vout[i].ToString());
-
             }
         }
         /** RVN END */
     }
 }
 
-bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout,  bool fJustCheck) {
+bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout, CAssetsCache* assetsCache) {
 
     CCoinsMap::iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) return false;
@@ -137,8 +136,9 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout,  bool 
     }
 
     /** RVN START */
-    if (!fJustCheck) {
-        passets->TrySpendCoin(outpoint, *moveout);
+    if (assetsCache) {
+        if (!assetsCache->TrySpendCoin(outpoint, *moveout))
+            return error("%s : Failed to try and spend the asset. COutPoint : %s", __func__, outpoint.ToString());
     }
     /** RVN END */
 

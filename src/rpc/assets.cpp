@@ -128,7 +128,7 @@ UniValue issue(const JSONRPCRequest& request)
 
     // Validate the assets data
     std::string strError;
-    if (!asset.IsValid(strError, true)) {
+    if (!asset.IsValid(strError, *passets)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strError);
     }
 

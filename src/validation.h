@@ -30,6 +30,7 @@
 #include <vector>
 
 #include <atomic>
+#include <assets/assets.h>
 
 class CBlockIndex;
 class CBlockTreeDB;
@@ -329,7 +330,7 @@ int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::D
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
 
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo& txundo, int nHeight, bool fJustCheck = false);
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo& txundo, int nHeight, CAssetsCache* assetCache = nullptr);
 
 /** Transaction validation functions */
 
@@ -461,7 +462,7 @@ extern CBlockTreeDB *pblocktree;
 /** Global variable that point to the active assets (protexted by cs_main) */
 extern CAssetsDB *passetsdb;
 
-extern CAssets *passets;
+extern CAssetsCache *passets;
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

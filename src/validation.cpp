@@ -193,7 +193,7 @@ CCoinsViewCache *pcoinsTip = nullptr;
 CBlockTreeDB *pblocktree = nullptr;
 
 CAssetsDB *passetsdb = nullptr;
-CAssets *passets = nullptr;
+CAssetsCache *passets = nullptr;
 
 enum FlushStateMode {
     FLUSH_STATE_NONE,
@@ -1211,19 +1211,19 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     }
 }
 
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight, bool fJustCheck)
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight, CAssetsCache* assetCache)
 {
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         txundo.vprevout.reserve(tx.vin.size());
         for (const CTxIn &txin : tx.vin) {
             txundo.vprevout.emplace_back();
-            bool is_spent = inputs.SpendCoin(txin.prevout, &txundo.vprevout.back(), fJustCheck);
+            bool is_spent = inputs.SpendCoin(txin.prevout, &txundo.vprevout.back(), assetCache); /** RVN START */ /* Pass assetCache into function */ /** RVN END */
             assert(is_spent);
         }
     }
     // add outputs
-    AddCoins(inputs, tx, nHeight, false, fJustCheck);
+    AddCoins(inputs, tx, nHeight, false, assetCache); /** RVN START */ /* Pass assetCache into function */ /** RVN END */
 }
 
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
@@ -1479,7 +1479,6 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out, CAss
 
     /** RVN START */
     if (assetCache && fIsAsset) {
-        std::cout << "I AM HERE Undoing an input of an asset" << std::endl;
         if (!assetCache->UndoAssetCoin(tempCoin, out))
             fClean = false;
     }
@@ -1512,6 +1511,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
     }
 
     // undo transactions in reverse order
+    CAssetsCache tempCache(*assetsCache);
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
         const CTransaction &tx = *(block.vtx[i]);
         uint256 hash = tx.GetHash();
@@ -1525,7 +1525,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
             if (!tx.vout[o].scriptPubKey.IsUnspendable()) {
                 COutPoint out(hash, o);
                 Coin coin;
-                bool is_spent = view.SpendCoin(out, &coin, true); /** RVN START */ /** Added the boolean true, as we don't need to try and spend the asset */ /** RVN END */
+                bool is_spent = view.SpendCoin(out, &coin, &tempCache); /** RVN START */ /* Pass assetsCache into the SpendCoin function */ /** RVN END */
                 if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
                     fClean = false; // transaction output mismatch
                 }
@@ -1722,7 +1722,7 @@ static int64_t nBlocksTotal = 0;
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false)
+                  CCoinsViewCache& view, const CChainParams& chainparams, CAssetsCache* assetsCache = nullptr, bool fJustCheck = false)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -1895,26 +1895,27 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         }
 
         /** RVN START */
-        if (tx.IsNewAsset()) {
-            CNewAsset asset;
-            std::string strAddress;
-            AssetFromTransaction(tx, asset, strAddress);
+        if (assetsCache) {
+            if (tx.IsNewAsset()) {
+                CNewAsset asset;
+                std::string strAddress;
+                AssetFromTransaction(tx, asset, strAddress);
 
-            std::string strError = "";
-            if (!asset.IsValid(strError))
-                return state.DoS(100, error("%s: %s", __func__, strError), REJECT_INVALID, "bad-txns-issue-asset");
+                std::string strError = "";
+                if (!asset.IsValid(strError, *assetsCache))
+                    return state.DoS(100, error("%s: %s", __func__, strError), REJECT_INVALID, "bad-txns-issue-asset");
 
-            // If we aren't just checking the block, database the assets
-            if(!fJustCheck) {
-                if (!passets->AddNewAsset(asset, strAddress, COutPoint(tx.GetHash(), tx.vout.size() - 1)))
-                    return error("%s: Failed at adding a new asset to our database. asset: %s", __func__,
-                                 asset.strName);
+                // Add the new asset to cache
+                if (!assetsCache->AddNewAsset(asset, strAddress))
+                    return state.DoS(100, error("%s: Failed at adding a new asset to our cache. asset: %s", __func__,
+                                 asset.strName), REJECT_INVALID, "bad-txns-issue-asset-name-already-taken");
 
-                // TODO when we are ready. Make sure to only database after we are done validating everything
+                // If asset is in an CTxOut that I own add it to my cache
                 if (vpwallets[0]->IsMine(tx.vout[tx.vout.size() - 1]) == ISMINE_SPENDABLE) {
-                    if (!passets->AddToMyUpspentOutPoints(asset.strName, COutPoint(tx.GetHash(), tx.vout.size() - 1)))
-                        return error("%s: Failed to add an asset I own to my Unspent Asset Database. asset %s",
-                                     __func__, asset.strName);
+                    if (!assetsCache->AddToMyUpspentOutPoints(asset.strName,
+                                                          COutPoint(tx.GetHash(), tx.vout.size() - 1)))
+                        return state.DoS(100, error("%s: Failed to add an asset I own to my Unspent Asset Cache. asset %s",
+                                                    __func__, asset.strName), REJECT_INVALID, "bad-asset-my-asset-wont-add");
                 }
             }
         }
@@ -1924,7 +1925,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         if (i > 0) {
             blockundo.vtxundo.push_back(CTxUndo());
         }
-        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight, fJustCheck);
+        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight, assetsCache);
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
@@ -2067,16 +2068,32 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
         if (fDoFullFlush) {
+
+            /** RVN START */
+            size_t assetsSize = 0;
+            if (passets)
+                assetsSize = passets->GetCacheSize() * 2;
+            /** RVN END */
+
             // Typical Coin structures on disk are around 48 bytes in size.
             // Pushing a new one to the database can cause it to be written
             // twice (once in the log, and once in the tables). This is already
             // an overestimation, as most will delete an existing entry or
             // overwrite one. Still, use a conservative safety factor of 2.
-            if (!CheckDiskSpace(48 * 2 * 2 * pcoinsTip->GetCacheSize()))
+            if (!CheckDiskSpace((48 * 2 * 2 * pcoinsTip->GetCacheSize()) + assetsSize)) /** RVN START */ /** RVN END */
                 return state.Error("out of disk space");
+
             // Flush the chainstate (which may refer to block index entries).
             if (!pcoinsTip->Flush())
                 return AbortNode(state, "Failed to write to coin database");
+
+            /** RVN START */
+            // Flush the assetstate
+            if (passets) {
+                if (!passets->Flush(false, true))
+                    return AbortNode(state, "Failed to write to asset database");
+            }
+            /** RVN END */
             nLastFlush = nNow;
         }
     }
@@ -2201,7 +2218,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         bool flushed = view.Flush();
         assert(flushed);
 
-        bool assetsFlushed = assetCache.Flush();
+        bool assetsFlushed = assetCache.Flush(true);
         assert(assetsFlushed);
     }
     LogPrint(BCLog::BENCH, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
@@ -2328,7 +2345,11 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     LogPrint(BCLog::BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
     {
         CCoinsViewCache view(pcoinsTip);
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
+
+        CAssetsCache assetCache(*passets);
+        assert(assetCache.setAssets.size() == passets->setAssets.size());
+
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, &assetCache);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -2339,6 +2360,9 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         LogPrint(BCLog::BENCH, "  - Connect total: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime3 - nTime2) * MILLI, nTimeConnectTotal * MICRO, nTimeConnectTotal * MILLI / nBlocksTotal);
         bool flushed = view.Flush();
         assert(flushed);
+
+        bool assetFlushed = assetCache.Flush(true);
+        assert(assetFlushed);
     }
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint(BCLog::BENCH, "  - Flush: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime4 - nTime3) * MILLI, nTimeFlush * MICRO, nTimeFlush * MILLI / nBlocksTotal);
@@ -3327,6 +3351,10 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
+    /** RVN START */
+    CAssetsCache assetCache(*passets);
+    /** RVN END */
+
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
@@ -3334,7 +3362,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
-    if (!ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
+    if (!ConnectBlock(block, state, &indexDummy, viewNew, chainparams, &assetCache, true)) /** RVN START */ /*Add asset to function */ /** RVN END*/
         return false;
     assert(state.IsValid());
 
@@ -3713,6 +3741,8 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     int nGoodTransactions = 0;
     CValidationState state;
     int reportDone = 0;
+
+    CAssetsCache assetCache(*passets);
     LogPrintf("[0%%]...");
     for (CBlockIndex* pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev)
     {
@@ -3751,7 +3781,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         // check level 3: check for inconsistencies during memory-only disconnect of tip blocks
         if (nCheckLevel >= 3 && pindex == pindexState && (coins.DynamicMemoryUsage() + pcoinsTip->DynamicMemoryUsage()) <= nCoinCacheUsage) {
             assert(coins.GetBestBlock() == pindex->GetBlockHash());
-            DisconnectResult res = DisconnectBlock(block, pindex, coins);
+            DisconnectResult res = DisconnectBlock(block, pindex, coins, &assetCache);
             if (res == DISCONNECT_FAILED) {
                 return error("VerifyDB(): *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
             }
@@ -3779,7 +3809,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
                 return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-            if (!ConnectBlock(block, state, pindex, coins, chainparams))
+            if (!ConnectBlock(block, state, pindex, coins, chainparams, &assetCache))
                 return error("VerifyDB(): *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         }
     }
