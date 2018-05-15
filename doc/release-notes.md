@@ -458,6 +458,11 @@ Instant send is a functionality ported from DASH distributing a copy of desired 
 - #13246 `6de7543` Bump to Ubuntu Bionic 18.04 in build-windows.md (ken2812221)
 - #12556 `e730b82` Fix version typo in getpeerinfo RPC call help (tamasblummer)
 
+GUI changes
+-----------
+
+- Block storage can be limited under Preferences, in the Main tab. Undoing this setting requires downloading the full blockchain again. This mode is incompatible with -txindex and -rescan.
+
 RPC changes
 ------------
 
