@@ -322,6 +322,12 @@ public:
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
 
+    // Whether the node should be passed out in ForEach* callbacks
+    bool FullyConnected() const
+    {
+        return fSuccessfullyConnected && !fDisconnect;
+    }
+
 private:
     const NodeId id;
     const uint64_t nLocalHostNonce;
@@ -525,7 +531,7 @@ public:
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
+            if (node != nullptr && node->FullyConnected())
                 func(node);
         }
     };
@@ -535,7 +541,7 @@ public:
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
+            if (node != nullptr && node->FullyConnected())
                 func(node);
         }
     };
@@ -545,7 +551,7 @@ public:
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
+            if (node != nullptr && node->FullyConnected())
                 pre(node);
         }
         post();
@@ -556,7 +562,7 @@ public:
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
+            if (node != nullptr && node->FullyConnected())
                 pre(node);
         }
         post();
@@ -699,9 +705,6 @@ private:
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes);
-
-    // Whether the node should be passed out in ForEach* callbacks
-    static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
     CCriticalSection cs_totalBytesRecv;
