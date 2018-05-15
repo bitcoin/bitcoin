@@ -123,6 +123,19 @@ public:
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
 };
 
+class BaseIndexDB : public CDBWrapper
+{
+public:
+    BaseIndexDB(const fs::path& path, size_t n_cache_size,
+                bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false);
+
+    /// Read block locator of the chain that the index is in sync with.
+    bool ReadBestBlock(CBlockLocator& locator) const;
+
+    /// Write block locator of the chain that the index is in sync with.
+    bool WriteBestBlock(const CBlockLocator& locator);
+};
+
 /**
  * Access to the txindex database (indexes/txindex/)
  *
@@ -132,7 +145,7 @@ public:
  * and block index entries may not be flushed to disk until after this database
  * is updated.
  */
-class TxIndexDB : public CDBWrapper
+class TxIndexDB : public BaseIndexDB
 {
 public:
     explicit TxIndexDB(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
@@ -143,12 +156,6 @@ public:
 
     /// Write a batch of transaction positions to the DB.
     bool WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_pos);
-
-    /// Read block locator of the chain that the txindex is in sync with.
-    bool ReadBestBlock(CBlockLocator& locator) const;
-
-    /// Write block locator of the chain that the txindex is in sync with.
-    bool WriteBestBlock(const CBlockLocator& locator);
 
     /// Migrate txindex data from the block tree DB, where it may be for older nodes that have not
     /// been upgraded yet to the new database.
