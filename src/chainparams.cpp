@@ -111,13 +111,13 @@ public:
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1517443200; // Feb 1st, 2018
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1548979200; // Feb 1st, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1533081600; // Aug 1st, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1577750400; // Dec 31st, 2019
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1517443200; // Feb 1st, 2018.
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1548979200; // Feb 1st, 2019.
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1533081600; // Aug 1st, 2018.
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1577750400; // Dec 31st, 2019.
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000003dcd8432dc91bbf"); // 1396940 // PM-Tech: ChainCoin
@@ -161,8 +161,8 @@ public:
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,4); // PM-Tech: ChainCoin
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,28 + 128); // PM-Tech: ChainCoin
         //uncompressed keys are compatible but not used unless unit tests, let's use Bitcoin values here
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x02, 0xFE, 0x52, 0xF8};
+        base58Prefixes[EXT_SECRET_KEY] = {0x02, 0xFE, 0x52, 0xCC};
 
         bech32_hrp = "chc";
 
@@ -274,7 +274,7 @@ public:
 
         // nodes with support for servicebits filtering should be at the top
         vSeeds.emplace_back("test.chaincoin.org");
-        vSeeds.emplace_back("test1.hashunlimited.com");
+        vSeeds.emplace_back("testseed.hashunlimited.com");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,80);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,44);
@@ -296,16 +296,17 @@ public:
 
         checkpointData = {
             {
-               {   0, uint256S("0000082f5939c2154dbcba35f784530d12e9d72472fcfaf29674ea312cdf4c83")},
+                {      0, uint256S("0000082f5939c2154dbcba35f784530d12e9d72472fcfaf29674ea312cdf4c83")},
+                {  66666, uint256S("0000001566591fd5eec0de52a7de96567edeb3ba2d78b41123d6a6b7dafab603")},
             }
         };
 
         chainTxData = ChainTxData{
 
-            0, // * UNIX timestamp of last checkpoint block
-            0,       // * total number of transactions between genesis and last checkpoint
+            1526408675, // * UNIX timestamp of last checkpoint block
+            67387,      // * total number of transactions between genesis and last checkpoint
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            0.01         // * estimated number of transactions per day after checkpoint
+            0.01        // * estimated number of transactions per day after checkpoint
         };
 
     }
