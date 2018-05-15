@@ -57,6 +57,9 @@ protected:
 
     virtual BaseIndexDB& GetDB() const = 0;
 
+    /// Get the name of the index for display in logs.
+    virtual const char* GetName() const = 0;
+
 public:
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
@@ -95,6 +98,8 @@ protected:
     bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
 
     BaseIndexDB& GetDB() const override;
+
+    const char* GetName() const override { return "txindex"; }
 
 public:
     /// Constructs the index, which becomes available to be queried.
