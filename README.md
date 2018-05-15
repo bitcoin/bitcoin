@@ -1,6 +1,8 @@
 Bitcoin Core integration/staging tree
 =====================================
 
+**Note**: If you want to compile 0.15.x, use this branch instead of the latest tagged release, as this branch contains additional bug fixes.
+
 [![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
 
 https://bitcoincore.org
