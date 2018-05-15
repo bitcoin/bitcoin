@@ -167,9 +167,15 @@ built by default.
 ##### Build requirements:
 
 ```shell
-sudo dnf install -y git gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3
+sudo dnf install -y git gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel python3
 ```
 
+##### BerkeleyDB 4.8:
+
+```shell
+sudo dnf install -y libdb4-devel libdb4-cxx-devel 
+
+```
 ##### MiniUPNP / Optional:
 
 ```shell
@@ -204,7 +210,7 @@ sudo dnf install -y qrencode-devel
 ##### Build requirements:
 
 ```shell
-sudo yum install -y git gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3 python-devel patch
+sudo yum install -y git gcc-c++ libtool make autoconf automake epel-release openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3 python-devel patch
 ```
 
 ##### Boost:
@@ -227,23 +233,25 @@ export LD_LIBRARY_PATH
 ```
 
 ##### BerkeleyDB 4.8:
-    
-**For CentOS:** you must compile [Berkeley DB](#berkeley-db) from source using the provided contrib script.
+
+
+```shell
+# berkeleydb 4.8 (requires epel-release)
+sudo yum install -y libdb4-devel libdb4-cxx-devel
+```
 
 ##### MiniUPNPC / Optional:
 
 ```shell
-curl -sL 'http://miniupnp.free.fr/files/download.php?file=miniupnpc-2.0.tar.gz' -o miniupnpc-2.0.tar.gz
-tar -xvf miniupnpc-2.0.tar.gz && cd miniupnpc-2.0
-make -j$(nproc) && sudo make install
+# upnp (requires epel-release)
+sudo yum install -y miniupnpc-devel
 ```
 
 ##### ZMQ dependencies:
 
 ```shell
-git clone https://github.com/zeromq/libzmq && cd libzmq
-./autogen.sh && ./configure && make -j$(nproc)
-make -j$(nproc) && sudo make install && sudo ldconfig
+# zmq (requires epel-release)
+sudo yum install -y czmq
 ```
 
 #### Dependencies for the GUI
