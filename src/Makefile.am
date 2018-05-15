@@ -167,7 +167,8 @@ BITCOIN_CORE_H = \
   compat/byteswap.h \
   compat/endian.h \
   compat/sanity.h \
-  updater.h
+  updater.h \
+  dbmanager.h
 
 JSON_H = \
   json/json_spirit.h \

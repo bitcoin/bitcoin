@@ -37,6 +37,8 @@
 #include "systemnodeconfig.h"
 #include "spork.h"
 #include "utilmoneystr.h"
+#include "dbmanager.h"
+#include "instantx.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
@@ -160,6 +162,8 @@ static CCoinsViewDB *pcoinsdbview = NULL;
 static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 static boost::scoped_ptr<ECCVerifyHandle> globalVerifyHandle;
 
+void DumpData();
+
 /** Preparing steps before shutting down or restarting the wallet */
 void PrepareShutdown()
 {
@@ -185,11 +189,7 @@ void PrepareShutdown()
     GenerateBitcoins(false, NULL, 0);
 #endif
     StopNode();
-    DumpMasternodes();
-    DumpBudgets();
-    DumpMasternodePayments();
-    DumpSystemnodes();
-    DumpSystemnodePayments();
+    DumpData();
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)
@@ -586,7 +586,85 @@ bool InitSanityCheck(void)
     return true;
 }
 
+bool LoadData()
+{
+    std::string strDBName;
+    boost::filesystem::path pathDB = GetDataDir();
 
+    uiInterface.InitMessage(_("Loading masternode cache..."));
+
+    strDBName = "mncache.dat";
+    DbManager<CMasternodeMan> mndb(strDBName, "MasternodeCache");
+    if(!mndb.Load(mnodeman)) {
+        return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
+    }
+
+    uiInterface.InitMessage(_("Loading systemnode cache..."));
+
+    strDBName = "sncache.dat";
+    DbManager<CSystemnodeMan> sndb(strDBName, "SystemnodeCache");
+    if(!sndb.Load(snodeman)) {
+        return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
+    }
+
+    uiInterface.InitMessage(_("Loading budget cache..."));
+
+    strDBName = "budget.dat";
+    DbManager<CBudgetManager> budgetdb(strDBName, "MasternodeBudget");
+    if(!budgetdb.Load(budget)) {
+        return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
+    }
+
+    //flag our cached items so we send them to our peers
+    budget.ResetSync();
+    budget.ClearSeen();
+
+    uiInterface.InitMessage(_("Loading masternode payment cache..."));
+
+    strDBName = "mnpayments.dat";
+    DbManager<CMasternodePayments> mnpayments(strDBName, "MasternodePayments");
+    if(!mnpayments.Load(masternodePayments)) {
+        return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
+    }
+
+    uiInterface.InitMessage(_("Loading systemnode payment cache..."));
+
+    strDBName = "snpayments.dat";
+    DbManager<CSystemnodePayments> snpayments(strDBName, "SystemnodePayments");
+    if(!snpayments.Load(systemnodePayments)) {
+        return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
+    }
+
+    uiInterface.InitMessage(_("Loading instant send cache..."));
+
+    strDBName = "ixcache.dat";
+    DbManager<InstantSend> ixcache(strDBName, "InstantSend");
+    if(!ixcache.Load(instantSend)) {
+        return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
+    }
+    return true;
+}
+
+void DumpData()
+{
+    DbManager<CMasternodeMan> mndb("mncache.dat", "MasternodeCache");
+    mndb.Dump(mnodeman);
+
+    DbManager<CBudgetManager> budgetdb("budget.dat", "MasternodeBudget");
+    budgetdb.Dump(budget);
+
+    DbManager<CMasternodePayments> mnpayments("mnpayments.dat", "MasternodePayments");
+    mnpayments.Dump(masternodePayments);
+
+    DbManager<CSystemnodeMan> sndb("sncache.dat", "SystemnodeCache");
+    sndb.Dump(snodeman);
+
+    DbManager<CSystemnodePayments> snpayments("snpayments.dat", "SystemnodePayments");
+    snpayments.Dump(systemnodePayments);
+
+    DbManager<InstantSend> ixcache("ixcache.dat", "InstantSend");
+    ixcache.Dump(instantSend);
+}
 
 /** Initialize crown.
  *  @pre Parameters should be parsed and config file should be read.
@@ -1439,89 +1517,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 10: setup Budgets
 
-    uiInterface.InitMessage(_("Loading masternode cache..."));
-
-    CMasternodeDB mndb;
-    CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
-    if (readResult == CMasternodeDB::FileError)
-        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
-    else if (readResult != CMasternodeDB::Ok)
-    {
-        LogPrintf("Error reading mncache.dat: ");
-        if(readResult == CMasternodeDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-    }
-
-    uiInterface.InitMessage(_("Loading systemnode cache..."));
-
-    CSystemnodeDB sndb;
-    CSystemnodeDB::ReadResult readResultS = sndb.Read(snodeman);
-    if (readResultS == CSystemnodeDB::FileError)
-        LogPrintf("Missing systemnode cache file - sncache.dat, will try to recreate\n");
-    else if (readResultS != CSystemnodeDB::Ok)
-    {
-        LogPrintf("Error reading sncache.dat: ");
-        if(readResultS == CSystemnodeDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-    }
-
-
-    uiInterface.InitMessage(_("Loading budget cache..."));
-
-    CBudgetDB budgetdb;
-    CBudgetDB::ReadResult readResult2 = budgetdb.Read(budget);
-    
-    if (readResult2 == CBudgetDB::FileError)
-        LogPrintf("Missing budget cache - budget.dat, will try to recreate\n");
-    else if (readResult2 != CBudgetDB::Ok)
-    {
-        LogPrintf("Error reading budget.dat: ");
-        if(readResult2 == CBudgetDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-    }
-
-    //flag our cached items so we send them to our peers
-    budget.ResetSync();
-    budget.ClearSeen();
-
-
-    uiInterface.InitMessage(_("Loading masternode payment cache..."));
-
-    CMasternodePaymentDB mnpayments;
-    CMasternodePaymentDB::ReadResult readResult3 = mnpayments.Read(masternodePayments);
-    
-    if (readResult3 == CMasternodePaymentDB::FileError)
-        LogPrintf("Missing masternode payment cache - mnpayments.dat, will try to recreate\n");
-    else if (readResult3 != CMasternodePaymentDB::Ok)
-    {
-        LogPrintf("Error reading mnpayments.dat: ");
-        if(readResult3 == CMasternodePaymentDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-    }
-
-    uiInterface.InitMessage(_("Loading systemnode payment cache..."));
-
-    CSystemnodePaymentDB snpayments;
-    CSystemnodePaymentDB::ReadResult readResult4 = snpayments.Read(systemnodePayments);
-    
-    if (readResult4 == CSystemnodePaymentDB::FileError)
-        LogPrintf("Missing systemnode payment cache - snpayments.dat, will try to recreate\n");
-    else if (readResult4 != CSystemnodePaymentDB::Ok)
-    {
-        LogPrintf("Error reading snpayments.dat: ");
-        if(readResult4 == CSystemnodePaymentDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-    }
+    if (!LoadData())
+        return false;
 
     fMasterNode = GetBoolArg("-masternode", false);
     fSystemNode = GetBoolArg("-systemnode", false);

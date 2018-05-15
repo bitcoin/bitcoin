@@ -43,39 +43,12 @@ extern std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 extern std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
 extern CBudgetManager budget;
-void DumpBudgets();
 
 // Define amount of blocks in budget payment cycle
 int GetBudgetPaymentCycleBlocks();
 
 //Check the collateral transaction for the budget proposal/finalized budget
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf);
-
-/** Save Budget Manager (budget.dat)
- */
-class CBudgetDB
-{
-private:
-    boost::filesystem::path pathDB;
-    std::string strMagicMessage;
-public:
-    enum ReadResult {
-        Ok,
-        FileError,
-        HashReadError,
-        IncorrectHash,
-        IncorrectMagicMessage,
-        IncorrectMagicNumber,
-        IncorrectFormat
-    };
-
-    CBudgetDB();
-    CBudgetDB(const boost::filesystem::path& pathDb);
-
-    bool Write(const CBudgetManager &objToSave);
-    ReadResult Read(CBudgetManager& objToLoad, bool fDryRun = false);
-};
-
 
 //
 // Budget Manager : Contains all proposals for the budget
