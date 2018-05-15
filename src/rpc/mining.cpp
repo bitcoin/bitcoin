@@ -773,9 +773,9 @@ static UniValue estimatefee(const JSONRPCRequest& request)
 
 static UniValue estimatesmartfee(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "estimatesmartfee conf_target (\"estimate_mode\")\n"
+            "estimatesmartfee conf_target (\"estimate_mode\" mempool_optimized)\n"
             "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
             "confirmation within conf_target blocks if possible and return the number of blocks\n"
             "for which the estimate is valid. Uses virtual transaction size as defined\n"
@@ -791,6 +791,9 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
             "       \"UNSET\" (defaults to CONSERVATIVE)\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
+            "3. mempool_optimized (boolean, optional, defaults to false) Use the mempool data to optimize\n"
+            "                     the fee (note: use of Replace-By-Fee is strongly recommended, as transactions\n"
+            "                     may get stuck due to a too optimistic fee rate).\n"
             "\nResult:\n"
             "{\n"
             "  \"feerate\" : x.x,     (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kB\n"
@@ -806,10 +809,11 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
             + HelpExampleCli("estimatesmartfee", "6")
             );
 
-    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VSTR});
+    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VSTR, UniValue::VBOOL});
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
     unsigned int conf_target = ParseConfirmTarget(request.params[0]);
     bool conservative = true;
+    bool mempool_optimized = !request.params[2].isNull() && request.params[2].get_bool();
     if (!request.params[1].isNull()) {
         FeeEstimateMode fee_mode;
         if (!FeeModeFromString(request.params[1].get_str(), fee_mode)) {
@@ -821,7 +825,7 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     UniValue errors(UniValue::VARR);
     FeeCalculation feeCalc;
-    CFeeRate feeRate = ::feeEstimator.estimateSmartFee(conf_target, &feeCalc, conservative);
+    CFeeRate feeRate = ::feeEstimator.estimateSmartFee(conf_target, &feeCalc, conservative, mempool_optimized);
     if (feeRate != CFeeRate(0)) {
         result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
     } else {
@@ -947,7 +951,7 @@ static const CRPCCommand commands[] =
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
 
     { "hidden",             "estimatefee",            &estimatefee,            {} },
-    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
+    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode", "mempool_optimized"} },
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
 };

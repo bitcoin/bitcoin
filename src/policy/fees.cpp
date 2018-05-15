@@ -11,6 +11,7 @@
 #include <streams.h>
 #include <txmempool.h>
 #include <util.h>
+#include <validation.h>
 
 static constexpr double INF_FEERATE = 1e99;
 
@@ -817,7 +818,7 @@ double CBlockPolicyEstimator::estimateConservativeFee(unsigned int doubleTarget,
  * estimates, however, required the 95% threshold at 2 * target be met for any
  * longer time horizons also.
  */
-CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation *feeCalc, bool conservative) const
+CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation *feeCalc, bool conservative, bool mempool_optimized) const
 {
     LOCK(cs_feeEstimator);
 
@@ -832,6 +833,11 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > longStats->GetMaxConfirms()) {
         return CFeeRate(0);  // error condition
+    }
+
+    CFeeRate mp_feerate(0);
+    if (mempool_optimized) {
+        mp_feerate = mempool.CalculateFeeRate((0.1 + conservative * 0.05) * std::max(0.5, 1.0 - (double)confTarget / 10));
     }
 
     // It's not possible to get reasonable estimates for confTarget of 1
@@ -892,7 +898,10 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 
     if (median < 0) return CFeeRate(0); // error condition
 
-    return CFeeRate(llround(median));
+    CFeeRate result = CFeeRate(llround(median));
+    printf("result:\n- baseline: %s\n"
+                    "- mempool:  %s\n", result.ToString().c_str(), mp_feerate.ToString().c_str());
+    return mempool_optimized && mp_feerate != CFeeRate(0) && mp_feerate < result ? mp_feerate : result;
 }
 
 
