@@ -33,7 +33,6 @@ Unpack the files into a directory and run: `bin/crown-qt` or `bin/crownd`. You n
 
 
 * [Masternode Configuration](masternode-config.md)
-* [Running Multiple Masternodes](guide-starmany.md)
 
 ## Participate in Crown Decentralized Governance
 
