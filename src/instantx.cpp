@@ -160,6 +160,17 @@ void InstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, CD
 
         return;
     }
+    else if (strCommand == "txllist") //Get InstantX Locked list
+    {
+        std::map<uint256, CConsensusVote>::const_iterator it = m_txLockVote.begin();
+        for (; it != m_txLockVote.end(); ++it)
+        {
+            CInv inv(MSG_TXLOCK_VOTE, it->second.GetHash());
+            pfrom->AddInventoryKnown(inv);
+
+            RelayInv(inv);
+        }
+    }
 }
 
 bool InstantSend::IsIxTxValid(const CTransaction& txCollateral) const
