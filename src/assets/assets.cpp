@@ -14,6 +14,7 @@
 #include <base58.h>
 #include <validation.h>
 #include <txmempool.h>
+#include <boost/algorithm/string.hpp>
 #include "assets.h"
 #include "assetdb.h"
 
@@ -22,18 +23,94 @@
 #define RVN_N 110
 #define RVN_Q 113
 
+static const auto MAX_NAME_LENGTH = 31;
 
-static const std::regex ASSET_NAME_REGEX("[A-Za-z_]{3,}");
+// min lengths are expressed by quantifiers
+static const std::regex ROOT_NAME_CHARACTERS("^[A-Z0-9._]{3,}$");
+static const std::regex SUB_NAME_CHARACTERS("^[A-Z0-9._]+$");
+static const std::regex UNIQUE_TAG_CHARACTERS("^[A-Za-z0-9!@$%&*()[\\]{}<>\\-_.;?\\\\:]+$");
+static const std::regex CHANNEL_TAG_CHARACTERS("^[A-Z0-9._]+$");
 
-// Does static checking (length, characters, etc.)
-bool IsAssetNameValid(const std::string& name)
+static const std::regex DOUBLE_PUNCTUATION("^.*[._]{2,}.*$");
+static const std::regex LEADING_PUNCTUATION("^[._].*$");
+static const std::regex TRAILING_PUNCTUATION("^.*[._]$");
+
+static const std::string SUB_NAME_DELIMITER = "/";
+static const std::string UNIQUE_TAG_DELIMITER = "#";
+static const std::string CHANNEL_TAG_DELIMITER = "~";
+
+static const std::regex UNIQUE_INDICATOR("^[^#]+#[^#]+$");
+static const std::regex CHANNEL_INDICATOR("^[^~]+~[^~]+$");
+
+bool IsRootNameValid(const std::string& name)
 {
-    return std::regex_match(name, ASSET_NAME_REGEX);
+    return std::regex_match(name, ROOT_NAME_CHARACTERS)
+        && !std::regex_match(name, DOUBLE_PUNCTUATION)
+        && !std::regex_match(name, LEADING_PUNCTUATION)
+        && !std::regex_match(name, TRAILING_PUNCTUATION);
 }
 
-bool IsAssetNameSizeValid(const std::string& name)
+bool IsSubNameValid(const std::string& name)
 {
-    return name.size() >= 3 && name.size() <= 31;
+    return std::regex_match(name, SUB_NAME_CHARACTERS)
+        && !std::regex_match(name, DOUBLE_PUNCTUATION)
+        && !std::regex_match(name, LEADING_PUNCTUATION)
+        && !std::regex_match(name, TRAILING_PUNCTUATION);
+}
+
+bool IsUniqueTagValid(const std::string& tag)
+{
+    return std::regex_match(tag, UNIQUE_TAG_CHARACTERS);
+}
+
+bool IsChannelTagValid(const std::string& tag)
+{
+    return std::regex_match(tag, CHANNEL_TAG_CHARACTERS)
+        && !std::regex_match(tag, DOUBLE_PUNCTUATION)
+        && !std::regex_match(tag, LEADING_PUNCTUATION)
+        && !std::regex_match(tag, TRAILING_PUNCTUATION);
+}
+
+bool IsNameValidBeforeTag(const std::string& name)
+{
+    std::vector<std::string> parts;
+    boost::split(parts, name, boost::is_any_of(SUB_NAME_DELIMITER));
+
+    if (!IsRootNameValid(parts.front())) return false;
+
+    if (parts.size() > 1)
+    {
+        for (unsigned long i = 1; i < parts.size(); i++)
+        {
+            if (!IsSubNameValid(parts[i])) return false;
+        }
+    }
+
+    return true;
+}
+
+bool IsAssetNameValid(const std::string& name)
+{
+    if (name.size() > MAX_NAME_LENGTH) return false;
+
+    if (std::regex_match(name, UNIQUE_INDICATOR))
+    {
+        std::vector<std::string> parts;
+        boost::split(parts, name, boost::is_any_of(UNIQUE_TAG_DELIMITER));
+        return IsNameValidBeforeTag(parts.front())
+            && IsUniqueTagValid(parts.back());
+    }
+    else if (std::regex_match(name, CHANNEL_INDICATOR))
+    {
+        std::vector<std::string> parts;
+        boost::split(parts, name, boost::is_any_of(CHANNEL_TAG_DELIMITER));
+        return IsNameValidBeforeTag(parts.front())
+            && IsChannelTagValid(parts.back());
+    }
+    else
+    {
+        return IsNameValidBeforeTag(name);
+    }
 }
 
 bool CNewAsset::IsNull() const
@@ -65,10 +142,7 @@ bool CNewAsset::IsValid(std::string& strError, bool fCheckMempool)
     }
 
     if (!IsAssetNameValid(std::string(strName)))
-        strError = "Invalid parameter: asset_name must be only consist of valid characters. See help for more details.";
-
-    if (!IsAssetNameSizeValid(strName))
-        strError  = "Invalid parameter: asset_name must have a size between 3 to 31";
+        strError = "Invalid parameter: asset_name must be only consist of valid characters and have a size between 3 and 31 characters. See help for more details.";
 
     if (nAmount <= 0)
         strError  = "Invalid parameter: asset amount can't be equal to or less than zero.";
@@ -339,5 +413,3 @@ bool IsScriptNewAsset(const CScript& scriptPubKey)
 
     return false;
 }
-
-
