@@ -181,7 +181,7 @@ public:
         return !(a.vin == b.vin);
     }
 
-    uint256 CalculateScore(int mod=1, int64_t nBlockHeight=0);
+    arith_uint256 CalculateScore(int64_t nBlockHeight=0);
 
     ADD_SERIALIZE_METHODS;
 
