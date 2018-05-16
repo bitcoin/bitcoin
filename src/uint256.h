@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include <crypto/common.h>
 
 /** Template base class for fixed-sized opaque blobs. */
 template<unsigned int BITS>
@@ -131,7 +130,9 @@ public:
      */
     uint64_t GetCheapHash() const
     {
-        return ReadLE64(data);
+        uint64_t r;
+        memcpy(&r, data, sizeof(r));
+        return r;
     }
 };
 
