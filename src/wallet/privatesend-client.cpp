@@ -7,7 +7,6 @@
 #include <wallet/coincontrol.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <init.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
@@ -15,6 +14,7 @@
 #include <reverse_iterator.h>
 #include <scheduler.h>
 #include <script/sign.h>
+#include <shutdown.h>
 #include <txmempool.h>
 #include <util.h>
 #include <utilmoneystr.h>
