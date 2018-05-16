@@ -44,11 +44,7 @@ This allows for running chaincoind without having to do any manual configuration
 relative to the data directory. `wallet` *only* supports relative paths.
 
 For an example configuration file that describes the configuration settings,
-<<<<<<< HEAD
-see `contrib/debian/examples/chaincoin.conf`.
-=======
-see `share/examples/bitcoin.conf`.
->>>>>>> fa0e1e2f6... contrib: Remove debian and rpm subfolders
+see `share/examples/chaincoin.conf`.
 
 Paths
 ---------------------------------
