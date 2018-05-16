@@ -58,7 +58,7 @@ Build Syscoin Core
         ./configure
         make
 
-3.  It is recommended to build and run the unit tests:
+3.  It is recommended (but not strongly) to build and run the unit tests:
 
         make check
 
