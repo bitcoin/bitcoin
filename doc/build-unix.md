@@ -217,19 +217,15 @@ sudo yum install -y git gcc-c++ libtool make autoconf automake epel-release open
 
 The version of Boost that ships with CentOS is too old to work with Syscoin - version 1.55+ 
 is required. You will also need to pass the argument `--with-boot-libdir="/usr/local/lib"` 
-to `./configure`. You may want to consider adding `LD_LIBRARY_PATH=/usr/local/lib` and 
-`export LD_LIBRARY_PATH`  to your `.bashrc` as well to configure this variable on when 
-starting `syscoind`.
+to `./configure`. You may want to consider adding `export LD_LIBRARY_PATH="/usr/local/lib"` 
+to your `.bashrc` as well to configure this variable on when starting `syscoind`.
 
 
 ```shell
 curl -sL https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.gz -o boost_1_65_1.tar.gz
 tar -xvf boost_1_65_1.tar.gz && cd boost_1_65_1
 ./bootstrap.sh
-sudo ./b2 install --with=all toolset=gcc link=static runtime-link=static
-sudo ldconfig
-LD_LIBRARY_PATH=/usr/local/lib
-export LD_LIBRARY_PATH
+sudo ./b2 cxxflags=-fPIC -a --with=all -j$(nproc) toolset=gcc link=static runtime-link=static install
 ```
 
 ##### BerkeleyDB 4.8:
@@ -251,7 +247,7 @@ sudo yum install -y miniupnpc-devel
 
 ```shell
 # zmq (requires epel-release)
-sudo yum install -y czmq
+sudo yum install -y czmq-devel
 ```
 
 #### Dependencies for the GUI
