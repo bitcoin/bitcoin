@@ -8,7 +8,9 @@
 
 std::unique_ptr<TxIndex> g_txindex;
 
-TxIndex::TxIndex(std::unique_ptr<TxIndexDB> db) : m_db(std::move(db)) {}
+TxIndex::TxIndex(size_t n_cache_size, bool f_memory, bool f_wipe)
+    : m_db(MakeUnique<TxIndex::DB>(n_cache_size, f_memory, f_wipe))
+{}
 
 bool TxIndex::Init()
 {
