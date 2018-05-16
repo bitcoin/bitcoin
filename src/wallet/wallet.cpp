@@ -1229,8 +1229,11 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pin
     }
 }
 
-void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
+void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx, const std::vector<CTransactionRef>& txn_replaced) {
     LOCK2(cs_main, cs_wallet);
+
+    for (const CTransactionRef& txit : txn_replaced) TransactionRemovedFromMempool(txit, MemPoolRemovalReason::REPLACED);
+
     SyncTransaction(ptx);
 
     auto it = mapWallet.find(ptx->GetHash());
@@ -1239,7 +1242,7 @@ void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
     }
 }
 
-void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
+void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) {
     LOCK(cs_wallet);
     auto it = mapWallet.find(ptx->GetHash());
     if (it != mapWallet.end()) {
@@ -1247,7 +1250,16 @@ void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
     }
 }
 
-void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) {
+void CWallet::MempoolUpdatedForBlockConnect(const std::vector<CTransactionRef>& tx_removed_in_block, const std::vector<CTransactionRef>& tx_removed_conflicted) {
+    LOCK2(cs_main, cs_wallet);
+    for (const CTransactionRef& ptx : tx_removed_conflicted) {
+        SyncTransaction(ptx);
+        TransactionRemovedFromMempool(ptx, MemPoolRemovalReason::CONFLICT);
+    }
+    // We can ignore tx_removed_in_block, we'll get it in BlockConnected
+}
+
+void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex) {
     LOCK2(cs_main, cs_wallet);
     // TODO: Temporarily ensure that mempool removals are notified before
     // connected transactions.  This shouldn't matter, but the abandoned
@@ -1256,14 +1268,9 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
     // notification of a connected conflict might cause an outside process
     // to abandon a transaction and then have it inadvertently cleared by
     // the notification that the conflicted transaction was evicted.
-
-    for (const CTransactionRef& ptx : vtxConflicted) {
-        SyncTransaction(ptx);
-        TransactionRemovedFromMempool(ptx);
-    }
     for (size_t i = 0; i < pblock->vtx.size(); i++) {
         SyncTransaction(pblock->vtx[i], pindex, i);
-        TransactionRemovedFromMempool(pblock->vtx[i]);
+        TransactionRemovedFromMempool(pblock->vtx[i], MemPoolRemovalReason::BLOCK);
     }
 
     m_last_block_processed = pindex;
@@ -4225,6 +4232,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
     walletInstance->m_last_block_processed = chainActive.Tip();
     RegisterValidationInterface(walletInstance);
+    RegisterMempoolInterface(walletInstance);
 
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
@@ -4383,7 +4391,7 @@ bool CWalletTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& 
     // because we think that this newly generated transaction's change is
     // unavailable as we're not yet aware that it is in the mempool.
     bool ret = ::AcceptToMemoryPool(mempool, state, tx, nullptr /* pfMissingInputs */,
-                                nullptr /* plTxnReplaced */, false /* bypass_limits */, nAbsurdFee);
+                                false /* bypass_limits */, nAbsurdFee);
     fInMempool |= ret;
     return ret;
 }
