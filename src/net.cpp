@@ -1210,6 +1210,7 @@ static const char *strMainNetDNSSeed[][2] = {
     {"seed", "seed.ppcoin.net"},
     {"seed2", "seed2.peercoin.net"},
     {"libraryseed", "seed.peercoin-library.org"},
+    {"7serverseed", "ppcseed.ns.7server.net"},
     {NULL, NULL}
 };
 
