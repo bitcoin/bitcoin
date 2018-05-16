@@ -11,6 +11,8 @@
 #include <validation.h>
 #include <warnings.h>
 
+constexpr char DB_BEST_BLOCK = 'B';
+
 constexpr int64_t SYNC_LOG_INTERVAL = 30; // seconds
 constexpr int64_t SYNC_LOCATOR_WRITE_INTERVAL = 30; // seconds
 
@@ -24,6 +26,24 @@ static void FatalError(const char* fmt, const Args&... args)
         "Error: A fatal internal error occurred, see debug.log for details",
         "", CClientUIInterface::MSG_ERROR);
     StartShutdown();
+}
+
+BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
+    CDBWrapper(path, n_cache_size, f_memory, f_wipe, f_obfuscate)
+{}
+
+bool BaseIndex::DB::ReadBestBlock(CBlockLocator& locator) const
+{
+    bool success = Read(DB_BEST_BLOCK, locator);
+    if (!success) {
+        locator.SetNull();
+    }
+    return success;
+}
+
+bool BaseIndex::DB::WriteBestBlock(const CBlockLocator& locator)
+{
+    return Write(DB_BEST_BLOCK, locator);
 }
 
 BaseIndex::~BaseIndex()
