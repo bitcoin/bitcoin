@@ -11,7 +11,6 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <fs.h>
-#include <init.h>
 #include <key.h>
 #include <key_io.h>
 #include <keystore.h>
@@ -23,6 +22,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
+#include <shutdown.h>
 #include <timedata.h>
 #include <txmempool.h>
 #include <utilmoneystr.h>
