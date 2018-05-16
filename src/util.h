@@ -160,12 +160,21 @@ class ArgsManager
 protected:
     friend class ArgsManagerHelper;
 
+    struct Arg
+    {
+        std::string m_help_param;
+        std::string m_help_text;
+        bool m_debug_only;
+
+        Arg(const std::string& help_param, const std::string& help_text, bool debug_only) : m_help_param(help_param), m_help_text(help_text), m_debug_only(debug_only) {};
+    };
+
     mutable CCriticalSection cs_args;
     std::map<std::string, std::vector<std::string>> m_override_args;
     std::map<std::string, std::vector<std::string>> m_config_args;
     std::string m_network;
     std::set<std::string> m_network_only_args;
-    std::map<std::pair<OptionsCategory, std::string>, std::pair<std::string, bool>> m_available_args;
+    std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args;
 
     void ReadConfigStream(std::istream& stream);
 
