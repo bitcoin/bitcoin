@@ -11,6 +11,7 @@
 #include <qt/platformstyle.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
+#include <wallet/walletmanager.h>
 
 #include <key.h>
 #include <pubkey.h>
@@ -103,9 +104,9 @@ void TestAddAddressesToSendBook()
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
     auto node = interfaces::MakeNode();
     OptionsModel optionsModel(*node);
-    AddWallet(&wallet);
+    g_wallet_manager.AddWallet(&wallet);
     WalletModel walletModel(std::move(node->getWallets()[0]), *node, platformStyle.get(), &optionsModel);
-    RemoveWallet(&wallet);
+    g_wallet_manager.RemoveWallet(&wallet);
     EditAddressDialog editAddressDialog(EditAddressDialog::NewSendingAddress);
     editAddressDialog.setModel(walletModel.getAddressTableModel());
 

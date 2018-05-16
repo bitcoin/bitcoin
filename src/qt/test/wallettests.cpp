@@ -16,6 +16,7 @@
 #include <test/test_bitcoin.h>
 #include <validation.h>
 #include <wallet/wallet.h>
+#include <wallet/walletmanager.h>
 #include <qt/overviewpage.h>
 #include <qt/receivecoinsdialog.h>
 #include <qt/recentrequeststablemodel.h>
@@ -166,9 +167,9 @@ void TestGUI()
     TransactionView transactionView(platformStyle.get());
     auto node = interfaces::MakeNode();
     OptionsModel optionsModel(*node);
-    AddWallet(&wallet);
+    g_wallet_manager.AddWallet(&wallet);
     WalletModel walletModel(std::move(node->getWallets().back()), *node, platformStyle.get(), &optionsModel);
-    RemoveWallet(&wallet);
+    g_wallet_manager.RemoveWallet(&wallet);
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 

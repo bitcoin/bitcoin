@@ -34,6 +34,7 @@
 #ifdef ENABLE_WALLET
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
+#include <wallet/walletmanager.h>
 #define CHECK_WALLET(x) x
 #else
 #define CHECK_WALLET(x) throw std::logic_error("Wallet function called in non-wallet build.")
@@ -222,7 +223,7 @@ class NodeImpl : public Node
     {
 #ifdef ENABLE_WALLET
         std::vector<std::unique_ptr<Wallet>> wallets;
-        for (CWallet* wallet : GetWallets()) {
+        for (CWallet* wallet : g_wallet_manager.GetWallets()) {
             wallets.emplace_back(MakeWallet(*wallet));
         }
         return wallets;
