@@ -35,7 +35,7 @@ static constexpr int64_t EXTRA_PEER_CHECK_INTERVAL = 45;
 /** Minimum time an outbound-peer-eviction candidate must be connected for, in order to evict, in seconds */
 static constexpr int64_t MINIMUM_CONNECT_TIME = 30;
 
-class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
+class PeerLogicValidation final : public CValidationInterface, public MempoolInterface, public NetEventsInterface {
 private:
     CConnman* const connman;
 
@@ -45,7 +45,7 @@ public:
     /**
      * Overridden from CValidationInterface.
      */
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected, const std::vector<CTransactionRef>& vtxConflicted) override;
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
     /**
      * Overridden from CValidationInterface.
      */
@@ -58,6 +58,10 @@ public:
      * Overridden from CValidationInterface.
      */
     void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override;
+    /**
+     * Overridden from MempoolInterface.
+     */
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& info, const std::vector<CTransactionRef>& txn_replaced) override;
 
     /** Initialize a peer by adding it to mapNodeState and pushing a message requesting its version */
     void InitializeNode(CNode* pnode) override;

@@ -212,6 +212,7 @@ void Shutdown()
     // Because these depend on each-other, we make sure that neither can be
     // using the other before destroying them.
     if (peerLogic) UnregisterValidationInterface(peerLogic.get());
+    if (peerLogic) UnregisterMempoolInterface(peerLogic.get());
     if (g_connman) g_connman->Stop();
     peerLogic.reset();
     g_connman.reset();
@@ -232,6 +233,7 @@ void Shutdown()
 
     if (fFeeEstimatesInitialized)
     {
+        UnregisterMempoolInterface(&::feeEstimator);
         ::feeEstimator.FlushUnconfirmed();
         fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
         CAutoFile est_fileout(fsbridge::fopen(est_path, "wb"), SER_DISK, CLIENT_VERSION);
@@ -272,6 +274,7 @@ void Shutdown()
 #if ENABLE_ZMQ
     if (pzmqNotificationInterface) {
         UnregisterValidationInterface(pzmqNotificationInterface);
+        UnregisterMempoolInterface(pzmqNotificationInterface);
         delete pzmqNotificationInterface;
         pzmqNotificationInterface = nullptr;
     }
@@ -284,9 +287,8 @@ void Shutdown()
         LogPrintf("%s: Unable to remove pidfile: %s\n", __func__, e.what());
     }
 #endif
-    UnregisterAllValidationInterfaces();
+    UnregisterAllValidationAndMempoolInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    GetMainSignals().UnregisterWithMempoolSignals(mempool);
     g_wallet_init_interface.Close();
     globalVerifyHandle.reset();
     ECC_Stop();
@@ -1247,7 +1249,6 @@ bool AppInitMain()
     threadGroup.create_thread(boost::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
 
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
-    GetMainSignals().RegisterWithMempoolSignals(mempool);
 
     /* Register RPC commands regardless of -server setting so they will be
      * available in the GUI RPC console even if external calls are disabled.
@@ -1284,6 +1285,7 @@ bool AppInitMain()
 
     peerLogic.reset(new PeerLogicValidation(&connman, scheduler));
     RegisterValidationInterface(peerLogic.get());
+    RegisterMempoolInterface(peerLogic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
@@ -1376,6 +1378,7 @@ bool AppInitMain()
 
     if (pzmqNotificationInterface) {
         RegisterValidationInterface(pzmqNotificationInterface);
+        RegisterMempoolInterface(pzmqNotificationInterface);
     }
 #endif
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
@@ -1583,6 +1586,7 @@ bool AppInitMain()
     // Allowed to fail as this file IS missing on first startup.
     if (!est_filein.IsNull())
         ::feeEstimator.Read(est_filein);
+    RegisterMempoolInterface(&::feeEstimator);
     fFeeEstimatesInitialized = true;
 
     // ********************************************************* Step 8: start indexers

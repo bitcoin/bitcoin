@@ -13,7 +13,7 @@
 class CBlockIndex;
 class CZMQAbstractNotifier;
 
-class CZMQNotificationInterface final : public CValidationInterface
+class CZMQNotificationInterface final : public CValidationInterface, public MempoolInterface
 {
 public:
     virtual ~CZMQNotificationInterface();
@@ -25,13 +25,16 @@ protected:
     void Shutdown();
 
     // CValidationInterface
-    void TransactionAddedToMempool(const CTransactionRef& tx) override;
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected, const std::vector<CTransactionRef>& vtxConflicted) override;
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, const std::vector<CTransactionRef>& txn_replaced) override;
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
 
 private:
     CZMQNotificationInterface();
+
+    // Does the actual sending of the tx through the ZMQ interface
+    void NotifyTransaction(const CTransactionRef& tx);
 
     void *pcontext;
     std::list<CZMQAbstractNotifier*> notifiers;

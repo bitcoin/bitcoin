@@ -7,9 +7,11 @@
 
 #include <amount.h>
 #include <policy/feerate.h>
+#include <primitives/transaction.h>
 #include <uint256.h>
 #include <random.h>
 #include <sync.h>
+#include <validationinterface.h>
 
 #include <map>
 #include <memory>
@@ -135,7 +137,7 @@ struct FeeCalculation
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
  * stats on the transactions included in that block
  */
-class CBlockPolicyEstimator
+class CBlockPolicyEstimator : public MempoolInterface
 {
 private:
     /** Track confirm delays up to 12 blocks for short horizon */
@@ -186,20 +188,30 @@ private:
      */
     static constexpr double FEE_SPACING = 1.05;
 
+    struct TxStatsInfo
+    {
+        unsigned int blockHeight;
+        CAmount m_fee_per_k;
+        uint256 witness_hash;
+        TxStatsInfo() : blockHeight(0), m_fee_per_k(0) {}
+    };
+
+    /** Remove a transaction from the mempool tracking stats*/
+    void removeTx(std::map<uint256, TxStatsInfo>::iterator pos, bool inBlock);
+
+    /** Helper method to quickly remove transactions that left mempool without going in a block */
+    void removeTxNotInBlock(const uint256& hash);
+
+protected:
+    // MempoolInterface functions:
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& info, const std::vector<CTransactionRef>& txn_replaced) override;
+    void TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) override;
+    void MempoolUpdatedForBlockConnect(const std::vector<CTransactionRef>& tx_removed_in_block, const std::vector<CTransactionRef>& tx_removed_conflicted, int block_height) override;
+
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
     CBlockPolicyEstimator();
     ~CBlockPolicyEstimator();
-
-    /** Process all the transactions that have been included in a block */
-    void processBlock(unsigned int nBlockHeight,
-                      std::vector<const CTxMemPoolEntry*>& entries);
-
-    /** Process a transaction accepted to the mempool*/
-    void processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate);
-
-    /** Remove a transaction from the mempool tracking stats*/
-    bool removeTx(uint256 hash, bool inBlock);
 
     /** DEPRECATED. Return a feerate estimate */
     CFeeRate estimateFee(int confTarget) const;
@@ -235,13 +247,6 @@ private:
     unsigned int historicalFirst;
     unsigned int historicalBest;
 
-    struct TxStatsInfo
-    {
-        unsigned int blockHeight;
-        unsigned int bucketIndex;
-        TxStatsInfo() : blockHeight(0), bucketIndex(0) {}
-    };
-
     // map of txids to information about that transaction
     std::map<uint256, TxStatsInfo> mapMemPoolTxs;
 
@@ -259,7 +264,7 @@ private:
     mutable CCriticalSection cs_feeEstimator;
 
     /** Process a transaction confirmed in a block*/
-    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
+    bool processBlockTx(unsigned int nBlockHeight, const CTransactionRef& tx);
 
     /** Helper for estimateSmartFee */
     double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const;

@@ -137,7 +137,7 @@ public:
 
     /** Remove a transaction from mempool tracking stats*/
     void removeTx(unsigned int entryHeight, unsigned int nBestSeenHeight,
-                  unsigned int bucketIndex, bool inBlock);
+                  double val, bool inBlock);
 
     /** Update our estimates by decaying our historical moving average and updating
         with the data gathered from the current block */
@@ -467,9 +467,10 @@ unsigned int TxConfirmStats::NewTx(unsigned int nBlockHeight, double val)
     return bucketindex;
 }
 
-void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHeight, unsigned int bucketindex, bool inBlock)
+void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHeight, double val, bool inBlock)
 {
     //nBestSeenHeight is not updated yet for the new block
+    unsigned int bucketindex = bucketMap.lower_bound(val)->second;
     int blocksAgo = nBestSeenHeight - entryHeight;
     if (nBestSeenHeight == 0)  // the BlockPolicyEstimator hasn't seen any blocks yet
         blocksAgo = 0;
@@ -504,23 +505,17 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
     }
 }
 
-// This function is called from CTxMemPool::removeUnchecked to ensure
-// txs removed from the mempool for any reason are no longer
-// tracked. Txs that were part of a block have already been removed in
-// processBlockTx to ensure they are never double tracked, but it is
-// of no harm to try to remove them again.
-bool CBlockPolicyEstimator::removeTx(uint256 hash, bool inBlock)
-{
-    LOCK(cs_feeEstimator);
+void CBlockPolicyEstimator::removeTx(std::map<uint256, TxStatsInfo>::iterator pos, bool in_block) {
+    feeStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.m_fee_per_k, in_block);
+    shortStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.m_fee_per_k, in_block);
+    longStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.m_fee_per_k, in_block);
+}
+
+void CBlockPolicyEstimator::removeTxNotInBlock(const uint256& hash) {
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos != mapMemPoolTxs.end()) {
-        feeStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);
-        shortStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);
-        longStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);
-        mapMemPoolTxs.erase(hash);
-        return true;
-    } else {
-        return false;
+        removeTx(pos, false);
+        mapMemPoolTxs.erase(pos);
     }
 }
 
@@ -546,82 +541,99 @@ CBlockPolicyEstimator::~CBlockPolicyEstimator()
 {
 }
 
-void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate)
-{
+void CBlockPolicyEstimator::TransactionAddedToMempool(const NewMempoolTransactionInfo& info, const std::vector<CTransactionRef>& txn_replaced) {
     LOCK(cs_feeEstimator);
-    unsigned int txHeight = entry.GetHeight();
-    uint256 hash = entry.GetTx().GetHash();
+    for (const CTransactionRef& tx : txn_replaced) {
+        removeTxNotInBlock(tx->GetHash());
+    }
+
+    unsigned int txHeight = nBestSeenHeight;
+    uint256 hash = info.m_tx->GetHash();
     if (mapMemPoolTxs.count(hash)) {
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error mempool tx %s already being tracked\n",
                  hash.ToString().c_str());
         return;
     }
 
-    if (txHeight != nBestSeenHeight) {
-        // Ignore side chains and re-orgs; assuming they are random they don't
-        // affect the estimate.  We'll potentially double count transactions in 1-block reorgs.
-        // Ignore txs if BlockPolicyEstimator is not in sync with chainActive.Tip().
-        // It will be synced next time a block is processed.
-        return;
-    }
-
     // Only want to be updating estimates when our blockchain is synced,
     // otherwise we'll miscalculate how many blocks its taking to get included.
-    if (!validFeeEstimate) {
+    if (!info.m_valid_for_estimation) {
         untrackedTxs++;
         return;
     }
     trackedTxs++;
 
     // Feerates are stored and reported as BTC-per-kb:
-    CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
+    CFeeRate feeRate(info.m_fee, info.m_virtual_transaction_size);
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
+    mapMemPoolTxs[hash].m_fee_per_k = feeRate.GetFeePerK();
+    mapMemPoolTxs[hash].witness_hash = info.m_tx->GetWitnessHash();
     unsigned int bucketIndex = feeStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
-    mapMemPoolTxs[hash].bucketIndex = bucketIndex;
     unsigned int bucketIndex2 = shortStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
     assert(bucketIndex == bucketIndex2);
     unsigned int bucketIndex3 = longStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
     assert(bucketIndex == bucketIndex3);
 }
 
-bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
+void CBlockPolicyEstimator::TransactionRemovedFromMempool(const CTransactionRef &tx, MemPoolRemovalReason reason) {
+    LOCK(cs_feeEstimator);
+    removeTxNotInBlock(tx->GetHash());
+}
+
+bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTransactionRef& tx)
 {
-    if (!removeTx(entry->GetTx().GetHash(), true)) {
+    std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(tx->GetHash());
+    if (pos == mapMemPoolTxs.end()) {
         // This transaction wasn't being tracked for fee estimation
         return false;
     }
+    if (pos->second.witness_hash != tx->GetWitnessHash()) {
+        // In the case that we saw a tx which had its witness malleated,
+        // pretend it just got removed (we should handle that better, too)
+        removeTx(pos, false);
+        mapMemPoolTxs.erase(pos);
+        return false;
+    }
+    removeTx(pos, true);
 
     // How many blocks did it take for miners to include this transaction?
     // blocksToConfirm is 1-based, so a transaction included in the earliest
     // possible block has confirmation count of 1
-    int blocksToConfirm = nBlockHeight - entry->GetHeight();
+    int blocksToConfirm = nBlockHeight - pos->second.blockHeight;
     if (blocksToConfirm <= 0) {
         // This can't happen because we don't process transactions from a block with a height
         // lower than our greatest seen height
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error Transaction had negative blocksToConfirm\n");
+        mapMemPoolTxs.erase(pos);
         return false;
     }
 
-    // Feerates are stored and reported as BTC-per-kb:
-    CFeeRate feeRate(entry->GetFee(), entry->GetTxSize());
+    feeStats->Record(blocksToConfirm, (double)pos->second.m_fee_per_k);
+    shortStats->Record(blocksToConfirm, (double)pos->second.m_fee_per_k);
+    longStats->Record(blocksToConfirm, (double)pos->second.m_fee_per_k);
 
-    feeStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
-    shortStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
-    longStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
+    mapMemPoolTxs.erase(pos);
     return true;
 }
 
-void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
-                                         std::vector<const CTxMemPoolEntry*>& entries)
-{
+void CBlockPolicyEstimator::MempoolUpdatedForBlockConnect(const std::vector<CTransactionRef>& txn_removed_in_block, const std::vector<CTransactionRef>& tx_removed_conflicted, int nBlockHeight) {
     LOCK(cs_feeEstimator);
-    if (nBlockHeight <= nBestSeenHeight) {
-        // Ignore side chains and re-orgs; assuming they are random
-        // they don't affect the estimate.
-        // And if an attacker can re-org the chain at will, then
-        // you've got much bigger problems than "attacker can influence
-        // transaction fees."
+    for (const CTransactionRef& tx : tx_removed_conflicted) {
+        removeTxNotInBlock(tx->GetHash());
+    }
+
+    if ((unsigned int)nBlockHeight <= nBestSeenHeight) {
+        // In most cases reorgs contain nearly the same transactions
+        // as the block that was disconnected.
+        // Ideally, especially for 1-block reorgs, we'd find the
+        // transactions which are newly-confirmed and mark them as
+        // such, but if nothing else removing as not in block
+        // prevents them from continuing to skew our unconfirmed
+        // counts, so we do that here.
+        for (const CTransactionRef& tx : txn_removed_in_block) {
+            removeTxNotInBlock(tx->GetHash());
+        }
         return;
     }
 
@@ -642,7 +654,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
 
     unsigned int countedTxs = 0;
     // Update averages with data points from current block
-    for (const auto& entry : entries) {
+    for (const auto& entry : txn_removed_in_block) {
         if (processBlockTx(nBlockHeight, entry))
             countedTxs++;
     }
@@ -654,7 +666,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
 
 
     LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy estimates updated by %u of %u block txs, since last block %u of %u tracked, mempool map size %u, max target %u from %s\n",
-             countedTxs, entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size(),
+             countedTxs, txn_removed_in_block.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size(),
              MaxUsableEstimate(), HistoricalBlockSpan() > BlockSpan() ? "historical" : "current");
 
     trackedTxs = 0;
@@ -988,7 +1000,8 @@ void CBlockPolicyEstimator::FlushUnconfirmed() {
     // Remove every entry in mapMemPoolTxs
     while (!mapMemPoolTxs.empty()) {
         auto mi = mapMemPoolTxs.begin();
-        removeTx(mi->first, false); // this calls erase() on mapMemPoolTxs
+        removeTx(mi, false);
+        mapMemPoolTxs.erase(mi);
     }
     int64_t endclear = GetTimeMicros();
     LogPrint(BCLog::ESTIMATEFEE, "Recorded %u unconfirmed txs from mempool in %gs\n", num_entries, (endclear - startclear)*0.000001);
