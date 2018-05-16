@@ -76,8 +76,8 @@ Comment:
 
 Files: src/qt/res/icons/clock*.png
        src/qt/res/icons/eye_*.png
-       src/qt/res/icons/verify.png
        src/qt/res/icons/tx_in*.png
+       src/qt/res/icons/verify.png
        src/qt/res/src/clock_*.svg
        src/qt/res/src/tx_*.svg
        src/qt/res/src/verify.svg
@@ -92,6 +92,11 @@ Files: src/qt/res/icons/about.png
 Copyright: Bitboy, Jonas Schnelli
 License: public-domain
 Comment: Site: https://bitcointalk.org/?topic=1756.0
+
+Files: src/qt/res/icons/proxy.png
+       src/qt/res/src/proxy.svg
+Copyright: Cristian Mircea Messel
+Licese: public-domain
 
 
 License: Expat
