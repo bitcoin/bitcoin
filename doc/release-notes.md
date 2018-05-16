@@ -59,6 +59,14 @@ Example item for a notable change.
 
 (to be filled in at release time)
 
+Miner block size removed
+------------------------
+
+The `-blockmaxsize` option for miners to limit their blocks' sizes was
+deprecated in V0.15.1, and has now been removed. Miners should use the
+`-blockmaxweight` option if they want to limit the weight of their blocks'
+weights.
+
 Credits
 =======
 

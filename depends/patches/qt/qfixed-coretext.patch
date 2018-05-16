@@ -1,0 +1,34 @@
+From dbdd5f0ffbce52c8b789ed09f1aa3f1da6c02e23 Mon Sep 17 00:00:00 2001
+From: Gabriel de Dietrich <gabriel.dedietrich@qt.io>
+Date: Fri, 30 Mar 2018 11:58:16 -0700
+Subject: [PATCH] QCoreTextFontEngine: Fix build with Xcode 9.3
+
+Apple LLVM version 9.1.0 (clang-902.0.39.1)
+
+Error message:
+
+.../qfontengine_coretext.mm:827:20: error: qualified reference to
+      'QFixed' is a constructor name rather than a type in this context
+    return QFixed::QFixed(int(CTFontGetUnitsPerEm(ctfont)));
+
+Change-Id: Iebe26b3b087a16b10664208fc8851cbddb47f043
+Reviewed-by: Konstantin Ritt <ritt.ks@gmail.com>
+---
+ src/platformsupport/fontdatabases/mac/qfontengine_coretext.mm | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git old/qtbase/src/platformsupport/fontdatabases/mac/qfontengine_coretext.mm new/qtbase/src/platformsupport/fontdatabases/mac/qfontengine_coretext.mm
+index 25ff69d877d..98b753eff96 100644
+--- old/qtbase/src/platformsupport/fontdatabases/mac/qfontengine_coretext.mm
++++ new/qtbase/src/platformsupport/fontdatabases/mac/qfontengine_coretext.mm
+@@ -824,7 +824,7 @@ void QCoreTextFontEngine::getUnscaledGlyph(glyph_t glyph, QPainterPath *path, gl
+ 
+ QFixed QCoreTextFontEngine::emSquareSize() const
+ {
+-    return QFixed::QFixed(int(CTFontGetUnitsPerEm(ctfont)));
++    return QFixed(int(CTFontGetUnitsPerEm(ctfont)));
+ }
+ 
+ QFontEngine *QCoreTextFontEngine::cloneWithSize(qreal pixelSize) const
+-- 
+2.16.3
