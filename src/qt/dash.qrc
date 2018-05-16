@@ -27,6 +27,7 @@
         <file alias="hd_enabled">res/icons/hd_enabled.png</file>
         <file alias="fontbigger">res/icons/fontbigger.png</file>
         <file alias="fontsmaller">res/icons/fontsmaller.png</file>
+        <file alias="proxy">res/icons/proxy.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="general">res/css/general.css</file>
