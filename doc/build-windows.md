@@ -5,7 +5,7 @@ Below are some notes on how to build Bitcoin Core for Windows.
 
 The options known to work for building Bitcoin Core on Windows are:
 
-* On Linux using the [Mingw-w64](https://mingw-w64.org/doku.php) cross compiler tool chain. Ubuntu Trusty 14.04 is recommended
+* On Linux using the [Mingw-w64](https://mingw-w64.org/doku.php) cross compiler tool chain. Ubuntu Bionic 18.04 is required
 and is the platform used to build the Bitcoin Core Windows release binaries.
 * On Windows using [Windows
 Subsystem for Linux (WSL)](https://msdn.microsoft.com/commandline/wsl/about) and the Mingw-w64 cross compiler tool chain.
@@ -39,10 +39,10 @@ To install WSL on Windows 10 with Fall Creators Update installed (version >= 162
   * Click OK
   * Restart if necessary
 2. Install Ubuntu
-  * Open Microsoft Store and search for Ubuntu or use [this link](https://www.microsoft.com/store/productId/9NBLGGH4MSV6)
+  * Open Microsoft Store and search for "Ubuntu 18.04" or use [this link](https://www.microsoft.com/store/productId/9N9TNGVNDL3Q)
   * Click Install
 3. Complete Installation
-  * Open a cmd prompt and type "Ubuntu"
+  * Open a cmd prompt and type "Ubuntu1804"
   * Create a new UNIX user account (this is a separate account from your Windows account)
 
 After the bash shell is active, you can follow the instructions below, starting
@@ -51,11 +51,6 @@ recommended but it is possible to compile the 32-bit version.
 
 Cross-compilation for Ubuntu and Windows Subsystem for Linux
 ------------------------------------------------------------
-
-At the time of writing the Windows Subsystem for Linux installs Ubuntu Xenial 16.04. The Mingw-w64 package
-for Ubuntu Xenial does not produce working executables for some of the Bitcoin Core applications.
-It is possible to build on Ubuntu Xenial by installing the cross compiler packages from Ubuntu Zesty, see the steps below.
-Building on Ubuntu Zesty 17.04 up to 17.10 has been verified to work.
 
 The steps below can be performed on Ubuntu (including in a VM) or WSL. The depends system
 will also work on other Linux distributions, however the commands for
@@ -73,26 +68,11 @@ See also: [dependencies.md](dependencies.md).
 
 ## Building for 64-bit Windows
 
-The first step is to install the mingw-w64 cross-compilation tool chain. Due to different Ubuntu
-packages for each distribution and problems with the Xenial packages the steps for each are different.
-
-Common steps to install mingw32 cross compiler tool chain:
+The first step is to install the mingw-w64 cross-compilation tool chain.
 
     sudo apt install g++-mingw-w64-x86-64
 
-Ubuntu Trusty 14.04:
-
-    No further steps required
-
-Ubuntu Xenial 16.04 and Windows Subsystem for Linux <sup>[1](#footnote1),[2](#footnote2)</sup>:
-
-    sudo apt install software-properties-common
-    sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu zesty universe"
-    sudo apt update
-    sudo apt upgrade
-    sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
-
-Ubuntu Zesty 17.04 <sup>[2](#footnote2)</sup>:
+Ubuntu Bionic 18.04 <sup>[1](#footnote1)</sup>:
 
     sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
 
@@ -124,7 +104,7 @@ To build executables for Windows 32-bit, install the following dependencies:
 
     sudo apt install g++-mingw-w64-i686 mingw-w64-i686-dev
 
-For Ubuntu Xenial 16.04, Ubuntu Zesty 17.04 and Windows Subsystem for Linux <sup>[2](#footnote2)</sup>:
+For Ubuntu Bionic 18.04 and Windows Subsystem for Linux <sup>[1](#footnote1)</sup>:
 
     sudo update-alternatives --config i686-w64-mingw32-g++  # Set the default mingw32 g++ compiler option to posix.
 
@@ -165,14 +145,7 @@ way. This will install to `c:\workspace\bitcoin`, for example:
 Footnotes
 ---------
 
-<a name="footnote1">1</a>: There is currently a bug in the 64 bit Mingw-w64 cross compiler packaged for WSL/Ubuntu Xenial 16.04 that
-causes two of the bitcoin executables to crash shortly after start up. The bug is related to the
--fstack-protector-all g++ compiler flag which is used to mitigate buffer overflows.
-Installing the Mingw-w64 packages from the Ubuntu 17 distribution solves the issue, however, this is not
-an officially supported approach and it's only recommended if you are prepared to reinstall WSL/Ubuntu should
-something break.
-
-<a name="footnote2">2</a>: Starting from Ubuntu Xenial 16.04 both the 32 and 64 bit Mingw-w64 packages install two different
+<a name="footnote1">1</a>: Starting from Ubuntu Xenial 16.04 both the 32 and 64 bit Mingw-w64 packages install two different
 compiler options to allow a choice between either posix or win32 threads. The default option is win32 threads which is the more
 efficient since it will result in binary code that links directly with the Windows kernel32.lib. Unfortunately, the headers
 required to support win32 threads conflict with some of the classes in the C++11 standard library in particular std::mutex.
