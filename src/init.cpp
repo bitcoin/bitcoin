@@ -1735,16 +1735,6 @@ bool AppInitMain()
     }
 
     // ********************************************************* Step 9: load wallet
-#ifdef ENABLE_WALLET
-    if (fParticlMode)
-    {
-        if (!CHDWallet::InitLoadWallet())
-            return InitError(_("Load HD wallet failed. Exiting."));
-    };
-#else
-    LogPrintf("No wallet support compiled in!\n");
-#endif
-    if (!fParticlMode)
     if (!g_wallet_init_interface.Open()) return false;
 
     // ********************************************************* Step 10: data directory maintenance

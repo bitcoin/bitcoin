@@ -161,146 +161,125 @@ void CHDWallet::AddOptions()
     return;
 };
 
-bool CHDWallet::InitLoadWallet()
+bool CHDWallet::Initialise()
 {
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
+    fParticlWallet = true;
+
+    if (!ParseMoney(gArgs.GetArg("-reservebalance", ""), nReserveBalance))
     {
-        LogPrintf("Wallet disabled!\n");
-        return true;
+        return InitError(_("Invalid amount for -reservebalance=<amount>"));
     };
 
-    for (const std::string& walletFile : gArgs.GetArgs("-wallet"))
+    std::string sError;
+    ProcessStakingSettings(sError);
+
+    if (mapMasterKeys.size() > 0
+        && !SetCrypted())
     {
-        std::string walletName = walletFile == "" ? "wallet.dat" : walletFile;
-        fs::path path = fs::absolute(walletFile, GetWalletDir());
-        CHDWallet *walletInstance = new CHDWallet(walletName, WalletDatabase::Create(path));
-        CHDWallet *const pwallet = (CHDWallet*) CWallet::CreateWalletFromFile(walletFile, path, walletInstance);
+        return error("SetCrypted failed.");
+    };
 
-        if (!pwallet)
-            return false;
+    {
+        // Prepare extended keys
+        ExtKeyLoadMaster();
+        ExtKeyLoadAccounts();
+        ExtKeyLoadAccountPacks();
+        LoadStealthAddresses();
+        PrepareLookahead(); // Must happen after ExtKeyLoadAccountPacks
+    }
 
-        if (!ParseMoney(gArgs.GetArg("-reservebalance", ""), pwallet->nReserveBalance))
+    {
+        LOCK2(cs_main, cs_wallet); // Locking cs_main for MarkConflicted
+        CHDWalletDB wdb(GetDBHandle());
+
+        LoadAddressBook(&wdb);
+        LoadTxRecords(&wdb);
+        LoadVoteTokens(&wdb);
+    }
+
+    LOCK(cs_main);
+
+    CBlockIndex *pindexRescan = chainActive.Genesis();
+    if (!gArgs.GetBoolArg("-rescan", false))
+    {
+        CBlockLocator locator;
+        CHDWalletDB walletdb(*database);
+        if (walletdb.ReadBestBlock(locator))
+            pindexRescan = FindForkInGlobalIndex(chainActive, locator);
+    }
+    if ((mapExtAccounts.size() > 0 || CountKeys() > 0) // Don't scan an empty wallet
+        && chainActive.Tip() && chainActive.Tip() != pindexRescan)
+    {
+        //We can't rescan beyond non-pruned blocks, stop and throw an error
+        //this might happen if a user uses an old wallet within a pruned node
+        // or if he ran -disablewallet for a longer time, then decided to re-enable
+        if (fPruneMode)
         {
-            delete pwallet;
-            return InitError(_("Invalid amount for -reservebalance=<amount>"));
-        };
+            CBlockIndex *block = chainActive.Tip();
+            while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA) && block->pprev->nTx > 0 && pindexRescan != block)
+                block = block->pprev;
 
-        std::string sError;
-        pwallet->ProcessStakingSettings(sError);
-
-        if (pwallet->mapMasterKeys.size() > 0
-            && !pwallet->SetCrypted())
-        {
-            delete pwallet;
-            return errorN(0, "SetCrypted failed.");
-        };
-
-        {
-            // Prepare extended keys
-            pwallet->ExtKeyLoadMaster();
-            pwallet->ExtKeyLoadAccounts();
-            pwallet->ExtKeyLoadAccountPacks();
-            pwallet->LoadStealthAddresses();
-            pwallet->PrepareLookahead(); // Must happen after ExtKeyLoadAccountPacks
-
-            fParticlWallet = true;
+            if (pindexRescan != block) {
+                return InitError(_("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)"));
+            }
         }
 
-        {
-            LOCK2(cs_main, pwallet->cs_wallet); // Locking cs_main for MarkConflicted
-            CHDWalletDB wdb(pwallet->GetDBHandle());
+        uiInterface.InitMessage(_("Rescanning..."));
+        LogPrintf("Rescanning last %i blocks (from block %i)...\n", chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
 
-            pwallet->LoadAddressBook(&wdb);
-            pwallet->LoadTxRecords(&wdb);
-            pwallet->LoadVoteTokens(&wdb);
+        // No need to read and scan block if block was created before
+        // our wallet birthday (as adjusted for block time variability)
+        while (pindexRescan && nTimeFirstKey && (pindexRescan->GetBlockTime() < (nTimeFirstKey - TIMESTAMP_WINDOW))) {
+            pindexRescan = chainActive.Next(pindexRescan);
         }
 
-        LOCK(cs_main);
-
-        CBlockIndex *pindexRescan = chainActive.Genesis();
-        if (!gArgs.GetBoolArg("-rescan", false))
+        int64_t nStart = GetTimeMillis();
         {
-            CBlockLocator locator;
-            CHDWalletDB walletdb(*pwallet->database);
-            if (walletdb.ReadBestBlock(locator))
-                pindexRescan = FindForkInGlobalIndex(chainActive, locator);
+            WalletRescanReserver reserver(this);
+            if (!reserver.reserve()) {
+                InitError(_("Failed to rescan the wallet during initialization"));
+                return error("Reserve rescan failed.");
+            }
+            ScanForWalletTransactions(pindexRescan, nullptr, reserver, true);
         }
-        if ((pwallet->mapExtAccounts.size() > 0 || pwallet->CountKeys() > 0) // Don't scan an empty wallet
-            && chainActive.Tip() && chainActive.Tip() != pindexRescan)
+        LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
+        ChainStateFlushed(chainActive.GetLocator());
+        database->IncrementUpdateCounter();
+    }
+
+    if (!pEKMaster)
+    {
+        if (gArgs.GetBoolArg("-createdefaultmasterkey", false))
         {
-            //We can't rescan beyond non-pruned blocks, stop and throw an error
-            //this might happen if a user uses an old wallet within a pruned node
-            // or if he ran -disablewallet for a longer time, then decided to re-enable
-            if (fPruneMode)
-            {
-                CBlockIndex *block = chainActive.Tip();
-                while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA) && block->pprev->nTx > 0 && pindexRescan != block)
-                    block = block->pprev;
-
-                if (pindexRescan != block) {
-                    return InitError(_("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)"));
-                }
-            }
-
-            uiInterface.InitMessage(_("Rescanning..."));
-            LogPrintf("Rescanning last %i blocks (from block %i)...\n", chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
-
-            // No need to read and scan block if block was created before
-            // our wallet birthday (as adjusted for block time variability)
-            while (pindexRescan && pwallet->nTimeFirstKey && (pindexRescan->GetBlockTime() < (pwallet->nTimeFirstKey - TIMESTAMP_WINDOW))) {
-                pindexRescan = chainActive.Next(pindexRescan);
-            }
-
-            int64_t nStart = GetTimeMillis();
-            {
-                WalletRescanReserver reserver(walletInstance);
-                if (!reserver.reserve()) {
-                    InitError(_("Failed to rescan the wallet during initialization"));
-                    return errorN(0, "Reserve rescan failed.");
-                }
-                walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, true);
-            }
-            LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
-            pwallet->ChainStateFlushed(chainActive.GetLocator());
-            pwallet->database->IncrementUpdateCounter();
-        }
-
-        if (!pwallet->pEKMaster)
+            std::string sMsg = "Generating random HD keys for wallet " + GetName();
+            #ifndef ENABLE_QT
+            fprintf(stdout, "%s\n", sMsg.c_str());
+            #endif
+            LogPrintf("%s\n", sMsg);
+            if (MakeDefaultAccount() != 0)
+                fprintf(stdout, "Error: MakeDefaultAccount failed!\n");
+        } else
         {
-            if (gArgs.GetBoolArg("-createdefaultmasterkey", false))
-            {
-                std::string sMsg = "Generating random HD keys for wallet " + pwallet->GetName();
-                #ifndef ENABLE_QT
-                fprintf(stdout, "%s\n", sMsg.c_str());
-                #endif
-                LogPrintf("%s\n", sMsg);
-                if (pwallet->MakeDefaultAccount() != 0)
-                    fprintf(stdout, "Error: MakeDefaultAccount failed!\n");
-            } else
-            {
-                /*
-                std::string sWarning = "Warning: Wallet " + pwallet->GetName() + " has no master HD key set, please view the readme.";
-                #ifndef ENABLE_QT
-                fprintf(stdout, "%s\n", sWarning.c_str());
-                #endif
-                LogPrintf("%s\n", sWarning);
-                */
-            }
-        };
-        if (pwallet->idDefaultAccount.IsNull())
-        {
-            std::string sWarning = "Warning: Wallet " + pwallet->GetName() + " has no active account, please view the readme.";
+            /*
+            std::string sWarning = "Warning: Wallet " + pwallet->GetName() + " has no master HD key set, please view the readme.";
             #ifndef ENABLE_QT
             fprintf(stdout, "%s\n", sWarning.c_str());
             #endif
             LogPrintf("%s\n", sWarning);
-        };
-
-        AddWallet(pwallet);
+            */
+        }
+    };
+    if (idDefaultAccount.IsNull())
+    {
+        std::string sWarning = "Warning: Wallet " + GetName() + " has no active account, please view the readme.";
+        #ifndef ENABLE_QT
+        fprintf(stdout, "%s\n", sWarning.c_str());
+        #endif
+        LogPrintf("%s\n", sWarning);
     };
 
     return true;
-}
+};
 
 bool CHDWallet::ProcessStakingSettings(std::string &sError)
 {

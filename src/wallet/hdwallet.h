@@ -386,7 +386,7 @@ public:
 
     static void AddOptions();
 
-    static bool InitLoadWallet();
+    bool Initialise();
 
     bool ProcessStakingSettings(std::string &sError);
 

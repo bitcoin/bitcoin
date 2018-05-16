@@ -151,6 +151,8 @@ std::string LocksHeld()
 
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
 {
+    if (!lockstack)
+        return;
     for (const std::pair<void*, CLockLocation> & i : *lockstack)
         if (i.first == cs)
             return;
@@ -160,6 +162,8 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
 
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
 {
+    if (!lockstack)
+        return;
     for (const std::pair<void*, CLockLocation>& i : *lockstack) {
         if (i.first == cs) {
             fprintf(stderr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());

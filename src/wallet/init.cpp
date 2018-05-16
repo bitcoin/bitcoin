@@ -13,6 +13,7 @@
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
+#include <wallet/hdwallet.h>
 
 class WalletInit : public WalletInitInterface {
 public:
@@ -251,11 +252,24 @@ bool WalletInit::Open() const
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()));
+        CHDWallet *partWallet = nullptr;
+        std::unique_ptr<CHDWallet> temp_wallet;
+        if (fParticlMode)
+        {
+            std::string walletName = walletFile == "" ? "wallet.dat" : walletFile;
+            temp_wallet = MakeUnique<CHDWallet>(walletName, WalletDatabase::Create(fs::absolute(walletFile, GetWalletDir())));
+            partWallet = temp_wallet.get();
+        };
+        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()), partWallet);
         if (!pwallet) {
             return false;
         }
+
+        if (partWallet && !partWallet->Initialise())
+            return false;
+
         AddWallet(pwallet);
+        temp_wallet.release();
     }
 
     return true;
@@ -264,7 +278,7 @@ bool WalletInit::Open() const
 void WalletInit::Start(CScheduler& scheduler) const
 {
     for (CWallet* pwallet : GetWallets()) {
-        pwallet->postInitProcess(scheduler);
+        pwallet->postInitProcess();
     }
 }
 
