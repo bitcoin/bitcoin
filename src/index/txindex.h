@@ -29,7 +29,7 @@ protected:
 
 public:
     /// Constructs the index, which becomes available to be queried.
-    explicit TxIndex(std::unique_ptr<TxIndexDB> db);
+    explicit TxIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     /// Look up a transaction by hash.
     ///
