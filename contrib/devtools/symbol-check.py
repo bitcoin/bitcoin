@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python2
 # Copyright (c) 2014 Wladimir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -11,6 +11,7 @@ Example usage:
 
     find ../gitian-builder/build -type f -executable | xargs python contrib/devtools/symbol-check.py
 '''
+from __future__ import division, print_function
 import subprocess
 import re
 import sys
@@ -77,11 +78,10 @@ class CPPFilt(object):
     Use a pipe to the 'c++filt' command.
     '''
     def __init__(self):
-        self.proc = subprocess.Popen(CPPFILT_CMD, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+        self.proc = subprocess.Popen(CPPFILT_CMD, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
     def __call__(self, mangled):
         self.proc.stdin.write(mangled + '\n')
-        self.proc.stdin.flush()
         return self.proc.stdout.readline().rstrip()
 
     def close(self):
@@ -94,12 +94,12 @@ def read_symbols(executable, imports=True):
     Parse an ELF executable and return a list of (symbol,version) tuples
     for dynamic, imported symbols.
     '''
-    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Could not read symbols for %s: %s' % (executable, stderr.strip()))
     syms = []
-    for line in stdout.splitlines():
+    for line in stdout.split('\n'):
         line = line.split()
         if len(line)>7 and re.match('[0-9]+:$', line[0]):
             (sym, _, version) = line[7].partition('@')
@@ -122,12 +122,12 @@ def check_version(max_versions, version):
     return ver <= max_versions[lib]
 
 def read_libraries(filename):
-    p = subprocess.Popen([READELF_CMD, '-d', '-W', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.Popen([READELF_CMD, '-d', '-W', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
     libraries = []
-    for line in stdout.splitlines():
+    for line in stdout.split('\n'):
         tokens = line.split()
         if len(tokens)>2 and tokens[1] == '(NEEDED)':
             match = re.match('^Shared library: \[(.*)\]$', ' '.join(tokens[2:]))
@@ -158,6 +158,6 @@ if __name__ == '__main__':
                 print('%s: NEEDED library %s is not allowed' % (filename, library_name))
                 retval = 1
 
-    sys.exit(retval)
+    exit(retval)
 
 

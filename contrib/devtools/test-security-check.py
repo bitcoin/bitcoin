@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
-# Copyright (c) 2015-2017 The Syscoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#!/usr/bin/python2
 '''
 Test script for security-check.py
 '''
+from __future__ import division,print_function
 import subprocess
+import sys
 import unittest
 
 def write_testcode(filename):
@@ -21,7 +20,7 @@ def write_testcode(filename):
 
 def call_security_check(cc, source, executable, options):
     subprocess.check_call([cc,source,'-o',executable] + options)
-    p = subprocess.Popen(['./security-check.py',executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.Popen(['./security-check.py',executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     return (p.returncode, stdout.rstrip())
 
