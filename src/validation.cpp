@@ -545,8 +545,7 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationSt
         const CTransactionRef& txFrom = pool.get(txin.prevout.hash);
         if (txFrom) {
             assert(txFrom->GetHash() == txin.prevout.hash);
-            assert(txFrom->vout.size() > txin.prevout.n);
-            assert(txFrom->vout[txin.prevout.n] == coin.out);
+            assert(txFrom->vout.at(txin.prevout.n) == coin.out);
         } else {
             const Coin& coinFromDisk = pcoinsTip->AccessCoin(txin.prevout);
             assert(!coinFromDisk.IsSpent());

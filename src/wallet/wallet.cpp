@@ -1573,8 +1573,7 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wall
         if (mi == wallet->mapWallet.end()) {
             return -1;
         }
-        assert(input.prevout.n < mi->second.tx->vout.size());
-        txouts.emplace_back(mi->second.tx->vout[input.prevout.n]);
+        txouts.emplace_back(mi->second.tx->vout.at(input.prevout.n));
     }
     return CalculateMaximumSignedTxSize(tx, wallet, txouts);
 }

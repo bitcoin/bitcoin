@@ -1233,7 +1233,7 @@ template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTr
 template <class T>
 uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
 {
-    assert(nIn < txTo.vin.size());
+    const CTxIn& txin = txTo.vin.at(nIn);
 
     if (sigversion == SigVersion::WITNESS_V0) {
         uint256 hashPrevouts;
@@ -1267,10 +1267,10 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
         // The input being signed (replacing the scriptSig with scriptCode + amount)
         // The prevout may already be contained in hashPrevout, and the nSequence
         // may already be contain in hashSequence.
-        ss << txTo.vin[nIn].prevout;
+        ss << txin.prevout;
         ss << scriptCode;
         ss << amount;
-        ss << txTo.vin[nIn].nSequence;
+        ss << txin.nSequence;
         // Outputs (none/one/all, depending on flags)
         ss << hashOutputs;
         // Locktime
