@@ -3410,8 +3410,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
     for (const COutput& out : vecOutputs) {
         CTxDestination address;
-        const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
-        bool fValidAddress = ExtractDestination(scriptPubKey, address);
+        const CTxOut& txout = out.tx->tx->vout.at(out.i);
+        bool fValidAddress = ExtractDestination(txout.scriptPubKey, address);
 
         if (destinations.size() && (!fValidAddress || !destinations.count(address)))
             continue;
@@ -3431,7 +3431,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 }
             }
 
-            if (scriptPubKey.IsPayToScriptHash()) {
+            if (txout.scriptPubKey.IsPayToScriptHash()) {
                 const CScriptID& hash = boost::get<CScriptID>(address);
                 CScript redeemScript;
                 if (pwallet->GetCScript(hash, redeemScript)) {
@@ -3440,8 +3440,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
             }
         }
 
-        entry.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
-        entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
+        entry.pushKV("scriptPubKey", HexStr(txout.scriptPubKey.begin(), txout.scriptPubKey.end()));
+        entry.pushKV("amount", ValueFromAmount(txout.nValue));
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);

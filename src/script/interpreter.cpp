@@ -1137,7 +1137,7 @@ public:
         if (fAnyoneCanPay)
             nInput = nIn;
         // Serialize the prevout
-        ::Serialize(s, txTo.vin[nInput].prevout);
+        ::Serialize(s, txTo.vin.at(nInput).prevout);
         // Serialize the script
         if (nInput != nIn)
             // Blank out other inputs' signatures
@@ -1149,7 +1149,7 @@ public:
             // let the others update at will
             ::Serialize(s, (int)0);
         else
-            ::Serialize(s, txTo.vin[nInput].nSequence);
+            ::Serialize(s, txTo.vin.at(nInput).nSequence);
     }
 
     /** Serialize an output of txTo */
@@ -1159,7 +1159,7 @@ public:
             // Do not lock-in the txout payee at other indices as txin
             ::Serialize(s, CTxOut());
         else
-            ::Serialize(s, txTo.vout[nOutput]);
+            ::Serialize(s, txTo.vout.at(nOutput));
     }
 
     /** Serialize txTo */
@@ -1359,7 +1359,7 @@ bool GenericTransactionSignatureChecker<T>::CheckLockTime(const CScriptNum& nLoc
     // prevent this condition. Alternatively we could test all
     // inputs, but testing just this input minimizes the data
     // required to prove correct CHECKLOCKTIMEVERIFY execution.
-    if (CTxIn::SEQUENCE_FINAL == txTo->vin[nIn].nSequence)
+    if (CTxIn::SEQUENCE_FINAL == txTo->vin.at(nIn).nSequence)
         return false;
 
     return true;
@@ -1370,7 +1370,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
 {
     // Relative lock times are supported by comparing the passed
     // in operand to the sequence number of the input.
-    const int64_t txToSequence = (int64_t)txTo->vin[nIn].nSequence;
+    const int64_t txToSequence = (int64_t)txTo->vin.at(nIn).nSequence;
 
     // Fail if the transaction's version number is not set high
     // enough to trigger BIP 68 rules.

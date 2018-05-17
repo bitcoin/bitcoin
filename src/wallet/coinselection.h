@@ -20,11 +20,9 @@ public:
     {
         if (!tx)
             throw std::invalid_argument("tx should not be null");
-        if (i >= tx->vout.size())
-            throw std::out_of_range("The output index is out of range");
 
         outpoint = COutPoint(tx->GetHash(), i);
-        txout = tx->vout[i];
+        txout = tx->vout.at(i);
         effective_value = txout.nValue;
     }
 

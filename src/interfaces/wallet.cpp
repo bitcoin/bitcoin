@@ -107,7 +107,7 @@ WalletTxStatus MakeWalletTxStatus(const CWalletTx& wtx)
 WalletTxOut MakeWalletTxOut(CWallet& wallet, const CWalletTx& wtx, int n, int depth)
 {
     WalletTxOut result;
-    result.txout = wtx.tx->vout[n];
+    result.txout = wtx.tx->vout.at(n);
     result.time = wtx.GetTxTime();
     result.depth_in_main_chain = depth;
     result.is_spent = wallet.IsSpent(wtx.GetHash(), n);
