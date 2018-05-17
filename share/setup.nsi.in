@@ -20,8 +20,7 @@ SetCompressor /SOLID lzma
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
 !define MUI_STARTMENUPAGE_DEFAULTFOLDER "@PACKAGE_NAME@"
-!define MUI_FINISHPAGE_RUN "$WINDIR\explorer.exe"
-!define MUI_FINISHPAGE_RUN_PARAMETERS $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
+!define MUI_FINISHPAGE_RUN $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-wizard.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
@@ -108,6 +107,10 @@ Section -post SEC0001
     WriteRegStr HKCR "@PACKAGE_TARNAME@" "" "URL:Syscoin"
     WriteRegStr HKCR "@PACKAGE_TARNAME@\DefaultIcon" "" $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
     WriteRegStr HKCR "@PACKAGE_TARNAME@\shell\open\command" "" '"$INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@" "%1"'
+
+    # Delete old key (before we switched to PACKAGE_TARNAME, which is set to 'syscoincore' now, we had 'syscoin' hardcoded)
+    # TODO remove this line sometime later
+    DeleteRegKey HKCR "syscoin"
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -147,6 +150,9 @@ Section -un.post UNSEC0001
     DeleteRegKey /IfEmpty HKCU "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY}"
     DeleteRegKey HKCR "@PACKAGE_TARNAME@"
+    # Delete old key (before we switched to PACKAGE_TARNAME, which is set to 'syscoincore' now, we had 'syscoin' hardcoded)
+    # TODO remove this line sometime later
+    DeleteRegKey HKCR "syscoin"
     RmDir /REBOOTOK $SMPROGRAMS\$StartMenuGroup
     RmDir /REBOOTOK $INSTDIR
     Push $R0
