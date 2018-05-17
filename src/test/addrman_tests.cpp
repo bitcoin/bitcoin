@@ -34,7 +34,7 @@ public:
 
     int RandomInt(int nMax) override
     {
-        state = (CHashWriter(SER_GETHASH, 0) << state).GetHash().GetCheapHash();
+        state = (CHashWriter(SER_GETHASH, 0) << state).GetCheapHash();
         return (unsigned int)(state % nMax);
     }
 
