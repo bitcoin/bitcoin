@@ -1904,19 +1904,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                 std::string strError = "";
                 if (!asset.IsValid(strError, *assetsCache))
                     return state.DoS(100, error("%s: %s", __func__, strError), REJECT_INVALID, "bad-txns-issue-asset");
-
-                // Add the new asset to cache
-                if (!assetsCache->AddNewAsset(asset, strAddress))
-                    return state.DoS(100, error("%s: Failed at adding a new asset to our cache. asset: %s", __func__,
-                                 asset.strName), REJECT_INVALID, "bad-txns-issue-asset-name-already-taken");
-
-                // If asset is in an CTxOut that I own add it to my cache
-                if (vpwallets[0]->IsMine(tx.vout[tx.vout.size() - 1]) == ISMINE_SPENDABLE) {
-                    if (!assetsCache->AddToMyUpspentOutPoints(asset.strName,
-                                                          COutPoint(tx.GetHash(), tx.vout.size() - 1)))
-                        return state.DoS(100, error("%s: Failed to add an asset I own to my Unspent Asset Cache. asset %s",
-                                                    __func__, asset.strName), REJECT_INVALID, "bad-asset-my-asset-wont-add");
-                }
             }
         }
         /** RVN END */
@@ -2094,6 +2081,7 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
                     return AbortNode(state, "Failed to write to asset database");
             }
             /** RVN END */
+
             nLastFlush = nNow;
         }
     }
@@ -3821,7 +3809,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
 }
 
 /** Apply the effects of a block on the utxo cache, ignoring that it may already have been applied. */
-static bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params)
+static bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params, CAssetsCache* assetsCache = nullptr)
 {
     // TODO: merge with ConnectBlock
     CBlock block;
@@ -3832,11 +3820,11 @@ static bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs,
     for (const CTransactionRef& tx : block.vtx) {
         if (!tx->IsCoinBase()) {
             for (const CTxIn &txin : tx->vin) {
-                inputs.SpendCoin(txin.prevout);
+                inputs.SpendCoin(txin.prevout, nullptr, assetsCache);
             }
         }
         // Pass check = true as every addition may be an overwrite.
-        AddCoins(inputs, *tx, pindex->nHeight, true);
+        AddCoins(inputs, *tx, pindex->nHeight, true, assetsCache);
     }
     return true;
 }

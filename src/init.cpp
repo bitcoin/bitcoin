@@ -249,6 +249,10 @@ void Shutdown()
         pcoinsdbview = nullptr;
         delete pblocktree;
         pblocktree = nullptr;
+        delete passets;
+        passets = nullptr;
+        delete passetsdb;
+        passetsdb = nullptr;
     }
 #ifdef ENABLE_WALLET
     StopWallets();
@@ -1738,5 +1742,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     StartWallets(scheduler);
 #endif
 
+
+    UpdatePossibleAssets();
     return !fRequestShutdown;
 }

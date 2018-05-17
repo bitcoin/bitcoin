@@ -71,6 +71,11 @@ public :
     std::vector<CAssetCacheNewTransfer> vNewTransfer;
     std::set<std::string> setChangeOwnedOutPoints;
 
+    //! During init, the wallet isn't enabled, there for if we disconnect any blocks
+    //! We need to store possible unspends of assets that could be ours and check back when the wallet is enabled.
+    std::set<CAssetCachePossibleMine> setPossiblyMineAdd;
+    std::set<CAssetCachePossibleMine> setPossiblyMineRemove;
+
     CAssetsCache()
     {
         SetNull();
@@ -91,6 +96,10 @@ public :
         vNewAssetsToAdd = cache.vNewAssetsToAdd;
         vUndoTransfer = cache.vUndoTransfer;
         setChangeOwnedOutPoints = cache.setChangeOwnedOutPoints;
+
+        // Copy sets of possibilymine
+        setPossiblyMineAdd = cache.setPossiblyMineAdd;
+        setPossiblyMineRemove = cache.setPossiblyMineRemove;
     }
 
     CAssetsCache& operator=(const CAssetsCache& cache)
@@ -108,6 +117,11 @@ public :
         vNewAssetsToAdd = cache.vNewAssetsToAdd;
         vUndoTransfer = cache.vUndoTransfer;
         setChangeOwnedOutPoints = cache.setChangeOwnedOutPoints;
+
+        // Copy sets of possibilymine
+        setPossiblyMineAdd = cache.setPossiblyMineAdd;
+        setPossiblyMineRemove = cache.setPossiblyMineRemove;
+
         return *this;
     }
 
@@ -123,11 +137,12 @@ public :
     bool AddToMyUpspentOutPoints(const std::string& strName, const COutPoint& out);
 
     // Cache only validation functions
-    bool TrySpendCoin(const COutPoint& out, const Coin& coin);
+    bool TrySpendCoin(const COutPoint& out, const CTxOut& coin);
 
     // Help functions
     bool GetAssetsOutPoints(const std::string& strName, std::set<COutPoint>& outpoints);
     bool ContainsAsset(const CNewAsset& asset);
+    bool AddPossibleOutPoint(const CAssetCachePossibleMine& possibleMine);
 
     //! Calculate the size of the CAssets (in bytes)
     size_t DynamicMemoryUsage() const;
@@ -148,6 +163,10 @@ public :
         vSpentAssets.clear();
         vNewTransfer.clear();
         setChangeOwnedOutPoints.clear();
+
+        // Copy sets of possibilymine
+        setPossiblyMineAdd.clear();
+        setPossiblyMineRemove.clear();
     }
 
    std::string CacheToString() const {
@@ -175,4 +194,6 @@ bool CheckIssueDataTx(const CTxOut& txOut);
 
 bool IsScriptNewAsset(const CScript& scriptPubKey);
 bool IsScriptTransferAsset(const CScript& scriptPubKey);
+
+void UpdatePossibleAssets();
 #endif //RAVENCOIN_ASSET_PROTOCOL_H

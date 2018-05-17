@@ -102,7 +102,8 @@ public:
 
 
 /** THESE ARE ONLY TO BE USED WHEN ADDING THINGS TO THE CACHE DURING CONNECT AND DISCONNECT BLOCK */
-struct CAssetCacheUndoAssetTransfer {
+struct CAssetCacheUndoAssetTransfer
+{
     CAssetTransfer transfer;
     std::string address;
     COutPoint out;
@@ -115,7 +116,8 @@ struct CAssetCacheUndoAssetTransfer {
     }
 };
 
-struct CAssetCacheUndoAssetAmount {
+struct CAssetCacheUndoAssetAmount
+{
     std::string assetName;
     std::string address;
     CAmount nAmount;
@@ -128,7 +130,8 @@ struct CAssetCacheUndoAssetAmount {
     }
 };
 
-struct CAssetCacheNewTransfer {
+struct CAssetCacheNewTransfer
+{
     std::string assetName;
     std::string address;
 
@@ -139,7 +142,8 @@ struct CAssetCacheNewTransfer {
     }
 };
 
-struct CAssetCacheSpendAsset {
+struct CAssetCacheSpendAsset
+{
     std::string assetName;
     std::string address;
 
@@ -147,6 +151,25 @@ struct CAssetCacheSpendAsset {
     {
         this->assetName = assetName;
         this->address = address;
+    }
+};
+
+struct CAssetCachePossibleMine
+{
+    std::string assetName;
+    COutPoint out;
+    CTxOut txOut;
+
+    CAssetCachePossibleMine(const std::string& assetName, const COutPoint& out, const CTxOut txOut)
+    {
+        this->assetName = assetName;
+        this->out = out;
+        this->txOut = txOut;
+    }
+
+    bool operator<(const CAssetCachePossibleMine &other) const
+    {
+        return out < other.out;
     }
 };
 

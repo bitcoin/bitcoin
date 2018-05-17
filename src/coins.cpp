@@ -14,6 +14,7 @@
 
 #include <assert.h>
 #include <assets/assets.h>
+#include <wallet/wallet.h>
 
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
@@ -92,9 +93,31 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
 }
 
-void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check, CAssetsCache* assetCache) {
+void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check, CAssetsCache* assetsCache) {
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
+
+    /** RVN START */
+    if (assetsCache) {
+        if (tx.IsNewAsset()) {
+            CNewAsset asset;
+            std::string strAddress;
+            AssetFromTransaction(tx, asset, strAddress);
+
+            // Add the new asset to cache
+            if (!assetsCache->AddNewAsset(asset, strAddress))
+                error("%s : Failed at adding a new asset to our cache. asset: %s", __func__,
+                      asset.strName);
+
+            int index = tx.vout.size() - 1;
+            CAssetCachePossibleMine possibleMine(asset.strName, COutPoint(tx.GetHash(), index), tx.vout[index]);
+            if (!assetsCache->AddPossibleOutPoint(possibleMine))
+                error("%s: Failed to add an asset I own to my Unspent Asset Cache. asset %s",
+                      __func__, asset.strName);
+        }
+    }
+    /** RVN END */
+
     for (size_t i = 0; i < tx.vout.size(); ++i) {
         bool overwrite = check ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
         // Always set the possible_overwrite flag to AddCoin for coinbase txn, in order to correctly
@@ -102,7 +125,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
         cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
 
         /** RVN START */
-        if (assetCache) {
+        if (assetsCache) {
             if (tx.vout[i].scriptPubKey.IsTransferAsset() && !tx.vout[i].scriptPubKey.IsUnspendable()) {
                 CAssetTransfer assetTransfer;
                 std::string address;
@@ -111,7 +134,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
                             "%s : ERROR - Received a coin that was a Transfer Asset but failed to get the transfer object from the scriptPubKey. CTxOut: %s\n",
                             __func__, tx.vout[i].ToString());
 
-                if (!assetCache->AddTransferAsset(assetTransfer, address, COutPoint(txid, i), tx.vout[i]))
+                if (!assetsCache->AddTransferAsset(assetTransfer, address, COutPoint(txid, i), tx.vout[i]))
                     LogPrintf("%s : ERROR - Failed to add transfer asset CTxOut: %s\n", __func__,
                               tx.vout[i].ToString());
             }
@@ -125,6 +148,11 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout, CAsset
     CCoinsMap::iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) return false;
     cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
+
+    /** RVN START */
+    Coin tempCoin = it->second.coin;
+    /** RVN END */
+
     if (moveout) {
         *moveout = std::move(it->second.coin);
     }
@@ -137,7 +165,7 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout, CAsset
 
     /** RVN START */
     if (assetsCache) {
-        if (!assetsCache->TrySpendCoin(outpoint, *moveout))
+        if (!assetsCache->TrySpendCoin(outpoint, tempCoin.out))
             return error("%s : Failed to try and spend the asset. COutPoint : %s", __func__, outpoint.ToString());
     }
     /** RVN END */
