@@ -3,9 +3,7 @@
 Unit tests will be automatically compiled if dependencies were met in `./configure`
 and tests weren't explicitly disabled.
 
-After configuring, they can be run with `make check`.
-
-To run the syscoind tests manually, launch `src/test/test_syscoin`.
+To run the syscoind tests launch `src/test/test_syscoin`.
 
 To add more syscoind tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
 .cpp files in the `test/` directory or add new .cpp files that
