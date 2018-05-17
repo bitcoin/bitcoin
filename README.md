@@ -55,9 +55,16 @@ See also: [Systemnode Setup Guide](https://forum.crown.tech/index.php?topic=1240
 
 ## Development
 
-### Report a bug
+### Report a Bug
 
-Bugs can be reported via the github issues page: https://github.com/Crowndev/crowncoin/issues, tech support channel in [Mattermost](https://mm.crownlab.eu/crown/channels/tech-support) or emailing [support@crown.tech](email:support@crown.tech)
+Bugs can be reported via the github issues page: https://gitlab.crown.tech/crown/crown-core/issues, tech support channel in [Mattermost](https://mm.crownlab.eu/crown/channels/tech-support) or emailing [support@crown.tech](email:support@crown.tech)
+
+When describing a bug please include following information:
+* **Issue summary** - an issue header which outlines the actual defect to be solved
+* **Product** - for example *Desktop Wallet x64, Windows 10*
+* **Build Found In** - for example *0.12.3.3*; this is very important as you may be using an old build and the issue may already have been resolved.
+* **Steps to reproduce** - the steps to recreate exactly how the error occurred when you found the issue
+* **Expected behavior** -  what you would expect to see instead of the issue; this can be useful as it may trigger a conversation between yourself and the developer (or the team) about a better fix or possible solutions.
 
 ### Procedures for bounty development
 The Crown team will  post a request for development and the requirements to receive the bounty reward and the size of the reward. 
