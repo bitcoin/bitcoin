@@ -36,12 +36,12 @@ public:
     bool ReadAssetAddressQuantity(const std::string& assetName, const std::string& address, CAmount& quantity);
 
     // Erase from database functions
-    bool EraseAssetData(const CNewAsset& asset);
-    bool EraseMyAssetData(const CNewAsset& asset);
+    bool EraseAssetData(const std::string& assetName);
+    bool EraseMyAssetData(const std::string& assetName);
     bool EraseAssetAddressQuantity(const std::string &assetName, const std::string &address);
 
     // Helper functions
-    bool EraseMyOutPoints(const CNewAsset& asset);
+    bool EraseMyOutPoints(const std::string& assetName);
     bool LoadAssets();
 
 };

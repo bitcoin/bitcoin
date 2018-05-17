@@ -647,6 +647,7 @@ public:
 
     /** RVN START */
     bool IsNewAsset() const;
+    bool IsTransferAsset() const;
     /** RVN END */
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */

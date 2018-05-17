@@ -206,6 +206,7 @@ libraven_server_a_SOURCES = \
   assets/assets.h \
   assets/assetdb.cpp \
   assets/assetdb.h \
+  assets/assettypes.h \
   policy/fees.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \

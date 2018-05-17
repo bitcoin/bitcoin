@@ -249,6 +249,10 @@ void Shutdown()
         pcoinsdbview = nullptr;
         delete pblocktree;
         pblocktree = nullptr;
+        delete passets;
+        passets = nullptr;
+        delete passetsdb;
+        passetsdb = nullptr;
     }
 #ifdef ENABLE_WALLET
     StopWallets();
@@ -1425,7 +1429,15 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReset);
 
                 passetsdb = new CAssetsDB(nBlockTreeDBCache, false, fReset);
-                passets = new CAssets();
+                passets = new CAssetsCache();
+
+                // Need to load assets before we verify the database
+                if (!passetsdb->LoadAssets()) {
+                    strLoadError = _("Failed to load Assets Database");
+                    break;
+                }
+                std::cout << std::endl << "Loaded Assets without error" << std::endl << "set of assets size: " << passets->setAssets.size() << std::endl  << "number of assets I have: " << passets->mapMyUnspentAssets.size() << std::endl;
+
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -1541,13 +1553,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                         break;
                     }
                 }
-
-                if (!passetsdb->LoadAssets()) {
-                    strLoadError = _("Failed to load Assets Database");
-                    break;
-                }
-                std::cout << std::endl << "Loaded Assets without error" << std::endl << "set of assets size: " << passets->setAssets.size() << std::endl  << "number of assets I have: " << passets->mapMyUnspentAssets.size() << std::endl;
-
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
                 strLoadError = _("Error opening block database");
@@ -1737,5 +1742,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     StartWallets(scheduler);
 #endif
 
+
+    UpdatePossibleAssets();
     return !fRequestShutdown;
 }

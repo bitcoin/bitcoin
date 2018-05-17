@@ -213,11 +213,22 @@ bool CScript::IsNewAsset() const
 {
     // Extra-fast test for new-asset CScripts:
     return (this->size() > 39 &&
-            (*this)[25] == OP_RETURN &&
+            (*this)[25] == OP_15 &&
             (*this)[27] == 114 &&
             (*this)[28] == 118 &&
             (*this)[29] == 110 &&
             (*this)[30] == 113);
+}
+
+bool CScript::IsTransferAsset() const
+{
+    // Extra-fast test for new-asset CScripts:
+    return (this->size() > 30 &&
+            (*this)[25] == OP_15 &&
+            (*this)[27] == 114 &&
+            (*this)[28] == 118 &&
+            (*this)[29] == 110 &&
+            (*this)[30] == 116);
 }
 
 bool CScript::IsPayToWitnessScriptHash() const

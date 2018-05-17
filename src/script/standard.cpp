@@ -4,6 +4,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <base58.h>
 #include "script/standard.h"
 
 #include "pubkey.h"
@@ -31,7 +32,11 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TX_WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
     case TX_WITNESS_UNKNOWN: return "witness_unknown";
+
+    /** RVN START */
     case TX_NEW_ASSET: return "new_asset";
+    case TX_TRANSFER_ASSET: return "transfer_asset";
+    /** RVN END */
     }
     return nullptr;
 }
@@ -63,13 +68,21 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         vSolutionsRet.push_back(hashBytes);
         return true;
     }
-
+    /** RVN START */
     if (scriptPubKey.IsNewAsset()) {
         typeRet = TX_NEW_ASSET;
         std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
         vSolutionsRet.push_back(hashBytes);
         return true;
     }
+
+    if (scriptPubKey.IsTransferAsset()) {
+        typeRet = TX_TRANSFER_ASSET;
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+        vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
+    /** RVN END */
 
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
@@ -231,6 +244,9 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = unk;
         return true;
     } else if (whichType == TX_NEW_ASSET) {
+        addressRet = CKeyID(uint160(vSolutions[0]));
+        return true;
+    } else if (whichType == TX_TRANSFER_ASSET) {
         addressRet = CKeyID(uint160(vSolutions[0]));
         return true;
     }

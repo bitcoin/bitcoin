@@ -47,23 +47,23 @@ bool CAssetsDB::ReadAssetAddressQuantity(const std::string& assetName, const std
     return Read(std::make_pair(ASSET_ADDRESS_QUANTITY_FLAG, std::make_pair(assetName, address)), quantity);
 }
 
-bool CAssetsDB::EraseAssetData(const CNewAsset & asset)
+bool CAssetsDB::EraseAssetData(const std::string& assetName)
 {
-    return Erase(std::make_pair(ASSET_FLAG, asset.strName));
+    return Erase(std::make_pair(ASSET_FLAG, assetName));
 }
 
-bool CAssetsDB::EraseMyAssetData(const CNewAsset& asset)
+bool CAssetsDB::EraseMyAssetData(const std::string& assetName)
 {
-    return Erase(std::make_pair(MY_ASSET_FLAG, asset.strName));
+    return Erase(std::make_pair(MY_ASSET_FLAG, assetName));
 }
 
 bool CAssetsDB::EraseAssetAddressQuantity(const std::string &assetName, const std::string &address) {
     return Erase(std::make_pair(ASSET_ADDRESS_QUANTITY_FLAG, std::make_pair(assetName, address)));
 }
 
-bool CAssetsDB::EraseMyOutPoints(const CNewAsset& asset)
+bool CAssetsDB::EraseMyOutPoints(const std::string& assetName)
 {
-    if (!EraseMyAssetData(asset))
+    if (!EraseMyAssetData(assetName))
         return error("%s : Failed to erase my asset outpoints from database.", __func__);
 
     return true;

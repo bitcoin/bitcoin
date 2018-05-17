@@ -510,7 +510,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 
                     // Verify that data
                     std::string strError = "";
-                    if (!asset.IsValid(strError))
+                    if (!asset.IsValid(strError, *passets))
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strError);
 
                     // Construct the asset transaction
