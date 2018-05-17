@@ -990,6 +990,19 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         t.detach(); // thread runs free
     }
 
+    {
+        // update the latest transaction id in case it has changed
+        std::lock_guard<std::mutex> lock(m_cs_txadd);
+        if (!wtxOrdered.empty()) {
+            CWalletTx* pwtx = wtxOrdered.rbegin()->second.first;
+            uint256 possible_latest_wtxid = pwtx->GetHash();
+            if (m_latest_wtxid != possible_latest_wtxid) {
+                m_latest_wtxid = possible_latest_wtxid;
+                m_cond_txadd.notify_all();
+            }
+        }
+    }
+
     return true;
 }
 
@@ -1008,6 +1021,11 @@ bool CWallet::LoadToWallet(const CWalletTx& wtxIn)
                 MarkConflicted(prevtx.hashBlock, wtx.GetHash());
             }
         }
+    }
+    if (!wtxOrdered.empty()) {
+        std::lock_guard<std::mutex> lock(m_cs_txadd);
+        m_latest_wtxid = wtxOrdered.rbegin()->second.first->GetHash();
+        m_cond_txadd.notify_all();
     }
 
     return true;

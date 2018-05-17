@@ -1180,6 +1180,11 @@ public:
 
     /** Whether a given output is spendable by this wallet */
     bool OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const;
+
+    /** mutex, container and condition variable for updating the latest transaction id */
+    std::mutex m_cs_txadd;
+    std::condition_variable m_cond_txadd;
+    uint256 m_latest_wtxid;
 };
 
 /** A key allocated from the key pool. */
