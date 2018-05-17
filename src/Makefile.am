@@ -1,13 +1,13 @@
 # Copyright (c) 2013-2016 The Syscoin Core developers
+# Copyright (c) 2014-2018 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 DIST_SUBDIRS = secp256k1 univalue
 
-AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
-AM_CXXFLAGS = $(HARDENED_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS)
+AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS)
+AM_CXXFLAGS = $(HARDENED_CXXFLAGS) $(ERROR_CXXFLAGS)
 AM_CPPFLAGS = $(HARDENED_CPPFLAGS)
-AM_LIBTOOLFLAGS = --preserve-dup-deps
 EXTRA_LIBRARIES =
 
 if EMBEDDED_UNIVALUE
@@ -19,7 +19,8 @@ else
 LIBUNIVALUE = $(UNIVALUE_LIBS)
 endif
 
-SYSCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+SYSCOIN_CONFIG_INCLUDES=-I$(builddir)/config
+SYSCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
@@ -61,7 +62,6 @@ EXTRA_LIBRARIES += \
 lib_LTLIBRARIES = $(LIBSYSCOINCONSENSUS)
 
 bin_PROGRAMS =
-noinst_PROGRAMS =
 TESTS =
 BENCHMARKS =
 
@@ -210,8 +210,8 @@ SYSCOIN_CORE_H = \
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
-	@$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
-	  "$(abs_top_srcdir)"
+	@$(top_srcdir)/share/genbuild.sh $(abs_top_builddir)/src/obj/build.h \
+	  $(abs_top_srcdir)
 libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between syscoind and syscoin-qt
@@ -315,8 +315,8 @@ libsyscoin_wallet_a_SOURCES = \
   $(SYSCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libsyscoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libsyscoin_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libsyscoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_CONFIG_INCLUDES) $(PIC_FLAGS)
+crypto_libsyscoin_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
 crypto_libsyscoin_crypto_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
@@ -448,10 +448,10 @@ endif
 
 syscoind_LDADD = \
   $(LIBSYSCOIN_SERVER) \
-  $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBUNIVALUE) \
   $(LIBSYSCOIN_UTIL) \
+  $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_ZMQ) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
@@ -477,7 +477,6 @@ syscoin_cli_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
-
 syscoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
@@ -539,7 +538,8 @@ CLEANFILES += univalue/*.gcda univalue/*.gcno
 CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
-CLEANFILES += obj/build.h
+
+DISTCLEANFILES = obj/build.h
 
 EXTRA_DIST = $(CTAES_DIST)
 
