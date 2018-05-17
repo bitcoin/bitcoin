@@ -57,7 +57,7 @@ See also: [Systemnode Setup Guide](https://forum.crown.tech/index.php?topic=1240
 
 ### Report a Bug
 
-Bugs can be reported via the github issues page: https://gitlab.crown.tech/crown/crown-core/issues, tech support channel in [Mattermost](https://mm.crownlab.eu/crown/channels/tech-support) or emailing [support@crown.tech](email:support@crown.tech)
+Bugs can be reported via the Gitlab issues page: https://gitlab.crown.tech/crown/crown-core/issues, tech support channel in [Mattermost](https://mm.crownlab.eu/crown/channels/tech-support) or emailing [support@crown.tech](email:support@crown.tech)
 
 When describing a bug please include following information:
 * **Issue summary** - an issue header which outlines the actual defect to be solved
