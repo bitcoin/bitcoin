@@ -58,11 +58,7 @@ Build Syscoin Core
         ./configure
         make
 
-3.  It is recommended to build and run the unit tests:
-
-        make check
-
-4.  You can also create a .dmg that contains the .app bundle (optional):
+3.  You can also create a .dmg that contains the .app bundle (optional):
 
         make deploy
 
