@@ -218,47 +218,6 @@ dist_noinst_SCRIPTS = autogen.sh
 
 EXTRA_DIST = $(DIST_SHARE) test/functional/test_runner.py test/functional $(DIST_CONTRIB) $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING) $(BIN_CHECKS)
 
-EXTRA_DIST += \
-	test/data/blanktxv1.hex \
-	test/data/blanktxv1.json \
-	test/data/blanktxv2.hex \
-	test/data/blanktxv2.json \
-	test/data/tt-delin1-out.hex \
-	test/data/tt-delin1-out.json \
-	test/data/tt-delout1-out.hex \
-	test/data/tt-delout1-out.json \
-	test/data/tt-locktime317000-out.hex \
-	test/data/tt-locktime317000-out.json \
-	test/data/tx394b54bb.hex \
-	test/data/txcreate1.hex \
-	test/data/txcreate1.json \
-	test/data/txcreate2.hex \
-	test/data/txcreate2.json \
-	test/data/txcreatedata1.hex \
-	test/data/txcreatedata1.json \
-	test/data/txcreatedata2.hex \
-	test/data/txcreatedata2.json \
-	test/data/txcreatedata_seq0.hex \
-	test/data/txcreatedata_seq0.json \
-	test/data/txcreatedata_seq1.hex \
-	test/data/txcreatedata_seq1.json \
-	test/data/txcreatemultisig1.hex \
-	test/data/txcreatemultisig1.json \
-	test/data/txcreatemultisig2.hex \
-	test/data/txcreatemultisig2.json \
-	test/data/txcreateoutpubkey1.hex \
-	test/data/txcreateoutpubkey1.json \
-	test/data/txcreatescript1.hex \
-	test/data/txcreatescript1.json \
-	test/data/txcreatescript2.hex \
-	test/data/txcreatescript2.json \
-	test/data/txcreatesignv1.hex \
-	test/data/txcreatesignv1.json \
-	test/data/txcreatesignv2.hex \
-	test/node1/syscoin.conf \
-	test/node2/syscoin.conf \
-	test/node3/syscoin.conf
-
 CLEANFILES = $(OSX_DMG) $(SYSCOIN_WIN_INSTALLER)
 
 .INTERMEDIATE: $(COVERAGE_INFO)
