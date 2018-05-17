@@ -403,7 +403,7 @@ git clone https://github.com/syscoin/syscoin.git
 cd syscoin/
 ./autogen.sh
 ./configure --disable-wallet --without-gui --without-miniupnpc
-make check
+make
 ```
 
 Note:

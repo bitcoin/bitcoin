@@ -1,4 +1,4 @@
-# Copyright (c) 2016 The Syscoin Core developers
+# Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,7 @@
 sign=false
 verify=false
 build=false
+setupenv=false
 
 # Systems to build
 linux=true
@@ -19,11 +20,11 @@ commit=false
 url=https://github.com/syscoin/syscoin
 proc=2
 mem=2000
-lxc=true
+lxc=false
 osslTarUrl=http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
 osslPatchUrl=https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
 scriptName=$(basename -- "$0")
-signProg="gpg --detach-sign"
+signProg="-p gpg"
 commitFiles=true
 
 # Help Message
@@ -46,8 +47,8 @@ Options:
 -o|--os		Specify which Operating Systems the build is for. Default is lwx. l for linux, w for windows, x for osx
 -j		Number of processes to use. Default 2
 -m		Memory to allocate in MiB. Default 2000
---kvm           Use KVM instead of LXC
---setup         Set up the Gitian building environment. Uses LXC. If you want to use KVM, use the --kvm option. Only works on Debian-based systems (Ubuntu, Debian)
+--lxc           Use LXC instead of KVM
+--setup         Set up the Gitian building environment. Uses KVM. If you don't want to use lxc, use the --kvm option. Only works on Debian-based systems (Ubuntu, Debian)
 --detach-sign   Create the assert file for detached signing. Will not commit anything.
 --no-commit     Do not commit anything to git
 -h|--help	Print this help message
@@ -77,7 +78,7 @@ while :; do
         -S|--signer)
 	    if [ -n "$2" ]
 	    then
-		SIGNER="$2"
+		SIGNER=$2
 		shift
 	    else
 		echo 'Error: "--signer" requires a non-empty argument.'
@@ -105,7 +106,7 @@ while :; do
 		fi
 		shift
 	    else
-		echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)'
+		echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)\n'
 		exit 1
 	    fi
 	    ;;
@@ -151,13 +152,14 @@ while :; do
 		exit 1
 	    fi
 	    ;;
-        # kvm
-        --kvm)
-            lxc=false
+        # lxc
+        --lxc)
+            lxc=true
             ;;
         # Detach sign
         --detach-sign)
-            signProg="true"
+            sign=true
+            signProg=""
             commitFiles=false
             ;;
         # Commit files
@@ -188,9 +190,9 @@ then
 fi
 
 # Get signer
-if [[ -n "$1" ]]
+if [[ -n"$1" ]]
 then
-    SIGNER="$1"
+    SIGNER=$1
     shift
 fi
 
@@ -203,7 +205,7 @@ then
 fi
 
 # Check that a signer is specified
-if [[ "$SIGNER" == "" ]]
+if [[ $SIGNER == "" ]]
 then
     echo "$scriptName: Missing signer."
     echo "Try $scriptName --help for more information"
@@ -221,14 +223,14 @@ fi
 # Add a "v" if no -c
 if [[ $commit = false ]]
 then
-	COMMIT="v${VERSION}"
+	COMMIT="${VERSION}"
 fi
 echo ${COMMIT}
 
 # Setup build environment
 if [[ $setup = true ]]
 then
-    sudo apt-get install ruby apache2 git apt-cacher-ng python-vm-builder qemu-kvm qemu-utils
+    sudo apt-get install ruby apache2 git apt-cacher-ng python-vm-builder qemu-kvm qemu-utils binutils
     git clone https://github.com/syscoin/gitian.sigs.git
     git clone https://github.com/syscoin/syscoin-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
@@ -254,12 +256,12 @@ if [[ $build = true ]]
 then
 	# Make output folder
 	mkdir -p ./syscoin-binaries/${VERSION}
-	
+
 	# Build Dependencies
 	echo ""
 	echo "Building Dependencies"
 	echo ""
-	pushd ./gitian-builder	
+	pushd ./gitian-builder
 	mkdir -p inputs
 	wget -N -P inputs $osslPatchUrl
 	wget -N -P inputs $osslTarUrl
@@ -272,8 +274,8 @@ then
 	    echo "Compiling ${VERSION} Linux"
 	    echo ""
 	    ./bin/gbuild -j ${proc} -m ${mem} --commit syscoin=${COMMIT} --url syscoin=${url} ../syscoin/contrib/gitian-descriptors/gitian-linux.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-linux --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-linux.yml
-	    mv build/out/syscoincore-*.tar.gz build/out/src/syscoincore-*.tar.gz ../syscoin-binaries/${VERSION}
+	    ./bin/gsign $signProg --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-linux.yml
+	    mv build/out/syscoin-*.tar.gz build/out/src/syscoin-*.tar.gz ../syscoin-binaries/${VERSION}
 	fi
 	# Windows
 	if [[ $windows = true ]]
@@ -282,9 +284,9 @@ then
 	    echo "Compiling ${VERSION} Windows"
 	    echo ""
 	    ./bin/gbuild -j ${proc} -m ${mem} --commit syscoin=${COMMIT} --url syscoin=${url} ../syscoin/contrib/gitian-descriptors/gitian-win.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-win.yml
-	    mv build/out/syscoincore-*-win-unsigned.tar.gz inputs/syscoin-win-unsigned.tar.gz
-	    mv build/out/syscoincore-*.zip build/out/syscoincore-*.exe ../syscoin-binaries/${VERSION}
+	    ./bin/gsign $signProg --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-win.yml
+	    mv build/out/syscoin-*-win-unsigned.tar.gz inputs/syscoin-win-unsigned.tar.gz
+	    mv build/out/syscoin-*.zip build/out/syscoin-*.exe ../syscoin-binaries/${VERSION}
 	fi
 	# Mac OSX
 	if [[ $osx = true ]]
@@ -293,9 +295,9 @@ then
 	    echo "Compiling ${VERSION} Mac OSX"
 	    echo ""
 	    ./bin/gbuild -j ${proc} -m ${mem} --commit syscoin=${COMMIT} --url syscoin=${url} ../syscoin/contrib/gitian-descriptors/gitian-osx.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-osx.yml
-	    mv build/out/syscoincore-*-osx-unsigned.tar.gz inputs/syscoin-osx-unsigned.tar.gz
-	    mv build/out/syscoincore-*.tar.gz build/out/syscoincore-*.dmg ../syscoin-binaries/${VERSION}
+	    ./bin/gsign $signProg --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-osx.yml
+	    mv build/out/syscoin-*-osx-unsigned.tar.gz inputs/syscoin-osx-unsigned.tar.gz
+	    mv build/out/syscoin-*.tar.gz build/out/syscoin-*.dmg ../syscoin-binaries/${VERSION}
 	fi
 	popd
 
@@ -306,9 +308,9 @@ then
             echo "Committing ${VERSION} Unsigned Sigs"
             echo ""
             pushd gitian.sigs
-            git add ${VERSION}-linux/"${SIGNER}"
-            git add ${VERSION}-win-unsigned/"${SIGNER}"
-            git add ${VERSION}-osx-unsigned/"${SIGNER}"
+            git add ${VERSION}-linux/${SIGNER}
+            git add ${VERSION}-win-unsigned/${SIGNER}
+            git add ${VERSION}-osx-unsigned/${SIGNER}
             git commit -a -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
             popd
         fi
@@ -328,10 +330,10 @@ then
 	echo "Verifying v${VERSION} Windows"
 	echo ""
 	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../syscoin/contrib/gitian-descriptors/gitian-win.yml
-	# Mac OSX	
+	# Mac OSX
 	echo ""
 	echo "Verifying v${VERSION} Mac OSX"
-	echo ""	
+	echo ""
 	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../syscoin/contrib/gitian-descriptors/gitian-osx.yml
 	# Signed Windows
 	echo ""
@@ -342,14 +344,14 @@ then
 	echo ""
 	echo "Verifying v${VERSION} Signed Mac OSX"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../syscoin/contrib/gitian-descriptors/gitian-osx-signer.yml	
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../syscoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	popd
 fi
 
 # Sign binaries
 if [[ $sign = true ]]
 then
-	
+
         pushd ./gitian-builder
 	# Sign Windows
 	if [[ $windows = true ]]
@@ -357,10 +359,10 @@ then
 	    echo ""
 	    echo "Signing ${VERSION} Windows"
 	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} ../syscoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	    mv build/out/syscoincore-*win64-setup.exe ../syscoin-binaries/${VERSION}
-	    mv build/out/syscoincore-*win32-setup.exe ../syscoin-binaries/${VERSION}
+	    ./bin/gbuild -i --commit signature=${COMMIT} --url signature=${url} ../syscoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	    ./bin/gsign $signProg --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	    mv build/out/syscoin-*win64-setup.exe ../syscoin-binaries/${VERSION}
+	    mv build/out/syscoin-*win32-setup.exe ../syscoin-binaries/${VERSION}
 	fi
 	# Sign Mac OSX
 	if [[ $osx = true ]]
@@ -368,8 +370,8 @@ then
 	    echo ""
 	    echo "Signing ${VERSION} Mac OSX"
 	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} ../syscoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	    ./bin/gbuild -i --commit signature=${COMMIT} --url signature=${url} ../syscoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	    ./bin/gsign $signProg --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	    mv build/out/syscoin-osx-signed.dmg ../syscoin-binaries/${VERSION}/syscoin-${VERSION}-osx.dmg
 	fi
 	popd
@@ -381,8 +383,8 @@ then
             echo ""
             echo "Committing ${VERSION} Signed Sigs"
             echo ""
-            git add ${VERSION}-win-signed/"${SIGNER}"
-            git add ${VERSION}-osx-signed/"${SIGNER}"
+            git add ${VERSION}-win-signed/${SIGNER}
+            git add ${VERSION}-osx-signed/${SIGNER}
             git commit -a -m "Add ${VERSION} signed binary sigs for ${SIGNER}"
             popd
         fi

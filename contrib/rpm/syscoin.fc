@@ -1,8 +1,0 @@
-/usr/bin/syscoin-cli		--	gen_context(system_u:object_r:syscoin_exec_t,s0)
-/usr/sbin/syscoind		--	gen_context(system_u:object_r:syscoin_exec_t,s0)
-/usr/lib(64)?/syscoincore/syscoind		--	gen_context(system_u:object_r:syscoin_exec_t,s0)
-
-/etc/syscoincore(/.*)?		gen_context(system_u:object_r:syscoin_conf_t,s0)
-/var/lib/syscoincore(/.*)?		gen_context(system_u:object_r:syscoin_var_lib_t,s0)
-
-(/var)?/run/syscoind(/.*)?   gen_context(system_u:object_r:syscoin_var_run_t,s0)
