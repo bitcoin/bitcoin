@@ -48,12 +48,3 @@ examine `uint256_tests.cpp`.
 For further reading, I found the following website to be helpful in
 explaining how the boost unit test framework works:
 [http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/](http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/).
-
-### syscoin-util-test.py
-
-The test directory also contains the syscoin-util-test.py tool, which tests syscoin utils (currently just syscoin-tx). This test gets run automatically during the `make check` build process. It is also possible to run the test manually from the src directory:
-
-```
-test/syscoin-util-test.py --srcdir=[current directory]
-
-```
