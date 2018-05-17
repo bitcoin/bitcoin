@@ -2117,6 +2117,77 @@ static UniValue listaccounts(const JSONRPCRequest& request)
     return ret;
 }
 
+static UniValue listsincetx(const JSONRPCRequest& request)
+{
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "listsincetx \"txid\" (polltime)\n"
+            "\nGet all transactions since a specific transaction [txid].\n"
+            "This call can be used as longpoll notification channel if follow-up transactions from the latest transaction-id are requested and [polltime] is greater than zero.\n"
+            "\nArguments:\n"
+            "1. \"txid\"               (string, required) The txid to list transactions since\n"
+            "1. \"polltime\"           (numeric, optional) If greater than zero, wait with a timeout of <polltime> seconds for new transactions. It will response immediately when new transactions arrive (default is 0)\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listsincetx", "\"66f1e20f43780a67762fa00524e0c4ce0416339aa84e830d90e8dc636cd836e4\" 10")
+            + HelpExampleRpc("listsincetx", "\"66f1e20f43780a67762fa00524e0c4ce0416339aa84e830d90e8dc636cd836e4\", 10")
+        );
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    // we assume that pwallet gets never deconstructed at this point
+    uint256 hash;
+    hash.SetHex(request.params[0].get_str());
+    auto it_find = pwallet->mapWallet.find(hash);
+    if (it_find == pwallet->mapWallet.end()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    }
+
+    UniValue transactions(UniValue::VARR);
+
+    // construct a function to populate the output array
+    auto addTransactionsSince = [&transactions, &pwallet](uint256 wtxid_since) {
+        LOCK2(cs_main, pwallet->cs_wallet); // we only lock at this point to allow non blocking long polling
+        isminefilter filter = ISMINE_SPENDABLE;
+        bool list = false;
+        // reverse iterate over the ordere transaction map
+        for (CWallet::TxItems::const_iterator it = pwallet->wtxOrdered.begin(); it != pwallet->wtxOrdered.end(); ++it) {
+            CWalletTx* const pwtx = (*it).second.first;
+            if (pwtx != nullptr && !list && wtxid_since == pwtx->GetHash()) {
+                // transaction found;
+                list = true;
+                continue;
+            } else if (list && pwtx != nullptr) {
+                ListTransactions(pwallet, *pwtx, "*", 0, true, transactions, filter);
+            }
+        }
+    };
+
+    // find transaction and eventually populate the array with follow-up transactions
+    addTransactionsSince(it_find->first);
+
+    // in case nothing has been found (means newest transaction has been requested) and requested txid is valid, longpoll if requested
+    if (transactions.empty() && !request.params[1].isNull() && request.params[1].get_int() > 0) {
+        uint256 wtx_update;
+        std::unique_lock<std::mutex> lock(pwallet->m_cs_txadd);
+        wtx_update = pwallet->m_latest_wtxid;
+
+        // wait for new transactions and timeout when the given timeout value has been reached
+        pwallet->m_cond_txadd.wait_for(lock, std::chrono::milliseconds(request.params[1].get_int() * 1000), [&pwallet, &wtx_update] {
+            return (pwallet->m_latest_wtxid != wtx_update);
+        });
+        // we eventually have follow-up transactions now, add them to the output array
+        addTransactionsSince(it_find->first);
+    }
+    return transactions;
+}
+
 static UniValue listsinceblock(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -4194,6 +4265,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "listlockunspent",                  &listlockunspent,               {} },
     { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","include_empty","include_watchonly","address_filter"} },
     { "wallet",             "listsinceblock",                   &listsinceblock,                {"blockhash","target_confirmations","include_watchonly","include_removed"} },
+    { "wallet",             "listsincetx",                      &listsincetx,                   {"txid", "polltime"} },
+
     { "wallet",             "listtransactions",                 &listtransactions,              {"account|dummy","count","skip","include_watchonly"} },
     { "wallet",             "listunspent",                      &listunspent,                   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
     { "wallet",             "listwallets",                      &listwallets,                   {} },
