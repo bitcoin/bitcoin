@@ -6,12 +6,12 @@ Unlike blockchain projects that rely on donations and pre-mined endowments, Crow
 
 Budgets go through a series of stages before being paid:
 1. Proposal submission, which itself is a two-step process:
- * prepare - create a special transaction that destroys coins in order to make a proposal
- * submit - propagate transaction to peers on network
+  * prepare - create a special transaction that destroys coins in order to make a proposal
+  * submit - propagate transaction to peers on network
 2. Voting - lobby for votes on your proposal and, hopefully, get enough votes to make it into the budget
 3. Finalization - at the end of each payment period, proposals are sorted then compiled into a finalized budget:
- * finalized budget submission - finalized budget is submited into the network
- * finalized budget voting - masternodes that agree with the finalization will vote on that budget
+  * finalized budget submission - finalized budget is submited into the network
+  * finalized budget voting - masternodes that agree with the finalization will vote on that budget
 4. Payment - the winning finalized budget is paid at the beginning of the next cycle
 
 

@@ -28,15 +28,22 @@ Unpack the files into a directory and run: `bin/crown-qt` or `bin/crownd`. You n
 
 ## Run Masternode or Systemnode
 
+Here are some guides that will help you to setup and run an incentivized node:
 * [Masternode Setup Guide](https://forum.crown.tech/index.php?topic=1241.0)
 * [Systemnode Setup Guide](https://forum.crown.tech/index.php?topic=1240.0)
-
-
 * [Masternode Configuration](masternode-config.md)
 
 ## Participate in Crown Decentralized Governance
 
-TBD
+As a community member you can participate in the Governance by proposing projects that will advance Crown. You are also encouraged to discuss the poposals at [Crown Forum](https://forum.crown.tech/index.php?board=17.0).
+
+If you own one or several masternodes you can (and you should!) help to choose the direction in which Crown goes by carefuly studying the proposals and voting for those you consider worthy.
+
+* [Governance and Proposals](https://forum.crown.tech/index.php?topic=17.0) - some frequently asqued questions
+* [Console Governance Interface](governance.md) - describes how to submit a proposal, how to vote for a proposal from the console and more
+* [How To Submit a Proposal](https://forum.crown.tech/index.php?topic=11.0) - another proposal submission guide
+* [Proposal Submission Template](https://forum.crown.tech/index.php?topic=9.0)
+* [Active Proposals](https://crown.today/proposals)
 
 ## Build Crown From Source
 
