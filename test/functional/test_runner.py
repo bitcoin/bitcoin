@@ -127,6 +127,7 @@ BASE_SCRIPTS = [
     'wallet_bumpfee.py',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
+    'wallet_listsincetx.py',
     'p2p_leak.py',
     'wallet_encryption.py',
     'feature_dersig.py',
