@@ -22,11 +22,12 @@ template<typename T>
 class DbManager
 {
 public:
-    DbManager(std::string strFilenameIn, std::string strMagicMessageIn);
-    bool Load(T& objToLoad);
-    bool Dump(T& objToSave);
+    DbManager(std::string filename, std::string magicMessage);
+    bool Load(T& objToLoad, bool fDryRun = false);
+    bool Dump(const T& objToSave);
 
-    enum ReadResult {
+    enum ReadResult
+    {
         Ok,
         FileError,
         HashReadError,
@@ -41,50 +42,52 @@ private:
     ReadResult Read(T& objToLoad, bool fDryRun = false);
 
 private:
-    boost::filesystem::path pathDB;
-    std::string strFilename;
-    std::string strMagicMessage;
+    boost::filesystem::path m_pathDb;
+    std::string m_filename;
+    std::string m_magicMessage;
 };
 
 template <typename T>
-DbManager<T>::DbManager(std::string strFilenameIn, std::string strMagicMessageIn)
+DbManager<T>::DbManager(std::string filename, std::string magicMessage)
 {
-    pathDB = GetDataDir() / strFilenameIn;
-    strFilename = strFilenameIn;
-    strMagicMessage = strMagicMessageIn;
+    m_pathDb = GetDataDir() / filename;
+    m_filename = filename;
+    m_magicMessage = magicMessage;
 }
 
 template <typename T>
 bool DbManager<T>::Write(const T& objToSave)
 {
-    // LOCK(objToSave.cs);
-
     int64_t nStart = GetTimeMillis();
 
     // serialize, checksum data up to that point, then append checksum
     CDataStream ssObj(SER_DISK, CLIENT_VERSION);
-    ssObj << strMagicMessage; // specific magic message for this type of object
+    ssObj << m_magicMessage; // specific magic message for this type of object
     ssObj << FLATDATA(Params().MessageStart()); // network specific magic number
     ssObj << objToSave;
     uint256 hash = Hash(ssObj.begin(), ssObj.end());
     ssObj << hash;
 
     // open output file, and associate with CAutoFile
-    FILE *file = fopen(pathDB.string().c_str(), "wb");
+    FILE *file = fopen(m_pathDb.string().c_str(), "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull())
-        return error("%s: Failed to open file %s", __func__, pathDB.string());
+    {
+        return error("%s: Failed to open file %s", __func__, m_pathDb.string());
+    }
 
     // Write and commit header, data
-    try {
+    try
+    {
         fileout << ssObj;
     }
-    catch (std::exception &e) {
+    catch (std::exception &e)
+    {
         return error("%s: Serialize or I/O error - %s", __func__, e.what());
     }
     fileout.fclose();
 
-    LogPrintf("Written info to %s  %dms\n", strFilename, GetTimeMillis() - nStart);
+    LogPrintf("Written info to %s  %dms\n", m_filename, GetTimeMillis() - nStart);
     LogPrintf("     %s\n", objToSave.ToString());
 
     return true;
@@ -95,30 +98,31 @@ typename DbManager<T>::ReadResult DbManager<T>::Read(T& objToLoad, bool fDryRun)
 {
     int64_t nStart = GetTimeMillis();
     // open input file, and associate with CAutoFile
-    FILE *file = fopen(pathDB.string().c_str(), "rb");
+    FILE *file = fopen(m_pathDb.string().c_str(), "rb");
     CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
     if (filein.IsNull())
     {
-        error("%s: Failed to open file %s", __func__, pathDB.string());
+        error("%s: Failed to open file %s", __func__, m_pathDb.string());
         return FileError;
     }
 
     // use file size to size memory buffer
-    int fileSize = boost::filesystem::file_size(pathDB);
+    int fileSize = boost::filesystem::file_size(m_pathDb);
     int dataSize = fileSize - sizeof(uint256);
     // Don't try to resize to a negative number if file is small
     if (dataSize < 0)
         dataSize = 0;
-    std::vector<unsigned char> vchData;
-    vchData.resize(dataSize);
+    std::vector<unsigned char> vchData(dataSize);
     uint256 hashIn;
 
     // read data and checksum from file
-    try {
+    try
+    {
         filein.read((char *)&vchData[0], dataSize);
         filein >> hashIn;
     }
-    catch (std::exception &e) {
+    catch (std::exception &e)
+    {
         error("%s: Deserialize or I/O error - %s", __func__, e.what());
         return HashReadError;
     }
@@ -134,20 +138,19 @@ typename DbManager<T>::ReadResult DbManager<T>::Read(T& objToLoad, bool fDryRun)
         return IncorrectHash;
     }
 
-
     unsigned char pchMsgTmp[4];
     std::string strMagicMessageTmp;
-    try {
+    try
+    {
         // de-serialize file header (file specific magic message) and ..
         ssObj >> strMagicMessageTmp;
 
         // ... verify the message matches predefined one
-        if (strMagicMessage != strMagicMessageTmp)
+        if (m_magicMessage != strMagicMessageTmp)
         {
             error("%s: Invalid magic message", __func__);
             return IncorrectMagicMessage;
         }
-
 
         // de-serialize file header (network specific magic number) and ..
         ssObj >> FLATDATA(pchMsgTmp);
@@ -162,15 +165,17 @@ typename DbManager<T>::ReadResult DbManager<T>::Read(T& objToLoad, bool fDryRun)
         // de-serialize data into T object
         ssObj >> objToLoad;
     }
-    catch (std::exception &e) {
+    catch (std::exception &e)
+    {
         objToLoad.Clear();
         error("%s: Deserialize or I/O error - %s", __func__, e.what());
         return IncorrectFormat;
     }
 
-    LogPrintf("Loaded info from %s  %dms\n", strFilename, GetTimeMillis() - nStart);
+    LogPrintf("Loaded info from %s  %dms\n", m_filename, GetTimeMillis() - nStart);
     LogPrintf("     %s\n", objToLoad.ToString());
-    if(!fDryRun) {
+    if(!fDryRun)
+    {
         LogPrintf("%s: Cleaning....\n", __func__);
         objToLoad.CheckAndRemove();
         LogPrintf("     %s\n", objToLoad.ToString());
@@ -180,20 +185,23 @@ typename DbManager<T>::ReadResult DbManager<T>::Read(T& objToLoad, bool fDryRun)
 }
 
 template <typename T>
-bool DbManager<T>::Load(T& objToLoad)
+bool DbManager<T>::Load(T& objToLoad, bool fDryRun)
 {
-    LogPrintf("Reading info from %s...\n", strFilename);
-    ReadResult readResult = Read(objToLoad);
+    LogPrintf("Reading info from %s...\n", m_filename);
+    ReadResult readResult = Read(objToLoad, fDryRun);
     if (readResult == FileError)
-        LogPrintf("Missing file %s, will try to recreate\n", strFilename);
+    {
+        LogPrintf("Missing file %s, will try to recreate\n", m_filename);
+    }
     else if (readResult != Ok)
     {
-        LogPrintf("Error reading %s: ", strFilename);
+        LogPrintf("Error reading %s: ", m_filename);
         if(readResult == IncorrectFormat)
         {
             LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
         }
-        else {
+        else
+        {
             LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
             // program should exit with an error
             return false;
@@ -203,32 +211,19 @@ bool DbManager<T>::Load(T& objToLoad)
 }
 
 template <typename T>
-bool DbManager<T>::Dump(T& objToSave)
+bool DbManager<T>::Dump(const T& objToSave)
 {
     int64_t nStart = GetTimeMillis();
 
-    LogPrintf("Verifying %s format...\n", strFilename);
+    LogPrintf("Verifying %s format...\n", m_filename);
     T tmpObjToLoad;
-    ReadResult readResult = Read(tmpObjToLoad, true);
-
-    // there was an error and it was not an error on file opening => do not proceed
-    if (readResult == FileError)
-        LogPrintf("Missing file %s, will try to recreate\n", strFilename);
-    else if (readResult != Ok)
+    if (!Load(tmpObjToLoad, true))
     {
-        LogPrintf("Error reading %s: ", strFilename);
-        if(readResult == IncorrectFormat)
-            LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
-        else
-        {
-            LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
-            return false;
-        }
+        return false;
     }
-
-    LogPrintf("Writing info to %s...\n", strFilename);
+    LogPrintf("Writing info to %s...\n", m_filename);
     Write(objToSave);
-    LogPrintf("%s dump finished  %dms\n", strFilename, GetTimeMillis() - nStart);
+    LogPrintf("%s dump finished  %dms\n", m_filename, GetTimeMillis() - nStart);
 
     return true;
 }
