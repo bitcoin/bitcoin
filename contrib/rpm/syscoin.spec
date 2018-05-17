@@ -310,9 +310,7 @@ install -p %{SOURCE22} %{buildroot}%{_mandir}/man1/syscoin-qt.1
 rm -f %{buildroot}%{_bindir}/test_*
 
 %check
-make check
-srcdir=src test/syscoin-util-test.py
-test/functional/test_runner.py --extended
+make
 
 %post libs -p /sbin/ldconfig
 
