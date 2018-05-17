@@ -891,12 +891,8 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
-        if (outpoint.n < ptx->vout.size()) {
-            coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
-            return true;
-        } else {
-            return false;
-        }
+        coin = Coin(ptx->vout.at(outpoint.n), MEMPOOL_HEIGHT, false);
+        return true;
     }
     return base->GetCoin(outpoint, coin);
 }

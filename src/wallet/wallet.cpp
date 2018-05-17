@@ -1299,8 +1299,8 @@ isminetype CWallet::IsMine(const CTxIn &txin) const
         if (mi != mapWallet.end())
         {
             const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.tx->vout.size())
-                return IsMine(prev.tx->vout[txin.prevout.n]);
+            const CTxOut& prevout = prev.tx->vout.at(txin.prevout.n);
+            return IsMine(prevout);
         }
     }
     return ISMINE_NO;
@@ -1316,9 +1316,9 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
         if (mi != mapWallet.end())
         {
             const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.tx->vout.size())
-                if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
-                    return prev.tx->vout[txin.prevout.n].nValue;
+            const CTxOut& prevout = prev.tx->vout.at(txin.prevout.n);
+            if (IsMine(prevout) & filter)
+                return prevout.nValue;
         }
     }
     return 0;
@@ -1401,11 +1401,7 @@ bool CWallet::IsAllFromMe(const CTransaction& tx, const isminefilter& filter) co
             return false; // any unknown inputs can't be from us
 
         const CWalletTx& prev = (*mi).second;
-
-        if (txin.prevout.n >= prev.tx->vout.size())
-            return false; // invalid input!
-
-        if (!(IsMine(prev.tx->vout[txin.prevout.n]) & filter))
+        if (!(IsMine(prev.tx->vout.at(txin.prevout.n)) & filter))
             return false;
     }
     return true;
@@ -2372,8 +2368,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
         auto it = mapWallet.find(output.hash);
         if (it != mapWallet.end()) {
             int depth = it->second.GetDepthInMainChain();
-            if (depth >= 0 && output.n < it->second.tx->vout.size() &&
-                IsMine(it->second.tx->vout[output.n]) == ISMINE_SPENDABLE) {
+            if (depth >= 0 && IsMine(it->second.tx->vout.at(output.n)) == ISMINE_SPENDABLE) {
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
@@ -2390,11 +2385,10 @@ const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int out
 {
     const CTransaction* ptx = &tx;
     int n = output;
-    while (IsChange(ptx->vout[n]) && ptx->vin.size() > 0) {
+    while (IsChange(ptx->vout.at(n)) && ptx->vin.size() > 0) {
         const COutPoint& prevout = ptx->vin[0].prevout;
         auto it = mapWallet.find(prevout.hash);
-        if (it == mapWallet.end() || it->second.tx->vout.size() <= prevout.n ||
-            !IsMine(it->second.tx->vout[prevout.n])) {
+        if (it == mapWallet.end() || !IsMine(it->second.tx->vout.at(prevout.n))) {
             break;
         }
         ptx = it->second.tx.get();
@@ -2493,11 +2487,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         if (it != mapWallet.end())
         {
             const CWalletTx* pcoin = &it->second;
-            // Clearly invalid input, fail
-            if (pcoin->tx->vout.size() <= outpoint.n)
-                return false;
             // Just to calculate the marginal byte size
-            nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
+            nValueFromPresetInputs += pcoin->tx->vout.at(outpoint.n).nValue;
             setPresetCoins.insert(CInputCoin(pcoin->tx, outpoint.n));
         } else
             return false; // TODO: Allow non-wallet inputs
@@ -2546,13 +2537,12 @@ bool CWallet::SignTransaction(CMutableTransaction &tx)
     int nIn = 0;
     for (auto& input : tx.vin) {
         std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(input.prevout.hash);
-        if(mi == mapWallet.end() || input.prevout.n >= mi->second.tx->vout.size()) {
+        if (mi == mapWallet.end()) {
             return false;
         }
-        const CScript& scriptPubKey = mi->second.tx->vout[input.prevout.n].scriptPubKey;
-        const CAmount& amount = mi->second.tx->vout[input.prevout.n].nValue;
+        const CTxOut& prevout = mi->second.tx->vout.at(input.prevout.n);
         SignatureData sigdata;
-        if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&tx, nIn, amount, SIGHASH_ALL), scriptPubKey, sigdata)) {
+        if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&tx, nIn, prevout.nValue, SIGHASH_ALL), prevout.scriptPubKey, sigdata)) {
             return false;
         }
         UpdateInput(input, sigdata);

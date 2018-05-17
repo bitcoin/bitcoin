@@ -1253,6 +1253,8 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
         if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
             hashOutputs = cacheready ? cache->hashOutputs : GetOutputsHash(txTo);
         } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
+            // Note that witness SIGHASH_SINGLE with output out of bound is explicitly
+            // interprested as valid despite out of bounds, see tx_valid.json
             CHashWriter ss(SER_GETHASH, 0);
             ss << txTo.vout[nIn];
             hashOutputs = ss.GetHash();
