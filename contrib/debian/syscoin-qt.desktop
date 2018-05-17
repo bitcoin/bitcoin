@@ -1,8 +1,7 @@
 [Desktop Entry]
-Version=1.0
-Name=Syscoin Core
-Comment=Connect to the Syscoin P2P Network
-Comment[de]=Verbinde mit dem Syscoin peer-to-peer Netzwerk
+Encoding=UTF-8
+Name=Syscoin
+Comment=Syscoin P2P Cryptocurrency
 Comment[fr]=Syscoin, monnaie virtuelle cryptographique pair à pair
 Comment[tr]=Syscoin, eşten eşe kriptografik sanal para birimi
 Exec=syscoin-qt %u
@@ -10,5 +9,4 @@ Terminal=false
 Type=Application
 Icon=syscoin128
 MimeType=x-scheme-handler/syscoin;
-Categories=Office;Finance;P2P;Network;Qt;
-StartupWMClass=Syscoin-qt
+Categories=Office;Finance;
