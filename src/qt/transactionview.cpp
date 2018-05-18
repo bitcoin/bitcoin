@@ -100,7 +100,24 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 #endif
     hlayout->addWidget(search_widget);
 
-    amountWidget = new QLineEdit(this);
+    class MinAmountWidget : public QLineEdit {
+    public:
+        MinAmountWidget(QWidget* parent) : QLineEdit(parent) {}
+    protected:
+        bool event(QEvent* event)
+        {
+            if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
+                QKeyEvent* key_event = static_cast<QKeyEvent*>(event);
+                if (key_event->key() == Qt::Key_Comma) {
+                    // Translate a comma into a period
+                    QKeyEvent period_key_event(event->type(), Qt::Key_Period, key_event->modifiers(), ".", key_event->isAutoRepeat(), key_event->count());
+                    return QLineEdit::event(&period_key_event);
+                }
+            }
+            return QLineEdit::event(event);
+        }
+    };
+    amountWidget = new MinAmountWidget(this);
 #if QT_VERSION >= 0x040700
     amountWidget->setPlaceholderText(tr("Min amount"));
 #endif
