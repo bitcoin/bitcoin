@@ -244,7 +244,7 @@
              <string>Use bech32 encoding.</string>
             </property>
             <property name="text">
-             <string>Generate Bech32 address</string>
+             <string>Generate native segwit (Bech32) address</string>
             </property>
            </widget>
           </item>
