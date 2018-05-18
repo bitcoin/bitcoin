@@ -1163,7 +1163,7 @@ UniValue offerupdate(const JSONRPCRequest& request) {
 void COfferDB::WriteOfferIndex(const COffer& offer, const int &op) {
 	UniValue oName(UniValue::VOBJ);
 	if (BuildOfferIndexerJson(offer, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offer");
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerrecord");
 	}
 	WriteOfferIndexHistory(offer, op);
 }

@@ -3,9 +3,7 @@
 Unit tests will be automatically compiled if dependencies were met in `./configure`
 and tests weren't explicitly disabled.
 
-After configuring, they can be run with `make check`.
-
-To run the syscoind tests manually, launch `src/test/test_syscoin`.
+To run the syscoind tests launch `src/test/test_syscoin`.
 
 To add more syscoind tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
 .cpp files in the `test/` directory or add new .cpp files that
@@ -50,12 +48,3 @@ examine `uint256_tests.cpp`.
 For further reading, I found the following website to be helpful in
 explaining how the boost unit test framework works:
 [http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/](http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/).
-
-### syscoin-util-test.py
-
-The test directory also contains the syscoin-util-test.py tool, which tests syscoin utils (currently just syscoin-tx). This test gets run automatically during the `make check` build process. It is also possible to run the test manually from the src directory:
-
-```
-test/syscoin-util-test.py --srcdir=[current directory]
-
-```

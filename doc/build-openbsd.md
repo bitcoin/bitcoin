@@ -74,8 +74,10 @@ To configure without wallet:
 
 Build and run the tests:
 ```bash
+./configure --enable-tests=yes
 gmake # use -jX here for parallelism
-gmake check
+cd src/test
+./test_syscoin
 ```
 
 Resource limits

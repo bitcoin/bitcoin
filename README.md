@@ -11,29 +11,31 @@ What is Syscoin?
 Syscoin is a merge-minable SHA256 coin which provides an array of useful services
 which leverage the bitcoin protocol and blockchain technology.
 
- - 1 minute block targets, diff retarget each block using Dark Gravity Wave(24) 
- - Flexible rewards schedule paying 25% to miners and 75% to masternodes
- - 888 million total coins (deflation 5 percent per year, deflation on all payouts)
- - Block time: 60 seconds target
- - Rewards: 38.5 Syscoins per block deflated 5 percent per year of which 10 percent is allocated to governance proposals (3.85 Syscoins per block). 75 percent of the result goes to masternode and 25 percent to miner.
- - SHA256 Proof of Work
- - Minable either exclusively or via merge-mining any PoW coin
- - Syscoin data service fees burned
- - Masternode collateral requirement: 100000 Syscoins
- - Masternode seniority: 3 percent every 4 months until 27 percent over 3 years
- - Governance proposals payout schedule: every month
- - Governance funding per round (168630 Syscoins per month)
+- 1 minute block targets, diff retarget each block using Dark Gravity Wave(24) 
+- 888 million total coins (deflation 5 percent per year, deflation on all payouts)
+- Block time: 60 seconds target
+- Rewards: 38.5 Syscoins per block deflated 5 percent per year. 
+  - 10 percent to governance proposals (3.85 Syscoins / block). 
+  - 22.5 percent to miner (8.6625 Syscoins / block)
+  - 67.5 percent to masternode (25.9875 Syscoins / block)
+- SHA256 Proof of Work
+- Mineable either exclusively or via merge-mining any SHA256 PoW coin
+- Syscoin data service fees burned
+- Masternode collateral requirement: 100000 Syscoins
+- Masternode seniority: 3 percent every 4 months until 27 percent over 3 years
+- Governance proposals payout schedule: every month
+- Governance funding per round (168630 Syscoins per month)
 
 Services include:
 
-- Layer 2 PoW/PoS hybrid consensus with bonded validator system (masternodes)
-- Decentralized governance (blockchain pays people for work by creating proposals and getting masternodes to vote on them)
-- Decentralized Identity reservation, ownership & exchange
-- Digital certificate storage, ownership & exchange
-- Distributed marketplate & exchange
-- Digital Services Provider marketplace & platform
-- Digital Asset Creation and Management
-- Decentralized Escrow service
+- Hybrid layer 2 PoW/PoS consensus with bonded validator system (masternodes)
+- Decentralized governance (blockchain pays for work via proposals and masternode votes)
+- Decentralized identity reservation, ownership, and exchange
+- Digital certificate storage, ownership, and exchange
+- Distributed marketplace and exchange
+- Digital services provider marketplace and platform
+- Digital asset creation and management
+- Decentralized escrow service
 
 For more information, as well as an immediately useable, binary version of
 the Syscoin client sofware, see https://www.syscoin.org.
@@ -65,8 +67,7 @@ lots of money.
 ### Automated Testing
 
 Developers are strongly encouraged to write [unit tests](/doc/unit-tests.md) for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled in configure) with: `make check`
+submit new unit tests for old code.
 
 There are also [regression and integration tests](/qa) of the RPC interface, written
 in Python, that are run automatically on the build server.
