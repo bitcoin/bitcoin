@@ -1449,6 +1449,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out, CAss
 {
     bool fClean = true;
 
+    /** RVN START */
     // This is needed because undo, is going to be cleared and moved when AddCoin is called. We need this for undo assets
     Coin tempCoin;
     bool fIsAsset = false;
@@ -1456,6 +1457,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out, CAss
         fIsAsset = true;
         tempCoin = undo;
     }
+    /** RVN END */
 
     if (view.HaveCoin(out)) fClean = false; // overwriting transaction output
 
@@ -1542,14 +1544,31 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
         /** RVN START */
         if (assetsCache) {
             if (tx.IsNewAsset()) {
+                // Remove the newly created asset
                 CNewAsset asset;
                 std::string strAddress;
-                AssetFromTransaction(tx, asset, strAddress);
+                if (!AssetFromTransaction(tx, asset, strAddress)) {
+                    error("%s : Failed to get asset from transaction. TXID : ", __func__, tx.GetHash().GetHex());
+                    return DISCONNECT_FAILED;
+                }
                 if (assetsCache->ContainsAsset(asset)) {
                     if (!assetsCache->RemoveNewAsset(asset, strAddress)) {
                         error("%s : Failed to Remove Asset. Asset Name : %s", __func__, asset.strName);
                         return DISCONNECT_FAILED;
                     }
+                }
+
+                // Get the owner from the transaction and remove it
+                std::string ownerName;
+                std::string ownerAddress;
+                if (!OwnerFromTransaction(tx, ownerName, ownerAddress)) {
+                    error("%s : Failed to get owner from transaction. TXID : ", __func__, tx.GetHash().GetHex());
+                    return DISCONNECT_FAILED;
+                }
+
+                if (!assetsCache->RemoveOwnerAsset(ownerName, ownerAddress)) {
+                    error("%s : Failed to Remove Owner from transaction. TXID : ", __func__, tx.GetHash().GetHex());
+                    return DISCONNECT_FAILED;
                 }
             }
 
@@ -1557,11 +1576,8 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                 CAssetTransfer transfer;
                 std::string strAddress;
                 if (!TransferAssetFromScript(tx.vout[index].scriptPubKey, transfer, strAddress)) {
-                    LogPrintf(
-                            "%s : Failed getting transfer asset from Script, Even though it was marked as a transfer Tx: %s\n",
-                            __func__, tx.vout[index].ToString());
-                    // TODO should we disconnect_failed here????
-                    continue;
+                    error("%s : Failed to get transfer asset from transaction. CTxOut : ", __func__, tx.vout[index].ToString());
+                    return DISCONNECT_FAILED;
                 }
 
                 COutPoint out(hash, index);
@@ -1902,6 +1918,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                 AssetFromTransaction(tx, asset, strAddress);
 
                 std::string strError = "";
+                if(!IsNewOwnerTxValid(tx, asset.strName, strAddress, strError))
+                    return state.DoS(100, false, REJECT_INVALID, strError);
+
                 if (!asset.IsValid(strError, *assetsCache))
                     return state.DoS(100, error("%s: %s", __func__, strError), REJECT_INVALID, "bad-txns-issue-asset");
             }

@@ -215,6 +215,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-asset");
 
         std::string strError = "";
+        if(!IsNewOwnerTxValid(tx, asset.strName, strAddress, strError))
+            return state.DoS(100, false, REJECT_INVALID, strError);
+
         if (!asset.IsValid(strError, *passets, fMemPoolCheck, fCheckDuplicateInputs))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
     }
