@@ -1,28 +1,55 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The GoByte Core developers
+// Copyright (c) 2018 The Aither Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include "ui_interface.h"
-#include "init.h"
-#include "bitcoinrpc.h"
 
+#include "noui.h"
+
+#include "ui_interface.h"
+#include "util.h"
+
+#include <cstdio>
+#include <stdint.h>
 #include <string>
 
-static int noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
+static bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
-    printf("%s: %s\n", caption.c_str(), message.c_str());
-    fprintf(stderr, "%s: %s\n", caption.c_str(), message.c_str());
-    return 4;
+    bool fSecure = style & CClientUIInterface::SECURE;
+    style &= ~CClientUIInterface::SECURE;
+
+    std::string strCaption;
+    // Check for usage of predefined caption
+    switch (style) {
+    case CClientUIInterface::MSG_ERROR:
+        strCaption += _("Error");
+        break;
+    case CClientUIInterface::MSG_WARNING:
+        strCaption += _("Warning");
+        break;
+    case CClientUIInterface::MSG_INFORMATION:
+        strCaption += _("Information");
+        break;
+    default:
+        strCaption += caption; // Use supplied caption (can be empty)
+    }
+
+    if (!fSecure)
+        LogPrintf("%s: %s\n", strCaption, message);
+    fprintf(stderr, "%s: %s\n", strCaption.c_str(), message.c_str());
+    return false;
 }
 
-static bool noui_ThreadSafeAskFee(int64_t nFeeRequired, const std::string& strCaption)
+static void noui_InitMessage(const std::string& message)
 {
-    return true;
+    LogPrintf("init message: %s\n", message);
 }
 
 void noui_connect()
 {
-    // Connect bitcoind signal handlers
+    // Connect aitherd signal handlers
     uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
-    uiInterface.ThreadSafeAskFee.connect(noui_ThreadSafeAskFee);
+    uiInterface.InitMessage.connect(noui_InitMessage);
 }

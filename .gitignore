@@ -1,54 +1,18 @@
+*.sublime-project
+*.sublime-workspace
+todo.txt
+reset-files.bash
+
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
-
-# autoreconf
-Makefile.in
-aclocal.m4
-autom4te.cache/
-build-aux/config.guess
-build-aux/config.sub
-build-aux/depcomp
-build-aux/install-sh
-build-aux/ltmain.sh
-build-aux/m4/libtool.m4
-build-aux/m4/lt~obsolete.m4
-build-aux/m4/ltoptions.m4
-build-aux/m4/ltsugar.m4
-build-aux/m4/ltversion.m4
-build-aux/missing
-build-aux/compile
-build-aux/test-driver
-config.log
-config.status
-configure
-libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
-src/config/stamp-h1
-share/setup.nsi
-share/qt/Info.plist
-
-src/univalue/gen
-
-src/qt/*.moc
-src/qt/moc_*.cpp
-src/qt/forms/ui_*.h
-
-src/qt/test/moc*.cpp
-
-src/qt/bitcoin-qt.config
-src/qt/bitcoin-qt.creator
-src/qt/bitcoin-qt.creator.user
-src/qt/bitcoin-qt.files
-src/qt/bitcoin-qt.includes
+src/aither
+src/aitherd
+src/aither-cli
+src/aither-tx
+src/test/test_aither
+src/qt/test/test_aither-qt
+src/bench/bench_aither
 
 .deps
 .dirstamp
@@ -61,7 +25,7 @@ src/qt/bitcoin-qt.includes
 *.pyc
 *.o
 *.o-*
-*.patch
+.aither
 *.a
 *.pb.cc
 *.pb.h
@@ -77,15 +41,10 @@ src/qt/bitcoin-qt.includes
 *.lo
 *.la
 
-# Compilation and Qt preprocessor part
-*.qm
-bitcoin-qt
-Bitcoin-Qt.app
-background.tiff*
-
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+aither-qt_test
+src/test/buildenv.py
 
 # Resources cpp
 qrc_*.cpp
@@ -98,7 +57,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_aither.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -106,20 +65,27 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-test/config.ini
-test/cache/*
+qa/pull-tester/run-bitcoind-for-test.sh
+qa/pull-tester/tests_config.py
+qa/pull-tester/cache/*
+qa/pull-tester/test.*/*
+qa/tmp
+cache/
+share/BitcoindComparisonTool.jar
 
 !src/leveldb*/Makefile
 
+.cproject
+.project
+.autotools
 /doc/doxygen/
 
 libbitcoinconsensus.pc
-contrib/devtools/split-debug.sh
+src/qt/aither-qt.bash
+qa/pull-tester/tests-config.sh
+
+#development symlinks
+aither-cli
+aitherd
+aither-qt
 .idea
-Aithercoin-qt.pro.user
-src/aithercoind
-src/main.h.autosave
-.qmake.stash
-Makefile.Debug
-Makefile.Release
-object_script.*

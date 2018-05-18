@@ -1,7 +1,23 @@
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The GoByte Core developers
+// Copyright (c) 2018 The Aither Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "transactionrecord.h"
 
-#include "wallet.h"
 #include "base58.h"
+#include "consensus/consensus.h"
+#include "main.h"
+#include "timedata.h"
+#include "wallet/wallet.h"
+
+#include "darksend.h"
+#include "instantx.h"
+
+#include <stdint.h>
+
+#include <boost/foreach.hpp>
 
 /* Return positive answer if transaction should be shown in list.
  */
@@ -25,28 +41,30 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 {
     QList<TransactionRecord> parts;
     int64_t nTime = wtx.GetTxTime();
-    int64_t nCredit = wtx.GetCredit(true);
-    int64_t nDebit = wtx.GetDebit();
-    int64_t nNet = nCredit - nDebit;
-    uint256 hash = wtx.GetHash(), hashPrev = 0;
+    CAmount nCredit = wtx.GetCredit(ISMINE_ALL);
+    CAmount nDebit = wtx.GetDebit(ISMINE_ALL);
+    CAmount nNet = nCredit - nDebit;
+    uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
-    if (nNet > 0 || wtx.IsCoinBase() || wtx.IsCoinStake())
+    if (nNet > 0 || wtx.IsCoinBase())
     {
         //
         // Credit
         //
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
-            if(wallet->IsMine(txout))
+            isminetype mine = wallet->IsMine(txout);
+            if(mine)
             {
                 TransactionRecord sub(hash, nTime);
                 CTxDestination address;
                 sub.idx = parts.size(); // sequence number
                 sub.credit = txout.nValue;
+                sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
                 if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
                 {
-                    // Received by Bitcoin Address
+                    // Received by Aither Address
                     sub.type = TransactionRecord::RecvWithAddress;
                     sub.address = CBitcoinAddress(address).ToString();
                 }
@@ -58,19 +76,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 }
                 if (wtx.IsCoinBase())
                 {
-                    // Generated (proof-of-work)
+                    // Generated
                     sub.type = TransactionRecord::Generated;
-                }
-                if (wtx.IsCoinStake())
-                {
-                    // Generated (proof-of-stake)
-
-                    if (hashPrev == hash)
-                        continue; // last coinstake output
-
-                    sub.type = TransactionRecord::Generated;
-                    sub.credit = nNet > 0 ? nNet : wtx.GetValueOut() - nDebit;
-                    hashPrev = hash;
                 }
 
                 parts.append(sub);
@@ -79,34 +86,97 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     }
     else
     {
-        bool fAllFromMe = true;
+        bool fAllFromMeDenom = true;
+        int nFromMe = 0;
+        bool involvesWatchAddress = false;
+        isminetype fAllFromMe = ISMINE_SPENDABLE;
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-            fAllFromMe = fAllFromMe && wallet->IsMine(txin);
+        {
+            if(wallet->IsMine(txin)) {
+                fAllFromMeDenom = fAllFromMeDenom && wallet->IsDenominated(txin);
+                nFromMe++;
+            }
+            isminetype mine = wallet->IsMine(txin);
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(fAllFromMe > mine) fAllFromMe = mine;
+        }
 
-        bool fAllToMe = true;
-        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-            fAllToMe = fAllToMe && wallet->IsMine(txout);
+        isminetype fAllToMe = ISMINE_SPENDABLE;
+        bool fAllToMeDenom = true;
+        int nToMe = 0;
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout) {
+            if(wallet->IsMine(txout)) {
+                fAllToMeDenom = fAllToMeDenom && wallet->IsDenominatedAmount(txout.nValue);
+                nToMe++;
+            }
+            isminetype mine = wallet->IsMine(txout);
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(fAllToMe > mine) fAllToMe = mine;
+        }
 
-        if (fAllFromMe && fAllToMe)
+        if(fAllFromMeDenom && fAllToMeDenom && nFromMe * nToMe) {
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::PrivateSendDenominate, "", -nDebit, nCredit));
+            parts.last().involvesWatchAddress = false;   // maybe pass to TransactionRecord as constructor argument
+        }
+        else if (fAllFromMe && fAllToMe)
         {
             // Payment to self
-            int64_t nChange = wtx.GetChange();
+            // TODO: this section still not accurate but covers most cases,
+            // might need some additional work however
 
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
-                            -(nDebit - nChange), nCredit - nChange));
+            TransactionRecord sub(hash, nTime);
+            // Payment to self by default
+            sub.type = TransactionRecord::SendToSelf;
+            sub.address = "";
+
+            if(mapValue["DS"] == "1")
+            {
+                sub.type = TransactionRecord::PrivateSend;
+                CTxDestination address;
+                if (ExtractDestination(wtx.vout[0].scriptPubKey, address))
+                {
+                    // Sent to Aither Address
+                    sub.address = CBitcoinAddress(address).ToString();
+                }
+                else
+                {
+                    // Sent to IP, or other non-address transaction like OP_EVAL
+                    sub.address = mapValue["to"];
+                }
+            }
+            else
+            {
+                for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
+                {
+                    const CTxOut& txout = wtx.vout[nOut];
+                    sub.idx = parts.size();
+
+                    if(wallet->IsCollateralAmount(txout.nValue)) sub.type = TransactionRecord::PrivateSendMakeCollaterals;
+                    if(wallet->IsDenominatedAmount(txout.nValue)) sub.type = TransactionRecord::PrivateSendCreateDenominations;
+                    if(nDebit - wtx.GetValueOut() == PRIVATESEND_COLLATERAL) sub.type = TransactionRecord::PrivateSendCollateralPayment;
+                }
+            }
+
+            CAmount nChange = wtx.GetChange();
+
+            sub.debit = -(nDebit - nChange);
+            sub.credit = nCredit - nChange;
+            parts.append(sub);
+            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
         else if (fAllFromMe)
         {
             //
             // Debit
             //
-            int64_t nTxFee = nDebit - wtx.GetValueOut();
+            CAmount nTxFee = nDebit - wtx.GetValueOut();
 
             for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
             {
                 const CTxOut& txout = wtx.vout[nOut];
                 TransactionRecord sub(hash, nTime);
                 sub.idx = parts.size();
+                sub.involvesWatchAddress = involvesWatchAddress;
 
                 if(wallet->IsMine(txout))
                 {
@@ -118,7 +188,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 CTxDestination address;
                 if (ExtractDestination(txout.scriptPubKey, address))
                 {
-                    // Sent to Bitcoin Address
+                    // Sent to Aither Address
                     sub.type = TransactionRecord::SendToAddress;
                     sub.address = CBitcoinAddress(address).ToString();
                 }
@@ -129,7 +199,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.address = mapValue["to"];
                 }
 
-                int64_t nValue = txout.nValue;
+                if(mapValue["DS"] == "1")
+                {
+                    sub.type = TransactionRecord::PrivateSend;
+                }
+
+                CAmount nValue = txout.nValue;
                 /* Add fee to first output */
                 if (nTxFee > 0)
                 {
@@ -147,6 +222,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             // Mixed debit transaction, can't break down payees
             //
             parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+            parts.last().involvesWatchAddress = involvesWatchAddress;
         }
     }
 
@@ -160,7 +236,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
 
     // Find the block the tx is in
     CBlockIndex* pindex = NULL;
-    std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(wtx.hashBlock);
+    BlockMap::iterator mi = mapBlockIndex.find(wtx.hashBlock);
     if (mi != mapBlockIndex.end())
         pindex = (*mi).second;
 
@@ -172,14 +248,15 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         idx);
     status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);
     status.depth = wtx.GetDepthInMainChain();
-    status.cur_num_blocks = nBestHeight;
+    status.cur_num_blocks = chainActive.Height();
+    status.cur_num_ix_locks = nCompleteTXLocks;
 
-    if (!IsFinalTx(wtx, nBestHeight + 1))
+    if (!CheckFinalTx(wtx))
     {
         if (wtx.nLockTime < LOCKTIME_THRESHOLD)
         {
             status.status = TransactionStatus::OpenUntilBlock;
-            status.open_for = wtx.nLockTime - nBestHeight;
+            status.open_for = wtx.nLockTime - chainActive.Height();
         }
         else
         {
@@ -187,7 +264,6 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
             status.open_for = wtx.nLockTime;
         }
     }
-
     // For generated transactions, determine maturity
     else if(type == TransactionRecord::Generated)
     {
@@ -236,16 +312,22 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
             status.status = TransactionStatus::Confirmed;
         }
     }
+
 }
 
 bool TransactionRecord::statusUpdateNeeded()
 {
     AssertLockHeld(cs_main);
-    return status.cur_num_blocks != nBestHeight;
+    return status.cur_num_blocks != chainActive.Height() || status.cur_num_ix_locks != nCompleteTXLocks;
 }
 
-std::string TransactionRecord::getTxID()
+QString TransactionRecord::getTxID() const
 {
-    return hash.ToString() + strprintf("-%03d", idx);
+    return formatSubTxId(hash, idx);
+}
+
+QString TransactionRecord::formatSubTxId(const uint256 &hash, int vout)
+{
+    return QString::fromStdString(hash.ToString() + strprintf("-%03d", vout));
 }
 

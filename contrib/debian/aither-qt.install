@@ -1,0 +1,6 @@
+usr/local/bin/aither-qt usr/bin
+share/pixmaps/aither32.xpm usr/share/pixmaps
+share/pixmaps/aither16.xpm usr/share/pixmaps
+share/pixmaps/aither128.png usr/share/pixmaps
+debian/aither-qt.desktop usr/share/applications
+debian/aither-qt.protocol usr/share/kde4/services/

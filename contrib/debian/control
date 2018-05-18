@@ -1,59 +1,68 @@
-Source: novacoin
+Source: aither
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
-Uploaders: Micah Anderson <micah@debian.org>
+Maintainer: Holger Schinzel <holger@aither.org>
+Uploaders: Holger Schinzel <holger@aither.org>
 Build-Depends: debhelper,
  devscripts,
+ automake,
+ libtool,
  bash-completion,
- libboost-system-dev (>> 1.35) | libboost-system1.35-dev,
  libdb4.8++-dev,
  libssl-dev,
  pkg-config,
- libminiupnpc8-dev,
- libboost-filesystem-dev (>> 1.35) | libboost-filesystem1.35-dev,
- libboost-program-options-dev (>> 1.35) | libboost-program-options1.35-dev,
- libboost-thread-dev (>> 1.35) | libboost-thread1.35-dev,
- libboost-test-dev (>> 1.35) | libboost-test1.35-dev,
+ libevent-dev,
+ libboost-system1.48-dev | libboost-system-dev (>> 1.35),
+ libboost-filesystem1.48-dev | libboost-filesystem-dev (>> 1.35),
+ libboost-program-options1.48-dev | libboost-program-options-dev (>> 1.35),
+ libboost-thread1.48-dev | libboost-thread-dev (>> 1.35),
+ libboost-test1.48-dev | libboost-test-dev (>> 1.35),
+ libboost-chrono1.48-dev | libboost-chrono-dev (>> 1.35),
  qt4-qmake,
  libqt4-dev,
- libqrencode-dev
+ libqrencode-dev,
+ libprotobuf-dev, protobuf-compiler,
+ python
 Standards-Version: 3.9.2
-Homepage: http://www.novacoin.su/
-Vcs-Git: git://github.com/CryptoManiac/novacoin.git
-Vcs-Browser: http://github.com/CryptoManiac/novacoin
+Homepage: https://www.aither.org/
+Vcs-Git: git://github.com/aithercoin/aither.git
+Vcs-Browser: https://github.com/aithercoin/aither
 
-Package: novacoind
+Package: aitherd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Novacoin is a free open source peer-to-peer electronic cash system that
- is completely decentralized, without the need for a central server or
- trusted parties.  Users hold the crypto keys to their own money and
- transact directly with each other, with the help of a P2P network to
- check for double-spending.
+ Aither is an experimental new digital currency that enables anonymous, instant
+ payments to anyone, anywhere in the world. Aither uses peer-to-peer
+ technology to operate with no central authority: managing transactions
+ and issuing money are carried out collectively by the network. Aither Core
+ is the name of the open source software which enables the use of this currency.
  .
- By default connects to an IRC network to discover other peers.
- .
- Full transaction history is stored locally at each client.  This
- requires 2+ GB of space, slowly growing.
- .
- This package provides novacoind, a combined daemon and CLI tool to
- interact with the daemon.
+ This package provides the daemon, aitherd, and the CLI tool
+ aither-cli to interact with the daemon.
 
-Package: novacoin-qt
+Package: aither-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Novacoin is a free open source peer-to-peer electronic cash system that
- is completely decentralized, without the need for a central server or
- trusted parties.  Users hold the crypto keys to their own money and
- transact directly with each other, with the help of a P2P network to
- check for double-spending.
+ Aither is an experimental new digital currency that enables anonymous, instant
+ payments to anyone, anywhere in the world. Aither uses peer-to-peer
+ technology to operate with no central authority: managing transactions
+ and issuing money are carried out collectively by the network. Aither Core
+ is the name of the open source software which enables the use of this currency.
  .
- By default connects to an IRC network to discover other peers.
+ This package provides Aither-Qt, a GUI for Aither based on Qt.
+
+Package: aither-tx
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: peer-to-peer digital currency - standalone transaction tool
+ Aither is an experimental new digital currency that enables anonymous, instant
+ payments to anyone, anywhere in the world. Aither uses peer-to-peer
+ technology to operate with no central authority: managing transactions
+ and issuing money are carried out collectively by the network. Aither Core
+ is the name of the open source software which enables the use of this currency.
  .
- Full transaction history is stored locally at each client.  This
- requires 2+ GB of space, slowly growing.
- .
- This package provides Novacoin-Qt, a GUI for Novacoin based on Qt.
+ This package provides aither-tx, a command-line transaction creation
+ tool which can be used without a aither daemon.  Some means of
+ exchanging minimal transaction data with peers is still required.

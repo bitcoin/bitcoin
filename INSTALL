@@ -1,9 +1,16 @@
-Building Aithercoin
+Building Aither Core
 
-See doc/readme-qt.rst for instructions on building Aithercoin QT,
-the intended-for-end-users, nice-graphical-interface, reference
-implementation of Aithercoin.
+Use the autogen script to prepare the build environment.
 
-See doc/build-*.txt for instructions on building aithercoind,
+    ./autogen.sh
+    ./configure
+    make
+
+Precompiled binaries are available at github, see
+https://github.com/aithercoin/aither-binaries
+
+Always verify the signatures and checksums.
+
+See doc/build-*.md for instructions on building aitherd,
 the intended-for-services, no-graphical-interface, reference
-implementation of Aithercoin.
+implementation of Aither.

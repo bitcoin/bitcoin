@@ -1,0 +1,20 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/translations">
+        <file alias="bg">locale/aither_bg.qm</file>
+        <file alias="de">locale/aither_de.qm</file>
+        <file alias="en">locale/aither_en.qm</file>
+        <file alias="es">locale/aither_es.qm</file>
+        <file alias="fi">locale/aither_fi.qm</file>
+        <file alias="fr">locale/aither_fr.qm</file>
+        <file alias="it">locale/aither_it.qm</file>
+        <file alias="ja">locale/aither_ja.qm</file>
+        <file alias="pl">locale/aither_pl.qm</file>
+        <file alias="pt">locale/aither_pt.qm</file>
+        <file alias="ru">locale/aither_ru.qm</file>
+        <file alias="sk">locale/aither_sk.qm</file>
+        <file alias="sv">locale/aither_sv.qm</file>
+        <file alias="vi">locale/aither_vi.qm</file>
+        <file alias="zh_CN">locale/aither_zh_CN.qm</file>
+        <file alias="zh_TW">locale/aither_zh_TW.qm</file>
+    </qresource>
+</RCC>

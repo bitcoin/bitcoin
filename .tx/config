@@ -1,0 +1,7 @@
+[main]
+host = https://www.transifex.com
+
+[aither.qt-translation-012x]
+file_filter = src/qt/locale/aither_<lang>.ts
+source_file = src/qt/locale/aither_en.ts
+source_lang = en

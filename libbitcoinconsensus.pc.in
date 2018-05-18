@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: Bitcoin Core consensus library
+Description: Library for the Bitcoin consensus protocol.
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lbitcoinconsensus
+Cflags: -I${includedir}
+Requires.private: libcrypto

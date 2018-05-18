@@ -1,4 +1,5 @@
 # Run the "uscan" command to check for upstream updates and more.
-version=4
+version=3
+# use qa.debian.org redirector; see man uscan
 opts=uversionmangle=s/(\d)(alpha|beta|rc)/$1~$2/,dversionmangle=s/~dfsg\d*// \
- http://githubredir.debian.net/github/CryptoManiac/novacoin v(.*).tar.gz
+ http://githubredir.debian.net/github/aithercoin/aither v(.*).tar.gz

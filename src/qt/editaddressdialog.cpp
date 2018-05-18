@@ -1,5 +1,13 @@
+// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The GoByte Core developers
+// Copyright (c) 2018 The Aither Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "editaddressdialog.h"
 #include "ui_editaddressdialog.h"
+
 #include "addresstablemodel.h"
 #include "guiutil.h"
 
@@ -8,7 +16,10 @@
 
 EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::EditAddressDialog), mapper(0), mode(mode), model(0)
+    ui(new Ui::EditAddressDialog),
+    mapper(0),
+    mode(mode),
+    model(0)
 {
     ui->setupUi(this);
 
@@ -99,7 +110,7 @@ void EditAddressDialog::accept()
             break;
         case AddressTableModel::INVALID_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered address \"%1\" is not a valid Aithercoin address.").arg(ui->addressEdit->text()),
+                tr("The entered address \"%1\" is not a valid Aither address.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case AddressTableModel::DUPLICATE_ADDRESS:

@@ -1,2 +1,0 @@
-debian/bin/novacoind usr/bin
-src/novacoind usr/lib/novacoin

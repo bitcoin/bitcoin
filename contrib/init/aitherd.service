@@ -1,0 +1,22 @@
+[Unit]
+Description=Aither's distributed currency daemon
+After=network.target
+
+[Service]
+User=aithercore
+Group=aithercore
+
+Type=forking
+PIDFile=/var/lib/aitherd/aitherd.pid
+ExecStart=/usr/bin/aitherd -daemon -pid=/var/lib/aitherd/aitherd.pid \
+-conf=/etc/aithercore/aither.conf -datadir=/var/lib/aitherd -disablewallet
+
+Restart=always
+PrivateTmp=true
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+StartLimitInterval=120s
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target

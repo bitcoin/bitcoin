@@ -1,31 +1,32 @@
-//
-// Alert system
-//
+// Copyright (c) 2010 Satoshi Nakamoto
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "alert.h"
+
+#include "base58.h"
+#include "clientversion.h"
+#include "net.h"
+#include "pubkey.h"
+#include "timedata.h"
+#include "ui_interface.h"
+#include "util.h"
+#include "utilstrencodings.h"
+
+#include <stdint.h>
 #include <algorithm>
+#include <map>
+
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/foreach.hpp>
-#include <map>
-
-#include "alert.h"
-#include "key.h"
-#include "net.h"
-#include "sync.h"
-#include "ui_interface.h"
+#include <boost/thread.hpp>
 
 using namespace std;
 
 map<uint256, CAlert> mapAlerts;
 CCriticalSection cs_mapAlerts;
-
-static const char* pszMainKey = "04b6a3a2911d40d214be61d573bfb1a32ef98b931d9c721f7bbbbdf2692abfd5eb235692d3ad1a81f75157fd0a9d96866b62b717d091f2481b70e3b8d87cc68fd3";
-
-// TestNet alerts pubKey
-static const char* pszTestKey = "04904d236abae451f9b5c7bf476486588f503a18096d538a7d8cddd95dd0ebcfd7433d0a5969c88eb47af4090a43437776ed09ddf95970d8363e196bc1a9391ced";
-
-// TestNet alerts private key
-// "308201130201010420b665cff1884e53da26376fd1b433812c9a5a8a4d5221533b15b9629789bb7e42a081a53081a2020101302c06072a8648ce3d0101022100fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f300604010004010704410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141020101a14403420004904d236abae451f9b5c7bf476486588f503a18096d538a7d8cddd95dd0ebcfd7433d0a5969c88eb47af4090a43437776ed09ddf95970d8363e196bc1a9391ced"
 
 void CUnsignedAlert::SetNull()
 {
@@ -51,13 +52,13 @@ std::string CUnsignedAlert::ToString() const
     BOOST_FOREACH(int n, setCancel)
         strSetCancel += strprintf("%d ", n);
     std::string strSetSubVer;
-    BOOST_FOREACH(std::string str, setSubVer)
+    BOOST_FOREACH(const std::string& str, setSubVer)
         strSetSubVer += "\"" + str + "\" ";
     return strprintf(
         "CAlert(\n"
         "    nVersion     = %d\n"
-        "    nRelayUntil  = %" PRId64 "\n"
-        "    nExpiration  = %" PRId64 "\n"
+        "    nRelayUntil  = %d\n"
+        "    nExpiration  = %d\n"
         "    nID          = %d\n"
         "    nCancel      = %d\n"
         "    setCancel    = %s\n"
@@ -73,18 +74,13 @@ std::string CUnsignedAlert::ToString() const
         nExpiration,
         nID,
         nCancel,
-        strSetCancel.c_str(),
+        strSetCancel,
         nMinVer,
         nMaxVer,
-        strSetSubVer.c_str(),
+        strSetSubVer,
         nPriority,
-        strComment.c_str(),
-        strStatusBar.c_str());
-}
-
-void CUnsignedAlert::print() const
-{
-    printf("%s", ToString().c_str());
+        strComment,
+        strStatusBar);
 }
 
 void CAlert::SetNull()
@@ -116,7 +112,7 @@ bool CAlert::Cancels(const CAlert& alert) const
     return (alert.nID <= nCancel || setCancel.count(alert.nID));
 }
 
-bool CAlert::AppliesTo(int nVersion, std::string strSubVerIn) const
+bool CAlert::AppliesTo(int nVersion, const std::string& strSubVerIn) const
 {
     // TODO: rework for client-version-embedded-in-strSubVer ?
     return (IsInEffect() &&
@@ -133,6 +129,9 @@ bool CAlert::RelayTo(CNode* pnode) const
 {
     if (!IsInEffect())
         return false;
+    // don't relay to nodes which haven't sent their version message
+    if (pnode->nVersion == 0)
+        return false;
     // returns true if wasn't already contained in the set
     if (pnode->setKnown.insert(GetHash()).second)
     {
@@ -140,20 +139,39 @@ bool CAlert::RelayTo(CNode* pnode) const
             AppliesToMe() ||
             GetAdjustedTime() < nRelayUntil)
         {
-            pnode->PushMessage("alert", *this);
+            pnode->PushMessage(NetMsgType::ALERT, *this);
             return true;
         }
     }
     return false;
 }
 
-bool CAlert::CheckSignature() const
+bool CAlert::Sign()
 {
-    CKey key;
-    if (!key.SetPubKey(ParseHex(fTestNet ? pszTestKey : pszMainKey)))
-        return error("CAlert::CheckSignature() : SetPubKey failed");
+    CDataStream sMsg(SER_NETWORK, CLIENT_VERSION);
+    sMsg << *(CUnsignedAlert*)this;
+    vchMsg = std::vector<unsigned char>(sMsg.begin(), sMsg.end());
+    CBitcoinSecret vchSecret;
+    if (!vchSecret.SetString(GetArg("-alertkey", "")))
+    {
+        printf("CAlert::SignAlert() : vchSecret.SetString failed\n");
+        return false;
+    }
+    CKey key = vchSecret.GetKey();
+    if (!key.Sign(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
+    {
+        printf("CAlert::SignAlert() : key.Sign failed\n");
+        return false;
+    }
+
+    return true;
+}
+
+bool CAlert::CheckSignature(const std::vector<unsigned char>& alertKey) const
+{
+    CPubKey key(alertKey);
     if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
-        return error("CAlert::CheckSignature() : verify signature failed");
+        return error("CAlert::CheckSignature(): verify signature failed");
 
     // Now unserialize the data
     CDataStream sMsg(vchMsg, SER_NETWORK, PROTOCOL_VERSION);
@@ -173,9 +191,9 @@ CAlert CAlert::getAlertByHash(const uint256 &hash)
     return retval;
 }
 
-bool CAlert::ProcessAlert(bool fThread)
+bool CAlert::ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThread)
 {
-    if (!CheckSignature())
+    if (!CheckSignature(alertKey))
         return false;
     if (!IsInEffect())
         return false;
@@ -210,13 +228,13 @@ bool CAlert::ProcessAlert(bool fThread)
             const CAlert& alert = (*mi).second;
             if (Cancels(alert))
             {
-                printf("cancelling alert %d\n", alert.nID);
+                LogPrint("alert", "cancelling alert %d\n", alert.nID);
                 uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
                 mapAlerts.erase(mi++);
             }
             else if (!alert.IsInEffect())
             {
-                printf("expiring alert %d\n", alert.nID);
+                LogPrint("alert", "expiring alert %d\n", alert.nID);
                 uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
                 mapAlerts.erase(mi++);
             }
@@ -230,7 +248,7 @@ bool CAlert::ProcessAlert(bool fThread)
             const CAlert& alert = item.second;
             if (alert.Cancels(*this))
             {
-                printf("alert already cancelled by %d\n", alert.nID);
+                LogPrint("alert", "alert already cancelled by %d\n", alert.nID);
                 return false;
             }
         }
@@ -241,33 +259,30 @@ bool CAlert::ProcessAlert(bool fThread)
         if(AppliesToMe())
         {
             uiInterface.NotifyAlertChanged(GetHash(), CT_NEW);
-            std::string strCmd = GetArg("-alertnotify", "");
-            if (!strCmd.empty())
-            {
-                // Alert text should be plain ascii coming from a trusted source, but to
-                // be safe we first strip anything not in safeChars, then add single quotes around
-                // the whole string before passing it to the shell:
-                std::string singleQuote("'");
-                // safeChars chosen to allow simple messages/URLs/email addresses, but avoid anything
-                // even possibly remotely dangerous like & or >
-                std::string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890 .,;_/:?@");
-                std::string safeStatus;
-                for (std::string::size_type i = 0; i < strStatusBar.size(); i++)
-                {
-                    if (safeChars.find(strStatusBar[i]) != std::string::npos)
-                        safeStatus.push_back(strStatusBar[i]);
-                }
-                safeStatus = singleQuote+safeStatus+singleQuote;
-                boost::replace_all(strCmd, "%s", safeStatus);
-
-                if (fThread)
-                    boost::thread t(runCommand, strCmd); // thread runs free
-                else
-                    runCommand(strCmd);
-            }
+            Notify(strStatusBar, fThread);
         }
     }
 
-    printf("accepted alert %d, AppliesToMe()=%d\n", nID, AppliesToMe());
+    LogPrint("alert", "accepted alert %d, AppliesToMe()=%d\n", nID, AppliesToMe());
     return true;
+}
+
+void
+CAlert::Notify(const std::string& strMessage, bool fThread)
+{
+    std::string strCmd = GetArg("-alertnotify", "");
+    if (strCmd.empty()) return;
+
+    // Alert text should be plain ascii coming from a trusted source, but to
+    // be safe we first strip anything not in safeChars, then add single quotes around
+    // the whole string before passing it to the shell:
+    std::string singleQuote("'");
+    std::string safeStatus = SanitizeString(strMessage);
+    safeStatus = singleQuote+safeStatus+singleQuote;
+    boost::replace_all(strCmd, "%s", safeStatus);
+
+    if (fThread)
+        boost::thread t(runCommand, strCmd); // thread runs free
+    else
+        runCommand(strCmd);
 }

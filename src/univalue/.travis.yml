@@ -1,0 +1,52 @@
+
+language: cpp
+
+compiler:
+  - clang
+  - gcc
+
+os:
+  - linux
+  - osx
+
+sudo: false
+
+env:
+  global:
+    - MAKEJOBS=-j3
+    - RUN_TESTS=true
+    - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
+
+cache:
+  apt: true
+
+addons:
+  apt:
+    packages:
+      - pkg-config
+
+before_script:
+  - if [ -n "$USE_SHELL" ]; then export CONFIG_SHELL="$USE_SHELL"; fi
+  - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
+
+script:
+  - if [ -n "$UNIVALUE_CONFIG" ]; then unset CC; unset CXX; fi
+  - OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
+  - UNIVALUE_CONFIG_ALL="--prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
+  - ./configure --cache-file=config.cache $UNIVALUE_CONFIG_ALL $UNIVALUE_CONFIG || ( cat config.log && false)
+  - make -s $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL ; false )
+  - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
+  - if [ "$RUN_TESTS" = "true" ]; then make $MAKEJOBS distcheck; fi
+
+matrix:
+  fast_finish: true
+  include:
+    - os: linux
+      compiler: gcc
+      env: UNIVALUE_CONFIG=--host=x86_64-w64-mingw32 RUN_TESTS=false
+      addons:
+        apt:
+          packages:
+            - g++-mingw-w64-x86-64
+            - gcc-mingw-w64-x86-64
+            - binutils-mingw-w64-x86-64

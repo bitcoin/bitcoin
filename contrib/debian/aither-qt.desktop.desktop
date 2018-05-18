@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Aither
+Comment=Aither P2P Cryptocurrency
+Exec=aither-qt %u
+Terminal=false
+Type=Application
+Icon=aither128
+MimeType=x-scheme-handler/aither;
+Categories=Office;Finance;
+Name[en_US]=aither-qt.desktop

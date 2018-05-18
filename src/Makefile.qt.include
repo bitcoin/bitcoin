@@ -1,0 +1,582 @@
+bin_PROGRAMS += qt/aither-qt
+EXTRA_LIBRARIES += qt/libbitcoinqt.a
+
+# aither qt core #
+QT_TS = \
+  qt/locale/aither_bg.ts \
+  qt/locale/aither_de.ts \
+  qt/locale/aither_en.ts \
+  qt/locale/aither_es.ts \
+  qt/locale/aither_fi.ts \
+  qt/locale/aither_fr.ts \
+  qt/locale/aither_it.ts \
+  qt/locale/aither_ja.ts \
+  qt/locale/aither_pl.ts \
+  qt/locale/aither_pt.ts \
+  qt/locale/aither_ru.ts \
+  qt/locale/aither_sk.ts \
+  qt/locale/aither_sv.ts \
+  qt/locale/aither_vi.ts \
+  qt/locale/aither_zh_CN.ts \
+  qt/locale/aither_zh_TW.ts
+
+QT_FORMS_UI = \
+  qt/forms/addressbookpage.ui \
+  qt/forms/askpassphrasedialog.ui \
+  qt/forms/coincontroldialog.ui \
+  qt/forms/darksendconfig.ui \
+  qt/forms/editaddressdialog.ui \
+  qt/forms/helpmessagedialog.ui \
+  qt/forms/intro.ui \
+  qt/forms/masternodelist.ui \
+  qt/forms/openuridialog.ui \
+  qt/forms/optionsdialog.ui \
+  qt/forms/overviewpage.ui \
+  qt/forms/receivecoinsdialog.ui \
+  qt/forms/receiverequestdialog.ui \
+  qt/forms/debugwindow.ui \
+  qt/forms/sendcoinsdialog.ui \
+  qt/forms/sendcoinsentry.ui \
+  qt/forms/signverifymessagedialog.ui \
+  qt/forms/transactiondescdialog.ui
+
+QT_MOC_CPP = \
+  qt/moc_addressbookpage.cpp \
+  qt/moc_addresstablemodel.cpp \
+  qt/moc_askpassphrasedialog.cpp \
+  qt/moc_bantablemodel.cpp \
+  qt/moc_bitcoinaddressvalidator.cpp \
+  qt/moc_bitcoinamountfield.cpp \
+  qt/moc_bitcoingui.cpp \
+  qt/moc_bitcoinunits.cpp \
+  qt/moc_clientmodel.cpp \
+  qt/moc_coincontroldialog.cpp \
+  qt/moc_coincontroltreewidget.cpp \
+  qt/moc_csvmodelwriter.cpp \
+  qt/moc_darksendconfig.cpp \
+  qt/moc_editaddressdialog.cpp \
+  qt/moc_guiutil.cpp \
+  qt/moc_intro.cpp \
+  qt/moc_macdockiconhandler.cpp \
+  qt/moc_macnotificationhandler.cpp \
+  qt/moc_masternodelist.cpp \
+  qt/moc_notificator.cpp \
+  qt/moc_openuridialog.cpp \
+  qt/moc_optionsdialog.cpp \
+  qt/moc_optionsmodel.cpp \
+  qt/moc_overviewpage.cpp \
+  qt/moc_peertablemodel.cpp \
+  qt/moc_paymentserver.cpp \
+  qt/moc_qvalidatedlineedit.cpp \
+  qt/moc_qvaluecombobox.cpp \
+  qt/moc_receivecoinsdialog.cpp \
+  qt/moc_receiverequestdialog.cpp \
+  qt/moc_recentrequeststablemodel.cpp \
+  qt/moc_rpcconsole.cpp \
+  qt/moc_sendcoinsdialog.cpp \
+  qt/moc_sendcoinsentry.cpp \
+  qt/moc_signverifymessagedialog.cpp \
+  qt/moc_splashscreen.cpp \
+  qt/moc_trafficgraphwidget.cpp \
+  qt/moc_transactiondesc.cpp \
+  qt/moc_transactiondescdialog.cpp \
+  qt/moc_transactionfilterproxy.cpp \
+  qt/moc_transactiontablemodel.cpp \
+  qt/moc_transactionview.cpp \
+  qt/moc_utilitydialog.cpp \
+  qt/moc_walletframe.cpp \
+  qt/moc_walletmodel.cpp \
+  qt/moc_walletview.cpp
+
+BITCOIN_MM = \
+  qt/macdockiconhandler.mm \
+  qt/macnotificationhandler.mm
+
+QT_MOC = \
+  qt/aither.moc \
+  qt/bitcoinamountfield.moc \
+  qt/intro.moc \
+  qt/overviewpage.moc \
+  qt/rpcconsole.moc
+
+QT_QRC_CPP = qt/qrc_aither.cpp
+QT_QRC = qt/aither.qrc
+QT_QRC_LOCALE_CPP = qt/qrc_aither_locale.cpp
+QT_QRC_LOCALE = qt/aither_locale.qrc
+
+PROTOBUF_CC = qt/paymentrequest.pb.cc
+PROTOBUF_H = qt/paymentrequest.pb.h
+PROTOBUF_PROTO = qt/paymentrequest.proto
+
+BITCOIN_QT_H = \
+  qt/addressbookpage.h \
+  qt/addresstablemodel.h \
+  qt/askpassphrasedialog.h \
+  qt/bantablemodel.h \
+  qt/bitcoinaddressvalidator.h \
+  qt/bitcoinamountfield.h \
+  qt/bitcoingui.h \
+  qt/bitcoinunits.h \
+  qt/clientmodel.h \
+  qt/coincontroldialog.h \
+  qt/coincontroltreewidget.h \
+  qt/csvmodelwriter.h \
+  qt/darksendconfig.h \
+  qt/editaddressdialog.h \
+  qt/guiconstants.h \
+  qt/guiutil.h \
+  qt/intro.h \
+  qt/macdockiconhandler.h \
+  qt/macnotificationhandler.h \
+  qt/masternodelist.h \
+  qt/networkstyle.h \
+  qt/notificator.h \
+  qt/openuridialog.h \
+  qt/optionsdialog.h \
+  qt/optionsmodel.h \
+  qt/overviewpage.h \
+  qt/paymentrequestplus.h \
+  qt/paymentserver.h \
+  qt/peertablemodel.h \
+  qt/platformstyle.h \
+  qt/qvalidatedlineedit.h \
+  qt/qvaluecombobox.h \
+  qt/receivecoinsdialog.h \
+  qt/receiverequestdialog.h \
+  qt/recentrequeststablemodel.h \
+  qt/rpcconsole.h \
+  qt/sendcoinsdialog.h \
+  qt/sendcoinsentry.h \
+  qt/signverifymessagedialog.h \
+  qt/splashscreen.h \
+  qt/trafficgraphwidget.h \
+  qt/transactiondesc.h \
+  qt/transactiondescdialog.h \
+  qt/transactionfilterproxy.h \
+  qt/transactionrecord.h \
+  qt/transactiontablemodel.h \
+  qt/transactionview.h \
+  qt/utilitydialog.h \
+  qt/walletframe.h \
+  qt/walletmodel.h \
+  qt/walletmodeltransaction.h \
+  qt/walletview.h \
+  qt/winshutdownmonitor.h
+
+RES_ICONS = \
+  qt/res/icons/bitcoin.ico \
+  qt/res/icons/bitcoin.png \
+  qt/res/icons/drkblue/add.png \
+  qt/res/icons/drkblue/address-book.png \
+  qt/res/icons/drkblue/browse.png \
+  qt/res/icons/drkblue/clock1.png \
+  qt/res/icons/drkblue/clock2.png \
+  qt/res/icons/drkblue/clock3.png \
+  qt/res/icons/drkblue/clock4.png \
+  qt/res/icons/drkblue/clock5.png \
+  qt/res/icons/drkblue/configure.png \
+  qt/res/icons/drkblue/connect0_16.png \
+  qt/res/icons/drkblue/connect1_16.png \
+  qt/res/icons/drkblue/connect2_16.png \
+  qt/res/icons/drkblue/connect3_16.png \
+  qt/res/icons/drkblue/connect4_16.png \
+  qt/res/icons/drkblue/debugwindow.png \
+  qt/res/icons/drkblue/drkblue_editpaste.png \
+  qt/res/icons/drkblue/drkblue_address-book.png \
+  qt/res/icons/drkblue/drkblue_editcopy.png \
+  qt/res/icons/drkblue/drkblue_remove.png \
+  qt/res/icons/drkblue/edit.png \
+  qt/res/icons/drkblue/editcopy.png \
+  qt/res/icons/drkblue/editpaste.png \
+  qt/res/icons/drkblue/export.png \
+  qt/res/icons/drkblue/eye.png \
+  qt/res/icons/drkblue/eye_minus.png \
+  qt/res/icons/drkblue/eye_plus.png \
+  qt/res/icons/drkblue/filesave.png \
+  qt/res/icons/drkblue/history.png \
+  qt/res/icons/drkblue/key.png \
+  qt/res/icons/drkblue/lock_closed.png \
+  qt/res/icons/drkblue/lock_open.png \
+  qt/res/icons/drkblue/masternodes.png \
+  qt/res/icons/drkblue/overview.png \
+  qt/res/icons/drkblue/quit.png \
+  qt/res/icons/drkblue/receive.png \
+  qt/res/icons/drkblue/remove.png \
+  qt/res/icons/drkblue/send.png \
+  qt/res/icons/drkblue/synced.png \
+  qt/res/icons/drkblue/transaction0.png \
+  qt/res/icons/drkblue/transaction2.png \
+  qt/res/icons/drkblue/transaction_conflicted.png \
+  qt/res/icons/drkblue/tx_inout.png \
+  qt/res/icons/drkblue/tx_input.png \
+  qt/res/icons/drkblue/tx_output.png \
+  qt/res/icons/drkblue/tx_mined.png \
+  qt/res/icons/drkblue/about.png \
+  qt/res/icons/drkblue/about_qt.png \
+  qt/res/icons/drkblue/verify.png \
+  qt/res/icons/crownium/add.png \
+  qt/res/icons/crownium/address-book.png \
+  qt/res/icons/crownium/browse.png \
+  qt/res/icons/crownium/clock1.png \
+  qt/res/icons/crownium/clock2.png \
+  qt/res/icons/crownium/clock3.png \
+  qt/res/icons/crownium/clock4.png \
+  qt/res/icons/crownium/clock5.png \
+  qt/res/icons/crownium/configure.png \
+  qt/res/icons/crownium/connect0_16.png \
+  qt/res/icons/crownium/connect1_16.png \
+  qt/res/icons/crownium/connect2_16.png \
+  qt/res/icons/crownium/connect3_16.png \
+  qt/res/icons/crownium/connect4_16.png \
+  qt/res/icons/crownium/debugwindow.png \
+  qt/res/icons/crownium/drkblue_editpaste.png \
+  qt/res/icons/crownium/drkblue_address-book.png \
+  qt/res/icons/crownium/drkblue_editcopy.png \
+  qt/res/icons/crownium/drkblue_remove.png \
+  qt/res/icons/crownium/edit.png \
+  qt/res/icons/crownium/editcopy.png \
+  qt/res/icons/crownium/editpaste.png \
+  qt/res/icons/crownium/export.png \
+  qt/res/icons/crownium/eye.png \
+  qt/res/icons/crownium/eye_minus.png \
+  qt/res/icons/crownium/eye_plus.png \
+  qt/res/icons/crownium/filesave.png \
+  qt/res/icons/crownium/history.png \
+  qt/res/icons/crownium/key.png \
+  qt/res/icons/crownium/lock_closed.png \
+  qt/res/icons/crownium/lock_open.png \
+  qt/res/icons/crownium/masternodes.png \
+  qt/res/icons/crownium/overview.png \
+  qt/res/icons/crownium/quit.png \
+  qt/res/icons/crownium/receive.png \
+  qt/res/icons/crownium/remove.png \
+  qt/res/icons/crownium/send.png \
+  qt/res/icons/crownium/synced.png \
+  qt/res/icons/crownium/transaction0.png \
+  qt/res/icons/crownium/transaction2.png \
+  qt/res/icons/crownium/transaction_conflicted.png \
+  qt/res/icons/crownium/tx_inout.png \
+  qt/res/icons/crownium/tx_input.png \
+  qt/res/icons/crownium/tx_output.png \
+  qt/res/icons/crownium/tx_mined.png \
+  qt/res/icons/crownium/about.png \
+  qt/res/icons/crownium/about_qt.png \
+  qt/res/icons/crownium/verify.png \
+  qt/res/icons/light/add.png \
+  qt/res/icons/light/address-book.png \
+  qt/res/icons/light/browse.png \
+  qt/res/icons/light/clock1.png \
+  qt/res/icons/light/clock2.png \
+  qt/res/icons/light/clock3.png \
+  qt/res/icons/light/clock4.png \
+  qt/res/icons/light/clock5.png \
+  qt/res/icons/light/configure.png \
+  qt/res/icons/light/connect0_16.png \
+  qt/res/icons/light/connect1_16.png \
+  qt/res/icons/light/connect2_16.png \
+  qt/res/icons/light/connect3_16.png \
+  qt/res/icons/light/connect4_16.png \
+  qt/res/icons/light/debugwindow.png \
+  qt/res/icons/light/drkblue_editpaste.png \
+  qt/res/icons/light/drkblue_address-book.png \
+  qt/res/icons/light/drkblue_editcopy.png \
+  qt/res/icons/light/drkblue_remove.png \
+  qt/res/icons/light/edit.png \
+  qt/res/icons/light/editcopy.png \
+  qt/res/icons/light/editpaste.png \
+  qt/res/icons/light/export.png \
+  qt/res/icons/light/eye.png \
+  qt/res/icons/light/eye_minus.png \
+  qt/res/icons/light/eye_plus.png \
+  qt/res/icons/light/filesave.png \
+  qt/res/icons/light/history.png \
+  qt/res/icons/light/key.png \
+  qt/res/icons/light/lock_closed.png \
+  qt/res/icons/light/lock_open.png \
+  qt/res/icons/light/masternodes.png \
+  qt/res/icons/light/overview.png \
+  qt/res/icons/light/quit.png \
+  qt/res/icons/light/receive.png \
+  qt/res/icons/light/remove.png \
+  qt/res/icons/light/send.png \
+  qt/res/icons/light/synced.png \
+  qt/res/icons/light/transaction0.png \
+  qt/res/icons/light/transaction2.png \
+  qt/res/icons/light/transaction_conflicted.png \
+  qt/res/icons/light/tx_inout.png \
+  qt/res/icons/light/tx_input.png \
+  qt/res/icons/light/tx_output.png \
+  qt/res/icons/light/tx_mined.png \
+  qt/res/icons/light/about.png \
+  qt/res/icons/light/about_qt.png \
+  qt/res/icons/light/verify.png \
+  qt/res/icons/trad/add.png \
+  qt/res/icons/trad/address-book.png \
+  qt/res/icons/trad/browse.png \
+  qt/res/icons/trad/clock1.png \
+  qt/res/icons/trad/clock2.png \
+  qt/res/icons/trad/clock3.png \
+  qt/res/icons/trad/clock4.png \
+  qt/res/icons/trad/clock5.png \
+  qt/res/icons/trad/configure.png \
+  qt/res/icons/trad/connect0_16.png \
+  qt/res/icons/trad/connect1_16.png \
+  qt/res/icons/trad/connect2_16.png \
+  qt/res/icons/trad/connect3_16.png \
+  qt/res/icons/trad/connect4_16.png \
+  qt/res/icons/trad/debugwindow.png \
+  qt/res/icons/trad/drkblue_editpaste.png \
+  qt/res/icons/trad/drkblue_address-book.png \
+  qt/res/icons/trad/drkblue_editcopy.png \
+  qt/res/icons/trad/drkblue_remove.png \
+  qt/res/icons/trad/edit.png \
+  qt/res/icons/trad/editcopy.png \
+  qt/res/icons/trad/editpaste.png \
+  qt/res/icons/trad/export.png \
+  qt/res/icons/trad/eye.png \
+  qt/res/icons/trad/eye_minus.png \
+  qt/res/icons/trad/eye_plus.png \
+  qt/res/icons/trad/filesave.png \
+  qt/res/icons/trad/history.png \
+  qt/res/icons/trad/key.png \
+  qt/res/icons/trad/lock_closed.png \
+  qt/res/icons/trad/lock_open.png \
+  qt/res/icons/trad/masternodes.png \
+  qt/res/icons/trad/overview.png \
+  qt/res/icons/trad/quit.png \
+  qt/res/icons/trad/receive.png \
+  qt/res/icons/trad/remove.png \
+  qt/res/icons/trad/send.png \
+  qt/res/icons/trad/synced.png \
+  qt/res/icons/trad/transaction0.png \
+  qt/res/icons/trad/transaction2.png \
+  qt/res/icons/trad/transaction_conflicted.png \
+  qt/res/icons/trad/tx_inout.png \
+  qt/res/icons/trad/tx_input.png \
+  qt/res/icons/trad/tx_output.png \
+  qt/res/icons/trad/tx_mined.png \
+  qt/res/icons/trad/about.png \
+  qt/res/icons/trad/about_qt.png \
+  qt/res/icons/trad/verify.png
+
+BITCOIN_QT_CPP = \
+  qt/bantablemodel.cpp \
+  qt/bitcoinaddressvalidator.cpp \
+  qt/bitcoinamountfield.cpp \
+  qt/bitcoingui.cpp \
+  qt/bitcoinunits.cpp \
+  qt/clientmodel.cpp \
+  qt/csvmodelwriter.cpp \
+  qt/guiutil.cpp \
+  qt/intro.cpp \
+  qt/networkstyle.cpp \
+  qt/notificator.cpp \
+  qt/optionsdialog.cpp \
+  qt/optionsmodel.cpp \
+  qt/peertablemodel.cpp \
+  qt/platformstyle.cpp \
+  qt/qvalidatedlineedit.cpp \
+  qt/qvaluecombobox.cpp \
+  qt/rpcconsole.cpp \
+  qt/splashscreen.cpp \
+  qt/trafficgraphwidget.cpp \
+  qt/utilitydialog.cpp
+
+if TARGET_WINDOWS
+BITCOIN_QT_CPP += qt/winshutdownmonitor.cpp
+endif
+
+if ENABLE_WALLET
+BITCOIN_QT_CPP += \
+  qt/addressbookpage.cpp \
+  qt/addresstablemodel.cpp \
+  qt/askpassphrasedialog.cpp \
+  qt/coincontroldialog.cpp \
+  qt/coincontroltreewidget.cpp \
+  qt/darksendconfig.cpp \
+  qt/editaddressdialog.cpp \
+  qt/masternodelist.cpp \
+  qt/openuridialog.cpp \
+  qt/overviewpage.cpp \
+  qt/paymentrequestplus.cpp \
+  qt/paymentserver.cpp \
+  qt/receivecoinsdialog.cpp \
+  qt/receiverequestdialog.cpp \
+  qt/recentrequeststablemodel.cpp \
+  qt/sendcoinsdialog.cpp \
+  qt/sendcoinsentry.cpp \
+  qt/signverifymessagedialog.cpp \
+  qt/transactiondesc.cpp \
+  qt/transactiondescdialog.cpp \
+  qt/transactionfilterproxy.cpp \
+  qt/transactionrecord.cpp \
+  qt/transactiontablemodel.cpp \
+  qt/transactionview.cpp \
+  qt/walletframe.cpp \
+  qt/walletmodel.cpp \
+  qt/walletmodeltransaction.cpp \
+  qt/walletview.cpp
+endif
+
+RES_IMAGES = \
+  qt/res/images/drkblue/about.png \
+  qt/res/images/drkblue/splash.png \
+  qt/res/images/drkblue/splash_testnet.png \
+  qt/res/images/drkblue/aither_logo_horizontal.png \
+  qt/res/images/drkblue/unchecked.png \
+  qt/res/images/drkblue/checked.png \
+  qt/res/images/drkblue/drkblue_downArrow.png \
+  qt/res/images/drkblue/drkblue_downArrow_small.png \
+  qt/res/images/drkblue/drkblue_upArrow_small.png \
+  qt/res/images/drkblue/drkblue_leftArrow_small.png \
+  qt/res/images/drkblue/drkblue_rightArrow_small.png \
+  qt/res/images/drkblue/drkblue_qtreeview_selected.png \
+  qt/res/images/drkblue/drkblue_walletFrame_bg.png \
+  qt/res/images/crownium/about.png \
+  qt/res/images/crownium/splash.png \
+  qt/res/images/crownium/splash_testnet.png \
+  qt/res/images/crownium/aither_logo_horizontal.png \
+  qt/res/images/crownium/unchecked.png \
+  qt/res/images/crownium/checked.png \
+  qt/res/images/crownium/drkblue_downArrow.png \
+  qt/res/images/crownium/drkblue_downArrow_small.png \
+  qt/res/images/crownium/drkblue_upArrow_small.png \
+  qt/res/images/crownium/drkblue_leftArrow_small.png \
+  qt/res/images/crownium/drkblue_rightArrow_small.png \
+  qt/res/images/crownium/drkblue_qtreeview_selected.png \
+  qt/res/images/crownium/drkblue_walletFrame_bg.png \
+  qt/res/images/light/about.png \
+  qt/res/images/light/splash.png \
+  qt/res/images/light/splash_testnet.png \
+  qt/res/images/light/aither_logo_horizontal.png \
+  qt/res/images/light/unchecked.png \
+  qt/res/images/light/checked.png \
+  qt/res/images/light/drkblue_downArrow.png \
+  qt/res/images/light/drkblue_downArrow_small.png \
+  qt/res/images/light/drkblue_upArrow_small.png \
+  qt/res/images/light/drkblue_leftArrow_small.png \
+  qt/res/images/light/drkblue_rightArrow_small.png \
+  qt/res/images/light/drkblue_qtreeview_selected.png \
+  qt/res/images/light/drkblue_walletFrame_bg.png \
+  qt/res/images/trad/about.png \
+  qt/res/images/trad/splash.png \
+  qt/res/images/trad/splash_testnet.png \
+  qt/res/images/trad/aither_logo_horizontal.png \
+  qt/res/images/trad/drkblue_downArrow.png \
+  qt/res/images/trad/drkblue_downArrow_small.png \
+  qt/res/images/trad/drkblue_upArrow_small.png \
+  qt/res/images/trad/drkblue_leftArrow_small.png \
+  qt/res/images/trad/drkblue_rightArrow_small.png \
+  qt/res/images/trad/drkblue_qtreeview_selected.png \
+  qt/res/images/trad/drkblue_walletFrame_bg.png
+
+RES_CSS = \
+  qt/res/css/drkblue.css \
+  qt/res/css/crownium.css \
+  qt/res/css/light.css
+
+RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
+
+BITCOIN_RC = qt/res/aither-qt-res.rc
+
+BITCOIN_QT_INCLUDES = -I$(builddir)/qt -I$(srcdir)/qt -I$(srcdir)/qt/forms \
+  -I$(builddir)/qt/forms -DQT_NO_KEYWORDS
+
+qt_libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+  $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
+qt_libbitcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+
+qt_libbitcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES)
+
+nodist_qt_libbitcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
+  $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
+
+# forms/foo.h -> forms/ui_foo.h
+QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:.ui=.h))))
+
+# Most files will depend on the forms and moc files as includes. Generate them
+# before anything else.
+$(QT_MOC): $(QT_FORMS_H)
+$(qt_libbitcoinqt_a_OBJECTS) $(qt_aither_qt_OBJECTS) : | $(QT_MOC)
+
+#Generating these with a half-written protobuf header leads to wacky results.
+#This makes sure it's done.
+$(QT_MOC): $(PROTOBUF_H)
+$(QT_MOC_CPP): $(PROTOBUF_H)
+
+# aither-qt binary #
+qt_aither_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+  $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
+qt_aither_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+
+qt_aither_qt_SOURCES = qt/aither.cpp
+if TARGET_DARWIN
+  qt_aither_qt_SOURCES += $(BITCOIN_MM)
+endif
+if TARGET_WINDOWS
+  qt_aither_qt_SOURCES += $(BITCOIN_RC)
+endif
+qt_aither_qt_LDADD = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
+if ENABLE_WALLET
+qt_aither_qt_LDADD += $(LIBBITCOIN_WALLET)
+endif
+if ENABLE_ZMQ
+qt_aither_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+endif
+qt_aither_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
+  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+qt_aither_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qt_aither_qt_LIBTOOLFLAGS = --tag CXX
+
+#locale/foo.ts -> locale/foo.qm
+QT_QM=$(QT_TS:.ts=.qm)
+
+SECONDARY: $(QT_QM)
+
+qt/aitherstrings.cpp: $(libbitcoin_server_a_SOURCES) $(libbitcoin_wallet_a_SOURCES) $(libbitcoin_common_a_SOURCES)
+	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
+	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) ../share/qt/extract_strings_qt.py $^
+
+translate: qt/aitherstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
+	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts qt/locale/aither_en.ts
+
+$(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
+	@test -f $(RCC)
+	@test -f $(@D)/$(<F) || cp -f $< $(@D)
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name aither_locale $(@D)/$(<F) | \
+	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
+
+$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES) $(PROTOBUF_H)
+	@test -f $(RCC)
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name aither $< | \
+	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
+
+CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
+
+CLEANFILES += $(CLEAN_QT)
+
+aither_qt_clean: FORCE
+	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_aither_qt_OBJECTS) qt/aither-qt$(EXEEXT) $(LIBBITCOINQT)
+
+aither_qt : qt/aither-qt$(EXEEXT)
+
+ui_%.h: %.ui
+	@test -f $(UIC)
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(UIC) -o $@ $< || (echo "Error creating $@"; false)
+
+%.moc: %.cpp
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(MOC) $(DEFAULT_INCLUDES) $(QT_INCLUDES) $(MOC_DEFS) $< | \
+	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
+
+moc_%.cpp: %.h
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(MOC) $(DEFAULT_INCLUDES) $(QT_INCLUDES) $(MOC_DEFS) $< | \
+	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
+
+%.qm: %.ts
+	@test -f $(LRELEASE)
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LRELEASE) -silent $< -qm $@

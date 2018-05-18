@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1000</width>
+    <width>954</width>
     <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Coin Control</string>
+   <string>Coin Selection</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -38,8 +38,11 @@
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="labelCoinControlQuantityText">
-         <property name="styleSheet">
-          <string notr="true">font-weight:bold;</string>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
          </property>
          <property name="text">
           <string>Quantity:</string>
@@ -48,12 +51,6 @@
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="labelCoinControlQuantity">
-         <property name="font">
-          <font>
-           <family>Monospace</family>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -70,8 +67,11 @@
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="labelCoinControlBytesText">
-         <property name="styleSheet">
-          <string notr="true">font-weight:bold;</string>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
          </property>
          <property name="text">
           <string>Bytes:</string>
@@ -80,12 +80,6 @@
        </item>
        <item row="1" column="1">
         <widget class="QLabel" name="labelCoinControlBytes">
-         <property name="font">
-          <font>
-           <family>Monospace</family>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -118,8 +112,11 @@
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="labelCoinControlAmountText">
-         <property name="styleSheet">
-          <string notr="true">font-weight:bold;</string>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
          </property>
          <property name="text">
           <string>Amount:</string>
@@ -128,12 +125,6 @@
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="labelCoinControlAmount">
-         <property name="font">
-          <font>
-           <family>Monospace</family>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -150,8 +141,11 @@
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="labelCoinControlPriorityText">
-         <property name="styleSheet">
-          <string notr="true">font-weight:bold;</string>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
          </property>
          <property name="text">
           <string>Priority:</string>
@@ -160,12 +154,6 @@
        </item>
        <item row="1" column="1">
         <widget class="QLabel" name="labelCoinControlPriority">
-         <property name="font">
-          <font>
-           <family>Monospace</family>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -173,7 +161,7 @@
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
-          <string/>
+          <string>medium</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -198,8 +186,11 @@
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="labelCoinControlFeeText">
-         <property name="styleSheet">
-          <string notr="true">font-weight:bold;</string>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
          </property>
          <property name="text">
           <string>Fee:</string>
@@ -208,12 +199,6 @@
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="labelCoinControlFee">
-         <property name="font">
-          <font>
-           <family>Monospace</family>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -233,11 +218,14 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
-         <property name="styleSheet">
-          <string notr="true">font-weight:bold;</string>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
          </property>
          <property name="text">
-          <string>Low Output:</string>
+          <string>Dust:</string>
          </property>
         </widget>
        </item>
@@ -246,12 +234,6 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
-         <property name="font">
-          <font>
-           <family>Monospace</family>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -259,7 +241,7 @@
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
-          <string notr="true">no</string>
+          <string>no</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -284,8 +266,11 @@
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="labelCoinControlAfterFeeText">
-         <property name="styleSheet">
-          <string notr="true">font-weight:bold;</string>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
          </property>
          <property name="text">
           <string>After Fee:</string>
@@ -294,12 +279,6 @@
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="labelCoinControlAfterFee">
-         <property name="font">
-          <font>
-           <family>Monospace</family>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -319,8 +298,11 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
-         <property name="styleSheet">
-          <string notr="true">font-weight:bold;</string>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
          </property>
          <property name="text">
           <string>Change:</string>
@@ -331,12 +313,6 @@
         <widget class="QLabel" name="labelCoinControlChange">
          <property name="enabled">
           <bool>false</bool>
-         </property>
-         <property name="font">
-          <font>
-           <family>Monospace</family>
-           <pointsize>10</pointsize>
-          </font>
          </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -370,76 +346,96 @@
      <property name="frameShadow">
       <enum>QFrame::Sunken</enum>
      </property>
-     <widget class="QWidget" name="horizontalLayoutWidget">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>0</y>
-        <width>781</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0">
-       <property name="spacing">
-        <number>14</number>
-       </property>
-       <item>
-        <widget class="QPushButton" name="pushButtonSelectAll">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>(un)select all</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="radioTreeMode">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Tree mode</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="radioListMode">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>List mode</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0,0">
+        <property name="spacing">
+         <number>14</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="pushButtonSelectAll">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>(un)select all</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButtonToggleLock">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>toggle lock state</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioTreeMode">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Tree mode</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioListMode">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>List mode</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelLocked">
+          <property name="text">
+           <string>(1 locked)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -451,7 +447,7 @@
       <bool>false</bool>
      </property>
      <property name="columnCount">
-      <number>11</number>
+      <number>13</number>
      </property>
      <attribute name="headerShowSortIndicator" stdset="0">
       <bool>true</bool>
@@ -471,12 +467,17 @@
      </column>
      <column>
       <property name="text">
-       <string>Label</string>
+       <string>Received with label</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Address</string>
+       <string>Received with address</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>PS Rounds</string>
       </property>
      </column>
      <column>
@@ -495,6 +496,11 @@
      <column>
       <property name="text">
        <string>Priority</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string/>
       </property>
      </column>
      <column>

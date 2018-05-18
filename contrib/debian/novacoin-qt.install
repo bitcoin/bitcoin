@@ -1,5 +1,0 @@
-novacoin-qt usr/bin
-share/pixmaps/bitcoin32.xpm usr/share/pixmaps
-share/pixmaps/bitcoin80.xpm usr/share/pixmaps
-debian/novacoin-qt.desktop usr/share/applications
-debian/novacoin-qt.protocol usr/share/kde4/services/
