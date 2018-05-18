@@ -92,7 +92,7 @@ void CAsset::Serialize( vector<unsigned char> &vchData) {
 void CAssetDB::WriteAssetIndex(const CAsset& asset, const int& op) {
 	UniValue oName(UniValue::VOBJ);
 	if (BuildAssetIndexerJson(asset, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "asset");
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
 	}
 	WriteAssetIndexHistory(asset, op);
 }
