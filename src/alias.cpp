@@ -1058,7 +1058,7 @@ void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
 	oName.push_back(Pair("expires_on", alias.nExpireTime));
 	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
 	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "alias");
+	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliasrecord");
 	WriteAliasIndexHistory(alias, op);
 }
 void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {

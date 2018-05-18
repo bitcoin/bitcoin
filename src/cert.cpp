@@ -99,7 +99,7 @@ void CCert::Serialize( vector<unsigned char> &vchData) {
 void CCertDB::WriteCertIndex(const CCert& cert, const int& op) {
 	UniValue oName(UniValue::VOBJ);
 	if (BuildCertIndexerJson(cert, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "cert");
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "certrecord");
 	}
 
 	WriteCertIndexHistory(cert, op);
