@@ -16,8 +16,8 @@ which leverage the bitcoin protocol and blockchain technology.
 - Block time: 60 seconds target
 - Rewards: 38.5 Syscoins per block deflated 5 percent per year. 
   - 10 percent to governance proposals (3.85 Syscoins / block). 
-  - 22.5 percent to miners (8.6625 Syscoins / block)
-  - 67.5 percent to masternodes (25.9875 Syscoins / block)
+  - 22.5 percent to miner (8.6625 Syscoins / block)
+  - 67.5 percent to masternode (25.9875 Syscoins / block)
 - SHA256 Proof of Work
 - Mineable either exclusively or via merge-mining any SHA256 PoW coin
 - Syscoin data service fees burned
