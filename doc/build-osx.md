@@ -64,6 +64,16 @@ Build Litecoin Core
 
         make deploy
 
+5.  Installation into user directories (optional):
+
+        make install
+
+    or
+
+        cd ~/litecoin/src
+        cp litecoind /usr/local/bin/
+        cp litecoin-cli /usr/local/bin/
+
 Running
 -------
 
