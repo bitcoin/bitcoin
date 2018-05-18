@@ -19,6 +19,7 @@ echo '#################################################'
 echo '# Building Aither Core                          #'
 echo '#################################################'
 cd $AIT_ROOT
+chmod ugo+x autogen.sh
 ./autogen.sh
 ./configure LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/"
 make
