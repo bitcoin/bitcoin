@@ -599,7 +599,7 @@ CBudgetProposal *CBudgetManager::FindProposal(uint256 nHash)
     LOCK(cs);
 
     std::map<uint256, CBudgetProposal>::iterator found = mapProposals.find(nHash);
-    if (found != mapProposals.end())
+    if (found == mapProposals.end())
         return NULL;
 
     return &found->second;
