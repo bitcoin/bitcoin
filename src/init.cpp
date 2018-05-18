@@ -537,19 +537,19 @@ std::string HelpMessage(HelpMessageMode mode)
 	strUsage += HelpMessageOpt("-zmqpubrawblock=<address>", _("Enable publish raw block in <address>"));
 	strUsage += HelpMessageOpt("-zmqpubrawtx=<address>", _("Enable publish raw transaction in <address>"));
 	strUsage += HelpMessageOpt("-zmqpubrawtxlock=<address>", _("Enable publish raw transaction (locked via InstantSend) in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubalias=<address>", _("Enable publish raw alias payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubaliashistory=<address>", _("Enable publish raw alias history payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubaliastxhistory=<address>", _("Enable publish raw alias transaction history payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpuboffer=<address>", _("Enable publish raw offer payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubofferhistory=<address>", _("Enable publish raw offer history payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubescrow=<address>", _("Enable publish raw escrow payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubescrowbid=<address>", _("Enable publish raw escrow bid payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubfeedback=<address>", _("Enable publish raw escrow feedback payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubcert=<address>", _("Enable publish raw certificate payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubcerthistory=<address>", _("Enable publish raw certificate history payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubasset=<address>", _("Enable publish raw asset payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubassethistory=<address>", _("Enable publish raw asset history payload in <address>"));
-	strUsage += HelpMessageOpt("-zmqpubassetallocation=<address>", _("Enable publish raw asset allocation payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubaliashistory=<address>", _("Enable publish raw alias history payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubaliasrecord=<address>", _("Enable publish raw alias payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubaliastxhistory=<address>", _("Enable publish raw alias transaction history payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubassetallocation=<address>", _("Enable publish raw asset allocation payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubassethistory=<address>", _("Enable publish raw asset history payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubassetrecord=<address>", _("Enable publish raw asset payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubcerthistory=<address>", _("Enable publish raw certificate history payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubcertrecord=<address>", _("Enable publish raw certificate payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubescrowbid=<address>", _("Enable publish raw escrow bid payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubescrowfeedback=<address>", _("Enable publish raw escrow feedback payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubescrowrecord=<address>", _("Enable publish raw escrow payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubofferhistory=<address>", _("Enable publish raw offer history payload in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubofferrecord=<address>", _("Enable publish raw offer payload in <address>"));
 #endif
 
     strUsage += HelpMessageGroup(_("Debugging/Testing options:"));
