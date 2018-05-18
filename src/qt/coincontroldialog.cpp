@@ -165,6 +165,7 @@ void CoinControlDialog::setModel(WalletModel *_model)
         updateView();
         updateLabelLocked();
         CoinControlDialog::updateLabels(_model, this);
+        UpdateAmountHeader(_model);
     }
 }
 
@@ -736,4 +737,10 @@ void CoinControlDialog::updateView()
     // sort view
     sortView(sortColumn, sortOrder);
     ui->treeWidget->setEnabled(true);
+}
+
+// updates the text of the amount header to show the correct display unit
+void CoinControlDialog::UpdateAmountHeader(WalletModel* model)
+{
+    ui->treeWidget->headerItem()->setText(COLUMN_AMOUNT, BitcoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit()));
 }

@@ -417,7 +417,7 @@
      </column>
      <column>
       <property name="text">
-       <string>Amount</string>
+       <string/>
       </property>
      </column>
      <column>
