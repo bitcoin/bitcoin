@@ -647,7 +647,7 @@ Others are external projects without a tight relationship with our project.  Cha
 be sent upstream but bugfixes may also be prudent to PR against Chaincoin Core so that they can be integrated
 quickly.  Cosmetic changes should be purely taken upstream.
 
-There is a tool in contrib/devtools/git-subtree-check.sh to check a subtree directory for consistency with
+There is a tool in `test/lint/git-subtree-check.sh` to check a subtree directory for consistency with
 its upstream repository.
 
 Current subtrees include:
@@ -778,7 +778,7 @@ To create a scripted-diff:
     - `-BEGIN VERIFY SCRIPT-`
     - `-END VERIFY SCRIPT-`
 
-The scripted-diff is verified by the tool `contrib/devtools/commit-script-check.sh`
+The scripted-diff is verified by the tool `test/lint/commit-script-check.sh`
 
 Commit [`bb81e173`](https://github.com/bitcoin/bitcoin/commit/bb81e173) is an example of a scripted-diff.
 
