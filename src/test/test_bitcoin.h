@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_TEST_BITCOIN_H
 #define BITCOIN_TEST_TEST_BITCOIN_H
 
+#include <test/util_tests.h>
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
@@ -59,7 +60,7 @@ struct CConnmanTest {
 
 class PeerLogicValidation;
 struct TestingSetup: public BasicTestingSetup {
-    fs::path pathTemp;
+    fs::path m_path_temp;
     boost::thread_group threadGroup;
     CConnman* connman;
     CScheduler scheduler;

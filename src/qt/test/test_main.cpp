@@ -6,11 +6,12 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <test/util_tests.h>
 #include <chainparams.h>
-#include <qt/test/rpcnestedtests.h>
-#include <util.h>
-#include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
+#include <qt/test/rpcnestedtests.h>
+#include <qt/test/uritests.h>
+#include <util.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/test/addressbooktests.h>
@@ -55,7 +56,7 @@ int main(int argc, char *argv[])
     SelectParams(CBaseChainParams::MAIN);
     noui_connect();
     ClearDatadirCache();
-    fs::path pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
+    fs::path pathTemp = util_tests::unit_test_directory("test_main");
     fs::create_directories(pathTemp);
     gArgs.ForceSetArg("-datadir", pathTemp.string());
 

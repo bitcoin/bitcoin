@@ -4,19 +4,20 @@
 
 #include <test/test_bitcoin.h>
 
+#include <test/util_tests.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
-#include <validation.h>
 #include <miner.h>
 #include <net_processing.h>
 #include <pow.h>
-#include <ui_interface.h>
-#include <streams.h>
-#include <rpc/server.h>
 #include <rpc/register.h>
+#include <rpc/server.h>
 #include <script/sigcache.h>
+#include <streams.h>
+#include <ui_interface.h>
+#include <validation.h>
 
 void CConnmanTest::AddNode(CNode& node)
 {
@@ -72,9 +73,9 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
         RegisterAllCoreRPCCommands(tableRPC);
         ClearDatadirCache();
-        pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30)));
-        fs::create_directories(pathTemp);
-        gArgs.ForceSetArg("-datadir", pathTemp.string());
+        m_path_temp = util_tests::unit_test_directory("test_bitcoin");
+        fs::create_directories(m_path_temp);
+        gArgs.ForceSetArg("-datadir", m_path_temp.string());
 
         // We have to run a scheduler thread to prevent ActivateBestChain
         // from blocking due to queue overrun.
@@ -114,7 +115,7 @@ TestingSetup::~TestingSetup()
         pcoinsTip.reset();
         pcoinsdbview.reset();
         pblocktree.reset();
-        fs::remove_all(pathTemp);
+        fs::remove_all(m_path_temp);
 }
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
