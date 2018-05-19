@@ -878,17 +878,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutFee8">
                  <item>
-                  <widget class="QCheckBox" name="checkBoxMinimumFee">
-                   <property name="toolTip">
-                    <string>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="labelMinFeeWarning">
+                  <widget class="QLabel" name="labelCustomFeeWarning">
                    <property name="enabled">
                     <bool>true</bool>
                    </property>
@@ -896,7 +886,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
                     <string>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</string>
                    </property>
                    <property name="text">
-                    <string>(read the tooltip)</string>
+                    <string>A too low fee might result in a never confirming transaction (read the tooltip)</string>
                    </property>
                    <property name="margin">
                     <number>5</number>
