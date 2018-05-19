@@ -31,6 +31,15 @@ public:
     CAmount value(bool *value=0) const;
     void setValue(const CAmount& value);
 
+    /** If allow empty is set to false the field will be set to the minimum allowed value if left empty. **/
+    void SetAllowEmpty(bool allow);
+
+    /** Set the minimum value in satoshis **/
+    void SetMinValue(const CAmount& value);
+
+    /** Set the maximum value in satoshis **/
+    void SetMaxValue(const CAmount& value);
+
     /** Set single step in satoshis **/
     void setSingleStep(const CAmount& step);
 
