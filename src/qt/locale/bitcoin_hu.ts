@@ -513,6 +513,11 @@ Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (htt
         <translation>Annak ellenőrzése, hogy az üzenetek valóban a megjelölt Peercoin címekkel vannak-e alaírva</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Fájl</translation>

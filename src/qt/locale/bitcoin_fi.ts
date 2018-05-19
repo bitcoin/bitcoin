@@ -515,6 +515,11 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Varmista, että viestisi on allekirjoitettu määritetyllä Peercoin -osoitteella</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Tiedosto</translation>

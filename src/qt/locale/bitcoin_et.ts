@@ -514,6 +514,11 @@ Toode sisaldab OpenSSL Projekti all toodetud tarkvara, mis on kasutamiseks OpenS
         <translation>Kinnita sõnumid kindlustamaks et need allkirjastati määratud Peercoini aadressiga</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Fail</translation>

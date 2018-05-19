@@ -514,6 +514,11 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>Ověř zprávy, aby ses ujistil, že byly podepsány danými Peercoinovými adresami</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;Soubor</translation>

@@ -514,6 +514,11 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
         <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation type="unfinished"/>

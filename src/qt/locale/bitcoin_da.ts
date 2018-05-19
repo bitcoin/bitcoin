@@ -514,6 +514,11 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
         <translation>Efterprøv beskeder for at sikre, at de er underskrevet med de(n) angivne Peercoin-adresse(r)</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+28"/>
         <source>&amp;File</source>
         <translation>Fil</translation>
