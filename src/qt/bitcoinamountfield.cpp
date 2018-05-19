@@ -59,12 +59,7 @@ public:
         }
 
         if (valid) {
-            if (val < min_amount) {
-                val = min_amount;
-            }
-            if (val > max_amount) {
-                val = max_amount;
-            }
+            val = qBound(min_amount, val, max_amount);
             input = BitcoinUnits::format(currentUnit, val, false, BitcoinUnits::separatorAlways);
             lineEdit()->setText(input);
         }
@@ -101,7 +96,7 @@ public:
         bool valid = false;
         CAmount val = value(&valid);
         val = val + steps * singleStep;
-        val = qMin(qMax(val, CAmount(min_amount)), max_amount);
+        val = qBound(min_amount, val, max_amount);
         setValue(val);
     }
 
