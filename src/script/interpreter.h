@@ -25,6 +25,8 @@ enum
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
     SIGHASH_ANYONECANPAY = 0x80,
+    SIGHASH_FORKID = 0x10,
+    SIGHASH_MBC_ALL = SIGHASH_ALL | SIGHASH_FORKID,
 };
 
 /** Script verification flags.

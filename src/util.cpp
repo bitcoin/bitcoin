@@ -644,7 +644,7 @@ fs::path GetDefaultDataDir()
 {
     // Windows < Vista: C:\Documents and Settings\Username\Application Data\MicroBitcoin
     // Windows >= Vista: C:\Users\Username\AppData\Roaming\MicroBitcoin
-    // Mac: ~/Library/Application Support/MicroBitcoin
+    // Mac: ~/.microbitcoin
     // Unix: ~/.microbitcoin
 #ifdef WIN32
     // Windows
@@ -658,7 +658,7 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/MicroBitcoin";
+    return pathRet / ".microbitcoin";
 #else
     // Unix
     return pathRet / ".microbitcoin";

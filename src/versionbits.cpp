@@ -227,3 +227,10 @@ void VersionBitsCache::Clear()
         caches[d].clear();
     }
 }
+
+
+bool IsVersionBitsActive(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
+{
+    return VersionBitsState(pindexPrev, params, pos, cache) == ThresholdState::ACTIVE;
+}
+

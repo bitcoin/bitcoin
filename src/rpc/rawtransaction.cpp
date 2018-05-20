@@ -839,7 +839,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
         }
     }
 
-    int nHashType = SIGHASH_ALL;
+    int nHashType = SIGHASH_MBC_ALL;
     if (!hashType.isNull()) {
         static std::map<std::string, int> mapSigHashValues = {
             {std::string("ALL"), int(SIGHASH_ALL)},

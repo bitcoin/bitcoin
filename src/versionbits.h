@@ -77,4 +77,15 @@ BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
+
+static const int32_t VERSIONBITS_MBC_MASK = 0x12000000UL;
+
+static inline bool CheckMBCVersion(int nVersion)
+{
+    static const int MBC_BIT = 24;
+    return (nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS
+        && (nVersion >> MBC_BIT) == ((VERSIONBITS_TOP_BITS | VERSIONBITS_MBC_MASK) >> MBC_BIT);
+}
+
+
 #endif // BITCOIN_VERSIONBITS_H

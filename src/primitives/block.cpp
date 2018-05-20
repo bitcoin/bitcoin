@@ -9,9 +9,15 @@
 #include <tinyformat.h>
 #include <utilstrencodings.h>
 #include <crypto/common.h>
+#include <versionbits.h>
 
 uint256 CBlockHeader::GetHash() const
 {
+    if (CheckMBCVersion(nVersion))
+    {
+        // New algo here
+        return SerializeHash(*this);
+    }
     return SerializeHash(*this);
 }
 

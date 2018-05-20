@@ -465,6 +465,22 @@ static bool IsCurrentForFeeEstimation()
     return true;
 }
 
+
+/** Check if hardfork is enabled **/
+bool IsHardForkEnabled(int nHeight, const Consensus::Params& BIP66Height ) {
+    return nHeight >= BIP66Height .MBCHeight;
+}
+
+bool IsHardForkEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params) {
+    if (pindexPrev == nullptr) {
+        return false;
+    }
+
+    return IsHardForkEnabled(pindexPrev->nHeight, params);
+}
+
+
+
 /* Make mempool consistent after a reorg, by re-adding or recursively erasing
  * disconnected block transactions from the mempool, and also removing any
  * other transactions from the mempool that are no longer valid given the new
@@ -1128,14 +1144,50 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    static const CAmount BTC_INIT_SUBSIDY = 50 * COIN * BTC_2_MBC_RATE;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+    // old subsidy.
+    if (consensusParams.MBCHeight <= 0 || nHeight < consensusParams.MBCHeight) {
+        const int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+        // Force block reward to zero when right shift is undefined.
+        if (halvings >= 64) {
+            return 0;
+        }
+
+        CAmount nSubsidy = BTC_INIT_SUBSIDY;
+
+        // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+        nSubsidy >>= halvings;
+        return nSubsidy; 
+    }
+
+    // premine.
+    // if (consensusParams.BCXPremineAmount > 0) {
+    //     if (nHeight == consensusParams.MBCHeight) {
+    //         return consensusParams.BCXPremineAmount;
+    //     }
+
+    //     if (consensusParams.BCXPremineBlocks > 0) {
+    //         nHeight += consensusParams.BCXPremineBlocks - 1;
+    //     }
+    // }
+
+    // after premine.
+    const int mbc2btcHalvingRate = consensusParams.nMBCSubsidyHalvingInterval / consensusParams.nSubsidyHalvingInterval;
+    const CAmount mbcInitSubsidy = BTC_INIT_SUBSIDY >> (consensusParams.MBCHeight / consensusParams.nSubsidyHalvingInterval);
+    const int lastBTCSubsidyHeight = (consensusParams.MBCHeight / consensusParams.nSubsidyHalvingInterval) * consensusParams.nSubsidyHalvingInterval;
+    const int remainBTCSubsidyHeight = consensusParams.nSubsidyHalvingInterval - (consensusParams.MBCHeight - lastBTCSubsidyHeight);
+    const int newMBCSubsidyBeginHeight = consensusParams.MBCHeight + remainBTCSubsidyHeight * mbc2btcHalvingRate;
+    if (nHeight < newMBCSubsidyBeginHeight) {
+        const CAmount nSubsidy = mbcInitSubsidy / mbc2btcHalvingRate;
+        return nSubsidy;
+    }
+
+    const int halvings = (nHeight - newMBCSubsidyBeginHeight) / consensusParams.nMBCSubsidyHalvingInterval + 1;
+    if (halvings >= 28) {
+        return 0;
+    }
+    const CAmount nSubsidy = (mbcInitSubsidy >> halvings) / mbc2btcHalvingRate;
     return nSubsidy;
 }
 
@@ -1307,7 +1359,13 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
-    return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);
+
+    bool ret = VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);
+    if (ret != true) {
+        LogPrintf(">>>script check false, %d, %d, %d, %s\n", nIn, error, nFlags, ptxTo->GetHash().ToString());
+    }
+    
+    return ret;
 }
 
 int GetSpendHeight(const CCoinsViewCache& inputs)
@@ -1664,10 +1722,15 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     LOCK(cs_main);
     int32_t nVersion = VERSIONBITS_TOP_BITS;
 
+    if (pindexPrev != nullptr && (pindexPrev->nHeight + 1) >= params.MBCHeight)
+    {
+        nVersion |= VERSIONBITS_MBC_MASK;
+    }
+
     for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
-        ThresholdState state = VersionBitsState(pindexPrev, params, static_cast<Consensus::DeploymentPos>(i), versionbitscache);
+        ThresholdState state = VersionBitsState(pindexPrev, params, (Consensus::DeploymentPos)i, versionbitscache);
         if (state == ThresholdState::LOCKED_IN || state == ThresholdState::STARTED) {
-            nVersion |= VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(i));
+            nVersion |= VersionBitsMask(params, (Consensus::DeploymentPos)i);
         }
     }
 

@@ -416,7 +416,7 @@ public:
         vchSig[4 + 33] = 0x02;
         vchSig[5 + 33] = 32;
         vchSig[6 + 33] = 0x01;
-        vchSig[6 + 33 + 32] = SIGHASH_ALL;
+        vchSig[6 + 33 + 32] = SIGHASH_MBC_ALL;
         return true;
     }
 };
