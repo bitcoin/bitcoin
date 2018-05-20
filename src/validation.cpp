@@ -1304,6 +1304,7 @@ static void CheckForkWarningConditions()
             if(pindexBestForkBase->phashBlock){
                 std::string warning = std::string("'Warning: Large-work fork detected, forking after block ") +
                     pindexBestForkBase->phashBlock->ToString() + std::string("'");
+                AlertNotify(warning);
             }
         }
         if (pindexBestForkTip && pindexBestForkBase)
@@ -1311,7 +1312,7 @@ static void CheckForkWarningConditions()
             LogPrintf("%s: Warning: Large valid fork found\n  forking the chain at height %d (%s)\n  lasting to height %d (%s).\nChain state database corruption likely.\n", __func__,
                    pindexBestForkBase->nHeight, pindexBestForkBase->phashBlock->ToString(),
                    pindexBestForkTip->nHeight, pindexBestForkTip->phashBlock->ToString());
-            SetfLargeWorkForkFound(false);
+            SetfLargeWorkForkFound(true);
         }
         else
         {
@@ -1343,7 +1344,6 @@ static void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
 
     // We define a condition where we should warn the user about as a fork of at least 7 blocks
     // with a tip within 120 blocks (+/- 3 hours if no one mines it) of ours
-    // or a chain that is entirely longer than ours and invalid (note that this should be detected by both)
     // We use 7 blocks rather arbitrarily as it represents just under 10% of sustained network
     // hash rate operating on the fork.
     // We define it this way because it allows us to only store the highest fork tip (+ base) which meets
@@ -1513,8 +1513,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     // such nodes as they are not following the protocol. That
                     // said during an upgrade careful thought should be taken
                     // as to the correct behavior - we may want to continue
-                    // peering with non-upgraded nodes even after a soft-fork
-                    // super-majority vote has passed.
+                    // peering with non-upgraded nodes even after soft-fork
+                    // super-majority signaling has occurred.
                     return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
@@ -1569,7 +1569,7 @@ static bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex *pindex)
     // Open history file to read
     CAutoFile filein(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
     if (filein.IsNull())
-        return error("%s: OpenBlockFile failed", __func__);
+        return error("%s: OpenUndoFile failed", __func__);
 
     // Read block
     uint256 hashChecksum;
@@ -1804,16 +1804,6 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     }
 
     return nVersion;
-}
-
-bool GetBlockHash(uint256& hashRet, int nBlockHeight)
-{
-    LOCK(cs_main);
-    if(chainActive.Tip() == nullptr) return false;
-    if(nBlockHeight < -1 || nBlockHeight > chainActive.Height()) return false;
-    if(nBlockHeight == -1) nBlockHeight = chainActive.Height();
-    hashRet = chainActive[nBlockHeight]->GetBlockHash();
-    return true;
 }
 
 /**
@@ -2219,21 +2209,6 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
             if (fFlushForPrune)
                 UnlinkPrunedFiles(setFilesToPrune);
             nLastWrite = nNow;
-            }
-            // Flush best chain related state. This can only be done if the blocks / block index write was also done.
-            if (fDoFullFlush) {
-                // Typical Coin structures on disk are around 48 bytes in size.
-                // Pushing a new one to the database can cause it to be written
-                // twice (once in the log, and once in the tables). This is already
-                // an overestimation, as most will delete an existing entry or
-                // overwrite one. Still, use a conservative safety factor of 2.
-                if (!CheckDiskSpace(48 * 2 * 2 * pcoinsTip->GetCacheSize()))
-                    return state.Error("out of disk space");
-                // Flush the chainstate (which may refer to block index entries).
-                if (!pcoinsTip->Flush())
-                    return AbortNode(state, "Failed to write to coin database");
-                nLastFlush = nNow;
-            }
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
         if (fDoFullFlush && !pcoinsTip->GetBestBlock().IsNull()) {
@@ -2249,6 +2224,12 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
                 return AbortNode(state, "Failed to write to coin database");
             nLastFlush = nNow;
         }
+    }
+    if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000)) {
+        // Update best block in wallet (so we can detect restored wallets).
+        GetMainSignals().SetBestChain(chainActive.GetLocator());
+        nLastSetChain = nNow;
+    }
     } catch (const std::runtime_error& e) {
         return AbortNode(state, std::string("System error while flushing: ") + e.what());
     }
@@ -2629,7 +2610,7 @@ bool CChainState::ActivateBestChainStep(CValidationState& state, const CChainPar
         nHeight = nTargetHeight;
 
         // Connect new blocks.
-            for (CBlockIndex *pindexConnect : reverse_iterate(vpindexToConnect)) {
+        for (CBlockIndex *pindexConnect : reverse_iterate(vpindexToConnect)) {
             if (!ConnectTip(state, chainparams, pindexConnect, pindexConnect == pindexMostWork ? pblock : std::shared_ptr<const CBlock>(), connectTrace, disconnectpool)) {
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
@@ -2944,6 +2925,7 @@ CBlockIndex* CChainState::AddToBlockIndex(const CBlockHeader& block)
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
     }
+    pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
@@ -3280,8 +3262,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
-        return state.Invalid(error("%s: block's timestamp is too early", __func__),
-                             REJECT_INVALID, "time-too-old");
+        return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
 
     // Check timestamp
     if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
@@ -3404,7 +3385,7 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
             if (ppindex)
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_MASK)
-                return state.Invalid(error("%s: block is marked invalid", __func__), 0, "duplicate");
+                return state.Invalid(error("%s: block %s is marked invalid", __func__, hash.ToString()), 0, "duplicate");
             return true;
         }
 
@@ -3884,6 +3865,7 @@ bool CChainState::LoadBlockIndex(const Consensus::Params& consensus_params, CBlo
     {
         CBlockIndex* pindex = item.second;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
+        pindex->nTimeMax = (pindex->pprev ? std::max(pindex->pprev->nTimeMax, pindex->nTime) : pindex->nTime);
         // We can link the chain of blocks for which we've received transactions at some point.
         // Pruned nodes may have deleted the block.
         if (pindex->nTx > 0) {
@@ -4565,7 +4547,7 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
             assert(pindex->GetBlockHash() == consensusParams.hashGenesisBlock); // Genesis block's hash must match.
             assert(pindex == chainActive.Genesis()); // The current active chain's genesis block must be this block.
         }
-        if (pindex->nChainTx == 0) assert(pindex->nSequenceId == 0);  // nSequenceId can't be set for blocks that aren't linked
+        if (pindex->nChainTx == 0) assert(pindex->nSequenceId <= 0);  // nSequenceId can't be set positive for blocks that aren't linked (negative is used for preciousblock)
         // VALID_TRANSACTIONS is equivalent to nTx > 0 for all nodes (whether or not pruning has occurred).
         // HAVE_DATA is only equivalent to nTx > 0 (or VALID_TRANSACTIONS) if no pruning has occurred.
         if (!fHavePruned) {
@@ -4706,7 +4688,7 @@ CBlockFileInfo* GetBlockFileInfo(size_t n)
 
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
-    AssertLockHeld(cs_main);
+    LOCK(cs_main);
     return VersionBitsState(chainActive.Tip(), params, pos, versionbitscache);
 }
 

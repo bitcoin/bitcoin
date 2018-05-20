@@ -10,6 +10,7 @@
 #include <util.h>
 #include <utilstrencodings.h>
 
+
 typedef std::vector<unsigned char> valtype;
 
 bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
@@ -273,7 +274,7 @@ class CScriptVisitor : public boost::static_visitor<bool>
 private:
     CScript *script;
 public:
-    CScriptVisitor(CScript *scriptin) { script = scriptin; }
+    explicit CScriptVisitor(CScript *scriptin) { script = scriptin; }
 
     bool operator()(const CNoDestination &dest) const {
         script->clear();

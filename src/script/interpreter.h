@@ -120,7 +120,7 @@ struct PrecomputedTransactionData
     uint256 hashPrevouts, hashSequence, hashOutputs;
     bool ready = false;
 
-    PrecomputedTransactionData(const CTransaction& tx);
+    explicit PrecomputedTransactionData(const CTransaction& tx);
 };
 
 enum SigVersion
@@ -177,7 +177,7 @@ private:
     const CTransaction txTo;
 
 public:
-    MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amount) : TransactionSignatureChecker(&txTo, nInIn, amount), txTo(*txToIn) {}
+    MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn) : TransactionSignatureChecker(&txTo, nInIn, amountIn), txTo(*txToIn) {}
 };
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);

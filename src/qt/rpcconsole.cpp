@@ -254,7 +254,7 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                         if (curarg.size())
                         {
                             if (stack.size())
-                                stack.back().push_back(curarg);
+                                add_to_current_stack(curarg);
                             else
                                 strResult = curarg;
                         }

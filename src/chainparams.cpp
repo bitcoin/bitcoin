@@ -160,9 +160,10 @@ public:
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,28); // PM-Tech: ChainCoin
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,4); // PM-Tech: ChainCoin
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,28 + 128); // PM-Tech: ChainCoin
-        //uncompressed keys are compatible but not used unless unit tests, let's use Bitcoin values here
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x02, 0xFE, 0x52, 0xF8};
-        base58Prefixes[EXT_SECRET_KEY] = {0x02, 0xFE, 0x52, 0xCC};
+        // Chaincoin BIP32 pubkeys start with 'xpub' (Bitcoin defaults)
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
+        // Chaincoin BIP32 prvkeys start with 'xprv' (Bitcoin defaults)
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
         bech32_hrp = "chc";
 
@@ -279,7 +280,9 @@ public:
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,80);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,44);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,88+128);
+        // Testnet Chaincoin BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
+        // Testnet Chaincoin BIP32 prvkeys start with 'tprv' (Bitcoin defaults)
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
         bech32_hrp = "tchc";

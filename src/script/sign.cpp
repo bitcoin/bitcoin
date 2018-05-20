@@ -12,6 +12,7 @@
 #include <script/standard.h>
 #include <uint256.h>
 
+
 typedef std::vector<unsigned char> valtype;
 
 TransactionSignatureCreator::TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : BaseSignatureCreator(keystoreIn), txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
@@ -140,10 +141,9 @@ static CScript PushAll(const std::vector<valtype>& values)
 bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPubKey, SignatureData& sigdata)
 {
     CScript script = fromPubKey;
-    bool solved = true;
     std::vector<valtype> result;
     txnouttype whichType;
-    solved = SignStep(creator, script, result, whichType, SIGVERSION_BASE);
+    bool solved = SignStep(creator, script, result, whichType, SIGVERSION_BASE);
     bool P2SH = false;
     CScript subscript;
     sigdata.scriptWitness.stack.clear();

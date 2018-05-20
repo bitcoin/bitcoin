@@ -189,12 +189,12 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
                     PushStatus(pfrom, STATUS_REJECTED, ERR_NON_STANDARD_PUBKEY, connman);
                     return;
                 }
-                if(!txout.scriptPubKey.IsPayToPublicKeyHash()) {
+/*                if(!txout.scriptPubKey.IsPayToPublicKeyHash()) {
                     LogPrintf("DSVIN -- invalid script! scriptPubKey=%s\n", ScriptToAsmStr(txout.scriptPubKey));
                     PushStatus(pfrom, STATUS_REJECTED, ERR_INVALID_SCRIPT, connman);
                     return;
                 }
-            }
+*/            }
 
             for (const auto& txin : entry.vecTxDSIn) {
                 tx.vin.push_back(txin);

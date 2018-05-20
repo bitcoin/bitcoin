@@ -14,7 +14,7 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <fs.h>
-#include <init.h>
+#include <wallet/init.h>
 #include <key.h>
 #include <keystore.h>
 #include <net.h>
@@ -30,7 +30,6 @@
 #include <txmempool.h>
 #include <util.h>
 #include <utilmoneystr.h>
-#include <validation.h>
 #include <wallet/fees.h>
 
 #include <governance.h>
@@ -3644,9 +3643,9 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         if (recipient.fSubtractFeeFromAmount)
             nSubtractFeeFromAmount++;
     }
-    if (vecSend.empty() || nValue < 0)
+    if (vecSend.empty())
     {
-        strFailReason = _("Transaction amounts must be positive");
+        strFailReason = _("Transaction must have at least one recipient");
         return false;
     }
 
@@ -3869,29 +3868,9 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 vecTxDSInTmp.clear();
                 const uint32_t nSequence = coin_control.signalRbf ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
                 for (const auto& coin : setCoins) {
-                    CTxIn txin = CTxIn(coin.outpoint,CScript(), nSequence);
+                    CTxIn txin = CTxIn(coin.outpoint, CScript(), nSequence);
                     vecTxDSInTmp.push_back(CTxDSIn(txin, coin.txout.scriptPubKey));
                     txNew.vin.push_back(txin);
-                }
-
-                if (bBIP69Enabled) {
-                    std::sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
-                    std::sort(vecTxDSInTmp.begin(), vecTxDSInTmp.end(), CompareInputBIP69());
-                    std::sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
-                }
-
-                // If there was change output added before, we must update its position now
-                if (nChangePosInOut != -1) {
-                    int i = 0;
-                    for (const CTxOut& txOut : txNew.vout)
-                    {
-                        if (txOut == newTxOut)
-                        {
-                            nChangePosInOut = i;
-                            break;
-                        }
-                        i++;
-                    }
                 }
 
                 // Fill in dummy signatures for fee calculation.

@@ -10,6 +10,7 @@
 #include <script/script.h>
 #include <script/sign.h>
 
+
 typedef std::vector<unsigned char> valtype;
 
 unsigned int HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore)

@@ -552,8 +552,8 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
     // Sort them low to high
     std::sort(vecMasternodeLastPaid.begin(), vecMasternodeLastPaid.end(), CompareLastPaidBlock());
 
-    uint256 blockHash;
-    if(!GetBlockHash(blockHash, nBlockHeight - 101)) {
+    CBlockIndex* pblockindex = chainActive[nBlockHeight - 101];
+    if(pblockindex->GetBlockHash().IsNull()) {
         LogPrintf("CMasternode::GetNextMasternodeInQueueForPayment -- ERROR: GetBlockHash() failed at nBlockHeight %d\n", nBlockHeight - 101);
         return false;
     }
@@ -566,7 +566,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
     arith_uint256 nHighest = 0;
     const CMasternode *pBestMasternode = nullptr;
     for (const auto& s : vecMasternodeLastPaid) {
-        arith_uint256 nScore = s.second->CalculateScore(blockHash);
+        arith_uint256 nScore = s.second->CalculateScore(pblockindex->GetBlockHash());
         if(nScore > nHighest){
             nHighest = nScore;
             pBestMasternode = s.second;
@@ -653,8 +653,8 @@ bool CMasternodeMan::GetMasternodeRank(const COutPoint& outpoint, int& nRankRet,
         return false;
 
     // make sure we know about this block
-    uint256 nBlockHash = uint256();
-    if (!GetBlockHash(nBlockHash, nBlockHeight)) {
+    CBlockIndex* pblockindex = chainActive[nBlockHeight];
+    if(pblockindex->GetBlockHash().IsNull()) {
         LogPrintf("CMasternodeMan::%s -- ERROR: GetBlockHash() failed at nBlockHeight %d\n", __func__, nBlockHeight);
         return false;
     }
@@ -662,7 +662,7 @@ bool CMasternodeMan::GetMasternodeRank(const COutPoint& outpoint, int& nRankRet,
     LOCK(cs);
 
     score_pair_vec_t vecMasternodeScores;
-    if (!GetMasternodeScores(nBlockHash, vecMasternodeScores, nMinProtocol))
+    if (!GetMasternodeScores(pblockindex->GetBlockHash(), vecMasternodeScores, nMinProtocol))
         return false;
 
     int nRank = 0;
@@ -685,8 +685,8 @@ bool CMasternodeMan::GetMasternodeRanks(CMasternodeMan::rank_pair_vec_t& vecMast
         return false;
 
     // make sure we know about this block
-    uint256 nBlockHash = uint256();
-    if (!GetBlockHash(nBlockHash, nBlockHeight)) {
+    CBlockIndex* pblockindex = chainActive[nBlockHeight];
+    if(pblockindex->GetBlockHash().IsNull()) {
         LogPrintf("CMasternodeMan::%s -- ERROR: GetBlockHash() failed at nBlockHeight %d\n", __func__, nBlockHeight);
         return false;
     }
@@ -694,7 +694,7 @@ bool CMasternodeMan::GetMasternodeRanks(CMasternodeMan::rank_pair_vec_t& vecMast
     LOCK(cs);
 
     score_pair_vec_t vecMasternodeScores;
-    if (!GetMasternodeScores(nBlockHash, vecMasternodeScores, nMinProtocol))
+    if (!GetMasternodeScores(pblockindex->GetBlockHash(), vecMasternodeScores, nMinProtocol))
         return false;
 
     int nRank = 0;
@@ -1182,15 +1182,15 @@ void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv,
         return;
     }
 
-    uint256 blockHash;
-    if(!GetBlockHash(blockHash, mnv.nBlockHeight)) {
+    CBlockIndex* pblockindex = chainActive[mnv.nBlockHeight];
+    if(pblockindex->GetBlockHash().IsNull()) {
         LogPrintf("MasternodeMan::SendVerifyReply -- can't get block hash for unknown block height %d, peer=%d\n", mnv.nBlockHeight, pnode->GetId());
         return;
     }
 
     std::string strError;
 
-    uint256 hash = mnv.GetSignatureHash1(blockHash);
+    uint256 hash = mnv.GetSignatureHash1(pblockindex->GetBlockHash());
 
     if(!CHashSigner::SignHash(hash, activeMasternode.keyMasternode, mnv.vchSig1)) {
         LogPrintf("CMasternodeMan::SendVerifyReply -- SignHash() failed\n");
@@ -1236,8 +1236,8 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
         return;
     }
 
-    uint256 blockHash;
-    if(!GetBlockHash(blockHash, mnv.nBlockHeight)) {
+    CBlockIndex* pblockindex = chainActive[mnv.nBlockHeight];
+    if(pblockindex->GetBlockHash().IsNull()) {
         // this shouldn't happen...
         LogPrintf("MasternodeMan::ProcessVerifyReply -- can't get block hash for unknown block height %d, peer=%d\n", mnv.nBlockHeight, pnode->GetId());
         return;
@@ -1256,8 +1256,8 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
         CMasternode* prealMasternode = nullptr;
         std::vector<CMasternode*> vpMasternodesToBan;
 
-        uint256 hash1 = mnv.GetSignatureHash1(blockHash);
-        std::string strMessage1 = strprintf("%s%d%s", pnode->addr.ToString(), mnv.nonce, blockHash.ToString());
+        uint256 hash1 = mnv.GetSignatureHash1(pblockindex->GetBlockHash());
+        std::string strMessage1 = strprintf("%s%d%s", pnode->addr.ToString(), mnv.nonce, pblockindex->GetBlockHash().ToString());
 
         for (auto& mnpair : mapMasternodes) {
             if(CAddress(mnpair.second.addr, NODE_NETWORK) == pnode->addr) {
@@ -1280,7 +1280,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
                     // ... and sign it
                     std::string strError;
 
-                    uint256 hash2 = mnv.GetSignatureHash2(blockHash);
+                    uint256 hash2 = mnv.GetSignatureHash2(pblockindex->GetBlockHash());
 
                     if(!CHashSigner::SignHash(hash2, activeMasternode.keyMasternode, mnv.vchSig2)) {
                         LogPrintf("MasternodeMan::ProcessVerifyReply -- SignHash() failed\n");
@@ -1351,8 +1351,8 @@ void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerif
         return;
     }
 
-    uint256 blockHash;
-    if(!GetBlockHash(blockHash, mnv.nBlockHeight)) {
+    CBlockIndex* pblockindex = chainActive[mnv.nBlockHeight];
+    if(pblockindex->GetBlockHash().IsNull()) {
         // this shouldn't happen...
         LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- Can't get block hash for unknown block height %d, peer=%d\n", mnv.nBlockHeight, pnode->GetId());
         return;
@@ -1392,8 +1392,8 @@ void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerif
             return;
         }
 
-        uint256 hash1 = mnv.GetSignatureHash1(blockHash);
-        uint256 hash2 = mnv.GetSignatureHash2(blockHash);
+        uint256 hash1 = mnv.GetSignatureHash1(pblockindex->GetBlockHash());
+        uint256 hash2 = mnv.GetSignatureHash2(pblockindex->GetBlockHash());
 
         if(!CHashSigner::VerifyHash(hash1, pmn1->pubKeyMasternode, mnv.vchSig1, strError)) {
             LogPrintf("MasternodeMan::ProcessVerifyBroadcast -- VerifyHash() failed, error: %s\n", strError);
