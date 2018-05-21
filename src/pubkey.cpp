@@ -169,6 +169,8 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
 bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
     if (!IsValid())
         return false;
+    if (IsQR())
+    	return true;
     secp256k1_pubkey pubkey;
     secp256k1_ecdsa_signature sig;
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size())) {
@@ -206,6 +208,8 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
 bool CPubKey::IsFullyValid() const {
     if (!IsValid())
         return false;
+    if (IsQR())
+        return true;
     secp256k1_pubkey pubkey;
     return secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size());
 }

@@ -139,7 +139,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 2)
+    if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
             "getnewaddress ( \"label\" \"address_type\" )\n"
             "\nReturns a new Bitcoin address for receiving payments.\n"
@@ -147,7 +147,8 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
             "so payments received with the address will be associated with 'label'.\n"
             "\nArguments:\n"
             "1. \"label\"          (string, optional) The label name for the address to be linked to. If not provided, the default label \"\" is used. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name.\n"
-            "2. \"address_type\"   (string, optional) The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Default is set by -addresstype.\n"
+            "2. \"address_type\"   (string, optional) The address type to use. Options are \"legacy\", \"p2sh-segwit\", \"bech32\". Default is set by -addresstype.\n"
+            "3. \"qr_or_not\"      (string, optional) Whether this should be qr resistant or not (true if yes)."
             "\nResult:\n"
             "\"address\"    (string) The new bitcoin address\n"
             "\nExamples:\n"
@@ -177,6 +178,9 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
     CPubKey newKey;
     if (!pwallet->GetKeyFromPool(newKey)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    }
+    if (!request.params[1].isNull() && request.params[2].get_str() == "true") {
+    	newKey.MakeQR();
     }
     pwallet->LearnRelatedScripts(newKey, output_type);
     CTxDestination dest = GetDestinationForKey(newKey, output_type);
@@ -3984,7 +3988,6 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     CScript scriptPubKey = GetScriptForDestination(dest);
     ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
-
     isminetype mine = IsMine(*pwallet, dest);
     ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
