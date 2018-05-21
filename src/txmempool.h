@@ -620,7 +620,7 @@ public:
     int Expire(int64_t time);
 
     /** Returns false if the transaction is in the mempool and not within the chain limit specified. */
-    bool TransactionWithinChainLimit(const uint256& txid, size_t chainLimit) const;
+    bool TransactionWithinChainLimit(const uint256& txid, size_t ancestor_limit, size_t descendant_limit) const;
 
     unsigned long size()
     {
