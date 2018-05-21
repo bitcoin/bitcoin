@@ -939,7 +939,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         file << "# HD seed: " << HexStr(vchSeed) << "\n\n";
 
         CExtKey masterKey;
-        masterKey.SetMaster(&vchSeed[0], vchSeed.size());
+        masterKey.SetSeed(&vchSeed[0], vchSeed.size());
 
         file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n";
 
