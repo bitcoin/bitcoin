@@ -11,7 +11,7 @@
 
 /**
  * CBaseChainParams defines the base parameters (shared between chaincoin-cli and chaincoind)
- * of a given instance of the Dash system.
+ * of a given instance of the Chaincoin system.
  */
 class CBaseChainParams
 {

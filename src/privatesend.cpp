@@ -463,7 +463,7 @@ void CPrivateSend::TransactionAddedToMempool(const CTransactionRef& ptx) {
 //TODO: Rename/move to core
 void ThreadCheckPrivateSend(CConnman& connman)
 {
-    if(fLiteMode) return; // disable all Dash specific functionality
+    if(fLiteMode) return; // disable all Chaincoin specific functionality
 
     static bool fOneThread;
     if(fOneThread) return;

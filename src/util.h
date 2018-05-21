@@ -42,7 +42,7 @@
 #define DBG( x ) 
 #endif
 
-//Dash only features
+//Chaincoin only features
 
 extern bool fMasternodeMode;
 extern bool fLiteMode;
@@ -76,7 +76,7 @@ extern bool fLogIPs;
 extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
-extern const char * const BITCOIN_CONF_FILENAME;
+extern const char * const CHAINCOIN_CONF_FILENAME;
 extern const char * const BITCOIN_PID_FILENAME;
 extern const char * const MASTERNODE_CONF_FILENAME;
 

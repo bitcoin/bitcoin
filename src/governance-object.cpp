@@ -466,7 +466,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
                 if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
                     strError = "Failed to find Masternode UTXO, missing masternode=" + strOutpoint + "\n";
                 } else if (err == CMasternode::COLLATERAL_INVALID_AMOUNT) {
-                    strError = "Masternode UTXO should have 1000 DASH, missing masternode=" + strOutpoint + "\n";
+                    strError = "Masternode UTXO should have 1000 CHC, missing masternode=" + strOutpoint + "\n";
                 } else if (err == CMasternode::COLLATERAL_INVALID_PUBKEY) {
                     fMissingMasternode = true;
                     strError = "Masternode not found: " + strOutpoint;

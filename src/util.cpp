@@ -88,7 +88,7 @@
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
-//Dash only features
+//Chaincoin only features
 bool fMasternodeMode = false;
 bool fLiteMode = false;
 /**
@@ -100,7 +100,7 @@ bool fLiteMode = false;
 */
 int nWalletBackups = 10;
 
-const char * const BITCOIN_CONF_FILENAME = "chaincoin.conf";
+const char * const CHAINCOIN_CONF_FILENAME = "chaincoin.conf";
 const char * const BITCOIN_PID_FILENAME = "chaincoind.pid";
 const char * const MASTERNODE_CONF_FILENAME = "masternode.conf";
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";

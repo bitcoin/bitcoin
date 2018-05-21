@@ -17,7 +17,7 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Chaincoin"
-            VALUE "FileDescription",    "chaincoin-tx (CLI Dash transaction editor utility)"
+            VALUE "FileDescription",    "chaincoin-tx (CLI Chaincoin transaction editor utility)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "chaincoin-tx"
             VALUE "LegalCopyright",     COPYRIGHT_STR

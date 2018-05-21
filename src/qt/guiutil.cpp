@@ -433,7 +433,7 @@ void openDebugLogfile()
 
 bool openConfigfile()
 {
-    fs::path pathConfig = GetConfigFile(BITCOIN_CONF_FILENAME);
+    fs::path pathConfig = GetConfigFile(CHAINCOIN_CONF_FILENAME);
 
     /* Create the file */
     fs::ofstream configFile(pathConfig, std::ios_base::app);
