@@ -249,6 +249,11 @@ public:
     std::string GetChainName() const;
 
     /**
+     * Clear available arguments
+     */
+    void ClearArgs() { m_available_args.clear(); }
+
+    /**
      * Add argument
      */
     void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
