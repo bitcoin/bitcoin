@@ -24,7 +24,7 @@ CSystemnodePing::CSystemnodePing()
     vchSig = std::vector<unsigned char>();
 }
 
-CSystemnodePing::CSystemnodePing(CTxIn& newVin)
+CSystemnodePing::CSystemnodePing(const CTxIn& newVin)
 {
     vin = newVin;
     blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
@@ -32,7 +32,7 @@ CSystemnodePing::CSystemnodePing(CTxIn& newVin)
     vchSig = std::vector<unsigned char>();
 }
 
-bool CSystemnodePing::Sign(CKey& keySystemnode, CPubKey& pubKeySystemnode)
+bool CSystemnodePing::Sign(const CKey& keySystemnode, const CPubKey& pubKeySystemnode)
 {
     std::string errorMessage;
     std::string strThroNeSignMessage;
@@ -53,13 +53,13 @@ bool CSystemnodePing::Sign(CKey& keySystemnode, CPubKey& pubKeySystemnode)
     return true;
 }
 
-void CSystemnodePing::Relay()
+void CSystemnodePing::Relay() const
 {
     CInv inv(MSG_SYSTEMNODE_PING, GetHash());
     RelayInv(inv);
 }
 
-bool CSystemnodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fCheckSigTimeOnly)
+bool CSystemnodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fCheckSigTimeOnly) const
 {
     if (sigTime > GetAdjustedTime() + 60 * 60) {
         LogPrintf("CSystemnodePing::CheckAndUpdate - Signature rejected, too far into the future %s\n", vin.ToString());
@@ -140,7 +140,8 @@ bool CSystemnodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fChec
     return false;
 }
 
-bool CSystemnodePing::VerifySignature(CPubKey& pubKeySystemnode, int &nDos) {
+bool CSystemnodePing::VerifySignature(const CPubKey& pubKeySystemnode, int &nDos) const
+{
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string errorMessage = "";
 
@@ -217,7 +218,7 @@ bool CSystemnode::IsValidNetAddr()
 // the proof of work for that block. The further away they are the better, the furthest will win the election
 // and get paid this block
 //
-arith_uint256 CSystemnode::CalculateScore(int64_t nBlockHeight)
+arith_uint256 CSystemnode::CalculateScore(int64_t nBlockHeight) const
 {
     if(chainActive.Tip() == NULL)
         return arith_uint256();
@@ -242,7 +243,7 @@ arith_uint256 CSystemnode::CalculateScore(int64_t nBlockHeight)
 //
 // When a new systemnode broadcast is sent, update our information
 //
-bool CSystemnode::UpdateFromNewBroadcast(CSystemnodeBroadcast& snb)
+bool CSystemnode::UpdateFromNewBroadcast(const CSystemnodeBroadcast& snb)
 {
     if(snb.sigTime > sigTime) {    
         pubkey2 = snb.pubkey2;
@@ -303,7 +304,8 @@ void CSystemnode::Check(bool forceCheck)
     activeState = SYSTEMNODE_ENABLED; // OK
 }
 
-int64_t CSystemnode::SecondsSincePayment() {
+int64_t CSystemnode::SecondsSincePayment() const
+{
     CScript pubkeyScript;
     pubkeyScript = GetScriptForDestination(pubkey.GetID());
 
@@ -320,7 +322,8 @@ int64_t CSystemnode::SecondsSincePayment() {
     return month + UintToArith256(hash).GetCompact(false);
 }
 
-int64_t CSystemnode::GetLastPaid() {
+int64_t CSystemnode::GetLastPaid() const
+{
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return false;
 
@@ -368,7 +371,7 @@ int64_t CSystemnode::GetLastPaid() {
 // CSystemnodeBroadcast
 //
 
-bool CSystemnodeBroadcast::CheckAndUpdate(int& nDos)
+bool CSystemnodeBroadcast::CheckAndUpdate(int& nDos) const
 {
     nDos = 0;
 
@@ -501,7 +504,7 @@ bool CSystemnodeBroadcast::CheckAndUpdate(int& nDos)
 
 }
 
-bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS)
+bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS) const
 {
     // we are a systemnode with the same vin (i.e. already activated) and this snb is ours (matches our systemnode privkey)
     // so nothing to do here for us
@@ -590,7 +593,7 @@ bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS)
 
 }
 
-void CSystemnodeBroadcast::Relay()
+void CSystemnodeBroadcast::Relay() const
 {
     CInv inv(MSG_SYSTEMNODE_ANNOUNCE, GetHash());
     RelayInv(inv);
@@ -713,7 +716,7 @@ bool CSystemnodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollater
     return true;
 }
 
-bool CSystemnodeBroadcast::Sign(CKey& keyCollateralAddress)
+bool CSystemnodeBroadcast::Sign(const CKey& keyCollateralAddress)
 {
     std::string errorMessage;
 
@@ -732,7 +735,7 @@ bool CSystemnodeBroadcast::Sign(CKey& keyCollateralAddress)
     return true;
 }
 
-bool CSystemnodeBroadcast::VerifySignature()
+bool CSystemnodeBroadcast::VerifySignature() const
 {
     std::string errorMessage;
 
