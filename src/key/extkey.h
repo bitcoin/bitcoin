@@ -131,7 +131,7 @@ struct CExtKey {
     void Decode(const unsigned char code[74]);
     bool Derive(CExtKey &out, unsigned int nChild) const;
     CExtPubKey Neutered() const;
-    void SetMaster(const unsigned char *seed, unsigned int nSeedLen);
+    void SetSeed(const unsigned char *seed, unsigned int nSeedLen);
     int SetKeyCode(const unsigned char *pkey, const unsigned char *pcode);
 
     size_t GetSerializeSize(int nType, int nVersion) const
@@ -245,7 +245,7 @@ public:
 
     CExtPubKey GetExtPubKey() const;
     CExtKeyPair Neutered() const;
-    void SetMaster(const unsigned char *seed, unsigned int nSeedLen);
+    void SetSeed(const unsigned char *seed, unsigned int nSeedLen);
     int SetKeyCode(const unsigned char *pkey, const unsigned char *pcode);
 
     template<typename Stream>

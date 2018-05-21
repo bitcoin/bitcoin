@@ -117,7 +117,7 @@ void runTests(int nLanguage, UniValue &tests)
             std::string sExtKey = test[4].get_str();
 
             CExtKey ekTest;
-            ekTest.SetMaster(&vSeed[0], vSeed.size());
+            ekTest.SetSeed(&vSeed[0], vSeed.size());
 
             eKey58.SetKey(ekTest, CChainParams::EXT_SECRET_KEY_BTC);
             BOOST_CHECK(eKey58.ToString() == sExtKey);

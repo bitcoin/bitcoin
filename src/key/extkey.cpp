@@ -316,7 +316,7 @@ bool CExtKey::Derive(CExtKey &out, unsigned int nChild) const
     return key.Derive(out.key, out.vchChainCode, nChild, vchChainCode);
 };
 
-void CExtKey::SetMaster(const unsigned char *seed, unsigned int nSeedLen)
+void CExtKey::SetSeed(const unsigned char *seed, unsigned int nSeedLen)
 {
     static const unsigned char hashkey[] = {'B','i','t','c','o','i','n',' ','s','e','e','d'};
 
@@ -500,7 +500,7 @@ CExtKeyPair CExtKeyPair::Neutered() const
     return ret;
 }
 
-void CExtKeyPair::SetMaster(const unsigned char *seed, unsigned int nSeedLen)
+void CExtKeyPair::SetSeed(const unsigned char *seed, unsigned int nSeedLen)
 {
     static const unsigned char hashkey[] = {'B','i','t','c','o','i','n',' ','s','e','e','d'};
 

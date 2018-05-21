@@ -712,7 +712,7 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
             vchSig.insert(vchSig.end(), sekExternal->kp.pubkey.begin(), sekExternal->kp.pubkey.end());
 
             CExtKey evStealthScan;
-            evStealthScan.SetMaster(vchSig.data(), vchSig.size());
+            evStealthScan.SetSeed(vchSig.data(), vchSig.size());
 
             CStoredExtKey *sekStealthScan = new CStoredExtKey();
             sekStealthScan->kp = evStealthScan;

@@ -20,7 +20,7 @@ CDebugDevice::CDebugDevice()
     strcpy(cSerialNo, "1");
     nInterface = 0;
 
-    ekv.SetMaster((const uint8_t*)seed, strlen(seed));
+    ekv.SetSeed((const uint8_t*)seed, strlen(seed));
 };
 
 

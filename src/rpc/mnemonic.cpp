@@ -134,7 +134,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
             if (0 != MnemonicToSeed(sMnemonic, sPassword, vSeed))
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "MnemonicToSeed failed.");
 
-            ekMaster.SetMaster(&vSeed[0], vSeed.size());
+            ekMaster.SetSeed(&vSeed[0], vSeed.size());
 
             if (!ekMaster.IsValid())
                 continue;
@@ -199,7 +199,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
 
         CExtKey ekMaster;
         CExtKey58 eKey58;
-        ekMaster.SetMaster(&vSeed[0], vSeed.size());
+        ekMaster.SetSeed(&vSeed[0], vSeed.size());
 
         if (!ekMaster.IsValid())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid key.");

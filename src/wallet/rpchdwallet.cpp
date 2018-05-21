@@ -1595,7 +1595,7 @@ static UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesi
         if (0 != MnemonicToSeed(sMnemonic, sPassphrase, vSeed))
             throw JSONRPCError(RPC_MISC_ERROR, "MnemonicToSeed failed.");
 
-        ekp.SetMaster(&vSeed[0], vSeed.size());
+        ekp.SetSeed(&vSeed[0], vSeed.size());
     };
 
     CStoredExtKey sek;

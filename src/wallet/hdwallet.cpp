@@ -5602,7 +5602,7 @@ int CHDWallet::ExtKeyNew32(CExtKey &out, uint8_t *data, uint32_t lenData)
 {
     LogPrint(BCLog::HDWALLET, "%s\n", __func__);
 
-    out.SetMaster(data, lenData);
+    out.SetSeed(data, lenData);
 
     return out.IsValid() ? 0 : 1;
 };
@@ -7580,7 +7580,7 @@ int CHDWallet::InitAccountStealthV2Chains(CHDWalletDB *pwdb, CExtKeyAccount *sea
     vchSig.insert(vchSig.end(), pk.begin(), pk.end());
 
     CExtKey evStealthScan;
-    evStealthScan.SetMaster(vchSig.data(), vchSig.size());
+    evStealthScan.SetSeed(vchSig.data(), vchSig.size());
 
     CStoredExtKey *sekStealthScan = new CStoredExtKey();
     sekStealthScan->kp = evStealthScan;
