@@ -1055,11 +1055,11 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
     }
 }
 
-bool CTxMemPool::TransactionWithinChainLimit(const uint256& txid, size_t chainLimit) const {
+bool CTxMemPool::TransactionWithinChainLimit(const uint256& txid, size_t ancestor_limit, size_t descendant_limit) const {
     LOCK(cs);
     auto it = mapTx.find(txid);
-    return it == mapTx.end() || (it->GetCountWithAncestors() < chainLimit &&
-       it->GetCountWithDescendants() < chainLimit);
+    return it == mapTx.end() || (it->GetCountWithAncestors() < ancestor_limit &&
+       it->GetCountWithDescendants() < descendant_limit);
 }
 
 SaltedTxidHasher::SaltedTxidHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}

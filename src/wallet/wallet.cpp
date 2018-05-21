@@ -2887,7 +2887,7 @@ bool CWallet::OutputEligibleForSpending(const COutput& output, const CoinEligibi
     if (output.nDepth < (output.tx->IsFromMe(ISMINE_ALL) ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs))
         return false;
 
-    if (!mempool.TransactionWithinChainLimit(output.tx->GetHash(), eligibility_filter.max_ancestors))
+    if (!mempool.TransactionWithinChainLimit(output.tx->GetHash(), eligibility_filter.max_ancestors, eligibility_filter.max_descendants))
         return false;
 
     return true;
