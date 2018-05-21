@@ -310,9 +310,6 @@ void CPrivateSendServer::CreateFinalTransaction(CConnman* connman)
             txNew.vin.push_back(txdsin);
     }
 
-    sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
-    sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
-
     finalMutableTransaction = txNew;
     LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::CreateFinalTransaction -- finalMutableTransaction=%s", txNew.GetHash().ToString());
 

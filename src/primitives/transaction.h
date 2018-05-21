@@ -439,33 +439,5 @@ typedef std::shared_ptr<const CTransaction> CTransactionRef;
 static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
 
-/** Implementation of BIP69
- * https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
- */
-struct CompareInputBIP69
-{
-    inline bool operator()(const CTxIn& a, const CTxIn& b) const
-    {
-        if (a.prevout.hash == b.prevout.hash) return a.prevout.n < b.prevout.n;
-
-        uint256 hasha = a.prevout.hash;
-        uint256 hashb = b.prevout.hash;
-
-        typedef std::reverse_iterator<const unsigned char*> rev_it;
-        rev_it rita = rev_it(hasha.end());
-        rev_it ritb = rev_it(hashb.end());
-
-        return std::lexicographical_compare(rita, rita + hasha.size(), ritb, ritb + hashb.size());
-    }
-};
-
-struct CompareOutputBIP69
-{
-    inline bool operator()(const CTxOut& a, const CTxOut& b) const
-    {
-        return a.nValue < b.nValue || (a.nValue == b.nValue && a.scriptPubKey < b.scriptPubKey);
-    }
-};
-
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H
 
