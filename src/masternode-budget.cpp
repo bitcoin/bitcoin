@@ -1731,8 +1731,8 @@ public:
             return a->GetHash() < b->GetHash();
         else if (a->GetPayee() != b->GetPayee())
             return a->GetPayee() < b->GetPayee();
-
-        return false;
+        else
+            return false;
     }    
 };
 
