@@ -487,7 +487,7 @@ void CBudgetManager::CheckAndRemove()
         bool isValid = pfinalizedBudget->fValid = pfinalizedBudget->IsValid(strError);
         LogPrintf("CBudgetManager::CheckAndRemove - pfinalizedBudget->IsValid - strError: %s\n", strError);
         if(isValid) {
-            if(Params().NetworkID() == CBaseChainParams::MAIN && rand() % 4 == 0)
+            if(Params().NetworkID() == CBaseChainParams::TESTNET || Params().NetworkID() == CBaseChainParams::MAIN && rand() % 4 == 0)
             {
                 //do this 1 in 4 blocks -- spread out the voting activity on mainnet
                 // -- this function is only called every sixth block, so this is really 1 in 24 blocks
