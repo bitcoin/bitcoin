@@ -125,10 +125,11 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 {
 	UniValue r;
-	printf("Running generate_asset_allocation_througputlkoi...\n");
+	printf("Running generate_asset_allocation_througput...\n");
 	GenerateBlocks(5);
 	map<string, string> assetMap;
 	// create 1000 aliases and assets for each asset
+	printf("creating 1000 aliases/asset...\n");
 	for (int i = 0; i < 1000; i++) {
 		string aliasname = "jagthroughput-" + boost::lexical_cast<string>(i);
 		string aliasnameto = "jagthroughput3-" + boost::lexical_cast<string>(i);
@@ -136,18 +137,31 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		AliasNew("node3", aliasnameto, "data");
 		string guid = AssetNew("node1", "usd", aliasname, "data", "8", "false", "1", "-1");
 		assetMap[guid] = aliasnameto;
+		if (i % 100 == 0)
+			printf("%d percentage done\n", 100 / (1000 / i));
 	}
+	printf("Creating assetsend transactions to node3 alias...\n");
 	vector<string> assetSendTxVec;
+	int count = 0;
 	for (auto& assetTuple : assetMap) {
+		count++;
 		string hex_str = AssetSend("node1", assetTuple.first, "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\"", "assetallocationsend", "''", false);
 		assetSendTxVec.push_back(hex_str);
+		if (count % 100 == 0)
+			printf("%d percentage done\n", 100 / (1000 / count));
 	}
+	printf("Sending assetsend transactions to network...\n");
 	map<string, int64_t> sendTimes;
+	count = 0;
 	for (auto& hex_str : assetSendTxVec) {
+		count++;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
 		string txid = find_value(r.get_obj(), "txid").get_str();
 		sendTimes[txid] = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+		if (count % 100 == 0)
+			printf("%d percentage done\n", 100 / (1000 / count));
 	}
+	printf("Gathering results...\n");
 	float totalTime = 0;
 	// wait 10 seconds
 	MilliSleep(10000);
