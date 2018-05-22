@@ -533,9 +533,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
 						receiverAllocation.nBalance += amountTuple.second;
 						theAssetAllocation.nBalance -= amountTuple.second;
-                                                if (vchReceiverAliasName == receiverAllocationTuple.vchAlias) {
-							bTPSTestFoundReceiver = true;
- 						}
+                       
 					}
 
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
@@ -669,12 +667,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
-			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-                        if (bTPSTestFoundReceiver)
-			{
-				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
-				
-			}
+			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();        
+			vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
 		}
 
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, dbAsset, ms, fJustCheck))

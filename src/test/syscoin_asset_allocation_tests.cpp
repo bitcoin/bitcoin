@@ -145,14 +145,13 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 	map<string, int64_t> sendTimes;
 	for (auto& hex_str : assetSendTxVec) {
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "decoderawtransaction " + hex_str));
 		string txid = find_value(r.get_obj(), "txid").get_str();
 		sendTimes[txid] = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	}
-	int64_t totalTime = 0;
+	float totalTime = 0;
 	// wait 10 seconds
 	MilliSleep(10000);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "gettpsinfo"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "tpstestinfo"));
 	UniValue tpsresponse = r.get_array();
 	for (int i = 0; i < tpsresponse.size();i++) {
 		UniValue responesObj = tpsresponse[i].get_obj();
@@ -163,5 +162,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		totalTime += timeRecv - sendTimes[txid];
 	}
 	totalTime /= tpsresponse.size();
+	printf("totalTime %.2f, num responses %d\n", totalTime, tpsresponse.size());
 }
 BOOST_AUTO_TEST_SUITE_END ()
