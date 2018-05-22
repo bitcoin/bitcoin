@@ -150,6 +150,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		varray1 = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray1[0].get_str()));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 
 		// registration
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' 3 0 '' '' '' ''"));
