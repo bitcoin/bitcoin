@@ -39,7 +39,7 @@ int FindAliasDiscount(const string& node, const string& owneralias, const string
 string AssetNew(const string& node, const string& name, const string& alias, const string& pubdata = "''", const string& precision="8", const string& useinputranges="false", const string& supply = "1", const string& maxsupply = "10", const string& interestrate = "0", const string& canadjustinterest = "false", const string& witness = "''");
 void AssetUpdate(const string& node, const string& name, const string& pubdata = "''", const string& supply = "''", const string& interest = "''", const string& witness = "''");
 void AssetTransfer(const string& node, const string &tonode, const string& name, const string& toalias, const string& witness = "''");
-void AssetSend(const string& node, const string& name, const string& inputs, const string& memo = "''", const string& witness = "''");
+void AssetSend(const string& node, const string& name, const string& inputs, const string& memo = "''", const string& witness = "''", bool completetx=true);
 string AssetAllocationTransfer(const bool usezdag, const string& node, const string& name, const string& fromalias, const string& inputs, const string& memo = "''", const string& witness = "''");
 void AssetClaimInterest(const string& node, const string& name, const string& alias, const string& witness = "''");
 const string CertNew(const string& node, const string& alias, const string& title, const string& pubdata, const string& witness="''");
