@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 	UniValue r;
 	printf("Running generate_asset_allocation_througputlkoi...\n");
 	GenerateBlocks(5);
-	vector<string> assetVec;
+	map<string, string> assetMap;
 	// create 1000 aliases and assets for each asset
 	for (int i = 0; i < 1000; i++) {
 		string aliasname = "jagthroughput-" + boost::lexical_cast<string>(i);
@@ -135,11 +135,11 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		AliasNew("node1",aliasname, "data");
 		AliasNew("node3", aliasnameto, "data");
 		string guid = AssetNew("node1", "usd", aliasname, "data", "8", "false", "1", "-1");
-		assetVec.push_back(guid);
+		assetMap[guid] = aliasnameto;
 	}
 	vector<string> assetSendTxVec;
-	for (auto& guid : assetVec) {
-		string hex_str = AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"" + aliasnameto "\\\",\\\"amount\\\":1}]\"", "assetallocationsend", "''", false);
+	for (auto& assetTuple : assetMap) {
+		string hex_str = AssetSend("node1", assetTuple.first, "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second "\\\",\\\"amount\\\":1}]\"", "assetallocationsend", "''", false);
 		assetSendTxVec.push_back(hex_str);
 	}
 	map<string, int64_t> sendTimes;
