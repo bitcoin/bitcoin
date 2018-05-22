@@ -189,23 +189,22 @@ bool DbManager<T>::Load(T& objToLoad, bool fDryRun)
 {
     LogPrintf("Reading info from %s...\n", m_filename);
     ReadResult readResult = Read(objToLoad, fDryRun);
-    if (readResult == FileError)
+    switch(readResult)
     {
-        LogPrintf("Missing file %s, will try to recreate\n", m_filename);
-    }
-    else if (readResult != Ok)
-    {
-        LogPrintf("Error reading %s: ", m_filename);
-        if(readResult == IncorrectFormat)
-        {
+        case Ok:
+            return true;
+        case FileError:
+            LogPrintf("Missing file %s, will try to recreate\n", m_filename);
+            break;
+        case IncorrectFormat:
+            LogPrintf("Error reading %s: ", m_filename);
             LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
-        }
-        else
-        {
+            break;
+        default:
+            LogPrintf("Error reading %s: ", m_filename);
             LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
-            // program should exit with an error
             return false;
-        }
+
     }
     return true;
 }
