@@ -55,6 +55,8 @@
 #define MICRO 0.000001
 #define MILLI 0.001
 
+typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
+
 /**
  * Global state
  */
@@ -275,6 +277,13 @@ namespace {
     std::set<int> setDirtyFileInfo;
 } // anon namespace
 
+CBlockIndex* LookupBlockIndex(const uint256& hash)
+{
+    AssertLockHeld(cs_main);
+    BlockMap::const_iterator it = mapBlockIndex.find(hash);
+    return it == mapBlockIndex.end() ? nullptr : it->second;
+}
+
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
     AssertLockHeld(cs_main);
@@ -292,6 +301,47 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
         }
     }
     return chain.Genesis();
+}
+
+size_t GetBlockIndexCount()
+{
+    LOCK(cs_main);
+    return mapBlockIndex.size();
+}
+
+std::vector<const CBlockIndex*> GetChainTips()
+{
+    LOCK(cs_main);
+
+    /*
+     * Algorithm:
+     *  - Make one pass through mapBlockIndex, picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
+     *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.
+     *  - add chainActive.Tip()
+     */
+    std::vector<const CBlockIndex*> setTips;
+    std::set<const CBlockIndex*> setOrphans;
+    std::set<const CBlockIndex*> setPrevs;
+
+    for (const std::pair<const uint256, CBlockIndex*>& item : mapBlockIndex)
+    {
+        if (!chainActive.Contains(item.second)) {
+            setOrphans.insert(item.second);
+            setPrevs.insert(item.second->pprev);
+        }
+    }
+
+    for (std::set<const CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it)
+    {
+        if (setPrevs.erase(*it) == 0) {
+            setTips.push_back(*it);
+        }
+    }
+
+    // Always report the currently active tip.
+    setTips.push_back(chainActive.Tip());
+
+    return setTips;
 }
 
 std::unique_ptr<CCoinsViewDB> pcoinsdbview;

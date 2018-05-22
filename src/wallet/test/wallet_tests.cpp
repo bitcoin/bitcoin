@@ -10,7 +10,9 @@
 #include <utility>
 #include <vector>
 
+#include <chainparams.h>
 #include <consensus/validation.h>
+#include <pow.h>
 #include <rpc/server.h>
 #include <test/test_bitcoin.h>
 #include <validation.h>
@@ -195,20 +197,32 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(), 50*COIN);
 }
 
-static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64_t blockTime)
+static int64_t AddTx(CWallet& wallet, uint32_t lock_time, int64_t mock_time, int64_t block_time)
 {
+    CBlockHeader genesis_header = Params().GenesisBlock().GetBlockHeader();
+    int64_t genesis_time = genesis_header.GetBlockTime();
+
+    lock_time += genesis_time;
+    mock_time += genesis_time;
+    block_time += genesis_time;
+
     CMutableTransaction tx;
-    tx.nLockTime = lockTime;
-    SetMockTime(mockTime);
-    CBlockIndex* block = nullptr;
-    if (blockTime > 0) {
+    tx.nLockTime = lock_time;
+    SetMockTime(mock_time);
+
+    CBlockHeader header;
+    header.hashPrevBlock = genesis_header.GetHash();
+    header.nBits = genesis_header.nBits;
+    header.nTime = block_time;
+    while (!CheckProofOfWork(header.GetHash(), header.nBits, Params().GetConsensus())) {
+        ++header.nNonce;
+    }
+
+    const CBlockIndex* block = nullptr;
+    {
         LOCK(cs_main);
-        auto inserted = mapBlockIndex.emplace(GetRandHash(), new CBlockIndex);
-        assert(inserted.second);
-        const uint256& hash = inserted.first->first;
-        block = inserted.first->second;
-        block->nTime = blockTime;
-        block->phashBlock = &hash;
+        CValidationState state;
+        ProcessNewBlockHeaders({header}, state, Params(), &block);
     }
 
     CWalletTx wtx(&wallet, MakeTransactionRef(tx));
@@ -220,12 +234,18 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
         wallet.AddToWallet(wtx);
     }
     LOCK(wallet.cs_wallet);
-    return wallet.mapWallet.at(wtx.GetHash()).nTimeSmart;
+    return wallet.mapWallet.at(wtx.GetHash()).nTimeSmart - genesis_time;
 }
+
+class RegtestWalletTestingSetup : public WalletTestingSetup
+{
+public:
+    RegtestWalletTestingSetup() : WalletTestingSetup(CBaseChainParams::REGTEST) {}
+};
 
 // Simple test to verify assignment of CWalletTx::nSmartTime value. Could be
 // expanded to cover more corner cases of smart time logic.
-BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
+BOOST_FIXTURE_TEST_CASE(ComputeTimeSmart, RegtestWalletTestingSetup)
 {
     // New transaction should use clock time if lower than block time.
     BOOST_CHECK_EQUAL(AddTx(m_wallet, 1, 100, 120), 100);
