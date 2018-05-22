@@ -58,7 +58,7 @@ The GUI wallet requires the QR Code encoding library and Google's data interchan
 
 `sudo dnf install qrencode protobuf`
 
-#### CentOS 7 -- 2018-05-11 -- Breaks because of issues with EPEL repos  
+#### CentOS 7
 
 Add the EPEL repository and install general depencencies:
 
@@ -66,6 +66,10 @@ Add the EPEL repository and install general depencencies:
 sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 sudo yum install zeromq libevent boost libdb4-cxx miniupnpc
 ```
+
+The GUI wallet requires the QR Code encoding library and Google's data interchange format Protocol Buffers. Install with:
+
+`sudo yum install qrencode protobuf`
 
 ### OS X
 
