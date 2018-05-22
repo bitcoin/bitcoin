@@ -41,8 +41,6 @@ const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
 
 // Chaincoin message types
-const char *TXLOCKREQUEST="ix";
-const char *TXLOCKVOTE="txlvote";
 const char *MASTERNODEPAYMENTVOTE="mnw";
 const char *MASTERNODEPAYMENTBLOCK="mnwb";
 const char *MASTERNODEPAYMENTSYNC="mnget";
@@ -97,8 +95,6 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::BLOCKTXN,
     // Chaincoin message types
     // NOTE: do NOT include non-implmented here, we want them to be "Unknown command" in ProcessMessage()
-    NetMsgType::TXLOCKREQUEST,
-    NetMsgType::TXLOCKVOTE,
     NetMsgType::MASTERNODEPAYMENTVOTE,
     // NetMsgType::MASTERNODEPAYMENTBLOCK, // there is no message for this, only inventory
     NetMsgType::MASTERNODEPAYMENTSYNC,
@@ -217,11 +213,8 @@ std::string CInv::GetCommand() const
     case MSG_BLOCK:                     return cmd.append(NetMsgType::BLOCK);
     case MSG_FILTERED_BLOCK:            return cmd.append(NetMsgType::MERKLEBLOCK);
     case MSG_CMPCT_BLOCK:               return cmd.append(NetMsgType::CMPCTBLOCK);
-    case MSG_TXLOCK_REQUEST:            return NetMsgType::TXLOCKREQUEST;
-    case MSG_TXLOCK_VOTE:               return NetMsgType::TXLOCKVOTE;
     case MSG_MASTERNODE_PAYMENT_VOTE:   return NetMsgType::MASTERNODEPAYMENTVOTE;
     case MSG_MASTERNODE_PAYMENT_BLOCK:  return NetMsgType::MNGOVERNANCEOBJECT;
-    case MSG_MASTERNODE_QUORUM:         return NetMsgType::MNQUORUM;
     case MSG_MASTERNODE_ANNOUNCE:       return NetMsgType::MNANNOUNCE;
     case MSG_MASTERNODE_PING:           return NetMsgType::MNPING;
     case MSG_DSTX:                      return NetMsgType::DSTX;

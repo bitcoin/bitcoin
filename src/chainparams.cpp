@@ -81,8 +81,6 @@ public:
         consensus.nMasternodePaymentsStartBlock = 1800000; // PM-Tech: to be set after activation, for now we are looking at SegWit activation
         consensus.nMasternodePaymentsIncreaseBlock = 2250000; // PM-Tech: estimation
         consensus.nMasternodePaymentsIncreasePeriod = 175000; // PM-Tech: approx. 6 months
-        consensus.nInstantSendConfirmationsRequired = 6;
-        consensus.nInstantSendKeepLock = 24;
         consensus.nSuperblockStartBlock = 1900000; // PM-Tech: to be defined
         consensus.nSuperblockCycle = 28800; // PM-Tech: to be defined
         consensus.nGovernanceMinQuorum = 10;
@@ -214,8 +212,6 @@ public:
         consensus.nMasternodePaymentsStartBlock = 25000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 4030;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
-        consensus.nInstantSendConfirmationsRequired = 2;
-        consensus.nInstantSendKeepLock = 6;
         consensus.nSuperblockStartBlock = 4200; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPeymentsStartBlock
         consensus.nSuperblockCycle = 24; // Superblocks can be issued hourly on testnet
         consensus.nGovernanceMinQuorum = 1;
@@ -326,8 +322,6 @@ public:
         consensus.nMasternodePaymentsStartBlock = 240;
         consensus.nMasternodePaymentsIncreaseBlock = 350;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
-        consensus.nInstantSendConfirmationsRequired = 2;
-        consensus.nInstantSendKeepLock = 6;
         consensus.nSuperblockStartBlock = 1500;
         consensus.nSuperblockCycle = 10;
         consensus.nGovernanceMinQuorum = 1;

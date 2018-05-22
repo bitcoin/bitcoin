@@ -278,7 +278,6 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::KEEPASS, "keepass"},
     {BCLog::GOV, "gov"},
     {BCLog::PRIVSEND, "privsend"},
-    {BCLog::INSTSEND, "instsend"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };

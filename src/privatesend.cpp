@@ -8,7 +8,6 @@
 #include <consensus/validation.h>
 #include <governance.h>
 #include <init.h>
-#include <instantx.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
@@ -502,7 +501,6 @@ void ThreadCheckPrivateSend(CConnman& connman)
                 mnodeman.CheckAndRemove(&connman);
                 mnodeman.WarnMasternodeDaemonUpdates();
                 mnpayments.CheckAndRemove();
-                instantsend.CheckAndRemove();
             }
             if(fMasternodeMode && (nTick % (60 * 5) == 0)) {
                 mnodeman.DoFullVerificationStep(&connman);

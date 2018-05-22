@@ -113,16 +113,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkUseInstantSend">
-            <property name="text">
-             <string>Request InstantSend</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCheckBox" name="useBech32">
             <property name="enabled">
              <bool>true</bool>

@@ -188,7 +188,7 @@ UniValue gobject(const JSONRPCRequest& request)
         EnsureWalletIsUnlocked(pwallet);
 
         CWalletTx wtx;
-        if(!pwallet->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), false)) {
+        if(!pwallet->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
         }
 

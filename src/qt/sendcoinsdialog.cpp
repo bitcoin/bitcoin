@@ -89,27 +89,19 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     QSettings settings;
     if (!settings.contains("bUseDarkSend"))
         settings.setValue("bUseDarkSend", false);
-    if (!settings.contains("bUseInstantX"))
-        settings.setValue("bUseInstantX", false);
 
     bool fUsePrivateSend = settings.value("bUseDarkSend").toBool();
-    bool fUseInstantSend = settings.value("bUseInstantX").toBool();
     if(fLiteMode) {
         ui->checkUsePrivateSend->setChecked(false);
         ui->checkUsePrivateSend->setVisible(false);
-        ui->checkUseInstantSend->setVisible(false);
         CoinControlDialog::coinControl()->fUsePrivateSend = false;
-        CoinControlDialog::coinControl()->fUseInstantSend = false;
     }
     else{
         ui->checkUsePrivateSend->setChecked(fUsePrivateSend);
-        ui->checkUseInstantSend->setChecked(fUseInstantSend);
         CoinControlDialog::coinControl()->fUsePrivateSend = fUsePrivateSend;
-        CoinControlDialog::coinControl()->fUseInstantSend = fUseInstantSend;
     }
 
     connect(ui->checkUsePrivateSend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
-    connect(ui->checkUseInstantSend, SIGNAL(stateChanged ( int )), this, SLOT(updateInstantSend()));
 
     // Coin Control: clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
@@ -280,15 +272,6 @@ void SendCoinsDialog::on_sendButton_clicked()
         recipients[0].inputType = ALL_COINS;
         strFunds = tr("using") + " <b>" + tr("any available funds (not anonymous)") + "</b>";
     }
-
-    if(ui->checkUseInstantSend->isChecked()) {
-        recipients[0].fUseInstantSend = true;
-        strFunds += " ";
-        strFunds += tr("and InstantSend");
-    } else {
-        recipients[0].fUseInstantSend = false;
-    }
-
 
     fNewRecipientAllowed = false;
     // request unlock only if was locked or unlocked for mixing:
@@ -604,14 +587,6 @@ void SendCoinsDialog::updateDisplayUnit()
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
     updateSmartFeeLabel();
-}
-
-void SendCoinsDialog::updateInstantSend()
-{
-    QSettings settings;
-    settings.setValue("bUseInstantX", ui->checkUseInstantSend->isChecked());
-    CoinControlDialog::coinControl()->fUseInstantSend = ui->checkUseInstantSend->isChecked();
-    coinControlUpdateLabels();
 }
 
 void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)

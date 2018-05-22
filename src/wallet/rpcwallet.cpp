@@ -11,7 +11,6 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <httpserver.h>
-#include <instantx.h>
 #include <keepass.h>
 #include <net.h>
 #include <netbase.h>
@@ -90,10 +89,8 @@ void EnsureWalletIsUnlocked(CWallet * const pwallet)
 
 void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
 {
-    int confirms = wtx.GetDepthInMainChain(false);
-    bool fLocked = instantsend.IsLockedInstantSendTransaction(wtx.GetHash());
+    int confirms = wtx.GetDepthInMainChain();
     entry.push_back(Pair("confirmations", confirms));
-    entry.push_back(Pair("instantlock", fLocked));
     if (wtx.IsCoinBase())
         entry.push_back(Pair("generated", true));
     if (confirms > 0)
@@ -409,7 +406,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
-static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CCoinControl& coin_control, bool fUseInstantSend=false, bool fUsePrivateSend=false)
+static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CCoinControl& coin_control, bool fUsePrivateSend=false)
 {
     CAmount curBalance = pwallet->GetBalance();
 
@@ -436,7 +433,7 @@ static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CA
     CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     if (!pwallet->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet,
-                                         strError, coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, fUseInstantSend)) {
+                                         strError, coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS)) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -455,9 +452,9 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 10)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 9)
         throw std::runtime_error(
-            "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount replaceable conf_target \"estimate_mode\" use_is use_ps )\n"
+            "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount replaceable conf_target \"estimate_mode\" use_ps )\n"
             "\nSend an amount to a given address.\n"
             + HelpRequiringPassphrase(pwallet) +
             "\nArguments:\n"
@@ -476,8 +473,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
-            "9. \"use_is\"      (bool, optional) Send this transaction as InstantSend (default: false)\n"
-            "10.\"use_ps\"      (bool, optional) Use anonymized funds only (default: false)\n"
+            "9.\"use_ps\"      (bool, optional) Use anonymized funds only (default: false)\n"
             "\nResult:\n"
             "\"txid\"  (string) The transaction id.\n"
             "\nExamples:\n"
@@ -531,105 +527,13 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         }
     }
 
-    bool fUseInstantSend = false;
     bool fUsePrivateSend = false;
     if (request.params.size() > 8)
-        fUseInstantSend = request.params[8].get_bool();
-    if (request.params.size() > 9)
-        fUsePrivateSend = request.params[9].get_bool();
+        fUsePrivateSend = request.params[8].get_bool();
 
     EnsureWalletIsUnlocked(pwallet);
 
-    SendMoney(pwallet, dest, nAmount, fSubtractFeeFromAmount, wtx, coin_control, fUseInstantSend, fUsePrivateSend);
-
-    return wtx.GetHash().GetHex();
-}
-
-UniValue instantsendtoaddress(const JSONRPCRequest& request)
-{
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
-        throw std::runtime_error(
-            "instantsendtoaddress \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
-            "\nSend an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
-            + HelpRequiringPassphrase(pwallet) +
-            "\nArguments:\n"
-            "1. \"address\"  (string, required) The chaincoin address to send to.\n"
-            "2. \"amount\"      (numeric, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                             This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                             to which you're sending the transaction. This is not part of the \n"
-            "                             transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                             The recipient will receive less bitcoins than you enter in the amount field.\n"
-            "6. replaceable            (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
-            "7. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
-            "8. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
-            "       \"UNSET\"\n"
-            "       \"ECONOMICAL\"\n"
-            "       \"CONSERVATIVE\"\n"
-            "\nResult:\n"
-            "\"txid\"  (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("instantsendtoaddress", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\" 0.1")
-            + HelpExampleCli("instantsendtoaddress", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleCli("instantsendtoaddress", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\" 0.1 \"\" \"\" true")
-            + HelpExampleRpc("instantsendtoaddress", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\", 0.1, \"donation\", \"seans outpost\"")
-        );
-
-    ObserveSafeMode();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
-
-    LOCK2(cs_main, pwallet->cs_wallet);
-
-    CTxDestination dest = DecodeDestination(request.params[0].get_str());
-    if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-    }
-
-    // Amount
-    CAmount nAmount = AmountFromValue(request.params[1]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-
-    // Wallet comments
-    CWalletTx wtx;
-    if (!request.params[2].isNull() && !request.params[2].get_str().empty())
-        wtx.mapValue["comment"] = request.params[2].get_str();
-    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
-        wtx.mapValue["to"]      = request.params[3].get_str();
-
-    bool fSubtractFeeFromAmount = false;
-    if (!request.params[4].isNull()) {
-        fSubtractFeeFromAmount = request.params[4].get_bool();
-    }
-
-    CCoinControl coin_control;
-    if (!request.params[5].isNull()) {
-        coin_control.signalRbf = request.params[5].get_bool();
-    }
-
-    if (!request.params[6].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6]);
-    }
-
-    if (!request.params[7].isNull()) {
-        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
-        }
-    }
-
-    EnsureWalletIsUnlocked(pwallet);
-
-    SendMoney(pwallet, dest, nAmount, fSubtractFeeFromAmount, wtx, coin_control, true);
+    SendMoney(pwallet, dest, nAmount, fSubtractFeeFromAmount, wtx, coin_control, fUsePrivateSend);
 
     return wtx.GetHash().GetHex();
 }
@@ -761,14 +665,13 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "getreceivedbyaddress \"address\" ( minconf addlockconf )\n"
+            "getreceivedbyaddress \"address\" ( minconf  )\n"
             "\nReturns the total amount received by the given address in transactions with specified minimum number of confirmations.\n"
             "\nArguments:\n"
             "1. \"address\"  (string, required) The chaincoin address for transactions.\n"
             "2. minconf        (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "3. addlockconf    (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
             "\nResult:\n"
             "amount            (numeric) The total amount in " + CURRENCY_UNIT + " received at this address.\n"
             "\nExamples:\n"
@@ -805,11 +708,6 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
     if (!request.params[1].isNull())
         nMinDepth = request.params[1].get_int();
 
-    bool fAddLockConf = false;
-    if(!request.params[2].isNull())
-        if(request.params[2].get_bool())
-            fAddLockConf = true;
-
     // Tally
     CAmount nAmount = 0;
     for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
@@ -819,7 +717,7 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 
         for (const CTxOut& txout : wtx.tx->vout)
             if (txout.scriptPubKey == scriptPubKey)
-                if (wtx.GetDepthInMainChain(fAddLockConf) >= nMinDepth)
+                if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += txout.nValue;
     }
 
@@ -834,14 +732,13 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "getreceivedbyaccount \"account\" ( minconf addlockconf )\n"
+            "getreceivedbyaccount \"account\" ( minconf )\n"
             "\nDEPRECATED. Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.\n"
             "\nArguments:\n"
             "1. \"account\"      (string, required) The selected account, may be the default account using \"\".\n"
             "2. minconf        (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "3. addlockconf    (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
             "\nResult:\n"
             "amount            (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -868,11 +765,6 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
     if (!request.params[1].isNull())
         nMinDepth = request.params[1].get_int();
 
-    bool fAddLockConf = false;
-    if(!request.params[2].isNull())
-        if(request.params[2].get_bool())
-            fAddLockConf = true;
-
     // Get the set of pub keys assigned to account
     std::string strAccount = AccountFromValue(request.params[0]);
     std::set<CTxDestination> setAddress = pwallet->GetAccountAddresses(strAccount);
@@ -888,7 +780,7 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
         {
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwallet, address) && setAddress.count(address)) {
-                if (wtx.GetDepthInMainChain(fAddLockConf) >= nMinDepth)
+                if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += txout.nValue;
             }
         }
@@ -904,9 +796,9 @@ UniValue getbalance(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
-            "getbalance ( \"account\" minconf addlockconf include_watchonly )\n"
+            "getbalance ( \"account\" minconf include_watchonly )\n"
             "\nIf account is not specified, returns the server's total available balance.\n"
             "The available balance is what the wallet considers currently spendable, and is\n"
             "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
@@ -927,8 +819,7 @@ UniValue getbalance(const JSONRPCRequest& request)
             "                     reliable and has resulted in confusing outcomes, so it is recommended to\n"
             "                     avoid passing this argument.\n"
             "2. minconf           (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "3. addlockconf      (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
-            "4. include_watchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
+            "3. include_watchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -950,8 +841,7 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     const UniValue& account_value = request.params[0];
     const UniValue& minconf = request.params[1];
-    const UniValue& lockconf = request.params[2];
-    const UniValue& include_watchonly = request.params[3];
+    const UniValue& include_watchonly = request.params[2];
 
     if (account_value.isNull()) {
         if (!minconf.isNull()) {
@@ -976,11 +866,7 @@ UniValue getbalance(const JSONRPCRequest& request)
         if(include_watchonly.get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
-    bool fAddLockConf = false;
-    if (!lockconf.isNull())
-        fAddLockConf = lockconf.getBool();
-
-    return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account, fAddLockConf));
+    return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account));
 }
 
 UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -1067,7 +953,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 7)
         throw std::runtime_error(
-            "sendfrom \"fromaccount\" \"toaddress\" amount ( minconf addlockconf \"comment\" \"comment_to\" )\n"
+            "sendfrom \"fromaccount\" \"toaddress\" amount ( minconf\"comment\" \"comment_to\" )\n"
             "\nDEPRECATED (use sendtoaddress). Sent an amount from an account to a bitcoin address."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
@@ -1078,7 +964,6 @@ UniValue sendfrom(const JSONRPCRequest& request)
             "2. \"toaddress\"         (string, required) The bitcoin address to send funds to.\n"
             "3. amount                (numeric or string, required) The amount in " + CURRENCY_UNIT + " (transaction fee is added on top).\n"
             "4. minconf               (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
-            "5. addlockconf    (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
             "6. \"comment\"           (string, optional) A comment used to store what the transaction is for. \n"
             "                                     This is not part of the transaction, just kept in your wallet.\n"
             "7. \"comment_to\"        (string, optional) An optional comment to store the name of the person or organization \n"
@@ -1115,22 +1000,17 @@ UniValue sendfrom(const JSONRPCRequest& request)
     if (!request.params[3].isNull())
         nMinDepth = request.params[3].get_int();
 
-    bool fAddLockConf = false;
-    if(!request.params[4].isNull())
-        if(request.params[4].get_bool())
-            fAddLockConf = true;
-
     CWalletTx wtx;
     wtx.strFromAccount = strAccount;
+    if (!request.params[4].isNull() && !request.params[4].get_str().empty())
+        wtx.mapValue["comment"] = request.params[4].get_str();
     if (!request.params[5].isNull() && !request.params[5].get_str().empty())
-        wtx.mapValue["comment"] = request.params[5].get_str();
-    if (!request.params[6].isNull() && !request.params[6].get_str().empty())
-        wtx.mapValue["to"]      = request.params[6].get_str();
+        wtx.mapValue["to"]      = request.params[5].get_str();
 
     EnsureWalletIsUnlocked(pwallet);
 
     // Check funds
-    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount, fAddLockConf);
+    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount);
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -1148,9 +1028,9 @@ UniValue sendmany(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 11)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 9)
         throw std::runtime_error(
-            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] replaceable conf_target \"estimate_mode\" use_is use_ps )\n"
+            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] replaceable conf_target \"estimate_mode\" use_ps )\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
@@ -1161,9 +1041,8 @@ UniValue sendmany(const JSONRPCRequest& request)
             "      ,...\n"
             "    }\n"
             "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
-            "4. addlockconf             (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
-            "5. \"comment\"               (string, optional) A comment\n"
-            "6. subtractfeefrom         (string, optional) A json array with addresses.\n"
+            "4. \"comment\"               (string, optional) A comment\n"
+            "5. subtractfeefrom         (string, optional) A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
             "                           Those recipients will receive less chaincoins than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.\n"
@@ -1171,11 +1050,10 @@ UniValue sendmany(const JSONRPCRequest& request)
             "      \"address\"            (string) Subtract fee from this address\n"
             "      ,...\n"
             "    ]\n"
-            "7. replaceable            (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
-            "8. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
-            "9. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
-            "10.\"use_is\"                (bool, optional) Send this transaction as InstantSend (default: false)\n"
-            "11.\"use_ps\"                (bool, optional) Use anonymized funds only (default: false)\n"
+            "6. replaceable            (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
+            "7. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
+            "8. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
+            "9.\"use_ps\"                (bool, optional) Use anonymized funds only (default: false)\n"
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
@@ -1209,31 +1087,26 @@ UniValue sendmany(const JSONRPCRequest& request)
     if (!request.params[2].isNull())
         nMinDepth = request.params[2].get_int();
 
-    bool fAddLockConf = false;
-    if(!request.params[3].isNull())
-        if(request.params[3].get_bool())
-            fAddLockConf = true;
-
     CWalletTx wtx;
     wtx.strFromAccount = strAccount;
-    if (!request.params[4].isNull() && !request.params[4].get_str().empty())
-        wtx.mapValue["comment"] = request.params[4].get_str();
+    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
+        wtx.mapValue["comment"] = request.params[3].get_str();
 
     UniValue subtractFeeFromAmount(UniValue::VARR);
-    if (!request.params[5].isNull())
-        subtractFeeFromAmount = request.params[5].get_array();
+    if (!request.params[4].isNull())
+        subtractFeeFromAmount = request.params[4].get_array();
 
     CCoinControl coin_control;
+    if (!request.params[5].isNull()) {
+        coin_control.signalRbf = request.params[5].get_bool();
+    }
+
     if (!request.params[6].isNull()) {
-        coin_control.signalRbf = request.params[6].get_bool();
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6]);
     }
 
     if (!request.params[7].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[7]);
-    }
-
-    if (!request.params[8].isNull()) {
-        if (!FeeModeFromString(request.params[8].get_str(), coin_control.m_fee_mode)) {
+        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
@@ -1274,7 +1147,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     // Check funds
-    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount, fAddLockConf);
+    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount);
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -1283,19 +1156,16 @@ UniValue sendmany(const JSONRPCRequest& request)
     CAmount nFeeRequired = 0;
     int nChangePosRet = -1;
     std::string strFailReason;
-    bool fUseInstantSend = false;
     bool fUsePrivateSend = false;
-    if (request.params.size() > 9)
-        fUseInstantSend = request.params[9].get_bool();
-    if (request.params.size() > 10)
-        fUsePrivateSend = request.params[10].get_bool();
+    if (request.params.size() > 8)
+        fUsePrivateSend = request.params[8].get_bool();
 
     bool fCreated = pwallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason,
-                                                   coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, fUseInstantSend);
+                                                   coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, keyChange, g_connman.get(), state /*, fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX*/))
+    if (!pwallet->CommitTransaction(wtx, keyChange, g_connman.get(), state))
         throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
 
     return wtx.GetHash().GetHex();
@@ -1562,7 +1432,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
         if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
             continue;
 
-        int nDepth = wtx.GetDepthInMainChain(fAddLockConf);
+        int nDepth = wtx.GetDepthInMainChain();
         if (nDepth < nMinDepth)
             continue;
 
@@ -1662,15 +1532,14 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
-            "listreceivedbyaddress ( minconf addlockconf include_empty include_watchonly)\n"
+            "listreceivedbyaddress ( minconf include_empty include_watchonly)\n"
             "\nList balances by receiving address.\n"
             "\nArguments:\n"
             "1. minconf          (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
-            "2. addlockconf      (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
-            "3. include_empty     (bool, optional, default=false) Whether to include addresses that haven't received any payments.\n"
-            "4. include_watchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
+            "2. include_empty     (bool, optional, default=false) Whether to include addresses that haven't received any payments.\n"
+            "3. include_watchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
 
             "\nResult:\n"
             "[\n"
@@ -1688,7 +1557,6 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             "\nExamples:\n"
             + HelpExampleCli("listreceivedbyaddress", "")
             + HelpExampleCli("listreceivedbyaddress", "6 false true")
-            + HelpExampleRpc("listreceivedbyaddress", "6, false, true, true")
         );
 
     ObserveSafeMode();
@@ -1711,13 +1579,12 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "listreceivedbyaccount ( minconf addlockconf include_empty include_watchonly)\n"
+            "listreceivedbyaccount ( minconf include_empty include_watchonly)\n"
             "\nDEPRECATED. List balances by account.\n"
             "\nArguments:\n"
-            "1. minconf          (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
-            "2. addlockconf      (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
-            "3. include_empty     (bool, optional, default=false) Whether to include accounts that haven't received any payments.\n"
-            "4. include_watchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
+            "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
+            "2. include_empty     (bool, optional, default=false) Whether to include accounts that haven't received any payments.\n"
+            "3. include_watchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
 
             "\nResult:\n"
             "[\n"
@@ -1734,7 +1601,6 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
             "\nExamples:\n"
             + HelpExampleCli("listreceivedbyaccount", "")
             + HelpExampleCli("listreceivedbyaccount", "6 false true")
-            + HelpExampleRpc("listreceivedbyaccount", "6, false, true, true")
         );
 
     ObserveSafeMode();
@@ -2006,14 +1872,13 @@ UniValue listaccounts(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 3)
+    if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
             "listaccounts ( minconf addlockconf include_watchonly)\n"
             "\nDEPRECATED. Returns Object that has account names as keys, account balances as values.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) Only include transactions with at least this many confirmations\n"
-            "2. addlockconf       (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
-            "3. include_watchonly  (bool, optional, default=false) Include balances in watchonly addresses (see 'importaddress')\n"
+            "2. include_watchonly  (bool, optional, default=false) Include balances in watchonly addresses (see 'importaddress')\n"
             "\nResult:\n"
             "{                    (json object where keys are account names, and values are numeric balances\n"
             "  \"account\": x.xxx,  (numeric) The property name is the account name, and the value is the total balance for the account.\n"
@@ -2042,14 +1907,9 @@ UniValue listaccounts(const JSONRPCRequest& request)
     if (!request.params[0].isNull())
         nMinDepth = request.params[0].get_int();
 
-    bool fAddLockConf = false;
+    isminefilter includeWatchonly = ISMINE_SPENDABLE;
     if(!request.params[1].isNull())
         if(request.params[1].get_bool())
-            fAddLockConf = true;
-
-    isminefilter includeWatchonly = ISMINE_SPENDABLE;
-    if(!request.params[2].isNull())
-        if(request.params[2].get_bool())
             includeWatchonly = includeWatchonly | ISMINE_WATCH_ONLY;
 
     std::map<std::string, CAmount> mapAccountBalances;
@@ -2065,7 +1925,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
         std::string strSentAccount;
         std::list<COutputEntry> listReceived;
         std::list<COutputEntry> listSent;
-        int nDepth = wtx.GetDepthInMainChain(fAddLockConf);
+        int nDepth = wtx.GetDepthInMainChain();
         if (wtx.GetBlocksToMaturity() > 0 || nDepth < 0)
             continue;
         wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, includeWatchonly);
@@ -2201,7 +2061,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
     for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         CWalletTx tx = pairWtx.second;
 
-        if (depth == -1 || tx.GetDepthInMainChain(false) < depth) {
+        if (depth == -1 || tx.GetDepthInMainChain() < depth) {
             ListTransactions(pwallet, tx, "*", 0, true, transactions, filter);
         }
     }
@@ -3209,7 +3069,7 @@ UniValue listunspent(const JSONRPCRequest& request)
     std::vector<COutput> vecOutputs;
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, ALL_COINS, true, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, ALL_COINS, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
     for (const COutput& out : vecOutputs) {
         CTxDestination address;
         const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;

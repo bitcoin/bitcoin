@@ -241,8 +241,6 @@ extern const char *BLOCKTXN;
 // Chaincoin message types
 // NOTE: do NOT declare non-implmented here, we don't want them to be exposed to the outside
 // TODO: add description
-extern const char *TXLOCKREQUEST;
-extern const char *TXLOCKVOTE;
 extern const char *MASTERNODEPAYMENTVOTE;
 extern const char *MASTERNODEPAYMENTSYNC;
 extern const char *MNANNOUNCE;
@@ -404,11 +402,11 @@ enum GetDataMsg
     // Chaincoin message types
     // NOTE: declare non-implmented here in future, we must keep this enum consistent and backwards compatible
     MSG_DEPRECATED = 8,
-    MSG_TXLOCK_REQUEST = 10,
-    MSG_TXLOCK_VOTE = 11,
+    MSG_DEPRECATED_01 = 10,
+    MSG_DEPRECATED_02 = 11,
     MSG_MASTERNODE_PAYMENT_VOTE = 12,
     MSG_MASTERNODE_PAYMENT_BLOCK = 13,
-    MSG_MASTERNODE_QUORUM = 14, // not implemented
+    MSG_DEPRECATED_03 = 14, // not implemented
     MSG_MASTERNODE_ANNOUNCE = 15,
     MSG_MASTERNODE_PING = 16,
     MSG_DSTX = 17,

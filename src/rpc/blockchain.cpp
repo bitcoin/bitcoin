@@ -373,9 +373,7 @@ std::string EntryDescriptionString()
            "    \"wtxid\" : hash,         (string) hash of serialized transaction, including witness data\n"
            "    \"depends\" : [           (array) unconfirmed transactions used as inputs for this transaction\n"
            "        \"transactionid\",    (string) parent transaction id\n"
-           "       ... ]\n"
-           "    \"instantsend\" : true|false, (boolean) True if this transaction was sent as an InstantSend one\n"
-           "    \"instantlock\" : true|false  (boolean) True if this transaction was locked via InstantSend\n";
+           "       ... ]\n";
 }
 
 void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)

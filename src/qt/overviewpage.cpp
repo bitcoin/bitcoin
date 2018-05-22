@@ -18,7 +18,6 @@
 #include <qt/utilitydialog.h>
 #include <qt/walletmodel.h>
 
-#include <instantx.h>
 #include <qt/darksendconfig.h>
 #include <masternode-sync.h>
 #include <privatesend-client.h>
@@ -231,13 +230,6 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
 
     updatePrivateSendProgress();
-
-    static int cachedTxLocks = 0;
-
-    if(cachedTxLocks != nCompleteTXLocks){
-        cachedTxLocks = nCompleteTXLocks;
-        ui->listTransactions->update();
-    }
 }
 
 // show/hide watch-only labels

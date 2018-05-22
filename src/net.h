@@ -872,7 +872,7 @@ public:
     void PushInventory(const CInv& inv)
     {
         LOCK(cs_inventory);
-        if ((inv.type == MSG_TX) || (inv.type == MSG_DSTX) || (inv.type == MSG_TXLOCK_REQUEST)) {
+        if ((inv.type == MSG_TX) || (inv.type == MSG_DSTX)) {
             if (!filterInventoryKnown.contains(inv.hash)) {
                 setInventoryTxToSend.insert(inv.hash);
             }

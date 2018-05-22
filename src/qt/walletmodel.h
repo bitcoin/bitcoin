@@ -57,7 +57,6 @@ public:
 #ifdef ENABLE_WALLET
     AvailableCoinsType inputType;
 #endif // ENABLE_WALLET
-    bool fUseInstantSend;
     CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
@@ -255,7 +254,6 @@ private:
     CAmount cachedWatchImmatureBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
-    int cachedTxLocks;
     int cachedPrivateSendRounds;
 
     QTimer *pollTimer;

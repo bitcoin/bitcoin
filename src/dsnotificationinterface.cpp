@@ -4,7 +4,6 @@
 
 #include <chainparams.h>
 #include <dsnotificationinterface.h>
-#include <instantx.h>
 #include <governance.h>
 #include <masternodeman.h>
 #include <masternode-payments.h>
@@ -50,13 +49,11 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 #ifdef ENABLE_WALLET
     privateSendClient.UpdatedBlockTip(pindexNew);
 #endif // ENABLE_WALLET
-    instantsend.UpdatedBlockTip(pindexNew);
     mnpayments.UpdatedBlockTip(pindexNew, connman);
     governance.UpdatedBlockTip(pindexNew, connman);
 }
 
 void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef &tx)
 {
-    instantsend.TransactionAddedToMempool(tx);
     CPrivateSend::TransactionAddedToMempool(tx);
 }

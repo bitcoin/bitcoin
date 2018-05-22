@@ -23,7 +23,6 @@
 #include <utilstrencodings.h>
 
 #include <governance.h>
-#include <instantx.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
 #include <privatesend.h>

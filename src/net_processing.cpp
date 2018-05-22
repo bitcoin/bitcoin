@@ -31,7 +31,6 @@
 #include <utilstrencodings.h>
 
 #include <governance.h>
-#include <instantx.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
@@ -1007,12 +1006,6 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         We're going to be asking many nodes upfront for the full inventory list, so we'll get duplicates of these.
         We want to only update the time on new hits, so that we can time out appropriately if needed.
     */
-    case MSG_TXLOCK_REQUEST:
-        return instantsend.AlreadyHave(inv.hash);
-
-    case MSG_TXLOCK_VOTE:
-        return instantsend.AlreadyHave(inv.hash);
-
     case MSG_MASTERNODE_PAYMENT_VOTE:
         return mnpayments.mapMasternodePaymentVotes.count(inv.hash);
 
@@ -1270,21 +1263,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
             }
             else if (!push) {
-                if (inv.type == MSG_TXLOCK_REQUEST) {
-                    CTxLockRequest txLockRequest;
-                    if(instantsend.GetTxLockRequest(inv.hash, txLockRequest)) {
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TXLOCKREQUEST, txLockRequest));
-                        push = true;
-                    }
-                }
-                else if (inv.type == MSG_TXLOCK_VOTE) {
-                    CTxLockVote vote;
-                    if(instantsend.GetTxLockVote(inv.hash, vote)) {
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TXLOCKVOTE, vote));
-                        push = true;
-                    }
-                }
-                else if (inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
+                if (inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
                     if(mnpayments.HasVerifiedPaymentVote(inv.hash)) {
                         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[inv.hash]));
                         push = true;
@@ -2226,7 +2205,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::HEADERS, vHeaders));
     }
 
-    else if (strCommand == NetMsgType::TX || strCommand == NetMsgType::DSTX || strCommand == NetMsgType::TXLOCKREQUEST)
+    else if (strCommand == NetMsgType::TX || strCommand == NetMsgType::DSTX )
     {
         // Stop processing the transaction early if
         // We are in blocks only mode and peer is either not whitelisted or whitelistrelay is off
@@ -2239,17 +2218,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::deque<COutPoint> vWorkQueue;
         std::vector<uint256> vEraseQueue;
         CTransactionRef ptx;
-        CTxLockRequest txLockRequest;
         CDarksendBroadcastTx dstx;
         int nInvType = MSG_TX;
 
         // Read data and assign inv type
         if(strCommand == NetMsgType::TX) {
             vRecv >> ptx;
-        } else if(strCommand == NetMsgType::TXLOCKREQUEST) {
-            vRecv >> txLockRequest;
-            ptx = txLockRequest.tx;
-            nInvType = MSG_TXLOCK_REQUEST;
         } else if (strCommand == NetMsgType::DSTX) {
             vRecv >> dstx;
             ptx = dstx.tx;
@@ -2261,12 +2235,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         pfrom->AddInventoryKnown(inv);
 
         // Process custom logic, no matter if tx will be accepted to mempool later or not
-        if (strCommand == NetMsgType::TXLOCKREQUEST) {
-            if(!instantsend.ProcessTxLockRequest(tx, connman)) {
-                LogPrint(BCLog::INSTSEND, "TXLOCKREQUEST -- failed %s\n", tx.GetHash().ToString());
-                return false;
-            }
-        } else if (strCommand == NetMsgType::DSTX) {
+        if (strCommand == NetMsgType::DSTX) {
             uint256 hashTx = tx.GetHash();
             if(CPrivateSend::GetDSTX(hashTx)) {
                 LogPrint(BCLog::PRIVSEND, "DSTX -- Already have %s, skipping...\n", hashTx.ToString());
@@ -2314,11 +2283,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 LogPrintf("DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
                         tx.GetHash().ToString(), pfrom->GetId());
                 CPrivateSend::AddDSTX(dstx);
-            } else if (strCommand == NetMsgType::TXLOCKREQUEST) {
-                LogPrintf("TXLOCKREQUEST -- Transaction Lock Request accepted, txid=%s, peer=%d\n",
-                        tx.GetHash().ToString(), pfrom->GetId());
-                instantsend.AcceptLockRequest(txLockRequest);
-                instantsend.Vote(tx.GetHash(), connman);
             }
 
             mempool.check(pcoinsTip.get());
@@ -2428,19 +2392,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         } else {
             assert(recentRejects);
             recentRejects->insert(tx.GetHash());
-
-            if (strCommand == NetMsgType::TXLOCKREQUEST && !AlreadyHave(inv)) {
-                // i.e. AcceptToMemoryPool failed, probably because it's conflicting
-                // with existing normal tx or tx lock for another tx. For the same tx lock
-                // AlreadyHave would have return "true" already.
-
-                // It's the first time we failed for this tx lock request,
-                // this should switch AlreadyHave to "true".
-                instantsend.RejectLockRequest(txLockRequest);
-                // this lets other nodes to create lock request candidate i.e.
-                // this allows multiple conflicting lock requests to compete for votes
-                RelayTransaction(tx, connman);
-            }
 
             if (!tx.HasWitness() && !state.CorruptionPossible()) {
                 // Do not use rejection cache for witness transactions or
@@ -3056,7 +3007,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, connman);
             mnodeman.ProcessMessage(pfrom, strCommand, vRecv, connman);
             mnpayments.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            instantsend.ProcessMessage(pfrom, strCommand, vRecv, connman);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
             governance.ProcessMessage(pfrom, strCommand, vRecv, connman);
         } else {

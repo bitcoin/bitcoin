@@ -17,7 +17,6 @@ class CCoinControl
 {
 public:
     bool fUsePrivateSend;
-    bool fUseInstantSend;
 
     //! Custom change destination, if not set an address is generated
     CTxDestination destChange;
@@ -50,7 +49,6 @@ public:
         fAllowOtherInputs = false;
         fAllowWatchOnly = false;
         setSelected.clear();
-        fUseInstantSend = false;
         fUsePrivateSend = true;
         m_feerate.reset();
         fOverrideFeeRate = false;

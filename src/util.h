@@ -131,7 +131,6 @@ namespace BCLog {
         KEEPASS     = (1 << 24),
         GOV         = (1 << 25),
         PRIVSEND    = (1 << 26),
-        INSTSEND    = (1 << 27),
         ALL         = ~(uint32_t)0,
     };
 }
