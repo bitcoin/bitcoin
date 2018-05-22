@@ -1320,38 +1320,12 @@ static UniValue getchaintips(const JSONRPCRequest& request)
 
     LOCK(cs_main);
 
-    /*
-     * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them.
-     * Algorithm:
-     *  - Make one pass through mapBlockIndex, picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
-     *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.
-     *  - add chainActive.Tip()
-     */
-    std::set<const CBlockIndex*, CompareBlocksByHeight> setTips;
-    std::set<const CBlockIndex*> setOrphans;
-    std::set<const CBlockIndex*> setPrevs;
-
-    for (const std::pair<const uint256, CBlockIndex*>& item : mapBlockIndex)
-    {
-        if (!chainActive.Contains(item.second)) {
-            setOrphans.insert(item.second);
-            setPrevs.insert(item.second->pprev);
-        }
-    }
-
-    for (std::set<const CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it)
-    {
-        if (setPrevs.erase(*it) == 0) {
-            setTips.insert(*it);
-        }
-    }
-
-    // Always report the currently active tip.
-    setTips.insert(chainActive.Tip());
+    std::vector<const CBlockIndex*> chain_tips = GetChainTips();
+    std::sort(chain_tips.begin(), chain_tips.end(), CompareBlocksByHeight());
 
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);
-    for (const CBlockIndex* block : setTips)
+    for (const CBlockIndex* block : chain_tips)
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("height", block->nHeight);
