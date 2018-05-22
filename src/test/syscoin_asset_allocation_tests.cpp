@@ -122,4 +122,46 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 
 }
+BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
+{
+	UniValue r;
+	printf("Running generate_asset_allocation_througputlkoi...\n");
+	GenerateBlocks(5);
+	vector<string> assetVec;
+	// create 1000 aliases and assets for each asset
+	for (int i = 0; i < 1000; i++) {
+		string aliasname = "jagthroughput-" + boost::lexical_cast<string>(i);
+		string aliasnameto = "jagthroughput3-" + boost::lexical_cast<string>(i);
+		AliasNew("node1",aliasname, "data");
+		AliasNew("node3", aliasnameto, "data");
+		string guid = AssetNew("node1", "usd", aliasname, "data", "8", "false", "1", "-1");
+		assetVec.push_back(guid);
+	}
+	vector<string> assetSendTxVec;
+	for (auto& guid : assetVec) {
+		string hex_str = AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"" + aliasnameto "\\\",\\\"amount\\\":1}]\"", "assetallocationsend", "''", false);
+		assetSendTxVec.push_back(hex_str);
+	}
+	map<string, int64_t> sendTimes;
+	for (auto& hex_str : assetSendTxVec) {
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "decoderawtransaction " + hex_str));
+		string txid = find_value(r.get_obj(), "txid").get_str();
+		sendTimes[txid] = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	}
+	int64_t totalTime = 0;
+	// wait 10 seconds
+	MilliSleep(10000);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "gettpsinfo"));
+	UniValue tpsresponse = r.get_array();
+	for (int i = 0; i < tpsresponse.size();i++) {
+		UniValue responesObj = tpsresponse[i].get_obj();
+		string txid = find_value(responesObj, "txid").get_str();
+		int64_t timeRecv = find_value(responesObj, "time").get_int64();
+		if (sendTimes.find(txid) == sendTimes.end())
+			continue;
+		totalTime += timeRecv - sendTimes[txid];
+	}
+	totalTime /= tpsresponse.size();
+}
 BOOST_AUTO_TEST_SUITE_END ()
