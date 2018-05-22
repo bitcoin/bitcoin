@@ -1384,13 +1384,13 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
                 // under BIP 152).
                 // Here, we try to detect the narrow situation that we have a
                 // valid block header (ie it was valid at the time the header
-                // was received, and hence stored in mapBlockIndex) but know the
+                // was received, and hence stored in the index) but know the
                 // block is invalid, and that a peer has announced that same
                 // block as being on its active chain.
                 // Disconnect the peer in such a situation.
                 //
                 // Note: if the header that is invalid was not accepted to our
-                // mapBlockIndex at all, that may also be grounds for
+                // block index at all, that may also be grounds for
                 // disconnecting the peer, as the chain they are on is likely
                 // to be incompatible. However, there is a circumstance where
                 // that does not hold: if the header's timestamp is more than
