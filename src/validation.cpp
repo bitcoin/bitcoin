@@ -55,6 +55,8 @@
 #define MICRO 0.000001
 #define MILLI 0.001
 
+typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
+
 /**
  * Global state
  */
@@ -274,6 +276,13 @@ namespace {
     /** Dirty block file entries. */
     std::set<int> setDirtyFileInfo;
 } // anon namespace
+
+CBlockIndex* LookupBlockIndex(const uint256& hash)
+{
+    AssertLockHeld(cs_main);
+    BlockMap::const_iterator it = mapBlockIndex.find(hash);
+    return it == mapBlockIndex.end() ? nullptr : it->second;
+}
 
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {

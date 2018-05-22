@@ -88,8 +88,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 WalletTxStatus MakeWalletTxStatus(const CWalletTx& wtx)
 {
     WalletTxStatus result;
-    auto mi = ::mapBlockIndex.find(wtx.hashBlock);
-    CBlockIndex* block = mi != ::mapBlockIndex.end() ? mi->second : nullptr;
+    const CBlockIndex* block = ::LookupBlockIndex(wtx.hashBlock);
     result.block_height = (block ? block->nHeight : std::numeric_limits<int>::max()),
     result.blocks_to_maturity = wtx.GetBlocksToMaturity();
     result.depth_in_main_chain = wtx.GetDepthInMainChain();
