@@ -443,6 +443,9 @@ inline CBlockIndex* LookupBlockIndex(const uint256& hash)
 /** Find the last common block between the parameter chain and a locator. */
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator);
 
+/** Get the number of block index entries. */
+size_t GetBlockIndexCount();
+
 /*
  * The set of chain tips consists of the tip of the active chain plus any stale blocks which do not
  * have another stale block building off of them.

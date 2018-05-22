@@ -294,6 +294,12 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
     return chain.Genesis();
 }
 
+size_t GetBlockIndexCount()
+{
+    LOCK(cs_main);
+    return mapBlockIndex.size();
+}
+
 std::vector<const CBlockIndex*> GetChainTips()
 {
     LOCK(cs_main);
