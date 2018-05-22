@@ -115,8 +115,6 @@ protected:
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {}
-    /** Notifies listeners of an updated transaction lock without new data. */
-    virtual void NotifyTransactionLock(const CTransactionRef&) {}
 
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
@@ -159,7 +157,6 @@ public:
     void Broadcast(int64_t nBestBlockTime, CConnman* connman);
     void BlockChecked(const CBlock&, const CValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
-    void NotifyTransactionLock(const CTransactionRef&);
 };
 
 CMainSignals& GetMainSignals();

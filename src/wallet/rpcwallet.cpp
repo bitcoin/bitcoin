@@ -1409,19 +1409,14 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
     if (!params[0].isNull())
         nMinDepth = params[0].get_int();
 
-    bool fAddLockConf = false;
-    if(!params[1].isNull())
-        if(params[1].get_bool())
-            fAddLockConf = true;
-
     // Whether to include empty accounts
     bool fIncludeEmpty = false;
-    if (!params[2].isNull())
-        fIncludeEmpty = params[2].get_bool();
+    if (!params[1].isNull())
+        fIncludeEmpty = params[1].get_bool();
 
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!params[3].isNull())
-        if(params[3].get_bool())
+    if(!params[2].isNull())
+        if(params[2].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
     // Tally
