@@ -25,6 +25,7 @@ class CTransaction;
 #include <unordered_map>
 
 int const MAX_STATE_HISTORY = 50;
+int const STORE_EVERY_N_BLOCK = 10000;
 
 #define TEST_ECO_PROPERTY_1 (0x80000003UL)
 
