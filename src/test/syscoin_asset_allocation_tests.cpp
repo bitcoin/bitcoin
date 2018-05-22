@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 	}
 	vector<string> assetSendTxVec;
 	for (auto& assetTuple : assetMap) {
-		string hex_str = AssetSend("node1", assetTuple.first, "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second "\\\",\\\"amount\\\":1}]\"", "assetallocationsend", "''", false);
+		string hex_str = AssetSend("node1", assetTuple.first, "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\"", "assetallocationsend", "''", false);
 		assetSendTxVec.push_back(hex_str);
 	}
 	map<string, int64_t> sendTimes;
