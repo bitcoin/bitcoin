@@ -128,27 +128,73 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 	printf("Running generate_asset_allocation_througput...\n");
 	GenerateBlocks(5);
 	map<string, string> assetMap;
+	map<string, string> assetAliasMap;
 	// create 1000 aliases and assets for each asset
 	printf("creating 1000 aliases/asset...\n");
 	for (int i = 0; i < 1000; i++) {
 		string aliasname = "jagthroughput-" + boost::lexical_cast<string>(i);
 		string aliasnameto = "jagthroughput3-" + boost::lexical_cast<string>(i);
 		AliasNew("node1",aliasname, "data");
-		AliasNew("node3", aliasnameto, "data");
-		string guid = AssetNew("node1", "usd", aliasname, "data", "8", "false", "1", "-1");
+
+		// registration
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' no 0 '' '' '' ''"));
+		UniValue varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray[0].get_str()));
+		varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+		// activation
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' no 0 '' '' '' ''"));
+		UniValue varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray1[0].get_str()));
+		varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray1[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+
+		// registration
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' no 0 '' '' '' ''"));
+		UniValue varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray[0].get_str()));
+		varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate 1"));
+		// activation
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' no 0 '' '' '' ''"));
+		UniValue varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray1[0].get_str()));
+		varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray1[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+
+
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew tpstest " + aliasname + " '' " + " assets " + " 8 false 1 10 0 false ''"));
+		UniValue arr = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+		string hex_str = find_value(r.get_obj(), "hex").get_str();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "decoderawtransaction " + hex_str));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+		string guid = arr[1].get_str();
 		assetMap[guid] = aliasnameto;
+		assetAliasMap[guid] = aliasname;
 		if (i % 100 == 0)
-			printf("%d percentage done\n", 100 / (1000 / (i+1)));
+			printf("%.2f percentage done\n", 100.0f / (1000.0f / (i+1)));
 	}
 	printf("Creating assetsend transactions to node3 alias...\n");
 	vector<string> assetSendTxVec;
 	int count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
-		string hex_str = AssetSend("node1", assetTuple.first, "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\"", "assetallocationsend", "''", false);
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\"" + " '' ''"));
+		UniValue arr = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
+		string hex_str = find_value(r.get_obj(), "hex").get_str();
+
 		assetSendTxVec.push_back(hex_str);
 		if (count % 100 == 0)
-			printf("%d percentage done\n", 100 / (1000 / count));
+			printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
 	}
 	printf("Sending assetsend transactions to network...\n");
 	map<string, int64_t> sendTimes;
@@ -159,7 +205,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		string txid = find_value(r.get_obj(), "txid").get_str();
 		sendTimes[txid] = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 		if (count % 100 == 0)
-			printf("%d percentage done\n", 100 / (1000 / count));
+			printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
 	}
 	printf("Gathering results...\n");
 	float totalTime = 0;
