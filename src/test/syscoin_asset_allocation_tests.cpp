@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		string aliasnameto = "jagthroughput3-" + boost::lexical_cast<string>(i);
 	
 		// registration
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' false 0 '' '' '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' 3 0 '' '' '' ''"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray[0].get_str()));
 		varray = r.get_array();
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 		// activation
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' false 0 '' '' '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' 3 0 '' '' '' ''"));
 		UniValue varray1 = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray1[0].get_str()));
 		varray1 = r.get_array();
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 
 		// registration
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' false 0 '' '' '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' 3 0 '' '' '' ''"));
 		varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray[0].get_str()));
 		varray = r.get_array();
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate 1"));
 		// activation
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' false 0 '' '' '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' 3 0 '' '' '' ''"));
 		varray1 = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray1[0].get_str()));
 		varray1 = r.get_array();
