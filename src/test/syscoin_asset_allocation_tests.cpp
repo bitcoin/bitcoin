@@ -134,8 +134,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 	for (int i = 0; i < 1000; i++) {
 		string aliasname = "jagthroughput-" + boost::lexical_cast<string>(i);
 		string aliasnameto = "jagthroughput3-" + boost::lexical_cast<string>(i);
-		AliasNew("node1",aliasname, "data");
-
+	
 		// registration
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' no 0 '' '' '' ''"));
 		UniValue varray = r.get_array();
@@ -154,7 +153,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 
 		// registration
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' no 0 '' '' '' ''"));
-		UniValue varray = r.get_array();
+		varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray[0].get_str()));
 		varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray[0].get_str()));
@@ -162,7 +161,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate 1"));
 		// activation
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' no 0 '' '' '' ''"));
-		UniValue varray1 = r.get_array();
+		varray1 = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray1[0].get_str()));
 		varray1 = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray1[0].get_str()));
@@ -187,9 +186,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 	int count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\"" + " '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\"" + " '' ''"));
 		UniValue arr = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
 
 		assetSendTxVec.push_back(hex_str);
