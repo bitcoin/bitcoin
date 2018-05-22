@@ -261,7 +261,7 @@ bool WalletInit::Open() const
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()));
+        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()));
         if (!pwallet) {
             return false;
         }
@@ -273,7 +273,7 @@ bool WalletInit::Open() const
 
 void WalletInit::Start(CScheduler& scheduler, CConnman* connman) const
 {
-    for (CWallet* pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->postInitProcess(gArgs.GetBoolArg("-mnconflock", true) ? true : false);
     }
     if(HasWallets()) privateSendClient.Controller(scheduler, connman);
@@ -284,14 +284,14 @@ void WalletInit::Start(CScheduler& scheduler, CConnman* connman) const
 
 void WalletInit::Flush() const
 {
-    for (CWallet* pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->Flush(false);
     }
 }
 
 void WalletInit::Stop() const
 {
-    for (CWallet* pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->Flush(true);
     }
     // Stop PrivateSend, release keys
@@ -301,9 +301,8 @@ void WalletInit::Stop() const
 
 void WalletInit::Close() const
 {
-    for (CWallet* pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         RemoveWallet(pwallet);
-        delete pwallet;
     }
 }
 
@@ -321,7 +320,7 @@ WalletInterface* const g_wallet_interface = &g_wallet;
 bool CWalletInterface::CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
 {
     bool foundmnout = false;
-    for (CWallet* pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         if (pwallet->GetMasternodeOutpointAndKeys(outpointRet, destRet, pubKeyRet, keyRet, strTxHash, strOutputIndex))
             foundmnout = true;
     }

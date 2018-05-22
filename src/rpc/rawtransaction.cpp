@@ -990,7 +990,8 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
 UniValue signrawtransaction(const JSONRPCRequest& request)
 {
 #ifdef ENABLE_WALLET
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
 #endif
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
