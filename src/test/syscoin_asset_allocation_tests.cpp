@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_througput)
 		string guid = AssetNew("node1", "usd", aliasname, "data", "8", "false", "1", "-1");
 		assetMap[guid] = aliasnameto;
 		if (i % 100 == 0)
-			printf("%d percentage done\n", 100 / (1000 / i));
+			printf("%d percentage done\n", 100 / (1000 / (i+1)));
 	}
 	printf("Creating assetsend transactions to node3 alias...\n");
 	vector<string> assetSendTxVec;
