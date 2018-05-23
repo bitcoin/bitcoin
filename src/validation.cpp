@@ -84,6 +84,7 @@ CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
 // SYSCOIN
+int64_t nLastMultithreadMempoolFailure = 0;
 bool fLoaded = false;
 tp::ThreadPool threadpool;
 std::atomic_bool fImporting(false);
@@ -1219,7 +1220,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				if (!pool.exists(hash))
 					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 			}
-			std::packaged_task<void()> t([&pool, chainHeight, tx, nFees, hash, coins_to_uncache, fromPeer]() {
+			std::packaged_task<void()> t([&pool, chainHeight, tx, nFees, hash, coins_to_uncache]() {
 				CValidationState vstate;
 				CCoinsViewCache &vview = *pcoinsTip;
 				if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true)) {
