@@ -353,7 +353,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 			printf("%.2f percentage done\n", 100.0f / (1000.0f / (i + 1)));
 	}
 	printf("creating receiver 1000 aliases/asset...\n");
+	int count = 0;
 	for (auto& assetTuple : assetMap) {
+		count++;
 		string aliasname = assetTuple.first;
 
 		// registration
@@ -372,12 +374,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray1[0].get_str()));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate 1"));
-		if (i % 100 == 0)
-			printf("%.2f percentage done\n", 100.0f / (1000.0f / (i + 1)));
+		if (count % 100 == 0)
+			printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
 	}
 	printf("Creating assetsend transactions to node3 alias...\n");
 	vector<string> assetSendTxVec;
-	int count = 0;
+	count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\" '' ''"));
