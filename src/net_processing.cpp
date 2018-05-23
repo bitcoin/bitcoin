@@ -568,7 +568,7 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
 } // namespace
 
 // This function is used for testing the stale tip eviction logic, see
-// DoS_tests.cpp
+// denialofservice_tests.cpp
 void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
 {
     LOCK(cs_main);
