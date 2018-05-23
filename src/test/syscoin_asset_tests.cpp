@@ -304,7 +304,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 {
 	UniValue r;
 	printf("Running generate_asset_througput...\n");
-	GenerateBlocks(5);
+	GenerateBlocks(5, "node1");
+	GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
 	map<string, string> assetAliasMap;
 	// create 1000 aliases and assets for each asset
@@ -352,9 +353,17 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "decoderawtransaction " + hex_str));
+
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 		string guid = arr[1].get_str();
+
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + aliasname + " " + "\"[{\\\"aliasto\\\":\\\"" + aliasname + "\\\",\\\"amount\\\":1}]\"" + " '' ''"));
+		UniValue arr = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+		string hex_str = find_value(r.get_obj(), "hex").get_str();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+
 		assetMap[guid] = aliasnameto;
 		assetAliasMap[guid] = aliasname;
 		if (i % 100 == 0)
@@ -365,7 +374,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 	int count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\"" + " '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\"" + " '' ''"));
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
