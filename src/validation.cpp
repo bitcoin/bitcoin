@@ -1236,7 +1236,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					return;
 				}
 				if (!CheckSyscoinInputs(tx, vstate, true, chainActive.Height(), CBlock())) {
-					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs Frror", hash.ToString(), vstate.GetRejectReason());
+					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 						pcoinsTip->Uncache(hashTx);
 					pool.removeRecursive(tx, MemPoolRemovalReason::UNKNOWN);
@@ -1311,8 +1311,10 @@ bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const
                         bool fOverrideMempoolLimit, const CAmount nAbsurdFee, bool fDryRun, bool bMultiThreaded)
 {
 	// SYSCOIN if its been less 60 seconds since the last MT mempool verification failure then fallback to single threaded
-	if (GetTime() - nLastMultithreadMempoolFailure < 60)
+	if (GetTime() - nLastMultithreadMempoolFailure < 60) {
+		LogPrintf("mempool", "AcceptToMemoryPoolWithTime: switching to single thread verification...\n");
 		bMultiThreaded = false;
+	}
     std::vector<COutPoint> coins_to_uncache;
     bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, nAcceptTime, plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, coins_to_uncache, fDryRun, bMultiThreaded);
     if (!res || fDryRun) {
@@ -1915,7 +1917,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 					return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
-			if (cacheFullScriptStore && !pvChecks) {
+			if (cacheFullScriptStore) {
 				// We executed all of the provided scripts, and were told to
 				// cache the result. Do so now.
 				scriptExecutionCache.insert(hashCacheEntry);
@@ -2526,7 +2528,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
             std::vector<CScriptCheck> vChecks;
-            bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
+			// SYSCOIN cache results always
+            bool fCacheResults = true;
             if (!CheckInputs(tx, state, view, fScriptChecks, STANDARD_SCRIPT_VERIFY_FLAGS, fCacheResults, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
