@@ -413,8 +413,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 		UniValue responesObj = tpsresponse[i].get_obj();
 		string txid = find_value(responesObj, "txid").get_str();
 		int64_t timeRecv = find_value(responesObj, "time").get_int64();
-		if (sendTimes.find(txid) == sendTimes.end())
+		if (sendTimes.find(txid) == sendTimes.end()) {
+			printf("Cannot find received txid from the sender list! skipping...\n");
 			continue;
+		}
 		totalTime += timeRecv - sendTimes[txid];
 	}
 	totalTime /= tpsresponse.size();
