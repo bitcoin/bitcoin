@@ -304,8 +304,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 {
 	UniValue r;
 	printf("Running generate_asset_througput...\n");
-	GenerateBlocks(50, "node1");
-	GenerateBlocks(50, "node3");
+	GenerateBlocks(5, "node1");
+	GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
 	map<string, string> assetAliasMap;
 	// create 1000 aliases and assets for each asset
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 
 		// registration
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' 3 0 '' '' '' ''"));
+	/*	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' 3 0 '' '' '' ''"));
 		varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray[0].get_str()));
 		varray = r.get_array();
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray1[0].get_str()));
 		varray1 = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray1[0].get_str()));
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));*/
 
 
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew tpstest " + aliasname + " '' " + " assets " + " 8 false 1 10 0 false ''"));
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 		string guid = arr[1].get_str();
 
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + aliasname + " " + "\"[{\\\"aliasto\\\":\\\"" + aliasname + "\\\",\\\"amount\\\":1}]\"" + " '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + aliasname + " " + "\"[{\\\"aliasto\\\":\\\"" + aliasname + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 	int count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\"" + " '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
