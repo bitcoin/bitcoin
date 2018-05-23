@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 	int count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
-		string aliasname = assetTuple.first;
+		string aliasname = assetTuple.second;
 
 		// registration
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasname + " '' 3 0 '' '' '' ''"));
