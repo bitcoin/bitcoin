@@ -1872,6 +1872,21 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 {
     if (!tx.IsCoinBase())
     {
+		// First check if script executions have been cached with the same
+		// flags. Note that this assumes that the inputs provided are
+		// correct (ie that the transaction hash which is in tx's prevouts
+		// properly commits to the scriptPubKey in the inputs view of that
+		// transaction).
+		uint256 hashCacheEntry;
+		// We only use the first 19 bytes of nonce to avoid a second SHA
+		// round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
+		static_assert(55 - sizeof(flags) - 32 >= 128 / 8, "Want at least 128 bits of nonce for script execution cache");
+		CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetHash().begin(), 32).Finalize(hashCacheEntry.begin());
+		if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
+			if (isCached)
+				*isCached = true;
+			return true;
+		}
         if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
             return false;
 
@@ -1888,21 +1903,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         // Of course, if an assumed valid block is invalid due to false scriptSigs
         // this optimization would allow an invalid chain to be accepted.
         if (fScriptChecks) {
-			// First check if script executions have been cached with the same
-			// flags. Note that this assumes that the inputs provided are
-			// correct (ie that the transaction hash which is in tx's prevouts
-			// properly commits to the scriptPubKey in the inputs view of that
-			// transaction).
-			uint256 hashCacheEntry;
-			// We only use the first 19 bytes of nonce to avoid a second SHA
-			// round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
-			static_assert(55 - sizeof(flags) - 32 >= 128 / 8, "Want at least 128 bits of nonce for script execution cache");
-			CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetHash().begin(), 32).Finalize(hashCacheEntry.begin());
-			if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
-				if(isCached)
-					*isCached = true;
-				return true;
-			}
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 const COutPoint &prevout = tx.vin[i].prevout;
                 const Coin& coin = inputs.AccessCoin(prevout);
