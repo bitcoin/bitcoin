@@ -48,10 +48,10 @@ public:
 
     /// Manage status of main Masternode
     void ManageStatus(); 
-    std::string GetStatus();
+    std::string GetStatus() const;
 
     /// Enable cold wallet mode (run a Masternode with no funds)
-    bool EnableHotColdMasterNode(CTxIn& vin, CService& addr);
+    bool EnableHotColdMasterNode(const CTxIn& vin, const CService& addr);
 };
 
 #endif
