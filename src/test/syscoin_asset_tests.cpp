@@ -358,9 +358,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 		string guid = arr[1].get_str();
 
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + aliasname + " " + "\"[{\\\"aliasto\\\":\\\"" + aliasname + "\\\",\\\"amount\\\":1}]\"" + " '' ''"));
-		UniValue arr = r.get_array();
+		arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
-		string hex_str = find_value(r.get_obj(), "hex").get_str();
+		hex_str = find_value(r.get_obj(), "hex").get_str();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 
