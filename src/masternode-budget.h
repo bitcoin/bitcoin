@@ -247,6 +247,8 @@ protected:
             return a.nProposalHash < b.nProposalHash;
         else if (a.payee != b.payee)
             return a.payee < b.payee;
+        else
+            return false;
     }
 
 public:

@@ -1659,12 +1659,12 @@ CFinalizedBudget::CFinalizedBudget()
 }
 
 CFinalizedBudget::CFinalizedBudget(std::string strBudgetName, int nBlockStart, std::vector<CTxBudgetPayment> vecBudgetPayments, uint256 nFeeTXHash)
-    : strBudgetName(strBudgetName)
-    , nBlockStart(nBlockStart)
+    : fAutoChecked(false)
     , vecBudgetPayments(vecBudgetPayments)
+    , strBudgetName(strBudgetName)
+    , nBlockStart(nBlockStart)
     , nFeeTXHash(nFeeTXHash)
     , fValid(true)
-    , fAutoChecked(false)
     , nTime(0)
 {
     boost::sort(this->vecBudgetPayments, ComparePayments);
@@ -1689,7 +1689,6 @@ bool CFinalizedBudget::AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::st
     LOCK(cs);
 
     uint256 masternodeHash = vote.vin.prevout.GetHash();
-    uint256 voteHash = vote.GetHash();
     map<uint256, CFinalizedBudgetVote>::iterator found = mapVotes.find(masternodeHash);
 
     if(found != mapVotes.end()){
@@ -1732,6 +1731,8 @@ public:
             return a->GetHash() < b->GetHash();
         else if (a->GetPayee() != b->GetPayee())
             return a->GetPayee() < b->GetPayee();
+        else
+            return false;
     }    
 };
 
