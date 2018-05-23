@@ -1222,8 +1222,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			}
 			std::packaged_task<void()> t([&pool, chainHeight, tx, nFees, hash, coins_to_uncache]() {
 				CValidationState vstate;
+				bool isCached = false;
 				CCoinsViewCache &vview = *pcoinsTip;
-				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true)) {
+				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, isCached)) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 						 pcoinsTip->Uncache(hashTx);
@@ -1235,7 +1236,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					nLastMultithreadMempoolFailure = GetTime();
 					return;
 				}
-				if (!CheckSyscoinInputs(tx, vstate, true, chainActive.Height(), CBlock())) {
+				if (!isCached && !CheckSyscoinInputs(tx, vstate, true, chainActive.Height(), CBlock())) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 						pcoinsTip->Uncache(hashTx);
@@ -1861,7 +1862,7 @@ void InitScriptExecutionCache() {
 	LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
 		(nElems * sizeof(uint256)) >> 20, (nMaxCacheSize * 2) >> 20, nElems);
 }
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks, bool *isCached)
 {
     if (!tx.IsCoinBase())
     {
@@ -1892,6 +1893,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			static_assert(55 - sizeof(flags) - 32 >= 128 / 8, "Want at least 128 bits of nonce for script execution cache");
 			CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetHash().begin(), 32).Finalize(hashCacheEntry.begin());
 			if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
+				if(isCached)
+					*isCached = true;
 				return true;
 			}
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
