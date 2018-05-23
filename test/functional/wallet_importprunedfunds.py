@@ -9,6 +9,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    find_vout_for_address,
 )
 
 class ImportPrunedFundsTest(BitcoinTestFramework):
@@ -57,16 +58,22 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         rawtxn1 = self.nodes[0].gettransaction(txnid1)['hex']
         proof1 = self.nodes[0].gettxoutproof([txnid1])
+        vout1 = find_vout_for_address(self.nodes[0], txnid1, address1)
+        self.nodes[0].lockunspent(False, [{"txid" : txnid1, "vout" : vout1}])
 
         txnid2 = self.nodes[0].sendtoaddress(address2, 0.05)
         self.nodes[0].generate(1)
         rawtxn2 = self.nodes[0].gettransaction(txnid2)['hex']
         proof2 = self.nodes[0].gettxoutproof([txnid2])
+        vout2 = find_vout_for_address(self.nodes[0], txnid2, address2)
+        self.nodes[0].lockunspent(False, [{"txid" : txnid2, "vout" : vout2}])
 
         txnid3 = self.nodes[0].sendtoaddress(address3, 0.025)
         self.nodes[0].generate(1)
         rawtxn3 = self.nodes[0].gettransaction(txnid3)['hex']
         proof3 = self.nodes[0].gettxoutproof([txnid3])
+        vout3 = find_vout_for_address(self.nodes[0], txnid3, address3)
+        self.nodes[0].lockunspent(False, [{"txid" : txnid3, "vout" : vout3}])
 
         self.sync_all()
 

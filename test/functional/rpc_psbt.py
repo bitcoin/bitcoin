@@ -38,6 +38,9 @@ class PSBTTest(BitcoinTestFramework):
         p2sh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "legacy")['address']
         p2wsh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "bech32")['address']
         p2sh_p2wsh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "p2sh-segwit")['address']
+        self.nodes[1].importaddress(p2sh)
+        self.nodes[1].importaddress(p2wsh)
+        self.nodes[1].importaddress(p2sh_p2wsh)
         p2wpkh = self.nodes[1].getnewaddress("", "bech32")
         p2pkh = self.nodes[1].getnewaddress("", "legacy")
         p2sh_p2wpkh = self.nodes[1].getnewaddress("", "p2sh-segwit")
@@ -101,7 +104,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Make sure that a psbt with signatures cannot be converted
         signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx['hex'])
-        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].converttopsbt, signedtx['hex'])
+        assert_raises_rpc_error(-22, None, self.nodes[0].converttopsbt, signedtx['hex'])
 
         # Explicilty allow converting non-empty txs
         new_psbt = self.nodes[0].converttopsbt(rawtx['hex'])

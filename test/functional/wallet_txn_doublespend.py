@@ -40,9 +40,13 @@ class TxnMallTest(BitcoinTestFramework):
         fund_foo_txid = self.nodes[0].sendtoaddress(node0_address_foo, 1219)
         fund_foo_tx = self.nodes[0].gettransaction(fund_foo_txid)
 
+        # lock fund_foo_tx output to prevent fund_bar_tx from spending it
+        self.nodes[0].lockunspent(False, [{'txid' : fund_foo_txid, 'vout' : find_output(self.nodes[0], fund_foo_txid, 1219)}])
+
         node0_address_bar = self.nodes[0].getnewaddress()
         fund_bar_txid = self.nodes[0].sendtoaddress(node0_address_bar, 29)
         fund_bar_tx = self.nodes[0].gettransaction(fund_bar_txid)
+        self.nodes[0].lockunspent(True)
 
         assert_equal(self.nodes[0].getbalance(),
                      starting_balance + fund_foo_tx["fee"] + fund_bar_tx["fee"])

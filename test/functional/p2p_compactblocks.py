@@ -99,7 +99,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.num_nodes = 2
         # This test was written assuming SegWit is activated using BIP9 at height 432 (3x confirmation window).
         # TODO: Rewrite this test to support SegWit being always active.
-        self.extra_args = [["-vbparams=segwit:0:0"], ["-vbparams=segwit:0:999999999999", "-txindex", "-deprecatedrpc=addwitnessaddress"]]
+        self.extra_args = [["-vbparams=segwit:0:0"], ["-vbparams=segwit:0:999999999999", "-txindex", "-deprecatedrpc=addwitnessaddress", "-changetype=legacy"]]
         self.utxos = []
 
     def build_block_on_tip(self, node, segwit=False):
@@ -258,7 +258,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Generate a bunch of transactions.
         node.generate(101)
         num_transactions = 25
-        address = node.getnewaddress()
+        address = node.getnewaddress(address_type='legacy')
         if use_witness_address:
             # Want at least one segwit spend, so move all funds to
             # a witness address.

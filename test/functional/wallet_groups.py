@@ -10,11 +10,17 @@ from test_framework.util import (
     assert_equal,
 )
 
-def assert_approx(v, vexp, vspan=0.00001):
+def is_approx(v, vexp, vspan=0.00001):
     if v < vexp - vspan:
-        raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
+        return (False, ("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan))))
     if v > vexp + vspan:
-        raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
+        return (False, ("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan))))
+    return (True, "")
+
+def assert_approx(v, vexp, vspan=0.00001):
+    res = is_approx(v, vexp, vspan)
+    if not res[0]:
+        raise AssertionError(res[1])
 
 class WalletGroupTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -40,7 +46,7 @@ class WalletGroupTest(BitcoinTestFramework):
         self.sync_all()
 
         # For each node, send 0.2 coins back to 0;
-        # - node[1] should pick one 0.5 UTXO and leave the rest
+        # - node[1] should pick one 0.5 UTXO or one 1.0 UTXO and leave the rest
         # - node[2] should pick one (1.0 + 0.5) UTXO group corresponding to a
         #   given address, and leave the rest
         txid1 = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 0.2)
@@ -48,11 +54,11 @@ class WalletGroupTest(BitcoinTestFramework):
         # txid1 should have 1 input and 2 outputs
         assert_equal(1, len(tx1["vin"]))
         assert_equal(2, len(tx1["vout"]))
-        # one output should be 0.2, the other should be ~0.3
+        # one output should be 0.2, the other should be ~0.3 or ~0.8
         v = [vout["value"] for vout in tx1["vout"]]
         v.sort()
         assert_approx(v[0], 0.2)
-        assert_approx(v[1], 0.3, 0.0001)
+        assert is_approx(v[1], 0.3, 0.0001) or is_approx(v[1], 0.8, 0.0001)
 
         txid2 = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 0.2)
         tx2 = self.nodes[2].getrawtransaction(txid2, True)

@@ -9,6 +9,7 @@ from test_framework.util import (
     assert_equal,
     connect_nodes,
     disconnect_nodes,
+    find_output,
     sync_blocks,
 )
 
@@ -46,9 +47,13 @@ class TxnMallTest(BitcoinTestFramework):
         node0_txid1 = self.nodes[0].sendtoaddress(node0_address1, 1219)
         node0_tx1 = self.nodes[0].gettransaction(node0_txid1)
 
+        # lock node0_tx1 output to prevent node0_tx2 from spending it
+        self.nodes[0].lockunspent(False, [{'txid' : node0_txid1, 'vout' : find_output(self.nodes[0], node0_txid1, 1219)}])
+
         node0_address2 = self.nodes[0].getnewaddress(address_type=output_type)
         node0_txid2 = self.nodes[0].sendtoaddress(node0_address2, 29)
         node0_tx2 = self.nodes[0].gettransaction(node0_txid2)
+        self.nodes[0].lockunspent(True)
 
         assert_equal(self.nodes[0].getbalance(),
                      starting_balance + node0_tx1["fee"] + node0_tx2["fee"])
@@ -56,15 +61,32 @@ class TxnMallTest(BitcoinTestFramework):
         # Coins are sent to node1_address
         node1_address = self.nodes[1].getnewaddress()
 
+        # Lock the outputs for node0_tx2 to avoid having that as a parent for tx1
+        to_lock = []
+        for vout in self.nodes[0].decoderawtransaction(node0_tx2['hex'])['vout']:
+            to_lock.append({'txid' : node0_txid2, 'vout' : vout['n']})
+        self.nodes[0].lockunspent(False, to_lock)
+
         # Send tx1, and another transaction tx2 that won't be cloned
         txid1 = self.nodes[0].sendtoaddress(node1_address, 40)
+        self.nodes[0].lockunspent(True) # Unlock locked outputs
+
+        # Lock the outputs for tx1 to avoid having that as a parent for tx2
+        to_lock = []
+        for vout in self.nodes[0].decoderawtransaction(self.nodes[0].getrawtransaction(txid1))['vout']:
+            to_lock.append({'txid' : txid1, 'vout' : vout['n']})
+        self.nodes[0].lockunspent(False, to_lock)
         txid2 = self.nodes[0].sendtoaddress(node1_address, 20)
+        self.nodes[0].lockunspent(True)
 
         # Construct a clone of tx1, to be malleated
         rawtx1 = self.nodes[0].getrawtransaction(txid1, 1)
-        clone_inputs = [{"txid": rawtx1["vin"][0]["txid"], "vout": rawtx1["vin"][0]["vout"]}]
-        clone_outputs = {rawtx1["vout"][0]["scriptPubKey"]["addresses"][0]: rawtx1["vout"][0]["value"],
-                         rawtx1["vout"][1]["scriptPubKey"]["addresses"][0]: rawtx1["vout"][1]["value"]}
+        clone_inputs = []
+        for vin in rawtx1['vin']:
+            clone_inputs.append({"txid": vin["txid"], "vout": vin["vout"]})
+        clone_outputs = {}
+        for vout in rawtx1['vout']:
+            clone_outputs[vout["scriptPubKey"]["addresses"][0]] = vout['value']
         clone_locktime = rawtx1["locktime"]
         clone_raw = self.nodes[0].createrawtransaction(clone_inputs, clone_outputs, clone_locktime)
 
@@ -108,8 +130,9 @@ class TxnMallTest(BitcoinTestFramework):
             assert_equal(tx1["confirmations"], 0)
             assert_equal(tx2["confirmations"], 0)
 
-        # Send clone and its parent to miner
-        self.nodes[2].sendrawtransaction(node0_tx1["hex"])
+        # Send clone and its parents to miner
+        for vin in rawtx1['vin']:
+            self.nodes[2].sendrawtransaction(self.nodes[0].getrawtransaction(vin['txid']))
         txid1_clone = self.nodes[2].sendrawtransaction(tx1_clone["hex"])
         if self.options.segwit:
             assert_equal(txid1, txid1_clone)
@@ -120,7 +143,8 @@ class TxnMallTest(BitcoinTestFramework):
 
         # Reconnect the split network, and sync chain:
         connect_nodes(self.nodes[1], 2)
-        self.nodes[2].sendrawtransaction(node0_tx2["hex"])
+        for vin in self.nodes[0].decoderawtransaction(tx2['hex'])['vin']:
+            self.nodes[2].sendrawtransaction(self.nodes[0].getrawtransaction(vin['txid']))
         self.nodes[2].sendrawtransaction(tx2["hex"])
         self.nodes[2].generate(1)  # Mine another block to make sure we sync
         sync_blocks(self.nodes)
