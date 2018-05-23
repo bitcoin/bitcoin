@@ -1313,7 +1313,7 @@ bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const
 {
 	// SYSCOIN if its been less 60 seconds since the last MT mempool verification failure then fallback to single threaded
 	if (GetTime() - nLastMultithreadMempoolFailure < 60) {
-		LogPrintf("mempool", "AcceptToMemoryPoolWithTime: switching to single thread verification...\n");
+		LogPrint("mempool", "%s\n", "AcceptToMemoryPoolWithTime: switching to single thread verification...");
 		bMultiThreaded = false;
 	}
     std::vector<COutPoint> coins_to_uncache;
