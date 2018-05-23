@@ -377,6 +377,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 		if (count % 100 == 0)
 			printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
 	}
+	GenerateBlocks(10);
 	printf("Creating assetsend transactions to node3 alias...\n");
 	vector<string> assetSendTxVec;
 	count = 0;
