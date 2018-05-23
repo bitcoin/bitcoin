@@ -336,11 +336,11 @@ typedef int64_t NodeId;
  * plTxnReplaced will be appended to with all transactions replaced from mempool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
 	bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced = NULL, bool fOverrideMempoolLimit = false,
-	const CAmount nAbsurdFee = 0, bool fDryRun = false);
+	const CAmount nAbsurdFee = 0, bool fDryRun = false, bool bMultiThreaded = false);
 /** (try to) add transaction to memory pool with a specified acceptance time **/
 bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
                         bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced = NULL,
-                        bool fOverrideMempoolLimit=false, const CAmount nAbsurdFee=0, bool fDryRun=false);
+                        bool fOverrideMempoolLimit=false, const CAmount nAbsurdFee=0, bool fDryRun=false, bool bMultiThreaded = false);
 // SYSCOIN
 inline CBlockIndex* LookupBlockIndex(const uint256& hash)
 {
