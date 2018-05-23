@@ -1223,7 +1223,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			std::packaged_task<void()> t([&pool, chainHeight, tx, nFees, hash, coins_to_uncache]() {
 				CValidationState vstate;
 				CCoinsViewCache &vview = *pcoinsTip;
-				if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true)) {
+				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true)) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 						 pcoinsTip->Uncache(hashTx);
@@ -1235,7 +1235,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					nLastMultithreadMempoolFailure = GetTime();
 					return;
 				}
-				if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
+				if (!CheckSyscoinInputs(tx, vstate, true, chainActive.Height(), CBlock())) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs Frror", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 						pcoinsTip->Uncache(hashTx);
