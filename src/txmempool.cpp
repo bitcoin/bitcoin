@@ -1056,14 +1056,25 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
 }
 
 uint64_t CTxMemPool::CalculateDescendantMaximum(txiter entry) const {
-    // find top parent
-    txiter top = entry;
-    for (;;) {
-        const setEntries& parents = GetMemPoolParents(top);
-        if (parents.size() == 0) break;
-        top = *parents.begin();
+    // find parent with highest descendant count
+    std::vector<txiter> candidates;
+    setEntries counted;
+    candidates.push_back(entry);
+    uint64_t maximum = 0;
+    while (candidates.size()) {
+        txiter candidate = candidates.back();
+        candidates.pop_back();
+        if (!counted.insert(candidate).second) continue;
+        const setEntries& parents = GetMemPoolParents(candidate);
+        if (parents.size() == 0) {
+            maximum = std::max(maximum, candidate->GetCountWithDescendants());
+        } else {
+            for (txiter i : parents) {
+                candidates.push_back(i);
+            }
+        }
     }
-    return top->GetCountWithDescendants();
+    return maximum;
 }
 
 void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const {
