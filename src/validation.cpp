@@ -1224,7 +1224,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				CValidationState vstate;
 				bool isCached = false;
 				CCoinsViewCache &vview = *pcoinsTip;
-				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &isCached)) {
+				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, NULL, &isCached)) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 						 pcoinsTip->Uncache(hashTx);
