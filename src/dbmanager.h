@@ -40,6 +40,8 @@ public:
 private:
     bool Write(const T& objToSave);
     ReadResult Read(T& objToLoad, bool fDryRun = false);
+    ReadResult DeserializeStream(CDataStream& stream, T& objToLoad) const;
+    ReadResult ReadStream(CDataStream& stream) const;
 
 private:
     boost::filesystem::path m_pathDb;
@@ -94,9 +96,8 @@ bool DbManager<T>::Write(const T& objToSave)
 }
 
 template <typename T>
-typename DbManager<T>::ReadResult DbManager<T>::Read(T& objToLoad, bool fDryRun)
+typename DbManager<T>::ReadResult DbManager<T>::ReadStream(CDataStream& stream) const
 {
-    int64_t nStart = GetTimeMillis();
     // open input file, and associate with CAutoFile
     FILE *file = fopen(m_pathDb.string().c_str(), "rb");
     CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
@@ -105,7 +106,6 @@ typename DbManager<T>::ReadResult DbManager<T>::Read(T& objToLoad, bool fDryRun)
         error("%s: Failed to open file %s", __func__, m_pathDb.string());
         return FileError;
     }
-
     // use file size to size memory buffer
     int fileSize = boost::filesystem::file_size(m_pathDb);
     int dataSize = fileSize - sizeof(uint256);
@@ -128,42 +128,59 @@ typename DbManager<T>::ReadResult DbManager<T>::Read(T& objToLoad, bool fDryRun)
     }
     filein.fclose();
 
-    CDataStream ssObj(vchData, SER_DISK, CLIENT_VERSION);
-
+    stream = CDataStream(vchData, SER_DISK, CLIENT_VERSION);
     // verify stored checksum matches input data
-    uint256 hashTmp = Hash(ssObj.begin(), ssObj.end());
+    uint256 hashTmp = Hash(stream.begin(), stream.end());
     if (hashIn != hashTmp)
     {
         error("%s: Checksum mismatch, data corrupted", __func__);
         return IncorrectHash;
     }
+    return Ok;
+}
 
+template <typename T>
+typename DbManager<T>::ReadResult DbManager<T>::DeserializeStream(CDataStream& stream, T& objToLoad) const
+{
     unsigned char pchMsgTmp[4];
     std::string strMagicMessageTmp;
+    // de-serialize file header (file specific magic message) and ..
+    stream >> strMagicMessageTmp;
+
+    // ... verify the message matches predefined one
+    if (m_magicMessage != strMagicMessageTmp)
+    {
+        error("%s: Invalid magic message", __func__);
+        return IncorrectMagicMessage;
+    }
+
+    // de-serialize file header (network specific magic number) and ..
+    stream >> FLATDATA(pchMsgTmp);
+
+    // ... verify the network matches ours
+    if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
+    {
+        error("%s: Invalid network magic number", __func__);
+        return IncorrectMagicNumber;
+    }
+
+    // de-serialize data into T object
+    stream >> objToLoad;
+    return Ok;
+}
+
+template <typename T>
+typename DbManager<T>::ReadResult DbManager<T>::Read(T& objToLoad, bool fDryRun)
+{
+    CDataStream ssObj(SER_DISK, CLIENT_VERSION);
+    ReadResult result = ReadStream(ssObj);
+    if (result != Ok)
+        return result;
     try
     {
-        // de-serialize file header (file specific magic message) and ..
-        ssObj >> strMagicMessageTmp;
-
-        // ... verify the message matches predefined one
-        if (m_magicMessage != strMagicMessageTmp)
-        {
-            error("%s: Invalid magic message", __func__);
-            return IncorrectMagicMessage;
-        }
-
-        // de-serialize file header (network specific magic number) and ..
-        ssObj >> FLATDATA(pchMsgTmp);
-
-        // ... verify the network matches ours
-        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
-        {
-            error("%s: Invalid network magic number", __func__);
-            return IncorrectMagicNumber;
-        }
-
-        // de-serialize data into T object
-        ssObj >> objToLoad;
+        result = DeserializeStream(ssObj, objToLoad);
+        if (result != Ok)
+            return result;
     }
     catch (std::exception &e)
     {
@@ -172,6 +189,7 @@ typename DbManager<T>::ReadResult DbManager<T>::Read(T& objToLoad, bool fDryRun)
         return IncorrectFormat;
     }
 
+    int64_t nStart = GetTimeMillis();
     LogPrintf("Loaded info from %s  %dms\n", m_filename, GetTimeMillis() - nStart);
     LogPrintf("     %s\n", objToLoad.ToString());
     if(!fDryRun)
