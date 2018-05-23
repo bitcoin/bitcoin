@@ -72,7 +72,7 @@ const unsigned int SMSG_TIME_LEEWAY    = 24;
 const unsigned int SMSG_TIME_IGNORE    = 90;                // seconds a peer is ignored for if they fail to deliver messages for a smsgWant
 
 
-const unsigned int SMSG_MAX_MSG_BYTES  = 4096;              // the user input part
+const unsigned int SMSG_MAX_MSG_BYTES  = 24000;             // the user input part
 const unsigned int SMSG_MAX_AMSG_BYTES = 512;               // the user input part (ANON)
 const unsigned int SMSG_MAX_MSG_BYTES_PAID = 512 * 1024;    // the user input part (Paid)
 

@@ -122,6 +122,7 @@ class AnonTest(ParticlTestFramework):
         unspent = nodes[1].listunspentanon()
         assert(unspent[0]['label'] == 'lblsx11')
         assert(nodes[1].lockunspent(False, [unspent[0]]) == True)
+        assert(len(nodes[1].listlockunspent()) == 1)
         unspentCheck = nodes[1].listunspentanon()
         assert(len(unspentCheck) < len(unspent))
         assert(nodes[1].lockunspent(True, [unspent[0]]) == True)

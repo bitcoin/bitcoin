@@ -544,7 +544,7 @@ class AtomicSwapTest(ParticlTestFramework):
         destA = nodes[0].derivefromstealthaddress(addrA_sx)
         pkh0_0 = b58decode(destA['address'])[1:-4]
 
-        ro = nodes[0].derivefromstealthaddress(addrA_sx, destA['ephemeral'])
+        ro = nodes[0].derivefromstealthaddress(addrA_sx, destA['ephemeral_pubkey'])
         privKeyA = ro['privatekey']
         pubKeyA = ro['pubkey']
 
@@ -552,7 +552,7 @@ class AtomicSwapTest(ParticlTestFramework):
         destB = nodes[0].derivefromstealthaddress(addrB_sx)
         pkh1_0 = b58decode(destB['address'])[1:-4]
 
-        ro = nodes[1].derivefromstealthaddress(addrB_sx, destB['ephemeral'])
+        ro = nodes[1].derivefromstealthaddress(addrB_sx, destB['ephemeral_pubkey'])
         privKeyB = ro['privatekey']
         pubKeyB = ro['pubkey']
 

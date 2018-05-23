@@ -2853,14 +2853,15 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
         } else
         if (r.nType == OUTPUT_CT)
         {
-            CKey sEphem;
+            CKey sEphem = r.sEphem;
 
             /*
             // TODO: Make optional
             if (0 != pc->DeriveNextKey(sEphem, nChild, true))
                 return errorN(1, sError, __func__, "TryDeriveNext failed.");
             */
-            sEphem.MakeNewKey(true);
+            if (!sEphem.IsValid())
+                sEphem.MakeNewKey(true);
 
             if (r.address.type() == typeid(CStealthAddress))
             {
@@ -2931,13 +2932,14 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
         } else
         if (r.nType == OUTPUT_RINGCT)
         {
-            CKey sEphem;
+            CKey sEphem = r.sEphem;
             /*
             // TODO: Make optional
             if (0 != pc->DeriveNextKey(sEphem, nChild, true))
                 return errorN(1, sError, __func__, "TryDeriveNext failed.");
             */
-            sEphem.MakeNewKey(true);
+            if (!sEphem.IsValid())
+                sEphem.MakeNewKey(true);
 
             if (r.address.type() == typeid(CStealthAddress))
             {
@@ -3063,9 +3065,9 @@ int CHDWallet::AddCTData(CTxOutBase *txout, CTempRecipient &r, std::string &sErr
     } else
     {
         if (!r.sEphem.IsValid())
-           return errorN(1, sError, __func__, "Invalid ephemeral key.");
+            return errorN(1, sError, __func__, "Invalid ephemeral key.");
         if (!r.pkTo.IsValid())
-           return errorN(1, sError, __func__, "Invalid recipient pubkey.");
+            return errorN(1, sError, __func__, "Invalid recipient pubkey.");
         nonce = r.sEphem.ECDH(r.pkTo);
         CSHA256().Write(nonce.begin(), 32).Finalize(nonce.begin());
         r.nonce = nonce;
@@ -3423,10 +3425,12 @@ bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r
 
 static bool InsertChangeAddress(CTempRecipient &r, std::vector<CTempRecipient> &vecSend, int &nChangePosInOut)
 {
-    nChangePosInOut = GetRandInt(vecSend.size()+1);
+    if (nChangePosInOut < 0)
+        nChangePosInOut = GetRandInt(vecSend.size()+1);
     if (nChangePosInOut < (int)vecSend.size()
         && vecSend[nChangePosInOut].nType == OUTPUT_DATA)
         nChangePosInOut++;
+
     vecSend.insert(vecSend.begin()+nChangePosInOut, r);
 
     // Insert data output for stealth address if required
@@ -3598,6 +3602,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     nFeeRet += nChange;
                 } else
                 {
+                    nChangePosInOut = coinControl->nChangePos;
                     InsertChangeAddress(r, vecSend, nChangePosInOut);
                 };
             };
@@ -4162,6 +4167,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     nFeeRet += nChange;
                 };
 
+                nChangePosInOut = coinControl->nChangePos;
                 InsertChangeAddress(r, vecSend, nChangePosInOut);
             }
 
@@ -4791,6 +4797,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     nFeeRet += nChange;
                 };
 
+                nChangePosInOut = coinControl->nChangePos;
                 InsertChangeAddress(r, vecSend, nChangePosInOut);
             }
 
@@ -9141,7 +9148,7 @@ int CHDWallet::CheckForStealthAndNarration(const CTxOutBase *pb, const CTxOutDat
     return -1;
 };
 
-bool CHDWallet::FindStealthTransactions(const CTransaction& tx, mapValue_t& mapNarr)
+bool CHDWallet::FindStealthTransactions(const CTransaction &tx, mapValue_t &mapNarr)
 {
     if (LogAcceptCategory(BCLog::HDWALLET))
         LogPrintf("%s: tx: %s.\n", __func__, tx.GetHash().GetHex());
@@ -10600,7 +10607,8 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
     for (auto &outpoint : vPresetInputs)
     {
         MapRecords_t::const_iterator it = mapRecords.find(outpoint.hash);
-        if (it != mapRecords.end())
+        if (it != mapRecords.end()
+            || (it = mapTempRecords.find(outpoint.hash)) != mapTempRecords.end()) // Allows non-wallet inputs
         {
             const CTransactionRecord &rtx = it->second;
             const COutputRecord *oR = rtx.GetOutput(outpoint.n);
@@ -10610,7 +10618,9 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
             nValueFromPresetInputs += oR->nValue;
             vPresetCoins.push_back(std::make_pair(it, outpoint.n));
         } else
-            return false; // TODO: Allow non-wallet inputs
+        {
+            return error("%s: Can't find output %s\n", __func__, outpoint.ToString());
+        };
     };
 
     // Remove preset inputs from vCoins

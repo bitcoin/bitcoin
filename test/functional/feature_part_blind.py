@@ -163,6 +163,7 @@ class BlindTest(ParticlTestFramework):
         # Test lockunspent
         unspent = nodes[1].listunspentblind(minconf=0)
         assert(nodes[1].lockunspent(False, [unspent[0]]) == True)
+        assert(len(nodes[1].listlockunspent()) == 1)
         unspentCheck = nodes[1].listunspentblind(minconf=0)
         assert(len(unspentCheck) < len(unspent))
         assert(nodes[1].lockunspent(True, [unspent[0]]) == True)

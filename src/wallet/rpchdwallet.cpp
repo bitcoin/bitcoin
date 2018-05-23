@@ -775,7 +775,7 @@ static UniValue extkey(const JSONRPCRequest &request)
         "    Default: list, or info when called like: extkey \"key\"\n"
         "\n"
         "extkey info \"key\" ( \"path\" )\n"
-        "    Return info for provided \"key\" or key at \"path\" from \"key\"\n"
+        "    Return info for provided \"key\" or key at \"path\" from \"key\".\n"
         "extkey list ( show_secrets )\n"
         "    List loose and account ext keys.\n"
         "extkey account ( \"key/id\" show_secrets )\n"
@@ -786,7 +786,7 @@ static UniValue extkey(const JSONRPCRequest &request)
         "extkey gen \"passphrase\" ( numhashes \"seedstring\" )\n"
         "    DEPRECATED\n"
         "    If no passhrase is specified key will be generated from random data.\n"
-        "    Warning: It is recommended to not use the passphrase\n"
+        "    Warning: It is not recommended to use this feature.\n"
         "extkey import \"key\" ( \"label\" bip44 save_bip44_key )\n"
         "    Add loose key to wallet.\n"
         "    If bip44 is set import will add the key derived from <key> on the bip44 path.\n"
@@ -802,7 +802,7 @@ static UniValue extkey(const JSONRPCRequest &request)
         "extkey deriveAccount ( \"label\" \"path\" )\n"
         "    Make a new account from the current master key, save to wallet.\n"
         "extkey options \"key\" ( \"optionName\" \"newValue\" )\n"
-        "    Manage keys and accounts\n"
+        "    Manage keys and accounts.\n"
         "\n";
 
     // default mode is list unless 1st parameter is a key - then mode is set to info
@@ -6008,13 +6008,13 @@ static UniValue derivefromstealthaddress(const JSONRPCRequest &request)
             "\nDerive a pubkey from a stealth address and random value.\n"
             "\nArguments:\n"
             "1. \"stealthaddress\"                 (string, required) The stealth address\n"
-            "2. \"ephempubkey\"                    (string, optional) The ephemeral publickey\n"
-            "   If ephempubkey is provided the spending private key will be derived, wallet must be unlocked\n"
+            "2. \"ephemeralvalue\"                 (string, optional) The ephemeral value, interpreted as private key if 32 bytes or public key if 33.\n"
+            "   If an ephemeral public key is provided the spending private key will be derived, wallet must be unlocked\n"
             "\nResult:\n"
             "   {\n"
             "     \"address\":\"base58\",            (string) The derived address\n"
             "     \"pubkey\":\"hex\",                (string) The derived public key\n"
-            "     \"ephemeral\":\"hex\",             (string) The ephemeral value\n"
+            "     \"ephemeral\":\"hex\",             (string) The ephemeral public key\n"
             "     \"privatekey\":\"wif\",            (string) The derived privatekey, if \"ephempubkey\" is provided\n"
             "   }\n"
             "\nExamples:\n"
@@ -6031,7 +6031,7 @@ static UniValue derivefromstealthaddress(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
 
-    CKey sSpendR;
+    CKey sSpendR, sShared, sEphem;
     CPubKey pkEphem, pkDest;
     CTxDestination dest;
 
@@ -6040,30 +6040,50 @@ static UniValue derivefromstealthaddress(const JSONRPCRequest &request)
         EnsureWalletIsUnlocked(pwallet);
 
         std::string s = request.params[1].get_str();
-        if (!IsHex(s) || !(s.size() == 66))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "ephempubkey must be 33 bytes and hex encoded.");
-        std::vector<uint8_t> v = ParseHex(s);
-        pkEphem = CPubKey(v.begin(), v.end());
+        if (!IsHex(s))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "ephemeralvalue must be hex encoded.");
 
-        CKey sSpend;
-        if (!pwallet->GetStealthAddressScanKey(sx))
-            throw JSONRPCError(RPC_WALLET_ERROR, "Scan key not found for stealth address.");
-        if (!pwallet->GetStealthAddressSpendKey(sx, sSpend))
-            throw JSONRPCError(RPC_WALLET_ERROR, "Spend key not found for stealth address.");
+        if (s.size() == 64)
+        {
+            std::vector<uint8_t> v = ParseHex(s);
+            sEphem.Set(v.data(), true);
+            if (!sEphem.IsValid())
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid ephemeral private key.");
+        } else
+        if (s.size() == 66)
+        {
+            std::vector<uint8_t> v = ParseHex(s);
+            pkEphem = CPubKey(v.begin(), v.end());
 
-        ec_point pEphem;;
-        pEphem.resize(EC_COMPRESSED_SIZE);
-        memcpy(&pEphem[0], pkEphem.begin(), pkEphem.size());
+            if (!pkEphem.IsValid())
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid ephemeral public key.");
 
-        if (StealthSecretSpend(sx.scan_secret, pEphem, sSpend, sSpendR) != 0)
-            throw JSONRPCError(RPC_WALLET_ERROR, "StealthSecretSpend failed.");
+            CKey sSpend;
+            if (!pwallet->GetStealthAddressScanKey(sx))
+                throw JSONRPCError(RPC_WALLET_ERROR, "Scan key not found for stealth address.");
+            if (!pwallet->GetStealthAddressSpendKey(sx, sSpend))
+                throw JSONRPCError(RPC_WALLET_ERROR, "Spend key not found for stealth address.");
 
-        pkDest = sSpendR.GetPubKey();
+            ec_point pEphem;;
+            pEphem.resize(EC_COMPRESSED_SIZE);
+            memcpy(&pEphem[0], pkEphem.begin(), pkEphem.size());
+
+            if (StealthSecretSpend(sx.scan_secret, pEphem, sSpend, sSpendR) != 0)
+                throw JSONRPCError(RPC_WALLET_ERROR, "StealthSecretSpend failed.");
+
+            pkDest = sSpendR.GetPubKey();
+        } else
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "ephemeralvalue must be 33 byte public key or 32 byte private key.");
+        }
     } else
     {
-        CKey sShared, sEphem;
-        ec_point pkSendTo;
         sEphem.MakeNewKey(true);
+    };
+
+    if (sEphem.IsValid())
+    {
+        ec_point pkSendTo;
         if (0 != StealthSecret(sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo))
             throw JSONRPCError(RPC_INTERNAL_ERROR, _("StealthSecret failed, try again."));
 
@@ -6075,7 +6095,9 @@ static UniValue derivefromstealthaddress(const JSONRPCRequest &request)
 
     result.pushKV("address", EncodeDestination(dest));
     result.pushKV("pubkey", HexStr(pkDest));
-    result.pushKV("ephemeral", HexStr(pkEphem));
+    result.pushKV("ephemeral_pubkey", HexStr(pkEphem));
+    if (sEphem.IsValid())
+        result.pushKV("ephemeral_privatekey", HexStr(sEphem.begin(), sEphem.end()));
 
     if (sSpendR.IsValid())
         result.pushKV("privatekey", CBitcoinSecret(sSpendR).ToString());
@@ -6467,13 +6489,15 @@ static UniValue createrawparttransaction(const JSONRPCRequest& request)
             "2. \"outputs\"               (array, required) A json array of json objects\n"
             "     [\n"
             "       {\n"
-            "         \"address\": \"str\"   (string, required) The particl address\n"
-            "         \"amount\": x.xxx    (numeric or string, required) The numeric value (can be string) in " + CURRENCY_UNIT + " of the output\n"
-            "         \"data\": \"hex\",     (string, required) The key is \"data\", the value is hex encoded data\n"
-            "         \"type\": \"str\",     (string, optional, default=\"plain\") The type of output to create, plain, blind or anon.\n"
-            "         \"pubkey\": \"hex\",   (string, optional) The key is \"pubkey\", the value is hex encoded public key for encrypting the metadata\n"
+            "         \"address\": \"str\"          (string, required) The particl address\n"
+            "         \"amount\": x.xxx           (numeric or string, required) The numeric value (can be string) in " + CURRENCY_UNIT + " of the output\n"
+            "         \"data\": \"hex\",            (string, required) The key is \"data\", the value is hex encoded data\n"
+            "         \"type\": \"str\",            (string, optional, default=\"plain\") The type of output to create, plain, blind or anon.\n"
+            "         \"pubkey\": \"hex\",          (string, optional) The key is \"pubkey\", the value is hex encoded public key for encrypting the metadata\n"
 //            "         \"subfee\":bool      (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "         \"narration\" \"str\", (string, optional) Up to 24 character narration sent with the transaction.\n"
+            "         \"narration\" \"str\",        (string, optional) Up to 24 character narration sent with the transaction.\n"
+            "         \"blindingfactor\" \"hex\",   (string, optional) Blinding factor to use. Blinding factor is randomly generated if not specified.\n"
+            "         \"ephemeral_key\" \"hex\",    (string, optional) Ephemeral secret key for blinded outputs.\n"
             "       }\n"
             "       ,...\n"
             "     ]\n"
@@ -6549,7 +6573,7 @@ static UniValue createrawparttransaction(const JSONRPCRequest& request)
             }
         }
 
-        const UniValue& blindObj = find_value(o, "blindingfactor");
+        const UniValue &blindObj = find_value(o, "blindingfactor");
         if (blindObj.isStr()) {
             std::string s = blindObj.get_str();
             if (!IsHex(s) || !(s.size() == 64))
@@ -6571,7 +6595,7 @@ static UniValue createrawparttransaction(const JSONRPCRequest& request)
         CTempRecipient r;
 
         uint8_t nType = OUTPUT_STANDARD;
-        const UniValue& typeObj = find_value(o, "type");
+        const UniValue &typeObj = find_value(o, "type");
         if (typeObj.isStr()) {
             std::string s = typeObj.get_str();
             if (s == "standard")
@@ -6609,6 +6633,14 @@ static UniValue createrawparttransaction(const JSONRPCRequest& request)
             std::vector<uint8_t> v = ParseHex(s);
             r.pkTo = CPubKey(v.begin(), v.end());
         };
+        if (o["ephemeral_key"].isStr())
+        {
+            std::string s = o["ephemeral_key"].get_str();
+            if (!IsHex(s) || !(s.size() == 64))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "\"ephemeral_key\" must be 32 bytes and hex encoded.");
+            std::vector<uint8_t> v = ParseHex(s);
+            r.sEphem.Set(v.data(), true);
+        };
 
         if (o["address"].isStr())
         {
@@ -6627,6 +6659,26 @@ static UniValue createrawparttransaction(const JSONRPCRequest& request)
         r.fSubtractFeeFromAmount = fSubtractFeeFromAmount;
         //r.address = address;
         r.sNarration = sNarr;
+
+        // Need to know the fee before calulating the blind sum
+        if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT)
+        {
+            r.vBlind.resize(32);
+            if (o["blindingfactor"].isStr())
+            {
+                std::string s = o["blindingfactor"].get_str();
+                if (!IsHex(s) || !(s.size() == 64))
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Blinding factor must be 32 bytes and hex encoded.");
+
+                uint256 blind;
+                blind.SetHex(s);
+                memcpy(r.vBlind.data(), blind.begin(), 32);
+            } else
+            {
+                // Generate a random blinding factor if not provided
+                GetStrongRandBytes(r.vBlind.data(), 32);
+            };
+        };
 
         vecSend.push_back(r);
     };
@@ -6667,10 +6719,6 @@ static UniValue createrawparttransaction(const JSONRPCRequest& request)
 
         if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT)
         {
-            r.vBlind.resize(32);
-            // Need to know the fee before calulating the blind sum
-            GetStrongRandBytes(&r.vBlind[0], 32);
-
             uint256 blind(r.vBlind.data(), 32);
             amount.pushKV("blind", blind.ToString());
 
@@ -6730,7 +6778,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             "       \"n\":\n"
             "         {\n"
             "           \"value\":amount\n"
-            "           \"blind\":\"hex\"\n"
+            //"           \"blind\":\"hex\"\n"
             "           \"nonce\":\"hex\"\n"
             "         }\n"
             "   }\n"
@@ -6749,6 +6797,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             "                              If no outputs are specified here, the sender pays the fee.\n"
             "                                  [vout_index,...]\n"
             "     \"replaceable\"            (boolean, optional) Marks this transaction as BIP125 replaceable.\n"
+            "     \"allow_other_inputs\"     (boolean, optional, default=true) Allow inputs to be added if any inputs already exist.\n"
             "                              Allows this transaction to be replaced by a transaction with higher fees\n"
             "     \"conf_target\"            (numeric, optional) Confirmation target (in blocks)\n"
             "     \"estimate_mode\"          (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
@@ -6790,6 +6839,8 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
     UniValue subtractFeeFromOutputs;
     std::set<int> setSubtractFeeFromOutputs;
 
+    coinControl.fAllowOtherInputs = true;
+
     if (request.params[4].isObject()) {
         UniValue options = request.params[4];
 
@@ -6803,6 +6854,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
                 {"feeRate", UniValueType()}, // will be checked below
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
+                {"allow_other_inputs", UniValueType(UniValue::VBOOL)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
             },
@@ -6849,6 +6901,9 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
         if (options.exists("replaceable")) {
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
+        if (options.exists("allow_other_inputs")) {
+            coinControl.fAllowOtherInputs = options["allow_other_inputs"].get_bool();
+        }
         if (options.exists("conf_target")) {
             if (options.exists("feeRate")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate");
@@ -6865,9 +6920,6 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
         }
     }
 
-    if (changePosition > -1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "TODO: changePosition");
-
     // parse hex string from parameter
     CMutableTransaction tx;
     tx.nVersion = PARTICL_TXN_VERSION;
@@ -6878,6 +6930,10 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
     size_t nOutputs = tx.GetNumVOuts();
     if (nOutputs == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
+
+    if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > nOutputs))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
+    coinControl.nChangePos = changePosition;
 
     for (unsigned int idx = 0; idx < subtractFeeFromOutputs.size(); idx++) {
         int pos = subtractFeeFromOutputs[idx].get_int();
@@ -6924,6 +6980,10 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             blind.SetHex(s);
             mInputBlinds[n] = blind;
         };
+
+        if (inputAmounts[sKey]["value"].isNull())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing 'value' for input.");
+
         r.nValue = AmountFromValue(inputAmounts[sKey]["value"]);
 
         if (inputAmounts[sKey]["witnessstack"].isArray())
@@ -6971,7 +7031,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             CTempRecipient &r = vecSend[n];
             std::string s = outputAmounts[sKey]["nonce"].get_str();
             if (!IsHex(s) || !(s.size() == 64))
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Blinding factor must be 32 bytes and hex encoded.");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Nonce must be 32 bytes and hex encoded.");
 
             r.fNonceSet = true;
             r.nonce.SetHex(s);
@@ -6991,6 +7051,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_MISC_ERROR, strprintf("secp256k1_rangeproof_rewind failed, output %d.", n));
             uint256 blind;
             memcpy(blind.begin(), blindOut, 32);
+
             mOutputBlinds[n] = blind;
             mOutputAmounts[n] = amountOut;
 
@@ -7045,6 +7106,9 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             if (memcmp(txout->GetPCommitment()->data, commitment.data, 33) != 0)
                 throw JSONRPCError(RPC_MISC_ERROR, strprintf("Bad blinding factor, output %d.", i));
             nTotalOutput += mOutputAmounts[i];
+
+            r.vBlind.resize(32);
+            memcpy(r.vBlind.data(), itb->second.begin(), 32);
         } else
         if (txout->IsType(OUTPUT_STANDARD))
         {

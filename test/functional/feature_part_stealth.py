@@ -203,14 +203,18 @@ class StealthTest(ParticlTestFramework):
         assert(ro[0]['outputs'][0]['stealth_address'] == sx1_b32)
 
         ro = nodes[0].derivefromstealthaddress(sx2_b32)
-        assert(len(ro) == 3)
+        assert(len(ro) == 4)
         assert(len(ro['pubkey']) == 66)
-        assert(len(ro['ephemeral']) == 66)
+        assert(len(ro['ephemeral_pubkey']) == 66)
 
-        recover = nodes[0].derivefromstealthaddress(sx2_b32, ro['ephemeral'])
+        recover = nodes[0].derivefromstealthaddress(sx2_b32, ro['ephemeral_pubkey'])
         assert(recover['pubkey'] == ro['pubkey'])
-        assert(recover['ephemeral'] == ro['ephemeral'])
+        assert(recover['ephemeral_pubkey'] == ro['ephemeral_pubkey'])
         assert(len(recover['privatekey']) > 0)
+
+        replay = nodes[0].derivefromstealthaddress(sx2_b32, ro['ephemeral_privatekey'])
+        assert(replay['pubkey'] == ro['pubkey'])
+        assert(replay['ephemeral_pubkey'] == ro['ephemeral_pubkey'])
 
 
 

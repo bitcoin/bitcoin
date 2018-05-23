@@ -621,6 +621,7 @@ class WalletParticlTest(ParticlTestFramework):
         # Test lockunspent
         unspent = nodes[2].listunspent()
         assert(nodes[2].lockunspent(False, [unspent[0]]) == True)
+        assert(len(nodes[2].listlockunspent()) == 1)
         unspentCheck = nodes[2].listunspent()
         assert(len(unspentCheck) < len(unspent))
         assert(nodes[2].lockunspent(True, [unspent[0]]) == True)

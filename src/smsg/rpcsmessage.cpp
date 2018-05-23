@@ -1537,14 +1537,15 @@ static UniValue smsgone(const JSONRPCRequest &request)
 
         if (sEnc == "")
         {
-            if (msg.vchMessage.size() < 4096)
-                result.pushKV("text", std::string((char*)&msg.vchMessage[0]));
+            // TODO: detect non ascii chars
+            if (msg.vchMessage.size() < smsg::SMSG_MAX_MSG_BYTES)
+                result.pushKV("text", std::string((char*)msg.vchMessage.data()));
             else
                 result.pushKV("hex", HexStr(msg.vchMessage));
         } else
         if (sEnc == "ascii")
         {
-            result.pushKV("text", std::string((char*)&msg.vchMessage[0]));
+            result.pushKV("text", std::string((char*)msg.vchMessage.data()));
         } else
         if (sEnc == "hex")
         {
