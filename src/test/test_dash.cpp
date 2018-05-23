@@ -232,7 +232,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
         if (!CalcCbTxMerkleRootQuorums(block, chainActive.Tip(), cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
-        CMutableTransaction tmpTx = *block.vtx[0];
+        CMutableTransaction tmpTx{*block.vtx[0]};
         SetTxPayload(tmpTx, cbTx);
         block.vtx[0] = MakeTransactionRef(tmpTx);
     }

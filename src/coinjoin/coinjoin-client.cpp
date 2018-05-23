@@ -557,7 +557,7 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTransaction& finalTrans
     if (fMasternodeMode || pnode == nullptr) return false;
     if (!mixingMasternode) return false;
 
-    finalMutableTransaction = finalTransactionNew;
+    finalMutableTransaction = CMutableTransaction{finalTransactionNew};
     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString()); /* Continued */
 
     // STEP 1: check final transaction general rules
