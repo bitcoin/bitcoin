@@ -1796,6 +1796,11 @@ bool CScriptCheck::operator()() {
     if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, cacheStore), &error)) {
         return false;
     }
+	uint256 hashCacheEntry;
+	CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(nFlags) - 32).Write(ptxTo->GetHash().begin(), 32).Finalize(hashCacheEntry.begin());
+	if (!scriptExecutionCache.contains(hashCacheEntry)) {
+		scriptExecutionCache.insert(hashCacheEntry);
+	}
     return true;
 }
 
@@ -1920,7 +1925,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 					return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
-			if (cacheFullScriptStore) {
+			if (cacheFullScriptStore && !pvChecks) {
 				// We executed all of the provided scripts, and were told to
 				// cache the result. Do so now.
 				scriptExecutionCache.insert(hashCacheEntry);
