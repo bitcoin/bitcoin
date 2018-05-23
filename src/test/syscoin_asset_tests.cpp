@@ -304,8 +304,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 {
 	UniValue r;
 	printf("Running generate_asset_througput...\n");
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node3");
+	GenerateBlocks(50, "node1");
+	GenerateBlocks(50, "node3");
 	map<string, string> assetMap;
 	map<string, string> assetAliasMap;
 	// create 1000 aliases and assets for each asset
