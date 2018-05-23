@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 	map<string, string> assetMap;
 	map<string, string> assetAliasMap;
 	// create 1000 aliases and assets for each asset
-	printf("creating 1000 aliases/asset...\n");
+	printf("creating sender 1000 aliases/asset...\n");
 	for (int i = 0; i < 1000; i++) {
 		string aliasname = "jagthroughput-" + boost::lexical_cast<string>(i);
 		string aliasnameto = "jagthroughput3-" + boost::lexical_cast<string>(i);
@@ -331,23 +331,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 
-		// registration
-	/*	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' 3 0 '' '' '' ''"));
-		varray = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray[0].get_str()));
-		varray = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray[0].get_str()));
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate 1"));
-		// activation
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasnameto + " '' 3 0 '' '' '' ''"));
-		varray1 = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray1[0].get_str()));
-		varray1 = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray1[0].get_str()));
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));*/
-
-
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew tpstest " + aliasname + " '' " + " assets " + " 8 false 1 10 0 false ''"));
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
@@ -366,6 +349,29 @@ BOOST_AUTO_TEST_CASE(generate_asset_througput)
 
 		assetMap[guid] = aliasnameto;
 		assetAliasMap[guid] = aliasname;
+		if (i % 100 == 0)
+			printf("%.2f percentage done\n", 100.0f / (1000.0f / (i + 1)));
+	}
+	printf("creating receiver 1000 aliases/asset...\n");
+	for (auto& assetTuple : assetMap) {
+		string aliasname = assetTuple.first;
+
+		// registration
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasname + " '' 3 0 '' '' '' ''"));
+		UniValue varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray[0].get_str()));
+		varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate 1"));
+		// activation
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasname + " '' 3 0 '' '' '' ''"));
+		UniValue varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray1[0].get_str()));
+		varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray1[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate 1"));
 		if (i % 100 == 0)
 			printf("%.2f percentage done\n", 100.0f / (1000.0f / (i + 1)));
 	}
