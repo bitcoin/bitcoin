@@ -1801,7 +1801,7 @@ bool CScriptCheck::operator()() {
     }
 	uint256 hashCacheEntry;
 	CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(nFlags) - 32).Write(ptxTo->GetHash().begin(), 32).Finalize(hashCacheEntry.begin());
-	if (!scriptExecutionCache.contains(hashCacheEntry)) {
+	if (!scriptExecutionCache.contains(hashCacheEntry, false)) {
 		scriptExecutionCache.insert(hashCacheEntry);
 	}
     return true;
