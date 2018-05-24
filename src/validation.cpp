@@ -1236,21 +1236,22 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded)
 		{
-			std::packaged_task<void()> t([&pool, tx, hash, &view, coins_to_uncache, hashCacheEntry]() {
+			std::packaged_task<void()> t([&pool, ptx, hash, &view, coins_to_uncache, hashCacheEntry]() {
+				const CTransaction& txIn = *ptx;
 				CValidationState vstate;
-				for (unsigned int i = 0; i < tx.vin.size(); i++) {
-					const COutPoint &prevout = tx.vin[i].prevout;
+				for (unsigned int i = 0; i < txIn.vin.size(); i++) {
+					const COutPoint &prevout = txIn.vin[i].prevout;
 					const Coin& coin = view.AccessCoin(prevout);
 					const CScript& scriptPubKey = coin.out.scriptPubKey;
 					const CAmount amount = coin.out.nValue;
 
 					// Verify signature
-					CScriptCheck check(scriptPubKey, amount, tx, i, STANDARD_SCRIPT_VERIFY_FLAGS, true, hashCacheEntry);
+					CScriptCheck check(scriptPubKey, amount, txIn, i, STANDARD_SCRIPT_VERIFY_FLAGS, true, hashCacheEntry);
 					if (!check()) {
 						LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
 						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 							pcoinsTip->Uncache(hashTx);
-						pool.removeRecursive(tx, MemPoolRemovalReason::UNKNOWN);
+						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
 						pool.ClearPrioritisation(hash);
 						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
 						CValidationState stateDummy;
