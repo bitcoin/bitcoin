@@ -15,6 +15,8 @@ bench_bench_dash_SOURCES = \
   bench/bench_dash.cpp \
   bench/bench.cpp \
   bench/bench.h \
+  bench/bls.cpp \
+  bench/bls_dkg.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/Examples.cpp \

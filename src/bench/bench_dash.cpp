@@ -8,14 +8,24 @@
 #include "validation.h"
 #include "util.h"
 
+#include "crypto/bls.h"
+
+void CleanupBLSTests();
+void CleanupBLSDkgTests();
+
 int
 main(int argc, char** argv)
 {
     ECC_Start();
+    BLSInit();
     SetupEnvironment();
     fPrintToDebugLog = false; // don't want to write to debug.log file
 
     benchmark::BenchRunner::RunAll();
+
+    // need to be called before global destructors kick in (PoolAllocator is needed due to many BLSSecretKeys)
+    CleanupBLSDkgTests();
+    CleanupBLSTests();
 
     ECC_Stop();
 }
