@@ -1236,11 +1236,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded)
 		{
-			std::packaged_task<void()> t([&pool, tx, hash, coins_to_uncache, hashCacheEntry]() {
+			std::packaged_task<void()> t([&pool, tx, hash, view, coins_to_uncache, hashCacheEntry]() {
 				CValidationState vstate;
 				for (unsigned int i = 0; i < tx.vin.size(); i++) {
 					const COutPoint &prevout = tx.vin[i].prevout;
-					const Coin& coin = inputs.AccessCoin(prevout);
+					const Coin& coin = view.AccessCoin(prevout);
 					const CScript& scriptPubKey = coin.out.scriptPubKey;
 					const CAmount amount = coin.out.nValue;
 
