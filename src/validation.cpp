@@ -1252,7 +1252,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
 						// Verify signature
 						CScriptCheck check(scriptPubKey, amount, txIn, i, STANDARD_SCRIPT_VERIFY_FLAGS, true, hashCacheEntry);
-						bFail = check();
+						bFail = !check();
 					}
 					if (bFail) {
 						LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
