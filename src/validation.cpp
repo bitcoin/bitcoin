@@ -1188,6 +1188,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
 		CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
 		control.Add(vChecks);
+		if (!bMultiThreaded) {
+			if (!control.Wait())
+				return false;
+			if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
+				return false;
+			}
+		}
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
 		{
@@ -1259,11 +1266,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			threadpool.post(t);
 		}
 		else {
-			if (!control.Wait())
-				return false;
-			if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
-				return false;
-			}
 			GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
 		}
 	}
