@@ -2567,6 +2567,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
+	if (!control.Wait())
+		return state.DoS(100, false);
+
 	if (!CheckSyscoinInputs(*block.vtx[0], state, fJustCheck, pindex->nHeight, block))
 		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n",
 			block.GetHash().ToString());
@@ -2596,8 +2599,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     }
     // END SYSCOIN
 
-    if (!control.Wait())
-        return state.DoS(100, false);
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint("bench", "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime4 - nTime2), nInputs <= 1 ? 0 : 0.001 * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * 0.000001);
 
