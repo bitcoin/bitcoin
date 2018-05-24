@@ -46,6 +46,7 @@ public:
     std::string ToString();
 
     void ConstructTransaction(CScript& script) const;
+    void ConstructOwnerTransaction(CScript& script) const;
 
     ADD_SERIALIZE_METHODS;
 
@@ -100,19 +101,53 @@ public:
 };
 
 
-
 /** THESE ARE ONLY TO BE USED WHEN ADDING THINGS TO THE CACHE DURING CONNECT AND DISCONNECT BLOCK */
-struct CAssetCacheUndoAssetTransfer
+struct CAssetCacheNewAsset
+{
+    CNewAsset asset;
+    std::string address;
+
+    CAssetCacheNewAsset(const CNewAsset& asset, const std::string& address)
+    {
+        this->asset = asset;
+        this->address = address;
+    }
+
+    bool operator<(const CAssetCacheNewAsset& rhs) const {
+        return asset.strName < rhs.asset.strName && address == rhs.address;
+    }
+};
+
+struct CAssetCacheNewTransfer
 {
     CAssetTransfer transfer;
     std::string address;
-    COutPoint out;
 
-    CAssetCacheUndoAssetTransfer(const CAssetTransfer& transfer, const std::string& address, const COutPoint& out)
+    CAssetCacheNewTransfer(const CAssetTransfer& transfer, const std::string& address)
     {
         this->transfer = transfer;
         this->address = address;
-        this->out = out;
+    }
+
+    bool operator<(const CAssetCacheNewTransfer& rhs ) const
+    {
+        return transfer.strName < rhs.transfer.strName && address == rhs.address && transfer.nAmount == rhs.transfer.nAmount;
+    }
+};
+
+struct CAssetCacheNewOwner
+{
+    std::string assetName;
+    std::string address;
+
+    CAssetCacheNewOwner(const std::string& assetName, const std::string& address)
+    {
+        this->assetName = assetName;
+        this->address = address;
+    }
+
+    bool operator<(const CAssetCacheNewOwner& rhs) const {
+        return assetName < rhs.assetName && address == rhs.address;
     }
 };
 
@@ -127,18 +162,6 @@ struct CAssetCacheUndoAssetAmount
         this->assetName = assetName;
         this->address = address;
         this->nAmount = nAmount;
-    }
-};
-
-struct CAssetCacheNewTransfer
-{
-    std::string assetName;
-    std::string address;
-
-    CAssetCacheNewTransfer(const std::string& assetName, const std::string& address)
-    {
-        this->assetName = assetName;
-        this->address = address;
     }
 };
 
