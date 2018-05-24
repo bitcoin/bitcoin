@@ -463,6 +463,8 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             }
 
             CScript scriptPubKey = GetScriptForDestination(destination);
+            CScript ownerPubKey = GetScriptForDestination(destination);
+
 
             if (sendTo[name_].type() == UniValue::VNUM) {
                 CAmount nAmount = AmountFromValue(sendTo[name_]);
@@ -527,6 +529,12 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 
                     // Construct the asset transaction
                     asset.ConstructTransaction(scriptPubKey);
+
+                    asset.ConstructOwnerTransaction(ownerPubKey);
+
+                    // Push the scriptPubKey into the vouts.
+                    CTxOut ownerOut(0, ownerPubKey);
+                    rawTx.vout.push_back(ownerOut);
 
                     // Push the scriptPubKey into the vouts.
                     CTxOut out(0, scriptPubKey);

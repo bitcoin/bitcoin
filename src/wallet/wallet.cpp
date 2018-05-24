@@ -2204,20 +2204,25 @@ void CWallet::AvailableCoinsAll(std::vector<COutput>& vCoins, std::map<std::stri
                     std::string address;
                     CAssetTransfer assetTransfer;
                     CNewAsset asset;
+                    std::string ownerName;
                     bool fWasNewAssetOutPoint = false;
                     bool fWasTransferAssetOutPoint = false;
+                    bool fWasOwnerAssetOutPoint = false;
                     std::string strAssetName;
                     if (TransferAssetFromScript(pcoin->tx->vout[out.n].scriptPubKey, assetTransfer, address)) {
                         strAssetName = assetTransfer.strName;
                         fWasTransferAssetOutPoint = true;
-                    } else if (AssetFromTransaction(*(pcoin->tx), asset, address)) {
+                    } else if (AssetFromScript(pcoin->tx->vout[out.n].scriptPubKey, asset, address)) {
                         strAssetName = asset.strName;
                         fWasNewAssetOutPoint = true;
+                    } else if (OwnerAssetFromScript(pcoin->tx->vout[out.n].scriptPubKey, ownerName, address)) {
+                        strAssetName = ownerName;
+                        fWasOwnerAssetOutPoint = true;
                     } else {
                         continue;
                     }
 
-                    if (fWasNewAssetOutPoint || fWasTransferAssetOutPoint) {
+                    if (fWasNewAssetOutPoint || fWasTransferAssetOutPoint || fWasOwnerAssetOutPoint) {
 
                         // If we already have the maximum amount or size for this asset, skip it
                         if (setAssetMaxFound.count(strAssetName))
@@ -2230,14 +2235,19 @@ void CWallet::AvailableCoinsAll(std::vector<COutput>& vCoins, std::map<std::stri
                         }
 
                         // Add the COutput to the map of available Asset Coins
-                        mapAssetCoins.at(strAssetName).push_back(COutput(pcoin, out.n, nDepth, fSpendableIn, fSolvableIn, safeTx));
+                        mapAssetCoins.at(strAssetName).push_back(
+                                COutput(pcoin, out.n, nDepth, fSpendableIn, fSolvableIn, safeTx));
 
                         // Initialize the map of current asset totals
                         if (!mapAssetTotals.count(strAssetName))
                             mapAssetTotals[strAssetName] = 0;
 
                         // Update the map of totals depending the which type of asset tx we are looking at
-                        fWasNewAssetOutPoint ? mapAssetTotals[strAssetName] += asset.nAmount : mapAssetTotals[strAssetName] += assetTransfer.nAmount;
+                        fWasNewAssetOutPoint ? mapAssetTotals[strAssetName] += asset.nAmount
+                                             : mapAssetTotals[strAssetName] += assetTransfer.nAmount;
+
+                        if (fWasOwnerAssetOutPoint)
+                            mapAssetTotals[strAssetName] = 1 * COIN;
                     }
 
                     // Checks the sum amount of all UTXO's, and adds to the set of assets that we found the max for
@@ -2675,7 +2685,7 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
             if (out.tx->tx->vout[out.i].scriptPubKey.IsNewAsset()) {
                 CNewAsset assetTemp;
                 std::string address;
-                if (!AssetFromTransaction(*(out.tx->tx), assetTemp, address))
+                if (!AssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, assetTemp, address))
                     continue;
                 mapValueRet.at(asset.first) += assetTemp.nAmount;
             } else if (out.tx->tx->vout[out.i].scriptPubKey.IsTransferAsset()) {
@@ -2684,6 +2694,12 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
                 if (!TransferAssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, transferTemp, address))
                     continue;
                 mapValueRet.at(asset.first) += transferTemp.nAmount;
+            } else if (out.tx->tx->vout[out.i].scriptPubKey.IsOwnerAsset()) {
+                std::string ownerName;
+                std::string address;
+                if (!OwnerAssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, ownerName, address))
+                    continue;
+                mapValueRet.at(ownerName) = 1 * COIN;
             } else {
                 continue;
             }
@@ -3074,7 +3090,13 @@ bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWall
                 if (fNewAsset && !asset.IsNull() && IsValidDestination(destination)) {
                     // Create the asset transaction and push it back so it is the last CTxOut in the transaction
                     CScript scriptPubKey = GetScriptForDestination(destination);
+                    CScript ownerScript = GetScriptForDestination(destination);
+
                     asset.ConstructTransaction(scriptPubKey);
+                    asset.ConstructOwnerTransaction(ownerScript);
+
+                    CTxOut ownerTxOut(0, ownerScript);
+                    txNew.vout.push_back(ownerTxOut);
 
                     CTxOut newTxOut(0, scriptPubKey);
                     txNew.vout.push_back(newTxOut);

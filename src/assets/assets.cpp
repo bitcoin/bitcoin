@@ -17,15 +17,10 @@
 #include <tinyformat.h>
 #include <wallet/wallet.h>
 #include <boost/algorithm/string.hpp>
+#include <consensus/validation.h>
 #include "assets.h"
 #include "assetdb.h"
 #include "assettypes.h"
-
-#define RVN_R 114
-#define RVN_V 118
-#define RVN_N 110
-#define RVN_Q 113
-#define RVN_T 116
 
 static const auto MAX_NAME_LENGTH = 31;
 
@@ -221,6 +216,21 @@ void CNewAsset::ConstructTransaction(CScript& script) const
     script << OP_15 << vchMessage << OP_DROP;
 }
 
+void CNewAsset::ConstructOwnerTransaction(CScript& script) const
+{
+    CDataStream ssOwner(SER_NETWORK, PROTOCOL_VERSION);
+    ssOwner << std::string(this->strName + OWNER);
+
+    std::vector<unsigned char> vchMessage;
+    vchMessage.push_back(RVN_R); // r
+    vchMessage.push_back(RVN_V); // v
+    vchMessage.push_back(RVN_N); // n
+    vchMessage.push_back(RVN_O); // o
+
+    vchMessage.insert(vchMessage.end(), ssOwner.begin(), ssOwner.end());
+    script << OP_15 << vchMessage << OP_DROP;
+}
+
 bool AssetFromTransaction(const CTransaction& tx, CNewAsset& asset, std::string& strAddress)
 {
     // Check to see if the transaction is an new asset issue tx
@@ -231,6 +241,48 @@ bool AssetFromTransaction(const CTransaction& tx, CNewAsset& asset, std::string&
     CScript scriptPubKey = tx.vout[tx.vout.size() - 1].scriptPubKey;
 
     return AssetFromScript(scriptPubKey, asset, strAddress);
+}
+
+bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, const std::string& address, std::string& errorMsg)
+{
+    // TODO when ready to ship. Put the owner validation code in own method if needed
+    std::string ownerName;
+    std::string ownerAddress;
+    if (!OwnerFromTransaction(tx, ownerName, ownerAddress)) {
+        errorMsg = "bad-txns-bad-owner";
+        return false;
+    }
+
+    int size = ownerName.size();
+
+    if (ownerAddress != address) {
+        errorMsg = "bad-txns-owner-address-mismatch";
+        return false;
+    }
+
+    if (size < OWNER_LENGTH + MIN_ASSET_LENGTH) {
+        errorMsg = "bad-txns-owner-asset-length";
+        return false;
+    }
+
+    if (ownerName != std::string(assetName + OWNER)) {
+        errorMsg = "bad-txns-owner-name-mismatch";
+        return false;
+    }
+
+    return true;
+}
+
+bool OwnerFromTransaction(const CTransaction& tx, std::string& ownerName, std::string& strAddress)
+{
+    // Check to see if the transaction is an new asset issue tx
+    if (!tx.IsNewAsset())
+        return false;
+
+    // Get the scriptPubKey from the last tx in vout
+    CScript scriptPubKey = tx.vout[tx.vout.size() - 2].scriptPubKey;
+
+    return OwnerAssetFromScript(scriptPubKey, ownerName, strAddress);
 }
 
 bool TransferAssetFromScript(const CScript& scriptPubKey, CAssetTransfer& assetTransfer, std::string& strAddress)
@@ -281,14 +333,41 @@ bool AssetFromScript(const CScript& scriptPubKey, CNewAsset& assetTransfer, std:
     return true;
 }
 
+bool OwnerAssetFromScript(const CScript& scriptPubKey, std::string& assetName, std::string& strAddress)
+{
+    if (!IsScriptOwnerAsset(scriptPubKey))
+        return false;
+
+    CTxDestination destination;
+    ExtractDestination(scriptPubKey, destination);
+
+    strAddress = EncodeDestination(destination);
+
+    std::vector<unsigned char> vchOwnerAsset;
+    vchOwnerAsset.insert(vchOwnerAsset.end(), scriptPubKey.begin() + 31, scriptPubKey.end());
+    CDataStream ssOwner(vchOwnerAsset, SER_NETWORK, PROTOCOL_VERSION);
+
+    try {
+        ssOwner >> assetName;
+    } catch(std::exception& e) {
+        std::cout << "Failed to get the owner asset from the stream: " << e.what() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 bool CTransaction::IsNewAsset() const
 {
     // Issuing a new Asset must contain at least 3 CTxOut ( 500 Raven Burn, Any Number of other Outputs ..., Issue Asset Tx, Asset Metadata)
-    if (vout.size() < 2)
+    if (vout.size() < 3)
         return false;
 
     // Check for the assets data CTxOut. This will always be the last output in the transaction
     if (!CheckIssueDataTx(vout[vout.size() - 1]))
+        return false;
+
+    if (!CheckOwnerDataTx(vout[vout.size() - 2]))
         return false;
 
     // Check for the Burn CTxOut in one of the vouts ( This is needed because the change CTxOut is places in a random position in the CWalletTx
@@ -369,10 +448,14 @@ void CAssetsCache::AddToAssetBalance(const std::string& strName, const std::stri
     }
     mapAssetsAddresses.at(strName).insert(address);
 
-    CAssetCacheNewTransfer newTransfer(strName, address);
 
     // Add to cache so we can save to database
-    vNewTransfer.push_back(newTransfer);
+    CAssetCacheNewTransfer newTransfer(CAssetTransfer(strName, nAmount), address);
+
+    if (setNewTransferAssetsToRemove.count(newTransfer))
+        setNewTransferAssetsToRemove.erase(newTransfer);
+
+    setNewTransferAssetsToAdd.insert(newTransfer);
 }
 
 bool CAssetsCache::TrySpendCoin(const COutPoint& out, const CTxOut& txOut)
@@ -402,6 +485,9 @@ bool CAssetsCache::TrySpendCoin(const COutPoint& out, const CTxOut& txOut)
                 CAssetTransfer transfer;
                 if (TransferAssetFromScript(txOut.scriptPubKey, transfer, address))
                     assetName = transfer.strName;
+            } else if (txOut.scriptPubKey.IsOwnerAsset()) {
+                if (!OwnerAssetFromScript(txOut.scriptPubKey, assetName, address))
+                    return error("%s : ERROR Failed to get owner asset from the OutPoint: %s", __func__, out.ToString());
             }
 
             // If we got the address and the assetName, proceed to remove it from the database, and in memory objects
@@ -485,25 +571,31 @@ bool CAssetsCache::UndoAssetCoin(const Coin& coin, const COutPoint& out)
     if (IsScriptNewAsset(coin.out.scriptPubKey)) {
         CNewAsset asset;
         if (!AssetFromScript(coin.out.scriptPubKey, asset, strAddress))
-            return error("%s : Failed to get asset from script while trying to undo asset. OutPoint : %s", __func__,
+            return error("%s : Failed to get asset from script while trying to undo asset spend. OutPoint : %s", __func__,
                          out.ToString());
         assetName = asset.strName;
         nAmount = asset.nAmount;
     } else if (IsScriptTransferAsset(coin.out.scriptPubKey)) {
         CAssetTransfer transfer;
         if (!TransferAssetFromScript(coin.out.scriptPubKey, transfer, strAddress))
-            return error("%s : Failed to get transfer asset from script while trying to undo asset. OutPoint : %s", __func__,
+            return error("%s : Failed to get transfer asset from script while trying to undo asset spend. OutPoint : %s", __func__,
                          out.ToString());
 
         assetName = transfer.strName;
         nAmount = transfer.nAmount;
+    } else if (IsScriptOwnerAsset(coin.out.scriptPubKey)) {
+        std::string ownerName;
+        if (!OwnerAssetFromScript(coin.out.scriptPubKey, ownerName, strAddress))
+            return error("%s : Failed to get owner asset from script while trying to unso asset spend. OutPoint : %s", __func__, out.ToString());
+        assetName = ownerName;
+        nAmount = 1 * COIN;
     }
 
     if (assetName == "" || strAddress == "" || nAmount == 0)
         return error("%s : AssetName, Address or nAmount is invalid., Asset Name: %s, Address: %s, Amount: %d", __func__, assetName, strAddress, nAmount);
 
     if (!AddBackSpentAsset(coin, assetName, strAddress, nAmount, out))
-        return (error("%s : Failed to add back the spent asset. OutPoint : %s", __func__, out.ToString()));
+        return error("%s : Failed to add back the spent asset. OutPoint : %s", __func__, out.ToString());
 
     return true;
 }
@@ -565,9 +657,6 @@ bool CAssetsCache::UndoTransfer(const CAssetTransfer& transfer, const std::strin
         if (mapMyUnspentAssets.at(transfer.strName).count(outToRemove))
             mapMyUnspentAssets.at(transfer.strName).erase(outToRemove);
 
-    // Update dirty memory so we know what to database
-    setChangeOwnedOutPoints.insert(transfer.strName);
-
     return true;
 }
 
@@ -591,7 +680,12 @@ bool CAssetsCache::RemoveNewAsset(const CNewAsset& asset, const std::string addr
     if (it != mapAssetsAddressAmount.end())
         mapAssetsAddressAmount.erase(it);
 
-    vNewAssetsToRemove.push_back(std::make_pair(asset, address));
+    CAssetCacheNewAsset newAsset(asset, address);
+
+    if (setNewAssetsToAdd.count(newAsset))
+        setNewAssetsToAdd.erase(newAsset);
+
+    setNewAssetsToRemove.insert(newAsset);
 
     return true;
 }
@@ -617,7 +711,68 @@ bool CAssetsCache::AddNewAsset(const CNewAsset& asset, const std::string address
     // Insert the asset into the assests address amount map
     mapAssetsAddressAmount[std::make_pair(asset.strName, address)] = asset.nAmount;
 
-    vNewAssetsToAdd.push_back(std::make_pair(asset, address));
+    CAssetCacheNewAsset newAsset(asset, address);
+
+    if (setNewAssetsToRemove.count(newAsset))
+        setNewAssetsToRemove.erase(newAsset);
+
+    setNewAssetsToAdd.insert(newAsset);
+
+    return true;
+}
+
+//! Changes Memory Only
+bool CAssetsCache::AddOwnerAsset(const std::string& assetsName, const std::string address)
+{
+    if (mapAssetsAddresses.count(assetsName)) {
+        if (mapAssetsAddresses[assetsName].count(address))
+            return error("%s : Tried adding an owner asset, but it already exsisted in the map of assets addresses: %s",
+                         __func__, assetsName);
+
+        mapAssetsAddresses[assetsName].insert(address);
+
+    } else {
+        std::set<std::string> setAddresses;
+        setAddresses.insert(address);
+        mapAssetsAddresses.insert(std::make_pair(assetsName, setAddresses));
+    }
+
+    // Insert the asset into the assests address amount map
+    mapAssetsAddressAmount[std::make_pair(assetsName, address)] = 1 * COIN;
+
+
+    // Update the cache
+    CAssetCacheNewOwner newOwner(assetsName, address);
+
+    if (setNewOwnerAssetsToRemove.count(newOwner))
+        setNewOwnerAssetsToRemove.erase(newOwner);
+
+    setNewOwnerAssetsToAdd.insert(newOwner);
+
+    return true;
+}
+
+//! Changes Memory Only
+bool CAssetsCache::RemoveOwnerAsset(const std::string& assetsName, const std::string address)
+{
+    if (mapMyUnspentAssets.count(assetsName))
+        mapMyUnspentAssets.erase(assetsName);
+
+    if (mapAssetsAddresses.count(assetsName))
+        mapAssetsAddresses[assetsName].erase(address);
+
+    auto pair = std::make_pair(assetsName, address);
+
+    auto it = mapAssetsAddressAmount.find(pair);
+    if (it != mapAssetsAddressAmount.end())
+        mapAssetsAddressAmount.erase(it);
+
+    // Update the cache
+    CAssetCacheNewOwner newOwner(assetsName, address);
+    if (setNewOwnerAssetsToAdd.count(newOwner))
+        setNewOwnerAssetsToAdd.erase(newOwner);
+
+    setNewOwnerAssetsToRemove.insert(newOwner);
 
     return true;
 }
@@ -628,9 +783,14 @@ bool CAssetsCache::RemoveTransfer(const CAssetTransfer &transfer, const std::str
     if (!UndoTransfer(transfer, address, out))
         return error("%s : Failed to undo the transfer", __func__);
 
-    CAssetCacheUndoAssetTransfer undo(transfer, address, out);
+    // Update the cache
+    setChangeOwnedOutPoints.insert(transfer.strName);
 
-    vUndoTransfer.push_back(undo);
+    CAssetCacheNewTransfer newTransfer(transfer, address);
+    if (setNewTransferAssetsToAdd.count(newTransfer))
+        setNewTransferAssetsToAdd.erase(newTransfer);
+
+    setNewTransferAssetsToRemove.insert(newTransfer);
 
     return true;
 }
@@ -643,8 +803,8 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
             std::string message;
 
             // Remove new assets from the database
-            for (auto newAsset : vNewAssetsToRemove) {
-                if (!passetsdb->EraseAssetData(newAsset.first.strName)) {
+            for (auto newAsset : setNewAssetsToRemove) {
+                if (!passetsdb->EraseAssetData(newAsset.asset.strName)) {
                     dirty = true;
                     message = "_Failed Erasing New Asset Data from database";
                 }
@@ -653,7 +813,7 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
                     return error("%s : %s", __func__, message);
                 }
 
-                if (!passetsdb->EraseAssetAddressQuantity(newAsset.first.strName, newAsset.second)) {
+                if (!passetsdb->EraseAssetAddressQuantity(newAsset.asset.strName, newAsset.address)) {
                     dirty = true;
                     message = "_Failed Erasing Address Balance from database";
                 }
@@ -664,8 +824,8 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
             }
 
             // Add the new assets to the database
-            for (auto newAsset : vNewAssetsToAdd) {
-                if (!passetsdb->WriteAssetData(newAsset.first)) {
+            for (auto newAsset : setNewAssetsToAdd) {
+                if (!passetsdb->WriteAssetData(newAsset.asset)) {
                     dirty = true;
                     message = "_Failed Writing New Asset Data to database";
                 }
@@ -674,8 +834,8 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
                     return error("%s : %s", __func__, message);
                 }
 
-                if (!passetsdb->WriteAssetAddressQuantity(newAsset.first.strName, newAsset.second,
-                                                          newAsset.first.nAmount)) {
+                if (!passetsdb->WriteAssetAddressQuantity(newAsset.asset.strName, newAsset.address,
+                                                          newAsset.asset.nAmount)) {
                     dirty = true;
                     message = "_Failed Writing Address Balance to database";
                 }
@@ -685,8 +845,35 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
                 }
             }
 
+            // Remove the new owners from database
+            for (auto ownerAsset : setNewOwnerAssetsToRemove) {
+
+                if (!passetsdb->EraseAssetAddressQuantity(ownerAsset.assetName, ownerAsset.address)) {
+                    dirty = true;
+                    message = "_Failed Erasing Owner Address Balance from database";
+                }
+
+                if (dirty) {
+                    return error("%s : %s", __func__, message);
+                }
+            }
+
+            // Add the new owners to database
+            for (auto ownerAsset : setNewOwnerAssetsToAdd) {
+
+                if (!passetsdb->WriteAssetAddressQuantity(ownerAsset.assetName, ownerAsset.address,
+                                                          1 * COIN)) {
+                    dirty = true;
+                    message = "_Failed Writing Owner Address Balance to database";
+                }
+
+                if (dirty) {
+                    return error("%s : %s", __func__, message);
+                }
+            }
+
             // Undo the transfering by updating the balances in the database
-            for (auto undoTransfer : vUndoTransfer) {
+            for (auto undoTransfer : setNewTransferAssetsToRemove) {
                 auto pair = std::make_pair(undoTransfer.transfer.strName, undoTransfer.address);
                 if (!mapAssetsAddressAmount.count(pair)) {
                     if (!passetsdb->EraseAssetAddressQuantity(undoTransfer.transfer.strName, undoTransfer.address)) {
@@ -741,11 +928,11 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
             }
 
             // Save the new transfers by updating the quantity in the database
-            for (auto newTransfer : vNewTransfer) {
-                auto pair = std::make_pair(newTransfer.assetName, newTransfer.address);
+            for (auto newTransfer : setNewTransferAssetsToAdd) {
+                auto pair = std::make_pair(newTransfer.transfer.strName, newTransfer.address);
                 // During init and reindex it disconnects and verifies blocks, can create a state where vNewTransfer will contain transfers that have already been spent. So if they aren't in the map, we can skip them.
                 if (mapAssetsAddressAmount.count(pair)) {
-                    if (!passetsdb->WriteAssetAddressQuantity(newTransfer.assetName, newTransfer.address,
+                    if (!passetsdb->WriteAssetAddressQuantity(newTransfer.transfer.strName, newTransfer.address,
                                                               mapAssetsAddressAmount.at(pair))) {
                         dirty = true;
                         message = "_Failed Writing new address quantity to database";
@@ -770,7 +957,6 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
             }
 
             ClearDirtyCache();
-
         }
 
         if (fSoftCopy) {
@@ -793,11 +979,17 @@ void CAssetsCache::Copy(const CAssetsCache& cache)
 
     // Copy dirty cache also
     vSpentAssets = cache.vSpentAssets;
-    vNewTransfer = cache.vNewTransfer;
     vUndoAssetAmount = cache.vUndoAssetAmount;
-    vNewAssetsToRemove = cache.vNewAssetsToRemove;
-    vNewAssetsToAdd = cache.vNewAssetsToAdd;
-    vUndoTransfer = cache.vUndoTransfer;
+
+    setNewAssetsToRemove = cache.setNewAssetsToRemove;
+    setNewAssetsToAdd = cache.setNewAssetsToAdd;
+
+    setNewOwnerAssetsToRemove = cache.setNewOwnerAssetsToRemove;
+    setNewOwnerAssetsToAdd = cache.setNewOwnerAssetsToAdd;
+
+    setNewTransferAssetsToRemove = cache.setNewTransferAssetsToRemove;
+    setNewTransferAssetsToAdd = cache.setNewTransferAssetsToAdd;
+
     setChangeOwnedOutPoints = cache.setChangeOwnedOutPoints;
 }
 
@@ -812,11 +1004,11 @@ size_t CAssetsCache::GetCacheSize() const
 {
     size_t size = 0;
     size += 32 * setChangeOwnedOutPoints.size(); // COutPoint is 32 bytes
-    size += 80 * vNewAssetsToAdd.size(); // CNewAsset is max 80 bytes
-    size -= 80 * vNewAssetsToRemove.size(); // CNewAsset is max 80 bytes
+    size += 80 * setNewOwnerAssetsToAdd.size(); // CNewAsset is max 80 bytes
+    size -= 80 * setNewOwnerAssetsToRemove.size(); // CNewAsset is max 80 bytes
     size += (1 + 32 + 40) * vUndoAssetAmount.size(); // 8 bit CAmount, 32 byte assetName, 40 bytes address
-    size += (1 + 32 + 40) * vUndoTransfer.size(); // 8 bit CAmount, 32 byte assetName, 40 bytes address
-    size += (32 + 40) * vNewTransfer.size();
+    size += (1 + 32 + 40) * setNewTransferAssetsToRemove.size(); // 8 bit CAmount, 32 byte assetName, 40 bytes address
+    size += (32 + 40) * setNewTransferAssetsToAdd.size();
     size -= (32 + 40) * vSpentAssets.size();
 
     return size;
@@ -862,10 +1054,29 @@ bool CheckIssueDataTx(const CTxOut& txOut)
     return IsScriptNewAsset(scriptPubKey);
 }
 
+bool CheckOwnerDataTx(const CTxOut& txOut)
+{
+    // Verify 'rvnq' is in the transaction
+    CScript scriptPubKey = txOut.scriptPubKey;
+
+    return IsScriptOwnerAsset(scriptPubKey);
+}
+
 bool IsScriptNewAsset(const CScript& scriptPubKey)
 {
     if (scriptPubKey.size() > 39) {
         if (scriptPubKey[25] == OP_15 && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_Q) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool IsScriptOwnerAsset(const CScript& scriptPubKey)
+{
+    if (scriptPubKey.size() > 30) {
+        if (scriptPubKey[25] == OP_15 && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_O) {
             return true;
         }
     }

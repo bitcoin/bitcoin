@@ -363,7 +363,7 @@ UniValue getassetaddresses(const JSONRPCRequest& request)
     for (auto it : setAddresses) {
         auto pair = std::make_pair(asset_name, it);
         if (passets->mapAssetsAddressAmount.count(pair)) {
-            addresses.push_back(Pair(it, passets->mapAssetsAddressAmount.at(pair)));
+            addresses.push_back(Pair(it, ValueFromAmount(passets->mapAssetsAddressAmount.at(pair))));
         } else {
             addresses.push_back(Pair(it, 0));
         }

@@ -104,15 +104,31 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
             std::string strAddress;
             AssetFromTransaction(tx, asset, strAddress);
 
+            std::string ownerName;
+            std::string ownerAddress;
+            OwnerFromTransaction(tx, ownerName, ownerAddress);
+
             // Add the new asset to cache
             if (!assetsCache->AddNewAsset(asset, strAddress))
                 error("%s : Failed at adding a new asset to our cache. asset: %s", __func__,
                       asset.strName);
 
-            int index = tx.vout.size() - 1;
-            CAssetCachePossibleMine possibleMine(asset.strName, COutPoint(tx.GetHash(), index), tx.vout[index]);
+            // Add the owner asset to cache
+            if (!assetsCache->AddOwnerAsset(ownerName, ownerAddress))
+                error("%s : Failed at adding a new asset to our cache. asset: %s", __func__,
+                      asset.strName);
+
+            int assetIndex = tx.vout.size() - 1;
+            int ownerIndex = assetIndex - 1;
+
+            CAssetCachePossibleMine possibleMineOwner(ownerName, COutPoint(tx.GetHash(), ownerIndex), tx.vout[ownerIndex]);
+            if (!assetsCache->AddPossibleOutPoint(possibleMineOwner))
+                error("%s: Failed to add the owner asset I own to my Unspent Asset Cache. Asset Name : %s",
+                      __func__, ownerName);
+
+            CAssetCachePossibleMine possibleMine(asset.strName, COutPoint(tx.GetHash(), assetIndex), tx.vout[assetIndex]);
             if (!assetsCache->AddPossibleOutPoint(possibleMine))
-                error("%s: Failed to add an asset I own to my Unspent Asset Cache. asset %s",
+                error("%s: Failed to add an asset I own to my Unspent Asset Cache. Asset Name : %s",
                       __func__, asset.strName);
         }
     }
