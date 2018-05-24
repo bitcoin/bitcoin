@@ -1179,10 +1179,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
-		std::vector<CScriptCheck> vChecks;
+		std::vector<CScriptCheck> vMempoolChecks;
 		// Check against previous transactions
 		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vChecks)) {
+		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vMempoolChecks, hashCacheEntry)) {
 			return false;
 		}
 		if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
@@ -1235,24 +1235,29 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded)
 		{
-			std::packaged_task<void()> t([&pool, tx, hash, coins_to_uncache, vChecks, &scriptcheckqueue]() {
-				std::vector<CScriptCheck> vvChecks = vChecks;
-				CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
-				control.Add(vvChecks);
+			std::packaged_task<void()> t([&pool, tx, hash, coins_to_uncache]() {
 				CValidationState vstate;
-				if (!control.Wait()) {
-					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(tx, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
-					return;
+				for (unsigned int i = 0; i < tx.vin.size(); i++) {
+					const COutPoint &prevout = tx.vin[i].prevout;
+					const Coin& coin = inputs.AccessCoin(prevout);
+					const CScript& scriptPubKey = coin.out.scriptPubKey;
+					const CAmount amount = coin.out.nValue;
+
+					// Verify signature
+					CScriptCheck check(scriptPubKey, amount, tx, i, STANDARD_SCRIPT_VERIFY_FLAGS, true, hashCacheEntry);
+					if (!check()) {
+						LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
+						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+							pcoinsTip->Uncache(hashTx);
+						pool.removeRecursive(tx, MemPoolRemovalReason::UNKNOWN);
+						pool.ClearPrioritisation(hash);
+						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+						CValidationState stateDummy;
+						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+						nLastMultithreadMempoolFailure = GetTime();
+						return;
+					}
 				}
-				
 				GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
 			});
 			threadpool.post(t);
@@ -1825,7 +1830,7 @@ void InitScriptExecutionCache() {
 	LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
 		(nElems * sizeof(uint256)) >> 20, (nMaxCacheSize * 2) >> 20, nElems);
 }
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks, uint256& hashCacheEntry)
 {
     if (!tx.IsCoinBase())
     {
@@ -1850,7 +1855,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			// correct (ie that the transaction hash which is in tx's prevouts
 			// properly commits to the scriptPubKey in the inputs view of that
 			// transaction).
-			uint256 hashCacheEntry;
+
 			// We only use the first 19 bytes of nonce to avoid a second SHA
 			// round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
 			static_assert(55 - sizeof(flags) - 32 >= 128 / 8, "Want at least 128 bits of nonce for script execution cache");
@@ -2491,8 +2496,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
             std::vector<CScriptCheck> vChecks;
+			// SYSCOIN
+			uint256 hashCacheEntry;
             bool fCacheResults = fJustCheck;  /* Don't cache results if we're actually connecting blocks (still consult the cache, though */
-            if (!CheckInputs(tx, state, view, fScriptChecks, STANDARD_SCRIPT_VERIFY_FLAGS, fCacheResults, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
+            if (!CheckInputs(tx, state, view, fScriptChecks, STANDARD_SCRIPT_VERIFY_FLAGS, fCacheResults, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, hashCacheEntry))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
