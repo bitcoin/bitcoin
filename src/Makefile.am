@@ -422,6 +422,8 @@ libdash_common_a_SOURCES = \
 libdash_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libdash_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libdash_util_a_SOURCES = \
+  crypto/bls_ies.cpp \
+  crypto/bls_ies.h \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
