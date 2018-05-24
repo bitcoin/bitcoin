@@ -1185,15 +1185,14 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vChecks)) {
 			return false;
 		}
-
+		if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
+			return false;
+		}
 		CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
 		control.Add(vChecks);
 		if (!bMultiThreaded) {
 			if (!control.Wait())
 				return false;
-			if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
-				return false;
-			}
 		}
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
@@ -1251,18 +1250,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						nLastMultithreadMempoolFailure = GetTime();
 						return;
 					}
-				}
-				if (!CheckSyscoinInputs(tx, vstate, true, chainActive.Height(), CBlock())) {
-					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs Error", hash.ToString(), vstate.GetRejectReason());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(tx, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
-					return;
 				}
 				GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
 			});
