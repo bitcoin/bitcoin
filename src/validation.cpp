@@ -775,7 +775,7 @@ static bool IsCurrentForFeeEstimation()
         return false;
     return true;
 }
-
+static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const CTransactionRef& ptx, bool fLimitFree,
                               bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                               bool fOverrideMempoolLimit, const CAmount& nAbsurdFee,
@@ -1179,55 +1179,63 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
-		const int chainHeight = chainActive.Height();
-		if (bMultiThreaded) {
-			// Remove conflicting transactions from the mempool
-			BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
-			{
-				LogPrint("mempool", "replacing tx %s with %s for %s %s additional fees, %d delta bytes\n",
-					it->GetTx().GetHash().ToString(),
-					hash.ToString(),
-					FormatMoney(nModifiedFees - nConflictingFees),
-					CURRENCY_UNIT,
-					(int)nSize - (int)nConflictingSize);
-				if (plTxnReplaced)
-					plTxnReplaced->push_back(it->GetSharedTx());
-			}
-			pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
+		bool isCached = false;
+		std::vector<CScriptCheck> vChecks;
+		// Check against previous transactions
+		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
+		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vChecks, &isCached)) {
+			return false;
+		}
+		if (isCached)
+			return true;
+		CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+		control.Add(vChecks);
+		// Remove conflicting transactions from the mempool
+		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
+		{
+			LogPrint("mempool", "replacing tx %s with %s for %s %s additional fees, %d delta bytes\n",
+				it->GetTx().GetHash().ToString(),
+				hash.ToString(),
+				FormatMoney(nModifiedFees - nConflictingFees),
+				CURRENCY_UNIT,
+				(int)nSize - (int)nConflictingSize);
+			if (plTxnReplaced)
+				plTxnReplaced->push_back(it->GetSharedTx());
+		}
+		pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
 
-			// This transaction should only count for fee estimation if it isn't a
-			// BIP 125 replacement transaction (may not be widely supported), the
-			// node is not behind, and the transaction is not dependent on any other
-			// transactions in the mempool.
-			bool validForFeeEstimation = !fReplacementTransaction && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
+		// This transaction should only count for fee estimation if it isn't a
+		// BIP 125 replacement transaction (may not be widely supported), the
+		// node is not behind, and the transaction is not dependent on any other
+		// transactions in the mempool.
+		bool validForFeeEstimation = !fReplacementTransaction && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
 
-			// Store transaction in memory
-			pool.addUnchecked(hash, entry, setAncestors, validForFeeEstimation);
+		// Store transaction in memory
+		pool.addUnchecked(hash, entry, setAncestors, validForFeeEstimation);
 
-			// Add memory address index
-			if (fAddressIndex) {
-				pool.addAddressIndex(entry, view);
-			}
+		// Add memory address index
+		if (fAddressIndex) {
+			pool.addAddressIndex(entry, view);
+		}
 
-			// Add memory spent index
-			if (fSpentIndex) {
-				pool.addSpentIndex(entry, view);
-			}
+		// Add memory spent index
+		if (fSpentIndex) {
+			pool.addSpentIndex(entry, view);
+		}
 
-			// trim mempool and check if tx was trimmed
-			if (!fOverrideMempoolLimit) {
-				LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
-				if (!pool.exists(hash))
-					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
-			}
-			std::packaged_task<void()> t([&pool, chainHeight, tx, nFees, hash, coins_to_uncache]() {
-				CValidationState vstate;
-				bool isCached = false;
-				CCoinsViewCache &vview = *pcoinsTip;
-				if (!CheckInputs(tx, vstate, vview, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, NULL, &isCached)) {
+		// trim mempool and check if tx was trimmed
+		if (!fOverrideMempoolLimit) {
+			LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+			if (!pool.exists(hash))
+				return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
+		}
+		if (bMultiThreaded)
+		{
+			std::packaged_task<void()> t([[&pool, tx, hash, coins_to_uncache, control]() {
+				if (!control.Wait()) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						 pcoinsTip->Uncache(hashTx);
+						pcoinsTip->Uncache(hashTx);
 					pool.removeRecursive(tx, MemPoolRemovalReason::UNKNOWN);
 					pool.ClearPrioritisation(hash);
 					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
@@ -1236,7 +1244,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					nLastMultithreadMempoolFailure = GetTime();
 					return;
 				}
-				if (!isCached && !CheckSyscoinInputs(tx, vstate, true, chainActive.Height(), CBlock())) {
+				if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckSyscoinInputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 						pcoinsTip->Uncache(hashTx);
@@ -1253,53 +1261,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			threadpool.post(t);
 		}
 		else {
-			// Check against previous transactions
-			// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-			if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true)) {
+			if (!control.Wait())
 				return false;
-			}
 			if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
 				return false;
 			}
-			// Remove conflicting transactions from the mempool
-			BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
-			{
-				LogPrint("mempool", "replacing tx %s with %s for %s %s additional fees, %d delta bytes\n",
-					it->GetTx().GetHash().ToString(),
-					hash.ToString(),
-					FormatMoney(nModifiedFees - nConflictingFees),
-					CURRENCY_UNIT,
-					(int)nSize - (int)nConflictingSize);
-				if (plTxnReplaced)
-					plTxnReplaced->push_back(it->GetSharedTx());
-			}
-			pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
-
-			// This transaction should only count for fee estimation if it isn't a
-			// BIP 125 replacement transaction (may not be widely supported), the
-			// node is not behind, and the transaction is not dependent on any other
-			// transactions in the mempool.
-			bool validForFeeEstimation = !fReplacementTransaction && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
-
-			// Store transaction in memory
-			pool.addUnchecked(hash, entry, setAncestors, validForFeeEstimation);
-
-			// Add memory address index
-			if (fAddressIndex) {
-				pool.addAddressIndex(entry, view);
-			}
-
-			// Add memory spent index
-			if (fSpentIndex) {
-				pool.addSpentIndex(entry, view);
-			}
-
-			// trim mempool and check if tx was trimmed
-			if (!fOverrideMempoolLimit) {
-				LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
-				if (!pool.exists(hash))
-					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
-			}
+			GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
 		}
 	}
 	
@@ -2273,7 +2240,6 @@ void static FlushBlockFile(bool fFinalize = false)
 
 bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
 
-static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck() {
     RenameThread("syscoin-scriptch");

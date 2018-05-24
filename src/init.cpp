@@ -1193,7 +1193,7 @@ bool AppInitParameterInteraction()
     if (nScriptCheckThreads <= 0)
         nScriptCheckThreads += GetNumCores();
     if (nScriptCheckThreads <= 1)
-        nScriptCheckThreads = 0;
+        nScriptCheckThreads = 1;
     else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
 
@@ -1407,7 +1407,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 	InitScriptExecutionCache();
     LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
     if (nScriptCheckThreads) {
-        for (int i=0; i<nScriptCheckThreads-1; i++)
+        for (int i=0; i<nScriptCheckThreads; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
 
