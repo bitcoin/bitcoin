@@ -1188,9 +1188,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
 			return false;
 		}
-		CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
-		control.Add(vChecks);
 		if (!bMultiThreaded) {
+			CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+			control.Add(vChecks);
 			if (!control.Wait())
 				return false;
 		}
@@ -1235,23 +1235,24 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded)
 		{
-			std::packaged_task<void()> t([&pool, tx, hash, coins_to_uncache, vChecks]() {
+			std::packaged_task<void()> t([&pool, tx, hash, coins_to_uncache, vChecks, &scriptcheckqueue]() {
 				std::vector<CScriptCheck> vvChecks = vChecks;
+				CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+				control.Add(vvChecks);
 				CValidationState vstate;
-				for(auto& check: vvChecks) {
-					if (!check()) {
-						LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
-						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-							pcoinsTip->Uncache(hashTx);
-						pool.removeRecursive(tx, MemPoolRemovalReason::UNKNOWN);
-						pool.ClearPrioritisation(hash);
-						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-						CValidationState stateDummy;
-						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-						nLastMultithreadMempoolFailure = GetTime();
-						return;
-					}
+				if (!control.Wait()) {
+					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
+					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+						pcoinsTip->Uncache(hashTx);
+					pool.removeRecursive(tx, MemPoolRemovalReason::UNKNOWN);
+					pool.ClearPrioritisation(hash);
+					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+					CValidationState stateDummy;
+					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+					nLastMultithreadMempoolFailure = GetTime();
+					return;
 				}
+				
 				GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
 			});
 			threadpool.post(t);
