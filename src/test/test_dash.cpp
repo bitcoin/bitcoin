@@ -65,6 +65,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         boost::filesystem::create_directories(pathTemp);
         ForceSetArg("-datadir", pathTemp.string());
         mempool.setSanityCheck(1.0);
+        evoDb = new CEvoDB(1 << 20, true, true);
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
@@ -91,6 +92,7 @@ TestingSetup::~TestingSetup()
         delete pcoinsTip;
         delete pcoinsdbview;
         delete pblocktree;
+        delete evoDb;
         boost::filesystem::remove_all(pathTemp);
 }
 
