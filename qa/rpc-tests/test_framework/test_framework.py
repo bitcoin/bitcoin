@@ -480,7 +480,7 @@ class DashTestFramework(BitcoinTestFramework):
             set_node_times(self.nodes, get_mocktime())
             self.nodes[0].generate(1)
 
-
+        sync_blocks(self.nodes)
 
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:
