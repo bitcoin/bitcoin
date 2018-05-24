@@ -1953,23 +1953,45 @@ void CConnman::ThreadOpenMasternodeConnections()
         if (!interruptNet.sleep_for(std::chrono::milliseconds(1000)))
             return;
 
+        std::set<CService> connectedNodes;
+        ForEachNode([&connectedNodes](const CNode* pnode) {
+            connectedNodes.emplace(pnode->addr);
+        });
+
         CSemaphoreGrant grant(*semMasternodeOutbound);
         if (interruptNet)
             return;
 
         // NOTE: Process only one pending masternode at a time
 
-        LOCK(cs_vPendingMasternodes);
-        if (vPendingMasternodes.empty()) {
-            // nothing to do, keep waiting
-            continue;
-        }
+        CService addr;
+        { // don't hold lock while calling OpenMasternodeConnection as cs_main is locked deep inside
+            LOCK2(cs_vNodes, cs_vPendingMasternodes);
 
-        const CService addr = vPendingMasternodes.front();
-        vPendingMasternodes.erase(vPendingMasternodes.begin());
-        if (IsMasternodeOrDisconnectRequested(addr)) {
-            // nothing to do, try the next one
-            continue;
+            std::vector<CService> pending;
+            for (auto& group : masternodeQuorumNodes) {
+                for (auto& addr : group.second) {
+                    if (!connectedNodes.count(addr) && !IsMasternodeOrDisconnectRequested(addr)) {
+                        pending.emplace_back(addr);
+                    }
+                }
+            }
+
+            if (!vPendingMasternodes.empty()) {
+                auto addr = vPendingMasternodes.front();
+                vPendingMasternodes.erase(vPendingMasternodes.begin());
+                if (!connectedNodes.count(addr) && !IsMasternodeOrDisconnectRequested(addr)) {
+                    pending.emplace_back(addr);
+                }
+            }
+
+            if (pending.empty()) {
+                // nothing to do, keep waiting
+                continue;
+            }
+
+            std::random_shuffle(pending.begin(), pending.end());
+            addr = pending.front();
         }
 
         OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
@@ -2573,6 +2595,93 @@ bool CConnman::AddPendingMasternode(const CService& service)
     return true;
 }
 
+bool CConnman::AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<CService>& addresses)
+{
+    LOCK(cs_vPendingMasternodes);
+    auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
+    if (it != masternodeQuorumNodes.end()) {
+        return false;
+    }
+    masternodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), addresses);
+    return true;
+}
+
+bool CConnman::HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash)
+{
+    LOCK(cs_vPendingMasternodes);
+    return masternodeQuorumNodes.count(std::make_pair(llmqType, quorumHash));
+}
+
+std::set<std::pair<Consensus::LLMQType, uint256>> CConnman::GetMasternodeQuorums()
+{
+    LOCK(cs_vPendingMasternodes);
+    std::set<std::pair<Consensus::LLMQType, uint256>> result;
+    for (auto& p : masternodeQuorumNodes) {
+        result.emplace(p.first);
+    }
+    return result;
+}
+
+std::set<uint256> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType)
+{
+    LOCK(cs_vPendingMasternodes);
+    std::set<uint256> result;
+    for (auto& p : masternodeQuorumNodes) {
+        if (p.first.first != llmqType) {
+            continue;
+        }
+        result.emplace(p.first.second);
+    }
+    return result;
+}
+
+std::set<CService> CConnman::GetMasternodeQuorumAddresses(Consensus::LLMQType llmqType, const uint256& quorumHash) const
+{
+    LOCK(cs_vPendingMasternodes);
+    auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
+    if (it == masternodeQuorumNodes.end()) {
+        return {};
+    }
+    return it->second;
+}
+
+std::set<NodeId> CConnman::GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const
+{
+    LOCK2(cs_vNodes, cs_vPendingMasternodes);
+    auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
+    if (it == masternodeQuorumNodes.end()) {
+        return {};
+    }
+    std::set<NodeId> nodes;
+    for (auto pnode : vNodes) {
+        if (pnode->fDisconnect) {
+            continue;
+        }
+        if (!pnode->qwatch && !it->second.count(pnode->addr)) {
+            continue;
+        }
+        nodes.emplace(pnode->id);
+    }
+    return nodes;
+}
+
+void CConnman::RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash)
+{
+    LOCK(cs_vPendingMasternodes);
+    masternodeQuorumNodes.erase(std::make_pair(llmqType, quorumHash));
+}
+
+bool CConnman::IsMasternodeQuorumNode(const CService& addr)
+{
+    LOCK(cs_vPendingMasternodes);
+    for (const auto& p : masternodeQuorumNodes) {
+        if (p.second.count(addr)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 size_t CConnman::GetNodeCount(NumConnections flags)
 {
     LOCK(cs_vNodes);
@@ -3015,6 +3124,20 @@ bool CConnman::ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, 
         }
     }
     return found != nullptr && cond(found) && func(found);
+}
+
+void CConnman::ForEachQuorumMember(Consensus::LLMQType llmqType, const uint256& quorumHash, std::function<bool(CNode* pnode)> func) const
+{
+    LOCK2(cs_vNodes, cs_vPendingMasternodes);
+    auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
+    if (it == masternodeQuorumNodes.end()) {
+        return;
+    }
+    for (auto&& pnode : vNodes) {
+        if(it->second.count(pnode->addr)) {
+            func(pnode);
+        }
+    }
 }
 
 bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {

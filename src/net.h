@@ -20,6 +20,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "threadinterrupt.h"
+#include "consensus/params.h"
 
 #include <atomic>
 #include <deque>
@@ -302,6 +303,8 @@ public:
         ForEachNodeThen(FullyConnectedOnly, pre, post);
     }
 
+    void ForEachQuorumMember(Consensus::LLMQType llmqType, const uint256& quorumHash, std::function<bool(CNode* pnode)> func) const;
+
     std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
     std::vector<CNode*> CopyNodeVector();
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
@@ -312,6 +315,7 @@ public:
     void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
     // This overload will not update node filters,  so use it only for the cases when other messages will update related transaction data in filters
     void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+    void RelayInvToQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash, CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
     void RemoveAskFor(const uint256& hash);
 
     // Addrman functions
@@ -351,8 +355,18 @@ public:
 
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);
-    bool AddPendingMasternode(const CService& addr);
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
+
+    bool AddPendingMasternode(const CService& addr);
+    bool AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<CService>& addresses);
+    bool HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
+    std::set<std::pair<Consensus::LLMQType, uint256>> GetMasternodeQuorums();
+    std::set<uint256> GetMasternodeQuorums(Consensus::LLMQType llmqType);
+    std::set<CService> GetMasternodeQuorumAddresses(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
+    // also returns QWATCH nodes
+    std::set<NodeId> GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
+    void RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
+    bool IsMasternodeQuorumNode(const CService& addr);
 
     size_t GetNodeCount(NumConnections num);
     void GetNodeStats(std::vector<CNodeStats>& vstats);
@@ -480,7 +494,8 @@ private:
     std::vector<std::string> vAddedNodes;
     CCriticalSection cs_vAddedNodes;
     std::vector<CService> vPendingMasternodes;
-    CCriticalSection cs_vPendingMasternodes;
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<CService>> masternodeQuorumNodes; // protected by cs_vPendingMasternodes
+    mutable CCriticalSection cs_vPendingMasternodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
@@ -798,6 +813,9 @@ public:
     std::atomic<int64_t> nMinPingUsecTime;
     // Whether a ping is requested.
     std::atomic<bool> fPingQueued;
+
+    // If true, we will send him all quorum related messages, even if he is not a member of our quorums
+    std::atomic_bool qwatch{false};
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
