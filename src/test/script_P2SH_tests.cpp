@@ -110,7 +110,9 @@ BOOST_AUTO_TEST_CASE(sign)
             CScript sigSave = txTo[i].vin[0].scriptSig;
             txTo[i].vin[0].scriptSig = txTo[j].vin[0].scriptSig;
             const CTxOut& output = txFrom.vout[txTo[i].vin[0].prevout.n];
-            bool sigOK = CScriptCheck(output.scriptPubKey, output.nValue, txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, false)();
+			// SYSCOIN
+			uint256 dummyEntry;
+            bool sigOK = CScriptCheck(output.scriptPubKey, output.nValue, txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, false, dummyEntry)();
             if (i == j)
                 BOOST_CHECK_MESSAGE(sigOK, strprintf("VerifySignature %d %d", i, j));
             else
