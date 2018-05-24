@@ -476,7 +476,7 @@ public:
         std::swap(nFlags, check.nFlags);
         std::swap(cacheStore, check.cacheStore);
         std::swap(error, check.error);
-		std::swap(hashCacheEntryIn, check.hashCacheEntry);
+		std::swap(hashCacheEntry, check.hashCacheEntry);
     }
 
     ScriptError GetScriptError() const { return error; }
