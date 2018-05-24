@@ -2544,6 +2544,18 @@ size_t CConnman::GetNodeCount(NumConnections flags)
     return nNum;
 }
 
+CNode* CConnman::GetNodeByID(NodeId id)
+{
+    AssertLockHeld(cs_vNodes);
+
+    for(CNode* pnode : vNodes) {
+        if (id == pnode->GetId()) {
+            return pnode;
+        }
+    }
+    return nullptr;
+}
+
 void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
 {
     vstats.clear();
@@ -2564,14 +2576,14 @@ bool CConnman::DisconnectNode(const std::string& strNode)
     }
     return false;
 }
+
 bool CConnman::DisconnectNode(NodeId id)
 {
     LOCK(cs_vNodes);
-    for(CNode* pnode : vNodes) {
-        if (id == pnode->GetId()) {
-            pnode->fDisconnect = true;
-            return true;
-        }
+    CNode* node = GetNodeByID(id);
+    if (node) {
+        node->fDisconnect = true;
+        return true;
     }
     return false;
 }
