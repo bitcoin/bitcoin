@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     CKey key[4];
     CAmount amount = 0;
     for (int i = 0; i < 4; i++)
-        key[i].MakeNewKey(true);
+        key[i].MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
 
     CScript a_and_b;
     a_and_b << OP_2 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << OP_2 << OP_CHECKMULTISIG;
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 {
     CKey key[4];
     for (int i = 0; i < 4; i++)
-        key[i].MakeNewKey(true);
+        key[i].MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
 
     txnouttype whichType;
 
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
     CKey key[4];
     for (int i = 0; i < 4; i++)
     {
-        key[i].MakeNewKey(true);
+        key[i].MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
         keystore.AddKey(key[i]);
     }
 

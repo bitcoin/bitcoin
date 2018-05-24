@@ -25,7 +25,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
     // Add some keys to the keystore:
     CKey key[4];
     for (int i = 0; i < 4; i++) {
-        key[i].MakeNewKey(i % 2);
+        key[i].MakeNewKeyWithType(KEY_P2PKH_COMPRESSED_FLAG(i % 2));
         keystoreRet.AddKey(key[i]);
     }
 

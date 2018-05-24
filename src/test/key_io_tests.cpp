@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
             // Must be valid private key
             privkey = DecodeSecret(exp_base58string);
             BOOST_CHECK_MESSAGE(privkey.IsValid(), "!IsValid:" + strTest);
-            BOOST_CHECK_MESSAGE(privkey.IsCompressed() == isCompressed, "compressed mismatch:" + strTest);
+            BOOST_CHECK_MESSAGE(KEY_IS_COMPRESSED(privkey.GetType()) == isCompressed, "type mismatch:" + strTest);
             BOOST_CHECK_MESSAGE(privkey.size() == exp_payload.size() && std::equal(privkey.begin(), privkey.end(), exp_payload.begin()), "key mismatch:" + strTest);
 
             // Private key must be invalid public key
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
         if (isPrivkey) {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             CKey key;
-            key.Set(exp_payload.begin(), exp_payload.end(), isCompressed);
+            key.SetWithType(exp_payload.begin(), exp_payload.end(), KEY_P2PKH_COMPRESSED_FLAG(isCompressed));
             assert(key.IsValid());
             BOOST_CHECK_MESSAGE(EncodeSecret(key) == exp_base58string, "result mismatch: " + strTest);
         } else {

@@ -199,6 +199,6 @@ CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest)
 bool HaveKey(const CKeyStore& store, const CKey& key)
 {
     CKey key2;
-    key2.Set(key.begin(), key.end(), !key.IsCompressed());
+    key2.SetWithType(key.begin(), key.end(), KEY_IS_COMPRESSED(key.GetType()) ? KEY_P2PKH_UNCOMPRESSED : KEY_P2PKH_COMPRESSED);
     return store.HaveKey(key.GetPubKey().GetID()) || store.HaveKey(key2.GetPubKey().GetID());
 }

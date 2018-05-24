@@ -23,7 +23,7 @@ bool TransactionSignatureCreator::CreateSig(const SigningProvider& provider, std
         return false;
 
     // Signing with uncompressed keys is disabled in witness scripts
-    if (sigversion == SigVersion::WITNESS_V0 && !key.IsCompressed())
+    if (sigversion == SigVersion::WITNESS_V0 && key.GetType() == KEY_P2PKH_UNCOMPRESSED)
         return false;
 
     uint256 hash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion);

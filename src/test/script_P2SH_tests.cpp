@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(sign)
     CKey key[4];
     for (int i = 0; i < 4; i++)
     {
-        key[i].MakeNewKey(true);
+        key[i].MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
         keystore.AddKey(key[i]);
     }
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(set)
     std::vector<CPubKey> keys;
     for (int i = 0; i < 4; i++)
     {
-        key[i].MakeNewKey(true);
+        key[i].MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
         keystore.AddKey(key[i]);
         keys.push_back(key[i].GetPubKey());
     }
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     std::vector<CPubKey> keys;
     for (int i = 0; i < 6; i++)
     {
-        key[i].MakeNewKey(true);
+        key[i].MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
         keystore.AddKey(key[i]);
     }
     for (int i = 0; i < 3; i++)

@@ -23,6 +23,41 @@
  */
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
 
+/**
+ * Key type, based on Electrum 3.0 extension:
+ * https://github.com/spesmilo/electrum/blob/82e88cb89df35288b80dfdbe071da74247351251/RELEASE-NOTES#L95-L108
+ */
+enum KeyType
+{
+    // Legacy style
+    KEY_P2PKH_UNCOMPRESSED = 0x00,
+    KEY_P2PKH_COMPRESSED   = 0x01,
+    // New style
+    KEY_P2PKH              = 0x10,   // compressed P2PKH, same as 0x01
+    KEY_P2WPKH             = 0x11,
+    KEY_P2WPKH_P2SH        = 0x12,
+    KEY_P2SH               = 0x13,
+    KEY_P2WSH              = 0x14,
+    KEY_P2WSH_P2SH         = 0x15,
+    // Ranges for validity
+    KEY_RANGE_LEGACY_START = KEY_P2PKH_UNCOMPRESSED,
+    KEY_RANGE_LEGACY_END   = KEY_P2PKH_COMPRESSED,
+    KEY_RANGE_START        = KEY_P2PKH,
+    KEY_RANGE_END          = KEY_P2WSH_P2SH,
+};
+
+// SECP256K1_EC_* conversion with KeyType
+#define KEY_SECP256K1_EC_COMPRESSED_FLAG(type) ((type) != KEY_P2PKH_UNCOMPRESSED ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED)
+
+// Temporary helper for converting compressed=true/false into KEY_P2PKH_*
+#define KEY_P2PKH_COMPRESSED_FLAG(flag) ((flag) ? KEY_P2PKH_COMPRESSED : KEY_P2PKH_UNCOMPRESSED)
+
+// Helper for 'is compressed' check
+#define KEY_IS_COMPRESSED(type) (type != KEY_P2PKH_UNCOMPRESSED)
+
+// Validity check
+#define KEY_VALID_TYPE(type) ((type >= KEY_RANGE_LEGACY_START && type <= KEY_RANGE_LEGACY_END) || (type >= KEY_RANGE_START && type <= KEY_RANGE_END))
+
 /** An encapsulated private key. */
 class CKey
 {
@@ -45,8 +80,9 @@ private:
     //! data, so fValid should always correspond to the actual state.
     bool fValid;
 
-    //! Whether the public key corresponding to this private key is (to be) compressed.
-    bool fCompressed;
+    //! The key type, used to determine which kinds of addresses should be
+    //! tracked.
+    KeyType m_type;
 
     //! The actual byte data
     std::vector<unsigned char, secure_allocator<unsigned char> > keydata;
@@ -56,7 +92,7 @@ private:
 
 public:
     //! Construct an invalid private key.
-    CKey() : fValid(false), fCompressed(false)
+    CKey() : fValid(false), m_type(KEY_P2PKH_UNCOMPRESSED)
     {
         // Important: vch must be 32 bytes in length to not break serialization
         keydata.resize(32);
@@ -64,21 +100,21 @@ public:
 
     friend bool operator==(const CKey& a, const CKey& b)
     {
-        return a.fCompressed == b.fCompressed &&
+        return a.m_type == b.m_type &&
             a.size() == b.size() &&
             memcmp(a.keydata.data(), b.keydata.data(), a.size()) == 0;
     }
 
     //! Initialize using begin and end iterators to byte data.
     template <typename T>
-    void Set(const T pbegin, const T pend, bool fCompressedIn)
+    void SetWithType(const T pbegin, const T pend, KeyType type_in)
     {
         if (size_t(pend - pbegin) != keydata.size()) {
             fValid = false;
         } else if (Check(&pbegin[0])) {
             memcpy(keydata.data(), (unsigned char*)&pbegin[0], keydata.size());
-            fValid = true;
-            fCompressed = fCompressedIn;
+            fValid = KEY_VALID_TYPE(type_in);
+            m_type = type_in;
         } else {
             fValid = false;
         }
@@ -93,10 +129,10 @@ public:
     bool IsValid() const { return fValid; }
 
     //! Check whether the public key corresponding to this private key is (to be) compressed.
-    bool IsCompressed() const { return fCompressed; }
+    KeyType GetType() const { return m_type; }
 
     //! Generate a new private key using a cryptographic PRNG.
-    void MakeNewKey(bool fCompressed);
+    void MakeNewKeyWithType(KeyType type);
 
     /**
      * Convert the private key to a CPrivKey (serialized OpenSSL private key data).

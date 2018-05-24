@@ -62,7 +62,7 @@ void TestAddAddressesToSendBook()
 
     auto build_address = [&wallet]() {
         CKey key;
-        key.MakeNewKey(true);
+        key.MakeNewKeyWithType(KEY_P2PKH_COMPRESSED);
         CTxDestination dest(GetDestinationForKey(
             key.GetPubKey(), wallet->m_default_address_type));
 
