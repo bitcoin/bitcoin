@@ -149,7 +149,7 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
     }
 
     if (!IsAssetNameValid(std::string(strName)))
-        strError = "Invalid parameter: asset_name must be only consist of valid characters and have a size between 3 and 31 characters. See help for more details.";
+        strError = "Invalid parameter: asset_name must only consist of valid characters and have a size between 3 and 31 characters. See help for more details.";
 
     if (nAmount <= 0)
         strError  = "Invalid parameter: asset amount can't be equal to or less than zero.";
@@ -303,6 +303,18 @@ CAssetTransfer::CAssetTransfer(const std::string& strAssetName, const CAmount& n
 {
     this->strName = strAssetName;
     this->nAmount = nAmount;
+}
+
+bool CAssetTransfer::IsValid(std::string& strError) const {
+    strError = "";
+
+    if (!IsAssetNameValid(std::string(strName)))
+        strError = "Invalid parameter: asset_name must only consist of valid characters and have a size between 3 and 31 characters. See help for more details.";
+
+    if (nAmount <= 0)
+        strError  = "Invalid parameter: asset amount can't be equal to or less than zero.";
+
+    return strError == "";
 }
 
 void CAssetTransfer::ConstructTransaction(CScript& script) const

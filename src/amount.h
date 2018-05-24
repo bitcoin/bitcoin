@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 
-/** Amount in satoshis (Can be negative) */
+/** Amount in corbies (Can be negative) */
 typedef int64_t CAmount;
 
 static const CAmount COIN = 100000000;

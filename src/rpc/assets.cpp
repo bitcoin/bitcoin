@@ -328,7 +328,7 @@ UniValue getassetaddresses(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-                "getassetsaddresses asset_name\n"
+                "getassetaddresses asset_name\n"
                 "\nReturns a list of all address that own the given asset"
 
                 "\nArguments:\n"

@@ -331,7 +331,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "     ]\n"
             "2. \"outputs\"                               (object, required) a json object with outputs\n"
             "     {\n"
-            "       \"address\":                          (string, required) The destination raven address\n"
+            "       \"address\":                          (string, required) The destination raven address.  Each output must have a different address.\n"
             "         x.xxx                             (numeric or string, required) The RVN amount\n"
             "           or\n"
             "         {                                 (object) A json object of assets to send\n"
@@ -382,7 +382,8 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0}]\" \"{\\\"address\\\":0.01}\"")
             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0}]\" \"{\\\"data\\\":\\\"00010203\\\"}\"")
             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0}]\" \"{\\\"RXissueAssetXXXXXXXXXXXXXXXXXhhZGt\\\":500,\\\"change_address\\\":change_amount,\\\"issuer_address\\\":{\\\"issue\\\":{\\\"name_length\\\":3,\\\"asset_name\\\":\\\"MYASSET\\\",\\\"asset_quantity\\\":1000000,\\\"units\\\":1,\\\"reissuable\\\":0,\\\"has_ipfs\\\":1,\\\"ipfs_hash\\\":\\\"43f81c6f2c0593bde5a85e09ae662816eca80797\\\"}}}\"")
-            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myownership\\\",\\\"vout\\\":0}]\" \"{\\\"issuer_address\\\":{\\\"reissue\\\":{\\\"name_length\\\":3,\\\"asset_name\\\":\\\"MYASSET\\\",\\\"asset_quantity\\\":2000000}}}\"")
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0},{\\\"txid\\\":\\\"myasset\\\",\\\"vout\\\":0}]\" \"{\\\"address\\\":{\\\"transfer\\\":{\\\"MYASSET\\\":50}}}\"")
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0},{\\\"txid\\\":\\\"myownership\\\",\\\"vout\\\":0}]\" \"{\\\"issuer_address\\\":{\\\"reissue\\\":{\\\"name_length\\\":3,\\\"asset_name\\\":\\\"MYASSET\\\",\\\"asset_quantity\\\":2000000}}}\"")
             + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0}]\", \"{\\\"data\\\":\\\"00010203\\\"}\"")
         );
 
@@ -534,7 +535,43 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
                 } else if (assetKey_ == "reissue") {
 
                 } else if (assetKey_ == "transfer") {
+                    if (asset_[0].type() != UniValue::VOBJ)
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, the format must follow { \"transfer\": {\"asset_name\": amount, ...} }"));
 
+                    UniValue transferData = asset_.getValues()[0].get_obj();
+                    auto keys = transferData.getKeys();
+
+                    if (keys.size() == 0)
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, the format must follow { \"transfer\": {\"asset_name\": amount, ...} }"));
+
+                    UniValue asset_quantity;
+                    int idx = 0;
+                    for (auto asset_name : keys) {
+                        asset_quantity = find_value(transferData, asset_name);
+
+                        if (!asset_quantity.isNum())
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing or invalid quantity");
+
+                        CAmount nAmount = AmountFromValue(asset_quantity);
+
+                        // Create a new transfer
+                        CAssetTransfer transfer(asset_name, nAmount);
+
+                        // Verify
+                        std::string strError = "";
+                        if (!transfer.IsValid(strError))
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, strError);
+
+                        // Construct transaction
+                        CScript scriptPubKey = GetScriptForDestination(destination);
+                        transfer.ConstructTransaction(scriptPubKey);
+
+                        // Push into vouts
+                        CTxOut out(idx, scriptPubKey);
+                        rawTx.vout.push_back(out);
+
+                        idx++;
+                    }
                 }
                 else {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, unknown output type (should be 'issue', 'reissue' or 'transfer'): " + assetKey_));
