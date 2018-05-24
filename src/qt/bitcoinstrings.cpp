@@ -166,8 +166,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Set lowest fee rate (in %s/kB) for transactions to be included in block "
 "creation. (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Set the number of script verification threads (%u to %d, 0 = auto, <0 = "
 "leave that many cores free, default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
