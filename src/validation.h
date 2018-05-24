@@ -462,10 +462,10 @@ private:
     ScriptError error;
 
 public:
-    CScriptCheck(): hashCacheEntry(0), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
+    CScriptCheck(): ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
     CScriptCheck(const CScript& scriptPubKeyIn, const CAmount amountIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn, uint256 hashCacheEntryIn) :
         scriptPubKey(scriptPubKeyIn),
-        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
+        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), hashCacheEntry(hashCacheEntryIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
 
     bool operator()();
 
