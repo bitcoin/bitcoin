@@ -101,7 +101,7 @@
              </attribute>
              <column>
               <property name="text">
-               <string>Alias</string>
+               <string>Name</string>
               </property>
              </column>
              <column>
