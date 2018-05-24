@@ -271,7 +271,8 @@ static UniValue devicesignmessage(const JSONRPCRequest &request)
 static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
 {
     #ifdef ENABLE_WALLET
-    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CHDWallet *const pwallet = GetParticlWallet(wallet.get());
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
     #endif
@@ -565,7 +566,8 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
 #ifdef ENABLE_WALLET
 static UniValue initaccountfromdevice(const JSONRPCRequest &request)
 {
-    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CHDWallet *const pwallet = GetParticlWallet(wallet.get());
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
@@ -808,7 +810,8 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
 
 static UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
 {
-    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CHDWallet *const pwallet = GetParticlWallet(wallet.get());
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 

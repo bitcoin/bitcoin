@@ -195,7 +195,7 @@ WalletTxOut MakeWalletTxOut(CHDWallet& wallet, const COutputR& r, int n, int dep
 class WalletImpl : public Wallet
 {
 public:
-    WalletImpl(CWallet& wallet) : m_wallet(wallet)
+    WalletImpl(const std::shared_ptr<CWallet>& wallet) : m_shared_wallet(wallet), m_wallet(*wallet.get())
     {
         if (::IsParticlWallet(&m_wallet))
             m_wallet_part = GetParticlWallet(&m_wallet);
@@ -632,6 +632,11 @@ public:
         return MakeHandler(m_wallet_part->NotifyReservedBalanceChanged.connect(fn));
     }
 
+    std::shared_ptr<CWallet> m_shared_wallet;
+    CWallet& m_wallet;
+
+
+
     bool IsParticlWallet() override
     {
         return m_wallet_part;
@@ -722,13 +727,11 @@ public:
         return m_wallet_part->IsMine(txout);
     }
 
-    CWallet& m_wallet;
-
     CHDWallet *m_wallet_part = nullptr;
 };
 
 } // namespace
 
-std::unique_ptr<Wallet> MakeWallet(CWallet& wallet) { return MakeUnique<WalletImpl>(wallet); }
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return MakeUnique<WalletImpl>(wallet); }
 
 } // namespace interfaces

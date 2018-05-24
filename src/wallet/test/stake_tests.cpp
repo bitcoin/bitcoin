@@ -37,8 +37,8 @@ struct StakeTestingSetup: public TestingSetup {
         TestingSetup(chainName, true) // fParticlMode = true
     {
         bool fFirstRun;
-        pwalletMain = MakeUnique<CHDWallet>("mock_part", WalletDatabase::CreateMock());
-        AddWallet(pwalletMain.get());
+        pwalletMain = std::make_shared<CHDWallet>("mock_part", WalletDatabase::CreateMock());
+        AddWallet(pwalletMain);
         fParticlWallet = true;
         pwalletMain->LoadWallet(fFirstRun);
         RegisterValidationInterface(pwalletMain.get());
@@ -53,7 +53,7 @@ struct StakeTestingSetup: public TestingSetup {
     ~StakeTestingSetup()
     {
         UnregisterValidationInterface(pwalletMain.get());
-        RemoveWallet(pwalletMain.get());
+        RemoveWallet(pwalletMain);
         pwalletMain.reset();
 
         mapStakeSeen.clear();
@@ -62,7 +62,7 @@ struct StakeTestingSetup: public TestingSetup {
         ECC_Stop_Blinding();
     }
 
-    std::unique_ptr<CHDWallet> pwalletMain;
+    std::shared_ptr<CHDWallet> pwalletMain;
 };
 
 BOOST_FIXTURE_TEST_SUITE(stake_tests, StakeTestingSetup)

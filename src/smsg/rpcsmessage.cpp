@@ -44,7 +44,7 @@ static UniValue smsgenable(const JSONRPCRequest &request)
 #ifdef ENABLE_WALLET
     auto vpwallets = GetWallets();
     assert(vpwallets.size() > 0);
-    pwallet = vpwallets[0];
+    pwallet = vpwallets[0].get();
 #endif
 
     result.pushKV("result", (smsgModule.Enable(pwallet) ? "Enabled secure messaging." : "Failed to enable secure messaging."));

@@ -263,7 +263,7 @@ static inline void condWaitFor(size_t nThreadID, int ms)
     t->condWaitFor(ms);
 };
 
-void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size_t nStart, size_t nEnd)
+void ThreadStakeMiner(size_t nThreadID, std::vector<std::shared_ptr<CWallet>> &vpwallets, size_t nStart, size_t nEnd)
 {
     LogPrintf("Starting staking thread %d, %d wallet%s.\n", nThreadID, nEnd - nStart, (nEnd - nStart) > 1 ? "s" : "");
 
@@ -355,7 +355,7 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
         size_t nWaitFor = 60000;
         for (size_t i = nStart; i < nEnd; ++i)
         {
-            auto pwallet = GetParticlWallet(vpwallets[i]);
+            auto pwallet = GetParticlWallet(vpwallets[i].get());
 
             if (nSearchTime <= pwallet->nLastCoinStakeSearchTime)
             {

@@ -1799,7 +1799,7 @@ bool AppInitMain()
     if (fParticlMode) // SMSG breaks functional tests with services flag, see version msg
     {
         auto vpwallets = GetWallets();
-        smsgModule.Start(vpwallets.size() > 0 ? vpwallets[0] : nullptr, !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
+        smsgModule.Start(vpwallets.size() > 0 ? vpwallets[0].get() : nullptr, !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
     };
 #else
     if (fParticlMode)
@@ -1910,7 +1910,7 @@ bool AppInitMain()
                 size_t nEnd = (i == nThreads-1) ? nWallets : nPerThread * (i+1);
                 StakeThread *t = new StakeThread();
                 vStakeThreads.push_back(t);
-                GetParticlWallet(vpwallets[i])->nStakeThread = i;
+                GetParticlWallet(vpwallets[i].get())->nStakeThread = i;
                 t->sName = strprintf("miner%d", i);
                 t->thread = std::thread(&TraceThread<std::function<void()> >, t->sName.c_str(), std::function<void()>(std::bind(&ThreadStakeMiner, i, vpwallets, nStart, nEnd)));
             };

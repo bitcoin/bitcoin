@@ -15,7 +15,7 @@ struct HDWalletTestingSetup: public TestingSetup {
     HDWalletTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~HDWalletTestingSetup();
 
-    std::unique_ptr<CHDWallet> pwalletMain;
+    std::shared_ptr<CHDWallet> pwalletMain;
 };
 
 std::string StripQuotes(std::string s);
