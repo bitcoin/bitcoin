@@ -21,6 +21,9 @@ public:
     static std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqType, const uint256& blockHash);
 
     static uint256 BuildCommitmentHash(uint8_t llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
+
+    static std::set<CService> GetQuorumConnections(Consensus::LLMQType llmqType, const uint256& blockHash, const uint256& forMember);
+    static std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType, const uint256& blockHash, size_t memberCount, size_t connectionCount);
 };
 
 }

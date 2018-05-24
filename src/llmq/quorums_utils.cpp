@@ -29,5 +29,60 @@ uint256 CLLMQUtils::BuildCommitmentHash(uint8_t llmqType, const uint256& blockHa
     return hw.GetHash();
 }
 
+std::set<CService> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType, const uint256& blockHash, const uint256& forMember)
+{
+    auto& params = Params().GetConsensus().llmqs.at(llmqType);
+
+    auto mns = GetAllQuorumMembers(llmqType, blockHash);
+    std::set<CService> result;
+    for (size_t i = 0; i < mns.size(); i++) {
+        auto& dmn = mns[i];
+        if (dmn->proTxHash == forMember) {
+            for (int n = 0; n < params.neighborConnections; n++) {
+                size_t idx = (i + 1 + n) % mns.size();
+                auto& otherDmn = mns[idx];
+                if (otherDmn == dmn) {
+                    continue;
+                }
+                result.emplace(otherDmn->pdmnState->addr);
+            }
+            size_t startIdx = i + mns.size() / 2;
+            startIdx -= (params.diagonalConnections / 2) * params.neighborConnections;
+            startIdx %= mns.size();
+            for (int n = 0; n < params.diagonalConnections; n++) {
+                size_t idx = startIdx + n * params.neighborConnections;
+                idx %= mns.size();
+                auto& otherDmn = mns[idx];
+                if (otherDmn == dmn) {
+                    continue;
+                }
+                result.emplace(otherDmn->pdmnState->addr);
+            }
+        }
+    }
+    return result;
+}
+
+std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQType llmqType, const uint256& blockHash, size_t memberCount, size_t connectionCount)
+{
+    static uint256 qwatchConnectionSeed;
+    static std::atomic<bool> qwatchConnectionSeedGenerated{false};
+    static CCriticalSection qwatchConnectionSeedCs;
+    if (!qwatchConnectionSeedGenerated) {
+        LOCK(qwatchConnectionSeedCs);
+        if (!qwatchConnectionSeedGenerated) {
+            qwatchConnectionSeed = GetRandHash();
+            qwatchConnectionSeedGenerated = true;
+        }
+    }
+
+    std::set<size_t> result;
+    uint256 rnd = qwatchConnectionSeed;
+    for (size_t i = 0; i < connectionCount; i++) {
+        rnd = ::SerializeHash(std::make_pair(rnd, std::make_pair((uint8_t)llmqType, blockHash)));
+        result.emplace(rnd.GetUint64(0) % memberCount);
+    }
+    return result;
+}
 
 }

@@ -266,6 +266,10 @@ extern const char *GETMNLISTDIFF;
 extern const char *MNLISTDIFF;
 extern const char *QFCOMMITMENT;
 extern const char *QCONTRIB;
+extern const char *QCOMPLAINT;
+extern const char *QJUSTIFICATION;
+extern const char *QPCOMMITMENT;
+extern const char *QWATCH;
 };
 
 /* Get a vector of all valid message types (see above) */
@@ -361,7 +365,10 @@ enum GetDataMsg {
     MSG_CMPCT_BLOCK = 20, //!< Defined in BIP152
     MSG_QUORUM_FINAL_COMMITMENT = 21,
     /* MSG_QUORUM_DUMMY_COMMITMENT = 22, */ // was shortly used on testnet/devnet/regtest
-    /* MSG_QUORUM_DUMMY_CONTRIBUTION = 23, */ // not a valid contribution and only allowed on testnet/devnet/regtest. Will later be replaced with the real contribution
+    MSG_QUORUM_CONTRIB = 23,
+    MSG_QUORUM_COMPLAINT = 24,
+    MSG_QUORUM_JUSTIFICATION = 25,
+    MSG_QUORUM_PREMATURE_COMMITMENT = 26,
 };
 
 /** inv message data */

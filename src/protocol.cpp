@@ -60,6 +60,10 @@ const char *GETMNLISTDIFF="getmnlistd";
 const char *MNLISTDIFF="mnlistdiff";
 const char *QFCOMMITMENT="qfcommit";
 const char *QCONTRIB="qcontrib";
+const char *QCOMPLAINT="qcomplaint";
+const char *QJUSTIFICATION="qjustify";
+const char *QPCOMMITMENT="qpcommit";
+const char *QWATCH="qwatch";
 };
 
 static const char* ppszTypeName[] =
@@ -90,6 +94,9 @@ static const char* ppszTypeName[] =
     NetMsgType::QFCOMMITMENT,
     "qdcommit", // was only shortly used on testnet
     NetMsgType::QCONTRIB,
+    NetMsgType::QCOMPLAINT,
+    NetMsgType::QJUSTIFICATION,
+    NetMsgType::QPCOMMITMENT,
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -144,6 +151,10 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::MNLISTDIFF,
     NetMsgType::QFCOMMITMENT,
     NetMsgType::QCONTRIB,
+    NetMsgType::QCOMPLAINT,
+    NetMsgType::QJUSTIFICATION,
+    NetMsgType::QPCOMMITMENT,
+    NetMsgType::QWATCH,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

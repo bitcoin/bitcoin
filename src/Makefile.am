@@ -141,10 +141,13 @@ BITCOIN_CORE_H = \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
-  llmq/quorums_commitment.h \
   llmq/quorums_blockprocessor.h \
-  llmq/quorums_utils.h \
+  llmq/quorums_commitment.h \
+  llmq/quorums_dkgsessionhandler.h \
+  llmq/quorums_dkgsessionmgr.h \
+  llmq/quorums_dkgsession.h \
   llmq/quorums_init.h \
+  llmq/quorums_utils.h \
   masternode-meta.h \
   masternode-payments.h \
   masternode-sync.h \
@@ -249,10 +252,13 @@ libdash_server_a_SOURCES = \
   governance-validators.cpp \
   governance-vote.cpp \
   governance-votedb.cpp \
-  llmq/quorums_commitment.cpp \
   llmq/quorums_blockprocessor.cpp \
-  llmq/quorums_utils.cpp \
+  llmq/quorums_commitment.cpp \
+  llmq/quorums_dkgsessionhandler.cpp \
+  llmq/quorums_dkgsessionmgr.cpp \
+  llmq/quorums_dkgsession.cpp \
   llmq/quorums_init.cpp \
+  llmq/quorums_utils.cpp \
   masternode-meta.cpp \
   masternode-payments.cpp \
   masternode-sync.cpp \
