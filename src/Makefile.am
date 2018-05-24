@@ -106,6 +106,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  ctpl.h \
   evo/evodb.h \
   evo/specialtx.h \
   evo/providertx.h \
