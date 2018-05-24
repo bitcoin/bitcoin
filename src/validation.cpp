@@ -1241,7 +1241,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				CValidationState vstate;
 				for (unsigned int i = 0; i < txIn.vin.size(); i++) {
 					const COutPoint &prevout = txIn.vin[i].prevout;
-					const Coin& coin = view.AccessCoin(prevout);
+					Coin coin;
+					if (!GetUTXOCoin(prevout, coin))
+						continue;
 					const CScript& scriptPubKey = coin.out.scriptPubKey;
 					const CAmount amount = coin.out.nValue;
 
@@ -1260,7 +1262,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					}
 				}
-				GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+				GetMainSignals().SyncTransaction(txIn, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
 			});
 			threadpool.post(t);
 		}
