@@ -1236,7 +1236,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded)
 		{
-			std::packaged_task<void()> t([[&pool, tx, hash, coins_to_uncache, control]() {
+			std::packaged_task<void()> t([&pool, tx, hash, coins_to_uncache, control]() {
 				if (!control.Wait()) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
