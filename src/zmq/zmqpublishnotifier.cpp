@@ -75,6 +75,9 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
             zmqError("Failed to create socket");
             return false;
         }
+        
+        int HWMlimit = 0;
+        zmq_setsockopt(psocket, ZMQ_SNDHWM, &HWMlimit, sizeof(HWMlimit));
 
         int rc = zmq_bind(psocket, address.c_str());
         if (rc!=0)

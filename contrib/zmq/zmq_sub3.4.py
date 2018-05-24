@@ -46,6 +46,7 @@ class ZMQHandler():
         self.zmqContext = zmq.asyncio.Context()
 
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)
+        self.zmqSubSocket.setsockopt(zmq.RCVHWM, 0)
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashblock")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashtx")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawblock")
