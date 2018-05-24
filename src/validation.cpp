@@ -1180,9 +1180,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
 		std::vector<CScriptCheck> vMempoolChecks;
+		uint256 hashCacheEntry;
 		// Check against previous transactions
 		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vMempoolChecks, hashCacheEntry)) {
+		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vMempoolChecks, &hashCacheEntry)) {
 			return false;
 		}
 		if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
@@ -1830,7 +1831,7 @@ void InitScriptExecutionCache() {
 	LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
 		(nElems * sizeof(uint256)) >> 20, (nMaxCacheSize * 2) >> 20, nElems);
 }
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks, uint256& hashCacheEntry)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks, uint256* hashCacheEntryOut)
 {
     if (!tx.IsCoinBase())
     {
@@ -1855,11 +1856,13 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			// correct (ie that the transaction hash which is in tx's prevouts
 			// properly commits to the scriptPubKey in the inputs view of that
 			// transaction).
-
+			uint256 hashCacheEntry;
 			// We only use the first 19 bytes of nonce to avoid a second SHA
 			// round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
 			static_assert(55 - sizeof(flags) - 32 >= 128 / 8, "Want at least 128 bits of nonce for script execution cache");
 			CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetHash().begin(), 32).Finalize(hashCacheEntry.begin());
+			if(hashCacheEntryOut)
+				*hashCacheEntryOut = hashCacheEntry;
 			if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
 				return true;
 			}
@@ -2496,10 +2499,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
             std::vector<CScriptCheck> vChecks;
-			// SYSCOIN
-			uint256 hashCacheEntry;
             bool fCacheResults = fJustCheck;  /* Don't cache results if we're actually connecting blocks (still consult the cache, though */
-            if (!CheckInputs(tx, state, view, fScriptChecks, STANDARD_SCRIPT_VERIFY_FLAGS, fCacheResults, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, hashCacheEntry))
+            if (!CheckInputs(tx, state, view, fScriptChecks, STANDARD_SCRIPT_VERIFY_FLAGS, fCacheResults, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
