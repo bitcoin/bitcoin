@@ -1179,11 +1179,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
-		std::vector<CScriptCheck> vMempoolChecks;
+		std::vector<CScriptCheck> vChecks;
 		uint256 hashCacheEntry;
 		// Check against previous transactions
 		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vMempoolChecks, &hashCacheEntry)) {
+		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vChecks, &hashCacheEntry)) {
 			return false;
 		}
 		if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
