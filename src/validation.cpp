@@ -591,7 +591,7 @@ void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) {
         pcoinsTip->Uncache(removed);
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJustCheck, int nHeight, const CBlock& block, bool bSanity)
+bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock& block, bool bSanity)
 {
 	// Ensure that we don't fail on verifydb which loads recent UTXO and will fail if the input is already spent, 
 	// but during runtime fLoaded should be true so it should check UTXO in correct state
@@ -616,7 +616,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 			bool bDestCheckFailed = false;
 			if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 			{
-				if (!FindAliasInTx(tx, vvchAliasArgs)) {
+				if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
 					return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
 				}
 				// it is assumed if no alias output is found, then it is for another service so this would be an alias update
@@ -624,7 +624,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 
 			}
 			errorMessage.clear();
-			good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
+			good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
 			if (!errorMessage.empty())
 				return state.DoS(100, false, REJECT_INVALID, errorMessage);
 	
@@ -692,7 +692,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 				good = false;
 				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				{
-					if (!FindAliasInTx(tx, vvchAliasArgs)) {
+					if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
 						if (fDebug)
 							LogPrintf("CheckSyscoinInputs: FindAliasInTx failed");
 						return true;
@@ -701,7 +701,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 					op = OP_ALIAS_UPDATE;
 				}
 				errorMessage.clear();
-				good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+				good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 
@@ -1187,7 +1187,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vChecks, &hashCacheEntry)) {
 			return false;
 		}
-		if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
+		if (!CheckSyscoinInputs(tx, state, view, true, chainActive.Height(), CBlock())) {
 			return false;
 		}
 		if (!bMultiThreaded) {
@@ -2576,7 +2576,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 	if (!control.Wait())
 		return state.DoS(100, false);
 
-	if (!CheckSyscoinInputs(*block.vtx[0], state, fJustCheck, pindex->nHeight, block))
+	if (!CheckSyscoinInputs(*block.vtx[0], state, view, fJustCheck, pindex->nHeight, block))
 		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n",
 			block.GetHash().ToString());
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
