@@ -44,7 +44,8 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
 
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    const char* pszTimestamp = "The Times Apr 25th 2018 Americans will know stock is rising";
+    //python gen.py -a neoscrypt -t 1527258000 -z "The Times May 25th 2018 Bitcoin investigation to focus on British traders" -p "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f" -b 0x1e0ffff0 -n 592642
+    const char* pszTimestamp = "The Times May 25th 2018 Bitcoin investigation to focus on British traders";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
@@ -114,10 +115,10 @@ public:
         nMaxTipAge = 6 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1524654029, 1964120, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527258000, 592642, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000001ca817e3e447d52c970c5d56c4e79b57fcfb35eac6e318ca3206d45c659"));
-        assert(genesis.hashMerkleRoot == uint256S("0xc0f1a0f95ce3b4524365c62715d26a58cbf2e1f0fbb23fca2b67dc68983e077a"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753"));
+        assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
 
         vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed1.aithercoin.com"));
         vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed2.aithercoin.com"));
