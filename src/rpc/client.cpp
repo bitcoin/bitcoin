@@ -148,6 +148,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getspentinfo", 0, "json" },
     { "getaddresstxids", 0, "addresses" },
     { "getaddressbalance", 0, "addresses" },
+	{ "getaddressbalance", 1, "seperated_output" },
     { "getaddressdeltas", 0, "addresses" },
     { "getaddressutxos", 0, "addresses" },
     { "getaddressmempool", 0, "addresses" },
