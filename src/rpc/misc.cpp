@@ -971,8 +971,8 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 	bool bSeperatedBalances = false;
-	if (params.size() > 1)
-		bSeperatedBalances = params[1].get_bool();
+	if (request.params.size() > 1)
+		bSeperatedBalances = request.params[1].get_bool();
 
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
 
