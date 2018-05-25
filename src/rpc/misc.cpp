@@ -954,7 +954,7 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
             "      ,...\n"
             "    ]\n"
             "}\n"
-			"2. seperated_output(boolean) If set to true, will return balances of the addresses passed in as an array instead of the summed balance. Default is false.\n"
+			"2. separated_output(boolean) If set to true, will return balances of the addresses passed in as an array instead of the summed balance. Default is false.\n"
             "\nResult:\n"
             "{\n"
             "  \"balance\"  (string) The current balance in satoshis\n"
