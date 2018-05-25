@@ -1772,6 +1772,10 @@ bool IsInitialBlockDownload()
     const CChainParams& chainParams = Params();
     if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints()))
         return true;
+    print('chainActive.Height: %s',chainActive.Height());
+    print('pindexBestHeader->nHeight: %s',pindexBestHeader->nHeight - 24 * 6);
+    print('std::max(chainActive.Tip()->GetBlockTime(), pindexBestHeader->GetBlockTime()): %s',std::max(chainActive.Tip()->GetBlockTime(), pindexBestHeader->GetBlockTime()));
+    print('GetTime() - chainParams.MaxTipAge(): %s',GetTime() - chainParams.MaxTipAge());
     bool state = (chainActive.Height() < pindexBestHeader->nHeight - 24 * 6 ||
             std::max(chainActive.Tip()->GetBlockTime(), pindexBestHeader->GetBlockTime()) < GetTime() - chainParams.MaxTipAge());
     if (!state)
