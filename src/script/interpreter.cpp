@@ -935,6 +935,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         //serror is set
                         return false;
                     }
+
                     bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion);
 
                     if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size())
@@ -1288,7 +1289,18 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 
 bool TransactionSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
-    return pubkey.Verify(sighash, vchSig);
+    if (!pubkey.Verify(sighash, vchSig)) {
+    	return false;
+    }
+	if (enforceQR && !pubkey.IsQR()) {
+		for (const auto& surrogate : txTo->vin[nIn].qrWit) {
+			if (pubkey == surrogate.pubKey) {
+				return surrogate.qrPubKey.Verify(sighash, surrogate.qrSig);
+			}
+		}
+		return false;
+	}
+    return true;
 }
 
 bool TransactionSignatureChecker::CheckSig(const std::vector<unsigned char>& vchSigIn, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const

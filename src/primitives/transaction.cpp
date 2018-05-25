@@ -43,6 +43,15 @@ std::string CTxIn::ToString() const
     return str;
 }
 
+std::string CPubKeySurrogate::ToString() const
+{
+    return strprintf("CPubKeySurrogate(old-key: %s, new-key: %s, commitTx-hash: %s, proof: %s)",
+    		pubKey.GetID().GetHex(),
+			qrPubKey.GetID().GetHex(),
+			commitTx->GetHash().GetHex(),
+			proof.substr(0, 24));
+}
+
 CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
 {
     nValue = nValueIn;
@@ -72,9 +81,16 @@ uint256 CTransaction::GetWitnessHash() const
     if (!HasWitness()) {
         return GetHash();
     }
-    return SerializeHash(*this, SER_GETHASH, 0);
+    return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_QR_WITNESS);
 }
 
+uint256 CTransaction::GetQRWitnessHash() const
+{
+    if (!HasQRWitness()) {
+        return GetHash();
+    }
+    return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_SEG_WITNESS);
+}
 /* For backward compatibility, the hash is initialized to 0. TODO: remove the need for this default constructor entirely. */
 CTransaction::CTransaction() : vin(), vout(), nVersion(CTransaction::CURRENT_VERSION), nLockTime(0), hash() {}
 CTransaction::CTransaction(const CMutableTransaction &tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime), hash(ComputeHash()) {}
@@ -109,6 +125,11 @@ std::string CTransaction::ToString() const
         str += "    " + tx_in.ToString() + "\n";
     for (const auto& tx_in : vin)
         str += "    " + tx_in.scriptWitness.ToString() + "\n";
+    for (const auto& tx_in : vin) {
+    	str += "    QRWitness:\n";
+    	for (const auto& s : tx_in.qrWit)
+        	str += "        " + s.ToString() + "\n";
+    }
     for (const auto& tx_out : vout)
         str += "    " + tx_out.ToString() + "\n";
     return str;

@@ -158,6 +158,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
 {
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
+    entry.pushKV("qrhash", tx.GetQRWitnessHash().GetHex());
     entry.pushKV("version", tx.nVersion);
     entry.pushKV("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
     entry.pushKV("vsize", (GetTransactionWeight(tx) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR);
@@ -184,6 +185,14 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                 }
                 in.pushKV("txinwitness", txinwitness);
             }
+
+            if (!tx.vin[i].qrWit.empty()) {
+				UniValue txinqrwit(UniValue::VARR);
+				for (const auto& sur : tx.vin[i].qrWit) {
+					txinqrwit.push_back(sur.ToString());
+				}
+				in.pushKV("txinqrwit", txinqrwit);
+			}
         }
         in.pushKV("sequence", (int64_t)txin.nSequence);
         vin.push_back(in);
