@@ -4,6 +4,7 @@
 #include "alias.h"
 #include "asset.h"
 #include "assetallocation.h"
+#include "validation.h"
 using namespace boost;
 using namespace std;
 typedef typename std::vector<int> container;
