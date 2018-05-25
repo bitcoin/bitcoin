@@ -694,7 +694,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 				{
 					if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
 						if (fDebug)
-							LogPrintf("CheckSyscoinInputs: FindAliasInTx failed");
+							LogPrintf("CheckSyscoinInputs: FindAliasInTx failed\n");
 						return true;
 					}
 					// it is assumed if no alias output is found, then it is for another service so this would be an alias update
@@ -2576,7 +2576,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 	if (!control.Wait())
 		return state.DoS(100, false);
 
-	if (!CheckSyscoinInputs(*block.vtx[0], state, view, fJustCheck, pindex->nHeight, block))
+	CCoinsViewCache viewOld(pcoinsTip);
+	if (!CheckSyscoinInputs(*block.vtx[0], state, viewOld, fJustCheck, pindex->nHeight, block))
 		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n",
 			block.GetHash().ToString());
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
