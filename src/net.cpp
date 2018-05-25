@@ -1937,36 +1937,44 @@ void CConnman::ThreadOpenAddedConnections()
 
 void CConnman::ThreadOpenMasternodeConnections()
 {
-    // Connecting to specific addresses, no masternode connections available
-    if (IsArgSet("-connect") && mapMultiArgs.at("-connect").size() > 0)
-        return;
+	// Connecting to specific addresses, no masternode connections available
+	if (IsArgSet("-connect") && mapMultiArgs.at("-connect").size() > 0)
+		return;
 
-    while (!interruptNet)
-    {
-        if (!interruptNet.sleep_for(std::chrono::milliseconds(1000)))
-            return;
+	while (!interruptNet)
+	{
+		if (!interruptNet.sleep_for(std::chrono::milliseconds(1000)))
+			return;
 
-        CSemaphoreGrant grant(*semMasternodeOutbound);
-        if (interruptNet)
-            return;
+		CSemaphoreGrant grant(*semMasternodeOutbound);
+		if (interruptNet)
+			return;
 
-        LOCK(cs_vPendingMasternodes);
-        std::vector<CService>::iterator it = vPendingMasternodes.begin();
-        while (it != vPendingMasternodes.end()) {
-            if (!IsMasternodeOrDisconnectRequested(*it)) {
-                OpenMasternodeConnection(CAddress(*it, NODE_NETWORK));
-                // should be in the list now if connection was opened
-                ForNode(*it, CConnman::AllNodes, [&](CNode* pnode) {
-                    if (pnode->fDisconnect) {
-                        return false;
-                    }
-                    grant.MoveTo(pnode->grantMasternodeOutbound);
-                    return true;
-                });
-            }
-            it = vPendingMasternodes.erase(it);
-        }
-    }
+		// NOTE: Process only one pending masternode at a time
+
+		LOCK(cs_vPendingMasternodes);
+		if (vPendingMasternodes.empty()) {
+			// nothing to do, keep waiting
+			continue;
+		}
+
+		const CService addr = vPendingMasternodes.front();
+		vPendingMasternodes.erase(vPendingMasternodes.begin());
+		if (IsMasternodeOrDisconnectRequested(addr)) {
+			// nothing to do, try the next one
+			continue;
+		}
+
+		OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
+		// should be in the list now if connection was opened
+		ForNode(addr, CConnman::AllNodes, [&](CNode* pnode) {
+			if (pnode->fDisconnect) {
+				return false;
+			}
+			grant.MoveTo(pnode->grantMasternodeOutbound);
+			return true;
+		});
+	}
 }
 
 // if successful, this moves the passed grant to the constructed node
