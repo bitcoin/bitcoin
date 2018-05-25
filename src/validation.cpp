@@ -776,6 +776,7 @@ static bool IsCurrentForFeeEstimation()
     return true;
 }
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
+static std::map<uint256, std::vector<CScriptCheck> > scriptCheckMap;
 bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const CTransactionRef& ptx, bool fLimitFree,
                               bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                               bool fOverrideMempoolLimit, const CAmount& nAbsurdFee,
@@ -1195,6 +1196,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			if (!control.Wait())
 				return false;
 		}
+		else
+		{
+			scriptCheckMap[hash] = vChecks;
+		}
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
 		{
@@ -1237,36 +1242,26 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		if (bMultiThreaded)
 		{
 			
-			std::packaged_task<void()> t([&pool, ptx, hash, &view, coins_to_uncache, hashCacheEntry]() {
-				bool bFail = false;
-				const CTransaction& txIn = *ptx;
+			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry]() {
 				CValidationState vstate;
-				for (unsigned int i = 0; i < txIn.vin.size(); i++) {
-					const COutPoint &prevout = txIn.vin[i].prevout;
-					Coin coin;
-					if (!GetUTXOCoin(prevout, coin))
-						bFail = true;
-					else {
-						const CScript& scriptPubKey = coin.out.scriptPubKey;
-						const CAmount amount = coin.out.nValue;
-
-						// Verify signature
-						CScriptCheck check(scriptPubKey, amount, txIn, i, STANDARD_SCRIPT_VERIFY_FLAGS, true, hashCacheEntry);
-						bFail = !check();
-					}
-					if (bFail) {
-						LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
-						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-							pcoinsTip->Uncache(hashTx);
-						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-						pool.ClearPrioritisation(hash);
-						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-						CValidationState stateDummy;
-						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-						nLastMultithreadMempoolFailure = GetTime();
-						return;
-					}
+				const CTransaction& txIn = *ptx;
+				CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+				control.Add(scriptCheckMap[hash]);
+				if (!control.Wait())
+				{
+					LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
+					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+						pcoinsTip->Uncache(hashTx);
+					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+					pool.ClearPrioritisation(hash);
+					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+					CValidationState stateDummy;
+					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+					nLastMultithreadMempoolFailure = GetTime();
+					scriptCheckMap.erase(hash);
+					return;
 				}
+				scriptCheckMap.erase(hash);
 				GetMainSignals().SyncTransaction(txIn, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
 			});
 			threadpool.post(t);
