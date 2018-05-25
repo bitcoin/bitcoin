@@ -12,6 +12,8 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	std::vector<CTransactionRef> orderedVtx;
 	int op;
+	AssertLockHeld(cs_main);
+	CCoinsViewCache view(pcoinsTip);
 	// order the arrival times in ascending order using a map
 	std::multimap<int64_t, int> orderedIndexes;
 	for (unsigned int n = 0; n < blockVtx.size(); n++) {
@@ -23,7 +25,7 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
-				if (!FindAliasInTx(tx, vvchAliasArgs)) {
+				if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
 					continue;
 				}
 				ArrivalTimesMap arrivalTimes;
@@ -84,6 +86,8 @@ bool CreateGraphFromVTX(const std::vector<CTransactionRef>& blockVtx, Graph &gra
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
+	AssertLockHeld(cs_main);
+	CCoinsViewCache view(pcoinsTip);
 	for (unsigned int n = 0; n< blockVtx.size(); n++) {
 		const CTransactionRef txRef = blockVtx[n];
 		if (!txRef)
@@ -94,7 +98,7 @@ bool CreateGraphFromVTX(const std::vector<CTransactionRef>& blockVtx, Graph &gra
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
 				
-				if (!FindAliasInTx(tx, vvchAliasArgs)) {
+				if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
 					continue;
 				}
 				

@@ -1369,7 +1369,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	vector<vector<unsigned char> > vvchAlias;
 	if (tx.nVersion == SYSCOIN_TX_VERSION && !DecodeAliasTx(tx, op, vvchAlias))
 	{
-		FindAliasInTx(tx, vvchAlias);
+		FindAliasInTx(view, tx, vvchAlias);
 		// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 		op = OP_ALIAS_UPDATE;
 
@@ -1507,7 +1507,6 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	}
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION) {
-		CCoinsViewCache view(pcoinsTip);
 		// call this twice, with fJustCheck and !fJustCheck both with bSanity enabled so it doesn't actually write out to the databases just does the checks
 		if (!CheckSyscoinInputs(tx, state, view, true, 0, CBlock(), true))
 			throw runtime_error(FormatStateMessage(state));
