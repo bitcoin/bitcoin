@@ -936,7 +936,7 @@ bool DecodeAliasTx(const CTransaction& tx, int& op,
 bool FindAliasInTx(const CCoinsViewCache &inputs, const CTransaction& tx, vector<vector<unsigned char> >& vvch) {
 	int op;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		const Coin& prevCoins = inputs.AccessCoin(prevout);
+		const Coin& prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
 		if (prevCoins.IsSpent()) {
 			continue;
 		}
