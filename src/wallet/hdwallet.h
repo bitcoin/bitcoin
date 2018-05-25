@@ -26,7 +26,7 @@ typedef std::multimap<int64_t, std::map<uint256, CTransactionRecord>::iterator> 
 
 class UniValue;
 
-const uint16_t PLACEHOLDER_N = 0xFFFF;
+const uint16_t OR_PLACEHOLDER_N = 0xFFFF; // index of a fake output to contain reconstructed amounts for txns with undecodeable outputs
 enum OutputRecordFlags
 {
     ORF_OWNED               = (1 << 0),

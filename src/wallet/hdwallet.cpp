@@ -47,9 +47,6 @@
 #include <boost/thread.hpp>
 
 
-
-
-
 int CTransactionRecord::InsertOutput(COutputRecord &r)
 {
     for (size_t i = 0; i < vout.size(); ++i)
@@ -9798,7 +9795,7 @@ bool CHDWallet::AddTxinToSpends(const CTxIn &txin, const uint256 &txhash)
 
 bool CHDWallet::ProcessPlaceholder(CHDWalletDB *pwdb, const CTransaction &tx, CTransactionRecord &rtx)
 {
-    rtx.EraseOutput(PLACEHOLDER_N);
+    rtx.EraseOutput(OR_PLACEHOLDER_N);
 
     CAmount nDebit = GetDebit(pwdb, rtx, ISMINE_ALL);
     CAmount nCredit = rtx.TotalOutput() + rtx.nFee;
@@ -9822,7 +9819,7 @@ bool CHDWallet::ProcessPlaceholder(CHDWalletDB *pwdb, const CTransaction &tx, CT
         };
 
         COutputRecord rout;
-        rout.n = PLACEHOLDER_N;
+        rout.n = OR_PLACEHOLDER_N;
         rout.nType = nType;
         rout.nFlags |= ORF_FROM;
         rout.nValue = nDebit - nCredit;
@@ -10613,7 +10610,7 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
             const CTransactionRecord &rtx = it->second;
             const COutputRecord *oR = rtx.GetOutput(outpoint.n);
             if (!oR)
-                continue;
+                return error("%s: Can't find output %s\n", __func__, outpoint.ToString());
 
             nValueFromPresetInputs += oR->nValue;
             vPresetCoins.push_back(std::make_pair(it, outpoint.n));

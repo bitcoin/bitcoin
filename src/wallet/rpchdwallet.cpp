@@ -6992,7 +6992,10 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
         CInputData im;
         CTransactionRecord rtx;
         COutputRecord r;
-        r.nType = OUTPUT_CT; // TODO
+        r.nType = OUTPUT_STANDARD;
+
+        if (tx.vin[n].prevout.n >= OR_PLACEHOLDER_N)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Input offset too large for output record.");
         r.n = tx.vin[n].prevout.n;
 
         uint256 blind;
@@ -7004,6 +7007,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
 
             blind.SetHex(s);
             mInputBlinds[n] = blind;
+            r.nType = OUTPUT_CT;
         };
 
         if (inputAmounts[sKey]["value"].isNull())
