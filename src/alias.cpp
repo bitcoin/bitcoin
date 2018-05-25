@@ -1101,6 +1101,8 @@ UniValue SyscoinListReceived(bool includeempty=true)
 		return NullUniValue;
 	map<string, int> mapAddress;
 	UniValue ret(UniValue::VARR);
+	std::set<CKeyID> setKeyPool;
+	pwalletMain->GetAllReserveKeys(setKeyPool);
 	BOOST_FOREACH(const PAIRTYPE(CSyscoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
 	{
 		const CSyscoinAddress& address = item.first;
