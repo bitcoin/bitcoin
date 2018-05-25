@@ -1245,21 +1245,22 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry]() {
 				CValidationState vstate;
 				const CTransaction& txIn = *ptx;
-				CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
-				control.Add(scriptCheckMap[hash]);
-				if (!control.Wait())
-				{
-					LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
-					scriptCheckMap.erase(hash);
-					return;
+				std::vector<CScriptCheck> &vCheckRef = scriptCheckMap[hash];
+				for (auto& check : vCheckRef) {
+					if (!check())
+					{
+						LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
+						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+							pcoinsTip->Uncache(hashTx);
+						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+						pool.ClearPrioritisation(hash);
+						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+						CValidationState stateDummy;
+						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+						nLastMultithreadMempoolFailure = GetTime();
+						scriptCheckMap.erase(hash);
+						return;
+					}
 				}
 				scriptCheckMap.erase(hash);
 				GetMainSignals().SyncTransaction(txIn, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
