@@ -1772,10 +1772,10 @@ bool IsInitialBlockDownload()
     const CChainParams& chainParams = Params();
     if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints()))
         return true;
-    LogPrintf("chainActive.Height: %s",chainActive.Height());
-    LogPrintf("pindexBestHeader->nHeight: %s",pindexBestHeader->nHeight - 24 * 6);
-    LogPrintf("std::max(chainActive.Tip()->GetBlockTime(), pindexBestHeader->GetBlockTime()): %s",std::max(chainActive.Tip()->GetBlockTime(), pindexBestHeader->GetBlockTime()));
-    LogPrintf("GetTime() - chainParams.MaxTipAge(): %s",GetTime() - chainParams.MaxTipAge());
+    LogPrintf("main.cpp:1775 chainActive.Height: %s\n",chainActive.Height());
+    LogPrintf("main.cpp:1776 pindexBestHeader->nHeight: %s\n",pindexBestHeader->nHeight - 24 * 6);
+    LogPrintf("main.cpp 1777 std::max(chainActive.Tip()->GetBlockTime(), pindexBestHeader->GetBlockTime()): %s\n",std::max(chainActive.Tip()->GetBlockTime(), pindexBestHeader->GetBlockTime()));
+    LogPrintf("main.cpp 1778 GetTime() - chainParams.MaxTipAge(): %s\n",GetTime() - chainParams.MaxTipAge());
     bool state = (chainActive.Height() < pindexBestHeader->nHeight - 24 * 6 ||
             std::max(chainActive.Tip()->GetBlockTime(), pindexBestHeader->GetBlockTime()) < GetTime() - chainParams.MaxTipAge());
     if (!state)
