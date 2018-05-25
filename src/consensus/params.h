@@ -63,6 +63,8 @@ struct Params {
     int MBCPowLimitWindow;
     uint256 powLimitMBCStart;
     int nMBCSubsidyHalvingInterval;
+    int premineBlocks;
+    std::string premineAddress;
 
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,

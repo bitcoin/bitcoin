@@ -7,6 +7,7 @@
 
 #include <amount.h>
 #include <chain.h>
+#include <base58.h>
 #include <chainparams.h>
 #include <coins.h>
 #include <consensus/consensus.h>
@@ -25,6 +26,13 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validationinterface.h>
+#include <key_io.h>
+
+#include <pubkey.h>
+#include <tinyformat.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <assert.h>
 
 #include <algorithm>
 #include <queue>
@@ -157,6 +165,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+
+    // Premine
+    const CChainParams &chainParams = Params();
+    if (chainParams.IsDuringPremine(nHeight))
+    {
+        CTxDestination destination = DecodeDestination(chainparams.GetConsensus().premineAddress);
+        coinbaseTx.vout.push_back(CTxOut(50 * COIN * BTC_2_MBC_RATE, GetScriptForDestination(destination)));
+    }
+
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;

@@ -25,17 +25,22 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (IsHardForkEnabled(pindexLast->nHeight + 1, params))
     {
         if ((pindexLast->nHeight + 1) < (params.MBCHeight + params.MBCPowLimitWindow)) {
-           return UintToArith256(params.powLimitMBCStart).GetCompact();
+            return UintToArith256(params.powLimit).GetCompact();
         } else {
            return GetNextWorkRequiredByDAA(pindexLast, pblock, params);
         }
     }
 
+    const CChainParams &chainParams = Params();
+    if (chainParams.IsDuringPremine(pindexLast->nHeight + 1))
+    {
+        return UintToArith256(params.powLimitMBCStart).GetCompact();
+    }
 
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
     // Only change once per difficulty adjustment interval
-    if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval()/5 != 0)
+    if ((pindexLast->nHeight+1) % (params.DifficultyAdjustmentInterval()/5) != 0)
     {
         if (params.fPowAllowMinDifficultyBlocks)
         {
@@ -48,7 +53,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % (params.DifficultyAdjustmentInterval() / 5) != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
                 return pindex->nBits;
             }
@@ -57,7 +62,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     }
 
     // Go back by what we want to be 14 days worth of blocks
-    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
+    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval() / 5 - 1);
     assert(nHeightFirst >= 0);
     const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
     assert(pindexFirst);
@@ -174,7 +179,7 @@ uint32_t GetNextWorkRequiredByDAA(const CBlockIndex* pindexLast, const CBlockHea
     assert(pindexLast != nullptr);
 
     // Special difficulty rule for testnet:
-    uint32_t nProofOfWorkLimit = UintToArith256(params.powLimitMBCStart).GetCompact();
+    uint32_t nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
     if (params.fPowAllowMinDifficultyBlocks) {
         // If the new block's timestamp is more than 2 * (nPowTargetSpaceing / 60) minutes
         // then allow mining of a min-difficulty block.
@@ -194,7 +199,7 @@ uint32_t GetNextWorkRequiredByDAA(const CBlockIndex* pindexLast, const CBlockHea
 
     // Compute the target based on time and work done
     arith_uint256 nextTarget = ComputeTarget(pindexFirstSuitable, pindexLastSuitable, params);
-    arith_uint256 powLimit = UintToArith256(params.powLimitMBCStart);
+    arith_uint256 powLimit = UintToArith256(params.powLimit);
     if (nextTarget > powLimit) {
         nextTarget = powLimit;
     }

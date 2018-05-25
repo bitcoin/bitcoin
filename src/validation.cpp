@@ -41,6 +41,7 @@
 #include <utilstrencodings.h>
 #include <validationinterface.h>
 #include <warnings.h>
+#include <base58.h>
 
 #include <future>
 #include <sstream>
@@ -467,8 +468,8 @@ static bool IsCurrentForFeeEstimation()
 
 
 /** Check if hardfork is enabled **/
-bool IsHardForkEnabled(int nHeight, const Consensus::Params& BIP66Height ) {
-    return nHeight >= BIP66Height .MBCHeight;
+bool IsHardForkEnabled(int nHeight, const Consensus::Params& params ) {
+    return nHeight >= params.MBCHeight;
 }
 
 bool IsHardForkEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params) {
@@ -1162,15 +1163,11 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     }
 
     // premine.
-    // if (consensusParams.BCXPremineAmount > 0) {
-    //     if (nHeight == consensusParams.MBCHeight) {
-    //         return consensusParams.BCXPremineAmount;
-    //     }
-
-    //     if (consensusParams.BCXPremineBlocks > 0) {
-    //         nHeight += consensusParams.BCXPremineBlocks - 1;
-    //     }
-    // }
+    const CChainParams &chainParams = Params();
+    if (chainParams.IsDuringPremine(nHeight)) {
+        CAmount nSubsidy = BTC_INIT_SUBSIDY;
+        return nSubsidy;
+    }
 
     // after premine.
     const int mbc2btcHalvingRate = consensusParams.nMBCSubsidyHalvingInterval / consensusParams.nSubsidyHalvingInterval;
@@ -2081,7 +2078,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
-    if (block.vtx[0]->GetValueOut() > blockReward)
+    if (block.vtx[0]->GetValueOut() > blockReward && pindex->nHeight != chainparams.GetConsensus().MBCHeight)
         return state.DoS(100,
                          error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
                                block.vtx[0]->GetValueOut(), blockReward),
@@ -3237,6 +3234,13 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
+
+    if (IsHardForkEnabled(nHeight, consensusParams)) {
+        if (!CheckMBCVersion(block.nVersion)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-block-version-bit", false, "incorrect block version bit");
+        }
+    }
+
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
 

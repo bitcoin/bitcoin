@@ -59,6 +59,14 @@ void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64
     consensus.vDeployments[d].nTimeout = nTimeout;
 }
 
+bool CChainParams::IsDuringPremine(uint32_t nHeight) const
+{
+    return consensus.MBCHeight > 0
+        && (int)nHeight >= consensus.MBCHeight
+        && (int)nHeight <= consensus.MBCHeight + consensus.premineBlocks
+        && consensus.premineAddress != "";
+}
+
 /**
  * Main network
  */
@@ -82,6 +90,8 @@ public:
         consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         consensus.MBCHeight = 524377;
+        consensus.premineBlocks = 100;
+        consensus.premineAddress = "";
         consensus.MBCPowLimitWindow = 800;
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.powLimitMBCStart = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -120,6 +130,12 @@ public:
         pchMessageStart[1] = 0xbe;
         pchMessageStart[2] = 0xb4;
         pchMessageStart[3] = 0xd9;
+
+        pchMessageStartMBC[0] = 0x8f;
+        pchMessageStartMBC[1] = 0xbc;
+        pchMessageStartMBC[2] = 0xb4;
+        pchMessageStartMBC[3] = 0xd7;
+
         nDefaultPort = 5482;
         nPruneAfterHeight = 100000;
 
@@ -141,8 +157,8 @@ public:
         // vSeeds.emplace_back("seed.btc.petertodd.org"); // Peter Todd, only supports x1, x5, x9, and xd
         // vSeeds.emplace_back("seed.bitcoin.sprovoost.nl"); // Sjors Provoost
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,75);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,51);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
@@ -201,6 +217,8 @@ public:
         consensus.BIP65Height = 581885; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
         consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
         consensus.MBCHeight = 524377;
+        consensus.premineBlocks = 100;
+        consensus.premineAddress = "";
         consensus.MBCPowLimitWindow = 800;
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.powLimitMBCStart = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -298,6 +316,8 @@ public:
         consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.MBCHeight = 2000;
+        consensus.premineBlocks = 100;
+        consensus.premineAddress = "";
         consensus.MBCPowLimitWindow = 800;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.powLimitMBCStart = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
