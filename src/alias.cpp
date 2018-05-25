@@ -1128,6 +1128,12 @@ UniValue SyscoinListReceived(bool includeempty=true)
 			obj.push_back(Pair("balance", ValueFromAmount(nBalance)));
 			obj.push_back(Pair("label", strAccount));
 			obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+			CKeyID keyid;
+			if (address.GetKeyID(keyid) && !pwalletMain->mapAddressBook.count(keyid) && !setKeyPool.count(keyid)) {
+				obj.push_back(Pair("change", true);
+			}
+			else
+				obj.push_back(Pair("change", false);
 			ret.push_back(obj);
 		}
 		mapAddress[strAddress] = 1;
@@ -1169,6 +1175,12 @@ UniValue SyscoinListReceived(bool includeempty=true)
 			obj.push_back(Pair("balance", ValueFromAmount(nBalance)));
 			obj.push_back(Pair("label", ""));
 			obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+			CKeyID keyid;
+			if (address.GetKeyID(keyid) && !pwalletMain->mapAddressBook.count(keyid) && !setKeyPool.count(keyid)) {
+				obj.push_back(Pair("change", true);
+			}
+			else
+				obj.push_back(Pair("change", false);
 			ret.push_back(obj);
 		}
 		mapAddress[strAddress] = 1;
