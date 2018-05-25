@@ -1339,12 +1339,12 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 		throw runtime_error(_("InstantSend doesn't support sending values that high yet. Transactions are currently limited to 100000 SYS."));
 	}
 	CAmount nCurrentAmount = 0;
-	{
-		LOCK(cs_main);
-		CCoinsViewCache view(pcoinsTip);
-		// get value of inputs
-		nCurrentAmount = view.GetValueIn(txIn_t);
-	}
+	
+	LOCK(cs_main);
+	CCoinsViewCache view(pcoinsTip);
+	// get value of inputs
+	nCurrentAmount = view.GetValueIn(txIn_t);
+	
 	int op, aliasOp;
 	vector<vector<unsigned char> > vvch;
 	vector<vector<unsigned char> > vvchAlias;
@@ -1993,7 +1993,7 @@ UniValue aliasbalance(const JSONRPCRequest& request)
 		res.push_back(Pair("balance", ValueFromAmount(nAmount)));
 		return  res;
 	}
-
+	LOCK(cs_main);
 	const string &strAddressFrom = EncodeBase58(theAlias.vchAddress);
 	UniValue paramsUTXO(UniValue::VARR);
 	UniValue param(UniValue::VOBJ);
