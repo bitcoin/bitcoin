@@ -89,3 +89,5 @@ aither-cli
 aitherd
 aither-qt
 .idea
+db-4.8.30.NC*
+release
