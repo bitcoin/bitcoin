@@ -1178,7 +1178,7 @@ UniValue SyscoinListReceived(bool includeempty=true)
 			obj.push_back(Pair("label", ""));
 			obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
 			CKeyID keyid;
-			if (address.GetKeyID(keyid) && !pwalletMain->mapAddressBook.count(keyid) && !setKeyPool.count(keyid)) {
+			if (sysAddress.GetKeyID(keyid) && !pwalletMain->mapAddressBook.count(keyid) && !setKeyPool.count(keyid)) {
 				obj.push_back(Pair("change", true));
 			}
 			else
