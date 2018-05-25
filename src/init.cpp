@@ -528,7 +528,7 @@ std::string HelpMessage(HelpMessageMode mode)
     if (mode == HMM_SYSCOIN_QT)
         strUsage += HelpMessageOpt("-windowtitle=<name>", _("Wallet window title"));
 #endif
-
+	strUsage += HelpMessageOpt("-stopatblock", strprintf(_("For Airdrops it is useful to stop your blockchain from processing at a certain block. Set this block as required by your airdrop schedule. 0 means it is disabled (default: 0)")));
 #if ENABLE_ZMQ
 	strUsage += HelpMessageGroup(_("ZeroMQ notification options:"));
 	strUsage += HelpMessageOpt("-zmqpubhashblock=<address>", _("Enable publish hash block in <address>"));
