@@ -283,31 +283,17 @@ public:
 
     virtual CAmount GetValue() const;
 
-    virtual bool PutValue(std::vector<uint8_t> &vchAmount) const
-    {
-        return false;
-    };
+    virtual bool PutValue(std::vector<uint8_t> &vchAmount) const { return false; };
 
-    virtual bool GetScriptPubKey(CScript &scriptPubKey_) const
-    {
-        return false;
-    };
+    virtual bool GetScriptPubKey(CScript &scriptPubKey_) const { return false; };
+    virtual const CScript *GetPScriptPubKey() const { return nullptr; };
 
-    virtual const CScript *GetPScriptPubKey() const
-    {
-        return nullptr;
-    };
+    virtual secp256k1_pedersen_commitment *GetPCommitment() { return nullptr; };
+    virtual std::vector<uint8_t> *GetPRangeproof() { return nullptr; };
 
-    virtual secp256k1_pedersen_commitment *GetPCommitment()
-    {
-        return nullptr;
-    };
 
-    virtual std::vector<uint8_t> *GetPRangeproof()
-    {
-        return nullptr;
-    };
-
+    virtual bool GetCTFee(CAmount &nFee) const { return false; };
+    virtual bool GetDevFundCfwd(CAmount &nCfwd) const { return false; };
 
     std::string ToString() const;
 };
@@ -349,25 +335,25 @@ public:
         return (nValue == 0 && scriptPubKey.empty());
     }
 
-    bool PutValue(std::vector<uint8_t> &vchAmount) const
+    bool PutValue(std::vector<uint8_t> &vchAmount) const override
     {
         vchAmount.resize(8);
         memcpy(&vchAmount[0], &nValue, 8);
         return true;
     };
 
-    CAmount GetValue() const
+    CAmount GetValue() const override
     {
         return nValue;
     };
 
-    bool GetScriptPubKey(CScript &scriptPubKey_) const
+    bool GetScriptPubKey(CScript &scriptPubKey_) const override
     {
         scriptPubKey_ = scriptPubKey;
         return true;
     };
 
-    virtual const CScript *GetPScriptPubKey() const
+    virtual const CScript *GetPScriptPubKey() const override
     {
         return &scriptPubKey;
     };
@@ -409,30 +395,30 @@ public:
         s >> vRangeproof;
     };
 
-    bool PutValue(std::vector<uint8_t> &vchAmount) const
+    bool PutValue(std::vector<uint8_t> &vchAmount) const override
     {
         vchAmount.resize(33);
         memcpy(&vchAmount[0], commitment.data, 33);
         return true;
     };
 
-    bool GetScriptPubKey(CScript &scriptPubKey_) const
+    bool GetScriptPubKey(CScript &scriptPubKey_) const override
     {
         scriptPubKey_ = scriptPubKey;
         return true;
     };
 
-    virtual const CScript *GetPScriptPubKey() const
+    virtual const CScript *GetPScriptPubKey() const override
     {
         return &scriptPubKey;
     };
 
-    secp256k1_pedersen_commitment *GetPCommitment()
+    secp256k1_pedersen_commitment *GetPCommitment() override
     {
         return &commitment;
     };
 
-    std::vector<uint8_t> *GetPRangeproof()
+    std::vector<uint8_t> *GetPRangeproof() override
     {
         return &vRangeproof;
     };
@@ -473,19 +459,19 @@ public:
         s >> vRangeproof;
     };
 
-    bool PutValue(std::vector<uint8_t> &vchAmount) const
+    bool PutValue(std::vector<uint8_t> &vchAmount) const override
     {
         vchAmount.resize(33);
         memcpy(&vchAmount[0], commitment.data, 33);
         return true;
     };
 
-    secp256k1_pedersen_commitment *GetPCommitment()
+    secp256k1_pedersen_commitment *GetPCommitment() override
     {
         return &commitment;
     };
 
-    std::vector<uint8_t> *GetPRangeproof()
+    std::vector<uint8_t> *GetPRangeproof() override
     {
         return &vRangeproof;
     };
@@ -509,6 +495,40 @@ public:
     void Unserialize(Stream &s)
     {
         s >> vData;
+    };
+
+    bool GetCTFee(CAmount &nFee) const override
+    {
+        if (vData.size() < 2 || vData[0] != DO_FEE)
+            return false;
+
+        size_t nb;
+        return (0 == GetVarInt(vData, 1, (uint64_t&)nFee, nb));
+    };
+
+    bool GetDevFundCfwd(CAmount &nCfwd) const override
+    {
+        if (vData.size() < 5)
+            return false;
+
+        size_t ofs = 4; // first 4 bytes will be height
+        while (ofs < vData.size())
+        {
+            if (vData[ofs] == DO_VOTE)
+            {
+                ofs += 5;
+                continue;
+            };
+            if (vData[ofs] == DO_DEV_FUND_CFWD)
+            {
+                ofs++;
+                size_t nb;
+                return (0 == GetVarInt(vData, ofs, (uint64_t&)nCfwd, nb));
+            };
+            break;
+        };
+
+        return false;
     };
 };
 
@@ -864,12 +884,7 @@ public:
         if (vpout.size() < 2 || vpout[0]->nVersion != OUTPUT_DATA)
             return false;
 
-        std::vector<uint8_t> &vData = ((CTxOutData*)vpout[0].get())->vData;
-        if (vData.size() < 2 || vData[0] != DO_FEE)
-            return false;
-
-        size_t nb;
-        return (0 == GetVarInt(vData, 1, (uint64_t&)nFee, nb));
+        return vpout[0]->GetCTFee(nFee);
     }
 
     bool GetDevFundCfwd(CAmount &nCfwd) const
@@ -877,28 +892,7 @@ public:
         if (vpout.size() < 1 || vpout[0]->nVersion != OUTPUT_DATA)
             return false;
 
-        std::vector<uint8_t> &vData = ((CTxOutData*)vpout[0].get())->vData;
-        if (vData.size() < 5)
-            return false;
-
-        size_t ofs = 4; // first 4 bytes will be height
-        while (ofs < vData.size())
-        {
-            if (vData[ofs] == DO_VOTE)
-            {
-                ofs += 5;
-                continue;
-            };
-            if (vData[ofs] == DO_DEV_FUND_CFWD)
-            {
-                ofs++;
-                size_t nb;
-                return (0 == GetVarInt(vData, ofs, (uint64_t&)nCfwd, nb));
-            };
-            break;
-        };
-
-        return false;
+        return vpout[0]->GetDevFundCfwd(nCfwd);
     }
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)

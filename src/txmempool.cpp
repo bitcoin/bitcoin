@@ -1147,7 +1147,10 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
             if (outpoint.n < ptx->vpout.size())
             {
                 const CTxOutBase *out = ptx->vpout[outpoint.n].get();
-                CTxOut txout(0, *out->GetPScriptPubKey());
+                const CScript *ps = out->GetPScriptPubKey();
+                if (!ps) // Data / anon output
+                    return false;
+                CTxOut txout(0, *ps);
                 if (out->IsType(OUTPUT_STANDARD))
                     txout.nValue = out->GetValue();
                 coin = Coin(txout, MEMPOOL_HEIGHT, false);

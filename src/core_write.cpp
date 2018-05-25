@@ -218,6 +218,11 @@ void OutputToJSON(uint256 &txid, int i,
             CTxOutData *s = (CTxOutData*) baseOut;
             entry.push_back(Pair("type", "data"));
             entry.push_back(Pair("data_hex", HexStr(s->vData.begin(), s->vData.end())));
+            CAmount nValue;
+            if (s->GetCTFee(nValue))
+                entry.push_back(Pair("ct_fee", ValueFromAmount(nValue)));
+            if (s->GetDevFundCfwd(nValue))
+                entry.push_back(Pair("dev_fund_cfwd", ValueFromAmount(nValue)));
             }
             break;
         case OUTPUT_CT:
