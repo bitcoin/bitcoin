@@ -2264,7 +2264,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     AssertLockHeld(cs_main);
 
     int64_t nTimeStart = GetTimeMicros();
-
+	const int64_t stopatblocknumber = GetArg("-stopatblock", 0);
+	if (stopatblocknumber > 0 && stopatblocknumber <= pindex->nHeight)
+		return error("%s: Consensus::CheckBlock: %s", __func__, "Airdrop scheduled block has been reached");
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
