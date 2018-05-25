@@ -214,10 +214,10 @@ public:
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1524654030, 595578, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527258000, 592642, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000003527a77d0c8b9dfa09cc07c933189e9ecd6f806d4924512dcbfea5cfb29"));
-        assert(genesis.hashMerkleRoot == uint256S("0xc0f1a0f95ce3b4524365c62715d26a58cbf2e1f0fbb23fca2b67dc68983e077a"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753"));
+        assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -309,10 +309,10 @@ public:
         nDefaultPort = 13565;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1524654031, 17962, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527258000, 592642, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000008f1c431931c4605a14daee6340d494e9fe63cc694e9f7ac0309b17c8e7b"));
-        assert(genesis.hashMerkleRoot == uint256S("0xc0f1a0f95ce3b4524365c62715d26a58cbf2e1f0fbb23fca2b67dc68983e077a"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753"));
+        assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();  //! Regtest mode doesn't have any DNS seeds.
