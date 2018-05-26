@@ -44,9 +44,9 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
 
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    //python gen.py -a neoscrypt -t 1527258000 -z "The Times May 25th 2018 Bitcoin investigation to focus on British traders" -p "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f" -b 0x1e0ffff0 -n 592642
+    //python gen.py -a neoscrypt -t 1527258000 -z "The Times May 25th 2018 Bitcoin investigation to focus on British traders" -p "0435c0f99b3af273876636de037c6c5cf8c4e08101ad15960435615f59c1239dcd9408708f5ec090756ce433092c10209f163c7f174a3cd8258b4969519a4912cf" -b 0x1e0ffff0 -n 592642
     const char* pszTimestamp = "The Times May 25th 2018 Bitcoin investigation to focus on British traders";
-    const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+    const CScript genesisOutputScript = CScript() << ParseHex("0435c0f99b3af273876636de037c6c5cf8c4e08101ad15960435615f59c1239dcd9408708f5ec090756ce433092c10209f163c7f174a3cd8258b4969519a4912cf") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
@@ -66,7 +66,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
-        consensus.nSubsidyHalvingInterval = 262800; // one year
+        consensus.nSubsidyHalvingInterval = 210000; // halve when reached 210,000 block
         consensus.nMasternodePaymentsStartBlock = 100000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 158000; // not used
         consensus.nMasternodePaymentsIncreasePeriod = 576*30; // not used
@@ -115,19 +115,19 @@ public:
         nMaxTipAge = 60 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1527258000, 592642, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527258000, 1944819, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753"));
-        assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000008de8b4b9ef8bf126b15f7c39086e698b8c35c59deb31d61b9ea317ccca"));
+        assert(genesis.hashMerkleRoot == uint256S("0xeb0ccbad153c1e555c87401023c2d59b30fe9c31f4782d7b888f0f4f7f80675c"));
 
-        vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed1.aithercoin.com"));
-        vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed2.aithercoin.com"));
-        vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed3.aithercoin.com"));
+        //vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed1.aithercoin.com"));
+        //vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed2.aithercoin.com"));
+        //vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed3.aithercoin.com"));
 
         // Aither addresses start with 'A'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,23);
-        // Aither script addresses start with '5'
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,85);
+        // Aither script addresses start with 'a'
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,83);
         // Aither private keys start with '5' or 'G' (?)
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,198);
         // Aither BIP32 pubkeys start with 'xpub' (Bitcoin defaults)
@@ -163,7 +163,7 @@ class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
-        consensus.nSubsidyHalvingInterval = 262800;
+        consensus.nSubsidyHalvingInterval = 210000;
         consensus.nMasternodePaymentsStartBlock = 1000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 158000;
         consensus.nMasternodePaymentsIncreasePeriod = 576*30;
@@ -207,19 +207,19 @@ public:
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1527250000, 1937110, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527250000, 544828, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000005998a81de3e7911a00654702fd51565598fa7b6be5080fc06789de8a3e8"));
-        assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000cf56078d5aa87716b7e74026b9f308a658669be0d08fc6a3baa44f3d117"));
+        assert(genesis.hashMerkleRoot == uint256S("0xeb0ccbad153c1e555c87401023c2d59b30fe9c31f4782d7b888f0f4f7f80675c"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("aithercoin.com", "testnet-seed.aithercoin.com"));
+        //vSeeds.push_back(CDNSSeedData("aithercoin.com", "testnet-seed.aithercoin.com"));
 
-        // Testnet Aither addresses start with 'n'
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
-        // Testnet Aither script addresses start with '9'
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
+        // Testnet Aither addresses start with 'B'
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,25);
+        // Testnet Aither script addresses start with 'b'
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,85);
         // Testnet private keys start with '9' or 'c' (Bitcoin defaults) (?)
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,240);
         // Testnet Aither BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
@@ -296,10 +296,10 @@ public:
         nDefaultPort = 42888;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1527240000, 1401732, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527240000, 155459, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000004a6849c72fb2955c26ef3688dc3f1e337ce7553433445834f48810e8c80"));
-        assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000004ab1803f82cfbfce7f69abcc7a1bb95416a49fddc80ab0dffccff320d75"));
+        assert(genesis.hashMerkleRoot == uint256S("0xeb0ccbad153c1e555c87401023c2d59b30fe9c31f4782d7b888f0f4f7f80675c"));
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();  //! Regtest mode doesn't have any DNS seeds.
@@ -313,10 +313,10 @@ public:
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
         checkpointData = {};
-        // Regtest Aither addresses start with 'n'
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
-        // Regtest Aither script addresses start with '9'
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
+        // Regtest Aither addresses start with 'B'
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,25);
+        // Regtest Aither script addresses start with 'b'
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,85);
         // Regtest private keys start with '9' or 'c' (Bitcoin defaults) (?)
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,240);
         // Regtest Aither BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
