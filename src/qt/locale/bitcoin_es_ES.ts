@@ -136,7 +136,7 @@
         <translation>Introduzca la nueva frase clave del monedero. &lt;br/&gt;Por favor utilice una frase clave de &lt;b&gt;diez o más carácteres aleatorios&lt;/b&gt;, o &lt;b&gt;ocho o más palabras&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Cifrar cartera</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>Introduzca la vieja frase clave y la nueva flase clave para el monedero.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Confirmar encriptación del monedero</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>Advertencia: Si encripta su monedero y pierde su frase clave &lt;b&gt;PERDERÁ TODOS SUS BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>¿Seguro que desea encriptar su monedero?</translation>
     </message>
     <message>
@@ -294,7 +294,7 @@
         <translation>Modificar las opciones de configuración para %1</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Cifrar monedero…</translation>
     </message>
     <message>

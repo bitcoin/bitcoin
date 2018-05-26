@@ -110,7 +110,7 @@
         <translation>&amp;Opcións...</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Encriptar Moedeiro...</translation>
     </message>
     <message>

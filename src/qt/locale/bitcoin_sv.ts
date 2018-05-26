@@ -137,7 +137,7 @@ Var vänlig och försök igen.</translation>
         <translation>Ange plånbokens nya lösenord. &lt;br/&gt; Använd ett lösenord på &lt;b&gt;tio eller fler slumpmässiga tecken,&lt;/b&gt; eller &lt;b&gt;åtta eller fler ord.&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Kryptera plånbok</translation>
     </message>
     <message>
@@ -165,7 +165,7 @@ Var vänlig och försök igen.</translation>
         <translation>Ge det gamla lösenordet och det nya lösenordet för plånboken.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Bekräfta kryptering av plånbok</translation>
     </message>
     <message>
@@ -173,7 +173,7 @@ Var vänlig och försök igen.</translation>
         <translation>VARNING: Om du krypterar din plånbok och glömmer ditt lösenord, kommer du att &lt;b&gt;FÖRLORA ALLA DINA BITCOIN&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Är du säker på att du vill kryptera din plånbok?</translation>
     </message>
     <message>
@@ -295,7 +295,7 @@ Var vänlig och försök igen.</translation>
         <translation>Ändra konfigurationsalternativ för %1</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Kryptera plånbok...</translation>
     </message>
     <message>

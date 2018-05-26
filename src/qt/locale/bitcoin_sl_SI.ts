@@ -174,7 +174,7 @@
         <translation>&amp;Možnosti ...</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Šifriraj denarnico ...</translation>
     </message>
     <message>

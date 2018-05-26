@@ -112,7 +112,7 @@
         <translation>Përsërisni frazkalimin e ri</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Kripto portofolin</translation>
     </message>
     <message>
@@ -136,11 +136,11 @@
         <translation>Ndrysho frazkalimin</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Konfirmoni enkriptimin e portofolit</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Jeni te sigurt te enkriptoni portofolin tuaj?</translation>
     </message>
     <message>

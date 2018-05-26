@@ -136,7 +136,7 @@
         <translation>Introduïu la contrasenya nova al moneder.&lt;br/&gt;Utilitzeu una contrasenya de &lt;b&gt;deu o més caràcters aleatoris&lt;/b&gt;, o &lt;b&gt;vuit o més paraules&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Encripta el monedero</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>Introduïu la contrasenya antiga i la contrasenya nova al moneder.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Confirma l'encriptació del moneder</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>Avís: si encripteu el vostre moneder i perdeu la contrasenya, &lt;b&gt;PERDREU TOTS ELS VOSTRES BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Esteu segur que voleu encriptar el vostre moneder?</translation>
     </message>
     <message>
@@ -294,7 +294,7 @@
         <translation>Modifica les opcions de configuració de %1</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Encripta el moneder...</translation>
     </message>
     <message>

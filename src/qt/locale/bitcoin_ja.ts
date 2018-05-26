@@ -140,7 +140,7 @@
         <translation>ウォレットの新しいパスフレーズを入力してください。&lt;br/&gt;&lt;b&gt;10文字以上のランダムな文字&lt;/b&gt;で構成されたものか、&lt;b&gt;8単語以上の単語&lt;/b&gt;で構成されたパスフレーズを使用してください。</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>ウォレットを暗号化する</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>ウォレットの古いパスフレーズおよび新しいパスフレーズを入力してください。</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>ウォレットの暗号化を確認する</translation>
     </message>
     <message>
@@ -176,7 +176,7 @@
         <translation>警告: もしもあなたのウォレットを暗号化してパスフレーズを失ってしまったなら、&lt;b&gt;あなたの Bitcoin はすべて失われます&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>本当にウォレットを暗号化しますか?</translation>
     </message>
     <message>
@@ -298,7 +298,7 @@
         <translation>%1 の設定を変更する</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>ウォレットの暗号化... (&amp;E)</translation>
     </message>
     <message>

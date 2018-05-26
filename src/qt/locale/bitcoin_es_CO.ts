@@ -137,7 +137,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Ingrese la nueva frase de contraseña a la billetera.&lt;br/&gt; Por favor utilice una frase de contraseña&lt;b&gt;diez o más caracteres aleatorios &lt;/b&gt; o &lt;b&gt;ocho o más palabras&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Encriptar la billetera</translation>
     </message>
     <message>
@@ -165,7 +165,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Ingrese la anterior y la nueva frase de contraseña en la billetera.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Confirmar el cifrado de la billetera</translation>
     </message>
     <message>
@@ -173,7 +173,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Advertencia: si encriptas tu billetera y pierdes tu contraseña &lt;b&gt; PIERDES TODOS TUS BITCOINS &lt;/b&gt; !</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>¿Estás seguro de que deseas encriptar tu billetera?</translation>
     </message>
     <message>
@@ -279,7 +279,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>&amp;Opciones</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Billetera Encriptada</translation>
     </message>
     <message>

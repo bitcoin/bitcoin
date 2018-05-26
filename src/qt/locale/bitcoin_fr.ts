@@ -140,7 +140,7 @@
         <translation>Saisissez la nouvelle phrase de passe du porte-monnaie.&lt;br/&gt;Veuillez utiliser une phrase de passe composée de &lt;b&gt;dix caractères aléatoires ou plus&lt;/b&gt;, ou de &lt;b&gt;huit mots ou plus&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Chiffrer le porte-monnaie</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Saisir l’ancienne puis la nouvelle phrase de passe du porte-monnaie.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Confirmer le chiffrement du porte-monnaie</translation>
     </message>
     <message>
@@ -176,7 +176,7 @@
         <translation>Avertissement : si vous chiffrez votre porte-monnaie et perdez votre phrase de passe, vous &lt;b&gt;PERDREZ TOUS VOS BITCOINS&lt;/b&gt; !</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Voulez-vous vraiment chiffrer votre porte-monnaie ?</translation>
     </message>
     <message>
@@ -298,7 +298,7 @@
         <translation>Modifier les options de configuration de %1</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Chiffrer le porte-monnaie...</translation>
     </message>
     <message>

@@ -150,7 +150,7 @@
         <translation>&amp;Opciones</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Encriptar cartera</translation>
     </message>
     <message>

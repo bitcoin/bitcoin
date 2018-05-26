@@ -136,7 +136,7 @@
         <translation>输入钱包的新密码。&lt;br/&gt;密码请用&lt;b&gt;10 个以上的随机字符&lt;/b&gt;，或是&lt;b&gt;8 个以上的字词&lt;/b&gt;。</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>加密钱包</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>请输入钱包的旧密码和新密码。</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>确认钱包加密</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>警告: 如果把钱包加密后又忘记密码，你就会从此&lt;b&gt;失去其中所有的比特币了&lt;/b&gt;！</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>你确定要把钱包加密吗？</translation>
     </message>
     <message>
@@ -294,7 +294,7 @@
         <translation>修改%1配置选项</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>加密钱包(&amp;E)...</translation>
     </message>
     <message>

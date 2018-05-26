@@ -106,7 +106,7 @@
         <translation>&amp;Pipamilian...</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>I-&amp;Encrypt in Wallet...</translation>
     </message>
     <message>

@@ -132,7 +132,7 @@
         <translation>Pasahitz berria errepiikatu</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Diruzorroa enkriptatu</translation>
     </message>
     <message>
@@ -156,7 +156,7 @@
         <translation>Pasahitza aldatu</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Diruorroaren enkriptazioa berretsi</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>Abisua: Diruzorroa enkriptatzen baduzu eta zure pasahitza galtzen baduzu, &lt;b&gt;BITCOIN GUZTIAK GALDUKO DITUZU&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Seguru al zaude, zure diruzorroa enkriptatu nahi duzula?</translation>
     </message>
     <message>

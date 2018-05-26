@@ -136,7 +136,7 @@
         <translation>Yeni parolayı cüzdana girin.&lt;br/&gt;Lütfen &lt;b&gt;on yada daha fazla karakter&lt;/b&gt; veya &lt;b&gt;sekiz yada daha fazla kelime&lt;/b&gt;içeren bir parola kullanın. </translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Cüzdanı Şifrele</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>Eski ve yeni parolanızı cüzdana girin.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Cüzdan Şifrelemesini Onaylayın</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>Uyarı: Eğer cüzdanınızı şifreleyip parolanızı kaybederseniz (unutursanız) , &lt;b&gt;BÜTÜN BITCOIN'LERINIZI KAYBEDECEKSINIZ&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Cüzdanınızı şifrelemek istediğinizden emin misiniz?</translation>
     </message>
     <message>
@@ -238,7 +238,7 @@
         <translation>&amp;Seçenekler</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Cüzdan Şifreleme</translation>
     </message>
     <message>

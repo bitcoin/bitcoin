@@ -110,7 +110,7 @@
         <translation>&amp;Опции...</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Криптирање на Паричник...</translation>
     </message>
     <message>

@@ -136,7 +136,7 @@
         <translation>Wys wagwoord</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Enkripteer beursie</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>Tik in die ou wagfrase en die nuwe wagfrase vir die beursie.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Bevestig beursie enkripsie.</translation>
     </message>
     <message>

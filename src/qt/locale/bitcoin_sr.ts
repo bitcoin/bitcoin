@@ -126,7 +126,7 @@
         <translation>П&amp;оставке...</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Шифровање новчаника...</translation>
     </message>
     <message>

@@ -134,7 +134,7 @@
         <translation>&amp;Parinktys...</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Užšifruoti piniginę...</translation>
     </message>
     <message>

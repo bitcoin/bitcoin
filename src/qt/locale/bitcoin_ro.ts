@@ -132,7 +132,7 @@
         <translation>Introduceti o parola noua pentru portofel.&lt;br/&gt;Va rugam sa folositi o parola de  &lt;b&gt; zece sau mai multe caractere&lt;/b&gt;, sau &lt;b&gt;mai mult de opt cuvinte&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Incripteaza portofelul</translation>
     </message>
     <message>
@@ -160,7 +160,7 @@
         <translation>Introdu parola veche si parola nouă pentru portofel</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Confirmă criptarea portofelului</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Atenție: Dacă îți criptezi portofelul și uiți parola, îți vei &lt;b&gt; PIERDE TOȚI BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Ești sigur că vrei să criptezi portofelul?</translation>
     </message>
     <message>
@@ -258,7 +258,7 @@
         <translation>&amp;Opțiuni...</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Criptează portofelul...</translation>
     </message>
     <message>

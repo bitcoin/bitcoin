@@ -140,7 +140,7 @@
         <translation>Inserire la nuova passphrase per il portafoglio.&lt;br/&gt;Si consiglia di utilizzare una passphrase di &lt;b&gt;almeno dieci caratteri casuali&lt;/b&gt; oppure &lt;b&gt;otto o più parole&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Cifra il portafoglio</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Inserisci la vecchia e la nuova passphrase per il portafoglio.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Conferma la cifratura del portafoglio</translation>
     </message>
     <message>
@@ -176,7 +176,7 @@
         <translation>Attenzione: perdendo la passphrase di un portamonete cifrato &lt;b&gt;TUTTI I PROPRI BITCOIN ANDRANNO PERSI&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Cifrare veramente il portafoglio?</translation>
     </message>
     <message>
@@ -298,7 +298,7 @@
         <translation>Modifica le opzioni di configurazione per %1</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Cifra portafoglio...</translation>
     </message>
     <message>

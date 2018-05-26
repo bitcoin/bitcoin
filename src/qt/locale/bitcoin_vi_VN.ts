@@ -120,7 +120,7 @@
         <translation>Điền lại passphrase</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Mã hóa ví</translation>
     </message>
     <message>
@@ -148,11 +148,11 @@
         <translation>Nhập cụm từ mật khẩu cũ và cụm mật khẩu mới vào ví.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Xác nhận mã hóa ví</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Bạn có chắc chắn muốn mã hóa ví của bạn?</translation>
     </message>
     <message>
@@ -271,7 +271,7 @@ Ví của bạn chưa được mã hóa.</translation>
         <translation>Chỉnh sửa thiết đặt tùy chọn cho %1</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Mã hóa ví tiền</translation>
     </message>
     <message>

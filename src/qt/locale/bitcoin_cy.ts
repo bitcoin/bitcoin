@@ -132,7 +132,7 @@
         <translation>Ysgrifennwch y cyfrinair newydd i'r waled. &lt;br/&gt; Os gwelwch yn dda, defnyddiwch gyfrinair &lt;b&gt; deg neu fwy o gymeriadau ar hap &lt;/b&gt; , neu &lt;b&gt; wyth neu fwy o eiriau &lt;/b&gt; .</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Amgryptio'r Waled</translation>
     </message>
     <message>
@@ -160,7 +160,7 @@
         <translation>Ysgrifennwch yr hen gyfrinair a chyfrinair newydd y waled.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Cadarnhau amgryptio'r waled</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Rhybudd: Os ydych yn amgryptio'r waled ag yn colli'r cyfrinair, byddwch yn &lt;b&gt; COLLI EICH BITCOINS I GYD &lt;b&gt; !</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Ydych yn siwr eich bod eisiau amgryptio eich waled?</translation>
     </message>
     <message>
@@ -290,7 +290,7 @@
         <translation>Addasu ffurfweddiad dewisiadau ar gyfer %1</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Amgryptio'r waled...</translation>
     </message>
     <message>

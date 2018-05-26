@@ -136,7 +136,7 @@
         <translation>Unesite novu pristupnu frazu u novčanik. &lt;br/&gt;Molimo, koristite pristupnu frazu koja ima &lt;b&gt; deset ili više nasumičnih znakova&lt;/b&gt;, ili &lt;b&gt;osam ili više reči&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Šifrujte novčanik</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>Unesite u novčanik staru pristupnu frazu i novu pristupnu frazu.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Potvrdite šifrovanje novčanika</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>Upozorenje: Ako šifrujete svoj novčanik, i potom izgubite svoju pristupnu frazu &lt;b&gt;IZGUBIĆETE SVE SVOJE BITKOINE&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Da li ste sigurni da želite da šifrujete svoj novčanik?</translation>
     </message>
     <message>
@@ -294,7 +294,7 @@
         <translation>Izmeni podešavanja za %1</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Enkriptuj Novčanik...</translation>
     </message>
     <message>

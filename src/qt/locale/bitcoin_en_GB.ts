@@ -140,8 +140,8 @@
         <translation>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
-        <translation>Create encrypted wallet</translation>
+        <source>Encrypt wallet</source>
+        <translation>Encrypt wallet</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
@@ -168,16 +168,16 @@
         <translation>Enter the old passphrase and new passphrase to the wallet.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
-        <translation>Confirm create encrypted wallet</translation>
+        <source>Confirm wallet encryption</source>
+        <translation>Confirm wallet encryption</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
         <translation>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
-        <translation>Are you sure you want to create a new encrypted wallet?</translation>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Are you sure you wish to encrypt your wallet?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -298,8 +298,8 @@
         <translation>Modify configuration options for %1</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
-        <translation>&amp;Create encrypted wallet...</translation>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Encrypt Wallet...</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>

@@ -132,7 +132,7 @@
         <translation>Введите новый пароль для кошелька.&lt;br/&gt; Пожалуйста используйте пароль из &lt;b&gt; десяти или более произвольных символов&lt;/b&gt;, или &lt;b&gt;восемь или боле слов&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Create encrypted wallet</source>
+        <source>Encrypt wallet</source>
         <translation>Зашифровать бумажник</translation>
     </message>
     <message>
@@ -160,7 +160,7 @@
         <translation>Введите старый и новый пароль для кошелька.</translation>
     </message>
     <message>
-        <source>Confirm create encrypted wallet</source>
+        <source>Confirm wallet encryption</source>
         <translation>Подтвердите шифрование бумажника</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Внимание: если вы зашифруете ваш кошелек и потеряете ваш пароль, то вы &lt;b&gt;ПОТЕРЯЕТЕ ВСЕ ВАШИ БИТКОЙНЫ&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you want to create a new encrypted wallet?</source>
+        <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Вы уверены, что вы хотите зашифровать ваш кошелек?</translation>
     </message>
     <message>
@@ -262,7 +262,7 @@
         <translation>&amp;Опции...</translation>
     </message>
     <message>
-        <source>&amp;Create encrypted wallet...</source>
+        <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Зашифровать кошелёк</translation>
     </message>
     <message>
