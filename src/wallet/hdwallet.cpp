@@ -3717,9 +3717,15 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 const CScript& scriptPubKey = coin.txout.scriptPubKey;
                 SignatureData sigdata;
 
+                std::map<COutPoint, CInputData>::const_iterator it = coinControl->m_inputData.find(coin.outpoint);
+                if (it != coinControl->m_inputData.end())
+                {
+                    sigdata.scriptWitness = it->second.scriptWitness;
+                } else
                 if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR_PARTICL, scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, "Dummy signature failed.");
                 UpdateTransaction(txNew, nIn, sigdata);
+
                 nIn++;
 
                 if (::IsMine(*this, coin.txout.scriptPubKey) & ISMINE_HARDWARE_DEVICE)
@@ -8124,7 +8130,15 @@ bool CHDWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& 
     coinControl.fAllowOtherInputs = true;
 
     for (const auto &txin : tx.vin)
+    {
         coinControl.Select(txin.prevout);
+        if (txin.scriptWitness.stack.size() > 0) // Keep existing signatures
+        {
+            CInputData im;
+            im.scriptWitness.stack = txin.scriptWitness.stack;
+            coinControl.m_inputData[txin.prevout] = im;
+        };
+    };
 
     CReserveKey reservekey(this);
 
@@ -10407,7 +10421,7 @@ bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const C
             if (pcoin->tx->vpout.size() <= outpoint.n)
                 return false;
             CInputCoin ic(pcoin->tx, outpoint.n);
-            nValueRet += ic.GetValue();
+            nValueFromPresetInputs += ic.GetValue();
             setPresetCoins.insert(ic);
         } else
         {
@@ -10419,7 +10433,7 @@ bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const C
                 if (pcoin->tx->vpout.size() <= outpoint.n)
                     return false;
                 CInputCoin ic(pcoin->tx, outpoint.n);
-                nValueRet += ic.GetValue();
+                nValueFromPresetInputs += ic.GetValue();
                 setPresetCoins.insert(ic);
             } else
                 return false; // TODO: Allow non-wallet inputs
