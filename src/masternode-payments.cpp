@@ -351,8 +351,8 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 
             auto res = mapMasternodePaymentVotes.emplace(nHash, vote);
 
-            // Avoid processing same vote multiple times
-            if(!res.second) {
+            // Avoid processing same vote multiple times if it was already verified earlier
+            if(!res.second && res.first->second.IsVerified()) {
                 LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nBlockHeight=%d/%d seen\n",
                             nHash.ToString(), vote.nBlockHeight, nCachedBlockHeight);
                 return;
@@ -372,11 +372,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
         std::string strError = "";
         if(!vote.IsValid(pfrom, nCachedBlockHeight, strError, connman)) {
             LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- invalid message, error: %s\n", strError);
-            return;
-        }
-
-        if(!UpdateLastVote(vote)) {
-            LogPrintf("MASTERNODEPAYMENTVOTE -- masternode already voted, masternode=%s\n", vote.masternodeOutpoint.ToStringShort());
             return;
         }
 
@@ -404,6 +399,11 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
             // but there is nothing we can do if vote info itself is outdated
             // (i.e. it was signed by a mn which changed its key),
             // so just quit here.
+            return;
+        }
+
+        if(!UpdateLastVote(vote)) {
+            LogPrintf("MASTERNODEPAYMENTVOTE -- masternode already voted, masternode=%s\n", vote.masternodeOutpoint.ToStringShort());
             return;
         }
 
