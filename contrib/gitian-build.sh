@@ -180,7 +180,7 @@ if [[ $lxc = true ]]
 then
     export USE_LXC=1
     export LXC_BRIDGE=lxcbr0
-    sudo ifconfig lxcbr0 up 10.0.2.2
+    sudo ifconfig lxcbr0 up 10.0.3.2
 fi
 
 # Check for OSX SDK
