@@ -86,7 +86,7 @@ public:
         consensus.BIP34Height = 227931; // FIX
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"); // FIX
         consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000");
-        consensus.nPowTargetTimespan = 24 * 60 * 60; // Aither: 1 day, 24 blocks
+        consensus.nPowTargetTimespan = 60 * 60; // Aither: 1 day, 24 blocks
         consensus.nPowTargetSpacing = 2.5 * 60; // Aither: 150 seconds
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -115,7 +115,7 @@ public:
         nMaxTipAge = 60 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1527258000, 592642, 0x1e0ffff0, 1, 25 * COIN);
+        genesis = CreateGenesisBlock(1527258000, 592642, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753"));
         assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
@@ -151,14 +151,7 @@ public:
         strSporkPubKey = "04080a56cc3f424a153dc2e5c8c784aa9c80196c5ccbf9711a7dc22e7042d42d00e7cb0ec91f5ea2fb00d7bb95c76763798bd7c2418f94d43b777333071fec6ff1";
         strMasternodePaymentsPubKey = "042925f2904184e419f890076f94e24943b20e149b4ba703e90b03d974ed04325e2cb289941d220e161000ead5e1cefebe160993df6f3b23741fa5f6e4c6f7a123";
 
-        checkpointData = (CCheckpointData) {
-            boost::assign::map_list_of
-             (    0, uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753")),
-            1527258000, // * UNIX timestamp of last checkpoint block
-            0,     // * total number of transactions between genesis and last checkpoint
-                        //   (the tx=... number in the SetBestChain debug.log lines)
-            2800        // * estimated number of transactions per day after checkpoint
-        };
+        checkpointData = {};
     }
 };
 static CMainParams mainParams;
@@ -171,7 +164,7 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 262800;
-        consensus.nMasternodePaymentsStartBlock = 300; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsStartBlock = 1000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 158000;
         consensus.nMasternodePaymentsIncreasePeriod = 576*30;
         consensus.nInstantSendKeepLock = 6;
@@ -214,7 +207,7 @@ public:
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1527250000, 1937110, 0x1e0ffff0, 1, 25 * COIN);
+        genesis = CreateGenesisBlock(1527250000, 1937110, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000005998a81de3e7911a00654702fd51565598fa7b6be5080fc06789de8a3e8"));
         assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
@@ -249,13 +242,7 @@ public:
         strSporkPubKey = "04080a56cc3f424a153dc2e5c8c784aa9c80196c5ccbf9711a7dc22e7042d42d00e7cb0ec91f5ea2fb00d7bb95c76763798bd7c2418f94d43b777333071fec6ff1";
         strMasternodePaymentsPubKey = "042debfdefc73e408e3269318a5767d3ce3f996593e6a6596b10907e76381bd5f0862d0e418c0d6862e88c8db42bff39a0d37ea61cca41713007f1f098cd139f84";
 
-        checkpointData = (CCheckpointData) {
-            boost::assign::map_list_of
-                    ( 0, uint256S("0x000005998a81de3e7911a00654702fd51565598fa7b6be5080fc06789de8a3e8")),
-            0,
-            0,
-            0
-        };
+        checkpointData = {};
 
     }
 };
@@ -305,13 +292,13 @@ public:
         pchMessageStart[1] = 0x9b;
         pchMessageStart[2] = 0x37;
         pchMessageStart[3] = 0x28;
-        nMaxTipAge = 6 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
+        nMaxTipAge = 60 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin => change to 60 hrs
         nDefaultPort = 42888;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1527250000, 1937110, 0x1e0ffff0, 1, 25 * COIN);
+        genesis = CreateGenesisBlock(1527240000, 1401732, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000005998a81de3e7911a00654702fd51565598fa7b6be5080fc06789de8a3e8"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000004a6849c72fb2955c26ef3688dc3f1e337ce7553433445834f48810e8c80"));
         assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
@@ -325,13 +312,7 @@ public:
 
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
-        checkpointData = (CCheckpointData){
-            boost::assign::map_list_of
-            ( 0, uint256S("0x000005998a81de3e7911a00654702fd51565598fa7b6be5080fc06789de8a3e8")),
-            0,
-            0,
-            0
-        };
+        checkpointData = {};
         // Regtest Aither addresses start with 'n'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         // Regtest Aither script addresses start with '9'
