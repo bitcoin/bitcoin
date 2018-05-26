@@ -353,7 +353,7 @@ void CMasternodeSync::ProcessTick()
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "spork-sync");
                 // get current network sporks
                 pnode->PushMessage(NetMsgType::GETSPORKS);
-                LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- requesting sporks from peer %d with address %s\n", nTick, nRequestedMasternodeAssets, pnode->id, pnode->addr);
+                LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- requesting sporks from peer %d\n", nTick, nRequestedMasternodeAssets, pnode->id);
                 continue; // always get sporks first, switch to the next node without waiting for the next tick
             }
 
