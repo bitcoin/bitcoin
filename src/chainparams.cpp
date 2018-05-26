@@ -115,7 +115,7 @@ public:
         nMaxTipAge = 60 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1527258000, 592642, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527258000, 592642, 0x1e0ffff0, 1, 25 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753"));
         assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
@@ -190,7 +190,7 @@ public:
         consensus.BIP34Height = 21111; // FIX
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8"); // FIX
         consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000");
-        consensus.nPowTargetTimespan = 60 * 60; // Aither: 1 hour, 24 blocks
+        consensus.nPowTargetTimespan = 5 * 60; // Aither: 1 hour, 24 blocks
         consensus.nPowTargetSpacing = 2.5 * 60; // Aither: 150 seconds
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
@@ -210,13 +210,13 @@ public:
         pchMessageStart[2] = 0x37;
         pchMessageStart[3] = 0x28;
         vAlertPubKey = ParseHex("04904d236abae451f9b5c7bf476486588f503a18096d538a7d8cddd95dd0ebcfd7433d0a5969c88eb47af4090a43437776ed09ddf95970d8363e196bc1a9391ced");
-        nDefaultPort = 13455;
+        nDefaultPort = 41888;
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1527258000, 592642, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527250000, 1937110, 0x1e0ffff0, 1, 25 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000005998a81de3e7911a00654702fd51565598fa7b6be5080fc06789de8a3e8"));
         assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
 
         vFixedSeeds.clear();
@@ -251,7 +251,7 @@ public:
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
-                    ( 0, uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753")),
+                    ( 0, uint256S("0x000005998a81de3e7911a00654702fd51565598fa7b6be5080fc06789de8a3e8")),
             0,
             0,
             0
@@ -306,12 +306,12 @@ public:
         pchMessageStart[2] = 0x37;
         pchMessageStart[3] = 0x28;
         nMaxTipAge = 6 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
-        nDefaultPort = 13565;
+        nDefaultPort = 42888;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1527258000, 592642, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527250000, 1937110, 0x1e0ffff0, 1, 25 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000005998a81de3e7911a00654702fd51565598fa7b6be5080fc06789de8a3e8"));
         assert(genesis.hashMerkleRoot == uint256S("0x330a943749361a6b38937f7ab092554316d677e556e7fb505f43a5101fdd7c02"));
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
@@ -327,7 +327,7 @@ public:
 
         checkpointData = (CCheckpointData){
             boost::assign::map_list_of
-            ( 0, uint256S("0x000009db3a5972b08bf1192bcc526980ed03ba37f67f110cef91c61555513753")),
+            ( 0, uint256S("0x000005998a81de3e7911a00654702fd51565598fa7b6be5080fc06789de8a3e8")),
             0,
             0,
             0
