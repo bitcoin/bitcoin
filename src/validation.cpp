@@ -2264,9 +2264,12 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     AssertLockHeld(cs_main);
 
     int64_t nTimeStart = GetTimeMicros();
-	const int64_t stopatblocknumber = GetArg("-stopatblock", 0);
-	if (stopatblocknumber > 0 && stopatblocknumber <= pindex->nHeight)
-		return error("%s: Consensus::CheckBlock: %s", __func__, "Airdrop scheduled block has been reached");
+    const int stopatblocknumber = GetArg("-stopatblock", 0);
+    if (stopatblocknumber > 0) {
+        if (stopatblocknumber < pindex->nHeight) {
+            return false;
+        }
+    }
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
@@ -2877,6 +2880,10 @@ struct ConnectTrace {
  */
 bool static ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace)
 {
+    const int stopatblocknumber = GetArg("-stopatblock", 0);
+    if (stopatblocknumber > 0 && pindexNew->nHeight >= stopatblocknumber) {
+        return false;
+    }
     assert(pindexNew->pprev == chainActive.Tip());
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
