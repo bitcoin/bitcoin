@@ -184,6 +184,7 @@ extern UniValue syscointxfund(const JSONRPCRequest& request);
 extern UniValue aliasupdate(const JSONRPCRequest& request);
 extern UniValue aliasinfo(const JSONRPCRequest& request);
 extern UniValue aliasbalance(const JSONRPCRequest& request);
+extern UniValue aliasbalancemulti(const JSONRPCRequest& request);
 extern UniValue prunesyscoinservices(const JSONRPCRequest& request);
 extern UniValue aliaspay(const JSONRPCRequest& request);
 extern UniValue aliasaddscript(const JSONRPCRequest& request);

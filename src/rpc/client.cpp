@@ -175,6 +175,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "syscointxfund", 1, "addresses" },
 	{ "syscointxfund", 2, "instantsend" },
 	{ "aliasbalance", 1, "instantsend" },
+	{ "aliasbalancemulti", 0, "aliases" },
+	{ "aliasbalancemulti", 1, "instantsend" },
 	{ "aliasupdate", 3, "accept_transfers_flags" },
 	{ "aliasupdate", 4, "expire_timestamp" },
 	{ "certtransfer", 3, "accessflags" },
