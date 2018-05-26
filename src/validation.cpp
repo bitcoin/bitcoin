@@ -580,7 +580,6 @@ bool CheckSurrogate(CPubKeySurrogate surrogate) {
 	CDataStream ssMB(ParseHex(surrogate.proof), SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
 	CMerkleBlock merkleBlock;
 	ssMB >> merkleBlock;
-
 	std::vector<uint256> vMatch;
 	std::vector<unsigned int> vIndex;
 	if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) != merkleBlock.header.hashMerkleRoot) {
@@ -635,12 +634,16 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
     // Reject transactions with witness before segregated witness activates (override with -prematurewitness)
     bool witnessEnabled = IsWitnessEnabled(chainActive.Tip(), chainparams.GetConsensus());
+    if (!gArgs.GetBoolArg("-prematurewitness", false) && tx.HasWitness() && !witnessEnabled) {
+    	return state.DoS(0, false, REJECT_NONSTANDARD, "no-witness-yet", true);
+    }
 
     bool qrWitnessEnabled = IsQRWitnessEnabled(chainActive.Tip(), chainparams.GetConsensus());
     if (tx.HasQRWitness() && !qrWitnessEnabled) {
 		return state.DoS(0, false, REJECT_NONSTANDARD, "no-qr-witness-yet", true);
 	}
 
+    // Verify each surrogate to make sure it is valid
     if (tx.HasQRWitness())
     	for (const CTxIn &txin : tx.vin)
     		for (const CPubKeySurrogate &surrogate : txin.qrWit)
@@ -3222,15 +3225,18 @@ static int GetWitnessCommitmentIndex(const CBlock& block)
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
 {
     int commitpos = GetWitnessCommitmentIndex(block);
-    std::vector<unsigned char> nonce(32, 0x00);
-    if (commitpos != -1 && IsQRWitnessEnabled(pindexPrev, consensusParams)) {
-    	uint256 qrwitnessroot = BlockQRWitnessMerkleRoot(block, nullptr);
-    	nonce = std::vector(qrwitnessroot.begin(), qrwitnessroot.end());
-    }
+    static const std::vector<unsigned char> nonce(32, 0x00);
     if (commitpos != -1 && IsWitnessEnabled(pindexPrev, consensusParams) && !block.vtx[0]->HasWitness()) {
         CMutableTransaction tx(*block.vtx[0]);
         tx.vin[0].scriptWitness.stack.resize(1);
-        tx.vin[0].scriptWitness.stack[0] = nonce;
+
+        if (IsQRWitnessEnabled(pindexPrev, consensusParams)) {
+			uint256 qrwitnessroot = BlockQRWitnessMerkleRoot(block, nullptr);
+			tx.vin[0].scriptWitness.stack[0] = std::vector<unsigned char>(qrwitnessroot.begin(), qrwitnessroot.end());
+		} else {
+	        tx.vin[0].scriptWitness.stack[0] = nonce;
+		}
+
         block.vtx[0] = MakeTransactionRef(std::move(tx));
     }
 }
@@ -3240,16 +3246,17 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
     std::vector<unsigned char> commitment;
     int commitpos = GetWitnessCommitmentIndex(block);
     std::vector<unsigned char> ret(32, 0x00);
-    if (consensusParams.vDeployments[Consensus::DEPLOYMENT_QRWIT].nTimeout != 0) {
-		if (commitpos == -1) {
-			uint256 qrwitnessroot = BlockQRWitnessMerkleRoot(block, nullptr);
-	    	ret = std::vector(qrwitnessroot.begin(), qrwitnessroot.end());
-		}
-    }
     if (consensusParams.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
         if (commitpos == -1) {
             uint256 witnessroot = BlockWitnessMerkleRoot(block, nullptr);
-            CHash256().Write(witnessroot.begin(), 32).Write(ret.data(), 32).Finalize(witnessroot.begin());
+
+            if (IsQRWitnessEnabled(pindexPrev, consensusParams)) {
+				uint256 qrwitnessroot = BlockQRWitnessMerkleRoot(block, nullptr);
+				CHash256().Write(witnessroot.begin(), 32).Write(qrwitnessroot.begin(), 32).Finalize(witnessroot.begin());
+			} else {
+            	CHash256().Write(witnessroot.begin(), 32).Write(ret.data(), 32).Finalize(witnessroot.begin());
+			}
+
             CTxOut out;
             out.nValue = 0;
             out.scriptPubKey.resize(38);
@@ -3376,9 +3383,9 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
             if (block.vtx[0]->vin[0].scriptWitness.stack.size() != 1 || block.vtx[0]->vin[0].scriptWitness.stack[0].size() != 32) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-witness-nonce-size", true, strprintf("%s : invalid witness reserved value size", __func__));
             }
-            if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_QRWIT, versionbitscache) == ThresholdState::ACTIVE) {
-            	uint256 hashQRWitness = BlockQRWitnessMerkleRoot(block, &malleated);
-            	if (memcmp(hashQRWitness.begin(), &block.vtx[0]->vin[0].scriptWitness.stack[0][0], 32)) {
+            if (IsQRWitnessEnabled(pindexPrev, consensusParams)) {
+            	uint256 qrwitnessroot = BlockQRWitnessMerkleRoot(block, &malleated);
+            	if (memcmp(qrwitnessroot.begin(), &block.vtx[0]->vin[0].scriptWitness.stack[0][0], 32)) {
 					return state.DoS(100, false, REJECT_INVALID, "bad-qr-witness-merkle-match", true, strprintf("%s : qr witness merkle commitment mismatch", __func__));
 				}
             	fHaveQRWitness = true;

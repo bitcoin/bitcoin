@@ -13,9 +13,8 @@
 #include <uint256.h>
 #include <pubkey.h>
 
-static const int SERIALIZE_TRANSACTION_NO_SEG_WITNESS = 0x40000000;
+static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 static const int SERIALIZE_TRANSACTION_NO_QR_WITNESS = 0x80000000;
-static const int SERIALIZE_TRANSACTION_NO_WITNESS = SERIALIZE_TRANSACTION_NO_QR_WITNESS | SERIALIZE_TRANSACTION_NO_SEG_WITNESS;
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -206,7 +205,7 @@ struct CMutableTransaction;
  */
 template<typename Stream, typename TxType>
 inline void UnserializeTransaction(TxType& tx, Stream& s) {
-    const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_SEG_WITNESS);
+    const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
     const bool fAllowQrWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_QR_WITNESS);
 
     s >> tx.nVersion;
@@ -215,7 +214,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
     tx.vout.clear();
     /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
     s >> tx.vin;
-    if (tx.vin.size() == 0 && (fAllowWitness || fAllowQrWitness)) {
+    if (tx.vin.size() == 0 && fAllowWitness) {
         /* We read a dummy or an empty vin. */
         s >> flags;
         if (flags != 0) {
@@ -249,7 +248,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
 
 template<typename Stream, typename TxType>
 inline void SerializeTransaction(const TxType& tx, Stream& s) {
-    const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_SEG_WITNESS);
+    const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
     const bool fAllowQrWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_QR_WITNESS);
 
     s << tx.nVersion;
@@ -260,13 +259,10 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         if (tx.HasWitness()) {
             flags |= 1;
         }
+        if (fAllowQrWitness && tx.HasQRWitness()) {
+       		flags |= 2;
+       	}
     }
-    if (fAllowQrWitness) {
-		/* Check whether qrWitnesses need to be serialized. */
-		if (tx.HasQRWitness()) {
-			flags |= 2;
-		}
-	}
     if (flags) {
         /* Use extended format in case witnesses are to be serialized. */
         std::vector<CTxIn> vinDummy;

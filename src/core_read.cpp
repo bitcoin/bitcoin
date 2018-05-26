@@ -129,7 +129,7 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
     }
 
     if (try_witness) {
-        CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_QR_WITNESS);
         try {
             ssData >> tx;
             if (ssData.empty()) {
@@ -138,6 +138,15 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
         } catch (const std::exception&) {
             // Fall through.
         }
+        CDataStream ssData1(txData, SER_NETWORK, PROTOCOL_VERSION);
+		try {
+			ssData1 >> tx;
+			if (ssData1.empty()) {
+				return true;
+			}
+		} catch (const std::exception&) {
+			// Fall through.
+		}
     }
     
     return false;

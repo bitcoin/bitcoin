@@ -340,7 +340,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
     if (!pwallet->GetKeyFromPool(newKey)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     }
-    if (!request.params[1].isNull() && request.params[2].get_str() == "true") {
+    if (!request.params[2].isNull() && request.params[2].get_str() == "true") {
     	newKey.MakeQR();
     }
     pwallet->LearnRelatedScripts(newKey, output_type);
