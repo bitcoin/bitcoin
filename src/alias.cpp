@@ -1984,6 +1984,38 @@ UniValue prunesyscoinservices(const JSONRPCRequest& request)
 	res.push_back(Pair("services_cleaned", servicesCleaned));
 	return res;
 }
+UniValue aliasbalancemulti(const JSONRPCRequest& request)
+{
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() < 1 || params.size() > 2)
+		throw runtime_error(
+			"aliasbalancemulti { \"aliases\" : [\"aliasname1\",\"aliasname2\",...] } instantsend\n"
+			"\nReturns an array of balances based on an array of aliases passed in, internally calls aliasbalance for each alias.\n"
+			"\nArguments:\n"
+			"1. \"aliases\"  (array, required) The syscoin aliases to find balances for. Must be an array.\n"
+			"2. \"instantsend\"  (boolean, optional) Check for balance available to instant send. Default is false.\n"
+		);
+	UniValue resArray(UniValue::VARR);
+	UniValue aliases = find_value(params[0].get_obj(), "aliases").get_array();
+	bool fUseInstantSend = false;
+	if (params.size() > 1)
+		fUseInstantSend = params[1].get_bool();
+	for (unsigned int idx = 0; idx < aliases.size(); idx++) {
+		const UniValue& alias = aliases[idx];
+		if (alias.isStr()) {
+			string aliasStr = alias.get_str();
+			JSONRPCRequest request;
+			UniValue requestArray(UniValue::VARR);
+			requestArray.push_back(aliasStr);
+			requestArray.push_back(fUseInstantSend);
+			request.params = requestArray;
+			const UniValue &resBalance = aliasbalance(request);
+			resBalance.push_back(Pair("alias", aliasStr));
+			resArray.push_back(resBalance);
+		}
+	}
+	return resArray;
+}
 UniValue aliasbalance(const JSONRPCRequest& request)
 {
 	const UniValue &params = request.params;
