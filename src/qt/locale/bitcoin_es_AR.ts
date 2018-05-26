@@ -122,7 +122,7 @@
         <translation>Repetí la nueva Frase de Contraseña</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Encriptar billetera</translation>
     </message>
     <message>

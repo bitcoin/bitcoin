@@ -140,7 +140,7 @@
         <translation>Insira a nova senha para a carteira.&lt;br/&gt;Favor usar uma senha com &lt;b&gt;dez ou mais caracteres aleatórios&lt;/b&gt;, ou &lt;b&gt;oito ou mais palavras&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Criptografar carteira</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Insira a senha antiga e a nova para a carteira.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Confirmar criptografia da carteira</translation>
     </message>
     <message>
@@ -176,7 +176,7 @@
         <translation>Aviso: Se você criptografar sua carteira e perder sua senha, você vai &lt;b&gt;PERDER TODOS OS SEUS BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Tem certeza que deseja criptografar a carteira?</translation>
     </message>
     <message>
@@ -294,7 +294,7 @@
         <translation>Modificar opções de configuração para o %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Criptografar Carteira...</translation>
     </message>
     <message>

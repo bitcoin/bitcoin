@@ -132,7 +132,7 @@
         <translation>Masukan kata sandi baru ke dompet.&lt;br/&gt;Mohon gunakan kata sandi &lt;b&gt;sepuluh karakter acak atau lebih&lt;/b&gt;, atau &lt;b&gt; delapan atau lebih beberapa kata &lt;/​​b&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Enkripsi dompet</translation>
     </message>
     <message>
@@ -160,7 +160,7 @@
         <translation>Masukkan kata sandi lama dan kata sandi baru ke dompet.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Konfirmasi pengenkripsian dompet</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Peringatan: Jika Anda enkripsi dompet Anda dan lupa kata sandi anda, Anda akan &lt;b&gt;KEHILANGAN SEMUA BITCOIN ANDA&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Apakah Anda yakin ingin enkripsi dompet Anda?</translation>
     </message>
     <message>
@@ -290,7 +290,7 @@
         <translation>Pengubahan opsi konfigurasi untuk %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Enkripsi Dompet...</translation>
     </message>
     <message>

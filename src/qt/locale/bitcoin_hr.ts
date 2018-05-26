@@ -136,7 +136,7 @@
         <translation>Unesite novu lozinku za novčanik. &lt;br/&gt;Molimo Vas da koristite zaporku od &lt;b&gt;deset ili više slučajnih znakova&lt;/b&gt;, ili &lt;b&gt;osam ili više riječi.&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Šifriranje novčanika</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>Unesite staru i novu lozinku za novčanik.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Potvrdi šifriranje novčanika</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>Upozorenje: Ako šifrirate vaš novčanik i izgubite lozinku, &lt;b&gt;IZGUBIT ĆETE SVE SVOJE BITCOINE!&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
     </message>
     <message>
@@ -274,7 +274,7 @@
         <translation>Pos&amp;tavke...</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>Ši&amp;friraj novčanik...</translation>
     </message>
     <message>

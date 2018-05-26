@@ -136,7 +136,7 @@
         <translation>Введіть нову кодову фразу для гаманця.&lt;br/&gt;Будь ласка, використовуйте кодові фрази що містять &lt;b&gt; щонайменше десять випадкових символів &lt;/b&gt; або &lt;b&gt; щонайменше вісім слів &lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Зашифрувати гаманець</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>Введіть старий пароль та новий пароль до гаманця.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Підтвердіть шифрування гаманця</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>УВАГА: Якщо ви зашифруєте гаманець і забудете пароль, ви &lt;b&gt;ВТРАТИТЕ ВСІ СВОЇ БІТКОІНИ&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Ви дійсно хочете зашифрувати свій гаманець?</translation>
     </message>
     <message>
@@ -294,7 +294,7 @@
         <translation>Редагувати параметри для %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Шифрування гаманця...</translation>
     </message>
     <message>

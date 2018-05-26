@@ -78,7 +78,7 @@
         <translation>&amp;விருப்பங்கள்...</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;என்க்ரிப்ட் பணப்பை...</translation>
     </message>
     <message>

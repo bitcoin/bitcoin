@@ -98,7 +98,7 @@
         <translation>&amp;Optiones</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Cifra Cassidile...</translation>
     </message>
     <message>

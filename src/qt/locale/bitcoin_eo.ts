@@ -136,7 +136,7 @@
         <translation>Enigu novan pasfrazon por la monujo.&lt;br/&gt;Bonvolu uzi pasfrazon kun &lt;b&gt;almenaŭ 10 hazardaj signoj&lt;/b&gt;, aŭ &lt;b&gt;almenaŭ ok aŭ pli vortoj&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Ĉifri la monujon</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Atentu! Se vi ĉifras vian monujon kaj perdas la pasfrazon, vi &lt;b&gt;PERDOS LA TUTON DE VIA BITMONO&lt;b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Ĉu vi certas, ke vi volas ĉifri la monujon?</translation>
     </message>
     <message>
@@ -242,7 +242,7 @@
         <translation>&amp;Agordoj...</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>Ĉifri &amp;Monujon...</translation>
     </message>
     <message>

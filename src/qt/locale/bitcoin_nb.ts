@@ -140,7 +140,7 @@
         <translation>Oppgi adgangsfrasen til lommeboken.&lt;br/&gt;Vennligst bruk en adgangsfrase med &lt;b&gt;ti eller flere tilfeldige tegn&lt;/b&gt;, eller &lt;b&gt;åtte eller flere ord&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Krypter lommebok</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Angi den gamle og en ny adgangsfrase til lommeboken.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Bekreft kryptering av lommebok</translation>
     </message>
     <message>
@@ -176,7 +176,7 @@
         <translation>Advarsel: Hvis du krypterer lommeboken og mister adgangsfrasen, så vil du &lt;b&gt;MISTE ALLE DINE BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
@@ -298,7 +298,7 @@
         <translation>Endre innstilinger for %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Krypter Lommebok...</translation>
     </message>
     <message>

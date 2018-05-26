@@ -56,7 +56,7 @@
         <translation>Korda uut parooli</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Krüpteeri rahakott</translation>
     </message>
     <message>
@@ -68,7 +68,7 @@
         <translation>Muuda parooli</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Kas oled kindel, et soovid rahakoti krüpteerida?</translation>
     </message>
     <message>

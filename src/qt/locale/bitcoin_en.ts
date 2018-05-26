@@ -176,7 +176,7 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -211,7 +211,7 @@
     </message>
     <message>
         <location line="+45"/>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -221,7 +221,7 @@
     </message>
     <message>
         <location line="+0"/>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -380,8 +380,8 @@
     </message>
     <message>
         <location line="+6"/>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Encrypt Wallet...</translation>
+        <source>&amp;Create encrypted wallet...</source>
+        <translation>&amp;Create encrypted wallet...</translation>
     </message>
     <message>
         <location line="+3"/>

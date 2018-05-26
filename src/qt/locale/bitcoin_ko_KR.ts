@@ -140,7 +140,7 @@
         <translation>지갑에 새로운 비밀문구를 입력하세요.&lt;br/&gt;비밀문구를 &lt;b&gt;열 개 이상의 무작위 글자&lt;/b&gt; 혹은 &lt;b&gt;여덟개 이상의 단어로&lt;b&gt; 정하세요.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>지갑 암호화</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>지갑의 기존 암호와 새로운 암호를 입력해주세요.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>지갑 암호화 승인</translation>
     </message>
     <message>
@@ -176,7 +176,7 @@
         <translation>경고: 만약 암호화 된 지갑의 비밀번호를 잃어버릴 경우, &lt;b&gt;모든 비트코인들을 잃어버릴 수 있습니다&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>지갑 암호화를 허용하시겠습니까?</translation>
     </message>
     <message>
@@ -298,7 +298,7 @@
         <translation>%1 설정 옵션 수정</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>지갑 암호화(&amp;E)...</translation>
     </message>
     <message>

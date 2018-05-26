@@ -136,7 +136,7 @@
         <translation>رمز جدید را در کیف‌پول وارد کنید. &lt;br/&gt;لطفا از رمزی استفاده کنید که&lt;b&gt; حداقل ۱۰ کاراکتر راندوم&lt;/b&gt;یا&lt;b&gt;حداقل ۸ کلمه داشته باشد&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>رمزگذاری کیف پول</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>رمز قدیمی و جدید کیف پول را وارد کنید.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>تایید رمزگذاری کیف پول</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>اخطار: اگر کیف‌پول خود را رمزگذاری کرده و رمز خود را فراموش کنید، شما &lt;b&gt;تمام بیت‌کوین‌های خود را از دست خواهید داد&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>آیا از رمزگذاری کیف‌پول خود اطمینان دارید؟</translation>
     </message>
     <message>
@@ -286,7 +286,7 @@
         <translation>اصلاح انتخاب ها برای پیکربندی %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>رمزگذاری کیف پول</translation>
     </message>
     <message>

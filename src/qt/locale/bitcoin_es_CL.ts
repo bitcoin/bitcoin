@@ -114,7 +114,7 @@
         <translation>&amp;Opciones</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Codificar la billetera...</translation>
     </message>
     <message>

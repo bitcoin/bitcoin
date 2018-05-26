@@ -102,7 +102,7 @@
         <translation>&amp;Сонголтууд...</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Түрүйвчийг цоожлох...</translation>
     </message>
     <message>

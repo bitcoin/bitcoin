@@ -118,7 +118,7 @@
         <translation>&amp;Мосламалар...</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>Ҳамённи &amp;кодлаш...</translation>
     </message>
     <message>

@@ -132,7 +132,7 @@
         <translation>Gõ cụm mật khẩu mới cho ví.&lt;br/&gt;Vui lòng dùng cụm mật khẩu của&lt;b&gt;mười hoặc hơn ký tự ngẫu nhiên&lt;/b&gt;, hoặc &lt;b&gt;tám hoặc nhiều từ hơn&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Ví mã hóa</translation>
     </message>
     <message>
@@ -160,7 +160,7 @@
         <translation>Nhập cụm mật khẩu cũ và cụm mật khẩu mới cho ví.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Xác nhận mã hóa ví</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Cảnh báo: Nếu bạn mã hóa ví và mất cụm mật khẩu, bạn sẽ &lt;b&gt;MẤT TẤT CẢ BITCOIN&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Bạn có chắc bạn muốn mã hóa ví của mình?</translation>
     </message>
     <message>
@@ -290,7 +290,7 @@
         <translation>Sửa đổi tùy chỉnh cấu hình cho %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Mã Hóa Ví...</translation>
     </message>
     <message>

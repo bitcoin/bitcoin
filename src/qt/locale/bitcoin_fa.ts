@@ -128,7 +128,7 @@
         <translation>تکرار گذرواژهٔ جدید</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>رمزنگاری کیف پول</translation>
     </message>
     <message>
@@ -156,11 +156,11 @@
         <translation>عبارت کهنه و جدید کیف پول را وارد کنید.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>تأیید رمزنگاری کیف پول</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>آیا مطمئن هستید که می‌خواهید کیف پول خود را رمزنگاری کنید؟</translation>
     </message>
     <message>
@@ -266,7 +266,7 @@
         <translation>تغییر تنظیمات %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;رمزنگاری کیف پول...</translation>
     </message>
     <message>

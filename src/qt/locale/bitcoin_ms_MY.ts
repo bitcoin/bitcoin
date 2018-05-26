@@ -137,7 +137,7 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation>Memasukkan frasa laluan baru kepada dompet.&lt;br/&gt;Sila mengunakkan frasa laluan yang&lt;b&gt;mengandungi 10 atau lebih aksara rawak&lt;/b&gt;,ataupun&lt;b&gt;lapan atau lebih perkataan.&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Dompet encrypt</translation>
     </message>
     <message>
@@ -165,7 +165,7 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation>Memasukkan frasa laluan lama dan frasa laluan baru untuk.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Mengesahkan enkripsi dompet</translation>
     </message>
     <message>
@@ -173,7 +173,7 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation>Amaran: Jika anda enkripkan dompet anda dan hilangkan frasa laluan, anda akan &lt;b&gt;ANDA AKAN HILANGKAN SEMUA BITCOIN ANDA&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Anda pasti untuk membuat enkripsi dompet anda?</translation>
     </message>
     <message>
@@ -295,7 +295,7 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation>Mengubah suai pilihan konfigurasi untuk %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Enkripsi Dompet</translation>
     </message>
     <message>

@@ -140,7 +140,7 @@
         <translation>Kirjoita uusi salauslause lompakolle.&lt;br/&gt;Käytä salauslausetta jossa on joko&lt;b&gt;kymmenen tai useampi satunnainen merkki&lt;/b&gt;, tai&lt;b&gt;vähintään kahdeksan sanaa&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Salaa lompakko</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>Syötä vanha ja uusi tunnuslause lompakolle.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Vahvista lompakon salaaminen</translation>
     </message>
     <message>
@@ -176,7 +176,7 @@
         <translation>Varoitus: Jos salaat lompakkosi ja menetät tunnuslauseesi, &lt;b&gt;MENETÄT KAIKKI BITCOINISI&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Oletko varma että haluat salata lompakkosi?</translation>
     </message>
     <message>
@@ -298,7 +298,7 @@
         <translation>Muuta kohteen %1 kokoonpanoasetuksia</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Salaa lompakko...</translation>
     </message>
     <message>

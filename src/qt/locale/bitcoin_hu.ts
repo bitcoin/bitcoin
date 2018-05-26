@@ -133,7 +133,7 @@
 Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű karaktert &lt;/b&gt;, vagy &lt;b&gt; nyolc vagy több szót &lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Tárca titkosítása</translation>
     </message>
     <message>
@@ -161,7 +161,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Gépelje be a tárcához tartozó régi, és új kulcsmondatot</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Tárca titkosításának megerősítése</translation>
     </message>
     <message>
@@ -169,7 +169,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Figyelem: Ha titkosítja a tárcáját és elveszíti a jelszavát, akkor &lt;b&gt;AZ ÖSSZES BITCOINJA ELVESZIK&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Biztosan titkosítani akarja a tárcát?</translation>
     </message>
     <message>
@@ -291,7 +291,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>%1 beállítások módosítása</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>Tárca &amp;titkosítása...</translation>
     </message>
     <message>

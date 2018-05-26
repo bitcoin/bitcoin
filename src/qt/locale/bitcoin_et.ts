@@ -136,7 +136,7 @@
         <translation>Sisesta uus salafraas rahakotti.&lt;br/&gt;Kasuta salafraasi millles on&lt;b&gt;kümme või rohkem juhuslikku sümbolit&lt;b&gt;,või&lt;b&gt;kaheksa või rohkem sõna&lt;b/&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Krüpteeri rahakott</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>Sisesta vana salafraas ja uus salafraas rahakotti.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Kinnita rahakoti krüpteerimine.</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>Hoiatus:Kui sa krüpteerid oma rahakoti ja kaotad salafraasi, siis sa&lt;b&gt;KAOTAD OMA BITCOINID&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Kas oled kindel, et soovid rahakoti krüpteerida?</translation>
     </message>
     <message>
@@ -270,7 +270,7 @@
         <translation>&amp;Valikud...</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Krüpteeri Rahakott</translation>
     </message>
     <message>

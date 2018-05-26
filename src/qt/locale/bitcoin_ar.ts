@@ -140,7 +140,7 @@
         <translation>أدخل عبارة مرور جديدة إلى المحفظة. الرجاء استخدام عبارة مرور تتكون من10 حروف عشوائية على الاقل, أو ثمانية كلمات على الاقل.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>تشفير المحفظة</translation>
     </message>
     <message>
@@ -168,7 +168,7 @@
         <translation>أدخل كلمة المرور القديمة والجديدة للمحفظة.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>تأكيد تشفير المحفظة</translation>
     </message>
     <message>
@@ -176,7 +176,7 @@
         <translation>تحذير: إذا قمت بتشفير محفظتك وفقدت كلمة المرور الخاص بك, ستفقد كل عملات BITCOINS الخاصة بك.</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>هل أنت متأكد من رغبتك في تشفير محفظتك ؟</translation>
     </message>
     <message>
@@ -294,7 +294,7 @@
         <translation>تغيير خيارات الإعداد لأساس ل%1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;تشفير المحفظة</translation>
     </message>
     <message>

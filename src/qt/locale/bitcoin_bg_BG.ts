@@ -132,7 +132,7 @@
         <translation>Повтори парола</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Криптирай портфейл</translation>
     </message>
     <message>
@@ -156,7 +156,7 @@
         <translation>Промени парола</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Потвърди криптирането на порфейла</translation>
     </message>
     <message>
@@ -250,7 +250,7 @@
         <translation>Промени конфигурации за %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>Криптирай портфейл</translation>
     </message>
     <message>

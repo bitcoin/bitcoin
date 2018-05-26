@@ -136,7 +136,7 @@
         <translation>აკრიფეთ ახალი პასფრაზა საფულისათვის.&lt;br/&gt; გამოიყენეთ &lt;b&gt;ათი ან მეტი შემთხვევითი სიმბოლოსაგან &lt;/b&gt;, ან &lt;b&gt;რვა ან მეტი სიტყვისაგან&lt;/b&gt; შემდგარი პასფრაზა.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>საფულის დაშიფრვა</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>აკრიფეთ ძველი და ახალი პასფრაზები საფულისათვის.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>საფულის დაშიფრვის დადასტურება</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>გაფრთხილება: თუ თქვენ დაშიფრავთ თქვენს საფულეს და ამის შემდეგ დაკარგავთ გასაშიფრ ფრაზას, &lt;b&gt;თქვენ დაკარგავთ ყველა ბიტკოინს!&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>დარწმუნებული ხარ რომ საფულის დაშიფვრა გსურს?</translation>
     </message>
     <message>
@@ -258,7 +258,7 @@
         <translation>%1-ის კონფიგურირების პარამეტრების რედაქტირება</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>საფულის &amp;დაშიფრვა</translation>
     </message>
     <message>

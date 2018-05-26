@@ -96,7 +96,7 @@
         <translation>Jaunā parole vēlreiz</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Šifrēt maciņu</translation>
     </message>
     <message>
@@ -108,11 +108,11 @@
         <translation>Atšifrēt maciņu</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Apstiprināt maciņa šifrēšanu</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Vai tu tiešām vēlies šifrēt savu maciņu?</translation>
     </message>
     <message>
@@ -174,7 +174,7 @@
         <translation>&amp;Iespējas...</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>Šifrēt &amp;maciņu...</translation>
     </message>
     <message>

@@ -136,7 +136,7 @@
         <translation>נא להזין את מילת הצופן לארנק.&lt;br/&gt;נא להשתמש במילת צופן המורכבת מ&lt;b&gt;עשרה או יותר תווים אקראיים&lt;/b&gt;, או &lt;b&gt;שמונה מילים ומעלה&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>הצפנת הארנק</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>נא להזין את מילת הצופן הישנה וחדשה לארנק</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>אימות הצפנת הארנק</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>אזהרה: איבוד מילת הצופן לאחר הצפנת הארנק עשויה לגרום לכך &lt;b&gt;שכל הביטקוינים שלך יאבדו&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>להצפין את הארנק?</translation>
     </message>
     <message>
@@ -294,7 +294,7 @@
         <translation>שינוי אפשרויות התצורה עבור %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>ה&amp;צפנת הארנק…</translation>
     </message>
     <message>

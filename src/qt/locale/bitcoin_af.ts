@@ -136,7 +136,7 @@
         <translation>Tik die nuwe wagwoord vir u beursie.&lt;br/&gt;Gerbuik asseblief 'n wagwoord met &lt;b&gt;tien of meer lukrake karakters&lt;/b&gt;, of &lt;b&gt;agt of meer woorde&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Encrypt wallet</source>
+        <source>Create encrypted wallet</source>
         <translation>Kodifiseer beursie</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@
         <translation>Tik die ou en die nuwe wagwoorde vir die beursie.</translation>
     </message>
     <message>
-        <source>Confirm wallet encryption</source>
+        <source>Confirm create encrypted wallet</source>
         <translation>Bevestig dat die beursie gekodifiseer is</translation>
     </message>
     <message>
@@ -172,7 +172,7 @@
         <translation>Waarskuwing: Indien u die beursie kodifiseer en u vergeet u wagwoord &lt;b&gt;VERLOOR U AL U BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
+        <source>Are you sure you want to create a new encrypted wallet?</source>
         <translation>Is u seker dat u die beursie wil kodifiseer?</translation>
     </message>
     <message>
@@ -290,7 +290,7 @@
         <translation>Verander konfigurasie-opsies vir %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;Kodifiseer Beursie</translation>
     </message>
     <message>

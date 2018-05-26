@@ -150,7 +150,7 @@
         <translation>ปรับปรุง ข้อมูลการตั้งค่าตัวเลือก สำหรับ %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;กระเป๋าเงินเข้ารหัส</translation>
     </message>
     <message>

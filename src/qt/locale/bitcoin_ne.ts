@@ -155,7 +155,7 @@
         <translation>%1 का लागि कन्फिगुरेसनको विकल्प परिमार्जन गर्नुहोस</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
+        <source>&amp;Create encrypted wallet...</source>
         <translation>&amp;amp;वालेटलाई इन्क्रिप्ट गर्नुहोस्...</translation>
     </message>
     <message>
