@@ -1185,13 +1185,14 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		if (fDryRun) return true;
 		std::vector<CScriptCheck> vChecks;
 		uint256 hashCacheEntry;
+		bool isCached = false;
 		// Check against previous transactions
 		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vChecks, &hashCacheEntry)) {
+		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vChecks, &hashCacheEntry, &isCached)) {
 			return false;
 		}
 		// if cache was hit we return, we already have processed this tx
-		if (!hashCacheEntry.IsNull())
+		if (isCached)
 			return true;
 
 		if (!CheckSyscoinInputs(tx, state, view, true, chainActive.Height(), CBlock())) {
@@ -1837,7 +1838,7 @@ void InitScriptExecutionCache() {
 	LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
 		(nElems * sizeof(uint256)) >> 20, (nMaxCacheSize * 2) >> 20, nElems);
 }
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks, uint256* hashCacheEntryOut)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks, uint256* hashCacheEntryOut, bool *isCached)
 {
     if (!tx.IsCoinBase())
     {
@@ -1867,9 +1868,11 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			// round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
 			static_assert(55 - sizeof(flags) - 32 >= 128 / 8, "Want at least 128 bits of nonce for script execution cache");
 			CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetHash().begin(), 32).Finalize(hashCacheEntry.begin());
+			if (hashCacheEntryOut)
+				*hashCacheEntryOut = hashCacheEntry;
 			if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
-				if (hashCacheEntryOut)
-					*hashCacheEntryOut = hashCacheEntry;
+				if (isCached)
+					*isCached = true;
 				return true;
 			}
             for (unsigned int i = 0; i < tx.vin.size(); i++) {

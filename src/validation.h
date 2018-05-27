@@ -385,7 +385,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * instead of being performed inline.
  */
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
-                 unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks = NULL, uint256* hashCacheEntry=NULL);
+                 unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks = NULL, uint256* hashCacheEntry=NULL, bool *isCached = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
