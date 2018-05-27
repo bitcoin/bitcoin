@@ -43,6 +43,7 @@ static void SetupBitcoinTxArgs()
     gArgs.AddArg("delin=N", _("Delete input N from TX"), false, OptionsCategory::COMMANDS);
     gArgs.AddArg("delout=N", _("Delete output N from TX"), false, OptionsCategory::COMMANDS);
     gArgs.AddArg("in=TXID:VOUT(:SEQUENCE_NUMBER)", _("Add input to TX"), false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("delwitness=N", _("Delete all witness data from input N"), false, OptionsCategory::COMMANDS);
     gArgs.AddArg("witness=N:HEX1(:HEX2...:HEXN)", _("Add witness data to input N"), false, OptionsCategory::COMMANDS);
     gArgs.AddArg("locktime=N", _("Set TX lock time to N"), false, OptionsCategory::COMMANDS);
     gArgs.AddArg("nversion=N", _("Set TX version to N"), false, OptionsCategory::COMMANDS);
@@ -284,6 +285,18 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
     // append to transaction input list
     CTxIn txin(txid, vout, CScript(), nSequenceIn);
     tx.vin.push_back(txin);
+}
+
+static void MutateTxDelWitness(CMutableTransaction& tx, const std::string& strInIdx)
+{
+    int inIdx = atoi(strInIdx);
+    if (inIdx < 0 || inIdx >= (int)tx.vin.size()) {
+        std::string strErr = "Invalid TX input index '" + strInIdx + "'";
+        throw std::runtime_error(strErr.c_str());
+    }
+
+    CTxIn &txin = tx.vin[inIdx];
+    txin.scriptWitness.stack.clear();
 }
 
 static void MutateTxAddWitness(CMutableTransaction& tx, const std::string& strInput)
@@ -799,6 +812,9 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
         MutateTxDelInput(tx, commandVal);
     else if (command == "in")
         MutateTxAddInput(tx, commandVal);
+
+    else if (command == "delwitness")
+        MutateTxDelWitness(tx, commandVal);
     else if (command == "witness")
         MutateTxAddWitness(tx, commandVal);
 
