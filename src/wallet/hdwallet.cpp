@@ -3424,6 +3424,8 @@ static bool InsertChangeAddress(CTempRecipient &r, std::vector<CTempRecipient> &
 {
     if (nChangePosInOut < 0)
         nChangePosInOut = GetRandInt(vecSend.size()+1);
+    else
+        nChangePosInOut = std::min(nChangePosInOut, (int)vecSend.size());
     if (nChangePosInOut < (int)vecSend.size()
         && vecSend[nChangePosInOut].nType == OUTPUT_DATA)
         nChangePosInOut++;
@@ -8141,6 +8143,9 @@ bool CHDWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& 
     };
 
     CReserveKey reservekey(this);
+
+    if (nChangePosInOut != -1)
+        coinControl.nChangePos = nChangePosInOut;
 
     CTransactionRef tx_new;
     if (!CreateTransaction(vecSend, tx_new, reservekey, nFeeRet, nChangePosInOut, strFailReason, coinControl, false))
