@@ -1271,19 +1271,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					}
 				}
-				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock())) {
-					LogPrint("mempool", "%s: %s %s (%s)\n", "CheckInputs Syscoin Inputs Error", hash.ToString(), vstate.GetRejectReason(), vstate.GetDebugMessage());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
-					scriptCheckMap.erase(hash);
-					return;
-				}
+				// we don't actually care if this doesn't pass, it will just be a NO-OP and fee's used for someone who tries to create invalid syscoin tx's, 
+				// the checkblock validation of syscoin tx's does the same thing anyway and syscointxfund ensures for normal users that bad tx's simply will be errored out before allowing to add to mempool
+				CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock());
 				{
 					LOCK(cs_main);
 					scriptCheckMap.erase(hash);
