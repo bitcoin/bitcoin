@@ -519,6 +519,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasbalance)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodebalance1 20"), runtime_error);
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
+	GenerateBlocks(5);
+	GenerateBlocks(5);
+	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasbalance jagnodebalance1"));
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	balanceBefore += 80.55*COIN;
