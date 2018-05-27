@@ -1284,14 +1284,20 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					scriptCheckMap.erase(hash);
 					return;
 				}
-				scriptCheckMap.erase(hash);
-				scriptExecutionCache.insert(hashCacheEntry);
+				{
+					LOCK(cs_main);
+					scriptCheckMap.erase(hash);
+					scriptExecutionCache.insert(hashCacheEntry);
+					GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+				}
 			});
 			threadpool.post(t);
 		}
 	}
-	
-	GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+	if(!bMultiThreaded)
+	{
+		GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+	}
     return true;
 }
 
