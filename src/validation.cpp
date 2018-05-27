@@ -1291,7 +1291,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 	}
 	
-	GetMainSignals().SyncTransaction(txIn, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+	GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
     return true;
 }
 
