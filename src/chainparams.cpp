@@ -66,8 +66,8 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
-        consensus.nSubsidyHalvingInterval = 210000; // halve when reached 210,000 block
-        consensus.nMasternodePaymentsStartBlock = 100000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nSubsidyHalvingInterval = 180000; // halve when reached 210,000 block
+        consensus.nMasternodePaymentsStartBlock = 36000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 158000; // not used
         consensus.nMasternodePaymentsIncreasePeriod = 576*30; // not used
         consensus.nInstantSendKeepLock = 24;
