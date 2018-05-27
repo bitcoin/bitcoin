@@ -1187,6 +1187,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vChecks, &hashCacheEntry)) {
 			return false;
 		}
+		// if cache was hit we return, we already have processed this tx
+		if (!hashCacheEntry.IsNull())
+			return true;
+
 		if (!CheckSyscoinInputs(tx, state, view, true, chainActive.Height(), CBlock())) {
 			return false;
 		}
@@ -1263,6 +1267,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					}
 				}
 				scriptCheckMap.erase(hash);
+				scriptExecutionCache.insert(hashCacheEntry);
 				GetMainSignals().SyncTransaction(txIn, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
 			});
 			threadpool.post(t);
@@ -1768,9 +1773,6 @@ bool CScriptCheck::operator()() {
     if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, cacheStore), &error)) {
         return false;
     }
-	if (cacheStore) {
-		scriptExecutionCache.insert(hashCacheEntry);
-	}
     return true;
 }
 
@@ -1865,9 +1867,9 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			// round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
 			static_assert(55 - sizeof(flags) - 32 >= 128 / 8, "Want at least 128 bits of nonce for script execution cache");
 			CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetHash().begin(), 32).Finalize(hashCacheEntry.begin());
-			if(hashCacheEntryOut)
-				*hashCacheEntryOut = hashCacheEntry;
 			if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
+				if (hashCacheEntryOut)
+					*hashCacheEntryOut = hashCacheEntry;
 				return true;
 			}
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
@@ -1885,7 +1887,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 const CAmount amount = coin.out.nValue;
 
                 // Verify signature
-                CScriptCheck check(scriptPubKey, amount, tx, i, flags, cacheStore, hashCacheEntry);
+                CScriptCheck check(scriptPubKey, amount, tx, i, flags, cacheStore);
                 if (pvChecks) {
                     pvChecks->push_back(CScriptCheck());
                     check.swap(pvChecks->back());
