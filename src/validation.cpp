@@ -1272,7 +1272,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					}
 				}
 				if (!CheckSyscoinInputs(tx, vstate, vView, true, chainActive.Height(), CBlock())) {
-					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Syscoin Inputs Error", hash.ToString(), vstate.GetRejectReason());
+					LogPrint("mempool", "%s: %s %s (%s)\n", "CheckInputs Syscoin Inputs Error", hash.ToString(), vstate.GetRejectReason(), vstate.GetDebugMessage());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 						pcoinsTip->Uncache(hashTx);
 					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
