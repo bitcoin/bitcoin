@@ -10,6 +10,7 @@ This file is modified from python-bitcoinlib.
 import ctypes
 import ctypes.util
 import hashlib
+import sys
 
 ssl = ctypes.cdll.LoadLibrary(ctypes.util.find_library ('ssl') or 'libeay32')
 
@@ -83,7 +84,7 @@ def _check_result(val, func, args):
 ssl.EC_KEY_new_by_curve_name.restype = ctypes.c_void_p
 ssl.EC_KEY_new_by_curve_name.errcheck = _check_result
 
-class CECKey():
+class CECKey(object):
     """Wrapper around OpenSSL's EC_KEY"""
 
     POINT_CONVERSION_COMPRESSED = 2
@@ -222,5 +223,10 @@ class CPubKey(bytes):
         return repr(self)
 
     def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, super(CPubKey, self).__repr__())
+        # Always have represent as b'<secret>' so test cases don't have to
+        # change for py2/3
+        if sys.version > '3':
+            return '%s(%s)' % (self.__class__.__name__, super(CPubKey, self).__repr__())
+        else:
+            return '%s(b%s)' % (self.__class__.__name__, super(CPubKey, self).__repr__())
 

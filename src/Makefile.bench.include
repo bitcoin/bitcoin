@@ -7,12 +7,11 @@ bin_PROGRAMS += bench/bench_microbitcoin
 BENCH_SRCDIR = bench
 BENCH_BINARY = bench/bench_microbitcoin$(EXEEXT)
 
-RAW_BENCH_FILES = \
+RAW_TEST_FILES = \
   bench/data/block413567.raw
-GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
+GENERATED_TEST_FILES = $(RAW_TEST_FILES:.raw=.raw.h)
 
 bench_bench_microbitcoin_SOURCES = \
-  $(RAW_BENCH_FILES) \
   bench/bench_bitcoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
@@ -26,15 +25,16 @@ bench_bench_microbitcoin_SOURCES = \
   bench/verify_script.cpp \
   bench/base58.cpp \
   bench/lockedpool.cpp \
-  bench/prevector.cpp
+  bench/perf.cpp \
+  bench/perf.h \
+  bench/prevector_destructor.cpp
 
-nodist_bench_bench_microbitcoin_SOURCES = $(GENERATED_BENCH_FILES)
+nodist_bench_bench_microbitcoin_SOURCES = $(GENERATED_TEST_FILES)
 
 bench_bench_microbitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_microbitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bench_bench_microbitcoin_LDADD = \
   $(LIBBITCOIN_SERVER) \
-  $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) \
@@ -51,12 +51,13 @@ endif
 
 if ENABLE_WALLET
 bench_bench_microbitcoin_SOURCES += bench/coin_selection.cpp
+bench_bench_microbitcoin_LDADD += $(LIBBITCOIN_WALLET) $(LIBBITCOIN_CRYPTO)
 endif
 
 bench_bench_microbitcoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 bench_bench_microbitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
+CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_TEST_FILES)
 
 CLEANFILES += $(CLEAN_BITCOIN_BENCH)
 

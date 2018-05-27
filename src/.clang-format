@@ -12,10 +12,7 @@ AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: true
 BinPackParameters: false
 BreakBeforeBinaryOperators: false
-BreakBeforeBraces: Custom
-BraceWrapping:
-  AfterClass: true
-  AfterFunction: true
+BreakBeforeBraces: Linux
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializersBeforeComma: false
 ColumnLimit:     0

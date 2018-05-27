@@ -1,14 +1,14 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_RPC_SERVER_H
-#define BITCOIN_RPC_SERVER_H
+#ifndef BITCOIN_RPCSERVER_H
+#define BITCOIN_RPCSERVER_H
 
-#include <amount.h>
-#include <rpc/protocol.h>
-#include <uint256.h>
+#include "amount.h"
+#include "rpc/protocol.h"
+#include "uint256.h"
 
 #include <list>
 #include <map>
@@ -25,10 +25,11 @@ namespace RPCServer
 {
     void OnStarted(std::function<void ()> slot);
     void OnStopped(std::function<void ()> slot);
+    void OnPreCommand(std::function<void (const CRPCCommand&)> slot);
 }
 
 /** Wrapper for UniValue::VType, which includes typeAny:
- * Used to denote don't care type. */
+ * Used to denote don't care type. Only used by RPCTypeCheckObj */
 struct UniValueType {
     UniValueType(UniValue::VType _type) : typeAny(false), type(_type) {}
     UniValueType() : typeAny(true) {}
@@ -45,7 +46,6 @@ public:
     bool fHelp;
     std::string URI;
     std::string authUser;
-    std::string peerAddr;
 
     JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) {}
     void parse(const UniValue& valRequest);
@@ -70,12 +70,12 @@ bool RPCIsInWarmup(std::string *outStatus);
  * the right number of arguments are passed, just that any passed are the correct type.
  */
 void RPCTypeCheck(const UniValue& params,
-                  const std::list<UniValueType>& typesExpected, bool fAllowNull=false);
+                  const std::list<UniValue::VType>& typesExpected, bool fAllowNull=false);
 
 /**
  * Type-check one argument; throws JSONRPCError if wrong type given.
  */
-void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected);
+void RPCTypeCheckArgument(const UniValue& value, UniValue::VType typeExpected);
 
 /*
   Check for expected keys/value types in an Object.
@@ -134,6 +134,7 @@ public:
     std::string category;
     std::string name;
     rpcfn_type actor;
+    bool okSafeMode;
     std::vector<std::string> argNames;
 };
 
@@ -166,22 +167,11 @@ public:
 
     /**
      * Appends a CRPCCommand to the dispatch table.
-     *
      * Returns false if RPC server is already running (dump concurrency protection).
-     *
      * Commands cannot be overwritten (returns false).
-     *
-     * Commands with different method names but the same callback function will
-     * be considered aliases, and only the first registered method name will
-     * show up in the help text command listing. Aliased commands do not have
-     * to have the same behavior. Server and client code can distinguish
-     * between calls based on method name, and aliased commands can also
-     * register different names, types, and numbers of parameters.
      */
     bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
 };
-
-bool IsDeprecatedRPCEnabled(const std::string& method);
 
 extern CRPCTable tableRPC;
 
@@ -206,4 +196,4 @@ std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq);
 // Retrieves any serialization flags requested in command line argument
 int RPCSerializationFlags();
 
-#endif // BITCOIN_RPC_SERVER_H
+#endif // BITCOIN_RPCSERVER_H

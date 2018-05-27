@@ -1,10 +1,9 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <interfaces/node.h>
-#include <qt/trafficgraphwidget.h>
-#include <qt/clientmodel.h>
+#include "trafficgraphwidget.h"
+#include "clientmodel.h"
 
 #include <QPainter>
 #include <QColor>
@@ -36,8 +35,8 @@ void TrafficGraphWidget::setClientModel(ClientModel *model)
 {
     clientModel = model;
     if(model) {
-        nLastBytesIn = model->node().getTotalBytesRecv();
-        nLastBytesOut = model->node().getTotalBytesSent();
+        nLastBytesIn = model->getTotalBytesRecv();
+        nLastBytesOut = model->getTotalBytesSent();
     }
 }
 
@@ -124,8 +123,8 @@ void TrafficGraphWidget::updateRates()
 {
     if(!clientModel) return;
 
-    quint64 bytesIn = clientModel->node().getTotalBytesRecv(),
-            bytesOut = clientModel->node().getTotalBytesSent();
+    quint64 bytesIn = clientModel->getTotalBytesRecv(),
+            bytesOut = clientModel->getTotalBytesSent();
     float inRate = (bytesIn - nLastBytesIn) / 1024.0f * 1000 / timer->interval();
     float outRate = (bytesOut - nLastBytesOut) / 1024.0f * 1000 / timer->interval();
     vSamplesIn.push_front(inRate);
@@ -170,8 +169,8 @@ void TrafficGraphWidget::clear()
     fMax = 0.0f;
 
     if(clientModel) {
-        nLastBytesIn = clientModel->node().getTotalBytesRecv();
-        nLastBytesOut = clientModel->node().getTotalBytesSent();
+        nLastBytesIn = clientModel->getTotalBytesRecv();
+        nLastBytesOut = clientModel->getTotalBytesSent();
     }
     timer->start();
 }

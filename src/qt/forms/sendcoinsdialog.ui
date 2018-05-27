@@ -848,9 +848,7 @@
                  <item>
                   <widget class="QLabel" name="labelCustomPerKilobyte">
                    <property name="toolTip">
-                    <string>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
-
-Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</string>
+                    <string>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 satoshis in fee, while &quot;total at least&quot; pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</string>
                    </property>
                    <property name="text">
                     <string>per kilobyte</string>
@@ -1110,10 +1108,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
            <item>
             <widget class="QCheckBox" name="optInRBF">
              <property name="text">
-              <string>Enable Replace-By-Fee</string>
+              <string>Request Replace-By-Fee</string>
              </property>
              <property name="toolTip">
-              <string>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</string>
+              <string>Indicates that the sender may wish to replace this transaction with a new one paying higher fees (prior to being confirmed).</string>
              </property>
             </widget>
            </item>
@@ -1266,12 +1264,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
   <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qt/qvalidatedlineedit.h</header>
+   <header>qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
    <class>BitcoinAmountField</class>
    <extends>QLineEdit</extends>
-   <header>qt/bitcoinamountfield.h</header>
+   <header>bitcoinamountfield.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

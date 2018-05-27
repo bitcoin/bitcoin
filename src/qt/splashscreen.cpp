@@ -1,23 +1,24 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include "config/bitcoin-config.h"
 #endif
 
-#include <qt/splashscreen.h>
+#include "splashscreen.h"
 
-#include <qt/networkstyle.h>
+#include "networkstyle.h"
 
-#include <clientversion.h>
-#include <init.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
-#include <interfaces/wallet.h>
-#include <util.h>
-#include <ui_interface.h>
-#include <version.h>
+#include "clientversion.h"
+#include "init.h"
+#include "util.h"
+#include "ui_interface.h"
+#include "version.h"
+
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -25,8 +26,8 @@
 #include <QPainter>
 #include <QRadialGradient>
 
-SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
-    QWidget(0, f), curAlignment(0), m_node(node)
+SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) :
+    QWidget(0, f), curAlignment(0)
 {
     // set reference point, paddings
     int paddingRight            = 50;
@@ -37,7 +38,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     float fontFactor            = 1.0;
     float devicePixelRatio      = 1.0;
 #if QT_VERSION > 0x050100
-    devicePixelRatio = static_cast<QGuiApplication*>(QCoreApplication::instance())->devicePixelRatio();
+    devicePixelRatio = ((QGuiApplication*)QCoreApplication::instance())->devicePixelRatio();
 #endif
 
     // define text to place
@@ -90,7 +91,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
 
     pixPaint.setFont(QFont(font, 15*fontFactor));
 
-    // if the version string is too long, reduce size
+    // if the version string is to long, reduce size
     fm = pixPaint.fontMetrics();
     int versionTextWidth  = fm.width(versionText);
     if(versionTextWidth > titleTextWidth+paddingRight-10) {
@@ -141,8 +142,8 @@ SplashScreen::~SplashScreen()
 bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
     if (ev->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(ev);
-        if(keyEvent->text()[0] == 'q') {
-            m_node.startShutdown();
+        if(keyEvent->text()[0] == 'q' && breakAction != nullptr) {
+            breakAction();
         }
     }
     return QObject::eventFilter(obj, ev);
@@ -169,41 +170,52 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
         Q_ARG(QColor, QColor(55,55,55)));
 }
 
-static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
+static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress)
 {
-    InitMessage(splash, title + std::string("\n") +
-            (resume_possible ? _("(press q to shutdown and continue later)")
-                                : _("press q to shutdown")) +
-            strprintf("\n%d", nProgress) + "%");
+    InitMessage(splash, title + strprintf("%d", nProgress) + "%");
 }
-#ifdef ENABLE_WALLET
-void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
+
+void SplashScreen::setBreakAction(const std::function<void(void)> &action)
 {
-    m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(boost::bind(ShowProgress, this, _1, _2, false)));
-    m_connected_wallets.emplace_back(std::move(wallet));
+    breakAction = action;
+}
+
+static void SetProgressBreakAction(SplashScreen *splash, const std::function<void(void)> &action)
+{
+    QMetaObject::invokeMethod(splash, "setBreakAction",
+        Qt::QueuedConnection,
+        Q_ARG(std::function<void(void)>, action));
+}
+
+#ifdef ENABLE_WALLET
+void SplashScreen::ConnectWallet(CWallet* wallet)
+{
+    wallet->ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
+    connectedWallets.push_back(wallet);
 }
 #endif
 
 void SplashScreen::subscribeToCoreSignals()
 {
     // Connect signals to client
-    m_handler_init_message = m_node.handleInitMessage(boost::bind(InitMessage, this, _1));
-    m_handler_show_progress = m_node.handleShowProgress(boost::bind(ShowProgress, this, _1, _2, _3));
+    uiInterface.InitMessage.connect(boost::bind(InitMessage, this, _1));
+    uiInterface.ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
+    uiInterface.SetProgressBreakAction.connect(boost::bind(SetProgressBreakAction, this, _1));
 #ifdef ENABLE_WALLET
-    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
+    uiInterface.LoadWallet.connect(boost::bind(&SplashScreen::ConnectWallet, this, _1));
 #endif
 }
 
 void SplashScreen::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
-    m_handler_init_message->disconnect();
-    m_handler_show_progress->disconnect();
-    for (auto& handler : m_connected_wallet_handlers) {
-        handler->disconnect();
+    uiInterface.InitMessage.disconnect(boost::bind(InitMessage, this, _1));
+    uiInterface.ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+#ifdef ENABLE_WALLET
+    for (CWallet* const & pwallet : connectedWallets) {
+        pwallet->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
     }
-    m_connected_wallet_handlers.clear();
-    m_connected_wallets.clear();
+#endif
 }
 
 void SplashScreen::showMessage(const QString &message, int alignment, const QColor &color)
@@ -225,6 +237,6 @@ void SplashScreen::paintEvent(QPaintEvent *event)
 
 void SplashScreen::closeEvent(QCloseEvent *event)
 {
-    m_node.startShutdown(); // allows an "emergency" shutdown during startup
+    StartShutdown(); // allows an "emergency" shutdown during startup
     event->ignore();
 }

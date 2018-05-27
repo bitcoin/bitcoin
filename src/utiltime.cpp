@@ -1,19 +1,18 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include "config/bitcoin-config.h"
 #endif
 
-#include <utiltime.h>
+#include "utiltime.h"
 
 #include <atomic>
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
-#include <ctime>
-#include <tinyformat.h>
 
 static std::atomic<int64_t> nMockTime(0); //!< For unit testing
 
@@ -76,35 +75,13 @@ void MilliSleep(int64_t n)
 #endif
 }
 
-std::string FormatISO8601DateTime(int64_t nTime) {
-    struct tm ts;
-    time_t time_val = nTime;
-#ifdef _MSC_VER
-    gmtime_s(&ts, &time_val);
-#else
-    gmtime_r(&time_val, &ts);
-#endif
-    return strprintf("%04i-%02i-%02iT%02i:%02i:%02iZ", ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday, ts.tm_hour, ts.tm_min, ts.tm_sec);
-}
-
-std::string FormatISO8601Date(int64_t nTime) {
-    struct tm ts;
-    time_t time_val = nTime;
-#ifdef _MSC_VER
-    gmtime_s(&ts, &time_val);
-#else
-    gmtime_r(&time_val, &ts);
-#endif
-    return strprintf("%04i-%02i-%02i", ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday);
-}
-
-std::string FormatISO8601Time(int64_t nTime) {
-    struct tm ts;
-    time_t time_val = nTime;
-#ifdef _MSC_VER
-    gmtime_s(&ts, &time_val);
-#else
-    gmtime_r(&time_val, &ts);
-#endif
-    return strprintf("%02i:%02i:%02iZ", ts.tm_hour, ts.tm_min, ts.tm_sec);
+std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
+{
+    static std::locale classic(std::locale::classic());
+    // std::locale takes ownership of the pointer
+    std::locale loc(classic, new boost::posix_time::time_facet(pszFormat));
+    std::stringstream ss;
+    ss.imbue(loc);
+    ss << boost::posix_time::from_time_t(nTime);
+    return ss.str();
 }

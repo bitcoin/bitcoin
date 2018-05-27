@@ -233,10 +233,6 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
-        <translation>Биткойн</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Алдаа</translation>
     </message>
@@ -278,10 +274,6 @@
         <translation>Ѳѳрчлѳлтүүдийг идэвхижүүлхийн тулд клиентийг ахин эхлүүлэх шаардлагтай</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Алдаа</translation>
-    </message>
-    <message>
         <source>This change would require a client restart.</source>
         <translation>Энэ ѳѳрчлѳлтийг оруулахын тулд кли1нт програмыг ахин эхлүүлэх шаардлагтай</translation>
     </message>
@@ -309,11 +301,7 @@
         <source>N/A</source>
         <translation>Алга Байна</translation>
     </message>
-    <message>
-        <source>unknown</source>
-        <translation>үл мэдэгдэх</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -572,12 +560,24 @@
         <translation>Мэдээллэл</translation>
     </message>
     <message>
+        <source>Loading addresses...</source>
+        <translation>Хаягуудыг ачааллаж байна...</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Эдгээр прокси хаягнууд буруу байна: '%s'</translation>
+    </message>
+    <message>
         <source>Insufficient funds</source>
         <translation>Таны дансны үлдэгдэл хүрэлцэхгүй байна</translation>
     </message>
     <message>
         <source>Loading block index...</source>
         <translation>Блокийн индексүүдийг ачааллаж байна...</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation>Холболт хийхийн тулд мѳн холболтой онгорхой хадгалхын тулд шинэ нод нэм</translation>
     </message>
     <message>
         <source>Loading wallet...</source>

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2017 The Bitcoin Core developers
+// Copyright (c) 2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +10,9 @@
 #include <map>
 #include <stdlib.h>
 
-#include <support/events.h>
+#include "support/events.h"
 
-#include <test/test_bitcoin.h>
+#include "test/test_bitcoin.h"
 
 #include <vector>
 

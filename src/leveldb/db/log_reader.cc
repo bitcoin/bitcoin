@@ -186,7 +186,7 @@ uint64_t Reader::LastRecordOffset() {
 }
 
 void Reader::ReportCorruption(uint64_t bytes, const char* reason) {
-  ReportDrop(bytes, Status::Corruption(reason, file_->GetName()));
+  ReportDrop(bytes, Status::Corruption(reason));
 }
 
 void Reader::ReportDrop(uint64_t bytes, const Status& reason) {

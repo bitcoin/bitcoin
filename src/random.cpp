@@ -1,20 +1,21 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <random.h>
+#include "random.h"
 
-#include <crypto/sha512.h>
-#include <support/cleanse.h>
+#include "crypto/sha512.h"
+#include "support/cleanse.h"
 #ifdef WIN32
-#include <compat.h> // for Windows API
+#include "compat.h" // for Windows API
 #include <wincrypt.h>
 #endif
-#include <util.h>             // for LogPrint()
-#include <utilstrencodings.h> // for GetTime()
+#include "util.h"             // for LogPrint()
+#include "utilstrencodings.h" // for GetTime()
 
 #include <stdlib.h>
+#include <limits>
 #include <chrono>
 #include <thread>
 
@@ -45,10 +46,10 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
-[[noreturn]] static void RandFailure()
+static void RandFailure()
 {
     LogPrintf("Failed to read randomness, aborting\n");
-    std::abort();
+    abort();
 }
 
 static inline int64_t GetPerformanceCounter()
@@ -178,7 +179,7 @@ static void RandAddSeedPerfmon()
 /** Fallback: get 32 bytes of system entropy from /dev/urandom. The most
  * compatible way to get cryptographic randomness on UNIX-ish platforms.
  */
-static void GetDevURandom(unsigned char *ent32)
+void GetDevURandom(unsigned char *ent32)
 {
     int f = open("/dev/urandom", O_RDONLY);
     if (f == -1) {
@@ -241,7 +242,7 @@ void GetOSRand(unsigned char *ent32)
     }
 #elif defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
     // We need a fallback for OSX < 10.12
-    if (&getentropy != nullptr) {
+    if (&getentropy != NULL) {
         if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
             RandFailure();
         }

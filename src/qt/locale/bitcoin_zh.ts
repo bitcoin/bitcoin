@@ -53,10 +53,6 @@
     </context>
 <context>
     <name>OptionsDialog</name>
-    <message>
-        <source>Error</source>
-        <translation>错误</translation>
-    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -182,6 +178,10 @@
     <message>
         <source>Warning</source>
         <translation>警告</translation>
+    </message>
+    <message>
+        <source>Loading addresses...</source>
+        <translation>正在载入地址...</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

@@ -1,12 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <netaddress.h>
-#include <hash.h>
-#include <utilstrencodings.h>
-#include <tinyformat.h>
+#ifdef HAVE_CONFIG_H
+#include "config/bitcoin-config.h"
+#endif
+
+#include "netaddress.h"
+#include "hash.h"
+#include "utilstrencodings.h"
+#include "tinyformat.h"
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
@@ -14,7 +18,7 @@ static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
 // 0xFD + sha256("bitcoin")[0:5]
 static const unsigned char g_internal_prefix[] = { 0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 };
 
-CNetAddr::CNetAddr()
+void CNetAddr::Init()
 {
     memset(ip, 0, sizeof(ip));
     scopeId = 0;
@@ -65,6 +69,11 @@ bool CNetAddr::SetSpecial(const std::string &strName)
         return true;
     }
     return false;
+}
+
+CNetAddr::CNetAddr()
+{
+    Init();
 }
 
 CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
@@ -285,6 +294,11 @@ bool operator==(const CNetAddr& a, const CNetAddr& b)
     return (memcmp(a.ip, b.ip, 16) == 0);
 }
 
+bool operator!=(const CNetAddr& a, const CNetAddr& b)
+{
+    return (memcmp(a.ip, b.ip, 16) != 0);
+}
+
 bool operator<(const CNetAddr& a, const CNetAddr& b)
 {
     return (memcmp(a.ip, b.ip, 16) < 0);
@@ -459,8 +473,14 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
     }
 }
 
-CService::CService() : port(0)
+void CService::Init()
 {
+    port = 0;
+}
+
+CService::CService()
+{
+    Init();
 }
 
 CService::CService(const CNetAddr& cip, unsigned short portIn) : CNetAddr(cip), port(portIn)
@@ -506,12 +526,17 @@ unsigned short CService::GetPort() const
 
 bool operator==(const CService& a, const CService& b)
 {
-    return static_cast<CNetAddr>(a) == static_cast<CNetAddr>(b) && a.port == b.port;
+    return (CNetAddr)a == (CNetAddr)b && a.port == b.port;
+}
+
+bool operator!=(const CService& a, const CService& b)
+{
+    return (CNetAddr)a != (CNetAddr)b || a.port != b.port;
 }
 
 bool operator<(const CService& a, const CService& b)
 {
-    return static_cast<CNetAddr>(a) < static_cast<CNetAddr>(b) || (static_cast<CNetAddr>(a) == static_cast<CNetAddr>(b) && a.port < b.port);
+    return (CNetAddr)a < (CNetAddr)b || ((CNetAddr)a == (CNetAddr)b && a.port < b.port);
 }
 
 bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
@@ -642,16 +667,16 @@ bool CSubNet::Match(const CNetAddr &addr) const
 static inline int NetmaskBits(uint8_t x)
 {
     switch(x) {
-    case 0x00: return 0;
-    case 0x80: return 1;
-    case 0xc0: return 2;
-    case 0xe0: return 3;
-    case 0xf0: return 4;
-    case 0xf8: return 5;
-    case 0xfc: return 6;
-    case 0xfe: return 7;
-    case 0xff: return 8;
-    default: return -1;
+    case 0x00: return 0; break;
+    case 0x80: return 1; break;
+    case 0xc0: return 2; break;
+    case 0xe0: return 3; break;
+    case 0xf0: return 4; break;
+    case 0xf8: return 5; break;
+    case 0xfc: return 6; break;
+    case 0xfe: return 7; break;
+    case 0xff: return 8; break;
+    default: return -1; break;
     }
 }
 
@@ -701,6 +726,11 @@ bool CSubNet::IsValid() const
 bool operator==(const CSubNet& a, const CSubNet& b)
 {
     return a.valid == b.valid && a.network == b.network && !memcmp(a.netmask, b.netmask, 16);
+}
+
+bool operator!=(const CSubNet& a, const CSubNet& b)
+{
+    return !(a==b);
 }
 
 bool operator<(const CSubNet& a, const CSubNet& b)

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,10 +10,9 @@
 #include <crypto/sha256.h>
 #include <prevector.h>
 #include <serialize.h>
-#include <streams.h>
 #include <uint256.h>
 #include <version.h>
-
+#include <streams.h>
 #include <vector>
 
 typedef uint256 ChainCode;
@@ -89,6 +88,20 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end,
     return result;
 }
 
+/** Compute the 256-bit hash of the concatenation of three objects. */
+template<typename T1, typename T2, typename T3>
+inline uint256 Hash(const T1 p1begin, const T1 p1end,
+                    const T2 p2begin, const T2 p2end,
+                    const T3 p3begin, const T3 p3end) {
+    static const unsigned char pblank[1] = {};
+    uint256 result;
+    CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0]))
+              .Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0]))
+              .Write(p3begin == p3end ? pblank : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0]))
+              .Finalize((unsigned char*)&result);
+    return result;
+}
+
 /** Compute the 160-bit hash an object. */
 template<typename T1>
 inline uint160 Hash160(const T1 pbegin, const T1 pend)
@@ -155,7 +168,7 @@ private:
     Source* source;
 
 public:
-    explicit CHashVerifier(Source* source_) : CHashWriter(source_->GetType(), source_->GetVersion()), source(source_) {}
+    CHashVerifier(Source* source_) : CHashWriter(source_->GetType(), source_->GetVersion()), source(source_) {}
 
     void read(char* pch, size_t nSize)
     {
@@ -174,7 +187,7 @@ public:
     }
 
     template<typename T>
-    CHashVerifier<Source>& operator>>(T&& obj)
+    CHashVerifier<Source>& operator>>(T& obj)
     {
         // Unserialize from this stream
         ::Unserialize(*this, obj);

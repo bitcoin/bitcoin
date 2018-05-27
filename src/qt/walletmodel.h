@@ -1,27 +1,19 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_WALLETMODEL_H
 #define BITCOIN_QT_WALLETMODEL_H
 
-#include <amount.h>
-#include <key.h>
-#include <serialize.h>
-#include <script/standard.h>
+#include "paymentrequestplus.h"
+#include "walletmodeltransaction.h"
 
-#include <qt/paymentrequestplus.h>
-#include <qt/walletmodeltransaction.h>
-
-#include <interfaces/wallet.h>
-#include <support/allocators/secure.h>
+#include "support/allocators/secure.h"
 
 #include <map>
 #include <vector>
 
 #include <QObject>
-
-enum class OutputType;
 
 class AddressTableModel;
 class OptionsModel;
@@ -35,11 +27,8 @@ class CKeyID;
 class COutPoint;
 class COutput;
 class CPubKey;
+class CWallet;
 class uint256;
-
-namespace interfaces {
-class Node;
-} // namespace interfaces
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -111,7 +100,7 @@ class WalletModel : public QObject
     Q_OBJECT
 
 public:
-    explicit WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *optionsModel, QObject *parent = 0);
+    explicit WalletModel(const PlatformStyle *platformStyle, CWallet *wallet, OptionsModel *optionsModel, QObject *parent = 0);
     ~WalletModel();
 
     enum StatusCode // Returned by sendCoins
@@ -140,6 +129,13 @@ public:
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
+    CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
+    CAmount getUnconfirmedBalance() const;
+    CAmount getImmatureBalance() const;
+    bool haveWatchOnly() const;
+    CAmount getWatchBalance() const;
+    CAmount getWatchUnconfirmedBalance() const;
+    CAmount getWatchImmatureBalance() const;
     EncryptionStatus getEncryptionStatus() const;
 
     // Check address for validity
@@ -168,6 +164,8 @@ public:
     // Passphrase only needed when unlocking
     bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
+    // Wallet backup
+    bool backupWallet(const QString &filename);
 
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
@@ -191,30 +189,37 @@ public:
 
     UnlockContext requestUnlock();
 
+    bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    bool IsSpendable(const CTxDestination& dest) const;
+    bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
+    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
+    bool isSpent(const COutPoint& outpoint) const;
+    void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
+
+    bool isLockedCoin(uint256 hash, unsigned int n) const;
+    void lockCoin(COutPoint& output);
+    void unlockCoin(COutPoint& output);
+    void listLockedCoins(std::vector<COutPoint>& vOutpts);
+
     void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
 
+    bool transactionCanBeAbandoned(uint256 hash) const;
+    bool abandonTransaction(uint256 hash) const;
+
+    bool transactionCanBeBumped(uint256 hash) const;
     bool bumpFee(uint256 hash);
 
     static bool isWalletEnabled();
 
-    interfaces::Node& node() const { return m_node; }
-    interfaces::Wallet& wallet() const { return *m_wallet; }
+    bool hdEnabled() const;
 
-    QString getWalletName() const;
+    int getDefaultConfirmTarget() const;
 
-    bool isMultiwallet();
+    bool getDefaultWalletRbf() const;
 
-    AddressTableModel* getAddressTableModel() const { return addressTableModel; }
 private:
-    std::unique_ptr<interfaces::Wallet> m_wallet;
-    std::unique_ptr<interfaces::Handler> m_handler_status_changed;
-    std::unique_ptr<interfaces::Handler> m_handler_address_book_changed;
-    std::unique_ptr<interfaces::Handler> m_handler_transaction_changed;
-    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
-    std::unique_ptr<interfaces::Handler> m_handler_watch_only_changed;
-    interfaces::Node& m_node;
-
+    CWallet *wallet;
     bool fHaveWatchOnly;
     bool fForceCheckBalanceChanged;
 
@@ -227,7 +232,12 @@ private:
     RecentRequestsTableModel *recentRequestsTableModel;
 
     // Cache some values to be able to detect changes
-    interfaces::WalletBalances m_cached_balances;
+    CAmount cachedBalance;
+    CAmount cachedUnconfirmedBalance;
+    CAmount cachedImmatureBalance;
+    CAmount cachedWatchOnlyBalance;
+    CAmount cachedWatchUnconfBalance;
+    CAmount cachedWatchImmatureBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
@@ -235,14 +245,15 @@ private:
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
-    void checkBalanceChanged(const interfaces::WalletBalances& new_balances);
+    void checkBalanceChanged();
 
 Q_SIGNALS:
     // Signal that balance in wallet changed
-    void balanceChanged(const interfaces::WalletBalances& balances);
+    void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+                        const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     // Encryption status of wallet changed
-    void encryptionStatusChanged();
+    void encryptionStatusChanged(int status);
 
     // Signal emitted when wallet needs to be unlocked
     // It is valid behaviour for listeners to keep the wallet locked after this signal;
@@ -253,7 +264,7 @@ Q_SIGNALS:
     void message(const QString &title, const QString &message, unsigned int style);
 
     // Coins sent: from wallet, to recipient, in (serialized) transaction:
-    void coinsSent(WalletModel* wallet, SendCoinsRecipient recipient, QByteArray transaction);
+    void coinsSent(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
 
     // Show progress dialog e.g. for rescan
     void showProgress(const QString &title, int nProgress);

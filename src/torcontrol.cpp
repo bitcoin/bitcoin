@@ -1,14 +1,14 @@
-// Copyright (c) 2015-2017 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <torcontrol.h>
-#include <utilstrencodings.h>
-#include <netbase.h>
-#include <net.h>
-#include <util.h>
-#include <crypto/hmac_sha256.h>
+#include "torcontrol.h"
+#include "utilstrencodings.h"
+#include "netbase.h"
+#include "net.h"
+#include "util.h"
+#include "crypto/hmac_sha256.h"
 
 #include <vector>
 #include <deque>
@@ -76,7 +76,7 @@ public:
 
     /** Create a new TorControlConnection.
      */
-    explicit TorControlConnection(struct event_base *base);
+    TorControlConnection(struct event_base *base);
     ~TorControlConnection();
 
     /**
@@ -121,7 +121,7 @@ private:
 };
 
 TorControlConnection::TorControlConnection(struct event_base *_base):
-    base(_base), b_conn(nullptr)
+    base(_base), b_conn(0)
 {
 }
 
@@ -133,7 +133,7 @@ TorControlConnection::~TorControlConnection()
 
 void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
 {
-    TorControlConnection *self = static_cast<TorControlConnection*>(ctx);
+    TorControlConnection *self = (TorControlConnection*)ctx;
     struct evbuffer *input = bufferevent_get_input(bev);
     size_t n_read_out = 0;
     char *line;
@@ -178,7 +178,7 @@ void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
 
 void TorControlConnection::eventcb(struct bufferevent *bev, short what, void *ctx)
 {
-    TorControlConnection *self = static_cast<TorControlConnection*>(ctx);
+    TorControlConnection *self = (TorControlConnection*)ctx;
     if (what & BEV_EVENT_CONNECTED) {
         LogPrint(BCLog::TOR, "tor: Successfully connected!\n");
         self->connected(*self);
@@ -227,7 +227,7 @@ bool TorControlConnection::Disconnect()
 {
     if (b_conn)
         bufferevent_free(b_conn);
-    b_conn = nullptr;
+    b_conn = 0;
     return true;
 }
 
@@ -476,7 +476,7 @@ TorController::~TorController()
 {
     if (reconnect_ev) {
         event_free(reconnect_ev);
-        reconnect_ev = nullptr;
+        reconnect_ev = 0;
     }
     if (service.IsValid()) {
         RemoveLocal(service);
@@ -725,13 +725,13 @@ fs::path TorController::GetPrivateKeyFile()
 
 void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 {
-    TorController *self = static_cast<TorController*>(arg);
+    TorController *self = (TorController*)arg;
     self->Reconnect();
 }
 
 /****** Thread ********/
 static struct event_base *gBase;
-static std::thread torControlThread;
+static boost::thread torControlThread;
 
 static void TorControlThread()
 {
@@ -740,7 +740,7 @@ static void TorControlThread()
     event_base_dispatch(gBase);
 }
 
-void StartTorControl()
+void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
     assert(!gBase);
 #ifdef WIN32
@@ -754,7 +754,7 @@ void StartTorControl()
         return;
     }
 
-    torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    torControlThread = boost::thread(boost::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
 }
 
 void InterruptTorControl()
@@ -770,7 +770,7 @@ void StopTorControl()
     if (gBase) {
         torControlThread.join();
         event_base_free(gBase);
-        gBase = nullptr;
+        gBase = 0;
     }
 }
 

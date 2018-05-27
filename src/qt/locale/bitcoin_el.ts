@@ -93,10 +93,6 @@
         <source>W&amp;allet</source>
         <translation>Πορτοφόλι</translation>
     </message>
-    <message>
-        <source>Error</source>
-        <translation>Σφάλμα</translation>
-    </message>
     </context>
 <context>
     <name>OverviewPage</name>

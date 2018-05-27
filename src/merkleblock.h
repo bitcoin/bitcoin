@@ -1,15 +1,15 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_MERKLEBLOCK_H
 #define BITCOIN_MERKLEBLOCK_H
 
-#include <serialize.h>
-#include <uint256.h>
-#include <primitives/block.h>
-#include <bloom.h>
+#include "serialize.h"
+#include "uint256.h"
+#include "primitives/block.h"
+#include "bloom.h"
 
 #include <vector>
 
@@ -63,7 +63,7 @@ protected:
     bool fBad;
 
     /** helper function to efficiently calculate the number of nodes at given height in the merkle tree */
-    unsigned int CalcTreeWidth(int height) const {
+    unsigned int CalcTreeWidth(int height) {
         return (nTransactions+(1 << height)-1) >> height;
     }
 
@@ -131,12 +131,8 @@ public:
     CBlockHeader header;
     CPartialMerkleTree txn;
 
-    /**
-     * Public only for unit testing and relay testing (not relayed).
-     *
-     * Used only when a bloom filter is specified to allow
-     * testing the transactions which matched the bloom filter.
-     */
+public:
+    /** Public only for unit testing and relay testing (not relayed) */
     std::vector<std::pair<unsigned int, uint256> > vMatchedTxn;
 
     /**
@@ -144,10 +140,10 @@ public:
      * Note that this will call IsRelevantAndUpdate on the filter for each transaction,
      * thus the filter will likely be modified.
      */
-    CMerkleBlock(const CBlock& block, CBloomFilter& filter) : CMerkleBlock(block, &filter, nullptr) { }
+    CMerkleBlock(const CBlock& block, CBloomFilter& filter);
 
     // Create from a CBlock, matching the txids in the set
-    CMerkleBlock(const CBlock& block, const std::set<uint256>& txids) : CMerkleBlock(block, nullptr, &txids) { }
+    CMerkleBlock(const CBlock& block, const std::set<uint256>& txids);
 
     CMerkleBlock() {}
 
@@ -158,10 +154,6 @@ public:
         READWRITE(header);
         READWRITE(txn);
     }
-
-private:
-    // Combined constructor to consolidate code
-    CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<uint256>* txids);
 };
 
 #endif // BITCOIN_MERKLEBLOCK_H

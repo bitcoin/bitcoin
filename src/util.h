@@ -1,41 +1,40 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /**
  * Server/client environment: argument handling, config file parsing,
- * thread wrappers, startup time
+ * logging, thread wrappers, startup time
  */
 #ifndef BITCOIN_UTIL_H
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include "config/bitcoin-config.h"
 #endif
 
-#include <compat.h>
-#include <fs.h>
-#include <logging.h>
-#include <sync.h>
-#include <tinyformat.h>
-#include <utiltime.h>
+#include "compat.h"
+#include "fs.h"
+#include "sync.h"
+#include "tinyformat.h"
+#include "utiltime.h"
 
 #include <atomic>
 #include <exception>
 #include <map>
-#include <memory>
-#include <set>
 #include <stdint.h>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
-#include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
+
+static const bool DEFAULT_LOGTIMEMICROS = false;
+static const bool DEFAULT_LOGIPS        = false;
+static const bool DEFAULT_LOGTIMESTAMPS = true;
 
 /** Signals for translation. */
 class CTranslationInterface
@@ -45,10 +44,19 @@ public:
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
 
+extern bool fPrintToConsole;
+extern bool fPrintToDebugLog;
+
+extern bool fLogTimestamps;
+extern bool fLogTimeMicros;
+extern bool fLogIPs;
+extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
 extern const char * const BITCOIN_CONF_FILENAME;
 extern const char * const BITCOIN_PID_FILENAME;
+
+extern std::atomic<uint32_t> logCategories;
 
 /**
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
@@ -63,30 +71,104 @@ inline std::string _(const char* psz)
 void SetupEnvironment();
 bool SetupNetworking();
 
+struct CLogCategoryActive
+{
+    std::string category;
+    bool active;
+};
+
+namespace BCLog {
+    enum LogFlags : uint32_t {
+        NONE        = 0,
+        NET         = (1 <<  0),
+        TOR         = (1 <<  1),
+        MEMPOOL     = (1 <<  2),
+        HTTP        = (1 <<  3),
+        BENCH       = (1 <<  4),
+        ZMQ         = (1 <<  5),
+        DB          = (1 <<  6),
+        RPC         = (1 <<  7),
+        ESTIMATEFEE = (1 <<  8),
+        ADDRMAN     = (1 <<  9),
+        SELECTCOINS = (1 << 10),
+        REINDEX     = (1 << 11),
+        CMPCTBLOCK  = (1 << 12),
+        RAND        = (1 << 13),
+        PRUNE       = (1 << 14),
+        PROXY       = (1 << 15),
+        MEMPOOLREJ  = (1 << 16),
+        LIBEVENT    = (1 << 17),
+        COINDB      = (1 << 18),
+        QT          = (1 << 19),
+        LEVELDB     = (1 << 20),
+        ALL         = ~(uint32_t)0,
+    };
+}
+/** Return true if log accepts specified category */
+static inline bool LogAcceptCategory(uint32_t category)
+{
+    return (logCategories.load(std::memory_order_relaxed) & category) != 0;
+}
+
+/** Returns a string with the log categories. */
+std::string ListLogCategories();
+
+/** Returns a vector of the active log categories. */
+std::vector<CLogCategoryActive> ListActiveLogCategories();
+
+/** Return true if str parses as a log category and set the flags in f */
+bool GetLogCategory(uint32_t *f, const std::string *str);
+
+/** Send a string to the log output */
+int LogPrintStr(const std::string &str);
+
+/** Get format string from VA_ARGS for error reporting */
+template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, const Args&... args) { return fmt; }
+
+static inline void MarkUsed() {}
+template<typename T, typename... Args> static inline void MarkUsed(const T& t, const Args&... args)
+{
+    (void)t;
+    MarkUsed(args...);
+}
+
+#ifdef USE_COVERAGE
+#define LogPrintf(...) do { MarkUsed(__VA_ARGS__); } while(0)
+#define LogPrint(category, ...) do { MarkUsed(__VA_ARGS__); } while(0)
+#else
+#define LogPrintf(...) do { \
+    std::string _log_msg_; /* Unlikely name to avoid shadowing variables */ \
+    try { \
+        _log_msg_ = tfm::format(__VA_ARGS__); \
+    } catch (tinyformat::format_error &fmterr) { \
+        /* Original format string will have newline so don't add one here */ \
+        _log_msg_ = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + FormatStringFromLogArgs(__VA_ARGS__); \
+    } \
+    LogPrintStr(_log_msg_); \
+} while(0)
+
+#define LogPrint(category, ...) do { \
+    if (LogAcceptCategory((category))) { \
+        LogPrintf(__VA_ARGS__); \
+    } \
+} while(0)
+#endif
+
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)
 {
-    LogPrintf("ERROR: %s\n", tfm::format(fmt, args...));
+    LogPrintStr("ERROR: " + tfm::format(fmt, args...) + "\n");
     return false;
 }
 
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
-bool FileCommit(FILE *file);
+void FileCommit(FILE *file);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
 bool RenameOver(fs::path src, fs::path dest);
-bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
-bool DirIsWritable(const fs::path& directory);
-
-/** Release all directory locks. This is used for unit testing only, at runtime
- * the global destructor will take care of the locks.
- */
-void ReleaseDirectoryLocks();
-
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
-const fs::path &GetBlocksDir(bool fNetSpecific = true);
 const fs::path &GetDataDir(bool fNetSpecific = true);
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
@@ -97,17 +179,9 @@ void CreatePidFile(const fs::path &path, pid_t pid);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
+void OpenDebugLog();
+void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
-
-/**
- * Most paths passed as configuration arguments are treated as relative to
- * the datadir if they are not absolute.
- *
- * @param path The path to be conditionally prefixed with datadir.
- * @param net_specific Forwarded to GetDataDir().
- * @return The normalized path.
- */
-fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
 
 inline bool IsSwitchChar(char c)
 {
@@ -118,63 +192,16 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
-enum class OptionsCategory
-{
-    OPTIONS,
-    CONNECTION,
-    WALLET,
-    WALLET_DEBUG_TEST,
-    ZMQ,
-    DEBUG_TEST,
-    CHAINPARAMS,
-    NODE_RELAY,
-    BLOCK_CREATION,
-    RPC,
-    GUI,
-    COMMANDS,
-    REGISTER_COMMANDS
-};
-
 class ArgsManager
 {
 protected:
-    friend class ArgsManagerHelper;
-
-    mutable CCriticalSection cs_args;
-    std::map<std::string, std::vector<std::string>> m_override_args;
-    std::map<std::string, std::vector<std::string>> m_config_args;
-    std::string m_network;
-    std::set<std::string> m_network_only_args;
-    std::map<std::pair<OptionsCategory, std::string>, std::pair<std::string, bool>> m_available_args;
-
-    void ReadConfigStream(std::istream& stream);
-
+    CCriticalSection cs_args;
+    std::map<std::string, std::string> mapArgs;
+    std::map<std::string, std::vector<std::string> > mapMultiArgs;
 public:
-    ArgsManager();
-
-    /**
-     * Select the network in use
-     */
-    void SelectConfigNetwork(const std::string& network);
-
     void ParseParameters(int argc, const char*const argv[]);
-    void ReadConfigFiles();
-
-    /**
-     * Log warnings for options in m_section_only_args when
-     * they are specified in the default section but not overridden
-     * on the command line or in a network-specific section in the
-     * config file.
-     */
-    void WarnForSectionOnlyArgs();
-
-    /**
-     * Return a vector of strings of the given argument
-     *
-     * @param strArg Argument to get (e.g. "-foo")
-     * @return command-line arguments
-     */
-    std::vector<std::string> GetArgs(const std::string& strArg) const;
+    void ReadConfigFile(const std::string& confPath);
+    std::vector<std::string> GetArgs(const std::string& strArg);
 
     /**
      * Return true if the given argument has been manually set
@@ -182,16 +209,7 @@ public:
      * @param strArg Argument to get (e.g. "-foo")
      * @return true if the argument has been set
      */
-    bool IsArgSet(const std::string& strArg) const;
-
-    /**
-     * Return true if the argument was originally passed as a negated option,
-     * i.e. -nofoo.
-     *
-     * @param strArg Argument to get (e.g. "-foo")
-     * @return true if the argument was passed negated
-     */
-    bool IsArgNegated(const std::string& strArg) const;
+    bool IsArgSet(const std::string& strArg);
 
     /**
      * Return string argument or default value
@@ -200,7 +218,7 @@ public:
      * @param strDefault (e.g. "1")
      * @return command-line argument or default value
      */
-    std::string GetArg(const std::string& strArg, const std::string& strDefault) const;
+    std::string GetArg(const std::string& strArg, const std::string& strDefault);
 
     /**
      * Return integer argument or default value
@@ -209,7 +227,7 @@ public:
      * @param nDefault (e.g. 1)
      * @return command-line argument (0 if invalid number) or default value
      */
-    int64_t GetArg(const std::string& strArg, int64_t nDefault) const;
+    int64_t GetArg(const std::string& strArg, int64_t nDefault);
 
     /**
      * Return boolean argument or default value
@@ -218,7 +236,7 @@ public:
      * @param fDefault (true or false)
      * @return command-line argument or default value
      */
-    bool GetBoolArg(const std::string& strArg, bool fDefault) const;
+    bool GetBoolArg(const std::string& strArg, bool fDefault);
 
     /**
      * Set an argument if it doesn't already have a value
@@ -241,30 +259,9 @@ public:
     // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
     // been set. Also called directly in testing.
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
-
-    /**
-     * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
-     * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
-     */
-    std::string GetChainName() const;
-
-    /**
-     * Add argument
-     */
-    void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
-
-    /**
-     * Get the help string
-     */
-    std::string GetHelpMessage();
 };
 
 extern ArgsManager gArgs;
-
-/**
- * @return true if help has been requested via a command-line arg
- */
-bool HelpRequested(const ArgsManager& args);
 
 /**
  * Format a string to be used as group of options in help messages
@@ -284,8 +281,9 @@ std::string HelpMessageGroup(const std::string& message);
 std::string HelpMessageOpt(const std::string& option, const std::string& message);
 
 /**
- * Return the number of cores available on the current system.
- * @note This does count virtual cores, such as those provided by HyperThreading.
+ * Return the number of physical cores available on the current system.
+ * @note This does not count virtual cores, such as those provided by HyperThreading
+ * when boost is newer than 1.56.
  */
 int GetNumCores();
 
@@ -320,21 +318,5 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
 }
 
 std::string CopyrightHolders(const std::string& strPrefix);
-
-//! Substitute for C++14 std::make_unique.
-template <typename T, typename... Args>
-std::unique_ptr<T> MakeUnique(Args&&... args)
-{
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-
-/**
- * On platforms that support it, tell the kernel the calling thread is
- * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.
- *
- * @return The return value of sched_setschedule(), or 1 on systems without
- * sched_setchedule().
- */
-int ScheduleBatchPriority(void);
 
 #endif // BITCOIN_UTIL_H

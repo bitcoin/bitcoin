@@ -1,18 +1,18 @@
-// Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <consensus/tx_verify.h>
-#include <core_io.h>
-#include <key.h>
-#include <keystore.h>
-#include <validation.h>
-#include <policy/policy.h>
-#include <script/script.h>
-#include <script/script_error.h>
-#include <script/sign.h>
-#include <script/ismine.h>
-#include <test/test_bitcoin.h>
+#include "consensus/tx_verify.h"
+#include "core_io.h"
+#include "key.h"
+#include "keystore.h"
+#include "validation.h"
+#include "policy/policy.h"
+#include "script/script.h"
+#include "script/script_error.h"
+#include "script/sign.h"
+#include "script/ismine.h"
+#include "test/test_bitcoin.h"
 
 #include <vector>
 
@@ -112,7 +112,8 @@ BOOST_AUTO_TEST_CASE(sign)
         {
             CScript sigSave = txTo[i].vin[0].scriptSig;
             txTo[i].vin[0].scriptSig = txTo[j].vin[0].scriptSig;
-            bool sigOK = CScriptCheck(txFrom.vout[txTo[i].vin[0].prevout.n], txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, false, &txdata)();
+            const CTxOut& output = txFrom.vout[txTo[i].vin[0].prevout.n];
+            bool sigOK = CScriptCheck(output.scriptPubKey, output.nValue, txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, false, &txdata)();
             if (i == j)
                 BOOST_CHECK_MESSAGE(sigOK, strprintf("VerifySignature %d %d", i, j));
             else

@@ -1,15 +1,15 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_WALLET_WALLETDB_H
 #define BITCOIN_WALLET_WALLETDB_H
 
-#include <amount.h>
-#include <primitives/transaction.h>
-#include <wallet/db.h>
-#include <key.h>
+#include "amount.h"
+#include "primitives/transaction.h"
+#include "wallet/db.h"
+#include "key.h"
 
 #include <list>
 #include <stdint.h>
@@ -20,13 +20,16 @@
 /**
  * Overview of wallet database classes:
  *
- * - WalletBatch is an abstract modifier object for the wallet database, and encapsulates a database
- *   batch update as well as methods to act on the database. It should be agnostic to the database implementation.
+ * - CDBEnv is an environment in which the database exists (has no analog in dbwrapper.h)
+ * - CWalletDBWrapper represents a wallet database (similar to CDBWrapper in dbwrapper.h)
+ * - CDB is a low-level database transaction (similar to CDBBatch in dbwrapper.h)
+ * - CWalletDB is a modifier object for the wallet, and encapsulates a database
+ *   transaction as well as methods to act on the database (no analog in
+ *   dbwrapper.h)
  *
- * The following classes are implementation specific:
- * - BerkeleyEnvironment is an environment in which the database exists.
- * - BerkeleyDatabase represents a wallet database.
- * - BerkeleyBatch is a low-level database batch update.
+ * The latter two are named confusingly, in contrast to what the names CDB
+ * and CWalletDB suggest they are transient transaction objects and don't
+ * represent the database itself.
  */
 
 static const bool DEFAULT_FLUSHWALLET = true;
@@ -42,18 +45,15 @@ class CWalletTx;
 class uint160;
 class uint256;
 
-/** Backend-agnostic database type. */
-using WalletDatabase = BerkeleyDatabase;
-
 /** Error statuses for the wallet database */
-enum class DBErrors
+enum DBErrors
 {
-    LOAD_OK,
-    CORRUPT,
-    NONCRITICAL_ERROR,
-    TOO_NEW,
-    LOAD_FAIL,
-    NEED_REWRITE
+    DB_LOAD_OK,
+    DB_CORRUPT,
+    DB_NONCRITICAL_ERROR,
+    DB_TOO_NEW,
+    DB_LOAD_FAIL,
+    DB_NEED_REWRITE
 };
 
 /* simple HD chain data model */
@@ -105,7 +105,7 @@ public:
     {
         SetNull();
     }
-    explicit CKeyMetadata(int64_t nCreateTime_)
+    CKeyMetadata(int64_t nCreateTime_)
     {
         SetNull();
         nCreateTime = nCreateTime_;
@@ -134,41 +134,39 @@ public:
 };
 
 /** Access to the wallet database.
- * This represents a single transaction at the
+ * This should really be named CWalletDBBatch, as it represents a single transaction at the
  * database. It will be committed when the object goes out of scope.
  * Optionally (on by default) it will flush to disk as well.
  */
-class WalletBatch
+class CWalletDB
 {
 private:
     template <typename K, typename T>
     bool WriteIC(const K& key, const T& value, bool fOverwrite = true)
     {
-        if (!m_batch.Write(key, value, fOverwrite)) {
+        if (!batch.Write(key, value, fOverwrite)) {
             return false;
         }
-        m_database.IncrementUpdateCounter();
+        m_dbw.IncrementUpdateCounter();
         return true;
     }
 
     template <typename K>
     bool EraseIC(const K& key)
     {
-        if (!m_batch.Erase(key)) {
+        if (!batch.Erase(key)) {
             return false;
         }
-        m_database.IncrementUpdateCounter();
+        m_dbw.IncrementUpdateCounter();
         return true;
     }
 
 public:
-    explicit WalletBatch(WalletDatabase& database, const char* pszMode = "r+", bool _fFlushOnClose = true) :
-        m_batch(database, pszMode, _fFlushOnClose),
-        m_database(database)
+    CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) :
+        batch(dbw, pszMode, _fFlushOnClose),
+        m_dbw(dbw)
     {
     }
-    WalletBatch(const WalletBatch&) = delete;
-    WalletBatch& operator=(const WalletBatch&) = delete;
 
     bool WriteName(const std::string& strAddress, const std::string& strName);
     bool EraseName(const std::string& strAddress);
@@ -193,6 +191,8 @@ public:
 
     bool WriteOrderPosNext(int64_t nOrderPosNext);
 
+    bool WriteDefaultKey(const CPubKey& vchPubKey);
+
     bool ReadPool(int64_t nPool, CKeyPool& keypool);
     bool WritePool(int64_t nPool, const CKeyPool& keypool);
     bool ErasePool(int64_t nPool);
@@ -204,7 +204,6 @@ public:
     bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
-    bool EraseAccount(const std::string& strAccount);
 
     /// Write destination data key,value tuple to database
     bool WriteDestData(const std::string &address, const std::string &key, const std::string &value);
@@ -219,17 +218,17 @@ public:
     DBErrors ZapWalletTx(std::vector<CWalletTx>& vWtx);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
     /* Try to (very carefully!) recover wallet database (with a possible key type filter) */
-    static bool Recover(const fs::path& wallet_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
+    static bool Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
     /* Recover convenience-function to bypass the key filter callback, called when verify fails, recovers everything */
-    static bool Recover(const fs::path& wallet_path, std::string& out_backup_filename);
+    static bool Recover(const std::string& filename, std::string& out_backup_filename);
     /* Recover filter (used as callback), will only let keys (cryptographical keys) as KV/key-type pass through */
     static bool RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, CDataStream ssValue);
     /* Function to determine if a certain KV/key-type is a key (cryptographical key) type */
     static bool IsKeyType(const std::string& strType);
     /* verifies the database environment */
-    static bool VerifyEnvironment(const fs::path& wallet_path, std::string& errorStr);
+    static bool VerifyEnvironment(const std::string& walletFile, const fs::path& dataDir, std::string& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const fs::path& wallet_path, std::string& warningStr, std::string& errorStr);
+    static bool VerifyDatabaseFile(const std::string& walletFile, const fs::path& dataDir, std::string& warningStr, std::string& errorStr);
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
@@ -245,8 +244,11 @@ public:
     //! Write wallet version
     bool WriteVersion(int nVersion);
 private:
-    BerkeleyBatch m_batch;
-    WalletDatabase& m_database;
+    CDB batch;
+    CWalletDBWrapper& m_dbw;
+
+    CWalletDB(const CWalletDB&);
+    void operator=(const CWalletDB&);
 };
 
 //! Compacts BDB state so that wallet.dat is self-contained (if there are changes)

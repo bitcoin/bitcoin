@@ -1,22 +1,25 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include "config/bitcoin-config.h"
 #endif
 
-#include <qt/optionsdialog.h>
-#include <qt/forms/ui_optionsdialog.h>
+#include "optionsdialog.h"
+#include "ui_optionsdialog.h"
 
-#include <qt/bitcoinunits.h>
-#include <qt/guiutil.h>
-#include <qt/optionsmodel.h>
+#include "bitcoinunits.h"
+#include "guiutil.h"
+#include "optionsmodel.h"
 
-#include <interfaces/node.h>
-#include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
-#include <netbase.h>
-#include <txdb.h> // for -dbcache defaults
+#include "validation.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
+#include "netbase.h"
+#include "txdb.h" // for -dbcache defaults
+
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h" // for CWallet::GetRequiredFee()
+#endif
 
 #include <QDataWidgetMapper>
 #include <QDir>
@@ -314,17 +317,17 @@ void OptionsDialog::updateDefaultProxyNets()
     std::string strProxy;
     QString strDefaultProxyGUI;
 
-    model->node().getProxy(NET_IPV4, proxy);
+    GetProxy(NET_IPV4, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv4->setChecked(true) : ui->proxyReachIPv4->setChecked(false);
 
-    model->node().getProxy(NET_IPV6, proxy);
+    GetProxy(NET_IPV6, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv6->setChecked(true) : ui->proxyReachIPv6->setChecked(false);
 
-    model->node().getProxy(NET_TOR, proxy);
+    GetProxy(NET_TOR, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
@@ -339,7 +342,7 @@ QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) cons
 {
     Q_UNUSED(pos);
     // Validate the proxy
-    CService serv(LookupNumeric(input.toStdString().c_str(), DEFAULT_GUI_PROXY_PORT));
+    CService serv(LookupNumeric(input.toStdString().c_str(), 9050));
     proxyType addrProxy = proxyType(serv, true);
     if (addrProxy.IsValid())
         return QValidator::Acceptable;

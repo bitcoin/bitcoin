@@ -1,15 +1,17 @@
-// Copyright (c) 2015-2017 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/platformstyle.h>
+#include "platformstyle.h"
 
-#include <qt/guiconstants.h>
+#include "guiconstants.h"
 
 #include <QApplication>
 #include <QColor>
+#include <QIcon>
 #include <QImage>
 #include <QPalette>
+#include <QPixmap>
 
 static const struct {
     const char *platformId;

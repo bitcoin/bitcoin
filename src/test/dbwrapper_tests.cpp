@@ -1,18 +1,16 @@
-// Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <dbwrapper.h>
-#include <uint256.h>
-#include <random.h>
-#include <test/test_bitcoin.h>
-
-#include <memory>
+#include "dbwrapper.h"
+#include "uint256.h"
+#include "random.h"
+#include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
 
 // Test if a string consists entirely of null characters
-static bool is_null_key(const std::vector<unsigned char>& key) {
+bool is_null_key(const std::vector<unsigned char>& key) {
     bool isnull = true;
 
     for (unsigned int i = 0; i < key.size(); i++)
@@ -127,7 +125,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
-    std::unique_ptr<CDBWrapper> dbw = MakeUnique<CDBWrapper>(ph, (1 << 10), false, false, false);
+    CDBWrapper* dbw = new CDBWrapper(ph, (1 << 10), false, false, false);
     char key = 'k';
     uint256 in = InsecureRand256();
     uint256 res;
@@ -137,7 +135,8 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     BOOST_CHECK_EQUAL(res.ToString(), in.ToString());
 
     // Call the destructor to free leveldb LOCK
-    dbw.reset();
+    delete dbw;
+    dbw = nullptr;
 
     // Now, set up another wrapper that wants to obfuscate the same directory
     CDBWrapper odbw(ph, (1 << 10), false, false, true);
@@ -168,7 +167,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
-    std::unique_ptr<CDBWrapper> dbw = MakeUnique<CDBWrapper>(ph, (1 << 10), false, false, false);
+    CDBWrapper* dbw = new CDBWrapper(ph, (1 << 10), false, false, false);
     char key = 'k';
     uint256 in = InsecureRand256();
     uint256 res;
@@ -178,7 +177,8 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     BOOST_CHECK_EQUAL(res.ToString(), in.ToString());
 
     // Call the destructor to free leveldb LOCK
-    dbw.reset();
+    delete dbw;
+    dbw = nullptr;
 
     // Simulate a -reindex by wiping the existing data store
     CDBWrapper odbw(ph, (1 << 10), false, true, true);
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
     // Check that creating an iterator creates a snapshot
     std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
 
-    for (unsigned int x=0x00; x<256; ++x) {
+    for (int x=0x00; x<256; ++x) {
         uint8_t key = x;
         uint32_t value = x*x;
         if (x & 1) BOOST_CHECK(dbw.Write(key, value));
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
 
     for (int seek_start : {0x00, 0x80}) {
         it->Seek((uint8_t)seek_start);
-        for (unsigned int x=seek_start; x<255; ++x) {
+        for (int x=seek_start; x<255; ++x) {
             uint8_t key;
             uint32_t value;
             BOOST_CHECK(it->Valid());
@@ -239,11 +239,11 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
 }
 
 struct StringContentsSerializer {
-    // Used to make two serialized objects the same while letting them have different lengths
+    // Used to make two serialized objects the same while letting them have a different lengths
     // This is a terrible idea
     std::string str;
     StringContentsSerializer() {}
-    explicit StringContentsSerializer(const std::string& inp) : str(inp) {}
+    StringContentsSerializer(const std::string& inp) : str(inp) {}
 
     StringContentsSerializer& operator+=(const std::string& s) {
         str += s;
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
         snprintf(buf, sizeof(buf), "%d", seek_start);
         StringContentsSerializer seek_key(buf);
         it->Seek(seek_key);
-        for (unsigned int x=seek_start; x<10; ++x) {
+        for (int x=seek_start; x<10; ++x) {
             for (int y = 0; y < 10; y++) {
                 snprintf(buf, sizeof(buf), "%d", x);
                 std::string exp_key(buf);

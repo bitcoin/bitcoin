@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util.h>
-#include <test/test_bitcoin.h>
+#include "util.h"
+#include "test/test_bitcoin.h"
 
 #include <string>
 #include <vector>
@@ -27,7 +27,7 @@ static void ResetArgs(const std::string& strArg)
     for (std::string& s : vecArg)
         vecChar.push_back(s.c_str());
 
-    gArgs.ParseParameters(vecChar.size(), vecChar.data());
+    gArgs.ParseParameters(vecChar.size(), &vecChar[0]);
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)

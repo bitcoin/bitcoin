@@ -413,22 +413,6 @@
           <number>4</number>
          </property>
          <item>
-          <widget class="QLabel" name="WalletSelectorLabel">
-           <property name="text">
-            <string>Wallet: </string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="WalletSelector">
-           <item>
-            <property name="text">
-             <string>(none)</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item>
           <spacer name="horizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -1440,7 +1424,7 @@
   <customwidget>
    <class>TrafficGraphWidget</class>
    <extends>QWidget</extends>
-   <header>qt/trafficgraphwidget.h</header>
+   <header>trafficgraphwidget.h</header>
    <container>1</container>
    <slots>
     <slot>clear()</slot>

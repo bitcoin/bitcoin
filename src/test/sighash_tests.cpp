@@ -1,19 +1,19 @@
-// Copyright (c) 2013-2017 The Bitcoin Core developers
+// Copyright (c) 2013-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <consensus/tx_verify.h>
-#include <consensus/validation.h>
-#include <test/data/sighash.json.h>
-#include <hash.h>
-#include <script/interpreter.h>
-#include <script/script.h>
-#include <serialize.h>
-#include <streams.h>
-#include <test/test_bitcoin.h>
-#include <util.h>
-#include <utilstrencodings.h>
-#include <version.h>
+#include "consensus/tx_verify.h"
+#include "consensus/validation.h"
+#include "data/sighash.json.h"
+#include "hash.h"
+#include "script/interpreter.h"
+#include "script/script.h"
+#include "serialize.h"
+#include "streams.h"
+#include "test/test_bitcoin.h"
+#include "util.h"
+#include "utilstrencodings.h"
+#include "version.h"
 
 #include <iostream>
 
@@ -35,7 +35,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
 
     // In case concatenating two scripts ends up with two codeseparators,
     // or an extra one at the end, this prevents all those possible incompatibilities.
-    FindAndDelete(scriptCode, CScript(OP_CODESEPARATOR));
+    scriptCode.FindAndDelete(CScript(OP_CODESEPARATOR));
 
     // Blank out other inputs' signatures
     for (unsigned int i = 0; i < txTmp.vin.size(); i++)
@@ -124,9 +124,11 @@ BOOST_AUTO_TEST_CASE(sighash_test)
     #if defined(PRINT_SIGHASH_JSON)
     std::cout << "[\n";
     std::cout << "\t[\"raw_transaction, script, input_index, hashType, signature_hash (result)\"],\n";
-    int nRandomTests = 500;
-    #else
+    #endif
     int nRandomTests = 50000;
+
+    #if defined(PRINT_SIGHASH_JSON)
+    nRandomTests = 500;
     #endif
     for (int i=0; i<nRandomTests; i++) {
         int nHashType = InsecureRand32();
@@ -138,7 +140,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
 
         uint256 sh, sho;
         sho = SignatureHashOld(scriptCode, txTo, nIn, nHashType);
-        sh = SignatureHash(scriptCode, txTo, nIn, nHashType, 0, SigVersion::BASE);
+        sh = SignatureHash(scriptCode, txTo, nIn, nHashType, 0, SIGVERSION_BASE);
         #if defined(PRINT_SIGHASH_JSON)
         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
         ss << txTo;
@@ -204,7 +206,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           continue;
         }
 
-        sh = SignatureHash(scriptCode, *tx, nIn, nHashType, 0, SigVersion::BASE);
+        sh = SignatureHash(scriptCode, *tx, nIn, nHashType, 0, SIGVERSION_BASE);
         BOOST_CHECK_MESSAGE(sh.GetHex() == sigHashHex, strTest);
     }
 }

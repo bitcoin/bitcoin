@@ -1,11 +1,11 @@
-// Copyright (c) 2016-2017 The Bitcoin Core developers
+// Copyright (c) 2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_VERSIONBITS_H
-#define BITCOIN_VERSIONBITS_H
+#ifndef BITCOIN_CONSENSUS_VERSIONBITS
+#define BITCOIN_CONSENSUS_VERSIONBITS
 
-#include <chain.h>
+#include "chain.h"
 #include <map>
 
 /** What block version to use for new blocks (pre versionbits) */
@@ -17,12 +17,12 @@ static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
 /** Total bits available for versionbits */
 static const int32_t VERSIONBITS_NUM_BITS = 29;
 
-enum class ThresholdState {
-    DEFINED,
-    STARTED,
-    LOCKED_IN,
-    ACTIVE,
-    FAILED,
+enum ThresholdState {
+    THRESHOLD_DEFINED,
+    THRESHOLD_STARTED,
+    THRESHOLD_LOCKED_IN,
+    THRESHOLD_ACTIVE,
+    THRESHOLD_FAILED,
 };
 
 // A map that gives the state for blocks whose height is a multiple of Period().
@@ -77,7 +77,6 @@ BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
-
 static const int32_t VERSIONBITS_MBC_MASK = 0x12000000UL;
 
 static inline bool CheckMBCVersion(int nVersion)
@@ -87,5 +86,4 @@ static inline bool CheckMBCVersion(int nVersion)
         && (nVersion >> MBC_BIT) == ((VERSIONBITS_TOP_BITS | VERSIONBITS_MBC_MASK) >> MBC_BIT);
 }
 
-
-#endif // BITCOIN_VERSIONBITS_H
+#endif

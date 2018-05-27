@@ -1,20 +1,20 @@
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <core_io.h>
+#include "core_io.h"
 
-#include <consensus/consensus.h>
-#include <consensus/validation.h>
-#include <key_io.h>
-#include <script/script.h>
-#include <script/standard.h>
-#include <serialize.h>
-#include <streams.h>
+#include "base58.h"
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
+#include "script/script.h"
+#include "script/standard.h"
+#include "serialize.h"
+#include "streams.h"
 #include <univalue.h>
-#include <util.h>
-#include <utilmoneystr.h>
-#include <utilstrencodings.h>
+#include "util.h"
+#include "utilmoneystr.h"
+#include "utilstrencodings.h"
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
@@ -34,7 +34,7 @@ std::string FormatScript(const CScript& script)
     while (it != script.end()) {
         CScript::const_iterator it2 = it;
         std::vector<unsigned char> vch;
-        if (script.GetOp(it, op, vch)) {
+        if (script.GetOp2(it, op, &vch)) {
             if (op == OP_0) {
                 ret += "0 ";
                 continue;
@@ -148,9 +148,8 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     out.pushKV("type", GetTxnOutputType(type));
 
     UniValue a(UniValue::VARR);
-    for (const CTxDestination& addr : addresses) {
-        a.push_back(EncodeDestination(addr));
-    }
+    for (const CTxDestination& addr : addresses)
+        a.push_back(CBitcoinAddress(addr).ToString());
     out.pushKV("addresses", a);
 }
 
@@ -161,7 +160,6 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     entry.pushKV("version", tx.nVersion);
     entry.pushKV("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
     entry.pushKV("vsize", (GetTransactionWeight(tx) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR);
-    entry.pushKV("weight", GetTransactionWeight(tx));
     entry.pushKV("locktime", (int64_t)tx.nLockTime);
 
     UniValue vin(UniValue::VARR);
@@ -210,6 +208,6 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         entry.pushKV("blockhash", hashBlock.GetHex());
 
     if (include_hex) {
-        entry.pushKV("hex", EncodeHexTx(tx, serialize_flags)); // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
+        entry.pushKV("hex", EncodeHexTx(tx, serialize_flags)); // the hex-encoded transaction. used the name "hex" to be consistent with the verbose output of "getrawtransaction".
     }
 }

@@ -1,14 +1,14 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_RPCCONSOLE_H
 #define BITCOIN_QT_RPCCONSOLE_H
 
-#include <qt/guiutil.h>
-#include <qt/peertablemodel.h>
+#include "guiutil.h"
+#include "peertablemodel.h"
 
-#include <net.h>
+#include "net.h"
 
 #include <QWidget>
 #include <QCompleter>
@@ -17,11 +17,6 @@
 class ClientModel;
 class PlatformStyle;
 class RPCTimerInterface;
-class WalletModel;
-
-namespace interfaces {
-    class Node;
-}
 
 namespace Ui {
     class RPCConsole;
@@ -38,16 +33,15 @@ class RPCConsole: public QWidget
     Q_OBJECT
 
 public:
-    explicit RPCConsole(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent);
+    explicit RPCConsole(const PlatformStyle *platformStyle, QWidget *parent);
     ~RPCConsole();
 
-    static bool RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr);
-    static bool RPCExecuteCommandLine(interfaces::Node& node, std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr) {
-        return RPCParseCommandLine(&node, strResult, strCommand, true, pstrFilteredOut, walletID);
+    static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr);
+    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr) {
+        return RPCParseCommandLine(strResult, strCommand, true, pstrFilteredOut);
     }
 
     void setClientModel(ClientModel *model);
-    void addWallet(WalletModel * const walletModel);
 
     enum MessageClass {
         MC_ERROR,
@@ -126,9 +120,10 @@ public Q_SLOTS:
 Q_SIGNALS:
     // For RPC command executor
     void stopExecutor();
-    void cmdRequest(const QString &command, const QString &walletID);
+    void cmdRequest(const QString &command);
 
 private:
+    static QString FormatBytes(quint64 bytes);
     void startExecutor();
     void setTrafficGraphRange(int mins);
     /** show detailed information on ui about selected node */
@@ -144,21 +139,19 @@ private:
 
     };
 
-    interfaces::Node& m_node;
-    Ui::RPCConsole* const ui;
-    ClientModel *clientModel = nullptr;
+    Ui::RPCConsole *ui;
+    ClientModel *clientModel;
     QStringList history;
-    int historyPtr = 0;
+    int historyPtr;
     QString cmdBeforeBrowsing;
     QList<NodeId> cachedNodeids;
-    const PlatformStyle* const platformStyle;
-    RPCTimerInterface *rpcTimerInterface = nullptr;
-    QMenu *peersTableContextMenu = nullptr;
-    QMenu *banTableContextMenu = nullptr;
-    int consoleFontSize = 0;
-    QCompleter *autoCompleter = nullptr;
+    const PlatformStyle *platformStyle;
+    RPCTimerInterface *rpcTimerInterface;
+    QMenu *peersTableContextMenu;
+    QMenu *banTableContextMenu;
+    int consoleFontSize;
+    QCompleter *autoCompleter;
     QThread thread;
-    QString m_last_wallet_id;
 
     /** Update UI with latest network info from model. */
     void updateNetworkState();

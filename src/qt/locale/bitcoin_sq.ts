@@ -385,10 +385,6 @@
         <translation>Miresevini</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Problem</translation>
     </message>
@@ -412,10 +408,6 @@
     <message>
         <source>W&amp;allet</source>
         <translation>Portofol</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Problem</translation>
     </message>
     </context>
 <context>
@@ -441,11 +433,7 @@
         <source>%1 and %2</source>
         <translation>%1 dhe %2</translation>
     </message>
-    <message>
-        <source>unknown</source>
-        <translation>i/e panjohur</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -461,6 +449,10 @@
     <message>
         <source>&amp;Open</source>
         <translation>&amp;Hap</translation>
+    </message>
+    <message>
+        <source>&amp;Clear</source>
+        <translation>&amp;Pastro</translation>
     </message>
     <message>
         <source>never</source>
@@ -777,7 +769,7 @@
         <source>Send Coins</source>
         <translation>Dërgo Monedha</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>WalletView</name>
     <message>

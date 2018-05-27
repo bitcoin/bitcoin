@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2018 MicroBitcoin developers
+
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -81,13 +83,12 @@ int static inline GetSkipHeight(int height) {
     return (height & 1) ? InvertLowestOne(InvertLowestOne(height - 1)) + 1 : InvertLowestOne(height);
 }
 
-const CBlockIndex* CBlockIndex::GetAncestor(int height) const
+CBlockIndex* CBlockIndex::GetAncestor(int height)
 {
-    if (height > nHeight || height < 0) {
+    if (height > nHeight || height < 0)
         return nullptr;
-    }
 
-    const CBlockIndex* pindexWalk = this;
+    CBlockIndex* pindexWalk = this;
     int heightWalk = nHeight;
     while (heightWalk > height) {
         int heightSkip = GetSkipHeight(heightWalk);
@@ -108,9 +109,9 @@ const CBlockIndex* CBlockIndex::GetAncestor(int height) const
     return pindexWalk;
 }
 
-CBlockIndex* CBlockIndex::GetAncestor(int height)
+const CBlockIndex* CBlockIndex::GetAncestor(int height) const
 {
-    return const_cast<CBlockIndex*>(static_cast<const CBlockIndex*>(this)->GetAncestor(height));
+    return const_cast<CBlockIndex*>(this)->GetAncestor(height);
 }
 
 void CBlockIndex::BuildSkip()
@@ -130,7 +131,7 @@ arith_uint256 GetBlockProof(const CBlockIndex& block)
     // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256
     // as it's too large for an arith_uint256. However, as 2**256 is at least as large
     // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
-    // or ~bnTarget / (bnTarget+1) + 1.
+    // or ~bnTarget / (nTarget+1) + 1.
     return (~bnTarget / (bnTarget + 1)) + 1;
 }
 
@@ -146,11 +147,12 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
     }
 
     if (IsHardForkEnabled(to.nHeight, params)) {
+        // New algo here
         r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip);
     } else {
         r = r * arith_uint256(params.nPowTargetSpacing * 5) / GetBlockProof(tip);
     }
-    
+
     if (r.bits() > 63) {
         return sign * std::numeric_limits<int64_t>::max();
     }

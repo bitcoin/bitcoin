@@ -1,24 +1,22 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/guiutil.h>
+#include "guiutil.h"
 
-#include <qt/bitcoinaddressvalidator.h>
-#include <qt/bitcoinunits.h>
-#include <qt/qvalidatedlineedit.h>
-#include <qt/walletmodel.h>
+#include "bitcoinaddressvalidator.h"
+#include "bitcoinunits.h"
+#include "qvalidatedlineedit.h"
+#include "walletmodel.h"
 
-#include <base58.h>
-#include <chainparams.h>
-#include <primitives/transaction.h>
-#include <key_io.h>
-#include <interfaces/node.h>
-#include <policy/policy.h>
-#include <protocol.h>
-#include <script/script.h>
-#include <script/standard.h>
-#include <util.h>
+#include "fs.h"
+#include "primitives/transaction.h"
+#include "init.h"
+#include "policy/policy.h"
+#include "protocol.h"
+#include "script/script.h"
+#include "script/standard.h"
+#include "util.h"
 
 #ifdef WIN32
 #ifdef _WIN32_WINNT
@@ -33,9 +31,9 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <shellapi.h>
-#include <shlobj.h>
-#include <shlwapi.h>
+#include "shellapi.h"
+#include "shlobj.h"
+#include "shlwapi.h"
 #endif
 
 #include <boost/scoped_array.hpp>
@@ -104,7 +102,7 @@ QFont fixedPitchFont()
 #endif
 }
 
-// Just some dummy data to generate a convincing random-looking (but consistent) address
+// Just some dummy data to generate an convincing random-looking (but consistent) address
 static const uint8_t dummydata[] = {0xeb,0x15,0x23,0x1d,0xfc,0xeb,0x60,0x92,0x58,0x86,0xb6,0x7d,0x06,0x52,0x99,0x92,0x59,0x15,0xae,0xb1,0x72,0xc0,0x66,0x47};
 
 // Generate a dummy address with invalid CRC, starting with the network prefix.
@@ -114,9 +112,8 @@ static std::string DummyAddress(const CChainParams &params)
     sourcedata.insert(sourcedata.end(), dummydata, dummydata + sizeof(dummydata));
     for(int i=0; i<256; ++i) { // Try every trailing byte
         std::string s = EncodeBase58(sourcedata.data(), sourcedata.data() + sourcedata.size());
-        if (!IsValidDestinationString(s)) {
+        if (!CBitcoinAddress(s).IsValid())
             return s;
-        }
         sourcedata[sourcedata.size()-1] += 1;
     }
     return "";
@@ -135,6 +132,15 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 #endif
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
+}
+
+void setupAmountWidget(QLineEdit *widget, QWidget *parent)
+{
+    QDoubleValidator *amountValidator = new QDoubleValidator(parent);
+    amountValidator->setDecimals(8);
+    amountValidator->setBottom(0.0);
+    widget->setValidator(amountValidator);
+    widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
 }
 
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
@@ -200,6 +206,14 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 
 bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 {
+    // Convert bitcoin:// to bitcoin:
+    //
+    //    Cannot handle this later, because bitcoin:// will cause Qt to see the part after // as host,
+    //    which will lower-case it (and thus invalidate the address).
+    if(uri.startsWith("bitcoin://", Qt::CaseInsensitive))
+    {
+        uri.replace(0, 10, "bitcoin:");
+    }
     QUrl uriInstance(uri);
     return parseBitcoinURI(uriInstance, out);
 }
@@ -232,12 +246,12 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
     return ret;
 }
 
-bool isDust(interfaces::Node& node, const QString& address, const CAmount& amount)
+bool isDust(const QString& address, const CAmount& amount)
 {
-    CTxDestination dest = DecodeDestination(address.toStdString());
+    CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script = GetScriptForDestination(dest);
     CTxOut txOut(amount, script);
-    return IsDust(txOut, node.getDustRelayFee());
+    return IsDust(txOut, ::dustRelayFee);
 }
 
 QString HtmlEscape(const QString& str, bool fMultiLine)
@@ -403,7 +417,7 @@ void openDebugLogfile()
 
 bool openBitcoinConf()
 {
-    boost::filesystem::path pathConfig = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
+    boost::filesystem::path pathConfig = GetConfigFile(BITCOIN_CONF_FILENAME);
 
     /* Create the file */
     boost::filesystem::ofstream configFile(pathConfig, std::ios_base::app);
@@ -599,7 +613,7 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
 #ifdef WIN32
 fs::path static StartupShortcutPath()
 {
-    std::string chain = gArgs.GetChainName();
+    std::string chain = ChainNameFromCommandLine();
     if (chain == CBaseChainParams::MAIN)
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
@@ -697,7 +711,7 @@ fs::path static GetAutostartDir()
 
 fs::path static GetAutostartFilePath()
 {
-    std::string chain = gArgs.GetChainName();
+    std::string chain = ChainNameFromCommandLine();
     if (chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "bitcoin.desktop";
     return GetAutostartDir() / strprintf("bitcoin-%s.lnk", chain);
@@ -729,17 +743,16 @@ bool SetStartOnSystemStartup(bool fAutoStart)
     else
     {
         char pszExePath[MAX_PATH+1];
-        ssize_t r = readlink("/proc/self/exe", pszExePath, sizeof(pszExePath) - 1);
-        if (r == -1)
+        memset(pszExePath, 0, sizeof(pszExePath));
+        if (readlink("/proc/self/exe", pszExePath, sizeof(pszExePath)-1) == -1)
             return false;
-        pszExePath[r] = '\0';
 
         fs::create_directories(GetAutostartDir());
 
         fs::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out|std::ios_base::trunc);
         if (!optionFile.good())
             return false;
-        std::string chain = gArgs.GetChainName();
+        std::string chain = ChainNameFromCommandLine();
         // Write a bitcoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
@@ -767,64 +780,47 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl);
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl)
 {
-    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, nullptr);
-    if (listSnapshot == nullptr) {
-        return nullptr;
-    }
-    
     // loop through the list of startup items and try to find the bitcoin app
+    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, nullptr);
     for(int i = 0; i < CFArrayGetCount(listSnapshot); i++) {
         LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(listSnapshot, i);
         UInt32 resolutionFlags = kLSSharedFileListNoUserInteraction | kLSSharedFileListDoNotMountVolumes;
         CFURLRef currentItemURL = nullptr;
 
 #if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 10100
-        if(&LSSharedFileListItemCopyResolvedURL)
-            currentItemURL = LSSharedFileListItemCopyResolvedURL(item, resolutionFlags, nullptr);
+    if(&LSSharedFileListItemCopyResolvedURL)
+        currentItemURL = LSSharedFileListItemCopyResolvedURL(item, resolutionFlags, nullptr);
 #if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED < 10100
-        else
-            LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, nullptr);
-#endif
-#else
+    else
         LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, nullptr);
 #endif
+#else
+    LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, nullptr);
+#endif
 
+        if(currentItemURL && CFEqual(currentItemURL, findUrl)) {
+            // found
+            CFRelease(currentItemURL);
+            return item;
+        }
         if(currentItemURL) {
-            if (CFEqual(currentItemURL, findUrl)) {
-                // found
-                CFRelease(listSnapshot);
-                CFRelease(currentItemURL);
-                return item;
-            }
             CFRelease(currentItemURL);
         }
     }
-    
-    CFRelease(listSnapshot);
     return nullptr;
 }
 
 bool GetStartOnSystemStartup()
 {
     CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    if (bitcoinAppUrl == nullptr) {
-        return false;
-    }
-    
     LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
     LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
-
-    CFRelease(bitcoinAppUrl);
     return !!foundItem; // return boolified object
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
     CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    if (bitcoinAppUrl == nullptr) {
-        return false;
-    }
-    
     LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
     LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
 
@@ -836,8 +832,6 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         // remove item
         LSSharedFileListItemRemove(loginItems, foundItem);
     }
-    
-    CFRelease(bitcoinAppUrl);
     return true;
 }
 #pragma GCC diagnostic pop
@@ -967,30 +961,6 @@ QString formatNiceTimeOffset(qint64 secs)
         timeBehindText = QObject::tr("%1 and %2").arg(QObject::tr("%n year(s)", "", years)).arg(QObject::tr("%n week(s)","", remainder/WEEK_IN_SECONDS));
     }
     return timeBehindText;
-}
-
-QString formatBytes(uint64_t bytes)
-{
-    if(bytes < 1024)
-        return QString(QObject::tr("%1 B")).arg(bytes);
-    if(bytes < 1024 * 1024)
-        return QString(QObject::tr("%1 KB")).arg(bytes / 1024);
-    if(bytes < 1024 * 1024 * 1024)
-        return QString(QObject::tr("%1 MB")).arg(bytes / 1024 / 1024);
-
-    return QString(QObject::tr("%1 GB")).arg(bytes / 1024 / 1024 / 1024);
-}
-
-qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize, qreal font_size) {
-    while(font_size >= minPointSize) {
-        font.setPointSizeF(font_size);
-        QFontMetrics fm(font);
-        if (fm.width(text) < width) {
-            break;
-        }
-        font_size -= 0.5;
-    }
-    return font_size;
 }
 
 void ClickableLabel::mouseReleaseEvent(QMouseEvent *event)

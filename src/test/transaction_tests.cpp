@@ -1,25 +1,25 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/data/tx_invalid.json.h>
-#include <test/data/tx_valid.json.h>
-#include <test/test_bitcoin.h>
+#include "data/tx_invalid.json.h"
+#include "data/tx_valid.json.h"
+#include "test/test_bitcoin.h"
 
-#include <clientversion.h>
-#include <checkqueue.h>
-#include <consensus/tx_verify.h>
-#include <consensus/validation.h>
-#include <core_io.h>
-#include <key.h>
-#include <keystore.h>
-#include <validation.h>
-#include <policy/policy.h>
-#include <script/script.h>
-#include <script/sign.h>
-#include <script/script_error.h>
-#include <script/standard.h>
-#include <utilstrencodings.h>
+#include "clientversion.h"
+#include "checkqueue.h"
+#include "consensus/tx_verify.h"
+#include "consensus/validation.h"
+#include "core_io.h"
+#include "key.h"
+#include "keystore.h"
+#include "validation.h"
+#include "policy/policy.h"
+#include "script/script.h"
+#include "script/sign.h"
+#include "script/script_error.h"
+#include "script/standard.h"
+#include "utilstrencodings.h"
 
 #include <map>
 #include <string>
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
 }
 
-static void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
+void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
 {
     CMutableTransaction outputm;
     outputm.nVersion = 1;
@@ -381,7 +381,7 @@ static void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outsc
     assert(input.vin[0].scriptWitness.stack == inputm.vin[0].scriptWitness.stack);
 }
 
-static void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, int flags, bool success)
+void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, int flags, bool success)
 {
     ScriptError error;
     CTransaction inputi(input);
@@ -404,10 +404,10 @@ static CScript PushAll(const std::vector<valtype>& values)
     return result;
 }
 
-static void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
+void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
 {
     std::vector<valtype> stack;
-    EvalScript(stack, script, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SigVersion::BASE);
+    EvalScript(stack, script, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SIGVERSION_BASE);
     assert(stack.size() > 0);
     stack.back() = std::vector<unsigned char>(redeemScript.begin(), redeemScript.end());
     script = PushAll(stack);
@@ -480,7 +480,8 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
 
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
         std::vector<CScriptCheck> vChecks;
-        CScriptCheck check(coins[tx.vin[i].prevout.n].out, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
+        const CTxOut& output = coins[tx.vin[i].prevout.n].out;
+        CScriptCheck check(output.scriptPubKey, output.nValue, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
         vChecks.push_back(CScriptCheck());
         check.swap(vChecks.back());
         control.Add(vChecks);

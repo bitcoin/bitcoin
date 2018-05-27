@@ -36,7 +36,7 @@ public:
 
     void setClientModel(ClientModel *clientModel);
 
-    bool addWallet(WalletModel *walletModel);
+    bool addWallet(const QString& name, WalletModel *walletModel);
     bool setCurrentWallet(const QString& name);
     bool removeWallet(const QString &name);
     void removeAllWallets();
@@ -59,7 +59,6 @@ private:
 
     const PlatformStyle *platformStyle;
 
-public:
     WalletView *currentWalletView();
 
 public Q_SLOTS:

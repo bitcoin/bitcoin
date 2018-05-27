@@ -1,10 +1,11 @@
-#!/usr/bin/env python3
-# Copyright (c) 2015-2017 The Bitcoin Core developers
+#!/usr/bin/env python2
+# Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Test script for security-check.py
 '''
+from __future__ import division,print_function
 import subprocess
 import unittest
 
@@ -21,7 +22,7 @@ def write_testcode(filename):
 
 def call_security_check(cc, source, executable, options):
     subprocess.check_call([cc,source,'-o',executable] + options)
-    p = subprocess.Popen(['./security-check.py',executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.Popen(['./security-check.py',executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     return (p.returncode, stdout.rstrip())
 
@@ -43,28 +44,18 @@ class TestSecurityChecks(unittest.TestCase):
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE']), 
                 (0, ''))
 
-    def test_32bit_PE(self):
+    def test_PE(self):
         source = 'test1.c'
         executable = 'test1.exe'
         cc = 'i686-w64-mingw32-gcc'
         write_testcode(source)
 
         self.assertEqual(call_security_check(cc, source, executable, []), 
-                (1, executable+': failed DYNAMIC_BASE NX'))
+                (1, executable+': failed PIE NX'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat']), 
-                (1, executable+': failed DYNAMIC_BASE'))
+                (1, executable+': failed PIE'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase']), 
                 (0, ''))
-    def test_64bit_PE(self):
-        source = 'test1.c'
-        executable = 'test1.exe'
-        cc = 'x86_64-w64-mingw32-gcc'
-        write_testcode(source)
-
-        self.assertEqual(call_security_check(cc, source, executable, []), (1, executable+': failed DYNAMIC_BASE NX\n'+executable+': warning HIGH_ENTROPY_VA'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat']), (1, executable+': failed DYNAMIC_BASE\n'+executable+': warning HIGH_ENTROPY_VA'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase']), (0, executable+': warning HIGH_ENTROPY_VA'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va']), (0, ''))
 
 if __name__ == '__main__':
     unittest.main()

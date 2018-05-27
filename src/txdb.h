@@ -1,18 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_TXDB_H
 #define BITCOIN_TXDB_H
 
-#include <coins.h>
-#include <dbwrapper.h>
-#include <chain.h>
-#include <primitives/block.h>
+#include "coins.h"
+#include "dbwrapper.h"
+#include "chain.h"
 
 #include <map>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -36,7 +34,7 @@ static const int64_t nMaxBlockDBCache = 2;
 //! Max memory allocated to block tree DB specific cache, if -txindex (MiB)
 // Unlike for the UTXO database, for the txindex scenario the leveldb cache make
 // a meaningful difference: https://github.com/bitcoin/bitcoin/pull/8273#issuecomment-229601991
-static const int64_t nMaxTxIndexCache = 1024;
+static const int64_t nMaxBlockDBAndTxIndexCache = 1024;
 //! Max memory allocated to coin DB specific cache (MiB)
 static const int64_t nMaxCoinsDBCache = 8;
 
@@ -48,7 +46,7 @@ struct CDiskTxPos : public CDiskBlockPos
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITEAS(CDiskBlockPos, *this);
+        READWRITE(*(CDiskBlockPos*)this);
         READWRITE(VARINT(nTxOffset));
     }
 
@@ -66,12 +64,12 @@ struct CDiskTxPos : public CDiskBlockPos
 };
 
 /** CCoinsView backed by the coin database (chainstate/) */
-class CCoinsViewDB final : public CCoinsView
+class CCoinsViewDB : public CCoinsView
 {
 protected:
     CDBWrapper db;
 public:
-    explicit CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
@@ -111,50 +109,21 @@ private:
 class CBlockTreeDB : public CDBWrapper
 {
 public:
-    explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-
+    CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+private:
+    CBlockTreeDB(const CBlockTreeDB&);
+    void operator=(const CBlockTreeDB&);
+public:
     bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
-    bool ReadBlockFileInfo(int nFile, CBlockFileInfo &info);
+    bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);
-    bool WriteReindexing(bool fReindexing);
-    bool ReadReindexing(bool &fReindexing);
+    bool WriteReindexing(bool fReindex);
+    bool ReadReindexing(bool &fReindex);
     bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
-    bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &vect);
+    bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &list);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
-};
-
-/**
- * Access to the txindex database (indexes/txindex/)
- *
- * The database stores a block locator of the chain the database is synced to
- * so that the TxIndex can efficiently determine the point it last stopped at.
- * A locator is used instead of a simple hash of the chain tip because blocks
- * and block index entries may not be flushed to disk until after this database
- * is updated.
- */
-class TxIndexDB : public CDBWrapper
-{
-public:
-    explicit TxIndexDB(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
-
-    /// Read the disk location of the transaction data with the given hash. Returns false if the
-    /// transaction hash is not indexed.
-    bool ReadTxPos(const uint256& txid, CDiskTxPos& pos) const;
-
-    /// Write a batch of transaction positions to the DB.
-    bool WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_pos);
-
-    /// Read block locator of the chain that the txindex is in sync with.
-    bool ReadBestBlock(CBlockLocator& locator) const;
-
-    /// Write block locator of the chain that the txindex is in sync with.
-    bool WriteBestBlock(const CBlockLocator& locator);
-
-    /// Migrate txindex data from the block tree DB, where it may be for older nodes that have not
-    /// been upgraded yet to the new database.
-    bool MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& best_locator);
 };
 
 #endif // BITCOIN_TXDB_H

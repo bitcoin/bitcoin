@@ -12,6 +12,8 @@ VERIFIED_ROOT=$(cat "${DIR}/trusted-git-root")
 VERIFIED_SHA512_ROOT=$(cat "${DIR}/trusted-sha512-root-commit")
 REVSIG_ALLOWED=$(cat "${DIR}/allow-revsig-commits")
 
+HAVE_FAILED=false
+
 HAVE_GNU_SHA512=1
 [ ! -x "$(which sha512sum)" ] && HAVE_GNU_SHA512=0
 
@@ -33,14 +35,11 @@ fi
 
 NO_SHA1=1
 PREV_COMMIT=""
-INITIAL_COMMIT="${CURRENT_COMMIT}"
-
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
 while true; do
 	if [ "$CURRENT_COMMIT" = $VERIFIED_ROOT ]; then
-		echo "There is a valid path from \"$INITIAL_COMMIT\" to $VERIFIED_ROOT where all commits are signed!"
-		exit 0
+		echo "There is a valid path from "$CURRENT_COMMIT" to $VERIFIED_ROOT where all commits are signed!"
+		exit 0;
 	fi
 
 	if [ "$CURRENT_COMMIT" = $VERIFIED_SHA512_ROOT ]; then
@@ -96,9 +95,9 @@ while true; do
 		FILE_HASHES=""
 		for FILE in $(git ls-tree --full-tree -r --name-only "$CURRENT_COMMIT" | LC_ALL=C sort); do
 			if [ "$HAVE_GNU_SHA512" = 1 ]; then
-				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | sha512sum | { read FIRST _; echo $FIRST; } )
+				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | sha512sum | { read FIRST OTHER; echo $FIRST; } )
 			else
-				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | shasum -a 512 | { read FIRST _; echo $FIRST; } )
+				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | shasum -a 512 | { read FIRST OTHER; echo $FIRST; } )
 			fi
 			[ "$FILE_HASHES" != "" ] && FILE_HASHES="$FILE_HASHES"'
 '
@@ -125,29 +124,9 @@ while true; do
 	fi
 
 	PARENTS=$(git show -s --format=format:%P "$CURRENT_COMMIT")
-	PARENT1=${PARENTS%% *}
-	PARENT2=""
-	if [ "x$PARENT1" != "x$PARENTS" ]; then
-		PARENTX=${PARENTS#* }
-		PARENT2=${PARENTX%% *}
-		if [ "x$PARENT2" != "x$PARENTX" ]; then
-			echo "Commit $CURRENT_COMMIT is an octopus merge" > /dev/stderr
-			exit 1
-		fi
-	fi
-	if [ "x$PARENT2" != "x" ]; then
-		CURRENT_TREE="$(git show --format="%T" "$CURRENT_COMMIT")"
-		git checkout --force --quiet "$PARENT1"
-		git merge --no-ff --quiet "$PARENT2" >/dev/null
-		RECREATED_TREE="$(git show --format="%T" HEAD)"
-		if [ "$CURRENT_TREE" != "$RECREATED_TREE" ]; then
-			echo "Merge commit $CURRENT_COMMIT is not clean" > /dev/stderr
-			git diff "$CURRENT_COMMIT"
-			git checkout --force --quiet "$BRANCH"
-			exit 1
-		fi
-		git checkout --force --quiet "$BRANCH"
-	fi
-	PREV_COMMIT="$CURRENT_COMMIT"
-	CURRENT_COMMIT="$PARENT1"
+	for PARENT in $PARENTS; do
+		PREV_COMMIT="$CURRENT_COMMIT"
+		CURRENT_COMMIT="$PARENT"
+		break
+	done
 done

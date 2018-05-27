@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CUCKOOCACHE_H
-#define BITCOIN_CUCKOOCACHE_H
+#ifndef _BITCOIN_CUCKOOCACHE_H_
+#define _BITCOIN_CUCKOOCACHE_H_
 
 #include <array>
 #include <algorithm>
@@ -58,7 +58,7 @@ public:
      * @post All calls to bit_is_set (without subsequent bit_unset) will return
      * true.
      */
-    explicit bit_packed_atomic_flags(uint32_t size)
+    bit_packed_atomic_flags(uint32_t size)
     {
         // pad out the size if needed
         size = (size + 7) / 8;
@@ -224,7 +224,7 @@ private:
      *
      * Instead we treat the 32-bit random number as a Q32 fixed-point number in the range
      *  [0,1) and simply multiply it by the size.  Then we just shift the result down by
-     *  32-bits to get our bucket number.  The result has non-uniformity the same as a
+     *  32-bits to get our bucket number.  The results has non-uniformity the same as a
      *  mod, but it is much faster to compute. More about this technique can be found at
      *  http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
      *
@@ -242,14 +242,14 @@ private:
      */
     inline std::array<uint32_t, 8> compute_hashes(const Element& e) const
     {
-        return {{(uint32_t)(((uint64_t)hash_function.template operator()<0>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<1>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<2>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<3>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<4>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<5>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<6>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<7>(e) * (uint64_t)size) >> 32)}};
+        return {{(uint32_t)((hash_function.template operator()<0>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<1>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<2>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<3>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<4>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<5>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<6>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<7>(e) * (uint64_t)size) >> 32)}};
     }
 
     /* end
@@ -478,4 +478,4 @@ public:
 };
 } // namespace CuckooCache
 
-#endif // BITCOIN_CUCKOOCACHE_H
+#endif

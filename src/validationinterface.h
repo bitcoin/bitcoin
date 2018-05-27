@@ -1,15 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_VALIDATIONINTERFACE_H
 #define BITCOIN_VALIDATIONINTERFACE_H
 
-#include <primitives/transaction.h> // CTransaction(Ref)
-
-#include <functional>
 #include <memory>
+
+#include "primitives/transaction.h" // CTransaction(Ref)
 
 class CBlock;
 class CBlockIndex;
@@ -21,8 +20,6 @@ class CValidationInterface;
 class CValidationState;
 class uint256;
 class CScheduler;
-class CTxMemPool;
-enum class MemPoolRemovalReason;
 
 // These functions dispatch to one or all registered wallets
 
@@ -32,92 +29,23 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn);
 void UnregisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister all wallets from core */
 void UnregisterAllValidationInterfaces();
-/**
- * Pushes a function to callback onto the notification queue, guaranteeing any
- * callbacks generated prior to now are finished when the function is called.
- *
- * Be very careful blocking on func to be called if any locks are held -
- * validation interface clients may not be able to make progress as they often
- * wait for things like cs_main, so blocking until func is called with cs_main
- * will result in a deadlock (that DEBUG_LOCKORDER will miss).
- */
-void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
-/**
- * This is a synonym for the following, which asserts certain locks are not
- * held:
- *     std::promise<void> promise;
- *     CallFunctionInValidationInterfaceQueue([&promise] {
- *         promise.set_value();
- *     });
- *     promise.get_future().wait();
- */
-void SyncWithValidationInterfaceQueue();
 
 class CValidationInterface {
 protected:
-    /**
-     * Protected destructor so that instances can only be deleted by derived classes.
-     * If that restriction is no longer desired, this should be made public and virtual.
-     */
-    ~CValidationInterface() = default;
-    /**
-     * Notifies listeners of updated block chain tip
-     *
-     * Called on a background thread.
-     */
+    /** Notifies listeners of updated block chain tip */
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
-    /**
-     * Notifies listeners of a transaction having been added to mempool.
-     *
-     * Called on a background thread.
-     */
+    /** Notifies listeners of a transaction having been added to mempool. */
     virtual void TransactionAddedToMempool(const CTransactionRef &ptxn) {}
-    /**
-     * Notifies listeners of a transaction leaving mempool.
-     *
-     * This only fires for transactions which leave mempool because of expiry,
-     * size limiting, reorg (changes in lock times/coinbase maturity), or
-     * replacement. This does not include any transactions which are included
-     * in BlockConnectedDisconnected either in block->vtx or in txnConflicted.
-     *
-     * Called on a background thread.
-     */
-    virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx) {}
     /**
      * Notifies listeners of a block being connected.
      * Provides a vector of transactions evicted from the mempool as a result.
-     *
-     * Called on a background thread.
      */
     virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex, const std::vector<CTransactionRef> &txnConflicted) {}
-    /**
-     * Notifies listeners of a block being disconnected
-     *
-     * Called on a background thread.
-     */
+    /** Notifies listeners of a block being disconnected */
     virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block) {}
-    /**
-     * Notifies listeners of the new active block chain on-disk.
-     *
-     * Prior to this callback, any updates are not guaranteed to persist on disk
-     * (ie clients need to handle shutdown/restart safety by being able to
-     * understand when some updates were lost due to unclean shutdown).
-     *
-     * When this callback is invoked, the validation changes done by any prior
-     * callback are guaranteed to exist on disk and survive a restart, including
-     * an unclean shutdown.
-     *
-     * Provides a locator describing the best chain, which is likely useful for
-     * storing current state on disk in client DBs.
-     *
-     * Called on a background thread.
-     */
-    virtual void ChainStateFlushed(const CBlockLocator &locator) {}
-    /**
-     * Notifies listeners about an inventory item being seen on the network.
-     *
-     * Called on a background thread.
-     */
+    /** Notifies listeners of the new active block chain on-disk. */
+    virtual void SetBestChain(const CBlockLocator &locator) {}
+    /** Notifies listeners about an inventory item being seen on the network. */
     virtual void Inventory(const uint256 &hash) {}
     /** Tells listeners to broadcast their data. */
     virtual void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) {}
@@ -145,9 +73,6 @@ private:
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
-    friend void ::CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
-
-    void MempoolEntryRemoved(CTransactionRef tx, MemPoolRemovalReason reason);
 
 public:
     /** Register a CScheduler to give callbacks which should run in the background (may only be called once) */
@@ -157,18 +82,11 @@ public:
     /** Call any remaining callbacks on the calling thread */
     void FlushBackgroundCallbacks();
 
-    size_t CallbacksPending();
-
-    /** Register with mempool to call TransactionRemovedFromMempool callbacks */
-    void RegisterWithMempoolSignals(CTxMemPool& pool);
-    /** Unregister with mempool */
-    void UnregisterWithMempoolSignals(CTxMemPool& pool);
-
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &);
-    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>> &);
+    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef> &);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &);
-    void ChainStateFlushed(const CBlockLocator &);
+    void SetBestChain(const CBlockLocator &);
     void Inventory(const uint256 &);
     void Broadcast(int64_t nBestBlockTime, CConnman* connman);
     void BlockChecked(const CBlock&, const CValidationState&);

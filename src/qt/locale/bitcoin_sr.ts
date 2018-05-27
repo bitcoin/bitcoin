@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Desni klik za izmenu adrese ili oznake</translation>
+        <translation>Kliknite desnim klikom radi izmene adrese ili oznake</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -34,12 +34,8 @@
         <translation>Eksportuj podatke iz izabrane kartice u fajl</translation>
     </message>
     <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Izvedi</translation>
-    </message>
-    <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Izbriši</translation>
+        <translation>&amp;Избриши</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -60,10 +56,6 @@
     </context>
 <context>
     <name>AddressTableModel</name>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -281,10 +273,6 @@
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
-    <message>
-        <source>Error</source>
-        <translation>Greška</translation>
-    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -305,11 +293,7 @@
         <source>Amount</source>
         <translation>iznos</translation>
     </message>
-    <message>
-        <source>unknown</source>
-        <translation>nepoznato</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -351,10 +335,6 @@
     <message>
         <source>Copy &amp;Address</source>
         <translation>Kopirajte adresu</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
     </message>
     </context>
 <context>
@@ -448,10 +428,6 @@
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -464,10 +440,6 @@
     </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Izvedi</translation>
-    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -494,6 +466,10 @@
     <message>
         <source>Password for JSON-RPC connections</source>
         <translation>Lozinka za JSON-RPC konekcije</translation>
+    </message>
+    <message>
+        <source>Loading addresses...</source>
+        <translation>učitavam adrese....</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

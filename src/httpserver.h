@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,7 +32,7 @@ void InterruptHTTPServer();
 /** Stop HTTP server */
 void StopHTTPServer();
 
-/** Change logging level for libevent. Removes BCLog::LIBEVENT from log categories if
+/** Change logging level for libevent. Removes BCLog::LIBEVENT from logCategories if
  * libevent doesn't support debug logging.*/
 bool UpdateHTTPServerLogging(bool enable);
 
@@ -61,7 +61,7 @@ private:
     bool replySent;
 
 public:
-    explicit HTTPRequest(struct evhttp_request* req);
+    HTTPRequest(struct evhttp_request* req);
     ~HTTPRequest();
 
     enum RequestMethod {

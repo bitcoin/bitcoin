@@ -101,10 +101,6 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Ката</translation>
     </message>
@@ -152,10 +148,6 @@
     <message>
         <source>none</source>
         <translation>жок</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Ката</translation>
     </message>
     </context>
 <context>

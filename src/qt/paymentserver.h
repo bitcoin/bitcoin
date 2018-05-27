@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,13 +32,15 @@
 // sends them to the server.
 //
 
-#include <qt/paymentrequestplus.h>
-#include <qt/walletmodel.h>
+#include "paymentrequestplus.h"
+#include "walletmodel.h"
 
 #include <QObject>
 #include <QString>
 
 class OptionsModel;
+
+class CWallet;
 
 QT_BEGIN_NAMESPACE
 class QApplication;
@@ -60,7 +62,7 @@ class PaymentServer : public QObject
 public:
     // Parse URIs on command line
     // Returns false on error
-    static void ipcParseCommandLine(interfaces::Node& node, int argc, char *argv[]);
+    static void ipcParseCommandLine(int argc, char *argv[]);
 
     // Returns true if there were URIs on the command line
     // which were successfully sent to an already-running
@@ -70,7 +72,7 @@ public:
     static bool ipcSendCommandLine();
 
     // parent should be QApplication object
-    explicit PaymentServer(QObject* parent, bool startLocalServer = true);
+    PaymentServer(QObject* parent, bool startLocalServer = true);
     ~PaymentServer();
 
     // Load root certificate authorities. Pass nullptr (default)
@@ -87,7 +89,7 @@ public:
     void setOptionsModel(OptionsModel *optionsModel);
 
     // Verify that the payment request network matches the client network
-    static bool verifyNetwork(interfaces::Node& node, const payments::PaymentDetails& requestDetails);
+    static bool verifyNetwork(const payments::PaymentDetails& requestDetails);
     // Verify if the payment request is expired
     static bool verifyExpired(const payments::PaymentDetails& requestDetails);
     // Verify the payment request size is valid as per BIP70
@@ -111,7 +113,7 @@ public Q_SLOTS:
     void uiReady();
 
     // Submit Payment message to a merchant, get back PaymentACK:
-    void fetchPaymentACK(WalletModel* walletModel, const SendCoinsRecipient& recipient, QByteArray transaction);
+    void fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
 
     // Handle an incoming URI, URI with local file scheme or file
     void handleURIOrFile(const QString& s);

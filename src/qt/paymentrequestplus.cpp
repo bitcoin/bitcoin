@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +7,9 @@
 // with some extra methods
 //
 
-#include <qt/paymentrequestplus.h>
+#include "paymentrequestplus.h"
 
-#include <util.h>
+#include "util.h"
 
 #include <stdexcept>
 
@@ -22,7 +22,7 @@
 class SSLVerifyError : public std::runtime_error
 {
 public:
-    explicit SSLVerifyError(std::string err) : std::runtime_error(err) { }
+    SSLVerifyError(std::string err) : std::runtime_error(err) { }
 };
 
 bool PaymentRequestPlus::parse(const QByteArray& data)
@@ -194,7 +194,8 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         qWarning() << "PaymentRequestPlus::getMerchant: SSL error: " << err.what();
     }
 
-    delete[] website;
+    if (website)
+        delete[] website;
     X509_STORE_CTX_free(store_ctx);
     for (unsigned int i = 0; i < certs.size(); i++)
         X509_free(certs[i]);

@@ -11,9 +11,7 @@
 /** Amount in satoshis (Can be negative) */
 typedef int64_t CAmount;
 
-// MBC Edit
 static const CAmount BTC_2_MBC_RATE = 10000;
-
 static const CAmount COIN = 100000000 / BTC_2_MBC_RATE;
 static const CAmount CENT = 1000000 / BTC_2_MBC_RATE;
 

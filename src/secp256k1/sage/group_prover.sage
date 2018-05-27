@@ -17,7 +17,7 @@
 #   - A constraint describing the requirements of the law, called "require"
 # * Implementations are transliterated into functions that operate as well on
 #   algebraic input points, and are called once per combination of branches
-#   executed. Each execution returns:
+#   exectured. Each execution returns:
 #   - A constraint describing the assumptions this implementation requires
 #     (such as Z1=1), called "assumeFormula"
 #   - A constraint describing the assumptions this specific branch requires,

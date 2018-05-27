@@ -17,7 +17,7 @@ class reverse_range
     T &m_x;
     
 public:
-    explicit reverse_range(T &x) : m_x(x) {}
+    reverse_range(T &x) : m_x(x) {}
     
     auto begin() const -> decltype(this->m_x.rbegin())
     {

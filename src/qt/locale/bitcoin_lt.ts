@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Spustelėkite dešinįjį klavišą norint keisti adresą arba etiketę</translation>
+        <translation>Spustelėkite dešinįjį klaviša norint keisti adresą arba etiketę</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -383,10 +383,6 @@
         <translation>Sveiki</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Klaida</translation>
     </message>
@@ -524,10 +520,6 @@
         <translation>Kliento perkrovimas reikalingas nustatymų aktyvavimui</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Klaida</translation>
-    </message>
-    <message>
         <source>This change would require a client restart.</source>
         <translation>Šis pakeitimas reikalautų kliento perkrovimo</translation>
     </message>
@@ -572,11 +564,7 @@
     </context>
 <context>
     <name>PeerTableModel</name>
-    <message>
-        <source>Received</source>
-        <translation>Gauta</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -595,27 +583,7 @@
         <source>N/A</source>
         <translation>nėra</translation>
     </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>nežinomas</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -689,6 +657,10 @@
         <translation>&amp;Konsolė</translation>
     </message>
     <message>
+        <source>&amp;Clear</source>
+        <translation>Išvalyti</translation>
+    </message>
+    <message>
         <source>Totals</source>
         <translation>Viso:</translation>
     </message>
@@ -699,6 +671,22 @@
     <message>
         <source>Clear console</source>
         <translation>Išvalyti konsolę</translation>
+    </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
     </message>
     <message>
         <source>never</source>
@@ -982,6 +970,10 @@
         <translation>Tikrinami blokai...</translation>
     </message>
     <message>
+        <source>Verifying wallet...</source>
+        <translation>Tikrinama piniginė...</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informacija</translation>
     </message>
@@ -1006,6 +998,14 @@
         <translation>Leisti DNS paiešką sujungimui ir mazgo pridėjimui</translation>
     </message>
     <message>
+        <source>Loading addresses...</source>
+        <translation>Užkraunami adresai...</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Neteisingas proxy adresas: '%s'</translation>
+    </message>
+    <message>
         <source>Insufficient funds</source>
         <translation>Nepakanka lėšų</translation>
     </message>
@@ -1014,8 +1014,16 @@
         <translation>Įkeliamas blokų indeksas...</translation>
     </message>
     <message>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation>Pridėti mazgą prie sujungti su and attempt to keep the connection open</translation>
+    </message>
+    <message>
         <source>Loading wallet...</source>
         <translation>Užkraunama piniginė...</translation>
+    </message>
+    <message>
+        <source>Cannot write default address</source>
+        <translation>Negalima parašyti įprasto adreso</translation>
     </message>
     <message>
         <source>Rescanning...</source>

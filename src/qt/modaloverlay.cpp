@@ -1,13 +1,13 @@
-// Copyright (c) 2016-2017 The Bitcoin Core developers
+// Copyright (c) 2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/modaloverlay.h>
-#include <qt/forms/ui_modaloverlay.h>
+#include "modaloverlay.h"
+#include "ui_modaloverlay.h"
 
-#include <qt/guiutil.h>
+#include "guiutil.h"
 
-#include <chainparams.h>
+#include "chainparams.h"
 
 #include <QResizeEvent>
 #include <QPropertyAnimation>
@@ -81,29 +81,31 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     // keep a vector of samples of verification progress at height
     blockProcessTime.push_front(qMakePair(currentDate.toMSecsSinceEpoch(), nVerificationProgress));
 
-    // show progress speed if we have more than one sample
-    if (blockProcessTime.size() >= 2) {
+    // show progress speed if we have more then one sample
+    if (blockProcessTime.size() >= 2)
+    {
+        double progressStart = blockProcessTime[0].second;
         double progressDelta = 0;
         double progressPerHour = 0;
         qint64 timeDelta = 0;
         qint64 remainingMSecs = 0;
         double remainingProgress = 1.0 - nVerificationProgress;
-        for (int i = 1; i < blockProcessTime.size(); i++) {
+        for (int i = 1; i < blockProcessTime.size(); i++)
+        {
             QPair<qint64, double> sample = blockProcessTime[i];
 
             // take first sample after 500 seconds or last available one
             if (sample.first < (currentDate.toMSecsSinceEpoch() - 500 * 1000) || i == blockProcessTime.size() - 1) {
-                progressDelta = blockProcessTime[0].second - sample.second;
+                progressDelta = progressStart-sample.second;
                 timeDelta = blockProcessTime[0].first - sample.first;
-                progressPerHour = progressDelta / (double) timeDelta * 1000 * 3600;
+                progressPerHour = progressDelta/(double)timeDelta*1000*3600;
                 remainingMSecs = (progressDelta > 0) ? remainingProgress / progressDelta * timeDelta : -1;
                 break;
             }
         }
         // show progress increase per hour
-        ui->progressIncreasePerH->setText(QString::number(progressPerHour * 100, 'f', 2)+"%");
+        ui->progressIncreasePerH->setText(QString::number(progressPerHour*100, 'f', 2)+"%");
 
-        // show expected remaining time
         if(remainingMSecs >= 0) {	
             ui->expectedTimeLeft->setText(GUIUtil::formatNiceTimeOffset(remainingMSecs / 1000.0));
         } else {
@@ -111,9 +113,8 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
         }
 
         static const int MAX_SAMPLES = 5000;
-        if (blockProcessTime.count() > MAX_SAMPLES) {
-            blockProcessTime.remove(MAX_SAMPLES, blockProcessTime.count() - MAX_SAMPLES);
-        }
+        if (blockProcessTime.count() > MAX_SAMPLES)
+            blockProcessTime.remove(MAX_SAMPLES, blockProcessTime.count()-MAX_SAMPLES);
     }
 
     // show the last block date

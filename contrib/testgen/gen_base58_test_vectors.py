@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
-# Copyright (c) 2012-2017 The Bitcoin Core developers
+#!/usr/bin/env python
+# Copyright (c) 2012-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Generate valid and invalid base58 address and private key test vectors.
 
-Usage:
+Usage: 
     gen_base58_test_vectors.py valid 50 > ../../src/test/data/base58_keys_valid.json
     gen_base58_test_vectors.py invalid 50 > ../../src/test/data/base58_keys_invalid.json
 '''
@@ -46,8 +46,8 @@ def is_valid(v):
     if result is None:
         return False
     for template in templates:
-        prefix = bytearray(template[0])
-        suffix = bytearray(template[2])
+        prefix = str(bytearray(template[0]))
+        suffix = str(bytearray(template[2]))
         if result.startswith(prefix) and result.endswith(suffix):
             if (len(result) - len(prefix) - len(suffix)) == template[1]:
                 return True
@@ -57,33 +57,30 @@ def gen_valid_vectors():
     '''Generate valid test vectors'''
     while True:
         for template in templates:
-            prefix = bytearray(template[0])
-            payload = bytearray(os.urandom(template[1]))
-            suffix = bytearray(template[2])
+            prefix = str(bytearray(template[0]))
+            payload = os.urandom(template[1]) 
+            suffix = str(bytearray(template[2]))
             rv = b58encode_chk(prefix + payload + suffix)
             assert is_valid(rv)
-            metadata = {x: y for x, y in zip(metadata_keys,template[3]) if y is not None}
-            hexrepr = b2a_hex(payload)
-            if isinstance(hexrepr, bytes):
-                hexrepr = hexrepr.decode('utf8')
-            yield (rv, hexrepr, metadata)
+            metadata = dict([(x,y) for (x,y) in zip(metadata_keys,template[3]) if y is not None])
+            yield (rv, b2a_hex(payload), metadata)
 
 def gen_invalid_vector(template, corrupt_prefix, randomize_payload_size, corrupt_suffix):
     '''Generate possibly invalid vector'''
     if corrupt_prefix:
         prefix = os.urandom(1)
     else:
-        prefix = bytearray(template[0])
-
+        prefix = str(bytearray(template[0]))
+    
     if randomize_payload_size:
         payload = os.urandom(max(int(random.expovariate(0.5)), 50))
     else:
         payload = os.urandom(template[1])
-
+    
     if corrupt_suffix:
         suffix = os.urandom(len(template[2]))
     else:
-        suffix = bytearray(template[2])
+        suffix = str(bytearray(template[2]))
 
     return b58encode_chk(prefix + payload + suffix)
 
@@ -114,8 +111,7 @@ def gen_invalid_vectors():
                 yield val,
 
 if __name__ == '__main__':
-    import sys
-    import json
+    import sys, json
     iters = {'valid':gen_valid_vectors, 'invalid':gen_invalid_vectors}
     try:
         uiter = iters[sys.argv[1]]
@@ -125,7 +121,7 @@ if __name__ == '__main__':
         count = int(sys.argv[2])
     except IndexError:
         count = 0
-
+   
     data = list(islice(uiter(), count))
     json.dump(data, sys.stdout, sort_keys=True, indent=4)
     sys.stdout.write('\n')

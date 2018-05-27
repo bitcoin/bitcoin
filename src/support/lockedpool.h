@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2017 The Bitcoin Core developers
+// Copyright (c) 2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,6 @@
 #include <map>
 #include <mutex>
 #include <memory>
-#include <unordered_map>
 
 /**
  * OS-dependent allocation and deallocation of locked/pinned memory pages.
@@ -51,9 +50,6 @@ public:
     Arena(void *base, size_t size, size_t alignment);
     virtual ~Arena();
 
-    Arena(const Arena& other) = delete; // non construction-copyable
-    Arena& operator=(const Arena&) = delete; // non copyable
-
     /** Memory statistics. */
     struct Stats
     {
@@ -89,19 +85,14 @@ public:
      */
     bool addressInArena(void *ptr) const { return ptr >= base && ptr < end; }
 private:
-    typedef std::multimap<size_t, char*> SizeToChunkSortedMap;
-    /** Map to enable O(log(n)) best-fit allocation, as it's sorted by size */
-    SizeToChunkSortedMap size_to_free_chunk;
+    Arena(const Arena& other) = delete; // non construction-copyable
+    Arena& operator=(const Arena&) = delete; // non copyable
 
-    typedef std::unordered_map<char*, SizeToChunkSortedMap::const_iterator> ChunkToSizeMap;
-    /** Map from begin of free chunk to its node in size_to_free_chunk */
-    ChunkToSizeMap chunks_free;
-    /** Map from end of free chunk to its node in size_to_free_chunk */
-    ChunkToSizeMap chunks_free_end;
-
-    /** Map from begin of used chunk to its size */
-    std::unordered_map<char*, size_t> chunks_used;
-
+    /** Map of chunk address to chunk information. This class makes use of the
+     * sorted order to merge previous and next chunks during deallocation.
+     */
+    std::map<char*, size_t> chunks_free;
+    std::map<char*, size_t> chunks_used;
     /** Base address of arena */
     char* base;
     /** End address of arena */
@@ -159,11 +150,8 @@ public:
      * If this callback is provided and returns false, the allocation fails (hard fail), if
      * it returns true the allocation proceeds, but it could warn.
      */
-    explicit LockedPool(std::unique_ptr<LockedPageAllocator> allocator, LockingFailed_Callback lf_cb_in = nullptr);
+    LockedPool(std::unique_ptr<LockedPageAllocator> allocator, LockingFailed_Callback lf_cb_in = 0);
     ~LockedPool();
-
-    LockedPool(const LockedPool& other) = delete; // non construction-copyable
-    LockedPool& operator=(const LockedPool&) = delete; // non copyable
 
     /** Allocate size bytes from this arena.
      * Returns pointer on success, or 0 if memory is full or
@@ -180,6 +168,9 @@ public:
     /** Get pool usage statistics */
     Stats stats() const;
 private:
+    LockedPool(const LockedPool& other) = delete; // non construction-copyable
+    LockedPool& operator=(const LockedPool&) = delete; // non copyable
+
     std::unique_ptr<LockedPageAllocator> allocator;
 
     /** Create an arena from locked pages */
@@ -226,7 +217,7 @@ public:
     }
 
 private:
-    explicit LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator);
+    LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator);
 
     /** Create a new LockedPoolManager specialized to the OS */
     static void CreateInstance();

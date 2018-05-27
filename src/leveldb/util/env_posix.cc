@@ -121,8 +121,6 @@ class PosixSequentialFile: public SequentialFile {
     }
     return Status::OK();
   }
-
-  virtual std::string GetName() const { return filename_; }
 };
 
 // pread() based random-access
@@ -174,8 +172,6 @@ class PosixRandomAccessFile: public RandomAccessFile {
     }
     return s;
   }
-
-  virtual std::string GetName() const { return filename_; }
 };
 
 // mmap() based random-access
@@ -210,8 +206,6 @@ class PosixMmapReadableFile: public RandomAccessFile {
     }
     return s;
   }
-
-  virtual std::string GetName() const { return filename_; }
 };
 
 class PosixWritableFile : public WritableFile {
@@ -293,8 +287,6 @@ class PosixWritableFile : public WritableFile {
     }
     return s;
   }
-
-  virtual std::string GetName() const { return filename_; }
 };
 
 static int LockOrUnlock(int fd, bool lock) {
