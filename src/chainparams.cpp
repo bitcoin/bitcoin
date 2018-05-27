@@ -86,7 +86,7 @@ public:
         consensus.BIP34Height = 227931; // FIX
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"); // FIX
         consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000");
-        consensus.nPowTargetTimespan = 60 * 60; // Aither: 1 day, 24 blocks
+        consensus.nPowTargetTimespan = 60 * 60; // Aither: 1 hour, 24 blocks
         consensus.nPowTargetSpacing = 2.5 * 60; // Aither: 150 seconds
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -112,7 +112,7 @@ public:
         pchMessageStart[3] = 0x25;
         vAlertPubKey = ParseHex("04b6a3a2911d40d214be61d573bfb1a32ef98b931d9c721f7bbbbdf2692abfd5eb235692d3ad1a81f75157fd0a9d96866b62b717d091f2481b70e3b8d87cc68fd3");
         nDefaultPort = 40888;
-        nMaxTipAge = 60 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
+        nMaxTipAge = 60 * 60 * 60; // ~1440 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
         nPruneAfterHeight = 100000;
 
         genesis = CreateGenesisBlock(1527258000, 1944819, 0x1e0ffff0, 1, 50 * COIN);
@@ -120,9 +120,9 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x0000008de8b4b9ef8bf126b15f7c39086e698b8c35c59deb31d61b9ea317ccca"));
         assert(genesis.hashMerkleRoot == uint256S("0xeb0ccbad153c1e555c87401023c2d59b30fe9c31f4782d7b888f0f4f7f80675c"));
 
-        //vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed1.aithercoin.com"));
-        //vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed2.aithercoin.com"));
-        //vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed3.aithercoin.com"));
+        vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed1.aithercoin.com"));
+        vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed2.aithercoin.com"));
+        vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed3.aithercoin.com"));
 
         // Aither addresses start with 'A'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,23);
@@ -139,15 +139,15 @@ public:
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
-        fMiningRequiresPeers = false;
+        fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
-        fMineBlocksOnDemand = true;
+        fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = false;
 
         nPoolMaxTransactions = 3;
-        nFulfilledRequestExpireTime = 1*60; // fulfilled requests expire in 1 hour
-        //strSporkPrivateKey = "f6c3c04c8c5a3c7ff31af773d8fa943973b21dd69a7e1b09b3fae8a15a699a82"
+        nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
+        //TODO aither need to remove strSporkPrivateKey = "f6c3c04c8c5a3c7ff31af773d8fa943973b21dd69a7e1b09b3fae8a15a699a82"
         strSporkPubKey = "04080a56cc3f424a153dc2e5c8c784aa9c80196c5ccbf9711a7dc22e7042d42d00e7cb0ec91f5ea2fb00d7bb95c76763798bd7c2418f94d43b777333071fec6ff1";
         strMasternodePaymentsPubKey = "042925f2904184e419f890076f94e24943b20e149b4ba703e90b03d974ed04325e2cb289941d220e161000ead5e1cefebe160993df6f3b23741fa5f6e4c6f7a123";
 
@@ -183,7 +183,7 @@ public:
         consensus.BIP34Height = 21111; // FIX
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8"); // FIX
         consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000");
-        consensus.nPowTargetTimespan = 5 * 60; // Aither: 1 hour, 24 blocks
+        consensus.nPowTargetTimespan = 5 * 60; // Aither: 5 minutes, 2 blocks
         consensus.nPowTargetSpacing = 2.5 * 60; // Aither: 150 seconds
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
@@ -292,7 +292,7 @@ public:
         pchMessageStart[1] = 0x9b;
         pchMessageStart[2] = 0x37;
         pchMessageStart[3] = 0x28;
-        nMaxTipAge = 60 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin => change to 60 hrs
+        nMaxTipAge = 60 * 60 * 60; // ~1440 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin => change to 60 hrs
         nDefaultPort = 42888;
         nPruneAfterHeight = 1000;
 
