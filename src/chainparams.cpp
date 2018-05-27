@@ -44,7 +44,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
 
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    //python gen.py -a neoscrypt -t 1527258000 -z "The Times May 25th 2018 Bitcoin investigation to focus on British traders" -p "0435c0f99b3af273876636de037c6c5cf8c4e08101ad15960435615f59c1239dcd9408708f5ec090756ce433092c10209f163c7f174a3cd8258b4969519a4912cf" -b 0x1e0ffff0 -n 592642
+    //python gen.py -z "The Times May 25th 2018 Bitcoin investigation to focus on British traders" -p "0435c0f99b3af273876636de037c6c5cf8c4e08101ad15960435615f59c1239dcd9408708f5ec090756ce433092c10209f163c7f174a3cd8258b4969519a4912cf" -b 0x1e0ffff0 -n 592642 -a neoscrypt -t 1527258000
     const char* pszTimestamp = "The Times May 25th 2018 Bitcoin investigation to focus on British traders";
     const CScript genesisOutputScript = CScript() << ParseHex("0435c0f99b3af273876636de037c6c5cf8c4e08101ad15960435615f59c1239dcd9408708f5ec090756ce433092c10209f163c7f174a3cd8258b4969519a4912cf") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
@@ -106,10 +106,10 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0x1a;
-        pchMessageStart[1] = 0xb2;
-        pchMessageStart[2] = 0xc3;
-        pchMessageStart[3] = 0xd4;
+        pchMessageStart[0] = 0x37;
+        pchMessageStart[1] = 0x5c;
+        pchMessageStart[2] = 0x6b;
+        pchMessageStart[3] = 0x25;
         vAlertPubKey = ParseHex("04b6a3a2911d40d214be61d573bfb1a32ef98b931d9c721f7bbbbdf2692abfd5eb235692d3ad1a81f75157fd0a9d96866b62b717d091f2481b70e3b8d87cc68fd3");
         nDefaultPort = 40888;
         nMaxTipAge = 60 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
