@@ -777,6 +777,9 @@ static bool IsCurrentForFeeEstimation()
 }
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 static std::map<uint256, std::vector<CScriptCheck> > scriptCheckMap;
+static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
+static uint256 scriptExecutionCacheNonce(GetRandHash());
+
 bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const CTransactionRef& ptx, bool fLimitFree,
                               bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                               bool fOverrideMempoolLimit, const CAmount& nAbsurdFee,
@@ -1764,9 +1767,6 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
     CTxUndo txundo;
     UpdateCoins(tx, inputs, txundo, nHeight);
 }
-
-static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
-static uint256 scriptExecutionCacheNonce(GetRandHash());
 
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
