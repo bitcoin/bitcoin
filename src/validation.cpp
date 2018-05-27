@@ -1271,7 +1271,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					}
 				}
-				if (!CheckSyscoinInputs(tx, vstate, vView, true, chainActive.Height(), CBlock())) {
+				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock())) {
 					LogPrint("mempool", "%s: %s %s (%s)\n", "CheckInputs Syscoin Inputs Error", hash.ToString(), vstate.GetRejectReason(), vstate.GetDebugMessage());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 						pcoinsTip->Uncache(hashTx);
