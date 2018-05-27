@@ -2009,7 +2009,7 @@ UniValue aliasbalancemulti(const JSONRPCRequest& request)
 			requestArray.push_back(aliasStr);
 			requestArray.push_back(fUseInstantSend);
 			request.params = requestArray;
-			const UniValue &resBalance = aliasbalance(request);
+			UniValue resBalance = aliasbalance(request);
 			resBalance.push_back(Pair("alias", aliasStr));
 			resArray.push_back(resBalance);
 		}
