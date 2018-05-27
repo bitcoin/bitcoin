@@ -1253,6 +1253,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry]() {
 				CValidationState vstate;
 				const CTransaction& txIn = *ptx;
+				CCoinsViewCache vView(pcoinsTip);
 				std::vector<CScriptCheck> &vCheckRef = scriptCheckMap[hash];
 				for (auto& check : vCheckRef) {
 					if (!check())
@@ -1270,7 +1271,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					}
 				}
-				if (!CheckSyscoinInputs(tx, vstate, view, true, chainActive.Height(), CBlock())) {
+				if (!CheckSyscoinInputs(tx, vstate, vView, true, chainActive.Height(), CBlock())) {
 					LogPrint("mempool", "%s: %s %s\n", "CheckInputs Syscoin Inputs Error", hash.ToString(), vstate.GetRejectReason());
 					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
 						pcoinsTip->Uncache(hashTx);
