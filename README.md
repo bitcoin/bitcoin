@@ -14,7 +14,7 @@ Specifications
 - PoW algo type: Scrypt
 - PoW reward: 0 coin + tx fees
 - PoW target spacing: 21 minutes
-- PoS reward: 0 coin
+- PoS reward: 0 coin & destroy tx fees (for deflation)
 - Min stake age: 42 hours
 - Max stake age: unlimited
 - PoS target spacing: 7 minutes
