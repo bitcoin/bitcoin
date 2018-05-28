@@ -67,7 +67,7 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 180000; // halve when reached 210,000 block
-        consensus.nMasternodePaymentsStartBlock = 36000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsStartBlock = 3600; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 158000; // not used
         consensus.nMasternodePaymentsIncreasePeriod = 576*30; // not used
         consensus.nInstantSendKeepLock = 24;
@@ -120,9 +120,9 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x0000008de8b4b9ef8bf126b15f7c39086e698b8c35c59deb31d61b9ea317ccca"));
         assert(genesis.hashMerkleRoot == uint256S("0xeb0ccbad153c1e555c87401023c2d59b30fe9c31f4782d7b888f0f4f7f80675c"));
 
-        vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed1.aithercoin.com"));
-        vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed2.aithercoin.com"));
-        vSeeds.push_back(CDNSSeedData("aithercoin.com", "seed3.aithercoin.com"));
+        vSeeds.push_back(CDNSSeedData("aithercoin.com", "net-1.seed.aithercoin.com"));
+        vSeeds.push_back(CDNSSeedData("aithercoin.com", "net-2.seed.aithercoin.com"));
+        vSeeds.push_back(CDNSSeedData("aithercoin.com", "net-3.seed.aithercoin.com"));
 
         // Aither addresses start with 'A'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,23);
@@ -146,7 +146,7 @@ public:
         fTestnetToBeDeprecatedFieldRPC = false;
 
         nPoolMaxTransactions = 3;
-        nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
+        nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 1 hour
         //TODO aither need to remove strSporkPrivateKey = "f6c3c04c8c5a3c7ff31af773d8fa943973b21dd69a7e1b09b3fae8a15a699a82"
         strSporkPubKey = "04080a56cc3f424a153dc2e5c8c784aa9c80196c5ccbf9711a7dc22e7042d42d00e7cb0ec91f5ea2fb00d7bb95c76763798bd7c2418f94d43b777333071fec6ff1";
         strMasternodePaymentsPubKey = "042925f2904184e419f890076f94e24943b20e149b4ba703e90b03d974ed04325e2cb289941d220e161000ead5e1cefebe160993df6f3b23741fa5f6e4c6f7a123";
@@ -214,7 +214,7 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        //vSeeds.push_back(CDNSSeedData("aithercoin.com", "testnet-seed.aithercoin.com"));
+        vSeeds.push_back(CDNSSeedData("aithercoin.com", "testnet.seed.aithercoin.com"));
 
         // Testnet Aither addresses start with 'B'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,25);
