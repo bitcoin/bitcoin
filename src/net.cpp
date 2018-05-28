@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Crown developers
+// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2018 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +18,7 @@
 #include "ui_interface.h"
 #include "legacysigner.h"
 #include "wallet.h"
+#include "spork.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -2168,4 +2170,12 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
         SocketSendData(this);
 
     LEAVE_CRITICAL_SECTION(cs_vSend);
+}
+
+int MinPeerProtoVersion()
+{
+    if (IsSporkActive(SPORK_16_DISCONNECT_OLD_NODES))
+        return MIN_PEER_PROTO_VERSION_CURR;
+    else
+        return MIN_PEER_PROTO_VERSION_PREV;
 }

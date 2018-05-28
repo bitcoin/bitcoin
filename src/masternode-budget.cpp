@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2015 The Crown developers
+// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2018 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +15,8 @@
 #include "addrman.h"
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/range/algorithm.hpp>
+#include <boost/range/algorithm_ext.hpp>
 
 CBudgetManager budget;
 CCriticalSection cs_budget;
@@ -21,6 +24,16 @@ CCriticalSection cs_budget;
 std::map<uint256, int64_t> askedForSourceProposalOrBudget;
 std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
+
+namespace
+{
+    CBitcoinAddress ScriptToAddress(const CScript& script)
+    {
+        CTxDestination destination;
+        ExtractDestination(script, destination);
+        return destination;
+    }
+}
 
 CAmount BlocksBeforeSuperblockToSubmitFinalBudget()
 {
@@ -43,6 +56,19 @@ int GetBudgetPaymentCycleBlocks()
         return 43200;
     else
         return 50; //for testing purposes
+}
+
+CAmount GetVotingThreshold()
+{
+    if (Params().NetworkID() == CBaseChainParams::MAIN)
+        return BlocksBeforeSuperblockToSubmitFinalBudget();
+    else
+        return BlocksBeforeSuperblockToSubmitFinalBudget() / 4; // 10 blocks for 50-block cycle
+}
+
+int GetNextSuperblock(int height)
+{
+    return height - height % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
 }
 
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf)
@@ -115,7 +141,7 @@ void CBudgetManager::CheckOrphanVotes()
     std::string strError = "";
     std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
     while(it1 != mapOrphanMasternodeBudgetVotes.end()){
-        if(budget.UpdateProposal(((*it1).second), NULL, strError)){
+        if(budget.ReceiveProposalVote(((*it1).second), NULL, strError)){
             LogPrintf("CBudgetManager::CheckOrphanVotes - Proposal/Budget is known, activating and removing orphan vote\n");
             mapOrphanMasternodeBudgetVotes.erase(it1++);
         } else {
@@ -181,9 +207,8 @@ void CBudgetManager::SubmitFinalBudget()
     uint256 txidCollateral;
 
     if(!mapCollateralTxids.count(tempBudget.GetHash())){
-        const bool useIX = false;
         CWalletTx wtx;
-        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, tempBudget.GetHash(), useIX)){
+        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, tempBudget.GetHash())){
             LogPrintf("CBudgetManager::SubmitFinalBudget - Can't make collateral transaction\n");
             return;
         }
@@ -191,7 +216,7 @@ void CBudgetManager::SubmitFinalBudget()
         // make our change address
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
-        pwalletMain->CommitTransaction(wtx, reservekey, useIX ? "ix" : "tx");
+        pwalletMain->CommitTransaction(wtx, reservekey);
         tx = (CTransaction)wtx;
         txidCollateral = tx.GetHash();
         mapCollateralTxids.insert(make_pair(tempBudget.GetHash(), txidCollateral));
@@ -415,10 +440,11 @@ void DumpBudgets()
     LogPrintf("Budget dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
-bool CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget)
+bool CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget, bool checkCollateral)
 {
     std::string strError = "";
-    if(!finalizedBudget.IsValid(strError)) return false;
+    if(!finalizedBudget.IsValid(strError, checkCollateral))
+        return false;
 
     if(mapFinalizedBudgets.count(finalizedBudget.GetHash())) {
         return false;
@@ -428,11 +454,11 @@ bool CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget)
     return true;
 }
 
-bool CBudgetManager::AddProposal(CBudgetProposal& budgetProposal)
+bool CBudgetManager::AddProposal(const CBudgetProposal& budgetProposal, bool checkCollateral)
 {
     LOCK(cs);
     std::string strError = "";
-    if(!budgetProposal.IsValid(strError)) {
+    if(!budgetProposal.IsValid(strError, checkCollateral)) {
         LogPrintf("CBudgetManager::AddProposal - invalid budget proposal - %s\n", strError);
         return false;
     }
@@ -457,10 +483,19 @@ void CBudgetManager::CheckAndRemove()
     {
         CFinalizedBudget* pfinalizedBudget = &((*it).second);
 
-        pfinalizedBudget->fValid = pfinalizedBudget->IsValid(strError);
+        bool isValid = pfinalizedBudget->fValid = pfinalizedBudget->IsValid(strError);
         LogPrintf("CBudgetManager::CheckAndRemove - pfinalizedBudget->IsValid - strError: %s\n", strError);
-        if(pfinalizedBudget->fValid) {
-            pfinalizedBudget->AutoCheck();
+        if(isValid) {
+            if(Params().NetworkID() == CBaseChainParams::MAIN && rand() % 4 == 0)
+            {
+                //do this 1 in 4 blocks -- spread out the voting activity on mainnet
+                // -- this function is only called every sixth block, so this is really 1 in 24 blocks
+                pfinalizedBudget->AutoCheck();
+            }
+            else
+            {
+                LogPrintf("CFinalizedBudget::AutoCheck - waiting\n");
+            }
         }
 
         ++it;
@@ -478,62 +513,66 @@ void CBudgetManager::CheckAndRemove()
     LogPrintf("CBudgetManager::CheckAndRemove - PASSED\n");
 }
 
-void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
+const CFinalizedBudget* CBudgetManager::GetMostVotedBudget(int height) const
 {
-    LOCK(cs);
-
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(!pindexPrev) return;
-
-    int nHighestCount = 0;
-    CScript payee;
-    CAmount nAmount = 0;
-
-    // ------- Grab The Highest Count
-
-    std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
-    while(it != mapFinalizedBudgets.end())
+    const CFinalizedBudget* budgetToPay = NULL;
+    typedef std::map<uint256, CFinalizedBudget>::const_iterator FinalizedBudgetIterator;
+    for (FinalizedBudgetIterator i = mapFinalizedBudgets.begin(); i != mapFinalizedBudgets.end(); ++i)
     {
-        CFinalizedBudget* pfinalizedBudget = &((*it).second);
-        if(pfinalizedBudget->GetVoteCount() > nHighestCount &&
-                pindexPrev->nHeight + 1 >= pfinalizedBudget->GetBlockStart() &&
-                pindexPrev->nHeight + 1 <= pfinalizedBudget->GetBlockEnd() &&
-                pfinalizedBudget->GetPayeeAndAmount(pindexPrev->nHeight + 1, payee, nAmount)){
-                    nHighestCount = pfinalizedBudget->GetVoteCount();
-        }
+        if (height != i->second.GetBlockStart())
+            continue;
 
-        ++it;
+        if (i->second.GetVoteCount() == 0) // discard budgets with no votes
+            continue;
+
+        if ((!budgetToPay || i->second.GetVoteCount() > budgetToPay->GetVoteCount()))
+            budgetToPay = &i->second;
     }
 
-    CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
-
-    //miners get the full amount on these blocks
-    txNew.vout[0].nValue = blockValue;
-
-    if(nHighestCount > 0){
-        txNew.vout.resize(2);
-
-        //these are super blocks, so their value can be much larger than normal
-        txNew.vout[1].scriptPubKey = payee;
-        txNew.vout[1].nValue = nAmount;
-
-        CTxDestination address1;
-        ExtractDestination(payee, address1);
-        CBitcoinAddress address2(address1);
-
-        LogPrintf("CBudgetManager::FillBlockPayee - Budget payment to %s for %lld\n", address2.ToString(), nAmount);
-   }
+    return budgetToPay;
 }
 
-CFinalizedBudget *CBudgetManager::FindFinalizedBudget(uint256 nHash)
+void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees) const
 {
-    if(mapFinalizedBudgets.count(nHash))
-        return &mapFinalizedBudgets[nHash];
+    assert (txNew.vout.size() == 1); // There is a blank for block creator's reward
 
-    return NULL;
+    LOCK(cs);
+
+    const CBlockIndex* pindexPrev = chainActive.Tip();
+    if(!pindexPrev)
+        return;
+
+    // Pay the miner
+
+    txNew.vout[0].nValue = GetBlockValue(pindexPrev->nHeight, nFees);
+
+    // Find finalized budgets with the most votes
+
+    const CFinalizedBudget* budgetToPay = GetMostVotedBudget(pindexPrev->nHeight + 1);
+    if (budgetToPay == NULL)
+        return;
+
+    // Pay the proposals
+
+    BOOST_FOREACH(const CTxBudgetPayment& payment, budgetToPay->GetBudgetPayments())
+    {
+        LogPrintf("CBudgetManager::FillBlockPayee - Budget payment to %s for %lld; proposal %s\n",
+            ScriptToAddress(payment.payee).ToString(), payment.nAmount, payment.nProposalHash.ToString());
+
+        txNew.vout.push_back(CTxOut(payment.nAmount, payment.payee));
+    }
 }
 
-CBudgetProposal *CBudgetManager::FindProposal(const std::string &strProposalName)
+CFinalizedBudget* CBudgetManager::FindFinalizedBudget(uint256 nHash)
+{
+    std::map<uint256, CFinalizedBudget>::iterator found = mapFinalizedBudgets.find(nHash);
+    if (found != mapFinalizedBudgets.end())
+        return NULL;
+
+    return &found->second;
+}
+
+CBudgetProposal* CBudgetManager::FindProposal(const std::string &strProposalName)
 {
     //find the prop with the highest yes count
 
@@ -558,108 +597,47 @@ CBudgetProposal *CBudgetManager::FindProposal(uint256 nHash)
 {
     LOCK(cs);
 
-    if(mapProposals.count(nHash))
-        return &mapProposals[nHash];
+    std::map<uint256, CBudgetProposal>::iterator found = mapProposals.find(nHash);
+    if (found != mapProposals.end())
+        return NULL;
 
-    return NULL;
+    return &found->second;
 }
 
-bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight)
+bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight) const
 {
-    int nHighestCount = -1;
+    const CFinalizedBudget* bestBudget = GetMostVotedBudget(nBlockHeight);
+    if (bestBudget == NULL)
+        return false;
 
-    std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
-    while(it != mapFinalizedBudgets.end())
-    {
-        CFinalizedBudget* pfinalizedBudget = &((*it).second);
-        if(pfinalizedBudget->GetVoteCount() > nHighestCount && 
-            nBlockHeight >= pfinalizedBudget->GetBlockStart() && 
-            nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
-            nHighestCount = pfinalizedBudget->GetVoteCount();
-        }
-
-        ++it;
-    }
-
-    /*
-        If budget doesn't have 5% of the network votes, then we should pay a masternode instead
-    */
-    if(20 * nHighestCount > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
-        return true;
-
-    return false;
+    // If budget doesn't have 5% of the masternode votes, we should not pay it
+    return (20 * bestBudget->GetVoteCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION));
 }
 
-bool CBudgetManager::HasNextFinalizedBudget()
-{
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(!pindexPrev) return false;
-
-    if(masternodeSync.IsBudgetFinEmpty()) return true;
-
-    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    CAmount amount = 1440;
-    if (Params().NetworkID() == CBaseChainParams::TESTNET) {
-        // Relatively 43200 / 30 = 1440, for testnet 50 / 30 ~ 2
-        amount = 2;
-    }
-    if(nBlockStart - pindexPrev->nHeight > amount*2) return true; //we wouldn't have the budget yet
-
-    if(budget.IsBudgetPaymentBlock(nBlockStart)) return true;
-
-    LogPrintf("CBudgetManager::HasNextFinalizedBudget() - Client is missing budget - %lli\n", nBlockStart);
-
-    return false;
-}
-
-bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
+bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const
 {
     LOCK(cs);
 
-    int nHighestCount = 0;
-    std::vector<CFinalizedBudget*> ret;
+    const CFinalizedBudget* bestBudget = GetMostVotedBudget(nBlockHeight);
+    const int mnodeCount = mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION);
 
-    // ------- Grab The Highest Count
-
-    std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
-    while(it != mapFinalizedBudgets.end())
-    {
-        CFinalizedBudget* pfinalizedBudget = &((*it).second);
-        if(pfinalizedBudget->GetVoteCount() > nHighestCount &&
-                nBlockHeight >= pfinalizedBudget->GetBlockStart() &&
-                nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
-                    nHighestCount = pfinalizedBudget->GetVoteCount();
-        }
-
-        ++it;
-    }
-
-    /*
-        If budget doesn't have 5% of the network votes, then we should pay a masternode instead
-    */
-
-    if(20 * nHighestCount < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
+    // If budget doesn't have 5% of the network votes, then we should not pay it
+    if (bestBudget == NULL || 20 * bestBudget->GetVoteCount() < mnodeCount)
         return false;
 
-    // check the highest finalized budgets (+/- 10% to assist in consensus)
-
-    it = mapFinalizedBudgets.begin();
-    while(it != mapFinalizedBudgets.end())
+    // Check the highest finalized budgets (+/- 10% to assist in consensus)
+    for (std::map<uint256, CFinalizedBudget>::const_iterator it = mapFinalizedBudgets.begin(); it != mapFinalizedBudgets.end(); ++it)
     {
-        CFinalizedBudget* pfinalizedBudget = &((*it).second);
+        const CFinalizedBudget& pfinalizedBudget = it->second;
 
-        if(10 * (nHighestCount - pfinalizedBudget->GetVoteCount()) < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)){
-            if(nBlockHeight >= pfinalizedBudget->GetBlockStart() && nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
-                if(pfinalizedBudget->IsTransactionValid(txNew, nBlockHeight)){
-                    return true;
-                }
-            }
-        }
+        if (10 * (bestBudget->GetVoteCount() - pfinalizedBudget.GetVoteCount()) > mnodeCount)
+            continue;
 
-        ++it;
+        if(pfinalizedBudget.IsTransactionValid(txNew, nBlockHeight))
+            return true;
     }
 
-    //we looked through all of the known budgets
+    // We looked through all of the known budgets
     return false;
 }
 
@@ -787,31 +765,24 @@ std::vector<CFinalizedBudget*> CBudgetManager::GetFinalizedBudgets()
     return vFinalizedBudgetsRet;
 }
 
-std::string CBudgetManager::GetRequiredPaymentsString(int nBlockHeight)
+std::string CBudgetManager::GetRequiredPaymentsString(int nBlockHeight) const
 {
     LOCK(cs);
 
     std::string ret = "unknown-budget";
 
-    std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
-    while(it != mapFinalizedBudgets.end())
-    {
-        CFinalizedBudget* pfinalizedBudget = &((*it).second);
-        if(nBlockHeight >= pfinalizedBudget->GetBlockStart() && nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
-            CTxBudgetPayment payment;
-            if(pfinalizedBudget->GetBudgetPaymentByBlock(nBlockHeight, payment)){
-                if(ret == "unknown-budget"){
-                    ret = payment.nProposalHash.ToString();
-                } else {
-                    ret += ",";
-                    ret += payment.nProposalHash.ToString();
-                }
-            } else {
-                LogPrintf("CBudgetManager::GetRequiredPaymentsString - Couldn't find budget payment for block %d\n", nBlockHeight);
-            }
-        }
+    const CFinalizedBudget* pfinalizedBudget = GetMostVotedBudget(nBlockHeight);
+    if (pfinalizedBudget == NULL)
+        return ret;
 
-        ++it;
+    BOOST_FOREACH(const CTxBudgetPayment& payment, pfinalizedBudget->GetBudgetPayments())
+    {
+        if(ret == "unknown-budget"){
+            ret = payment.nProposalHash.ToString();
+        } else {
+            ret += ",";
+            ret += payment.nProposalHash.ToString();
+        }
     }
 
     return ret;
@@ -924,7 +895,7 @@ void CBudgetManager::NewBlock()
     {
         std::string strError = "";
         int nConf = 0;
-        if(!IsBudgetCollateralValid((*it5).nFeeTXHash, (*it5).GetHash(), strError, (*it5).nTime, nConf)){
+        if(!IsBudgetCollateralValid(it5->GetFeeTxHash(), it5->GetHash(), strError, it5->nTime, nConf)){
             ++it5;
             continue;
         }
@@ -1034,7 +1005,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
         
         std::string strError = "";
-        if(UpdateProposal(vote, pfrom, strError)) {
+        if(ReceiveProposalVote(vote, pfrom, strError)) {
             vote.Relay();
             masternodeSync.AddedBudgetItem(vote.GetHash());
         }
@@ -1053,8 +1024,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         std::string strError = "";
         int nConf = 0;
-        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.nFeeTXHash, finalizedBudgetBroadcast.GetHash(), strError, finalizedBudgetBroadcast.nTime, nConf)){
-            LogPrintf("Finalized Budget FeeTX is not valid - %s - %s\n", finalizedBudgetBroadcast.nFeeTXHash.ToString(), strError);
+        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.GetFeeTxHash(), finalizedBudgetBroadcast.GetHash(), strError, finalizedBudgetBroadcast.nTime, nConf)){
+            LogPrintf("Finalized Budget FeeTX is not valid - %s - %s\n", finalizedBudgetBroadcast.GetFeeTxHash().ToString(), strError);
 
             if(nConf >= 1) vecImmatureFinalizedBudgets.push_back(finalizedBudgetBroadcast);
             return;
@@ -1115,12 +1086,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     }
 }
 
-bool CBudgetManager::PropExists(uint256 nHash)
-{
-    if(mapProposals.count(nHash)) return true;
-    return false;
-}
-
 //mark that a full sync is needed
 void CBudgetManager::ResetSync()
 {
@@ -1145,15 +1110,8 @@ void CBudgetManager::ResetSync()
     std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
     while(it3 != mapSeenFinalizedBudgets.end()){
         CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
-        if(pfinalizedBudget && pfinalizedBudget->fValid){
-
-            //send votes
-            std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
-            while(it4 != pfinalizedBudget->mapVotes.end()){
-                (*it4).second.fSynced = false;
-                ++it4;
-            }
-        }
+        if (pfinalizedBudget)
+            pfinalizedBudget->ResetSync();
         ++it3;
     }
 }
@@ -1185,23 +1143,15 @@ void CBudgetManager::MarkSynced()
     std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
     while(it3 != mapSeenFinalizedBudgets.end()){
         CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
-        if(pfinalizedBudget && pfinalizedBudget->fValid){
-
-            //mark votes
-            std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
-            while(it4 != pfinalizedBudget->mapVotes.end()){
-                if((*it4).second.fValid)
-                    (*it4).second.fSynced = true;
-                ++it4;
-            }
-        }
+        if(pfinalizedBudget)
+            pfinalizedBudget->MarkSynced();
         ++it3;
     }
 
 }
 
 
-void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
+void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial) const
 {
     LOCK(cs);
 
@@ -1217,16 +1167,17 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     int nInvCount = 0;
 
-    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
-    while(it1 != mapSeenMasternodeBudgetProposals.end()){
-        CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
-        if(pbudgetProposal && pbudgetProposal->fValid && (nProp.IsNull() || (*it1).first == nProp)){
+    std::map<uint256, CBudgetProposalBroadcast>::const_iterator it1 = mapSeenMasternodeBudgetProposals.begin();
+    while(it1 != mapSeenMasternodeBudgetProposals.end())
+    {
+        std::map<uint256, CBudgetProposal>::const_iterator pbudgetProposal = mapProposals.find((*it1).first);
+        if(pbudgetProposal != mapProposals.end() && pbudgetProposal->second.fValid && (nProp.IsNull() || (*it1).first == nProp)){
             pfrom->PushInventory(CInv(MSG_BUDGET_PROPOSAL, (*it1).second.GetHash()));
             nInvCount++;
         
             //send votes
-            std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
-            while(it2 != pbudgetProposal->mapVotes.end()){
+            std::map<uint256, CBudgetVote>::const_iterator it2 = pbudgetProposal->second.mapVotes.begin();
+            while(it2 != pbudgetProposal->second.mapVotes.end()){
                 if((*it2).second.fValid){
                     if((fPartial && !(*it2).second.fSynced) || !fPartial) {
                         pfrom->PushInventory(CInv(MSG_BUDGET_VOTE, (*it2).second.GetHash()));
@@ -1245,25 +1196,11 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     nInvCount = 0;
 
-    std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
+    std::map<uint256, CFinalizedBudgetBroadcast>::const_iterator it3 = mapSeenFinalizedBudgets.begin();
     while(it3 != mapSeenFinalizedBudgets.end()){
-        CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
-        if(pfinalizedBudget && pfinalizedBudget->fValid && (nProp.IsNull() || (*it3).first == nProp)){
-            pfrom->PushInventory(CInv(MSG_BUDGET_FINALIZED, (*it3).second.GetHash()));
-            nInvCount++;
-
-            //send votes
-            std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
-            while(it4 != pfinalizedBudget->mapVotes.end()){
-                if((*it4).second.fValid) {
-                    if((fPartial && !(*it4).second.fSynced) || !fPartial) {
-                        pfrom->PushInventory(CInv(MSG_BUDGET_FINALIZED_VOTE, (*it4).second.GetHash()));
-                        nInvCount++;
-                    }
-                }
-                ++it4;
-            }
-        }
+        std::map<uint256, CFinalizedBudget>::const_iterator pfinalizedBudget = mapFinalizedBudgets.find((*it3).first);
+        if(pfinalizedBudget != mapFinalizedBudgets.end() && (nProp.IsNull() || (*it3).first == nProp))
+            pfinalizedBudget->second.Sync(pfrom, fPartial);
         ++it3;
     }
 
@@ -1272,9 +1209,34 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
 }
 
-bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError)
+bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& strError)
+{
+    map<uint256, CBudgetProposal>::iterator found = mapProposals.find(vote.nProposalHash);
+    if (found == mapProposals.end())
+    {
+        strError = "Proposal not found!";
+        return false;
+    }
+
+    CBudgetProposal& proposal = found->second;
+    int height = chainActive.Height();
+
+    if (proposal.nBlockStart <= GetNextSuperblock(height) &&
+        proposal.nBlockEnd > GetNextSuperblock(height) &&
+        GetNextSuperblock(height) - height <= GetVotingThreshold()
+        )
+    {
+        strError = "Vote is too close to superblock. Voting during budget finalziation is not allowed";
+        return false;
+    }
+
+    return proposal.AddOrUpdateVote(vote, strError);
+}
+
+bool CBudgetManager::ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError)
 {
     LOCK(cs);
+
 
     if(!mapProposals.count(vote.nProposalHash)){
         if(pfrom){
@@ -1282,7 +1244,7 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
             //   otherwise we'll think a full sync succeeded when they return a result
             if(!masternodeSync.IsSynced()) return false;
 
-            LogPrintf("CBudgetManager::UpdateProposal - Unknown proposal %d, asking for source proposal\n", vote.nProposalHash.ToString());
+            LogPrintf("CBudgetManager::ReceiveProposalVote - Unknown proposal %d, asking for source proposal\n", vote.nProposalHash.ToString());
             mapOrphanMasternodeBudgetVotes[vote.nProposalHash] = vote;
 
             if(!askedForSourceProposalOrBudget.count(vote.nProposalHash)){
@@ -1297,6 +1259,19 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
 
 
     CBudgetProposal& proposal = mapProposals[vote.nProposalHash];
+    int height = chainActive.Height();
+    if (proposal.nBlockStart <= GetNextSuperblock(height) && proposal.nBlockEnd > GetNextSuperblock(height))
+    {
+        const int votingThresholdTime = GetVotingThreshold() * Params().TargetSpacing() * 0.75;
+        const int superblockProjectedTime = GetAdjustedTime() + (GetNextSuperblock(height) - height) * Params().TargetSpacing();
+
+        if (superblockProjectedTime - vote.nTime <= votingThresholdTime)
+        {
+            strError = "Vote is too close to superblock.";
+            return false;
+        }
+    }
+
     if(!proposal.AddOrUpdateVote(vote, strError))
         return false;
 
@@ -1377,7 +1352,7 @@ CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
     fValid = true;
 }
 
-bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
+bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral) const
 {
     if(GetNays() - GetYeas() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10){
          strError = "Active removal";
@@ -1444,7 +1419,7 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
     return true;
 }
 
-bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
+bool CBudgetProposal::AddOrUpdateVote(const CBudgetVote& vote, std::string& strError)
 {
     LOCK(cs);
 
@@ -1683,8 +1658,21 @@ CFinalizedBudget::CFinalizedBudget()
     voteSubmittedTime = boost::none;
 }
 
+CFinalizedBudget::CFinalizedBudget(std::string strBudgetName, int nBlockStart, std::vector<CTxBudgetPayment> vecBudgetPayments, uint256 nFeeTXHash)
+    : strBudgetName(strBudgetName)
+    , nBlockStart(nBlockStart)
+    , vecBudgetPayments(vecBudgetPayments)
+    , nFeeTXHash(nFeeTXHash)
+    , fValid(true)
+    , fAutoChecked(false)
+    , nTime(0)
+{
+    boost::sort(this->vecBudgetPayments, ComparePayments);
+}
+
 CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
 {
+    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
     strBudgetName = other.strBudgetName;
     nBlockStart = other.nBlockStart;
     vecBudgetPayments = other.vecBudgetPayments;
@@ -1732,87 +1720,97 @@ bool CFinalizedBudget::AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::st
     return true;
 }
 
+class SortByAmount
+{
+public:
+    template <class T1, class T2>
+    bool operator()(const T1& a, const T2& b) const
+    {
+        if (a->GetAmount() != b->GetAmount())
+            return a->GetAmount() > b->GetAmount();
+        else if (a->GetHash() != b->GetHash())
+            return a->GetHash() < b->GetHash();
+        else if (a->GetPayee() != b->GetPayee())
+            return a->GetPayee() < b->GetPayee();
+    }    
+};
+
 //evaluate if we should vote for this. Masternode only
-void CFinalizedBudget::AutoCheck()
+bool CFinalizedBudget::AutoCheck()
 {
     LOCK(cs);
+    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
 
     CBlockIndex* pindexPrev = chainActive.Tip();
-    if(!pindexPrev) return;
+    if(!pindexPrev)
+        return false;
 
     LogPrintf("CFinalizedBudget::AutoCheck - %lli - %d\n", pindexPrev->nHeight, fAutoChecked);
 
-    if(!fMasterNode || fAutoChecked) return;
-
-    //do this 1 in 4 blocks -- spread out the voting activity on mainnet
-    // -- this function is only called every sixth block, so this is really 1 in 24 blocks
-    if(Params().NetworkID() == CBaseChainParams::MAIN && rand() % 4 != 0) {
-        LogPrintf("CFinalizedBudget::AutoCheck - waiting\n");
-        return;
-    }
+    if(!fMasterNode || fAutoChecked)
+        return false;
 
     // Auto-check votes with an interval that does not allow to submit votes to soon
     if (voteSubmittedTime && GetTime() - voteSubmittedTime.get() < FINAL_BUDGET_VOTE_UPDATE_MIN)
-        return;
+        return false;
 
     fAutoChecked = true; //we only need to check this once
 
 
-    if(strBudgetMode == "auto") //only vote for exact matches
-    {
-        std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
+    std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
 
+    
+    boost::sort(vBudgetProposals, SortByAmount());
 
-        for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
-            LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vecBudgetPayments[i].nProposalHash.ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vecBudgetPayments[i].payee.ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vecBudgetPayments[i].nAmount);
-        }
-
-        for(unsigned int i = 0; i < vBudgetProposals.size(); i++){
-            LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vBudgetProposals[i]->GetHash().ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vBudgetProposals[i]->GetPayee().ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vBudgetProposals[i]->GetAmount());
-        }
-
-        if(vBudgetProposals.size() == 0) {
-            LogPrintf("CFinalizedBudget::AutoCheck - Can't get Budget, aborting\n");
-            return;
-        }
-
-        if(vBudgetProposals.size() != vecBudgetPayments.size()) {
-            LogPrintf("CFinalizedBudget::AutoCheck - Budget length doesn't match\n");
-            return;
-        }
-
-
-        for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
-            if(i > vBudgetProposals.size() - 1) {
-                LogPrintf("CFinalizedBudget::AutoCheck - Vector size mismatch, aborting\n");
-                return;
-            }
-
-            if(vecBudgetPayments[i].nProposalHash != vBudgetProposals[i]->GetHash()){
-                LogPrintf("CFinalizedBudget::AutoCheck - item #%d doesn't match %s %s\n", i, vecBudgetPayments[i].nProposalHash.ToString(), vBudgetProposals[i]->GetHash().ToString());
-                return;
-            }
-
-            // if(vecBudgetPayments[i].payee != vBudgetProposals[i]->GetPayee()){ -- triggered with false positive 
-            if(vecBudgetPayments[i].payee.ToString() != vBudgetProposals[i]->GetPayee().ToString()){
-                LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, vecBudgetPayments[i].payee.ToString(), vBudgetProposals[i]->GetPayee().ToString());
-                return;
-            }
-
-            if(vecBudgetPayments[i].nAmount != vBudgetProposals[i]->GetAmount()){
-                LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %lli %lli\n", i, vecBudgetPayments[i].nAmount, vBudgetProposals[i]->GetAmount());
-                return;
-            }
-        }
-
-        LogPrintf("CFinalizedBudget::AutoCheck - Finalized Budget Matches! Submitting Vote.\n");
-        SubmitVote();
-
+    for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
+        LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vecBudgetPayments[i].nProposalHash.ToString());
+        LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vecBudgetPayments[i].payee.ToString());
+        LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vecBudgetPayments[i].nAmount);
     }
+
+    for(unsigned int i = 0; i < vBudgetProposals.size(); i++){
+        LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vBudgetProposals[i]->GetHash().ToString());
+        LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vBudgetProposals[i]->GetPayee().ToString());
+        LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vBudgetProposals[i]->GetAmount());
+    }
+
+    if(vBudgetProposals.size() == 0) {
+        LogPrintf("CFinalizedBudget::AutoCheck - Can't get Budget, aborting\n");
+        return false;
+    }
+
+    if(vBudgetProposals.size() != vecBudgetPayments.size()) {
+        LogPrintf("CFinalizedBudget::AutoCheck - Budget length doesn't match\n");
+        return false;
+    }
+
+
+    for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
+        if(i > vBudgetProposals.size() - 1) {
+            LogPrintf("CFinalizedBudget::AutoCheck - Vector size mismatch, aborting\n");
+            return false;
+        }
+
+        if(vecBudgetPayments[i].nProposalHash != vBudgetProposals[i]->GetHash()){
+            LogPrintf("CFinalizedBudget::AutoCheck - item #%d doesn't match %s %s\n", i, vecBudgetPayments[i].nProposalHash.ToString(), vBudgetProposals[i]->GetHash().ToString());
+            return false;
+        }
+
+        // if(vecBudgetPayments[i].payee != vBudgetProposals[i]->GetPayee()){ -- triggered with false positive
+        if(vecBudgetPayments[i].payee.ToString() != vBudgetProposals[i]->GetPayee().ToString()){
+            LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, vecBudgetPayments[i].payee.ToString(), vBudgetProposals[i]->GetPayee().ToString());
+            return false;
+        }
+
+        if(vecBudgetPayments[i].nAmount != vBudgetProposals[i]->GetAmount()){
+            LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %lli %lli\n", i, vecBudgetPayments[i].nAmount, vBudgetProposals[i]->GetAmount());
+            return false;
+        }
+    }
+
+    LogPrintf("CFinalizedBudget::AutoCheck - Finalized Budget Matches! Submitting Vote.\n");
+    SubmitVote();
+    return true;
 }
 // If masternode voted for a proposal, but is now invalid -- remove the vote
 void CFinalizedBudget::CleanAndRemove(bool fSignatureCheck)
@@ -1837,12 +1835,15 @@ CAmount CFinalizedBudget::GetTotalPayout() const
     return ret;
 }
 
-std::string CFinalizedBudget::GetProposals() 
+std::string CFinalizedBudget::GetProposals() const
 {
     LOCK(cs);
+    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
+
     std::string ret = "";
 
-    BOOST_FOREACH(CTxBudgetPayment& budgetPayment, vecBudgetPayments){
+    BOOST_FOREACH(const CTxBudgetPayment& budgetPayment, vecBudgetPayments)
+    {
         CBudgetProposal* pbudgetProposal = budget.FindProposal(budgetPayment.nProposalHash);
 
         std::string token = budgetPayment.nProposalHash.ToString();
@@ -1859,28 +1860,22 @@ std::string CFinalizedBudget::GetStatus() const
     std::string retBadHashes = "";
     std::string retBadPayeeOrAmount = "";
 
-    for(int nBlockHeight = GetBlockStart(); nBlockHeight <= GetBlockEnd(); nBlockHeight++)
+    BOOST_FOREACH(const CTxBudgetPayment& payment, GetBudgetPayments())
     {
-        CTxBudgetPayment budgetPayment;
-        if(!GetBudgetPaymentByBlock(nBlockHeight, budgetPayment)){
-            LogPrintf("CFinalizedBudget::GetStatus - Couldn't find budget payment for block %lld\n", nBlockHeight);
-            continue;
-        }
-
-        CBudgetProposal* pbudgetProposal =  budget.FindProposal(budgetPayment.nProposalHash);
+        CBudgetProposal* pbudgetProposal =  budget.FindProposal(payment.nProposalHash);
         if(!pbudgetProposal){
             if(retBadHashes == ""){
-                retBadHashes = "Unknown proposal hash! Check this proposal before voting" + budgetPayment.nProposalHash.ToString();
+                retBadHashes = "Unknown proposal hash! Check this proposal before voting" + payment.nProposalHash.ToString();
             } else {
-                retBadHashes += "," + budgetPayment.nProposalHash.ToString();
+                retBadHashes += "," + payment.nProposalHash.ToString();
             }
         } else {
-            if(pbudgetProposal->GetPayee() != budgetPayment.payee || pbudgetProposal->GetAmount() != budgetPayment.nAmount)
+            if(pbudgetProposal->GetPayee() != payment.payee || pbudgetProposal->GetAmount() != payment.nAmount)
             {
                 if(retBadPayeeOrAmount == ""){
-                    retBadPayeeOrAmount = "Budget payee/nAmount doesn't match our proposal! " + budgetPayment.nProposalHash.ToString();
+                    retBadPayeeOrAmount = "Budget payee/nAmount doesn't match our proposal! " + payment.nProposalHash.ToString();
                 } else {
-                    retBadPayeeOrAmount += "," + budgetPayment.nProposalHash.ToString();
+                    retBadPayeeOrAmount += "," + payment.nProposalHash.ToString();
                 }
             }
         }
@@ -1893,6 +1888,7 @@ std::string CFinalizedBudget::GetStatus() const
 
 bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral) const
 {
+    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
     //must be the correct block for payment to happen (once a month)
     if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0) {strError = "Invalid BlockStart"; return false;}
     if(GetBlockEnd() - nBlockStart > 100) {strError = "Invalid BlockEnd"; return false;}
@@ -1939,34 +1935,36 @@ void CFinalizedBudget::ResetAutoChecked()
     fAutoChecked = false;
 }
 
-bool CFinalizedBudget::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
+bool CFinalizedBudget::IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const
 {
-    int nCurrentBudgetPayment = nBlockHeight - GetBlockStart();
-    if(nCurrentBudgetPayment < 0) {
+    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
+
+    if(nBlockHeight != GetBlockStart()) {
         LogPrintf("CFinalizedBudget::IsTransactionValid - Invalid block - height: %d start: %d\n", nBlockHeight, GetBlockStart());
         return false;
     }
 
-    if(nCurrentBudgetPayment > (int)vecBudgetPayments.size() - 1) {
-        LogPrintf("CFinalizedBudget::IsTransactionValid - Invalid block - current budget payment: %d of %d\n", nCurrentBudgetPayment + 1, (int)vecBudgetPayments.size());
-        return false;
-    }
-
-    bool found = false;
-    BOOST_FOREACH(CTxOut out, txNew.vout)
+    BOOST_FOREACH(const CTxBudgetPayment& payment, vecBudgetPayments)
     {
-        if(vecBudgetPayments[nCurrentBudgetPayment].payee == out.scriptPubKey && vecBudgetPayments[nCurrentBudgetPayment].nAmount == out.nValue)
-            found = true;
+        bool found = false;
+        BOOST_FOREACH(const CTxOut& out, txNew.vout)
+        {
+            if(payment.payee == out.scriptPubKey && payment.nAmount == out.nValue)
+                found = true;
+        }
+        if(!found)
+        {
+            LogPrintf("CFinalizedBudget::IsTransactionValid - Missing required payment - %s: %d\n", ScriptToAddress(payment.payee).ToString(), payment.nAmount);
+            return false;
+        }
     }
-    if(!found) {
-        CTxDestination address1;
-        ExtractDestination(vecBudgetPayments[nCurrentBudgetPayment].payee, address1);
-        CBitcoinAddress address2(address1);
 
-        LogPrintf("CFinalizedBudget::IsTransactionValid - Missing required payment - %s: %d\n", address2.ToString(), vecBudgetPayments[nCurrentBudgetPayment].nAmount);
-    }
-    
-    return found;
+    return true;
+}
+
+const std::vector<CTxBudgetPayment>& CFinalizedBudget::GetBudgetPayments() const
+{
+    return vecBudgetPayments;
 }
 
 void CFinalizedBudget::SubmitVote()
@@ -1998,36 +1996,68 @@ void CFinalizedBudget::SubmitVote()
     }
 }
 
-CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast()
+void CFinalizedBudget::MarkSynced()
 {
-    strBudgetName = "";
-    nBlockStart = 0;
-    vecBudgetPayments.clear();
-    mapVotes.clear();
-    vchSig.clear();
-    nFeeTXHash = uint256();
+    if (!fValid)
+        return;
+
+    for(std::map<uint256,CFinalizedBudgetVote>::iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
+    {
+        if(vote->second.fValid)
+            vote->second.fSynced = true;
+    }
 }
 
-CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(const CFinalizedBudget& other)
+int CFinalizedBudget::Sync(CNode* pfrom, bool fPartial) const
 {
-    strBudgetName = other.strBudgetName;
-    nBlockStart = other.nBlockStart;
-    BOOST_FOREACH(CTxBudgetPayment out, other.vecBudgetPayments) vecBudgetPayments.push_back(out);
-    mapVotes = other.mapVotes;
-    nFeeTXHash = other.nFeeTXHash;
+    if (!fValid)
+        return 0;
+
+    int invCount = 0;
+    pfrom->PushInventory(CInv(MSG_BUDGET_FINALIZED, GetHash()));
+    ++invCount;
+
+    //send votes
+    for(std::map<uint256,CFinalizedBudgetVote>::const_iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
+    {
+        if(!vote->second.fValid)
+            continue;
+
+        if((fPartial && !vote->second.fSynced) || !fPartial)
+        {
+            pfrom->PushInventory(CInv(MSG_BUDGET_FINALIZED_VOTE, vote->second.GetHash()));
+            ++invCount;
+        }
+    }
+
+    return invCount;
+}
+
+void CFinalizedBudget::ResetSync()
+{
+    if (!fValid)
+        return;
+
+    for(std::map<uint256,CFinalizedBudgetVote>::iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
+    {
+        vote->second.fSynced = false;
+    }
+}
+
+CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast()
+    : CFinalizedBudget("", 0, std::vector<CTxBudgetPayment>(), uint256())
+{
 }
 
 CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecBudgetPaymentsIn, uint256 nFeeTXHashIn)
+    : CFinalizedBudget(strBudgetNameIn, nBlockStartIn, vecBudgetPaymentsIn, nFeeTXHashIn)
 {
-    strBudgetName = strBudgetNameIn;
-    nBlockStart = nBlockStartIn;
-    BOOST_FOREACH(CTxBudgetPayment out, vecBudgetPaymentsIn) vecBudgetPayments.push_back(out);
-    mapVotes.clear();
-    nFeeTXHash = nFeeTXHashIn;
+    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
 }
 
 void CFinalizedBudgetBroadcast::Relay()
 {
+    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
     CInv inv(MSG_BUDGET_FINALIZED, GetHash());
     RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
 }

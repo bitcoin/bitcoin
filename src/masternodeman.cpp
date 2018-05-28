@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2015 The Crown developers
+// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2018 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -207,7 +208,7 @@ CMasternodeMan::CMasternodeMan() {
     nDsqCount = 0;
 }
 
-bool CMasternodeMan::Add(CMasternode &mn)
+bool CMasternodeMan::Add(const CMasternode &mn)
 {
     LOCK(cs);
 

@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2015 The Crown Developers
+// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2018 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -108,22 +109,15 @@ Value mnbudget(const Array& params, bool fHelp)
         if(!budgetProposalBroadcast.IsValid(strError, false))
             return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
 
-        bool useIX = false; //true;
-        // if (params.size() > 7) {
-        //     if(params[7].get_str() != "false" && params[7].get_str() != "true")
-        //         return "Invalid use_ix, must be true or false";
-        //     useIX = params[7].get_str() == "true" ? true : false;
-        // }
-
         CWalletTx wtx;
-        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, budgetProposalBroadcast.GetHash(), useIX)){
+        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, budgetProposalBroadcast.GetHash())){
             return "Error making collateral transaction for proposal. Please check your wallet balance and make sure your wallet is unlocked.";
         }
 
         // make our change address
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
-        pwalletMain->CommitTransaction(wtx, reservekey, useIX ? "ix" : "tx");
+        pwalletMain->CommitTransaction(wtx, reservekey);
 
         return wtx.GetHash().ToString();
     }
@@ -267,7 +261,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
 
             std::string strError = "";
-            if(budget.UpdateProposal(vote, NULL, strError)) {
+            if(budget.SubmitProposalVote(vote, strError)) {
                 budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
                 vote.Relay();
                 success++;
@@ -322,7 +316,7 @@ Value mnbudget(const Array& params, bool fHelp)
         }
 
         std::string strError = "";
-        if(budget.UpdateProposal(vote, NULL, strError)){
+        if(budget.SubmitProposalVote(vote, strError)){
             budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             return "Voted successfully";
@@ -548,7 +542,7 @@ Value mnbudgetvoteraw(const Array& params, bool fHelp)
     }
 
     std::string strError = "";
-    if(budget.UpdateProposal(vote, NULL, strError)){
+    if(budget.SubmitProposalVote(vote, strError)){
         budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         return "Voted successfully";
@@ -700,10 +694,10 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         BOOST_FOREACH(CFinalizedBudget* finalizedBudget, winningFbs)
         {
             Object bObj;
-            bObj.push_back(Pair("FeeTX",  finalizedBudget->nFeeTXHash.ToString()));
+            bObj.push_back(Pair("FeeTX",  finalizedBudget->GetFeeTxHash().ToString()));
             bObj.push_back(Pair("Hash",  finalizedBudget->GetHash().ToString()));
             bObj.push_back(Pair("BlockStart",  (int64_t)finalizedBudget->GetBlockStart()));
-            bObj.push_back(Pair("BlockEnd",    (int64_t)finalizedBudget->GetBlockEnd()));
+            bObj.push_back(Pair("BlockEnd",    (int64_t)finalizedBudget->GetBlockStart())); // Budgets are paid in a single block !
             bObj.push_back(Pair("Proposals",  finalizedBudget->GetProposals()));
             bObj.push_back(Pair("VoteCount",  (int64_t)finalizedBudget->GetVoteCount()));
             bObj.push_back(Pair("Status",  finalizedBudget->GetStatus()));
@@ -733,19 +727,16 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         if(pfinalBudget == NULL) return "Unknown budget hash";
 
-        std::map<uint256, CFinalizedBudgetVote>::iterator it = pfinalBudget->mapVotes.begin();
-        while(it != pfinalBudget->mapVotes.end()){
-
+        const std::map<uint256, CFinalizedBudgetVote>& fbVotes = pfinalBudget->GetVotes();
+        for (std::map<uint256, CFinalizedBudgetVote>::const_iterator i = fbVotes.begin(); i != fbVotes.end(); ++i)
+        {
             Object bObj;
-            bObj.push_back(Pair("nHash",  (*it).first.ToString().c_str()));
-            bObj.push_back(Pair("nTime",  (int64_t)(*it).second.nTime));
-            bObj.push_back(Pair("fValid",  (*it).second.fValid));
+            bObj.push_back(Pair("nHash", i->first.ToString().c_str()));
+            bObj.push_back(Pair("nTime", static_cast<int64_t>(i->second.nTime)));
+            bObj.push_back(Pair("fValid", i->second.fValid));
 
-            obj.push_back(Pair((*it).second.vin.prevout.ToStringShort(), bObj));
-
-            it++;
+            obj.push_back(Pair(i->second.vin.prevout.ToStringShort(), bObj));
         }
-
 
         return obj;
     }

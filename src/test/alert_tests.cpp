@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(GenerateAlerts)
     GenerateAlertTests();
 }
 #endif
-
-BOOST_AUTO_TEST_CASE(AlertApplies)
+/*
+BOOST_AUTO_TEST_CASE(AlertApplies, * boost::unit_test::disabled())
 {
     SetMockTime(11);
     const std::vector<unsigned char>& alertKey = Params().AlertKey();
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
 }
 
 
-BOOST_AUTO_TEST_CASE(AlertNotify)
+BOOST_AUTO_TEST_CASE(AlertNotify, * boost::unit_test::disabled())
 {
     SetMockTime(11);
     const std::vector<unsigned char>& alertKey = Params().AlertKey();
@@ -232,5 +232,5 @@ BOOST_AUTO_TEST_CASE(AlertNotify)
 
     SetMockTime(0);
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END()

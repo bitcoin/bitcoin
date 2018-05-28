@@ -19,8 +19,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 
-CClientUIInterface uiInterface;
-CWallet* pwalletMain;
+extern CClientUIInterface uiInterface;
+extern CWallet* pwalletMain;
 
 extern bool fPrintToConsole;
 extern void noui_connect();
@@ -80,17 +80,17 @@ struct TestingSetup {
 
 BOOST_GLOBAL_FIXTURE(TestingSetup);
 
-void Shutdown(void* parg)
+static void Shutdown(void* parg)
 {
   exit(0);
 }
 
-void StartShutdown()
+static void StartShutdown()
 {
   exit(0);
 }
 
-bool ShutdownRequested()
+static bool ShutdownRequested()
 {
   return false;
 }

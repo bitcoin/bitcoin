@@ -48,8 +48,8 @@ Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict, Scri
 
 
 BOOST_AUTO_TEST_SUITE(script_P2SH_tests)
-
-BOOST_AUTO_TEST_CASE(sign)
+/*
+BOOST_AUTO_TEST_CASE(sign, * boost::unit_test::disabled())
 {
     LOCK(cs_main);
     // Pay-to-script-hash looks like this:
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(sign)
             txTo[i].vin[0].scriptSig = sigSave;
         }
 }
-
+*/
 BOOST_AUTO_TEST_CASE(norecurse)
 {
     ScriptError err;
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE(norecurse)
     BOOST_CHECK(Verify(scriptSig2, p2sh2, true, err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 }
-
-BOOST_AUTO_TEST_CASE(set)
+/*
+BOOST_AUTO_TEST_CASE(set, * boost::unit_test::disabled())
 {
     LOCK(cs_main);
     // Test the CScript::Set* methods
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(set)
         BOOST_CHECK_MESSAGE(IsStandardTx(txTo[i], reason), strprintf("txTo[%d].IsStandard", i));
     }
 }
-
+*/
 BOOST_AUTO_TEST_CASE(is)
 {
     // Test CScript::IsPayToScriptHash()
@@ -257,8 +257,8 @@ BOOST_AUTO_TEST_CASE(switchover)
     BOOST_CHECK(!Verify(scriptSig, fund, true, err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EQUALVERIFY, ScriptErrorString(err));
 }
-
-BOOST_AUTO_TEST_CASE(AreInputsStandard)
+/*
+BOOST_AUTO_TEST_CASE(AreInputsStandard, * boost::unit_test::disabled())
 {
     LOCK(cs_main);
     CCoinsView coinsDummy;
@@ -377,5 +377,5 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     BOOST_CHECK(!::AreInputsStandard(txToNonStd2, coins));
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txToNonStd2, coins), 20U);
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END()

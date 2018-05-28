@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Crown developers
+// Copyright (c) 2014-2018 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -237,9 +237,9 @@ void DumpSystemnodePayments()
 
 int CSystemnodePayments::GetMinSystemnodePaymentsProto() const
 {
-    return IsSporkActive(SPORK_15_SYSTEMNODE_PAY_UPDATED_NODES)
-            ? MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_2
-            : MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_1;
+    return IsSporkActive(SPORK_15_SYSTEMNODE_DONT_PAY_OLD_NODES)
+            ? MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_CURR
+            : MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_PREV;
 }
 
 void CSystemnodePayments::ProcessMessageSystemnodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -379,7 +379,7 @@ void CSystemnodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
         }
     }
 
-    CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
+    CAmount blockValue = GetBlockValue(pindexPrev->nHeight, nFees);
     CAmount systemnodePayment = GetSystemnodePayment(pindexPrev->nHeight+1, blockValue);
 
     // This is already done in masternode

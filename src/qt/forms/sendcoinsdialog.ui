@@ -1341,22 +1341,6 @@
         <number>3</number>
        </property>
        <item>
-        <widget class="QCheckBox" name="checkInstantX">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>85</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>InstantX</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QLabel" name="labelSPBalance">
          <property name="text">
           <string>Balance:</string>

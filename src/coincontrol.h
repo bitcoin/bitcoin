@@ -12,7 +12,6 @@ class CCoinControl
 {
 public:
     CTxDestination destChange;
-    bool useInstantX;
 
     CCoinControl()
     {
@@ -23,7 +22,6 @@ public:
     {
         destChange = CNoDestination();
         setSelected.clear();
-        useInstantX = false;
     }
 
     bool HasSelected() const

@@ -657,13 +657,13 @@ void MasternodeList::VoteMany(std::string strCommand)
         }
 
         std::string strError = "";
-        if(budget.UpdateProposal(vote, NULL, strError)) {
+        if(budget.SubmitProposalVote(vote, strError)) {
             budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             success++;
         } else {
             failed++;
-            statusObj += "\nFailed to update proposal. Error: " + strError;
+            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: " + strError;
         }
     }
     std::string returnObj;
