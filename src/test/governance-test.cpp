@@ -22,6 +22,26 @@ std::ostream& operator<<(std::ostream& os, const CTxOut& value)
     return os << value.ToString();
 }
 
+std::ostream& operator<<(std::ostream& os, const CTxBudgetPayment& value)
+{
+    return os << "{" << value.nProposalHash.ToString() << ":" << value.nAmount << "@" << value.payee.ToString() << "}";
+}
+
+std::ostream& operator<<(std::ostream& os, const CBudgetProposal& value)
+{
+    return os << "{"
+        << value.GetName() << ", "
+        << value.GetURL() << ", "
+        << "[" << value.GetBlockStart() << "," << value.GetBlockEnd() << "]" << ", "
+        << value.GetAmount() << "->" << value.GetPayee().ToString()
+        << "}";
+}
+
+bool operator == (const CBudgetProposal& a, const CBudgetProposal& b)
+{
+    return a.GetHash() == b.GetHash();
+}
+
 bool operator == (const CTxBudgetPayment& a, const CTxBudgetPayment& b)
 {
     return a.nProposalHash == b.nProposalHash &&
@@ -32,11 +52,6 @@ bool operator == (const CTxBudgetPayment& a, const CTxBudgetPayment& b)
 bool operator != (const CTxBudgetPayment& a, const CTxBudgetPayment& b)
 {
     return !(a == b);
-}
-
-std::ostream& operator<<(std::ostream& os, const CTxBudgetPayment& value)
-{
-    return os << "{" << value.nProposalHash.ToString() << ":" << value.nAmount << "@" << value.payee.ToString() << "}";
 }
 
 namespace
@@ -548,6 +563,126 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         std::vector<CTxBudgetPayment> actual = budget.GetBudgetPayments();
 
         BOOST_CHECK_EQUAL_COLLECTIONS(actual.begin(), actual.end(), expected.begin(), expected.end());
+    }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+namespace
+{
+    struct BudgetProposalsFixture
+    {
+        const int nextSbStart;
+        const int blockHeight;
+        const CKey keyPair;
+        const CMasternode mn;
+
+        std::vector<uint256> hashes;
+        std::vector<CBlockIndex> blocks;
+        std::string error;
+
+        BudgetProposalsFixture()
+            : nextSbStart(1296000)
+            , blockHeight(100500)
+            , keyPair(CreateKeyPair(vchKey0))
+            , hashes(static_cast<size_t>(blockHeight))
+            , blocks(static_cast<size_t>(blockHeight))
+        {
+            // Build a main chain 100500 blocks long.
+            for (size_t i = 0; i < blocks.size(); ++i)
+            {
+                FillBlock(blocks[i], hashes[i], &blocks[i - 1], i);
+            }
+            chainActive.SetTip(&blocks[blockHeight-1]);
+        }
+
+        ~BudgetProposalsFixture()
+        {
+            SetMockTime(0);
+
+            budget.Clear();
+            chainActive = CChain();
+        }
+
+        CBudgetProposal CreateProposal(const std::string& name, int blockStart, int blockEnd, CKey payee, CAmount amount)
+        {
+            CBudgetProposal p(
+                "test proposal",
+                "",
+                blockStart,
+                blockEnd,
+                PayToPublicKey(payee.GetPubKey()),
+                amount * COIN,
+                uint256()
+            );
+            p.nTime = GetTime();
+            return p;
+        }
+
+        CBudgetProposal CreateProposal(const std::string& name, int blockStart, CKey payee)
+        {
+            return CreateProposal(name, blockStart, blockStart + GetBudgetPaymentCycleBlocks(), payee, 42);
+        }
+    };
+}
+
+BOOST_FIXTURE_TEST_SUITE(BudgetProposals, BudgetProposalsFixture)
+
+    BOOST_AUTO_TEST_CASE(NoProposals)
+    {
+        // Set Up
+        const CBudgetProposal dummy = CreateProposal("test proposal", nextSbStart, keyPair);
+
+        // Call & Check
+        BOOST_CHECK_EQUAL((void*)NULL, budget.FindProposal(dummy.GetHash()));
+        BOOST_CHECK_EQUAL((void*)NULL, budget.FindProposal(dummy.GetName()));
+    }
+
+    BOOST_AUTO_TEST_CASE(ProposalIsFoundByHash)
+    {
+        // Set Up
+        const CBudgetProposal expected = CreateProposal("test proposal", nextSbStart, keyPair);
+        budget.AddProposal(expected, false); // false = don't check collateral
+
+        // Call & Check
+        const CBudgetProposal* actual = budget.FindProposal(expected.GetHash());
+        BOOST_REQUIRE(actual != NULL);
+        BOOST_CHECK_EQUAL(*actual, expected);
+    }
+
+    BOOST_AUTO_TEST_CASE(NoSuchHash)
+    {
+        // Set Up
+        const CBudgetProposal expected = CreateProposal("test proposal", nextSbStart, keyPair);
+        budget.AddProposal(expected, false); // false = don't check collateral
+
+        // Call & Check
+        BOOST_CHECK_EQUAL(budget.FindProposal(ArithToUint256(0xBADC0DE)), (void*)NULL);
+    }
+
+    BOOST_AUTO_TEST_CASE(ProposalIsFoundByName)
+    {
+        // Set Up
+        const CBudgetProposal expected = CreateProposal("test proposal", nextSbStart, keyPair);
+        budget.AddProposal(expected, false); // false = don't check collateral
+        const CBudgetVote vote(mn.vin, expected.GetHash(), VOTE_YES);
+
+        const bool isSubmitted = budget.SubmitProposalVote(vote, error);
+        BOOST_REQUIRE(isSubmitted);
+
+        // Call & Check
+        const CBudgetProposal* actual = budget.FindProposal(expected.GetHash());
+        BOOST_REQUIRE(actual != NULL);
+        BOOST_CHECK_EQUAL(*actual, expected);
+    }
+
+    BOOST_AUTO_TEST_CASE(NoSuchName)
+    {
+        // Set Up
+        const CBudgetProposal expected = CreateProposal("test proposal", nextSbStart, keyPair);
+        budget.AddProposal(expected, false); // false = don't check collateral
+
+        // Call & Check
+        BOOST_CHECK_EQUAL(budget.FindProposal("not found"), (void*)NULL);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
