@@ -28,9 +28,9 @@ CMasternode::CMasternode() :
     fAllowMixingTx(true)
 {}
 
-CMasternode::CMasternode(CService addr, COutPoint outpoint, CPubKey pubKeyCollateralAddress, CPubKey pubKeyMasternode, int nProtocolVersionIn) :
+CMasternode::CMasternode(CService addr, COutPoint outpoint, CPubKey pubKeyCollateralAddress, CTxDestination collDest, CPubKey pubKeyMasternode, int nProtocolVersionIn) :
     masternode_info_t{ MASTERNODE_ENABLED, nProtocolVersionIn, GetAdjustedTime(),
-                       outpoint, addr, pubKeyCollateralAddress, pubKeyMasternode},
+                       outpoint, addr, collDest, pubKeyCollateralAddress, pubKeyMasternode},
     fAllowMixingTx(true)
 {}
 
@@ -48,7 +48,7 @@ CMasternode::CMasternode(const CMasternode& other) :
 
 CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
     masternode_info_t{ mnb.nActiveState, mnb.nProtocolVersion, mnb.sigTime,
-                       mnb.outpoint, mnb.addr, mnb.pubKeyCollateralAddress, mnb.pubKeyMasternode},
+                       mnb.outpoint, mnb.addr, mnb.collDest, mnb.pubKeyCollateralAddress, mnb.pubKeyMasternode},
     lastPing(mnb.lastPing),
     vchSig(mnb.vchSig),
     fAllowMixingTx(true)
@@ -66,6 +66,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman* co
     vchSig = mnb.vchSig;
     nProtocolVersion = mnb.nProtocolVersion;
     addr = mnb.addr;
+    collDest = mnb.collDest;
     nPoSeBanScore = 0;
     nPoSeBanHeight = 0;
     nTimeLastChecked = 0;
@@ -103,13 +104,13 @@ arith_uint256 CMasternode::CalculateScore(const uint256& blockHash) const
     return UintToArith256(ss.GetHash());
 }
 
-CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey)
+CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey, const CTxDestination& collateralDest)
 {
     int nHeight;
-    return CheckCollateral(outpoint, pubkey, nHeight);
+    return CheckCollateral(outpoint, pubkey, collateralDest, nHeight);
 }
 
-CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey, int& nHeightRet)
+CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey, const CTxDestination& collateralDest, int& nHeightRet)
 {
     AssertLockHeld(cs_main);
 
@@ -122,7 +123,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
         return COLLATERAL_INVALID_AMOUNT;
     }
 
-    if(pubkey == CPubKey() || coin.out.scriptPubKey != GetScriptForDestination(pubkey.GetID())) {
+    if(pubkey == CPubKey() || collateralDest == CTxDestination() || coin.out.scriptPubKey != GetScriptForDestination(collateralDest)) {
         return COLLATERAL_INVALID_PUBKEY;
     }
 
@@ -304,7 +305,7 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
 
     const CBlockIndex *BlockReading = pindex;
 
-    CScript mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+    CScript mnpayee = GetScriptForDestination(collDest);
     // LogPrint(BCLog::MNODEPAY, "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s\n", outpoint.ToStringShort());
 
     LOCK(cs_mapMasternodeBlocks);
@@ -345,6 +346,7 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
     CKey keyCollateralAddressNew;
     CPubKey pubKeyMasternodeNew;
     CKey keyMasternodeNew;
+    CTxDestination destNew;
     const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
 
     auto Log = [&strErrorRet](std::string sErr)->bool
@@ -363,7 +365,7 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
 
     bool foundmnout = false;
     for (CWalletRef pwallet : vpwallets) {
-        if (pwallet->GetMasternodeOutpointAndKeys(outpoint, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
+        if (pwallet->GetMasternodeOutpointAndKeys(outpoint, destNew, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
             foundmnout = true;
     }
     if (!foundmnout)
@@ -379,16 +381,16 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
     } else if (service.GetPort() == mainnetDefaultPort)
         return Log(strprintf("Invalid port %u for masternode %s, %d is the only supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort));
 
-    return Create(outpoint, service, keyCollateralAddressNew, pubKeyCollateralAddressNew, keyMasternodeNew, pubKeyMasternodeNew, strErrorRet, mnbRet);
+    return Create(outpoint, service, keyCollateralAddressNew, pubKeyCollateralAddressNew, destNew, keyMasternodeNew, pubKeyMasternodeNew, strErrorRet, mnbRet);
 }
 
-bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& service, const CKey& keyCollateralAddressNew, const CPubKey& pubKeyCollateralAddressNew, const CKey& keyMasternodeNew, const CPubKey& pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet)
+bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& service, const CKey& keyCollateralAddressNew, const CPubKey& pubKeyCollateralAddressNew, const CTxDestination destNew, const CKey& keyMasternodeNew, const CPubKey& pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
 
     LogPrint(BCLog::MNODE, "CMasternodeBroadcast::Create -- pubKeyCollateralAddressNew = %s, pubKeyMasternodeNew.GetID() = %s\n",
-             EncodeDestination(pubKeyCollateralAddressNew.GetID()),
+             EncodeDestination(destNew),
              pubKeyMasternodeNew.GetID().ToString());
 
     auto Log = [&strErrorRet,&mnbRet](std::string sErr)->bool
@@ -403,7 +405,7 @@ bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& ser
     if (!mnp.Sign(keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Failed to sign ping, masternode=%s", outpoint.ToStringShort()));
 
-    mnbRet = CMasternodeBroadcast(service, outpoint, pubKeyCollateralAddressNew, pubKeyMasternodeNew, PROTOCOL_VERSION);
+    mnbRet = CMasternodeBroadcast(service, outpoint, pubKeyCollateralAddressNew, destNew, pubKeyMasternodeNew, PROTOCOL_VERSION);
 
     if (!mnbRet.IsValidNetAddr())
         return Log(strprintf("Invalid IP address, masternode=%s", outpoint.ToStringShort()));
@@ -450,18 +452,9 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
     }
 
     CScript pubkeyScript;
-    pubkeyScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+    pubkeyScript = GetScriptForDestination(pubKeyMasternode.GetID());
 
     if(pubkeyScript.size() != 25) {
-        LogPrintf("CMasternodeBroadcast::SimpleCheck -- pubKeyCollateralAddress has the wrong size\n");
-        nDos = 100;
-        return false;
-    }
-
-    CScript pubkeyScript2;
-    pubkeyScript2 = GetScriptForDestination(pubKeyMasternode.GetID());
-
-    if(pubkeyScript2.size() != 25) {
         LogPrintf("CMasternodeBroadcast::SimpleCheck -- pubKeyMasternode has the wrong size\n");
         nDos = 100;
         return false;
@@ -540,7 +533,7 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
     AssertLockHeld(cs_main);
 
     int nHeight;
-    CollateralStatus err = CheckCollateral(outpoint, pubKeyCollateralAddress, nHeight);
+    CollateralStatus err = CheckCollateral(outpoint, pubKeyCollateralAddress, collDest, nHeight);
     if (err == COLLATERAL_UTXO_NOT_FOUND) {
         LogPrint(BCLog::MNODE, "CMasternodeBroadcast::CheckOutpoint -- Failed to find Masternode UTXO, masternode=%s\n", outpoint.ToStringShort());
         return false;

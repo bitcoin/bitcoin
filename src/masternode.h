@@ -5,6 +5,7 @@
 #ifndef MASTERNODE_H
 #define MASTERNODE_H
 
+#include <base58.h>
 #include <key.h>
 #include <net.h>
 #include <validation.h>
@@ -97,10 +98,10 @@ struct masternode_info_t
 
     masternode_info_t(int activeState, int protoVer, int64_t sTime,
                       COutPoint const& outpnt, CService const& addr,
-                      CPubKey const& pkCollAddr, CPubKey const& pkMN) :
+                      CTxDestination const& collDest, CPubKey const& pkCollAddr, CPubKey const& pkMN) :
 
         nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime},
-        outpoint{outpnt}, addr{addr},
+        outpoint{outpnt}, addr{addr}, collDest{collDest},
         pubKeyCollateralAddress{pkCollAddr}, pubKeyMasternode{pkMN} {}
 
     int nActiveState = 0;
@@ -109,6 +110,7 @@ struct masternode_info_t
 
     COutPoint outpoint{};
     CService addr{};
+    CTxDestination collDest{};
     CPubKey pubKeyCollateralAddress{};
     CPubKey pubKeyMasternode{};
 
@@ -165,15 +167,17 @@ public:
     CMasternode();
     CMasternode(const CMasternode& other);
     CMasternode(const CMasternodeBroadcast& mnb);
-    CMasternode(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn);
+    CMasternode(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CTxDestination collateralNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn);
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         LOCK(cs);
+        std::string strDest = EncodeDestination(collDest);
         READWRITE(outpoint);
         READWRITE(addr);
+        READWRITE(strDest);
         READWRITE(pubKeyCollateralAddress);
         READWRITE(pubKeyMasternode);
         READWRITE(lastPing);
@@ -191,6 +195,7 @@ public:
         READWRITE(fAllowMixingTx);
         READWRITE(fUnitTest);
         READWRITE(mapGovernanceObjectsVotedOn);
+        if(ser_action.ForRead()) collDest = DecodeDestination(strDest);
     }
 
     // CALCULATE A RANK AGAINST OF GIVEN BLOCK
@@ -198,8 +203,8 @@ public:
 
     bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman* connman);
 
-    static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey);
-    static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey, int& nHeightRet);
+    static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey, const CTxDestination& collateralDest);
+    static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey, const CTxDestination& collateralDest, int& nHeightRet);
     void Check(bool fForce = false);
 
     bool IsBroadcastedWithin(int nSeconds) { return GetAdjustedTime() - sigTime < nSeconds; }
@@ -303,15 +308,17 @@ public:
 
     CMasternodeBroadcast() : CMasternode(), fRecovery(false) {}
     CMasternodeBroadcast(const CMasternode& mn) : CMasternode(mn), fRecovery(false) {}
-    CMasternodeBroadcast(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
-        CMasternode(addrNew, outpointNew, pubKeyCollateralAddressNew, pubKeyMasternodeNew, nProtocolVersionIn), fRecovery(false) {}
+    CMasternodeBroadcast(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CTxDestination collateralNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
+        CMasternode(addrNew, outpointNew, pubKeyCollateralAddressNew, collateralNew, pubKeyMasternodeNew, nProtocolVersionIn), fRecovery(false) {}
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
+        std::string strDest = EncodeDestination(collDest);
         READWRITE(outpoint);
         READWRITE(addr);
+        if(ser_action.ForRead()) collDest = DecodeDestination(strDest);
         READWRITE(pubKeyCollateralAddress);
         READWRITE(pubKeyMasternode);
         if (!(s.GetType() & SER_GETHASH)) {
@@ -328,7 +335,7 @@ public:
     uint256 GetSignatureHash() const;
 
     /// Create Masternode broadcast, needs to be relayed manually after that
-    static bool Create(const COutPoint& outpoint, const CService& service, const CKey& keyCollateralAddressNew, const CPubKey& pubKeyCollateralAddressNew, const CKey& keyMasternodeNew, const CPubKey& pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet);
+    static bool Create(const COutPoint& outpoint, const CService& service, const CKey& keyCollateralAddressNew, const CPubKey& pubKeyCollateralAddressNew, const CTxDestination collateralNew, const CKey& keyMasternodeNew, const CPubKey& pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet);
     static bool Create(const std::string& strService, const std::string& strKey, const std::string& strTxHash, const std::string& strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline = false);
 
     bool SimpleCheck(int& nDos);

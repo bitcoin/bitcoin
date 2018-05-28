@@ -233,7 +233,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
             return;
         }
         // fill payee with locally calculated winner and hope for the best
-        payee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
+        payee = GetScriptForDestination(mnInfo.collDest);
     }
 
     // GET MASTERNODE PAYMENT VARIABLES SETUP
@@ -419,7 +419,7 @@ bool CMasternodePayments::IsScheduled(const masternode_info_t& mnInfo, int nNotB
     if(!masternodeSync.IsMasternodeListSynced()) return false;
 
     CScript mnpayee;
-    mnpayee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
+    mnpayee = GetScriptForDestination(mnInfo.collDest);
 
     CScript payee;
     for(int64_t h = nCachedBlockHeight; h <= nCachedBlockHeight + 8; h++){
@@ -705,7 +705,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight, CConnman* connman)
     LogPrintf("CMasternodePayments::ProcessBlock -- Masternode found by GetNextMasternodeInQueueForPayment(): %s\n", mnInfo.outpoint.ToStringShort());
 
 
-    CScript payee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
+    CScript payee = GetScriptForDestination(mnInfo.collDest);
 
     CMasternodePaymentVote voteNew(activeMasternode.outpoint, nBlockHeight, payee);
 

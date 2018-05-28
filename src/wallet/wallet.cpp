@@ -3396,7 +3396,7 @@ bool CWallet::GetCollateralTxDSIn(CTxDSIn& txdsinRet, CAmount& nValueRet) const
     return false;
 }
 
-bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
+bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CTxDestination& destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
@@ -3410,7 +3410,7 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubK
     }
 
     if(strTxHash.empty()) // No output specified, select the first one
-        return GetOutpointAndKeysFromOutput(vPossibleCoins[0], outpointRet, pubKeyRet, keyRet);
+        return GetOutpointAndKeysFromOutput(vPossibleCoins[0], outpointRet, destRet, pubKeyRet, keyRet);
 
     // Find specific outpoint
     uint256 txHash = uint256S(strTxHash);
@@ -3418,37 +3418,47 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubK
 
     for (const auto& out : vPossibleCoins)
         if(out.tx->GetHash() == txHash && out.i == nOutputIndex) // found it!
-            return GetOutpointAndKeysFromOutput(out, outpointRet, pubKeyRet, keyRet);
+            return GetOutpointAndKeysFromOutput(out, outpointRet, destRet, pubKeyRet, keyRet);
 
     LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate specified masternode vin\n");
     return false;
 }
 
-bool CWallet::GetOutpointAndKeysFromOutput(const COutput& out, COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet)
+bool CWallet::GetOutpointAndKeysFromOutput(const COutput& out, COutPoint& outpointRet, CTxDestination& destRet, CPubKey& pubKeyRet, CKey& keyRet)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
+
+    LOCK2(cs_main, cs_wallet);
 
     CScript pubScript;
 
     outpointRet = COutPoint(out.tx->GetHash(), out.i);
     pubScript = out.tx->tx->vout[out.i].scriptPubKey; // the inputs PubKey
 
-    CTxDestination dest;
-    ExtractDestination(pubScript, dest);
+    if (!ExtractDestination(pubScript, destRet)) {
+        LogPrintf("CWallet::GetOutpointAndKeysFromOutput -- invalid Script\n");
+        return false;
+    }
 
-    const CKeyID *keyID = boost::get<CKeyID>(&dest);
-    if (!keyID) {
+    if (!IsValidDestination(destRet)) {
+        LogPrintf("CWallet::GetOutpointAndKeysFromOutput -- invalid Address\n");
+        return false;
+    }
+
+    auto keyid = GetKeyForDestination(*this, destRet);
+    if (keyid.IsNull()) {
         LogPrintf("CWallet::GetOutpointAndKeysFromOutput -- Address does not refer to a key\n");
         return false;
     }
 
-    if (!GetKey(*keyID, keyRet)) {
+    if (!this->GetKey(keyid, keyRet)) {
         LogPrintf ("CWallet::GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
         return false;
     }
 
     pubKeyRet = keyRet.GetPubKey();
+
     return true;
 }
 
