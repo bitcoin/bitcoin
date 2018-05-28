@@ -11,7 +11,7 @@
 #include <random.h>
 #include <script/standard.h>
 #include <script/sign.h>
-#include <test/test_bitcoin.h>
+#include <test/test_chaincoin.h>
 #include <utiltime.h>
 #include <core_io.h>
 #include <keystore.h>

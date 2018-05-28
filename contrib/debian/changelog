@@ -337,7 +337,7 @@ bitcoin (0.5.0~rc3-natty0) natty; urgency=low
 
 bitcoin (0.5.0~rc1-natty1) natty; urgency=low
 
-  * Add test_bitcoin to build test
+  * Add test_chaincoin to build test
   * Fix clean
   * Remove uneccessary build-dependancies
 

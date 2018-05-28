@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The chaincoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,71 +13,54 @@ void URITests::uriTests()
 {
     SendCoinsRecipient rv;
     QUrl uri;
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?req-dontexist="));
+    uri.setUrl(QString("chaincoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?req-dontexist="));
     QVERIFY(!GUIUtil::parseBitcoinURI(uri, &rv));
 
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?dontexist="));
+    uri.setUrl(QString("chaincoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?dontexist="));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
-    QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
+    QVERIFY(rv.address == QString("CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU"));
     QVERIFY(rv.label == QString());
     QVERIFY(rv.amount == 0);
 
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?label=Some Example Address"));
+    uri.setUrl(QString("chaincoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?label=Genesis Example Address"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
-    QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
-    QVERIFY(rv.label == QString("Some Example Address"));
+    QVERIFY(rv.address == QString("CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU"));
+    QVERIFY(rv.label == QString("Genesis Example Address"));
     QVERIFY(rv.amount == 0);
 
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=0.001"));
+    uri.setUrl(QString("chaincoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?amount=0.001"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
-    QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
+    QVERIFY(rv.address == QString("CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU"));
     QVERIFY(rv.label == QString());
     QVERIFY(rv.amount == 100000);
 
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=1.001"));
+    uri.setUrl(QString("chaincoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?amount=1.001"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
-    QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
+    QVERIFY(rv.address == QString("CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU"));
     QVERIFY(rv.label == QString());
     QVERIFY(rv.amount == 100100000);
 
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=100&label=Some Example"));
+    uri.setUrl(QString("chaincoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?amount=100&label=Genesis Example"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
-    QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
+    QVERIFY(rv.address == QString("CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU"));
     QVERIFY(rv.amount == 10000000000LL);
-    QVERIFY(rv.label == QString("Some Example"));
+    QVERIFY(rv.label == QString("Genesis Example"));
 
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?message=Some Example Address"));
+    uri.setUrl(QString("chaincoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?message=Genesis Example Address"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
-    QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
+    QVERIFY(rv.address == QString("CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU"));
     QVERIFY(rv.label == QString());
 
-    QVERIFY(GUIUtil::parseBitcoinURI("chaincoin://XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?message=Some Example Address", &rv));
-    QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
+    QVERIFY(GUIUtil::parseBitcoinURI("chaincoin://CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?message=Genesis Example Address", &rv));
+    QVERIFY(rv.address == QString("CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU"));
     QVERIFY(rv.label == QString());
 
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?req-message=Some Example Address"));
+    uri.setUrl(QString("chaincoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?req-message=Genesis Example Address"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
 
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=1,000&label=Some Example"));
+    uri.setUrl(QString("chaincoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?amount=1,000&label=Genesis Example"));
     QVERIFY(!GUIUtil::parseBitcoinURI(uri, &rv));
 
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=1,000.0&label=Some Example"));
+    uri.setUrl(QString("chaincoin:CMZCCTuDipQrPrxwJSxwagGfcyDcteaTUU?amount=1,000.0&label=Genesis Example"));
     QVERIFY(!GUIUtil::parseBitcoinURI(uri, &rv));
-
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=100&label=Some Example&message=Some Example"));
-    QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
-    QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
-    QVERIFY(rv.amount == 10000000000LL);
-    QVERIFY(rv.label == QString("Some Example"));
-    QVERIFY(rv.message == QString("Some Example Message"));
-
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=100&label=Some Example&message=Some Example"));
-    QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
-    QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
-    QVERIFY(rv.amount == 10000000000LL);
-    QVERIFY(rv.label == QString("Some Example"));
-    QVERIFY(rv.message == QString("Some Example Message"));
-
-    uri.setUrl(QString("chaincoin:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
-    QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
 }
