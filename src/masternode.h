@@ -318,7 +318,7 @@ public:
         std::string strDest = EncodeDestination(collDest);
         READWRITE(outpoint);
         READWRITE(addr);
-        if(ser_action.ForRead()) collDest = DecodeDestination(strDest);
+        READWRITE(strDest);
         READWRITE(pubKeyCollateralAddress);
         READWRITE(pubKeyMasternode);
         if (!(s.GetType() & SER_GETHASH)) {
@@ -329,6 +329,7 @@ public:
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(lastPing);
         }
+        if(ser_action.ForRead()) collDest = DecodeDestination(strDest);
     }
 
     uint256 GetHash() const;
