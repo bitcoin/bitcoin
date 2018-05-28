@@ -1279,16 +1279,14 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					LOCK(cs_main);
 					scriptCheckMap.erase(hash);
 					scriptExecutionCache.insert(hashCacheEntry);
-					GetMainSignals().SyncTransaction(txIn, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
 				}
 			});
 			threadpool.post(t);
 		}
 	}
-	if(!bMultiThreaded)
-	{
-		GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
-	}
+
+	GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+	
     return true;
 }
 
