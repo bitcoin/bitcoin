@@ -63,7 +63,8 @@ public:
     CAmount m_extrafee;
     std::map<COutPoint, CInputData> m_inputData;
     bool fAllowLocked = false;
-    int nChangePos = -1;
+    mutable int nChangePos = -1;
+    bool m_addChangeOutput = true;
     //MapRecords_t mapRecords; // hack for COutputR
 
 

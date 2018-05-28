@@ -172,8 +172,7 @@ public:
         return nTotal;
     };
 
-    mutable uint32_t nCacheFlags;
-
+    //mutable uint32_t nCacheFlags;
     bool InMempool() const;
     bool IsTrusted() const;
 

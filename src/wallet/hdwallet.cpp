@@ -3012,7 +3012,8 @@ int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string 
             if (r.fNonceSet)
             {
                 if (r.vData.size() < 33)
-                    return errorN(1, sError, __func__, "Missing ephemeral value, vData size %d", r.vData.size());
+                    LogPrintf("%s: Missing ephemeral value, vData size %d", __func__, r.vData.size());
+                    //return errorN(1, sError, __func__, "Missing ephemeral value, vData size %d", r.vData.size());
                 txout->vData = r.vData;
             } else
             {
@@ -3513,6 +3514,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
     unsigned int nBytes;
+    int nChangePosInOut = -1;
     {
         LOCK2(cs_main, cs_wallet);
 
@@ -3564,8 +3566,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 };
             }
 
-            int nChangePosInOut = -1;
-
             const CAmount nChange = nValueIn - nValueToSelect;
 
             // Remove fee outputs from last round
@@ -3578,6 +3578,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 };
             };
 
+            nChangePosInOut = -1;
             if (nChange > 0)
             {
                 // Fill an output to ourself
@@ -3831,6 +3832,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             nFeeRet = nFeeNeeded;
             continue;
         };
+        coinControl->nChangePos = nChangePosInOut;
 
         if (!fOnlyStandardOutputs)
         {
@@ -3945,7 +3947,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 //return errorN(1, sError, __func__, "Need key from hardware: TODO"); // []
 
                 NotifyWaitingForDevice(true);
-
             };
 #endif
         };
@@ -4111,7 +4112,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<COutputR> vAvailableCoins;
         AvailableBlindedCoins(vAvailableCoins, true, coinControl);
 
-
         CAmount nValueOutPlain = 0;
         int nChangePosInOut = -1;
 
@@ -4150,11 +4150,12 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 };
             };
 
-            nChangePosInOut = -1;
-
-            // Insert a sender-owned 0 value output which becomes the change output if needed
+            if (!coinControl->m_addChangeOutput)
             {
-                // Fill an output to ourself
+                nFeeRet += nChange;
+            } else
+            {
+                // Insert a sender-owned 0 value output which becomes the change output if needed
                 CTempRecipient r;
                 r.nType = OUTPUT_CT;
                 r.fChange = true;
@@ -4174,7 +4175,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
                 nChangePosInOut = coinControl->nChangePos;
                 InsertChangeAddress(r, vecSend, nChangePosInOut);
-            }
+            };
 
             // Fill vin
             //
@@ -4359,6 +4360,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             nFeeRet = nFeeNeeded;
             continue;
         };
+        coinControl->nChangePos = nChangePosInOut;
 
 
         nValueOutPlain += nFeeRet;
@@ -4409,7 +4411,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             //    return errorN(1, sError, __func__, "secp256k1_pedersen_commit failed for plain out.");
         };
 
-        // Update the change output commitment
+        // Update the change output commitment if it exists, else last blinded
+        int nLastBlinded = -1;
         for (size_t i = 0; i < vecSend.size(); ++i)
         {
             auto &r = vecSend[i];
@@ -4418,14 +4421,24 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             {
                 if ((int)i != nChangePosInOut)
                     vpBlinds.push_back(&r.vBlind[0]);
+                nLastBlinded = i;
             };
         };
 
         if (nChangePosInOut != -1)
         {
-            auto &r = vecSend[nChangePosInOut];
+            nLastBlinded = nChangePosInOut; // Use the change output
+        } else
+        if (nLastBlinded != -1)
+        {
+            vpBlinds.pop_back();
+        };
+
+        if (nLastBlinded != -1)
+        {
+            auto &r = vecSend[nLastBlinded];
             if (r.nType != OUTPUT_CT)
-                return errorN(1, sError, __func__, "nChangePosInOut not blind.");
+                return errorN(1, sError, __func__, "nLastBlinded not blind.");
 
             CTxOutCT *pout = (CTxOutCT*)txNew.vpout[r.n].get();
 
@@ -4781,8 +4794,6 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 };
             };
 
-            nChangePosInOut = -1;
-
             // Insert a sender-owned 0 value output that becomes the change output if needed
             {
                 // Fill an output to ourself
@@ -4991,6 +5002,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             nFeeRet = nFeeNeeded;
             continue;
         };
+        coinControl->nChangePos = nChangePosInOut;
 
         LogPrint(BCLog::HDWALLET, "%s: Using %d inputs, ringsize %d.\n", __func__, setCoins.size(), nRingSize);
 
@@ -10591,27 +10603,6 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
 {
     std::vector<COutputR> vCoins(vAvailableCoins);
 
-    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
-    if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
-    {
-        for (auto &out : vCoins)
-        {
-            COutPoint op(out.txhash, out.i);
-            if (!coinControl->IsSelected(op))
-                continue;
-            //if (!out.fSpendable)
-            //     continue;
-
-            const COutputRecord *oR = out.rtx->second.GetOutput(out.i);
-            if (!oR)
-                continue;
-
-            nValueRet += oR->nValue;
-            setCoinsRet.push_back(std::make_pair(out.rtx, out.i));
-        };
-        return (nValueRet >= nTargetValue);
-    };
-
     // calculate value from preset inputs and store them
     std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > vPresetCoins;
     CAmount nValueFromPresetInputs = 0;
@@ -10637,6 +10628,14 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
         {
             return error("%s: Can't find output %s\n", __func__, outpoint.ToString());
         };
+    };
+
+    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
+    if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
+    {
+        nValueRet = nValueFromPresetInputs;
+        setCoinsRet.insert(setCoinsRet.end(), vPresetCoins.begin(), vPresetCoins.end());
+        return (nValueRet >= nTargetValue);
     };
 
     // Remove preset inputs from vCoins

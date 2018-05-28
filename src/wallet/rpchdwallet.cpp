@@ -6516,12 +6516,14 @@ static UniValue createrawparttransaction(const JSONRPCRequest& request)
             "         \"address\": \"str\"          (string, required) The particl address\n"
             "         \"amount\": x.xxx           (numeric or string, required) The numeric value (can be string) in " + CURRENCY_UNIT + " of the output\n"
             "         \"data\": \"hex\",            (string, required) The key is \"data\", the value is hex encoded data\n"
+            "         \"script\": \"str\",          (string, optional) Specify script directly.\n"
             "         \"type\": \"str\",            (string, optional, default=\"plain\") The type of output to create, plain, blind or anon.\n"
             "         \"pubkey\": \"hex\",          (string, optional) The key is \"pubkey\", the value is hex encoded public key for encrypting the metadata\n"
 //            "         \"subfee\":bool      (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
             "         \"narration\" \"str\",        (string, optional) Up to 24 character narration sent with the transaction.\n"
             "         \"blindingfactor\" \"hex\",   (string, optional) Blinding factor to use. Blinding factor is randomly generated if not specified.\n"
             "         \"ephemeral_key\" \"hex\",    (string, optional) Ephemeral secret key for blinded outputs.\n"
+            "         \"nonce\":\"hex\"\n           (string, optional) Nonce for blinded outputs.\n"
             "       }\n"
             "       ,...\n"
             "     ]\n"
@@ -6665,6 +6667,18 @@ static UniValue createrawparttransaction(const JSONRPCRequest& request)
             std::vector<uint8_t> v = ParseHex(s);
             r.sEphem.Set(v.data(), true);
         };
+        if (o["nonce"].isStr())
+        {
+            std::string s = o["nonce"].get_str();
+            if (!IsHex(s) || !(s.size() == 64))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "\"nonce\" must be 32 bytes and hex encoded.");
+            std::vector<uint8_t> v = ParseHex(s);
+            r.nonce.SetHex(s);
+            r.fNonceSet = true;
+        };
+
+        if (o["address"].isStr() && o["script"].isStr())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't specify both \"address\" and \"script\".");
 
         if (o["address"].isStr())
         {
@@ -6673,6 +6687,13 @@ static UniValue createrawparttransaction(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
             r.address = dest;
         };
+
+        if (o["script"].isStr())
+        {
+            r.scriptPubKey = ParseScript(o["script"].get_str());
+            r.fScriptSet = true;
+        };
+
 
         std::string sNarr;
         if (o["narration"].isStr())
@@ -6823,6 +6844,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             "                                  [vout_index,...]\n"
             "     \"replaceable\"            (boolean, optional) Marks this transaction as BIP125 replaceable.\n"
             "     \"allow_other_inputs\"     (boolean, optional, default=true) Allow inputs to be added if any inputs already exist.\n"
+            "     \"allow_change_output\"    (boolean, optional, default=true) Allow change output to be added if needed (only for 'blind' input_type).\n"
             "                              Allows this transaction to be replaced by a transaction with higher fees\n"
             "     \"conf_target\"            (numeric, optional) Confirmation target (in blocks)\n"
             "     \"estimate_mode\"          (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
@@ -6833,8 +6855,9 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
-            "  \"fee\":       n,         (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
-            "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
+            "  \"fee\":       n,       (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
+            "  \"changepos\": n        (numeric) The position of the added change output, or -1\n"
+            "  \"output_amounts\": obj (json) Output values and blinding factors\n"
             "}\n"
             "\nExamples:\n"
             "\nCreate a transaction with no inputs\n"
@@ -6880,6 +6903,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"allow_other_inputs", UniValueType(UniValue::VBOOL)},
+                {"allow_change_output", UniValueType(UniValue::VBOOL)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
             },
@@ -6928,6 +6952,9 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
         }
         if (options.exists("allow_other_inputs")) {
             coinControl.fAllowOtherInputs = options["allow_other_inputs"].get_bool();
+        }
+        if (options.exists("allow_change_output")) {
+            coinControl.m_addChangeOutput = options["allow_change_output"].get_bool();
         }
         if (options.exists("conf_target")) {
             if (options.exists("feeRate")) {
@@ -6986,11 +7013,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
         if (!ParseInt64(sKey, &n) || n >= (int64_t)tx.vin.size() || n < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Bad index for input blinding factor.");
 
-        if (n < 0 || (int64_t)tx.vin.size() <= n)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Input offset out of range.");
-
         CInputData im;
-        CTransactionRecord rtx;
         COutputRecord r;
         r.nType = OUTPUT_STANDARD;
 
@@ -7032,8 +7055,8 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
         };
 
         //r.scriptPubKey = ; // TODO
-        rtx.InsertOutput(r);
-        pwallet->mapTempRecords[tx.vin[n].prevout.hash] = rtx;
+        std::pair<MapRecords_t::iterator, bool> ret = pwallet->mapTempRecords.insert(std::make_pair(tx.vin[n].prevout.hash, CTransactionRecord()));
+        ret.first->second.InsertOutput(r);
 
         im.nValue = r.nValue;
         im.blind = blind;
@@ -7049,7 +7072,6 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Bad index for output blinding factor.");
 
         const auto &txout = tx.vpout[n];
-
 
         if (!outputAmounts[sKey]["value"].isNull())
             mOutputAmounts[n] = AmountFromValue(outputAmounts[sKey]["value"]);
@@ -7232,8 +7254,12 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
         };
     };
 
+    pwallet->mapTempRecords.clear();
+
     UniValue result(UniValue::VOBJ);
     result.pushKV("hex", EncodeHexTx(tx));
+    result.pushKV("fee", ValueFromAmount(nFee));
+    result.pushKV("changepos", coinControl.nChangePos);
     result.pushKV("output_amounts", outputValues);
 
     return result;
