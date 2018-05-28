@@ -249,7 +249,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Reject a block spending an immature coinbase.")
         self.move_tip(15)
         b20 = self.next_block(20, spend=out[7])
-        self.sync_blocks([b20], False, 16, b'bad-txns-premature-spend-of-coinbase')
+        self.sync_blocks([b20], False, 16, b'bad-txns-premature-spend-of-coinbase', reconnect=True)
 
         # Attempt to spend a coinbase at depth too low (on a fork this time)
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
@@ -262,7 +262,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.sync_blocks([b21], False)
 
         b22 = self.next_block(22, spend=out[5])
-        self.sync_blocks([b22], False, 16, b'bad-txns-premature-spend-of-coinbase')
+        self.sync_blocks([b22], False, 16, b'bad-txns-premature-spend-of-coinbase', reconnect=True)
 
         # Create a block on either side of MAX_BLOCK_BASE_SIZE and make sure its accepted/rejected
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
@@ -584,7 +584,7 @@ class FullBlockTest(BitcoinTestFramework):
         while b47.sha256 < target:
             b47.nNonce += 1
             b47.rehash()
-        self.sync_blocks([b47], False, request_block=False)
+        self.sync_blocks([b47], False, request_block=False, reconnect=True)
 
         self.log.info("Reject a block with a timestamp >2 hours in the future")
         self.move_tip(44)
@@ -635,7 +635,7 @@ class FullBlockTest(BitcoinTestFramework):
         b54 = self.next_block(54, spend=out[15])
         b54.nTime = b35.nTime - 1
         b54.solve()
-        self.sync_blocks([b54], False, request_block=False)
+        self.sync_blocks([b54], False, request_block=False, reconnect=True)
 
         # valid timestamp
         self.move_tip(53)
@@ -782,7 +782,7 @@ class FullBlockTest(BitcoinTestFramework):
         assert(tx.vin[0].nSequence < 0xffffffff)
         tx.calc_sha256()
         b62 = self.update_block(62, [tx])
-        self.sync_blocks([b62], False, 16, b'bad-txns-nonfinal')
+        self.sync_blocks([b62], False, 16, b'bad-txns-nonfinal', reconnect=True)
 
         # Test a non-final coinbase is also rejected
         #
@@ -796,7 +796,7 @@ class FullBlockTest(BitcoinTestFramework):
         b63.vtx[0].vin[0].nSequence = 0xDEADBEEF
         b63.vtx[0].rehash()
         b63 = self.update_block(63, [])
-        self.sync_blocks([b63], False, 16, b'bad-txns-nonfinal')
+        self.sync_blocks([b63], False, 16, b'bad-txns-nonfinal', reconnect=True)
 
         #  This checks that a block with a bloated VARINT between the block_header and the array of tx such that
         #  the block is > MAX_BLOCK_BASE_SIZE with the bloated varint, but <= MAX_BLOCK_BASE_SIZE without the bloated varint,
