@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>नया पता लिखिए !</translation>
+        <translation>एक नया पता बनाएं</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -20,6 +20,10 @@
     <message>
         <source>Delete the currently selected address from the list</source>
         <translation>सूची से वर्तमान में चयनित पता हटाएं</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>डेटा को मौजूदा टैब से एक फ़ाइल में निर्यात करें</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -48,6 +52,10 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>ये भुगतान भेजने के लिए ये आपके बिटकॉइन पते हैं। हमेशा सिक्के भेजने से पहले राशि और प्राप्तकर्ता पते की जांच करें।</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>भुगतान प्राप्त करने के लिए ये आपके बीटकोइन पते हैं प्रत्येक लेनदेन के लिए एक नया प्राप्त पता उपयोग करने की सिफारिश की जाती है।</translation>
     </message>
     </context>
 <context>
@@ -454,6 +462,10 @@
     <message>
         <source>&amp;Export</source>
         <translation>&amp;निर्यात</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>डेटा को मौजूदा टैब से एक फ़ाइल में निर्यात करें</translation>
     </message>
     </context>
 <context>

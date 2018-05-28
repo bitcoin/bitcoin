@@ -655,6 +655,10 @@
         <source>calculating...</source>
         <translation>Se calculează...</translation>
     </message>
+    <message>
+        <source>Hide</source>
+        <translation>Ascunde</translation>
+    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -752,6 +756,10 @@
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
         <translation>Clientul va fi oprit. Dorești sa continui?</translation>
+    </message>
+    <message>
+        <source>Configuration options</source>
+        <translation>Optiuni de configuratie</translation>
     </message>
     <message>
         <source>Error</source>
@@ -988,12 +996,20 @@
         <source>Label</source>
         <translation>Etichetă</translation>
     </message>
+    <message>
+        <source>Message</source>
+        <translation>Mesaj</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Label</source>
         <translation>Etichetă</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mesaj</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1027,6 +1043,10 @@
         <translation>Schimbă:</translation>
     </message>
     <message>
+        <source>Hide</source>
+        <translation>Ascunde</translation>
+    </message>
+    <message>
         <source>Copy amount</source>
         <translation>Copiază cantitatea</translation>
     </message>
@@ -1054,28 +1074,92 @@
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
-    </context>
+    <message>
+        <source>Message verified.</source>
+        <translation>Mesaj verificat.</translation>
+    </message>
+</context>
 <context>
     <name>SplashScreen</name>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
-    </context>
+    <message>
+        <source>KB/s</source>
+        <translation>KB/s</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Generated</source>
+        <translation>Generat</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>De la</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>La</translation>
+    </message>
+    <message>
+        <source>Credit</source>
+        <translation>Credit</translation>
+    </message>
+    <message>
+        <source>Total credit</source>
+        <translation>Credit total</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mesaj</translation>
+    </message>
+    <message>
+        <source>Comment</source>
+        <translation>Comentariu</translation>
+    </message>
+    <message>
+        <source>Transaction ID</source>
+        <translation>Transactiune ID</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transactiune</translation>
+    </message>
     <message>
         <source>Amount</source>
         <translation>Cantitate</translation>
     </message>
-    </context>
+    <message>
+        <source>true</source>
+        <translation>Adevarat</translation>
+    </message>
+    <message>
+        <source>false</source>
+        <translation>Fals</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
+        <source>Type</source>
+        <translation>tip</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etichetă</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Obtinut cu</translation>
+    </message>
+    <message>
+        <source>(n/a)</source>
+        <translation>(n/a)</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1084,6 +1168,42 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>All</source>
+        <translation>Tot</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Astazi</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>Saptamana aceasta</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>Luna aceasta</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>Luna trecuta</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>Anul acesta</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Obtinut cu</translation>
+    </message>
+    <message>
+        <source>To yourself</source>
+        <translation>Pentru tine</translation>
+    </message>
+    <message>
+        <source>Other</source>
+        <translation>Altru</translation>
+    </message>
     <message>
         <source>Copy address</source>
         <translation>Copiază adresa</translation>
@@ -1105,12 +1225,24 @@
         <translation>Fisier text separat prin virgule (*.csv)</translation>
     </message>
     <message>
+        <source>Confirmed</source>
+        <translation>Confirmat</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>tip</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etichetă</translation>
     </message>
     <message>
         <source>Address</source>
         <translation>Adresă</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -1135,6 +1267,10 @@
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Options:</source>
+        <translation>Optiuni:</translation>
+    </message>
     <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>

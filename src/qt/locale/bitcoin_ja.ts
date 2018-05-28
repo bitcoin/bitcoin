@@ -1430,11 +1430,11 @@
     </message>
     <message>
         <source>Sent</source>
-        <translation>送金</translation>
+        <translation>送信</translation>
     </message>
     <message>
         <source>Received</source>
-        <translation>受取</translation>
+        <translation>受信</translation>
     </message>
 </context>
 <context>
@@ -1634,11 +1634,11 @@
     </message>
     <message>
         <source>Received</source>
-        <translation>受取</translation>
+        <translation>受信</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation>送金</translation>
+        <translation>送信</translation>
     </message>
     <message>
         <source>&amp;Peers</source>

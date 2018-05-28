@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Mới</translation>
+        <translation>&amp;Tạo mới</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -60,6 +60,14 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Địa chỉ nhận</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Đây là các địa chỉ Bitcoin để gửi bạn gửi tiền. Trước khi gửi bạn nên kiểm tra lại số tiền bạn muốn gửi và địa chỉ bitcoin của người nhận.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Đây là các địa chỉ Bitcoin để bạn nhận tiền. Với mỗi giao dịch, bạn nên dùng một địa chỉ Bitcoin mới để nhận tiền.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -118,6 +126,14 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Điền lại passphrase</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>Hiện mật khẩu</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Nhập passphrase mới cho Ví của bạn.&lt;br/&gt;Vui long dùng  passphrase gồm&lt;b&gt;ít nhất 10 ký tự bất kỳ &lt;/b&gt;, hoặc &lt;b&gt;ít nhất 8 chữ&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>

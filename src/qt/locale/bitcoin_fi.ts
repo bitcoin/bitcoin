@@ -1008,6 +1008,14 @@
         <translation>Ilmoittaa, mikäli oletetettua SOCKS5-välityspalvelinta käytetään vertaisten tavoittamiseen tämän verkkotyypin kautta.</translation>
     </message>
     <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Piilota kuvake järjestelmäpalkista.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Piilota tehtäväpalkin kuvake</translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Minimoi ikkuna ohjelman sulkemisen sijasta kun ikkuna suljetaan. Kun tämä asetus on käytössä, ohjelma suljetaan vain valittaessa valikosta Poistu.</translation>
     </message>
@@ -1070,6 +1078,14 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Portin uudelleenohjaus &amp;UPnP:llä</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>Hyväksy yhteysiä ulkopuolelta</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Hyväksy sisääntulevia yhteyksiä</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
@@ -1150,6 +1166,10 @@
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>Näytetäänkö kolikkokontrollin ominaisuuksia vai ei</translation>
+    </message>
+    <message>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>&amp;Kolmannen osapuolen rahansiirto URL:t</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1379,6 +1399,10 @@
     <message>
         <source>Node/Service</source>
         <translation>Noodi/Palvelu</translation>
+    </message>
+    <message>
+        <source>NodeId</source>
+        <translation>NodeId</translation>
     </message>
     <message>
         <source>Ping</source>
@@ -1737,6 +1761,10 @@
         <translation>Käytä nuolia ylös ja alas selataksesi historiaa, sekä %1 tyhjentääkseksi ruudun.</translation>
     </message>
     <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>Lisätietoja konsolin käytöstä saat kirjoittamalla %1.</translation>
+    </message>
+    <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
         <translation>VAROITUS: aktiiviset huijarit neuvovat kirjoittamaan komentoja tähän komentoriviin, varastaen lompakkosi sisällön. Älä käytä komentoriviä ilman täyttä ymmärrystä kirjoittamasi komennon toiminnasta.</translation>
     </message>
@@ -2069,6 +2097,10 @@
         <translation>Vahvistusajan tavoite:</translation>
     </message>
     <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation>Käytä Replace-By-Fee:tä</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>&amp;Tyhjennnä Kaikki</translation>
     </message>
@@ -2250,6 +2282,10 @@
     <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>V&amp;ähennä maksukulu määrästä</translation>
+    </message>
+    <message>
+        <source>Use available balance</source>
+        <translation>Käytä saatavilla oleva saldo</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2787,6 +2823,10 @@
         <translation>Muu</translation>
     </message>
     <message>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>Kirjoita osoite, siirron tunniste tai nimiö etsiäksesi</translation>
+    </message>
+    <message>
         <source>Min amount</source>
         <translation>Minimimäärä</translation>
     </message>
@@ -2924,8 +2964,16 @@
         <translation>Nykyinen palkkio:</translation>
     </message>
     <message>
+        <source>Increase:</source>
+        <translation>Korota:</translation>
+    </message>
+    <message>
         <source>New fee:</source>
         <translation>Uusi palkkio:</translation>
+    </message>
+    <message>
+        <source>Confirm fee bump</source>
+        <translation>Vahvista palkkion korotus</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -3192,6 +3240,10 @@
     <message>
         <source>Enable transaction replacement in the memory pool (default: %u)</source>
         <translation>Ota rahansiirron korvaaminen käyttöön muistivarannossa (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
+        <translation>Virhe luodessa %s: Et voi luoda ei-HD lompakkoja tällä versiolla.</translation>
     </message>
     <message>
         <source>Error initializing block database</source>

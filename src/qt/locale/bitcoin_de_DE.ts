@@ -128,6 +128,10 @@
         <translation>Neues Passwort wiederholen</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>Passwort anzeigen</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Geben Sie das neue Passwort Ihrer digitalen Geldbörse ein.&lt;br/&gt;Verwenden Sie bitte ein Passwort bestehend aus &lt;b&gt;zehn oder mehr zufälligen Zeichen&lt;/b&gt;, oder aus &lt;b&gt;acht oder mehr Wörtern&lt;/b&gt;.</translation>
     </message>

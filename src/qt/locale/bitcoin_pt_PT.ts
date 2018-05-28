@@ -996,6 +996,10 @@
         <translation>Endereço de IP do proxy (exemplo, IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Esconder o ícone da barra de ferramentas.</translation>
+    </message>
+    <message>
         <source>&amp;Hide tray icon</source>
         <translation>&amp;Ocultar ícone da bandeja</translation>
     </message>
@@ -1011,6 +1015,10 @@
     <message>
         <source>Active command-line options that override above options:</source>
         <translation>Ativar as opções da linha de comando que se sobrepõem às opções acima:</translation>
+    </message>
+    <message>
+        <source>Open the %1 configuration file from the working directory.</source>
+        <translation>Abrir o ficheiro de configuração %1 do diretório aberto.</translation>
     </message>
     <message>
         <source>Open Configuration File</source>

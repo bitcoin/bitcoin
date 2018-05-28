@@ -502,12 +502,20 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Comisión:</translation>
     </message>
     <message>
+        <source>Dust:</source>
+        <translation>Polvo:</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation>Después de comisión:</translation>
     </message>
     <message>
         <source>Change:</source>
         <translation>Cambio:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation>(de)seleccionar todo</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -582,6 +590,10 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Copiar bytes</translation>
     </message>
     <message>
+        <source>Copy dust</source>
+        <translation>Copiar polvo</translation>
+    </message>
+    <message>
         <source>Copy change</source>
         <translation>Copiar cambio</translation>
     </message>
@@ -592,6 +604,10 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>no</source>
         <translation>no</translation>
+    </message>
+    <message>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>Está etiqueta se vuelve roja si algún receptor recibe una cantidad inferior al límite actual establecido para el polvo.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1752,6 +1768,10 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Borre todos los campos del formulario.</translation>
     </message>
     <message>
+        <source>Dust:</source>
+        <translation>Polvo:</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation>Cantidad de copia</translation>
     </message>
@@ -1771,6 +1791,10 @@ Tarifa de copia</translation>
     <message>
         <source>Copy bytes</source>
         <translation>Copiar bytes</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Copiar polvo</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -1909,6 +1933,10 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation>Esta es la cuota de transacción que puede descartar si el cambio es más pequeño que el polvo a este nivel.</translation>
     </message>
     <message>
         <source>Information</source>

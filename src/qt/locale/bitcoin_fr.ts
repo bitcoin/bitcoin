@@ -3882,6 +3882,10 @@
         <translation>Extraire les informations de débogage (par défaut : %u, fournir &lt;category&gt; est facultatif)</translation>
     </message>
     <message>
+        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
+        <translation>Définir le poids maximal de bloc BIP141 à cette valeur x 4. Déconseillé, utiliser blockmaxweight</translation>
+    </message>
+    <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
         <translation>Définit la sérialisation de la transaction brute ou les données hexa de bloc retournées en mode non-verbose, non-segwit(0) ou segwit(1) (par défaut : %d)</translation>
     </message>

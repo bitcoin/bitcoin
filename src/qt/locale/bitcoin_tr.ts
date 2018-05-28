@@ -1884,6 +1884,10 @@
         <translation>Ödeme &amp;talep et</translation>
     </message>
     <message>
+        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
+        <translation>Bech32 adresleri (BIP-173) harcama yapmak için daha ucuzdur ve yazım hatalarına karşı daha iyi koruma sunar. SegWit ile sarılı kontrol edilmemiş bir P2SH adresi oluşturulduğunda eski cüzdanlarla uyumludur.</translation>
+    </message>
+    <message>
         <source>Generate Bech32 address</source>
         <translation>Bech32 adresi oluştur</translation>
     </message>
@@ -3654,6 +3658,18 @@
         <translation>İşlemin imzalanması başarısız oldu</translation>
     </message>
     <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Belirtilen -walletdir "%s" mevcut değil</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Belirtilen -walletdir "%s" göreceli bir yoldur</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Belirtilen -walletdir "%s" bir dizin değildir</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>İşlemdeki bitcoin tutarı ücreti ödemek için çok düşük</translation>
     </message>
@@ -3684,6 +3700,10 @@
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Bu bilgisayarda %s ögesine bağlanılamadı (bağlanma %s hatasını verdi)</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Başlangıç anahtarları üretilemiyor</translation>
     </message>
     <message>
         <source>Upgrade wallet to latest format on startup</source>

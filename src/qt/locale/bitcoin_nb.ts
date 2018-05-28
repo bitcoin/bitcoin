@@ -1188,6 +1188,10 @@
         <translation>Skal myntkontroll funksjoner vises eller ikke.</translation>
     </message>
     <message>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>Tredjepart transaksjon URLer</translation>
+    </message>
+    <message>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
@@ -1801,6 +1805,14 @@
         <translation>Bruk ↑ og ↓ til å navigere historikk, og %1 for å tømme skjermen.</translation>
     </message>
     <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Skriv %1 for en oversikt over tilgjengelige kommandoer.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>For mer informasjon om hvordan konsollet brukes skriv %1.</translation>
+    </message>
+    <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
         <translation>Advarsel: Svindlere har vært på ferde, i oppfordringen om å skrive kommandoer her, for å stjele lommebokinnhold. Ikke bruk konsollen uten at du forstår alle ringvirkningene av en kommando.</translation>
     </message>
@@ -1886,6 +1898,14 @@
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Etterspør betaling</translation>
+    </message>
+    <message>
+        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
+        <translation>Bech32 adresser (BIP-173) er billigere å sende fra og gir bedre beskyttelse mot skrivefeil. Når dette ikke er valgt vil en P2SH SegWit adresse bli laget, som er kompatibel med eldre wallets. </translation>
+    </message>
+    <message>
+        <source>Generate Bech32 address</source>
+        <translation>Generer Bech32 adresse</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -2133,6 +2153,14 @@
         <translation>Bekreftelsestidsmål:</translation>
     </message>
     <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation>Aktiver Replace-By-Fee</translation>
+    </message>
+    <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>Med Replace-By-Fee (BIP-125) kan du øke transaksjonens gebyr etter at den er sendt. Uten dette aktivert anbefales et høyere gebyr for å kompensere for risikoen for at transaksjonen blir forsinket. </translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>Fjern &amp;Alt</translation>
     </message>
@@ -2199,6 +2227,14 @@
     <message>
         <source>or</source>
         <translation>eller</translation>
+    </message>
+    <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>Du kan øke gebyret senere (signaliserer Replace-By-Fee, BIP-125).</translation>
+    </message>
+    <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Signaliserer ikke Replace-By-Fee, BIP-125</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3158,12 +3194,20 @@
         <translation>Godta stafettransaksjoner mottatt fra hvitlistede likemenn, selv når transaksjoner ikke stafettsendes (forvalg: %d)</translation>
     </message>
     <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Legg til node for tilkobling og forsøk å holde forbindelsen åpen (se 'addnode' RPC kommandoen for mer informasjon)</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind til angitt adresse. Bruk [vertsmaskin]:port notasjon for IPv6</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>Kan ikke låse datamappen %s. %s kjører antagelig allerede.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>Kan ikke angi spesifikke tilkoblinger og ha addrman til å finne utgående tilkoblinger samtidig. </translation>
     </message>
     <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
@@ -3354,6 +3398,10 @@
         <translation>Aktiver transaksjonserstatning i hukommelsespuljen (forvalg: %u)</translation>
     </message>
     <message>
+        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
+        <translation>Feil under oppretting av %s: Du kan ikke lage en lommebok uten HD med denne versjonen.</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>Feil under initialisering av blokkdatabase</translation>
     </message>
@@ -3388,6 +3436,10 @@
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Kunne ikke lytte på noen port. Bruk -listen=0 hvis det er dette du vil.</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Klarte ikke gå igjennom lommeboken under oppstart</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3686,6 +3738,18 @@
         <translation>Signering av transaksjon feilet</translation>
     </message>
     <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Oppgitt -walletdir "%s" eksisterer ikke</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Oppgitt -walletdir "%s" er en relativ sti</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Oppgitt -walletdir "%s" er ikke en katalog</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Transaksjonsbeløpet er for lite til å betale gebyr</translation>
     </message>
@@ -3718,6 +3782,10 @@
         <translation>Kan ikke binde til %s på denne datamaskinen (binding returnerte feilen %s)</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Klarte ikke lage første nøkkel</translation>
+    </message>
+    <message>
         <source>Upgrade wallet to latest format on startup</source>
         <translation>Oppgrader lommebok til nyeste format ved oppstart</translation>
     </message>
@@ -3728,6 +3796,10 @@
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>Lommebokbekreftelse pågår…</translation>
+    </message>
+    <message>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>Lommebok %s befinner seg utenfor lommebokkatalog %s</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3820,6 +3892,14 @@
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
         <translation>Setter serialisering av råtransaksjon eller heksadesimal verdi for blokk returnert i ikke-ordrikt modus, non-segwit(0) eller segwit(1) (forvalg: %d)</translation>
+    </message>
+    <message>
+        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
+        <translation>Oppgi katalog som inneholder lommebøker (standard: &lt;datadir&gt;/wallets hvis den eksisterer, ellers &lt;datadir&gt;)</translation>
+    </message>
+    <message>
+        <source>Specify location of debug log file: this can be an absolute path or a path relative to the data directory (default: %s)</source>
+        <translation>Oppgi sted for feilsøkingsloggfil: Dette kan være en absolutt sti eler en sti relativt til datakatalogen (standard: %s)</translation>
     </message>
     <message>
         <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>

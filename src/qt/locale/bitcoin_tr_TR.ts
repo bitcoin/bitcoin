@@ -395,6 +395,10 @@
         <translation>Tarih</translation>
     </message>
     <message>
+        <source>Confirmations</source>
+        <translation>Onaylamalar</translation>
+    </message>
+    <message>
         <source>Confirmed</source>
         <translation>Kabul edilen</translation>
     </message>
@@ -527,6 +531,10 @@
 <context>
     <name>ModalOverlay</name>
     <message>
+        <source>Form</source>
+        <translation>Form</translation>
+    </message>
+    <message>
         <source>Number of blocks left</source>
         <translation>Kalan blokların sayısı</translation>
     </message>
@@ -617,15 +625,47 @@
         <translation>Konfigürasyon ayarları</translation>
     </message>
     <message>
+        <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
+        <translation>Konfigürasyon dosyası GUI ayarlarını geçersiz kılmak için gelişmiş kullanıcı ayarlarını değiştirir. Ek olarak, herhangi bir komut satırı seçeneği konfigürasyon dosyasını geçersiz kılar.</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Hata</translation>
     </message>
-    </context>
+    <message>
+        <source>The configuration file could not be opened.</source>
+        <translation>Konfigürasyon dosyası açılamadı.</translation>
+    </message>
+    <message>
+        <source>This change would require a client restart.</source>
+        <translation>Bu değişiklik istemcinin yeniden başlatılmasını gerektirir.</translation>
+    </message>
+    <message>
+        <source>The supplied proxy address is invalid.</source>
+        <translation>Sağlanan proxy adresi geçerli değil.</translation>
+    </message>
+</context>
 <context>
     <name>OverviewPage</name>
     <message>
+        <source>Form</source>
+        <translation>Form</translation>
+    </message>
+    <message>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Gösterilen bilgi geçerli olmayabilir. Bağlantı tekrar sağlandıktan sonra cüzdanınız otomatik olarak senkronize olacaktır. Henüz senkronize olma işlemi tamamlanmadı.</translation>
+    </message>
+    <message>
+        <source>Watch-only:</source>
+        <translation>Sadece görüntülenebilir:</translation>
+    </message>
+    <message>
         <source>Available:</source>
         <translation>Kullanılabilir:</translation>
+    </message>
+    <message>
+        <source>Your current spendable balance</source>
+        <translation>Mevcut harcanabilir tutarınız</translation>
     </message>
     <message>
         <source>Pending:</source>
@@ -635,9 +675,41 @@
         <source>Total:</source>
         <translation>Toplam:</translation>
     </message>
-    </context>
+    <message>
+        <source>Your current total balance</source>
+        <translation>Toplam mevcut miktarınız</translation>
+    </message>
+    <message>
+        <source>Your current balance in watch-only addresses</source>
+        <translation>Sadece görüntülenebilir adreslerdeki mevcut miktarınız</translation>
+    </message>
+    <message>
+        <source>Spendable:</source>
+        <translation>Harcanabilir:</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>Yakın zamanda yapılmış işlemler</translation>
+    </message>
+    <message>
+        <source>Unconfirmed transactions to watch-only addresses</source>
+        <translation>Sadece görüntülenebilir adreslerdeki doğrulanmamış işlemler</translation>
+    </message>
+    <message>
+        <source>Current total balance in watch-only addresses</source>
+        <translation>Sadece görüntülenebilir adreslerdeki mevcut toplam miktar</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>Payment request error</source>
+        <translation>Ödeme isteği hatası</translation>
+    </message>
+    <message>
+        <source>Payment request fetch URL is invalid: %1</source>
+        <translation>Ödeme isteği URL'si hatalı: %1</translation>
+    </message>
     <message>
         <source>Invalid payment address %1</source>
         <translation>Hatalı ödeme adresi %1</translation>
