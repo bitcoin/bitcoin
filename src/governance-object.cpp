@@ -244,7 +244,7 @@ uint256 CGovernanceObject::GetHash() const
     ss << nRevision;
     ss << nTime;
     ss << GetDataAsHexString();
-    ss << masternodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing
+    ss << masternodeOutpoint;
     ss << vchSig;
     // fee_tx is left out on purpose
 
@@ -552,14 +552,14 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
              << ", output.nValue = " << output.nValue
              << ", output.scriptPubKey = " << ScriptToAsmStr( output.scriptPubKey, false )
              << std::endl; );
-        if(!output.scriptPubKey.IsUnspendable()) {
-            strError = strprintf("Invalid Script %s", txCollateral->ToString());
-            LogPrintf ("CGovernanceObject::IsCollateralValid -- %s\n", strError);
-            return false;
-        }
         if(output.scriptPubKey == findScript && output.nValue >= nMinFee) {
             DBG( std::cout << "IsCollateralValid foundOpReturn = true" << std::endl; );
             foundOpReturn = true;
+            if(!output.scriptPubKey.IsUnspendable()) {
+                strError = strprintf("Invalid Script %s", txCollateral->ToString());
+                LogPrintf ("CGovernanceObject::IsCollateralValid -- %s\n", strError);
+                return false;
+            }
         }
         else  {
             DBG( std::cout << "IsCollateralValid No match, continuing" << std::endl; );
