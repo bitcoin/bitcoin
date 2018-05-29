@@ -160,7 +160,7 @@ target_include_directories(crownqtlib PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE
 
 target_link_libraries(crownqtlib
   crown_util
-  crown_cli
+  crown_client
   leveldb
   Qt5::Widgets
   Qt5::Network
@@ -205,7 +205,7 @@ target_link_libraries(crown_qt
   crown_util
   crown_crypto
   crown_univalue
-  crown_cli
+  crown_client
   crownqtlib
   Qt5::Widgets
   protobuf::libprotobuf

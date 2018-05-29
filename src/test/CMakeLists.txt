@@ -49,7 +49,7 @@ target_compile_definitions(crown_test PRIVATE "BOOST_TEST_DYN_LINK=1")
 target_link_libraries(crown_test
   Boost::boost
   Boost::unit_test_framework
-  crown_cli
+  crown_client
   crown_core
   crown_server
   crown_common
