@@ -312,7 +312,7 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                             std::string method = stack.back()[0];
                             std::string uri;
 #ifdef ENABLE_WALLET
-                            if (walletID && !walletID->empty()) {
+                            if (walletID) {
                                 QByteArray encodedName = QUrl::toPercentEncoding(QString::fromStdString(*walletID));
                                 uri = "/wallet/"+std::string(encodedName.constData(), encodedName.length());
                             }
@@ -425,7 +425,7 @@ void RPCExecutor::request(const QString &command, const QString &walletID)
             return;
         }
         std::string wallet_id = walletID.toStdString();
-        if(!RPCConsole::RPCExecuteCommandLine(m_node, result, executableCommand, nullptr, &wallet_id))
+        if (!RPCConsole::RPCExecuteCommandLine(m_node, result, executableCommand, nullptr, walletID.isNull() ? nullptr : &wallet_id))
         {
             Q_EMIT reply(RPCConsole::CMD_ERROR, QString("Parse error: unbalanced ' or \""));
             return;
@@ -910,7 +910,7 @@ void RPCConsole::on_lineEdit_returnPressed()
         }
 
         if (m_last_wallet_id != walletID) {
-            if (walletID.isEmpty()) {
+            if (walletID.isNull()) {
                 message(CMD_REQUEST, tr("Executing command without any wallet"));
             } else {
                 message(CMD_REQUEST, tr("Executing command using \"%1\" wallet").arg(walletID));
