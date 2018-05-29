@@ -623,6 +623,11 @@ int main(int argc, char *argv[])
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
     translationInterface.Translate.connect(Translate);
 
+    // Re-setup help text so that they are translated
+    gArgs.ClearArgs();
+    node->setupServerArgs();
+    SetupUIArgs();
+
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
     if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
