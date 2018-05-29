@@ -592,26 +592,21 @@ bool LoadData()
     boost::filesystem::path pathDB = GetDataDir();
 
     uiInterface.InitMessage(_("Loading masternode cache..."));
-
-    strDBName = "mncache.dat";
-    DbManager<CMasternodeMan> mndb(strDBName, "MasternodeCache");
-    if(!mndb.Load(mnodeman)) {
+    
+    if (!Load(mnodeman, "mncache.dat", "MasternodeCache"))
+    {
         return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
     }
 
     uiInterface.InitMessage(_("Loading systemnode cache..."));
-
-    strDBName = "sncache.dat";
-    DbManager<CSystemnodeMan> sndb(strDBName, "SystemnodeCache");
-    if(!sndb.Load(snodeman)) {
+    if (!Load(snodeman, "sncache.dat", "SystemnodeCache"))
+    {
         return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
     }
 
     uiInterface.InitMessage(_("Loading budget cache..."));
-
-    strDBName = "budget.dat";
-    DbManager<CBudgetManager> budgetdb(strDBName, "MasternodeBudget");
-    if(!budgetdb.Load(budget)) {
+    if (!Load(budget, "budget.dat", "MasternodeBudget"))
+    {
         return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
     }
 
@@ -620,50 +615,34 @@ bool LoadData()
     budget.ClearSeen();
 
     uiInterface.InitMessage(_("Loading masternode payment cache..."));
-
-    strDBName = "mnpayments.dat";
-    DbManager<CMasternodePayments> mnpayments(strDBName, "MasternodePayments");
-    if(!mnpayments.Load(masternodePayments)) {
+    if (!Load(masternodePayments, "mnpayments.dat", "MasternodePayments"))
+    {
         return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
     }
 
     uiInterface.InitMessage(_("Loading systemnode payment cache..."));
-
-    strDBName = "snpayments.dat";
-    DbManager<CSystemnodePayments> snpayments(strDBName, "SystemnodePayments");
-    if(!snpayments.Load(systemnodePayments)) {
+    if (!Load(systemnodePayments, "snpayments.dat", "SystemnodePayments"))
+    {
         return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
     }
 
     uiInterface.InitMessage(_("Loading instant send cache..."));
-
-    strDBName = "ixcache.dat";
-    DbManager<InstantSend> ixcache(strDBName, "InstantSend");
-    if(!ixcache.Load(instantSend)) {
+    if (!Load(GetInstantSend(), "ixcache.dat", "InstantSend"))
+    {
         return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
     }
+
     return true;
 }
 
 void DumpData()
 {
-    DbManager<CMasternodeMan> mndb("mncache.dat", "MasternodeCache");
-    mndb.Dump(mnodeman);
-
-    DbManager<CBudgetManager> budgetdb("budget.dat", "MasternodeBudget");
-    budgetdb.Dump(budget);
-
-    DbManager<CMasternodePayments> mnpayments("mnpayments.dat", "MasternodePayments");
-    mnpayments.Dump(masternodePayments);
-
-    DbManager<CSystemnodeMan> sndb("sncache.dat", "SystemnodeCache");
-    sndb.Dump(snodeman);
-
-    DbManager<CSystemnodePayments> snpayments("snpayments.dat", "SystemnodePayments");
-    snpayments.Dump(systemnodePayments);
-
-    DbManager<InstantSend> ixcache("ixcache.dat", "InstantSend");
-    ixcache.Dump(instantSend);
+    Dump(mnodeman, "mncache.dat", "MasternodeCache");
+    Dump(budget, "budget.dat", "MasternodeBudget");
+    Dump(masternodePayments, "mnpayments.dat", "MasternodePayments");
+    Dump(snodeman, "sncache.dat", "SystemnodeCache");
+    Dump(systemnodePayments, "snpayments.dat", "SystemnodePayments");
+    Dump(GetInstantSend(), "ixcache.dat", "InstantSend");
 }
 
 /** Initialize crown.

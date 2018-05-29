@@ -140,7 +140,7 @@ void ThreadCheckLegacySigner()
                 mnodeman.CheckAndRemove();
                 mnodeman.ProcessMasternodeConnections();
                 masternodePayments.CheckAndRemove();
-                instantSend.CheckAndRemove();
+                GetInstantSend().CheckAndRemove();
             }
 
             //if(c1 % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
@@ -159,7 +159,7 @@ void ThreadCheckLegacySigner()
                 snodeman.CheckAndRemove();
                 snodeman.ProcessSystemnodeConnections();
                 systemnodePayments.CheckAndRemove();
-                instantSend.CheckAndRemove();
+                GetInstantSend().CheckAndRemove();
             }
 
             //if(c2 % SYSTEMNODES_DUMP_SECONDS == 0) DumpSystemnodes();

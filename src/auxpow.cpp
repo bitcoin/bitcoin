@@ -119,14 +119,14 @@ int CMerkleTx::GetTransactionLockSignatures() const
     if(!IsSporkActive(SPORK_2_INSTANTX)) return -3;
     if(!fEnableInstantX) return -1;
 
-    return instantSend.GetSignaturesCount(GetHash());
+    return GetInstantSend().GetSignaturesCount(GetHash());
 }
 
 bool CMerkleTx::IsTransactionLockTimedOut() const
 {
     if(!fEnableInstantX) return 0;
 
-    return instantSend.IsLockTimedOut(GetHash());
+    return GetInstantSend().IsLockTimedOut(GetHash());
 }
 
 bool

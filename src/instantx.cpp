@@ -19,7 +19,7 @@
 using namespace std;
 using namespace boost;
 
-InstantSend instantSend;
+std::auto_ptr<InstantSend> g_instantSend;
 
 //step 1.) Broadcast intention to lock transaction inputs, "txlreg", CTransaction
 //step 2.) Top INSTANTX_SIGNATURES_TOTAL masternodes, open connect to top 1 masternode.
@@ -215,7 +215,7 @@ bool InstantSend::IsIxTxValid(const CTransaction& txCollateral) const
     return true;
 }
 
-int64_t InstantSend::CreateNewLock(CTransaction tx)
+int64_t InstantSend::CreateNewLock(const CTransaction& tx)
 {
     int64_t nTxAge = 0;
     BOOST_REVERSE_FOREACH(CTxIn i, tx.vin){
@@ -460,9 +460,9 @@ void InstantSend::CheckAndRemove()
 
 }
 
-int InstantSend::GetSignaturesCount(uint256 txHash)
+int InstantSend::GetSignaturesCount(uint256 txHash) const
 {
-    std::map<uint256, CTransactionLock>::iterator i = m_txLocks.find(txHash);
+    std::map<uint256, CTransactionLock>::const_iterator i = m_txLocks.find(txHash);
     if (i != m_txLocks.end()) {
         return (*i).second.CountSignatures();
     }
@@ -483,7 +483,7 @@ bool InstantSend::TxLockRequested(uint256 txHash) const
     return m_txLockReq.count(txHash) || m_txLockReqRejected.count(txHash);
 }
 
-boost::optional<uint256> InstantSend::GetLockedTx(COutPoint out) const
+boost::optional<uint256> InstantSend::GetLockedTx(const COutPoint& out) const
 {
     std::map<COutPoint, uint256>::const_iterator it = m_lockedInputs.find(out);
     if (it != m_lockedInputs.end())
@@ -509,17 +509,17 @@ boost::optional<CTransaction> InstantSend::GetLockReq(uint256 txHash) const
 
 bool InstantSend::AlreadyHave(uint256 txHash) const
 {
-    return m_txLockVote.count(txHash);
+    return m_txLockVote.find(txHash) != m_txLockVote.end();
 }
 
 std::string InstantSend::ToString() const
 {
     std::ostringstream info;
 
-    info << "Transaction lock requests: " << static_cast<int>(m_txLockReq.size()) <<
-            ", Transaction locks: " << static_cast<int>(m_txLocks.size()) <<
-            ", Locked Inputs: " << static_cast<int>(m_lockedInputs.size()) <<
-            ", Transaction lock votes: " << static_cast<int>(m_txLockVote.size());
+    info << "Transaction lock requests: " << m_txLockReq.size() <<
+            ", Transaction locks: " << m_txLocks.size() <<
+            ", Locked Inputs: " << m_lockedInputs.size() <<
+            ", Transaction lock votes: " << m_txLockVote.size();
 
     return info.str();
 }
@@ -630,7 +630,7 @@ void CTransactionLock::AddSignature(const CConsensusVote& cv)
     vecConsensusVotes.push_back(cv);
 }
 
-int CTransactionLock::CountSignatures()
+int CTransactionLock::CountSignatures() const
 {
     /*
         Only count signatures where the BlockHeight matches the transaction's blockheight.
@@ -651,4 +651,13 @@ int CTransactionLock::CountSignatures()
 uint256 CTransactionLock::GetHash() const
 {
     return txHash;
+}
+
+InstantSend& GetInstantSend()
+{
+    if (g_instantSend.get() == NULL)
+    {
+        g_instantSend.reset(new InstantSend);
+    }
+    return *g_instantSend;
 }

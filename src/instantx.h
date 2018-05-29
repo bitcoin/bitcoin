@@ -31,7 +31,9 @@ class InstantSend;
 
 static const int MIN_INSTANTX_PROTO_VERSION = 70040;
 
-extern InstantSend instantSend;
+extern std::auto_ptr<InstantSend> g_instantSend;
+
+InstantSend& GetInstantSend();
 
 class InstantSend
 {
@@ -39,14 +41,14 @@ public:
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void CheckAndRemove();
     void Clear();
-    int64_t CreateNewLock(CTransaction tx);
-    int GetSignaturesCount(uint256 txHash);
+    int64_t CreateNewLock(const CTransaction& tx);
+    int GetSignaturesCount(uint256 txHash) const;
     int GetCompleteLocksCount() const;
     bool IsLockTimedOut(uint256 txHash) const;
     bool TxLockRequested(uint256 txHash) const;
     bool AlreadyHave(uint256 txHash) const;
     std::string ToString() const;
-    boost::optional<uint256> GetLockedTx(COutPoint out) const;
+    boost::optional<uint256> GetLockedTx(const COutPoint& out) const;
     boost::optional<CConsensusVote> GetLockVote(uint256 txHash) const;
     boost::optional<CTransaction> GetLockReq(uint256 txHash) const;
 
@@ -108,7 +110,7 @@ class CTransactionLock
 {
 public:
     bool SignaturesValid() const;
-    int CountSignatures();
+    int CountSignatures() const;
     void AddSignature(const CConsensusVote& cv);
     uint256 GetHash() const;
 

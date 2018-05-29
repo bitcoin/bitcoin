@@ -13,19 +13,8 @@
 
 #include <boost/filesystem.hpp>
 
-/** 
-*   Generic Dumping and Loading
-*   ---------------------------
-*/
-
-template<typename T>
-class DbManager
+namespace details
 {
-public:
-    DbManager(std::string filename, std::string magicMessage);
-    bool Load(T& objToLoad, bool fDryRun = false);
-    bool Dump(const T& objToSave);
-
     enum ReadResult
     {
         Ok,
@@ -37,189 +26,171 @@ public:
         IncorrectFormat
     };
 
-private:
-    bool Write(const T& objToSave);
-    ReadResult Read(T& objToLoad, bool fDryRun = false);
-    ReadResult DeserializeStream(CDataStream& stream, T& objToLoad) const;
-    ReadResult ReadStream(CDataStream& stream) const;
-
-private:
-    boost::filesystem::path m_pathDb;
-    std::string m_filename;
-    std::string m_magicMessage;
-};
-
-template <typename T>
-DbManager<T>::DbManager(std::string filename, std::string magicMessage)
-{
-    m_pathDb = GetDataDir() / filename;
-    m_filename = filename;
-    m_magicMessage = magicMessage;
-}
-
-template <typename T>
-bool DbManager<T>::Write(const T& objToSave)
-{
-    int64_t nStart = GetTimeMillis();
-
-    // serialize, checksum data up to that point, then append checksum
-    CDataStream ssObj(SER_DISK, CLIENT_VERSION);
-    ssObj << m_magicMessage; // specific magic message for this type of object
-    ssObj << FLATDATA(Params().MessageStart()); // network specific magic number
-    ssObj << objToSave;
-    uint256 hash = Hash(ssObj.begin(), ssObj.end());
-    ssObj << hash;
-
-    // open output file, and associate with CAutoFile
-    FILE *file = fopen(m_pathDb.string().c_str(), "wb");
-    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull())
+    inline ReadResult ReadStream(CDataStream& stream, std::string filename)
     {
-        return error("%s: Failed to open file %s", __func__, m_pathDb.string());
+        boost::filesystem::path pathDb = GetDataDir() / filename;
+        // open input file, and associate with CAutoFile
+        FILE *file = fopen(pathDb.string().c_str(), "rb");
+        CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
+        if (filein.IsNull())
+        {
+            error("%s: Failed to open file %s", __func__, pathDb.string());
+            return FileError;
+        }
+        // use file size to size memory buffer
+        int fileSize = boost::filesystem::file_size(pathDb);
+        int dataSize = fileSize - sizeof(uint256);
+        // Don't try to resize to a negative number if file is small
+        if (dataSize < 0)
+            dataSize = 0;
+        std::vector<unsigned char> vchData(dataSize);
+        uint256 hashIn;
+
+        // read data and checksum from file
+        try
+        {
+            filein.read((char *)&vchData[0], dataSize);
+            filein >> hashIn;
+        }
+        catch (std::exception &e)
+        {
+            error("%s: Deserialize or I/O error - %s", __func__, e.what());
+            return HashReadError;
+        }
+        filein.fclose();
+
+        stream = CDataStream(vchData, SER_DISK, CLIENT_VERSION);
+        // verify stored checksum matches input data
+        uint256 hashTmp = Hash(stream.begin(), stream.end());
+        if (hashIn != hashTmp)
+        {
+            error("%s: Checksum mismatch, data corrupted", __func__);
+            return IncorrectHash;
+        }
+        return Ok;
     }
 
-    // Write and commit header, data
-    try
+    template <typename T>
+    ReadResult DeserializeStream(CDataStream& stream, std::string magicMessage, T& objToLoad)
     {
-        fileout << ssObj;
-    }
-    catch (std::exception &e)
-    {
-        return error("%s: Serialize or I/O error - %s", __func__, e.what());
-    }
-    fileout.fclose();
+        unsigned char pchMsgTmp[4];
+        std::string strMagicMessageTmp;
+        // de-serialize file header (file specific magic message) and ..
+        stream >> strMagicMessageTmp;
 
-    LogPrintf("Written info to %s  %dms\n", m_filename, GetTimeMillis() - nStart);
-    LogPrintf("     %s\n", objToSave.ToString());
+        // ... verify the message matches predefined one
+        if (magicMessage != strMagicMessageTmp)
+        {
+            error("%s: Invalid magic message", __func__);
+            return IncorrectMagicMessage;
+        }
 
-    return true;
-}
+        // de-serialize file header (network specific magic number) and ..
+        stream >> FLATDATA(pchMsgTmp);
 
-template <typename T>
-typename DbManager<T>::ReadResult DbManager<T>::ReadStream(CDataStream& stream) const
-{
-    // open input file, and associate with CAutoFile
-    FILE *file = fopen(m_pathDb.string().c_str(), "rb");
-    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
-    {
-        error("%s: Failed to open file %s", __func__, m_pathDb.string());
-        return FileError;
-    }
-    // use file size to size memory buffer
-    int fileSize = boost::filesystem::file_size(m_pathDb);
-    int dataSize = fileSize - sizeof(uint256);
-    // Don't try to resize to a negative number if file is small
-    if (dataSize < 0)
-        dataSize = 0;
-    std::vector<unsigned char> vchData(dataSize);
-    uint256 hashIn;
+        // ... verify the network matches ours
+        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
+        {
+            error("%s: Invalid network magic number", __func__);
+            return IncorrectMagicNumber;
+        }
 
-    // read data and checksum from file
-    try
-    {
-        filein.read((char *)&vchData[0], dataSize);
-        filein >> hashIn;
-    }
-    catch (std::exception &e)
-    {
-        error("%s: Deserialize or I/O error - %s", __func__, e.what());
-        return HashReadError;
-    }
-    filein.fclose();
-
-    stream = CDataStream(vchData, SER_DISK, CLIENT_VERSION);
-    // verify stored checksum matches input data
-    uint256 hashTmp = Hash(stream.begin(), stream.end());
-    if (hashIn != hashTmp)
-    {
-        error("%s: Checksum mismatch, data corrupted", __func__);
-        return IncorrectHash;
-    }
-    return Ok;
-}
-
-template <typename T>
-typename DbManager<T>::ReadResult DbManager<T>::DeserializeStream(CDataStream& stream, T& objToLoad) const
-{
-    unsigned char pchMsgTmp[4];
-    std::string strMagicMessageTmp;
-    // de-serialize file header (file specific magic message) and ..
-    stream >> strMagicMessageTmp;
-
-    // ... verify the message matches predefined one
-    if (m_magicMessage != strMagicMessageTmp)
-    {
-        error("%s: Invalid magic message", __func__);
-        return IncorrectMagicMessage;
+        // de-serialize data into T object
+        stream >> objToLoad;
+        return Ok;
     }
 
-    // de-serialize file header (network specific magic number) and ..
-    stream >> FLATDATA(pchMsgTmp);
-
-    // ... verify the network matches ours
-    if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
+    template <typename T>
+    ReadResult Read(T& objToLoad, std::string magicMessage, std::string filename, bool fDryRun)
     {
-        error("%s: Invalid network magic number", __func__);
-        return IncorrectMagicNumber;
-    }
-
-    // de-serialize data into T object
-    stream >> objToLoad;
-    return Ok;
-}
-
-template <typename T>
-typename DbManager<T>::ReadResult DbManager<T>::Read(T& objToLoad, bool fDryRun)
-{
-    CDataStream ssObj(SER_DISK, CLIENT_VERSION);
-    ReadResult result = ReadStream(ssObj);
-    if (result != Ok)
-        return result;
-    try
-    {
-        result = DeserializeStream(ssObj, objToLoad);
+        CDataStream ssObj(SER_DISK, CLIENT_VERSION);
+        ReadResult result = ReadStream(ssObj, filename);
         if (result != Ok)
             return result;
-    }
-    catch (std::exception &e)
-    {
-        objToLoad.Clear();
-        error("%s: Deserialize or I/O error - %s", __func__, e.what());
-        return IncorrectFormat;
-    }
+        try
+        {
+            result = DeserializeStream(ssObj, magicMessage, objToLoad);
+            if (result != Ok)
+                return result;
+        }
+        catch (std::exception &e)
+        {
+            objToLoad.Clear();
+            error("%s: Deserialize or I/O error - %s", __func__, e.what());
+            return IncorrectFormat;
+        }
 
-    int64_t nStart = GetTimeMillis();
-    LogPrintf("Loaded info from %s  %dms\n", m_filename, GetTimeMillis() - nStart);
-    LogPrintf("     %s\n", objToLoad.ToString());
-    if(!fDryRun)
-    {
-        LogPrintf("%s: Cleaning....\n", __func__);
-        objToLoad.CheckAndRemove();
+        int64_t nStart = GetTimeMillis();
+        LogPrintf("Loaded info from %s  %dms\n", filename, GetTimeMillis() - nStart);
         LogPrintf("     %s\n", objToLoad.ToString());
+        if(!fDryRun)
+        {
+            LogPrintf("%s: Cleaning....\n", __func__);
+            objToLoad.CheckAndRemove();
+            LogPrintf("     %s\n", objToLoad.ToString());
+        }
+
+        return Ok;
     }
 
-    return Ok;
+    template <typename T>
+    bool Write(const T& objToSave, std::string filename, std::string magicMessage)
+    {
+        int64_t nStart = GetTimeMillis();
+
+        // serialize, checksum data up to that point, then append checksum
+        CDataStream ssObj(SER_DISK, CLIENT_VERSION);
+        ssObj << magicMessage; // specific magic message for this type of object
+        ssObj << FLATDATA(Params().MessageStart()); // network specific magic number
+        ssObj << objToSave;
+        uint256 hash = Hash(ssObj.begin(), ssObj.end());
+        ssObj << hash;
+
+        // open output file, and associate with CAutoFile
+        boost::filesystem::path pathDb = GetDataDir() / filename;
+        FILE *file = fopen(pathDb.string().c_str(), "wb");
+        CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
+        if (fileout.IsNull())
+        {
+            return error("%s: Failed to open file %s", __func__, pathDb.string());
+        }
+
+        // Write and commit header, data
+        try
+        {
+            fileout << ssObj;
+        }
+        catch (std::exception &e)
+        {
+            return error("%s: Serialize or I/O error - %s", __func__, e.what());
+        }
+        fileout.fclose();
+
+        LogPrintf("Written info to %s  %dms\n", filename, GetTimeMillis() - nStart);
+        LogPrintf("     %s\n", objToSave.ToString());
+
+        return true;
+    }
 }
 
 template <typename T>
-bool DbManager<T>::Load(T& objToLoad, bool fDryRun)
+bool Load(T& objToLoad, std::string filename, std::string magicMessage, bool fDryRun = false)
 {
-    LogPrintf("Reading info from %s...\n", m_filename);
-    ReadResult readResult = Read(objToLoad, fDryRun);
+    LogPrintf("Reading info from %s...\n", filename);
+    ::details::ReadResult readResult = ::details::Read(objToLoad, magicMessage, filename, fDryRun);
     switch(readResult)
     {
-        case Ok:
+        case ::details::Ok:
             return true;
-        case FileError:
-            LogPrintf("Missing file %s, will try to recreate\n", m_filename);
+        case ::details::FileError:
+            LogPrintf("Missing file %s, will try to recreate\n", filename);
             break;
-        case IncorrectFormat:
-            LogPrintf("Error reading %s: ", m_filename);
+        case ::details::IncorrectFormat:
+            LogPrintf("Error reading %s: ", filename);
             LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
             break;
         default:
-            LogPrintf("Error reading %s: ", m_filename);
+            LogPrintf("Error reading %s: ", filename);
             LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
             return false;
 
@@ -228,19 +199,19 @@ bool DbManager<T>::Load(T& objToLoad, bool fDryRun)
 }
 
 template <typename T>
-bool DbManager<T>::Dump(const T& objToSave)
+bool Dump(const T& objToSave, std::string filename, std::string magicMessage)
 {
     int64_t nStart = GetTimeMillis();
 
-    LogPrintf("Verifying %s format...\n", m_filename);
+    LogPrintf("Verifying %s format...\n", filename);
     T tmpObjToLoad;
-    if (!Load(tmpObjToLoad, true))
+    if (!Load(tmpObjToLoad, filename, magicMessage, true))
     {
         return false;
     }
-    LogPrintf("Writing info to %s...\n", m_filename);
-    Write(objToSave);
-    LogPrintf("%s dump finished  %dms\n", m_filename, GetTimeMillis() - nStart);
+    LogPrintf("Writing info to %s...\n", filename);
+    ::details::Write(objToSave, filename, magicMessage);
+    LogPrintf("%s dump finished  %dms\n", filename, GetTimeMillis() - nStart);
 
     return true;
 }
