@@ -33,37 +33,37 @@ static const int CONTINUE_EXECUTION=-1;
 
 static void SetupBitcoinTxArgs()
 {
-    gArgs.AddArg("-?", _("This help message"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-create", _("Create new, empty TX."), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-json", _("Select JSON output"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-txid", _("Output only the hex-encoded transaction id of the resultant transaction."), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-?", "This help message", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-create", "Create new, empty TX.", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-json", "Select JSON output", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-txid", "Output only the hex-encoded transaction id of the resultant transaction.", false, OptionsCategory::OPTIONS);
     SetupChainParamsBaseOptions();
 
-    gArgs.AddArg("delin=N", _("Delete input N from TX"), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("delout=N", _("Delete output N from TX"), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("in=TXID:VOUT(:SEQUENCE_NUMBER)", _("Add input to TX"), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("locktime=N", _("Set TX lock time to N"), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("nversion=N", _("Set TX version to N"), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("outdata=[VALUE:]DATA", _("Add data-based output to TX"), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("outmultisig=VALUE:REQUIRED:PUBKEYS:PUBKEY1:PUBKEY2:....[:FLAGS]", _("Add Pay To n-of-m Multi-sig output to TX. n = REQUIRED, m = PUBKEYS") + ". " +
-        _("Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output") + ". " +
-        _("Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash."), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("outpubkey=VALUE:PUBKEY[:FLAGS]", _("Add pay-to-pubkey output to TX") + ". " +
-        _("Optionally add the \"W\" flag to produce a pay-to-witness-pubkey-hash output") + ". " +
-        _("Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash."), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("outscript=VALUE:SCRIPT[:FLAGS]", _("Add raw script output to TX") + ". " +
-        _("Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output") + ". " +
-        _("Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash."), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("replaceable(=N)", _("Set RBF opt-in sequence number for input N (if not provided, opt-in all available inputs)"), false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("sign=SIGHASH-FLAGS", _("Add zero or more signatures to transaction") + ". " +
-        _("This command requires JSON registers:") +
-        _("prevtxs=JSON object") + ", " +
-        _("privatekeys=JSON object") + ". " +
-        _("See signrawtransaction docs for format of sighash flags, JSON objects."), false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("delin=N", "Delete input N from TX", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("delout=N", "Delete output N from TX", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("in=TXID:VOUT(:SEQUENCE_NUMBER)", "Add input to TX", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("locktime=N", "Set TX lock time to N", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("nversion=N", "Set TX version to N", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("outaddr=VALUE:ADDRESS", "Add address-based output to TX", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("outdata=[VALUE:]DATA", "Add data-based output to TX", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("outmultisig=VALUE:REQUIRED:PUBKEYS:PUBKEY1:PUBKEY2:....[:FLAGS]", "Add Pay To n-of-m Multi-sig output to TX. n = REQUIRED, m = PUBKEYS. "
+        "Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output. "
+        "Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash.", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("outpubkey=VALUE:PUBKEY[:FLAGS]", "Add pay-to-pubkey output to TX. "
+        "Optionally add the \"W\" flag to produce a pay-to-witness-pubkey-hash output. "
+        "Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash.", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("outscript=VALUE:SCRIPT[:FLAGS]", "Add raw script output to TX. "
+        "Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output. "
+        "Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash.", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("replaceable(=N)", "Set RBF opt-in sequence number for input N (if not provided, opt-in all available inputs)", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("sign=SIGHASH-FLAGS", "Add zero or more signatures to transaction. "
+        "This command requires JSON registers:"
+        "prevtxs=JSON object, "
+        "privatekeys=JSON object. "
+        "See signrawtransaction docs for format of sighash flags, JSON objects.", false, OptionsCategory::COMMANDS);
 
-    gArgs.AddArg("load=NAME:FILENAME", _("Load JSON file FILENAME into register NAME"), false, OptionsCategory::REGISTER_COMMANDS);
-    gArgs.AddArg("set=NAME:JSON-STRING", _("Set register NAME to given JSON-STRING"), false, OptionsCategory::REGISTER_COMMANDS);
+    gArgs.AddArg("load=NAME:FILENAME", "Load JSON file FILENAME into register NAME", false, OptionsCategory::REGISTER_COMMANDS);
+    gArgs.AddArg("set=NAME:JSON-STRING", "Set register NAME to given JSON-STRING", false, OptionsCategory::REGISTER_COMMANDS);
 }
 
 //
@@ -90,10 +90,10 @@ static int AppInitRawTx(int argc, char* argv[])
 
     if (argc < 2 || HelpRequested(gArgs)) {
         // First part of help message is specific to this utility
-        std::string strUsage = strprintf(_("%s bitcoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n\n" +
-            _("Usage:") + "\n" +
-              "  bitcoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded bitcoin transaction") + "\n" +
-              "  bitcoin-tx [options] -create [commands]   " + _("Create hex-encoded bitcoin transaction") + "\n" +
+        std::string strUsage = strprintf("%s bitcoin-tx utility version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
+            "Usage:\n"
+              "  bitcoin-tx [options] <hex-tx> [commands]  Update hex-encoded bitcoin transaction\n" +
+              "  bitcoin-tx [options] -create [commands]   Create hex-encoded bitcoin transaction\n" +
               "\n";
         strUsage += gArgs.GetHelpMessage();
 
