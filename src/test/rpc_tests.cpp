@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(rpc_assets_getaddressbalances)
 
     // valid params
     BOOST_CHECK_NO_THROW(CallRPC(std::string("getaddressbalances ")+ok_address));
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("getaddressbalances ")+ok_address+" 5"));
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("getaddressbalances ")+ok_address+" 1"));
 
     // invalid address
     BOOST_CHECK_THROW(CallRPC(std::string("getaddressbalances ")+bad_address), std::runtime_error);
