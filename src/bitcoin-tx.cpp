@@ -64,6 +64,7 @@ static void SetupBitcoinTxArgs()
         _("prevtxs=JSON object") + ", " +
         _("privatekeys=JSON object") + ". " +
         _("See signrawtransaction docs for format of sighash flags, JSON objects."), false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("outblind=COMMITMENT:SCRIPT:RANGEPROOF[:DATA]", _("Add blinded output to TX"), false, OptionsCategory::COMMANDS);
 
     gArgs.AddArg("load=NAME:FILENAME", _("Load JSON file FILENAME into register NAME"), false, OptionsCategory::REGISTER_COMMANDS);
     gArgs.AddArg("set=NAME:JSON-STRING", _("Set register NAME to given JSON-STRING"), false, OptionsCategory::REGISTER_COMMANDS);
@@ -782,6 +783,49 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     tx = mergedTx;
 }
 
+static void MutateTxAddOutBlind(CMutableTransaction& tx, const std::string& strInput)
+{
+    // separate COMMITMENT:SCRIPT:RANGEPROOF[:DATA]
+    std::vector<std::string> vStrInputParts;
+    boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
+    if (vStrInputParts.size() < 3)
+        throw std::runtime_error("TX output missing separator");
+
+    // extract and validate COMMITMENT
+    std::string &strCommitment = vStrInputParts[0];
+    if (!IsHex(strCommitment) || !(strCommitment.size() == 66))
+        throw std::runtime_error("COMMITMENT must be 33 bytes and hex encoded.");
+    std::vector<uint8_t> vchAmount = ParseHex(strCommitment);
+
+    // extract and validate script
+    std::string &strScript = vStrInputParts[1];
+    CScript scriptPubKey = ParseScript(strScript);
+
+    // extract and validate rangeproof
+    std::string &strRP = vStrInputParts[2];
+    if (!IsHex(strRP))
+        throw std::runtime_error("RANGEPROOF must be hex encoded.");
+    std::vector<uint8_t> vRangeproof = ParseHex(strRP);
+
+    std::vector<uint8_t> vData;
+    if (vStrInputParts.size() > 3) {
+        std::string &strData = vStrInputParts[3];
+        if (!IsHex(strData))
+            throw std::runtime_error("DATA must be hex encoded.");
+        vData = ParseHex(strData);
+    }
+
+    // construct TxOut, append to transaction output list
+    auto txbout = MAKE_OUTPUT<CTxOutCT>();
+    CTxOutCT *txout = (CTxOutCT*)txbout.get();
+    memcpy(txout->commitment.data, vchAmount.data(), 33);
+    txout->vData = vData;
+    txout->scriptPubKey = scriptPubKey;
+    txout->vRangeproof = vRangeproof;
+
+    tx.vpout.push_back(txbout);
+}
+
 class Secp256k1Init
 {
     ECCVerifyHandle globalVerifyHandle;
@@ -836,6 +880,10 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
     else if (command == "sign") {
         ecc.reset(new Secp256k1Init());
         MutateTxSign(tx, commandVal);
+    }
+
+    else if (command == "outblind") {
+        MutateTxAddOutBlind(tx, commandVal);
     }
 
     else if (command == "load")

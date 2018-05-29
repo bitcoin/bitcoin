@@ -289,7 +289,10 @@ EXTRA_DIST += \
     test/util/data_particl/txcreate1.json \
     test/util/data_particl/txcreate2.hex \
     test/util/data_particl/txcreate2.json \
-    test/util/data_particl/txcreatesignva0.hex
+    test/util/data_particl/txcreatesignva0.hex \
+    test/util/data_particl/txaddwitness0.hex \
+    test/util/data_particl/txdelwitness0.hex \
+    test/util/data_particl/txblindout0.hex
 
 
 CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
