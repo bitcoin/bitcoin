@@ -12,11 +12,21 @@ unset DISPLAY
 export CCACHE_COMPRESS=${CCACHE_COMPRESS:-1}
 export CCACHE_SIZE=${CCACHE_SIZE:-400M}
 
-if [ "$PULL_REQUEST" != "false" ]; then contrib/devtools/commit-script-check.sh $COMMIT_RANGE; fi
+if [ "$PULL_REQUEST" != "false" ]; then test/lint/commit-script-check.sh $COMMIT_RANGE; fi
 
-#if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi TODO reenable after all Bitcoin PRs have been merged and docs fully fixed
-if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-rpc-mappings.py .; fi
-if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/lint-all.sh; fi
+if [ "$CHECK_DOC" = 1 ]; then
+    # TODO: Verify subtrees
+    #test/lint/git-subtree-check.sh src/crypto/ctaes
+    #test/lint/git-subtree-check.sh src/secp256k1
+    #test/lint/git-subtree-check.sh src/univalue
+    #test/lint/git-subtree-check.sh src/leveldb
+    # TODO: Check docs (reenable after all Bitcoin PRs have been merged and docs fully fixed)
+    #test/lint/check-doc.py
+    # Check rpc consistency
+    test/lint/check-rpc-mappings.py .
+    # Run all linters
+    test/lint/lint-all.sh
+fi
 
 ccache --max-size=$CCACHE_SIZE
 
