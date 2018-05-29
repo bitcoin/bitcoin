@@ -24,15 +24,15 @@ static const int64_t DEFAULT_PLOT_HEIGHT = 768;
 
 static void SetupBenchArgs()
 {
-    gArgs.AddArg("-?", _("Print this help message and exit"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-list", _("List benchmarks without executing them. Can be combined with -scaling and -filter"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-evals=<n>", strprintf(_("Number of measurement evaluations to perform. (default: %u)"), DEFAULT_BENCH_EVALUATIONS), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-filter=<regex>", strprintf(_("Regular expression filter to select benchmark by name (default: %s)"), DEFAULT_BENCH_FILTER), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-scaling=<n>", strprintf(_("Scaling factor for benchmark's runtime (default: %u)"), DEFAULT_BENCH_SCALING), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-printer=(console|plot)", strprintf(_("Choose printer format. console: print data to console. plot: Print results as HTML graph (default: %s)"), DEFAULT_BENCH_PRINTER), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-plot-plotlyurl=<uri>", strprintf(_("URL to use for plotly.js (default: %s)"), DEFAULT_PLOT_PLOTLYURL), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-plot-width=<x>", strprintf(_("Plot width in pixel (default: %u)"), DEFAULT_PLOT_WIDTH), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-plot-height=<x>", strprintf(_("Plot height in pixel (default: %u)"), DEFAULT_PLOT_HEIGHT), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-?", "Print this help message and exit", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-list", "List benchmarks without executing them. Can be combined with -scaling and -filter", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-evals=<n>", strprintf("Number of measurement evaluations to perform. (default: %u)", DEFAULT_BENCH_EVALUATIONS), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-scaling=<n>", strprintf("Scaling factor for benchmark's runtime (default: %u)", DEFAULT_BENCH_SCALING), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-printer=(console|plot)", strprintf("Choose printer format. console: print data to console. plot: Print results as HTML graph (default: %s)", DEFAULT_BENCH_PRINTER), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-plotlyurl=<uri>", strprintf("URL to use for plotly.js (default: %s)", DEFAULT_PLOT_PLOTLYURL), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-width=<x>", strprintf("Plot width in pixel (default: %u)", DEFAULT_PLOT_WIDTH), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-height=<x>", strprintf("Plot height in pixel (default: %u)", DEFAULT_PLOT_HEIGHT), false, OptionsCategory::OPTIONS);
 }
 
 int
