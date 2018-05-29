@@ -2,12 +2,6 @@ Contents
 ========
 This directory contains tools for developers working on this repository.
 
-check-doc.py
-============
-
-Check if all command line args are documented. The return value indicates the
-number of undocumented args.
-
 clang-format-diff.py
 ===================
 
