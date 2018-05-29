@@ -40,7 +40,7 @@ def serialize_script_num(value):
 # Create a coinbase transaction, assuming no miner fees.
 # If pubkey is passed in, the coinbase output will be a P2PK output;
 # otherwise an anyone-can-spend output.
-def create_coinbase(height, pubkey = None):
+def create_coinbase(height, pubkey = None, dip4_activated=False):
     coinbase = CTransaction()
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), 
                 ser_string(serialize_script_num(height)), 0xffffffff))
@@ -53,6 +53,11 @@ def create_coinbase(height, pubkey = None):
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
     coinbase.vout = [ coinbaseoutput ]
+    if dip4_activated:
+        coinbase.nVersion = 3
+        coinbase.nType = 5
+        cbtx_payload = CCbTx(1, height, 0)
+        coinbase.vExtraPayload = cbtx_payload.serialize()
     coinbase.calc_sha256()
     return coinbase
 
