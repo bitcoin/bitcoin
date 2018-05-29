@@ -27,7 +27,6 @@
 
 using namespace std::chrono;
 using namespace std;
-vector<pair<uint256, int64_t> > vecTPSTestReceivedTimes;
 bool IsAssetAllocationOp(int op) {
 	return op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_COLLECT_INTEREST;
 }
@@ -668,7 +667,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();        
-			vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
 		}
 
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, dbAsset, ms, fJustCheck))
@@ -891,21 +889,7 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 
 	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
-UniValue tpstestinfo(const JSONRPCRequest& request) {
-        const UniValue &params = request.params;
-	if (request.fHelp || 0 != params.size())
-		throw runtime_error("tpstestinfo\n"
-			"Gets TPS Test information for receivers of assetallocation transfers\n");
 
-	UniValue oTPSTestResults(UniValue::VARR);
-	for (auto &receivedTime : vecTPSTestReceivedTimes) {
-		UniValue oTPSTestStatusObj(UniValue::VOBJ);
-		oTPSTestStatusObj.push_back(Pair("txid", receivedTime.first.GetHex()));
-		oTPSTestStatusObj.push_back(Pair("time", receivedTime.second));
-		oTPSTestResults.push_back(oTPSTestStatusObj);
-	}
-	return oTPSTestResults;
-}
 UniValue assetallocationinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || 3 != params.size())
