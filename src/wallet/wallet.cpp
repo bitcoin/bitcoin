@@ -1149,16 +1149,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 #if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
     if (!m_notify_tx_changed_scripts.empty()) {
-#ifdef WIN32
-        // Substituting the wallet name isn't currently supported on windows
-        // because windows shell escaping has not been implemented yet:
-        // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-537384875
-        // A few ways it could be implemented in the future are described in:
-        // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-461288094
-        const std::string walletname_escaped = "wallet_name_substitution_is_not_available_on_Windows";
-#else
         const std::string walletname_escaped = ShellEscape(GetName());
-#endif
         const std::string txid_hex = hash.GetHex();
         std::string blockhash_hex, blockheight_str;
         if (auto* conf = wtx.state<TxStateConfirmed>()) {
