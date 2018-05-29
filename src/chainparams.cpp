@@ -145,15 +145,11 @@ public:
         // This is fine at runtime as we'll fall back to using them as a oneshot if they dont support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
+        vSeeds.emplace_back("chc1.hashunlimited.com");
         vSeeds.emplace_back("seed1.chaincoin.org");
         vSeeds.emplace_back("seed2.chaincoin.org");
         vSeeds.emplace_back("seed3.chaincoin.org");
         vSeeds.emplace_back("seed4.chaincoin.org");
-        vSeeds.emplace_back("seed5.chaincoin.org");
-        vSeeds.emplace_back("seed6.chaincoin.org");
-        vSeeds.emplace_back("seed7.chaincoin.org");
-        vSeeds.emplace_back("seed8.chaincoin.org");
-        vSeeds.emplace_back("chc1.hashunlimited.com");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,28); // PM-Tech: ChainCoin
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,4); // PM-Tech: ChainCoin
