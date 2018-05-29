@@ -2,12 +2,6 @@ Contents
 ========
 This directory contains tools for developers working on this repository.
 
-check-doc.py
-============
-
-Check if all command line args are documented. The return value indicates the
-number of undocumented args.
-
 clang-format-diff.py
 ===================
 
@@ -92,23 +86,6 @@ example:
 ```bash
 BUILDDIR=$PWD/build contrib/devtools/gen-manpages.sh
 ```
-
-git-subtree-check.sh
-====================
-
-Run this script from the root of the repository to verify that a subtree matches the contents of
-the commit it claims to have been updated to.
-
-To use, make sure that you have fetched the upstream repository branch in which the subtree is
-maintained:
-* for `src/secp256k1`: https://github.com/bitcoin-core/secp256k1.git (branch master)
-* for `src/leveldb`: https://github.com/bitcoin-core/leveldb.git (branch bitcoin-fork)
-* for `src/univalue`: https://github.com/bitcoin-core/univalue.git (branch master)
-* for `src/crypto/ctaes`: https://github.com/bitcoin-core/ctaes.git (branch master)
-
-Usage: `git-subtree-check.sh DIR (COMMIT)`
-
-`COMMIT` may be omitted, in which case `HEAD` is used.
 
 github-merge.py
 ===============

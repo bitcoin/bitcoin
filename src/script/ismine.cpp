@@ -74,7 +74,7 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
     txnouttype whichType;
     if (!Solver(scriptPubKey, whichType, vSolutions)) {
         if (keystore.HaveWatchOnly(scriptPubKey))
-            return ISMINE_WATCH_UNSOLVABLE;
+            return ISMINE_WATCH_ONLY_;
         return ISMINE_NO;
     }
 
@@ -107,7 +107,7 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
             break;
         }
         isminetype ret = IsMineInner(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), isInvalid, IsMineSigVersion::WITNESS_V0);
-        if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
+        if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_ONLY_ || (ret == ISMINE_NO && isInvalid))
             return ret;
         break;
     }
@@ -148,7 +148,7 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
             isminetype ret = IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::P2SH);
-            if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
+            if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_ONLY_ || (ret == ISMINE_NO && isInvalid))
                 return ret;
         }
         break;
@@ -164,7 +164,7 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
             isminetype ret = IsMineInner(keystore, subscript, isInvalid, IsMineSigVersion::WITNESS_V0);
-            if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
+            if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_ONLY_ || (ret == ISMINE_NO && isInvalid))
                 return ret;
         }
         break;
@@ -199,9 +199,7 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
     }
 
     if (keystore.HaveWatchOnly(scriptPubKey)) {
-        // TODO: This could be optimized some by doing some work after the above solver
-        SignatureData sigs;
-        return ProduceSignature(keystore, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigs) ? ISMINE_WATCH_SOLVABLE : ISMINE_WATCH_UNSOLVABLE;
+        return ISMINE_WATCH_ONLY_;
     }
     return ISMINE_NO;
 }

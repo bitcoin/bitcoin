@@ -20,6 +20,8 @@ don't have test cases for.
 - Where possible, try to adhere to [PEP-8 guidelines](https://www.python.org/dev/peps/pep-0008/)
 - Use a python linter like flake8 before submitting PRs to catch common style
   nits (eg trailing whitespace, unused imports, etc)
+- See [the python lint script](/test/lint/lint-python.sh) that checks for violations that
+  could lead to bugs and issues in the test code.
 - Avoid wildcard imports where possible
 - Use a module-level docstring to describe what the test is testing, and how it
   is testing it.

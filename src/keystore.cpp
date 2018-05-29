@@ -64,7 +64,7 @@ isminetype CBasicKeyStore::IsMine(const CKeyID &address) const
     if (mapKeys.count(address) > 0)
         return ISMINE_SPENDABLE;
     if (mapWatchKeys.count(address) > 0)
-        return ISMINE_WATCH_SOLVABLE;
+        return ISMINE_WATCH_ONLY_;
     return ISMINE_NO;
 };
 

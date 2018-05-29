@@ -17,13 +17,10 @@ class CScript;
 enum isminetype : uint8_t
 {
     ISMINE_NO = 0,
-    //! Indicates that we don't know how to create a scriptSig that would solve this if we were given the appropriate private keys
-    ISMINE_WATCH_UNSOLVABLE = 1,
-    //! Indicates that we know how to create a scriptSig that would solve this if we were given the appropriate private keys
-    ISMINE_WATCH_SOLVABLE = 2,
+    ISMINE_WATCH_ONLY_ = 1,
+    ISMINE_SPENDABLE = 2,
     ISMINE_WATCH_COLDSTAKE = (1 << 7),
-    ISMINE_WATCH_ONLY = ISMINE_WATCH_SOLVABLE | ISMINE_WATCH_UNSOLVABLE | ISMINE_WATCH_COLDSTAKE,
-    ISMINE_SPENDABLE = 4,
+    ISMINE_WATCH_ONLY = ISMINE_WATCH_ONLY_ | ISMINE_WATCH_COLDSTAKE,
     ISMINE_HARDWARE_DEVICE = (1 << 6), // Pivate key is on external device
     ISMINE_ALL = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE
 };

@@ -1217,7 +1217,7 @@ isminetype CHDWallet::HaveStealthAddress(const CStealthAddress &sxAddr) const
         isminetype imSpend = IsMine(si->spend_secret_id);
         if (imSpend & ISMINE_SPENDABLE)
             return imSpend; // Retain ISMINE_HARDWARE_DEVICE flag if present
-        return ISMINE_WATCH_SOLVABLE;
+        return ISMINE_WATCH_ONLY_;
     };
 
     CKeyID sxId = CPubKey(sxAddr.scan_pubkey).GetID();
@@ -1804,7 +1804,7 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
 
     if (!Solver(scriptPubKey, whichType, vSolutions)) {
         if (HaveWatchOnly(scriptPubKey))
-            return ISMINE_WATCH_UNSOLVABLE;
+            return ISMINE_WATCH_ONLY_;
         return ISMINE_NO;
     }
 
@@ -1858,7 +1858,7 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
         CScript subscript;
         if (GetCScript(scriptID, subscript)) {
             isminetype ret = ::IsMine(*((CKeyStore*)this), subscript, isInvalid);
-            if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
+            if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_ONLY_ || (ret == ISMINE_NO && isInvalid))
                 return ret;
         }
         break;
@@ -1895,9 +1895,7 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
 
     if (HaveWatchOnly(scriptPubKey))
     {
-        // TODO: This could be optimized some by doing some work after the above solver
-        SignatureData sigs;
-        return ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR_PARTICL, scriptPubKey, sigs) ? ISMINE_WATCH_SOLVABLE : ISMINE_WATCH_UNSOLVABLE;
+        return ISMINE_WATCH_ONLY_;
     };
     return ISMINE_NO;
 };
@@ -3012,7 +3010,7 @@ int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string 
             if (r.fNonceSet)
             {
                 if (r.vData.size() < 33)
-                    LogPrintf("%s: Missing ephemeral value, vData size %d", __func__, r.vData.size());
+                    LogPrintf("%s: Missing ephemeral value, vData size %d\n", __func__, r.vData.size());
                     //return errorN(1, sError, __func__, "Missing ephemeral value, vData size %d", r.vData.size());
                 txout->vData = r.vData;
             } else
@@ -10289,8 +10287,9 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
                 continue;
             }
 
-            bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
-            bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
+            bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_ONLY_) != ISMINE_NO);
+            //bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
+            bool fSolvableIn = IsSolvable(*this, txout->scriptPubKey);
             bool fNeedHardwareKey = (mine & ISMINE_HARDWARE_DEVICE);
 
             vCoins.emplace_back(&wtx, i, nDepth, fSpendableIn, fSolvableIn, safeTx, fMature, fNeedHardwareKey);
