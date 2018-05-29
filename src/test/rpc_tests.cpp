@@ -41,45 +41,8 @@ UniValue CallRPC(std::string args)
 // asset fixtures
 static const std::string ok_address = "R9hNxkyzXrHmpxg7Z1qbW1PrKFriqzXBAU";
 static const std::string bad_address = "X9hNxkyzXrHmpxg7Z1qbW1PrKFriqzXBAU";
-static const std::string ok_asset_name = "OK_ASSET";
 
 BOOST_FIXTURE_TEST_SUITE(rpc_tests, TestingSetup)
-
-BOOST_AUTO_TEST_CASE(rpc_assets_issue)
-{
-    // missing required params
-    BOOST_CHECK_THROW(CallRPC("issue"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_asset_name), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_asset_name+" 1000"), std::runtime_error);
-
-    // valid params
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("issue ")+ok_asset_name+" 1000 "+"\"\""));
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("issue ")+ok_asset_name+" 1000 "+ok_address));
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("issue ")+ok_asset_name+" 1000 "+ok_address+" 1"));
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("issue ")+ok_asset_name+" 1000 "+ok_address+" 0.00000001 true"));
-
-    // invalid to_address
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_asset_name+" 1000 "+bad_address+" 0.0001 true"), std::runtime_error);
-
-    // invalid asset_name
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+"X"+" 1000 "+ok_address+" 0.0001 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+"XX"+" 1000 "+ok_address+" 0.0001 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+"BAD_A$$ET"+" 1000 "+ok_address+" 0.0001 true"), std::runtime_error);
-
-    // invalid qty
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_asset_name+" 0 "+ok_address+" 0.0001 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_asset_name+" -1 "+ok_address+" 0.0001 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_asset_name+" NaN "+ok_address+" 0.0001 true"), std::runtime_error);
-
-    // invalid units
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" 1000 "+ok_address+" 2 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" 1000 "+ok_address+" 0.0002 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" 1000 "+ok_address+" 0.000000001 true"), std::runtime_error);
-
-    // invalid reissuable
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_asset_name+" 1000 "+ok_address+" 1 NaB"), std::runtime_error);
-
-}
 
 BOOST_AUTO_TEST_CASE(rpc_assets_getaddressbalances)
 {
