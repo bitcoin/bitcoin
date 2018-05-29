@@ -44,8 +44,8 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
 
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    //python gen.py -z "The Times May 25th 2018 Bitcoin investigation to focus on British traders" -p "0435c0f99b3af273876636de037c6c5cf8c4e08101ad15960435615f59c1239dcd9408708f5ec090756ce433092c10209f163c7f174a3cd8258b4969519a4912cf" -b 0x1e0ffff0 -n 592642 -a neoscrypt -t 1527258000
-    const char* pszTimestamp = "The Times May 25th 2018 Bitcoin investigation to focus on British traders";
+    //python gen.py -z "The Times 2018/05/25 Bitcoin investigation to focus on British traders 1" -p "0435c0f99b3af273876636de037c6c5cf8c4e08101ad15960435615f59c1239dcd9408708f5ec090756ce433092c10209f163c7f174a3cd8258b4969519a4912cf" -b 0x1e0ffff0 -a neoscrypt -t 1527258100
+    const char* pszTimestamp = "The Times 2018/05/25 Bitcoin investigation to focus on British traders 1";
     const CScript genesisOutputScript = CScript() << ParseHex("0435c0f99b3af273876636de037c6c5cf8c4e08101ad15960435615f59c1239dcd9408708f5ec090756ce433092c10209f163c7f174a3cd8258b4969519a4912cf") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
@@ -105,20 +105,21 @@ public:
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
+         * 4a d5 83 12
          */
-        pchMessageStart[0] = 0x37;
-        pchMessageStart[1] = 0x5c;
-        pchMessageStart[2] = 0x6b;
-        pchMessageStart[3] = 0x25;
+        pchMessageStart[0] = 0x4a;
+        pchMessageStart[1] = 0xd5;
+        pchMessageStart[2] = 0x83;
+        pchMessageStart[3] = 0x12;
         vAlertPubKey = ParseHex("04b6a3a2911d40d214be61d573bfb1a32ef98b931d9c721f7bbbbdf2692abfd5eb235692d3ad1a81f75157fd0a9d96866b62b717d091f2481b70e3b8d87cc68fd3");
         nDefaultPort = 40888;
         nMaxTipAge = 60 * 60 * 60; // ~1440 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1527258000, 1944819, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527258100, 1237745, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000008de8b4b9ef8bf126b15f7c39086e698b8c35c59deb31d61b9ea317ccca"));
-        assert(genesis.hashMerkleRoot == uint256S("0xeb0ccbad153c1e555c87401023c2d59b30fe9c31f4782d7b888f0f4f7f80675c"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000977aa66ac276b762c36fca36a843f5525a8fa9849c429a922858f2036a2"));
+        assert(genesis.hashMerkleRoot == uint256S("0x61caac4609d899cee2d0d30c3050eec5144f0a2fc3abbfe627fdafc3feb44b37"));
 
         vSeeds.push_back(CDNSSeedData("aithercoin.com", "net-1.seed.aithercoin.com"));
         vSeeds.push_back(CDNSSeedData("aithercoin.com", "net-2.seed.aithercoin.com"));
@@ -139,14 +140,18 @@ public:
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
-        fMiningRequiresPeers = true;
+        //TODO set to true if release
+        fMiningRequiresPeers = false;
+
+        //TODO set to false if release
+        fMineBlocksOnDemand = true;
+
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
-        fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = false;
 
         nPoolMaxTransactions = 3;
-        nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 1 hour
+        nFulfilledRequestExpireTime = 60 * 60; // fulfilled requests expire in 1 hour
         //TODO aither need to remove strSporkPrivateKey = "f6c3c04c8c5a3c7ff31af773d8fa943973b21dd69a7e1b09b3fae8a15a699a82"
         strSporkPubKey = "04080a56cc3f424a153dc2e5c8c784aa9c80196c5ccbf9711a7dc22e7042d42d00e7cb0ec91f5ea2fb00d7bb95c76763798bd7c2418f94d43b777333071fec6ff1";
         strMasternodePaymentsPubKey = "042925f2904184e419f890076f94e24943b20e149b4ba703e90b03d974ed04325e2cb289941d220e161000ead5e1cefebe160993df6f3b23741fa5f6e4c6f7a123";
@@ -183,8 +188,8 @@ public:
         consensus.BIP34Height = 21111; // FIX
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8"); // FIX
         consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000");
-        consensus.nPowTargetTimespan = 5 * 60; // Aither: 5 minutes, 2 blocks
-        consensus.nPowTargetSpacing = 2.5 * 60; // Aither: 150 seconds
+        consensus.nPowTargetTimespan = 5 * 60; // Aither: 5 minutes, 5 blocks
+        consensus.nPowTargetSpacing = 1 * 60; // Aither: 60 seconds
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
@@ -198,23 +203,25 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1502280000; // Aug 9th, 2017
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1533816000; // Aug 9th, 2018
 
-        pchMessageStart[0] = 0x4d;
-        pchMessageStart[1] = 0x9b;
-        pchMessageStart[2] = 0x37;
-        pchMessageStart[3] = 0x28;
+                //cd f8 dc 7d
+        pchMessageStart[0] = 0xcd;
+        pchMessageStart[1] = 0xf8;
+        pchMessageStart[2] = 0xdc;
+        pchMessageStart[3] = 0x7d;
         vAlertPubKey = ParseHex("04904d236abae451f9b5c7bf476486588f503a18096d538a7d8cddd95dd0ebcfd7433d0a5969c88eb47af4090a43437776ed09ddf95970d8363e196bc1a9391ced");
         nDefaultPort = 41888;
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1527250000, 544828, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527258200, 218168, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000cf56078d5aa87716b7e74026b9f308a658669be0d08fc6a3baa44f3d117"));
-        assert(genesis.hashMerkleRoot == uint256S("0xeb0ccbad153c1e555c87401023c2d59b30fe9c31f4782d7b888f0f4f7f80675c"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000dec8348b5ac3541c4f83f81220cfee823812187a3a9b72d749a49361a29"));
+        assert(genesis.hashMerkleRoot == uint256S("0x61caac4609d899cee2d0d30c3050eec5144f0a2fc3abbfe627fdafc3feb44b37"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("aithercoin.com", "testnet.seed.aithercoin.com"));
+        vSeeds.push_back(CDNSSeedData("aithercoin.com", "testnet-1.seed.aithercoin.com"));
+        vSeeds.push_back(CDNSSeedData("aithercoin.com", "testnet-2.seed.aithercoin.com"));
 
         // Testnet Aither addresses start with 'B'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,25);
@@ -234,7 +241,7 @@ public:
         fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
-        fMineBlocksOnDemand = false;
+        fMineBlocksOnDemand = true;
         fTestnetToBeDeprecatedFieldRPC = true;
 
         nPoolMaxTransactions = 3;
@@ -296,10 +303,10 @@ public:
         nDefaultPort = 42888;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1527240000, 155459, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1527258300, 2338553, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000004ab1803f82cfbfce7f69abcc7a1bb95416a49fddc80ab0dffccff320d75"));
-        assert(genesis.hashMerkleRoot == uint256S("0xeb0ccbad153c1e555c87401023c2d59b30fe9c31f4782d7b888f0f4f7f80675c"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000ba1258879771eaf7171c93c1921afeff526615c33e4866f74a79a40ab11"));
+        assert(genesis.hashMerkleRoot == uint256S("0x61caac4609d899cee2d0d30c3050eec5144f0a2fc3abbfe627fdafc3feb44b37"));
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();  //! Regtest mode doesn't have any DNS seeds.
