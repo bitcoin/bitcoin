@@ -345,6 +345,60 @@ RES_ICONS = \
   qt/res/icons/light/fontsmaller.png \
   qt/res/icons/light/transaction_abandoned.png \
   qt/res/icons/light/network_disabled.png \
+  qt/res/icons/light-retro/add.png \
+  qt/res/icons/light-retro/address-book.png \
+  qt/res/icons/light-retro/browse.png \
+  qt/res/icons/light-retro/clock1.png \
+  qt/res/icons/light-retro/clock2.png \
+  qt/res/icons/light-retro/clock3.png \
+  qt/res/icons/light-retro/clock4.png \
+  qt/res/icons/light-retro/clock5.png \
+  qt/res/icons/light-retro/configure.png \
+  qt/res/icons/light-retro/connect0_16.png \
+  qt/res/icons/light-retro/connect1_16.png \
+  qt/res/icons/light-retro/connect2_16.png \
+  qt/res/icons/light-retro/connect3_16.png \
+  qt/res/icons/light-retro/connect4_16.png \
+  qt/res/icons/light-retro/debugwindow.png \
+  qt/res/icons/light-retro/drkblue_editpaste.png \
+  qt/res/icons/light-retro/drkblue_address-book.png \
+  qt/res/icons/light-retro/drkblue_editcopy.png \
+  qt/res/icons/light-retro/drkblue_remove.png \
+  qt/res/icons/light-retro/edit.png \
+  qt/res/icons/light-retro/editcopy.png \
+  qt/res/icons/light-retro/editpaste.png \
+  qt/res/icons/light-retro/export.png \
+  qt/res/icons/light-retro/eye.png \
+  qt/res/icons/light-retro/eye_minus.png \
+  qt/res/icons/light-retro/eye_plus.png \
+  qt/res/icons/light-retro/filesave.png \
+  qt/res/icons/light-retro/hd_disabled.png \
+  qt/res/icons/light-retro/hd_enabled.png \
+  qt/res/icons/light-retro/history.png \
+  qt/res/icons/light-retro/key.png \
+  qt/res/icons/light-retro/lock_closed.png \
+  qt/res/icons/light-retro/lock_open.png \
+  qt/res/icons/light-retro/masternodes.png \
+  qt/res/icons/light-retro/overview.png \
+  qt/res/icons/light-retro/quit.png \
+  qt/res/icons/light-retro/receive.png \
+  qt/res/icons/light-retro/remove.png \
+  qt/res/icons/light-retro/send.png \
+  qt/res/icons/light-retro/synced.png \
+  qt/res/icons/light-retro/transaction0.png \
+  qt/res/icons/light-retro/transaction2.png \
+  qt/res/icons/light-retro/transaction_conflicted.png \
+  qt/res/icons/light-retro/tx_inout.png \
+  qt/res/icons/light-retro/tx_input.png \
+  qt/res/icons/light-retro/tx_output.png \
+  qt/res/icons/light-retro/tx_mined.png \
+  qt/res/icons/light-retro/about.png \
+  qt/res/icons/light-retro/about_qt.png \
+  qt/res/icons/light-retro/verify.png \
+  qt/res/icons/light-retro/fontbigger.png \
+  qt/res/icons/light-retro/fontsmaller.png \
+  qt/res/icons/light-retro/transaction_abandoned.png \
+  qt/res/icons/light-retro/network_disabled.png \
   qt/res/icons/trad/add.png \
   qt/res/icons/trad/address-book.png \
   qt/res/icons/trad/browse.png \
@@ -506,6 +560,19 @@ RES_IMAGES = \
   qt/res/images/light/drkblue_rightArrow_small.png \
   qt/res/images/light/drkblue_qtreeview_selected.png \
   qt/res/images/light/drkblue_walletFrame_bg.png \
+  qt/res/images/light-retro/about.png \
+  qt/res/images/light-retro/splash.png \
+  qt/res/images/light-retro/splash_testnet.png \
+  qt/res/images/light-retro/dash_logo_horizontal.png \
+  qt/res/images/light-retro/unchecked.png \
+  qt/res/images/light-retro/checked.png \
+  qt/res/images/light-retro/drkblue_downArrow.png \
+  qt/res/images/light-retro/drkblue_downArrow_small.png \
+  qt/res/images/light-retro/drkblue_upArrow_small.png \
+  qt/res/images/light-retro/drkblue_leftArrow_small.png \
+  qt/res/images/light-retro/drkblue_rightArrow_small.png \
+  qt/res/images/light-retro/drkblue_qtreeview_selected.png \
+  qt/res/images/light-retro/drkblue_walletFrame_bg.png \
   qt/res/images/trad/about.png \
   qt/res/images/trad/splash.png \
   qt/res/images/trad/splash_testnet.png \
@@ -523,6 +590,8 @@ RES_CSS = \
   qt/res/css/crownium.css \
   qt/res/css/light.css \
   qt/res/css/light-hires.css \
+  qt/res/css/light-retro.css \
+  qt/res/css/light-hires-retro.css \
   qt/res/css/trad.css
 
 RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
