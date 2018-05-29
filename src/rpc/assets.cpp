@@ -66,9 +66,9 @@ UniValue issue(const JSONRPCRequest& request)
             "\"txid\"                     (string) The transaction id\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("issue", "\"myaddress\" \"myassetname\" 1000")
-            + HelpExampleCli("issue", "\"myaddress\" \"myassetname\" 1000 \"0.0001\"")
-            + HelpExampleCli("issue", "\"myaddress\" \"myassetname\" 1000 \"0.01\" true")
+            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\"")
+            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"0.0001\"")
+            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"0.01\" true")
         );
 
 
@@ -509,7 +509,7 @@ UniValue transfer(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category    name                      actor (function)         argNames
   //  ----------- ------------------------  -----------------------  ----------
-    { "assets",   "issue",                  &issue,                  {"to_address","asset_name","qty","units","reissuable"} },
+    { "assets",   "issue",                  &issue,                  {"asset_name","qty","to_address","units","reissuable","has_ipfs","ipfs_hash"} },
     { "assets",   "getaddressbalances",     &getaddressbalances,     {"address", "minconf"} },
     { "assets",   "getallassets",           &getallassets,           {}},
     { "assets",   "getmyassets",            &getmyassets,            {}},
