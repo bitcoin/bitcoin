@@ -109,19 +109,19 @@ public:
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1533081600; // Aug 1st, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1527811200; // June 1st, 2018
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1577750400; // Dec 31st, 2019
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1533081600; // Aug 1st, 2018.
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1527811200; // June 1st, 2018.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1577750400; // Dec 31st, 2019.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000003dcd8432dc91bbf"); // 1396940 // PM-Tech: ChainCoin
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000004b643d48e088b67"); // 1499485 // PM-Tech: ChainCoin
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000000000cad6be92824a5050ebb98a5c835e85a76922b2ebdefb1962d2ce51"); //1396940 // PM-Tech: ChainCoin
+        consensus.defaultAssumeValid = uint256S("0x0000000001aa875dd078fe2381501d724dade107bea7868fd6586918f4f8421f"); //1499485 // PM-Tech: ChainCoin
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -193,10 +193,10 @@ public:
        };
 
        chainTxData = ChainTxData{
-            1490629503 /*1518000378*/, // * UNIX timestamp of last checkpoint block
+            1490629503  /*1518000378*/, // * UNIX timestamp of last checkpoint block
             1652928,    // * total number of transactions between genesis and last checkpoint
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            0.01388     // * estimated number of transactions per second after that timestamp
+            0.0142373   // * estimated number of transactions per second after that timestamp
         };
     }
 };
