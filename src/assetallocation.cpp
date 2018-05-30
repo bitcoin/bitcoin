@@ -1078,7 +1078,7 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	bool bConfirmed = false;
 	if (chainActive.Height() >= assetallocation.nHeight - 1) {
 		bConfirmed = (chainActive.Height() - assetallocation.nHeight) >= 1;
-		CBlockIndex *pindex = chainActive[chainActive.Height() >= assetallocation.nHeight ? nHeight: assetallocation.nHeight - 1];
+		CBlockIndex *pindex = chainActive[chainActive.Height() >= assetallocation.nHeight ? assetallocation.nHeight : assetallocation.nHeight - 1];
 		if (pindex) {
 			nTime = pindex->GetMedianTimePast();
 		}
