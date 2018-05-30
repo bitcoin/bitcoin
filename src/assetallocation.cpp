@@ -1097,6 +1097,7 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
 	if (fAssetAllocationIndex) {
 		CAliasIndex fromAlias;
+		printf("strSender %s strReceiver %d\n", strSender.c_str(), strReceiver.c_str());
 		if (!GetAlias(vchFromString(strSender), fromAlias))
 			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Failed to read sender alias from DB"));
 		CAliasIndex toAlias;
