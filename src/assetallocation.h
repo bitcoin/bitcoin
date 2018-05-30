@@ -183,7 +183,7 @@ public:
 		WriteAssetAllocationIndex(assetallocation, asset, nAmount, strReceiver);
         return writeState;
     }
-	bool WriteAssetAllocationWalletIndex(const CAssetAllocationTuple& assetAllocationTuple, const UniValue& value) {
+	bool WriteAssetAllocationWalletIndex(const CAssetAllocationTuple& assetAllocationTuple, const std::string& value) {
 		return Write(make_pair(std::string("assetallocationtxi"), assetAllocationTuple), value));
 	}
 	bool EraseAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup = false) {

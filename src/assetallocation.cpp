@@ -89,10 +89,10 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 	if (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex) {
 		UniValue oName(UniValue::VOBJ);
 		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, stringFromVch(assetallocation.vchAlias), strReceiver, oName)) {
-			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetallocation");
+			const string& strObj = oName.write();
+			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
 			if (!strReceiver.empty() && fAssetAllocationIndex) {
-				const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
-				WriteAssetAllocationWalletIndex(allocationTuple, oName);
+				WriteAssetAllocationWalletIndex(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias), strObj);
 			}
 		}
 	}
@@ -1165,6 +1165,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, U
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	pair<string, vector<unsigned char> > key;
+	string assetStr;
 	UniValue assetValue;
 	int index = 0;
 	while (pcursor->Valid()) {
@@ -1176,8 +1177,9 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, U
 		boost::this_thread::interruption_point();
 		try {
 			if (pcursor->GetKey(key) && key.first == "assetallocationtxi") {
-				pcursor->GetValue(assetValue);
-				oRes.push_back(assetValue);
+				pcursor->GetValue(assetStr);
+				if(assetValue.read(assetStr))
+					oRes.push_back(assetValue);
 			}
 			if (index >= count+from)
 				break;
