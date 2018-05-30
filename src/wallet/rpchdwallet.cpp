@@ -5228,6 +5228,8 @@ static UniValue createsignaturewithwallet(const JSONRPCRequest &request)
     std::vector<uint8_t> vchAmount;
     if (prevOut.exists("amount"))
     {
+        if (prevOut.exists("amount_commitment"))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Both \"amount\" and \"amount_commitment\" found.");
         CAmount nValue = AmountFromValue(prevOut["amount"]);
         vchAmount.resize(8);
         memcpy(vchAmount.data(), &nValue, 8);
@@ -5236,11 +5238,11 @@ static UniValue createsignaturewithwallet(const JSONRPCRequest &request)
     {
         std::string s = prevOut["amount_commitment"].get_str();
         if (!IsHex(s) || !(s.size() == 66))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "amount_commitment must be 33 bytes and hex encoded.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "\"amount_commitment\" must be 33 bytes and hex encoded.");
         vchAmount = ParseHex(s);
     } else
     {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount or amount_commitment is required");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "\"amount\" or \"amount_commitment\" is required");
     };
 
     if (prevOut.exists("redeemScript"))
@@ -5372,6 +5374,8 @@ static UniValue createsignaturewithkey(const JSONRPCRequest &request)
     std::vector<uint8_t> vchAmount(8);
     if (prevOut.exists("amount"))
     {
+        if (prevOut.exists("amount_commitment"))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Both \"amount\" and \"amount_commitment\" found.");
         CAmount nValue = AmountFromValue(prevOut["amount"]);
         vchAmount.resize(8);
         memcpy(vchAmount.data(), &nValue, 8);
@@ -5380,11 +5384,11 @@ static UniValue createsignaturewithkey(const JSONRPCRequest &request)
     {
         std::string s = prevOut["amount_commitment"].get_str();
         if (!IsHex(s) || !(s.size() == 66))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "amount_commitment must be 33 bytes and hex encoded.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "\"amount_commitment\" must be 33 bytes and hex encoded.");
         vchAmount = ParseHex(s);
     } else
     {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount or amount_commitment is required");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "\"amount\" or \"amount_commitment\" is required");
     };
 
     if (prevOut.exists("redeemScript"))
@@ -6677,6 +6681,14 @@ static UniValue createrawparttransaction(const JSONRPCRequest& request)
             r.fNonceSet = true;
         };
 
+        if (o["data"].isStr())
+        {
+            std::string s = o["data"].get_str();
+            if (!IsHex(s))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "\"data\" must be hex encoded.");
+            r.vData = ParseHex(s);
+        };
+
         if (o["address"].isStr() && o["script"].isStr())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't specify both \"address\" and \"script\".");
 
@@ -7207,7 +7219,6 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
         {
             if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, false, nFee, &coinControl, sError))
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
-
         } else
         if (sInputType == "anon")
         {
@@ -7226,11 +7237,16 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
     }
 
     tx.vpout = wtx.tx->vpout;
-    tx.vin = wtx.tx->vin;
-
-    for (const CTxIn& txin : tx.vin) {
-        if (lockUnspents) {
-            LOCK(pwallet->cs_wallet);
+    // keep existing sequences
+    for (const auto &txin : wtx.tx->vin)
+    {
+        if (!coinControl.IsSelected(txin.prevout))
+        {
+            tx.vin.push_back(txin);
+        };
+        if (lockUnspents)
+        {
+            LOCK2(cs_main, pwallet->cs_wallet);
             pwallet->LockCoin(txin.prevout);
         };
     };
@@ -7434,16 +7450,24 @@ static UniValue verifyrawtransaction(const JSONRPCRequest &request)
             newcoin.out.scriptPubKey = scriptPubKey;
             newcoin.out.nValue = 0;
             if (prevOut.exists("amount")) {
+                if (prevOut.exists("amount_commitment"))
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Both \"amount\" and \"amount_commitment\" found.");
+                newcoin.nType = OUTPUT_STANDARD;
                 newcoin.out.nValue = AmountFromValue(find_value(prevOut, "amount"));
-            }
+            } else
             if (prevOut.exists("amount_commitment")) {
                 std::string s = prevOut["amount_commitment"].get_str();
                 if (!IsHex(s) || !(s.size() == 66))
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "amount_commitment must be 33 bytes and hex encoded.");
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "\"amount_commitment\" must be 33 bytes and hex encoded.");
                 std::vector<uint8_t> vchCommitment = ParseHex(s);
                 assert(vchCommitment.size() == 33);
                 memcpy(newcoin.commitment.data, vchCommitment.data(), 33);
-            }
+                newcoin.nType = OUTPUT_CT;
+            } else
+            {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "\"amount\" or \"amount_commitment\" is required");
+            };
+
             newcoin.nHeight = 1;
             view.AddCoin(out, std::move(newcoin), true);
             }

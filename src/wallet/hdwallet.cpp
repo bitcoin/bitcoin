@@ -3010,8 +3010,7 @@ int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string 
             if (r.fNonceSet)
             {
                 if (r.vData.size() < 33)
-                    LogPrintf("%s: Missing ephemeral value, vData size %d\n", __func__, r.vData.size());
-                    //return errorN(1, sError, __func__, "Missing ephemeral value, vData size %d", r.vData.size());
+                    return errorN(1, sError, __func__, "Missing ephemeral value, vData size %d", r.vData.size());
                 txout->vData = r.vData;
             } else
             {
@@ -10612,9 +10611,9 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
 
     for (auto &outpoint : vPresetInputs)
     {
-        MapRecords_t::const_iterator it = mapRecords.find(outpoint.hash);
-        if (it != mapRecords.end()
-            || (it = mapTempRecords.find(outpoint.hash)) != mapTempRecords.end()) // Allows non-wallet inputs
+        MapRecords_t::const_iterator it;
+        if ((it = mapTempRecords.find(outpoint.hash)) != mapTempRecords.end() // Must check mapTempRecords first, mapRecords may contain the same tx without the relevant output.
+            || (it = mapRecords.find(outpoint.hash)) != mapRecords.end()) // Allows non-wallet inputs
         {
             const CTransactionRecord &rtx = it->second;
             const COutputRecord *oR = rtx.GetOutput(outpoint.n);
