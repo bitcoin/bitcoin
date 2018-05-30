@@ -86,12 +86,12 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 
 }
 void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const string& strReceiver) {
-	if (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex) {
+	if (!strReceiver.empty() && (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex)) {
 		UniValue oName(UniValue::VOBJ);
 		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, stringFromVch(assetallocation.vchAlias), strReceiver, oName)) {
 			const string& strObj = oName.write();
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
-			if (!strReceiver.empty() && fAssetAllocationIndex) {
+			if ( fAssetAllocationIndex) {
 				WriteAssetAllocationWalletIndex(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias), strObj);
 			}
 		}

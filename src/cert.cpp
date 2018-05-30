@@ -265,7 +265,7 @@ bool RevertCert(const std::vector<unsigned char>& vchCert, const int op, const u
 		}
 	}
 	// write the state back to previous state
-	else if (!pcertdb->WriteCert(dbCert, op, INT64_MAX, false))
+	else if (!pcertdb->WriteCert(dbCert, op, INT64_MAX, false, false))
 	{
 		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 3001 - " + _("Failed to write to cert DB");
 		return error(errorMessage.c_str());
