@@ -85,10 +85,14 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset) {
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const string& strReceiver) {
 	UniValue oName(UniValue::VOBJ);
-	if (BuildAssetAllocationIndexerJson(assetallocation, asset, oName)) {
+	if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, stringFromVch(assetallocation.vchAlias), strReceiver, oName)) {
 		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetallocation");
+		if (!strReceiver.empty() && GetArg("-assetallocationindex", false)) {
+			const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
+			WriteAssetAllocationWalletIndex(allocationTuple, oName);
+		}
 	}
 
 }
@@ -204,7 +208,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 		dbAssetAllocation.nLastInterestClaimHeight = nHeight;
 	}
 	// write the state back to previous state
-	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, asset, INT64_MAX, false))
+	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, asset, INT64_MAX, "", false))
 	{
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1000 - " + _("Failed to write to asset allocation DB");
 		return error(errorMessage.c_str());
@@ -533,7 +537,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= amountTuple.second;
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, stringFromVch(receiverAllocation.vchAlias), fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -637,7 +641,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= rangeTotals[i];
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, stringFromVch(receiverAllocation.vchAlias), fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1030 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -667,7 +671,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 		}
 
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, dbAsset, ms, fJustCheck))
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, dbAsset, ms, "", fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
@@ -1066,16 +1070,52 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
 	oAssetAllocation.push_back(Pair("accumulated_interest", ValueFromAssetAmount(GetAssetAllocationInterest(assetallocation, chainActive.Tip()->nHeight, errorMessage), asset.nPrecision, asset.bUseInputRanges)));
 	return true;
 }
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oAssetAllocation)
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const string& strSender, const string& strReceiver, UniValue& oAssetAllocation)
 {
+	int64_t nTime = 0;
+	bool bConfirmed = false;
+	if (chainActive.Height() >= assetallocation.nHeight - 1) {
+		nConfirmations = (chainActive.Height() - assetallocation.nHeight) >= 6;
+		CBlockIndex *pindex = chainActive[chainActive.Height() >= assetallocation.nHeight ? nHeight: assetallocation.nHeight - 1];
+		if (pindex) {
+			nTime = pindex->GetMedianTimePast();
+		}
+	}
 	oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias).ToString()));
 	oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
+	oAssetAllocation.push_back(Pair("time", nTime));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	oAssetAllocation.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
 	oAssetAllocation.push_back(Pair("interest_rate", asset.fInterestRate));
 	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
-	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
+	oAssetAllocation.push_back(Pair("sender", strSender));
+	oAssetAllocation.push_back(Pair("receiver", strReceiver));
 	oAssetAllocation.push_back(Pair("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
+	oAssetAllocation.push_back(Pair("amount", ValueFromAssetAmount(nAmount, asset.nPrecision, asset.bUseInputRanges)));
+	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
+	if (GetArg("-assetallocationindex", false)) {
+		CAliasIndex fromAlias;
+		if (!GetAlias(vchFromStrinG(strSender), fromAlias))
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Failed to read sender alias from DB"));
+		CAliasIndex toAlias;
+		if (!GetAlias(vchFromStrinG(strReceiver), toAlias))
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Failed to read recipient alias from DB"));
+
+		const CSyscoinAddress fromAddress(EncodeBase58(fromAlias.vchAddress));
+		const CSyscoinAddress toAddress(EncodeBase58(toAlias.vchAddress));
+
+		isminefilter filter = ISMINE_SPENDABLE;
+		isminefilter mine = IsMine(*pwalletMain, fromAddress.Get());
+		string strCat = "";
+		if ((mine & filter))
+			strCat = "send";
+		else {
+			mine = IsMine(*pwalletMain, toAddress.Get());
+			if ((mine & filter))
+				strCat = "receive";
+		}
+		oAssetAllocation.push_back(Pair("category", strCat));
+	}
 	return true;
 }
 void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
@@ -1117,6 +1157,54 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 	entry.push_back(Pair("allocations", oAssetAllocationReceiversArray));
 
 
+}
+bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, UniValue& oRes) {
+
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	pair<string, vector<unsigned char> > key;
+	UniValue assetValue;
+	int index = 0;
+	while (pcursor->Valid()) {
+		index++;
+		if (from > 0 && index <= from) {
+			pcursor->Next();
+			continue;
+		}
+		boost::this_thread::interruption_point();
+		try {
+			if (pcursor->GetKey(key) && key.first == "assetallocationtxi") {
+				pcursor->GetValue(assetValue);
+				oRes.push_back(assetValue);
+			}
+			if (index >= count+from)
+				break;
+
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
+}
+UniValue listassetallocationtransactions(const UniValue& params, bool fHelp) {
+	if (fHelp || 2 < params.size())
+		throw runtime_error("listassetallocationtransactions [count] [from]\n"
+			"list asset allocations sent or recieved in this wallet.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip.\n");
+	int count = 10;
+	int from = 0;
+	if (params.size() > 0)
+		count = params[0].get_int();
+	if (params.size() > 1)
+		from = params[1].get_int();
+
+	UniValue oRes(UniValue::VARR);
+	if (!passetallocationdb->ScanAssetAllocations(count, from, oRes))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1511 - " + _("Scan failed"));
+	return oRes;
 }
 
 

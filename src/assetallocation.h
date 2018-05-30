@@ -167,7 +167,7 @@ class CAssetAllocationDB : public CDBWrapper {
 public:
 	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAsset& asset, const int64_t& arrivalTime, const bool& fJustCheck) {
+    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAmount& nAmount, const CAsset& asset, const int64_t& arrivalTime, const string& strReceiever, const bool& fJustCheck) {
 		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
 		bool writeState = Write(make_pair(std::string("assetallocationi"), allocationTuple), assetallocation);
 		if (!fJustCheck)
@@ -180,9 +180,12 @@ public:
 				writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 			}
 		}
-		WriteAssetAllocationIndex(assetallocation, asset);
+		WriteAssetAllocationIndex(assetallocation, asset, nAmount, strReceiver);
         return writeState;
     }
+	bool WriteAssetAllocationWalletIndex(const CAssetAllocationTuple& assetAllocationTuple, const UniValue& value) {
+		bool writeState = Write(make_pair(std::string("assetallocationtxi"), assetAllocationTuple), value));
+	}
 	bool EraseAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("assetallocationi"), assetAllocationTuple));
 		Erase(make_pair(std::string("assetp"), assetAllocationTuple));
@@ -213,7 +216,7 @@ public:
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
 	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset);
-
+	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
 };
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool bSanityCheck = false);
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
