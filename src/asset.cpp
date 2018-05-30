@@ -489,7 +489,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						receiverAllocation.nBalance += amountTuple.second;
 						// adjust sender balance
 						theAsset.nBalance -= amountTuple.second;
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, stringFromVch(receiverAllocation.vchAlias), fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2034 - " + _("Failed to write to asset allocation DB");
 							continue;
@@ -560,7 +560,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						subtractRanges(dbAsset.listAllocationInputs, input.second, outputSubtract);
 						theAsset.listAllocationInputs = outputSubtract;
 						theAsset.nBalance -= rangeTotals[i];
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, stringFromVch(receiverAllocation.vchAlias), fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2039 - " + _("Failed to write to asset allocation DB");
 							return error(errorMessage.c_str());
