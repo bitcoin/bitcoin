@@ -90,17 +90,21 @@ void CAsset::Serialize( vector<unsigned char> &vchData) {
 
 }
 void CAssetDB::WriteAssetIndex(const CAsset& asset, const int& op) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildAssetIndexerJson(asset, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
+	if (IsArgSet("-zmqpubassetrecord")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildAssetIndexerJson(asset, oName)) {
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
+		}
 	}
 	WriteAssetIndexHistory(asset, op);
 }
 void CAssetDB::WriteAssetIndexHistory(const CAsset& asset, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildAssetIndexerHistoryJson(asset, oName)) {
-		oName.push_back(Pair("op", assetFromOp(op)));
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assethistory");
+	if (IsArgSet("-zmqpubassethistory")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildAssetIndexerHistoryJson(asset, oName)) {
+			oName.push_back(Pair("op", assetFromOp(op)));
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assethistory");
+		}
 	}
 }
 bool GetAsset(const vector<unsigned char> &vchAsset,

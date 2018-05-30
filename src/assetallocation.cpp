@@ -86,12 +86,14 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 
 }
 void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const string& strReceiver) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, stringFromVch(assetallocation.vchAlias), strReceiver, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetallocation");
-		if (!strReceiver.empty() && GetArg("-assetallocationindex", false)) {
-			const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
-			WriteAssetAllocationWalletIndex(allocationTuple, oName);
+	if (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, stringFromVch(assetallocation.vchAlias), strReceiver, oName)) {
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetallocation");
+			if (!strReceiver.empty() && fAssetAllocationIndex) {
+				const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
+				WriteAssetAllocationWalletIndex(allocationTuple, oName);
+			}
 		}
 	}
 
@@ -1075,7 +1077,7 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	int64_t nTime = 0;
 	bool bConfirmed = false;
 	if (chainActive.Height() >= assetallocation.nHeight - 1) {
-		nConfirmations = (chainActive.Height() - assetallocation.nHeight) >= 6;
+		bConfirmed = (chainActive.Height() - assetallocation.nHeight) >= 1;
 		CBlockIndex *pindex = chainActive[chainActive.Height() >= assetallocation.nHeight ? nHeight: assetallocation.nHeight - 1];
 		if (pindex) {
 			nTime = pindex->GetMedianTimePast();
@@ -1093,7 +1095,7 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("amount", ValueFromAssetAmount(nAmount, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
-	if (GetArg("-assetallocationindex", false)) {
+	if (fAssetAllocationIndex) {
 		CAliasIndex fromAlias;
 		if (!GetAlias(vchFromStrinG(strSender), fromAlias))
 			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Failed to read sender alias from DB"));

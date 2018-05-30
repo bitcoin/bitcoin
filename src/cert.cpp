@@ -97,18 +97,21 @@ void CCert::Serialize( vector<unsigned char> &vchData) {
 
 }
 void CCertDB::WriteCertIndex(const CCert& cert, const int& op) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildCertIndexerJson(cert, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "certrecord");
+	if (IsArgSet("-zmqpubcertrecord")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildCertIndexerJson(cert, oName)) {
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "certrecord");
+		}
 	}
-
 	WriteCertIndexHistory(cert, op);
 }
 void CCertDB::WriteCertIndexHistory(const CCert& cert, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildCertIndexerHistoryJson(cert, oName)) {
-		oName.push_back(Pair("op", certFromOp(op)));
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "certhistory");
+	if (IsArgSet("-zmqpubcerthistory")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildCertIndexerHistoryJson(cert, oName)) {
+			oName.push_back(Pair("op", certFromOp(op)));
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "certhistory");
+		}
 	}
 }
 	

@@ -1051,21 +1051,25 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 }
 
 void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
-	CSyscoinAddress address(EncodeBase58(alias.vchAddress));
-	oName.push_back(Pair("address", address.ToString()));
-	oName.push_back(Pair("expires_on", alias.nExpireTime));
-	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
-	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliasrecord");
+	if (IsArgSet("-zmqpubaliasrecord")) {
+		UniValue oName(UniValue::VOBJ);
+		oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
+		CSyscoinAddress address(EncodeBase58(alias.vchAddress));
+		oName.push_back(Pair("address", address.ToString()));
+		oName.push_back(Pair("expires_on", alias.nExpireTime));
+		oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
+		oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliasrecord");
+	}
 	WriteAliasIndexHistory(alias, op);
 }
 void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	BuildAliasIndexerHistoryJson(alias, oName);
-	oName.push_back(Pair("op", aliasFromOp(op)));
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliashistory");
+	if (IsArgSet("-zmqpubaliashistory")) {
+		UniValue oName(UniValue::VOBJ);
+		BuildAliasIndexerHistoryJson(alias, oName);
+		oName.push_back(Pair("op", aliasFromOp(op)));
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliashistory");
+	}
 }
 bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const unsigned int& nHeight, const string &type, const string &guid, UniValue& oName)
 {
@@ -1086,9 +1090,11 @@ bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, co
 	return true;
 }
 void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const unsigned int& nHeight, const string &type, const string &guid) {
-	UniValue oName(UniValue::VOBJ);
-	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
+	if (IsArgSet("-zmqpubaliastxhistory")) {
+		UniValue oName(UniValue::VOBJ);
+		BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
+	}
 }
 UniValue SyscoinListReceived(bool includeempty=true)
 {
