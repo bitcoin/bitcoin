@@ -1192,8 +1192,9 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, U
 	}
 	return true;
 }
-UniValue listassetallocationtransactions(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 < params.size())
+UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 2 < params.size())
 		throw runtime_error("listassetallocationtransactions [count] [from]\n"
 			"list asset allocations sent or recieved in this wallet.\n"
 			"[count]          (numeric, optional, default=10) The number of results to return.\n"
