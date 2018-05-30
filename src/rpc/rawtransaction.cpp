@@ -32,8 +32,10 @@
 #endif
 
 #include <stdint.h>
+#include "assets/assets.h"
 
 #include <univalue.h>
+#include <tinyformat.h>
 
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
@@ -295,27 +297,71 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
         throw std::runtime_error(
             "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] {\"address\":amount,\"data\":\"hex\",...} ( locktime ) ( replaceable )\n"
             "\nCreate a transaction spending the given inputs and creating new outputs.\n"
-            "Outputs can be addresses or data.\n"
+            "Outputs are addresses (paired with a RVN amount, asset quantity or data) or data.\n"
             "Returns hex-encoded raw transaction.\n"
             "Note that the transaction's inputs are not signed, and\n"
             "it is not stored in the wallet or transmitted to the network.\n"
 
             "\nArguments:\n"
-            "1. \"inputs\"                (array, required) A json array of json objects\n"
+            "1. \"inputs\"                                      (array, required) A json array of json objects\n"
             "     [\n"
             "       {\n"
-            "         \"txid\":\"id\",    (string, required) The transaction id\n"
-            "         \"vout\":n,         (numeric, required) The output number\n"
-            "         \"sequence\":n      (numeric, optional) The sequence number\n"
+            "         \"txid\":\"id\",                            (string, required) The transaction id\n"
+            "         \"vout\":n,                               (numeric, required) The output number\n"
+            "         \"sequence\":n                            (numeric, optional) The sequence number\n"
             "       } \n"
             "       ,...\n"
             "     ]\n"
-            "2. \"outputs\"               (object, required) a json object with outputs\n"
-            "    {\n"
-            "      \"address\": x.xxx,    (numeric or string, required) The key is the raven address, the numeric value (can be string) is the " + CURRENCY_UNIT + " amount\n"
-            "      \"data\": \"hex\"      (string, required) The key is \"data\", the value is hex encoded data\n"
-            "      ,...\n"
-            "    }\n"
+            "2. \"outputs\"                                     (object, required) a json object with outputs\n"
+            "     {\n"
+            "       \"address\":                                (string, required) The destination raven address\n"
+            "         x.xxx                                   (numeric or string, required) The RVN amount\n"
+            "           or\n"
+            "         {                                       (object) A json object of assets to send\n"
+            "           \"transfer\":\n"
+            "             {\n"
+            "               \"asset-name\":                     (string, required) asset name\n"
+            "               asset-quantity                    (numeric, required) The asset total amount in raw units\n"
+            "               ,...\n"
+            "             }\n"
+            "         }\n"
+            "           or\n"
+            "         {                                       (object) A json object describing new asset issue\n"
+            "           \"issue\":\n"
+            "             {\n"
+            "               \"asset-name\":                     (string, required) asset name\n"
+            "               asset-quantity                    (numeric, required) The asset total amount in raw units\n"
+            "             }\n"
+            "         }\n"
+            "           or\n"
+            "         {                                       (object) A json object describing follow-on asset issue\n"
+            "           \"reissue\":\n"
+            "             {\n"
+            "               \"asset-name\":                     (string, required) asset name\n"
+            "               asset-quantity                    (numeric, required) The asset total amount in raw units\n"
+            "             }\n"
+            "         }\n"
+//            "           or\n"
+//            "         {                                       (object) A json object describing inline data\n"
+//            "           \"data\":\n"
+//            "             {\n"
+//            "               \"data-hex\"                        (string, required) Data hex string\n"
+//            "                   or\n"
+//            "                data-json                        (object, required) JSON data object\n"
+//            "                  {\n"
+//            "                    \"json\": data-json            (object, required) Valid JSON object\n"
+//            "                  }\n"
+//            "                   or\n"
+//            "                data-text                        (object, required) Text data object\n"
+//            "                  {\n"
+//            "                    \"text\": \"data-text\"          (string, required) Data string\n"
+//            "                  }\n"
+//            "             }\n"
+//            "         }\n"
+            "           or\n"
+            "         \"data\": \"hex\"                           (string, required) The key is \"data\", the value is hex encoded data\n"
+            "         ,...\n"
+            "     }\n"
             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
             "4. replaceable               (boolean, optional, default=false) Marks this transaction as BIP125 replaceable.\n"
             "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
@@ -405,10 +451,90 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             }
 
             CScript scriptPubKey = GetScriptForDestination(destination);
-            CAmount nAmount = AmountFromValue(sendTo[name_]);
+            CScript ownerPubKey = GetScriptForDestination(destination);
 
-            CTxOut out(nAmount, scriptPubKey);
-            rawTx.vout.push_back(out);
+
+            if (sendTo[name_].type() == UniValue::VNUM) {
+                CAmount nAmount = AmountFromValue(sendTo[name_]);
+                CTxOut out(nAmount, scriptPubKey);
+                rawTx.vout.push_back(out);
+            }
+            /** RVN COIN START **/
+            else if (sendTo[name_].type() == UniValue::VOBJ) {
+                auto asset_ = sendTo[name_].get_obj();
+                auto assetKey_ = asset_.getKeys()[0];
+
+                if (assetKey_ == "issue") {
+
+                    if (asset_[0].type() != UniValue::VOBJ)
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, the format must follow { \"issue\": {\"key\": value}, ...}"));
+
+                    // Get the asset data object from the json
+                    auto assetData = asset_.getValues()[0].get_obj();
+
+                    /**-------Process the assets data-------**/
+                    const UniValue& asset_name = find_value(assetData, "asset_name");
+                    if (!asset_name.isStr())
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing asset data for key: asset_name");
+
+                    const UniValue& asset_quantity = find_value(assetData, "asset_quantity");
+                    if (!asset_quantity.isNum())
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing asset data for key: asset_quantity");
+
+                    const UniValue& units = find_value(assetData, "units");
+                    if (!units.isNum())
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing asset metadata for key: units");
+
+                    const UniValue& reissuable = find_value(assetData, "reissuable");
+                    if (!reissuable.isNum())
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing asset metadata for key: reissuable");
+
+                    const UniValue& has_ipfs = find_value(assetData, "has_ipfs");
+                    if (!has_ipfs.isNum())
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing asset metadata for key: has_ipfs");
+
+                    UniValue ipfs_hash = "";
+                    if (has_ipfs.get_int() == 1) {
+                        ipfs_hash = find_value(assetData, "ipfs_hash");
+                        if (!ipfs_hash.isStr())
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing asset metadata for key: has_ipfs");
+                    }
+
+                    CAmount nAmount = AmountFromValue(asset_quantity);
+
+                    // Create a new asset
+                    CNewAsset asset(asset_name.get_str(), nAmount, units.get_int(), reissuable.get_int(), has_ipfs.get_int(), ipfs_hash.get_str());
+
+                    // Verify that data
+                    std::string strError = "";
+                    if (!asset.IsValid(strError, *passets))
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, strError);
+
+                    // Construct the asset transaction
+                    asset.ConstructTransaction(scriptPubKey);
+
+                    asset.ConstructOwnerTransaction(ownerPubKey);
+
+                    // Push the scriptPubKey into the vouts.
+                    CTxOut ownerOut(0, ownerPubKey);
+                    rawTx.vout.push_back(ownerOut);
+
+                    // Push the scriptPubKey into the vouts.
+                    CTxOut out(0, scriptPubKey);
+                    rawTx.vout.push_back(out);
+
+                } else if (assetKey_ == "reissue") {
+
+                } else if (assetKey_ == "transfer") {
+
+                }
+                else {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, unknown output type (should be 'issue', 'reissue' or 'transfer'): " + assetKey_));
+                }
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, Output must be of the type object"));
+            }
+            /** RVN COIN STOP **/
         }
     }
 
