@@ -466,7 +466,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             CScript ownerPubKey = GetScriptForDestination(destination);
 
 
-            if (sendTo[name_].type() == UniValue::VNUM) {
+            if (sendTo[name_].type() == UniValue::VNUM || sendTo[name_].type() == UniValue::VSTR) {
                 CAmount nAmount = AmountFromValue(sendTo[name_]);
                 CTxOut out(nAmount, scriptPubKey);
                 rawTx.vout.push_back(out);
