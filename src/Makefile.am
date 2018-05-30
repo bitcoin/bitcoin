@@ -168,6 +168,7 @@ BITCOIN_CORE_H = \
   compat/endian.h \
   compat/sanity.h \
   updater.h \
+  dbdetails.h \
   dbmanager.h
 
 JSON_H = \
@@ -219,6 +220,7 @@ libbitcoin_server_a_SOURCES = \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
+  dbdetails.cpp \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
