@@ -1875,6 +1875,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 11a: setup PrivateSend
     fMasternodeMode = GetBoolArg("-masternode", false);
 	fUnitTest = GetBoolArg("-unittest", false);
+	fAssetAllocationIndex = GetBoolArg("-assetallocationindex", false);
     // TODO: masternode should have no wallet
 
     //lite mode disables all Syscoin-specific functionality

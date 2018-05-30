@@ -1161,23 +1161,21 @@ UniValue offerupdate(const JSONRPCRequest& request) {
 }
 
 void COfferDB::WriteOfferIndex(const COffer& offer, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildOfferIndexerJson(offer, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerrecord");
+	if (IsArgSet("-zmqpubofferrecord")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildOfferIndexerJson(offer, oName)) {
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerrecord");
+		}
 	}
 	WriteOfferIndexHistory(offer, op);
 }
 void COfferDB::WriteOfferIndexHistory(const COffer& offer, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	string serviceFromOp = "";
-	if (IsEscrowOp(op))
-		serviceFromOp = escrowFromOp(op);
-	else if (IsOfferOp(op))
-		serviceFromOp = offerFromOp(op);
-
-	if (BuildOfferIndexerHistoryJson(offer, oName)) {
-		oName.push_back(Pair("op", serviceFromOp));
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerhistory");
+	if (IsArgSet("-zmqpubofferhistory")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildOfferIndexerHistoryJson(offer, oName)) {
+			oName.push_back(Pair("op", offerFromOp(op)));
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerhistory");
+		}
 	}
 }
 UniValue offerinfo(const JSONRPCRequest& request) {
