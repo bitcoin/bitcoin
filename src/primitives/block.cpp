@@ -16,8 +16,9 @@ uint256 CBlockHeader::GetHash() const
 {
     if (CheckMBCVersion(nVersion))
     {
-        // New algo here
-        return SerializeHash(*this);
+        XCoin::CGroestlHashWriter ss(SER_GETHASH, PROTOCOL_VERSION); //GRS
+        ss << *this;
+        return ss.GetHash();
     }
     return SerializeHash(*this);
 }

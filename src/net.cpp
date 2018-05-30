@@ -2831,12 +2831,13 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 
 const CMessageHeader::MessageStartChars &CNode::magic() const
 {
-    const CChainParams& chainparams = Params();
-    if (IsHardForkEnabled(chainActive.Height() + 1, chainparams.GetConsensus()))
-    {
-        return Params().MBCMessageStart();
-    }
-    return Params().MessageStart();
+    // const CChainParams& chainparams = Params();
+    // if (IsHardForkEnabled(chainActive.Height() + 2, chainparams.GetConsensus()))
+    // {
+    //     return Params().MBCMessageStart();
+    // }
+    // return Params().MessageStart();
+    return Params().MBCMessageStart();
 }
 
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)

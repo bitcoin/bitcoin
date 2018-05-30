@@ -81,12 +81,12 @@ BITCOIN_CORE_H = \
   addrman.h \
   base58.h \
   bloom.h \
-  bignum.h \
   blockencodings.h \
   groestlcoin.h \
   sphlib/sph_types.h \
   sphlib/sph_groestl.h \
   chain.h \
+  bignum.h \
   chainparams.h \
   chainparamsbase.h \
   chainparamsseeds.h \
@@ -289,6 +289,8 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
+  sphlib/groestl.cpp \
+  groestlcoin-hash.cpp \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
