@@ -86,7 +86,7 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 
 }
 void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver) {
-	if (!strReceiver.empty() && (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex)) {
+	if (!vchReceiver.empty() && (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex)) {
 		UniValue oName(UniValue::VOBJ);
 		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, asset.vchAlias, vchReceiver, oName)) {
 			const string& strObj = oName.write();
