@@ -11,6 +11,7 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <uint256.h>
+#include <iostream>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -1289,12 +1290,15 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 
 bool TransactionSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
+	std::cout<<"Verifying signature with "<< (pubkey.IsQR() ? "" : "non-") <<"quantum resistant public key: "<<pubkey.GetID().GetHex()<<"!"<<(enforceQR ? "(need-qr)" : "(normal)")<<std::endl;
     if (!pubkey.Verify(sighash, vchSig)) {
     	return false;
     }
 	if (enforceQR && !pubkey.IsQR()) {
+		std::cout<<"Need surrogate!"<<std::endl;
 		for (const auto& surrogate : txTo->vin[nIn].qrWit) {
 			if (pubkey == surrogate.pubKey) {
+				std::cout<<"Found surrogate!"<<std::endl;
 				return surrogate.qrPubKey.Verify(sighash, surrogate.qrSig);
 			}
 		}

@@ -52,7 +52,6 @@ private:
      * Its length can very cheaply be computed from the first byte.
      */
     unsigned char vch[PUBLIC_KEY_SIZE];
-    bool qrFlag = false;
 
     //! Compute the length of a pubkey with a given first byte.
     unsigned int static GetLen(unsigned char chHeader)
@@ -136,7 +135,6 @@ public:
         unsigned int len = size();
         ::WriteCompactSize(s, len);
         s.write((char*)vch, len);
-        ::Serialize(s, qrFlag);
     }
     template <typename Stream>
     void Unserialize(Stream& s)
@@ -151,7 +149,6 @@ public:
                 s.read(&dummy, 1);
             Invalidate();
         }
-        ::Unserialize(s, qrFlag);
     }
 
     //! Get the KeyID of this public key (hash of its serialization)
@@ -205,9 +202,9 @@ public:
     //! Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
 
-    void MakeQR() { qrFlag = true; }
+    void MakeQR() { vch[4] = 0x00; }
 
-    bool IsQR() const { return qrFlag; }
+    bool IsQR() const { return vch[4] <= 0x80; }
 };
 
 struct CExtPubKey {

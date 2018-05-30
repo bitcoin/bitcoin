@@ -139,7 +139,7 @@ UniValue mcreatesurrogateforkey(const JSONRPCRequest& request)
 	if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
 		return NullUniValue;
 
-	if (request.fHelp || request.params.size() != 1)
+	if (request.fHelp || request.params.size() != 2)
 		throw std::runtime_error(
 			"mgetkeypairhash \"oldkeyid\" \n"
 			"\nReturns the hash of the concatenation of: hash(oldpublic key) and hash(new public key)."
@@ -147,6 +147,7 @@ UniValue mcreatesurrogateforkey(const JSONRPCRequest& request)
 			"ensure the transition to quantum resistance signature schemes.\n"
 			"\nArguments:\n"
 			"1. oldKeyId    (string, required) The id of the old public key.\n"
+			"2. newKeyId    (string, required) The id of the old public key.\n"
 			"\nResult:\n"
 			"public key: hexstring of key id\n"
 			"new qr key: hexstring of key id\n"
@@ -161,15 +162,18 @@ UniValue mcreatesurrogateforkey(const JSONRPCRequest& request)
 	if (!pwallet->GetPubKey(oldKeyId, oldPubKey))
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin key");
 
+	const std::string newKeyIdStr = request.params[1].get_str();
+	CKeyID newKeyId;
+	newKeyId.SetHex(newKeyIdStr);
 	CPubKey qrPubKey;
-	qrPubKey = CPubKey(oldPubKey.begin(), oldPubKey.end());
-	qrPubKey.MakeQR();
+	if (!pwallet->GetPubKey(newKeyId, qrPubKey))
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin key");
 
 	CPubKeySurrogate sur;
 	sur.pubKey = oldPubKey;
 	sur.qrPubKey = qrPubKey;
 
-	pwallet->mapPubKeySurrogate[qrPubKey] = sur;
+	pwallet->mapPubKeySurrogate[oldPubKey] = sur;
 
 	uint256 h = Hash(oldPubKey.begin(), oldPubKey.end(), qrPubKey.begin(), qrPubKey.end());
 
@@ -287,7 +291,7 @@ UniValue mkeys(const JSONRPCRequest& request)
 	for (const std::pair<CTxDestination, CAddressBookData> p : pwallet->mapAddressBook) {
 		CPubKey vchPubKey;
 		pwallet->GetPubKey(GetKeyForDestination(*pwallet, p.first), vchPubKey);
-		res.pushKV(EncodeDestination(p.first), vchPubKey.GetID().GetHex());
+		res.pushKV(EncodeDestination(p.first), (vchPubKey.IsQR() ? "qr-" : "non-qr-") + vchPubKey.GetID().GetHex());
 	}
 	return res;
 }
@@ -300,7 +304,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 3)
+    if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
             "getnewaddress ( \"label\" \"address_type\" )\n"
             "\nReturns a new Bitcoin address for receiving payments.\n"
@@ -309,7 +313,6 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"label\"          (string, optional) The label name for the address to be linked to. If not provided, the default label \"\" is used. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name.\n"
             "2. \"address_type\"   (string, optional) The address type to use. Options are \"legacy\", \"p2sh-segwit\", \"bech32\". Default is set by -addresstype.\n"
-            "3. \"qr_or_not\"      (string, optional) Whether this should be qr resistant or not (true if yes)."
             "\nResult:\n"
             "\"address\"    (string) The new bitcoin address\n"
             "\nExamples:\n"
@@ -332,17 +335,19 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
     }
 
     if (!pwallet->IsLocked()) {
-        pwallet->TopUpKeyPool();
+        pwallet->TopUpKeyPool(0);
     }
 
     // Generate a new key that is added to wallet
     CPubKey newKey;
-    if (!pwallet->GetKeyFromPool(newKey)) {
+    if (!pwallet->GetKeyFromPool(newKey, false)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     }
-    if (!request.params[2].isNull() && request.params[2].get_str() == "true") {
-    	newKey.MakeQR();
+
+    if (newKey.IsQR()) {
+    	std::cout <<"Generated a quantum resistant key."<< std::endl;
     }
+
     pwallet->LearnRelatedScripts(newKey, output_type);
     CTxDestination dest = GetDestinationForKey(newKey, output_type);
 

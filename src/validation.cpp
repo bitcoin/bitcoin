@@ -970,7 +970,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             }
         }
 
-        unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+        unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS | (IsQRWitnessEnabled(chainActive.Tip(), Params().GetConsensus()) ? SCRIPT_QR_VERIFY : 0);
         if (!chainparams.RequireStandard()) {
             scriptVerifyFlags = gArgs.GetArg("-promiscuousmempoolflags", scriptVerifyFlags);
         }
@@ -1385,7 +1385,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
-    return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata, (nFlags & SCRIPT_QR_VERIFY)), &error);
+    return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, TransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, *txdata, (nFlags & SCRIPT_QR_VERIFY)), &error);
 }
 
 int GetSpendHeight(const CCoinsViewCache& inputs)
@@ -1826,7 +1826,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
-    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == ThresholdState::ACTIVE) {
+    if (IsQRWitnessEnabled(pindex->pprev, consensusparams)) {
     	flags |= SCRIPT_QR_VERIFY;
     }
 
