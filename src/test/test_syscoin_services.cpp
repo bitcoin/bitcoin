@@ -1285,16 +1285,16 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	BOOST_CHECK(r.isArray());
 	UniValue assetTxArray = r.get_array();
 	UniValue firstAssetTx = assetTxArray[0].get_obj();
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txid").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "confirmed").get_bool(), false);
+	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid);
+	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), false);
 	if (!usezdag) {
 		GenerateBlocks(1, node);
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetallocationtransactions"));
 		BOOST_CHECK(r.isArray());
 		assetTxArray = r.get_array();
 		firstAssetTx = assetTxArray[0].get_obj();
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txid").get_str(), txid);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "confirmed").get_bool(), true);
+		BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid);
+		BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), true);
 	}
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + name + " " + fromalias + " false"));
 	balance = find_value(r.get_obj(), "balance");
