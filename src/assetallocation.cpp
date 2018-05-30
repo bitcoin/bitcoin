@@ -85,10 +85,10 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const string& strReceiver) {
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver) {
 	if (!strReceiver.empty() && (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex)) {
 		UniValue oName(UniValue::VOBJ);
-		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, stringFromVch(asset.vchAlias), strReceiver, oName)) {
+		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, asset.vchAlias, vchReceiver, oName)) {
 			const string& strObj = oName.write();
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
 			if ( fAssetAllocationIndex) {
@@ -210,7 +210,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 		dbAssetAllocation.nLastInterestClaimHeight = nHeight;
 	}
 	// write the state back to previous state
-	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, 0, asset, INT64_MAX, "", false))
+	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, 0, asset, INT64_MAX, vchFromString(""), false))
 	{
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1000 - " + _("Failed to write to asset allocation DB");
 		return error(errorMessage.c_str());
@@ -539,7 +539,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= amountTuple.second;
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, stringFromVch(receiverAllocation.vchAlias), fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -643,7 +643,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= rangeTotals[i];
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, stringFromVch(receiverAllocation.vchAlias), fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1030 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -673,7 +673,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 		}
 
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, dbAsset, ms, "", fJustCheck))
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, dbAsset, ms, vchFromString(""), fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
@@ -1072,7 +1072,7 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
 	oAssetAllocation.push_back(Pair("accumulated_interest", ValueFromAssetAmount(GetAssetAllocationInterest(assetallocation, chainActive.Tip()->nHeight, errorMessage), asset.nPrecision, asset.bUseInputRanges)));
 	return true;
 }
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const string& strSender, const string& strReceiver, UniValue& oAssetAllocation)
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const vector<unsigned char>& vchSender, const vector<unsigned char>& vchReceiver, UniValue& oAssetAllocation)
 {
 	int64_t nTime = 0;
 	bool bConfirmed = false;
@@ -1090,18 +1090,17 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
 	oAssetAllocation.push_back(Pair("interest_rate", asset.fInterestRate));
 	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
-	oAssetAllocation.push_back(Pair("sender", strSender));
-	oAssetAllocation.push_back(Pair("receiver", strReceiver));
+	oAssetAllocation.push_back(Pair("sender", stringFromVch(vchSender)));
+	oAssetAllocation.push_back(Pair("receiver", stringFromVch(vchReceiver)));
 	oAssetAllocation.push_back(Pair("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("amount", ValueFromAssetAmount(nAmount, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
 	if (fAssetAllocationIndex) {
 		CAliasIndex fromAlias;
-		printf("strSender %s strReceiver %s\n", strSender.c_str(), strReceiver.c_str());
-		if (!GetAlias(vchFromString(strSender), fromAlias))
+		if (!GetAlias(vchSender, fromAlias))
 			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Failed to read sender alias from DB"));
 		CAliasIndex toAlias;
-		if (!GetAlias(vchFromString(strReceiver), toAlias))
+		if (!GetAlias(vchReceiver, toAlias))
 			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Failed to read recipient alias from DB"));
 
 		const CSyscoinAddress fromAddress(EncodeBase58(fromAlias.vchAddress));
