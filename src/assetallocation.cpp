@@ -91,7 +91,7 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, asset.vchAlias, vchReceiver, oName)) {
 			const string& strObj = oName.write();
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
-			if ( fAssetAllocationIndex) {
+			if (fAssetAllocationIndex) {
 				WriteAssetAllocationWalletIndex(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias), strObj);
 			}
 		}
@@ -1168,7 +1168,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 
 
 }
-bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, UniValue& oRes) {
+bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const int from, UniValue& oRes) {
 
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
@@ -1177,21 +1177,21 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, U
 	UniValue assetValue;
 	int index = 0;
 	while (pcursor->Valid()) {
-		index++;
-		if (from > 0 && index <= from) {
-			pcursor->Next();
-			continue;
-		}
 		boost::this_thread::interruption_point();
 		try {
 			if (pcursor->GetKey(key) && key.first == "assetallocationtxi") {
+				index++;
+				if (from > 0 && index <= from) {
+					pcursor->Next();
+					continue;
+				}
 				pcursor->GetValue(assetStr);
 				if(assetValue.read(assetStr))
 					oRes.push_back(assetValue);
-			}
-			if (index >= count+from)
-				break;
 
+				if (index >= count + from)
+					break;
+			}
 			pcursor->Next();
 		}
 		catch (std::exception &e) {
@@ -1215,7 +1215,7 @@ UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 		from = params[1].get_int();
 
 	UniValue oRes(UniValue::VARR);
-	if (!passetallocationdb->ScanAssetAllocations(count, from, oRes))
+	if (!passetallocationttransactionsdb->ScanAssetAllocations(count, from, oRes))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Scan failed"));
 	return oRes;
 }

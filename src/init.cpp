@@ -315,6 +315,13 @@ void PrepareShutdown()
 			delete passetallocationdb;
 			passetallocationdb = NULL;
 		}
+		if (passetallocationtransactionsdb != NULL)
+		{
+			if (!passetallocationtransactionsdb->Flush())
+				LogPrintf("Failed to write to asset allocation transactions database!");
+			delete passetallocationtransactionsdb;
+			passetallocationtransactionsdb = NULL;
+		}
 		if (pescrowdb != NULL)
 		{
 			if (!pescrowdb->Flush())
@@ -1684,6 +1691,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 				delete pcertdb;
 				delete passetdb;
 				delete passetallocationdb;
+				delete passetallocationtransactionsdb;
 				delete pescrowdb;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
@@ -1695,6 +1703,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 				pcertdb = new CCertDB(nCoinCacheUsage * 2, false, fReindex);
 				passetdb = new CAssetDB(nCoinCacheUsage * 2, false, fReindex);
 				passetallocationdb = new CAssetAllocationDB(nCoinCacheUsage * 2, false, fReindex);
+				passetallocationtransactionsdb = new CAssetAllocationTransactionsDB(nCoinCacheUsage * 2, false, fReindex);
 				pescrowdb = new CEscrowDB(nCoinCacheUsage * 2, false, fReindex);
 
                 if (fReindex) {
