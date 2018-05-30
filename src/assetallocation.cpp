@@ -1098,10 +1098,16 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	if (fAssetAllocationIndex) {
 		CAliasIndex fromAlias;
 		if (!GetAlias(vchSender, fromAlias))
-			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Failed to read sender alias from DB"));
+		{
+			LogPrintf("BuildAssetAllocationIndexerJson: Cannot find sender alias %s when building asset allocation index!\n", stringFromVch(vchSender).c_str());
+			return false;
+		}
 		CAliasIndex toAlias;
 		if (!GetAlias(vchReceiver, toAlias))
-			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Failed to read recipient alias from DB"));
+		{
+			LogPrintf("BuildAssetAllocationIndexerJson: Cannot find receiver alias %s when building asset allocation index!\n", stringFromVch(vchReceiver).c_str());
+			return false;
+		}
 
 		const CSyscoinAddress fromAddress(EncodeBase58(fromAlias.vchAddress));
 		const CSyscoinAddress toAddress(EncodeBase58(toAlias.vchAddress));
