@@ -288,6 +288,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # 1. Mine a block; expect inv announcements each time
         self.log.info("Part 1: headers don't start before sendheaders message...")
         for i in range(4):
+            self.log.debug("Part 1.{}: starting...".format(i))
             old_tip = tip
             tip = self.mine_blocks(1)
             inv_node.check_last_inv_announcement(inv=[tip])
@@ -335,11 +336,13 @@ class SendHeadersTest(BitcoinTestFramework):
         height = self.nodes[0].getblockcount() + 1
         block_time += 10  # Advance far enough ahead
         for i in range(10):
+            self.log.debug("Part 2.{}: starting...".format(i))
             # Mine i blocks, and alternate announcing either via
             # inv (of tip) or via headers. After each, new blocks
             # mined by the node should successfully be announced
             # with block header, even though the blocks are never requested
             for j in range(2):
+                self.log.debug("Part 2.{}.{}: starting...".format(i, j))
                 blocks = []
                 for b in range(i + 1):
                     blocks.append(create_block(tip, create_coinbase(height), block_time))
@@ -386,6 +389,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # PART 3.  Headers announcements can stop after large reorg, and resume after
         # getheaders or inv from peer.
         for j in range(2):
+            self.log.debug("Part 3.{}: starting...".format(j))
             # First try mining a reorg that can propagate with header announcement
             new_block_hashes = self.mine_reorg(length=7)
             tip = new_block_hashes[-1]
@@ -412,23 +416,28 @@ class SendHeadersTest(BitcoinTestFramework):
             test_node.wait_for_block(new_block_hashes[-1])
 
             for i in range(3):
+                self.log.debug("Part 3.{}.{}: starting...".format(j, i))
+
                 # Mine another block, still should get only an inv
                 tip = self.mine_blocks(1)
                 inv_node.check_last_inv_announcement(inv=[tip])
                 test_node.check_last_inv_announcement(inv=[tip])
                 if i == 0:
-                    self.log.debug("Just get the data -- shouldn't cause headers announcements to resume")
+                    # Just get the data -- shouldn't cause headers announcements to resume
                     test_node.send_get_data([tip])
                     test_node.wait_for_block(tip)
                 elif i == 1:
-                    self.log.debug("Send a getheaders message that shouldn't trigger headers announcements to resume (best header sent will be too old)")
+                    # Send a getheaders message that shouldn't trigger headers announcements
+                    # to resume (best header sent will be too old)
                     test_node.send_get_headers(locator=[fork_point], hashstop=new_block_hashes[1])
                     test_node.send_get_data([tip])
                     test_node.wait_for_block(tip)
                 elif i == 2:
+                    # This time, try sending either a getheaders to trigger resumption
+                    # of headers announcements, or mine a new block and inv it, also
+                    # triggering resumption of headers announcements.
                     test_node.send_get_data([tip])
                     test_node.wait_for_block(tip)
-                    self.log.debug("This time, try sending either a getheaders to trigger resumption of headers announcements, or mine a new block and inv it, also triggering resumption of headers announcements.")
                     if j == 0:
                         test_node.send_get_headers(locator=[tip], hashstop=0)
                         test_node.sync_with_ping()
@@ -532,6 +541,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # First we test that receipt of an unconnecting header doesn't prevent
         # chain sync.
         for i in range(10):
+            self.log.debug("Part 5.{}: starting...".format(i))
             test_node.last_message.pop("getdata", None)
             blocks = []
             # Create two more blocks.
