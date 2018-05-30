@@ -167,7 +167,7 @@ class CAssetAllocationDB : public CDBWrapper {
 public:
 	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAmount& nAmount, const CAsset& asset, const int64_t& arrivalTime, const std::string& strReceiever, const bool& fJustCheck) {
+    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAmount& nAmount, const CAsset& asset, const int64_t& arrivalTime, const std::string& strReceiver, const bool& fJustCheck) {
 		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
 		bool writeState = Write(make_pair(std::string("assetallocationi"), allocationTuple), assetallocation);
 		if (!fJustCheck)
