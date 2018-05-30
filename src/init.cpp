@@ -668,6 +668,19 @@ void SetupServerArgs()
     gArgs.AddArg("-statsport=<port>", strprintf("Specify statsd port (default: %u)", DEFAULT_STATSD_PORT), false, OptionsCategory::STATSD);
     gArgs.AddArg("-statsns=<ns>", strprintf("Specify additional namespace prefix (default: %s)", DEFAULT_STATSD_NAMESPACE), false, OptionsCategory::STATSD);
     gArgs.AddArg("-statsperiod=<seconds>", strprintf("Specify the number of seconds between periodic measurements (default: %d)", DEFAULT_STATSD_PERIOD), false, OptionsCategory::STATSD);
+
+    // Hidden options
+    gArgs.AddArg("-benchmark", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-blockminsize", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-dbcrashratio", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-debugnet", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-forcecompactdb", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-h", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-rpcssl", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-socks", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-tor", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-whitelistalwaysrelay", "", false, OptionsCategory::HIDDEN);
 }
 
 std::string LicenseInfo()
