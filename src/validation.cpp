@@ -194,6 +194,7 @@ CBlockTreeDB *pblocktree = nullptr;
 
 CAssetsDB *passetsdb = nullptr;
 CAssetsCache *passets = nullptr;
+CLRUCache<std::string, CNewAsset> *passetsCache = nullptr;
 
 enum FlushStateMode {
     FLUSH_STATE_NONE,
@@ -465,7 +466,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    if (!CheckTransaction(tx, state, true, true))
+    if (!CheckTransaction(tx, state, passets, true, true))
         return false; // state filled in by CheckTransaction
 
     // Coinbase is only valid in a block, not as a loose transaction
@@ -1067,27 +1068,27 @@ bool IsInitialBlockDownload()
         return false;
     if (fImporting || fReindex)
     {
-        LogPrintf("IsInitialBlockDownload (importing or reindex)");
+//        LogPrintf("IsInitialBlockDownload (importing or reindex)\n");
         return true;
     }
     if (chainActive.Tip() == nullptr)
     {
-        LogPrintf("IsInitialBlockDownload (tip is null)");
+//        LogPrintf("IsInitialBlockDownload (tip is null)");
         return true;
     }
     if (chainActive.Tip()->nChainWork < nMinimumChainWork)
     {
-    		LogPrintf("IsInitialBlockDownload (min chain work)");
-    		LogPrintf("Work found: %s", chainActive.Tip()->nChainWork.GetHex());
-    		LogPrintf("Work needed: %s", nMinimumChainWork.GetHex());
+//    		LogPrintf("IsInitialBlockDownload (min chain work)");
+//    		LogPrintf("Work found: %s", chainActive.Tip()->nChainWork.GetHex());
+//    		LogPrintf("Work needed: %s", nMinimumChainWork.GetHex());
         return true;
     }
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
     {
-        LogPrintf("%s: (tip age): %d\n", __func__, nMaxTipAge);
+//        LogPrintf("%s: (tip age): %d\n", __func__, nMaxTipAge);
         return true;
     }
-    LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
+//    LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
     latchToFalse.store(true, std::memory_order_relaxed);
     return false;
 }
@@ -2217,7 +2218,6 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         CCoinsViewCache view(pcoinsTip);
 
         CAssetsCache assetCache(*passets);
-        assert(assetCache.setAssets.size() == passets->setAssets.size());
 
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
         if (DisconnectBlock(block, pindexDelete, view, &assetCache) != DISCONNECT_OK)
@@ -2354,7 +2354,6 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         CCoinsViewCache view(pcoinsTip);
 
         CAssetsCache assetCache(*passets);
-        assert(assetCache.setAssets.size() == passets->setAssets.size());
 
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, &assetCache);
         GetMainSignals().BlockChecked(blockConnecting, state);
@@ -2963,7 +2962,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     // Check transactions
     for (const auto& tx : block.vtx)
-        if (!CheckTransaction(*tx, state, false))
+        if (!CheckTransaction(*tx, state, passets, false))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
@@ -3853,6 +3852,7 @@ bool ReplayBlocks(const CChainParams& params, CCoinsView* view)
     LOCK(cs_main);
 
     CCoinsViewCache cache(view);
+    CAssetsCache assetsCache(*passets);
 
     std::vector<uint256> hashHeads = view->GetHeadBlocks();
     if (hashHeads.empty()) return true; // We're already in a consistent state.
@@ -3887,7 +3887,7 @@ bool ReplayBlocks(const CChainParams& params, CCoinsView* view)
                 return error("RollbackBlock(): ReadBlockFromDisk() failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
             }
             LogPrintf("Rolling back %s (%i)\n", pindexOld->GetBlockHash().ToString(), pindexOld->nHeight);
-            DisconnectResult res = DisconnectBlock(block, pindexOld, cache);
+            DisconnectResult res = DisconnectBlock(block, pindexOld, cache, &assetsCache);
             if (res == DISCONNECT_FAILED) {
                 return error("RollbackBlock(): DisconnectBlock failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
             }
@@ -3909,6 +3909,7 @@ bool ReplayBlocks(const CChainParams& params, CCoinsView* view)
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
+    assetsCache.Flush(true);
     uiInterface.ShowProgress("", 100, false);
     return true;
 }
@@ -4151,8 +4152,9 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 if (mapBlockIndex.count(hash) == 0 || (mapBlockIndex[hash]->nStatus & BLOCK_HAVE_DATA) == 0) {
                     LOCK(cs_main);
                     CValidationState state;
-                    if (AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr))
+                    if (AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr)) {
                         nLoaded++;
+                    }
                     if (state.IsError())
                         break;
                 } else if (hash != chainparams.GetConsensus().hashGenesisBlock && mapBlockIndex[hash]->nHeight % 1000 == 0) {

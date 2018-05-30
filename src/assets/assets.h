@@ -11,6 +11,8 @@
 #include <string>
 #include <set>
 #include <map>
+#include <unordered_map>
+#include <list>
 #include <tinyformat.h>
 #include "serialize.h"
 #include "primitives/transaction.h"
@@ -34,8 +36,12 @@ class CTransaction;
 class CTxOut;
 class Coin;
 
+// 50000 * 82 Bytes == 4.1 Mb
+#define MAX_CACHE_ASSETS_SIZE 50000
+
 class CAssets {
 public:
+    CLRUCache<std::string, CNewAsset> cacheAssets;
     std::set<CNewAsset, AssetComparator> setAssets;
     std::map<std::string, std::set<COutPoint> > mapMyUnspentAssets; // Asset Name -> COutPoint
     std::map<std::string, std::set<std::string> > mapAssetsAddresses; // Asset Name -> set <Addresses>
@@ -45,14 +51,12 @@ public:
         this->mapMyUnspentAssets = assets.mapMyUnspentAssets;
         this->mapAssetsAddressAmount = assets.mapAssetsAddressAmount;
         this->mapAssetsAddresses = assets.mapAssetsAddresses;
-        this->setAssets = assets.setAssets;
     }
 
     CAssets& operator=(const CAssets& other) {
         mapMyUnspentAssets = other.mapMyUnspentAssets;
         mapAssetsAddressAmount = other.mapAssetsAddressAmount;
         mapAssetsAddresses = other.mapAssetsAddresses;
-        setAssets = other.setAssets;
         return *this;
     }
 
@@ -61,7 +65,6 @@ public:
     }
 
     void SetNull() {
-        setAssets.clear();
         mapMyUnspentAssets.clear();
         mapAssetsAddresses.clear();
         mapAssetsAddressAmount.clear();
@@ -104,56 +107,74 @@ public :
 
     CAssetsCache(const CAssetsCache& cache)
     {
-        mapMyUnspentAssets = cache.mapMyUnspentAssets;
-        mapAssetsAddressAmount = cache.mapAssetsAddressAmount;
-        mapAssetsAddresses = cache.mapAssetsAddresses;
-        setAssets = cache.setAssets;
+        this->mapMyUnspentAssets = cache.mapMyUnspentAssets;
+        this->mapAssetsAddressAmount = cache.mapAssetsAddressAmount;
+        this->mapAssetsAddresses = cache.mapAssetsAddresses;
 
         // Copy dirty cache also
-        vSpentAssets = cache.vSpentAssets;
-        vUndoAssetAmount = cache.vUndoAssetAmount;
-        setChangeOwnedOutPoints = cache.setChangeOwnedOutPoints;
+        this->vSpentAssets = cache.vSpentAssets;
+        this->vUndoAssetAmount = cache.vUndoAssetAmount;
 
-        // New Assets
-        setNewAssetsToAdd = cache.setNewAssetsToAdd;
-        setNewAssetsToRemove = cache.setNewAssetsToRemove;
+        this->setNewTransferAssetsToAdd = cache.setNewTransferAssetsToAdd;
+        this->setNewTransferAssetsToRemove = cache.setNewTransferAssetsToRemove;
 
-        // New Transfers
-        setNewTransferAssetsToAdd = cache.setNewTransferAssetsToAdd;
-        setNewTransferAssetsToRemove = cache.setNewTransferAssetsToRemove;
+        this->setNewAssetsToRemove = cache.setNewAssetsToRemove;
+        this->setNewAssetsToAdd = cache.setNewAssetsToAdd;
 
-        // New Owners
-        setNewOwnerAssetsToAdd = cache.setNewOwnerAssetsToAdd;
-        setNewOwnerAssetsToRemove = cache.setNewOwnerAssetsToRemove;
+        this->setNewOwnerAssetsToAdd = cache.setNewOwnerAssetsToAdd;
+        this->setNewOwnerAssetsToRemove = cache.setNewOwnerAssetsToRemove;
 
-        // Copy sets of possibilymine
-        setPossiblyMineAdd = cache.setPossiblyMineAdd;
-        setPossiblyMineRemove = cache.setPossiblyMineRemove;
+        this->setChangeOwnedOutPoints = cache.setChangeOwnedOutPoints;
     }
 
     CAssetsCache& operator=(const CAssetsCache& cache)
     {
-        mapMyUnspentAssets = cache.mapMyUnspentAssets;
-        mapAssetsAddressAmount = cache.mapAssetsAddressAmount;
-        mapAssetsAddresses = cache.mapAssetsAddresses;
-        setAssets = cache.setAssets;
+        this->mapMyUnspentAssets = cache.mapMyUnspentAssets;
+        this->mapAssetsAddressAmount = cache.mapAssetsAddressAmount;
+        this->mapAssetsAddresses = cache.mapAssetsAddresses;
 
         // Copy dirty cache also
-        vSpentAssets = cache.vSpentAssets;
-        setNewTransferAssetsToAdd = cache.setNewTransferAssetsToAdd;
-        vUndoAssetAmount = cache.vUndoAssetAmount;
-        setNewAssetsToRemove = cache.setNewAssetsToRemove;
-        setNewAssetsToAdd = cache.setNewAssetsToAdd;
-        setNewTransferAssetsToRemove = cache.setNewTransferAssetsToRemove;
-        setChangeOwnedOutPoints = cache.setChangeOwnedOutPoints;
-        setNewOwnerAssetsToAdd = cache.setNewOwnerAssetsToAdd;
-        setNewOwnerAssetsToRemove = cache.setNewOwnerAssetsToRemove;
+        this->vSpentAssets = cache.vSpentAssets;
+        this->vUndoAssetAmount = cache.vUndoAssetAmount;
 
-        // Copy sets of possibilymine
-        setPossiblyMineAdd = cache.setPossiblyMineAdd;
-        setPossiblyMineRemove = cache.setPossiblyMineRemove;
+        this->setNewTransferAssetsToAdd = cache.setNewTransferAssetsToAdd;
+        this->setNewTransferAssetsToRemove = cache.setNewTransferAssetsToRemove;
+
+        this->setNewAssetsToRemove = cache.setNewAssetsToRemove;
+        this->setNewAssetsToAdd = cache.setNewAssetsToAdd;
+
+        this->setNewOwnerAssetsToAdd = cache.setNewOwnerAssetsToAdd;
+        this->setNewOwnerAssetsToRemove = cache.setNewOwnerAssetsToRemove;
+
+        this->setChangeOwnedOutPoints = cache.setChangeOwnedOutPoints;
 
         return *this;
+    }
+
+    void Copy(const CAssetsCache& cache)
+    {
+        this->mapMyUnspentAssets = cache.mapMyUnspentAssets;
+        this->mapAssetsAddressAmount = cache.mapAssetsAddressAmount;
+        this->mapAssetsAddresses = cache.mapAssetsAddresses;
+
+        // Copy dirty cache also
+        this->vSpentAssets = cache.vSpentAssets;
+        this->vUndoAssetAmount = cache.vUndoAssetAmount;
+
+        this->setNewTransferAssetsToAdd = cache.setNewTransferAssetsToAdd;
+        this->setNewTransferAssetsToRemove = cache.setNewTransferAssetsToRemove;
+
+        this->setNewAssetsToRemove = cache.setNewAssetsToRemove;
+        this->setNewAssetsToAdd = cache.setNewAssetsToAdd;
+
+        this->setNewOwnerAssetsToAdd = cache.setNewOwnerAssetsToAdd;
+        this->setNewOwnerAssetsToRemove = cache.setNewOwnerAssetsToRemove;
+
+        this->setChangeOwnedOutPoints = cache.setChangeOwnedOutPoints;
+
+        // Copy sets of possibilymine
+        this->setPossiblyMineAdd = cache.setPossiblyMineAdd;
+        this->setPossiblyMineRemove = cache.setPossiblyMineRemove;
     }
 
     // Cache only undo functions
@@ -176,6 +197,9 @@ public :
     bool ContainsAsset(const CNewAsset& asset);
     bool AddPossibleOutPoint(const CAssetCachePossibleMine& possibleMine);
 
+    bool CheckIfAssetExists(const std::string& name);
+    bool GetAssetIfExists(const std::string& name, CNewAsset& asset);
+
     //! Calculate the size of the CAssets (in bytes)
     size_t DynamicMemoryUsage() const;
 
@@ -184,8 +208,6 @@ public :
 
     //! Flush a cache to a different cache (usually passets), save to database if fToDataBase is true
     bool Flush(bool fSoftCopy = false, bool fToDataBase = false);
-
-    void Copy(const CAssetsCache& cache);
 
     void ClearDirtyCache() {
 
@@ -216,6 +238,7 @@ public :
 };
 
 bool IsAssetNameValid(const std::string& name);
+bool IsAssetNameAnOwner(const std::string& name);
 
 bool IsAssetNameSizeValid(const std::string& name);
 

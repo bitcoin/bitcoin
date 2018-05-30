@@ -82,7 +82,7 @@ bool CAssetsDB::LoadAssets()
         if (pcursor->GetKey(key) && key.first == ASSET_FLAG) {
             CNewAsset asset;
             if (pcursor->GetValue(asset)) {
-                passets->setAssets.insert(asset);
+                passetsCache->Put(asset.strName, asset);
                 pcursor->Next();
             } else {
                 return error("%s: failed to read asset", __func__);

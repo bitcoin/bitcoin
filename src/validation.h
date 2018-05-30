@@ -464,6 +464,8 @@ extern CAssetsDB *passetsdb;
 
 extern CAssetsCache *passets;
 
+extern CLRUCache<std::string, CNewAsset> *passetsCache;
+
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
  * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)

@@ -473,11 +473,6 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
                     auto assetData = asset_.getValues()[0].get_obj();
 
                     /**-------Process the assets data-------**/
-
-                    const UniValue& name_length = find_value(assetData, "name_length");
-                    if (!name_length.isNum())
-                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing asset metadata for key: name_length");
-
                     const UniValue& asset_name = find_value(assetData, "asset_name");
                     if (!asset_name.isStr())
                         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing asset data for key: asset_name");
@@ -508,7 +503,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
                     CAmount nAmount = AmountFromValue(asset_quantity);
 
                     // Create a new asset
-                    CNewAsset asset(asset_name.get_str(), nAmount, name_length.get_int(), units.get_int(), reissuable.get_int(), has_ipfs.get_int(), ipfs_hash.get_str());
+                    CNewAsset asset(asset_name.get_str(), nAmount, units.get_int(), reissuable.get_int(), has_ipfs.get_int(), ipfs_hash.get_str());
 
                     // Verify that data
                     std::string strError = "";
