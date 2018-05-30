@@ -1099,13 +1099,15 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 		CAliasIndex fromAlias;
 		if (!GetAlias(vchSender, fromAlias))
 		{
-			LogPrintf("BuildAssetAllocationIndexerJson: Cannot find sender alias %s when building asset allocation index!\n", stringFromVch(vchSender).c_str());
+			if(fDebug)
+				LogPrintf("BuildAssetAllocationIndexerJson: Cannot find sender alias %s when building asset allocation index!\n", stringFromVch(vchSender).c_str());
 			return false;
 		}
 		CAliasIndex toAlias;
 		if (!GetAlias(vchReceiver, toAlias))
 		{
-			LogPrintf("BuildAssetAllocationIndexerJson: Cannot find receiver alias %s when building asset allocation index!\n", stringFromVch(vchReceiver).c_str());
+			if(fDebug)
+				LogPrintf("BuildAssetAllocationIndexerJson: Cannot find receiver alias %s when building asset allocation index!\n", stringFromVch(vchReceiver).c_str());
 			return false;
 		}
 

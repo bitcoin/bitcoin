@@ -1988,6 +1988,8 @@ UniValue prunesyscoinservices(const JSONRPCRequest& request)
 	CleanupSyscoinServiceDatabases(servicesCleaned);
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("services_cleaned", servicesCleaned));
+	if (fDebug)
+		LogPrintf("prunesyscoinservices # cleaned: %d\n", servicesCleaned);
 	return res;
 }
 UniValue aliasbalancemulti(const JSONRPCRequest& request)
