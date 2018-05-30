@@ -218,6 +218,15 @@ public:
 	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver);
 	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
 };
+class CAssetAllocationTransactionsDB : public CDBWrapper {
+public:
+	CAssetAllocationTransactionsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationtransactions", nCacheSize, fMemory, fWipe) {}
+
+	bool WriteAssetAllocationWalletIndex(const CAssetAllocationTuple& assetAllocationTuple, const std::string& value) {
+		return Write(make_pair(std::string("assetallocationtxi"), assetAllocationTuple), value);
+	}
+	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
+};
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool bSanityCheck = false);
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& asset, const bool bGetInputs, UniValue& oName);

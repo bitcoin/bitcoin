@@ -283,6 +283,7 @@ extern CCertDB *pcertdb;
 extern CEscrowDB *pescrowdb;
 extern CAssetDB *passetdb;
 extern CAssetAllocationDB *passetallocationdb;
+extern CAssetAllocationTransactionsDB *passetallocationtransactionsdb;
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);

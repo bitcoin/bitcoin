@@ -44,6 +44,7 @@ CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CAssetDB *passetdb = NULL;
 CAssetAllocationDB *passetallocationdb = NULL;
+CAssetAllocationTransactionsDB *passetallocationtransactionsdb = NULL;
 typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
 typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
 mapAliasRegistrationsType mapAliasRegistrations;
@@ -813,6 +814,11 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 	{
 		if (!passetallocationdb->Flush())
 			LogPrintf("Failed to write to asset allocation database!");
+	}
+	if (passetallocationtransactionsdb != NULL)
+	{
+		if (!passetallocationtransactionsdb->Flush())
+			LogPrintf("Failed to write to asset allocation transactions database!");
 	}
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
