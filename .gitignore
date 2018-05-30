@@ -118,3 +118,5 @@ libravenconsensus.pc
 contrib/devtools/split-debug.sh
 .idea
 cmake-build-debug
+
+CMakeLists.txt
