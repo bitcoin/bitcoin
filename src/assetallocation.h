@@ -184,7 +184,7 @@ public:
         return writeState;
     }
 	bool WriteAssetAllocationWalletIndex(const CAssetAllocationTuple& assetAllocationTuple, const std::string& value) {
-		return Write(make_pair(std::string("assetallocationtxi"), assetAllocationTuple), value));
+		return Write(make_pair(std::string("assetallocationtxi"), assetAllocationTuple), value);
 	}
 	bool EraseAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("assetallocationi"), assetAllocationTuple));
