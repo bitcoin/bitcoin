@@ -83,6 +83,7 @@ jobs:
   include:
     - stage: lint
       sudo: false
+      cache: false
       addons:
         apt:
           packages:
@@ -92,6 +93,7 @@ jobs:
         - travis_retry pip3 install flake8 --user
       before_script:
         - git fetch --unshallow
+      script:
         - if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then test/lint/commit-script-check.sh $TRAVIS_COMMIT_RANGE; fi
         - test/lint/git-subtree-check.sh src/crypto/ctaes
         - test/lint/git-subtree-check.sh src/secp256k1
@@ -100,6 +102,7 @@ jobs:
         - test/lint/check-doc.py
         - test/lint/check-rpc-mappings.py .
         - test/lint/lint-all.sh
-      script:
-        - if [ "$TRAVIS_REPO_SLUG" = "chaincoin/chaincoin" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then while read LINE; do travis_retry gpg --keyserver hkp://subset.pool.sks-keyservers.net --recv-keys $LINE; done < contrib/verify-commits/trusted-keys; fi
-        - if [ "$TRAVIS_REPO_SLUG" = "chaincoin/chaincoin" -a "$TRAVIS_EVENT_TYPE" = "cron" ]; then travis_wait 30 contrib/verify-commits/verify-commits.sh; fi
+        - if [ "$TRAVIS_REPO_SLUG" = "chaincoin/chaincoin" -a "$TRAVIS_EVENT_TYPE" = "cron" ]; then
+              while read LINE; do travis_retry gpg --keyserver hkp://subset.pool.sks-keyservers.net --recv-keys $LINE; done < contrib/verify-commits/trusted-keys &&
+              travis_wait 30 contrib/verify-commits/verify-commits.sh;
+          fi
