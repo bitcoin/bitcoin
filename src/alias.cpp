@@ -817,11 +817,14 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
 	CAliasIndex& txPos) {
-	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos))
+	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos)) {
+		printf("alias %s doesnt exist\n", stringFromVch(vchAlias).c_str());
 		return false;
+	}
 	
 	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
 		txPos.SetNull();
+		printf("alias %s expired chainActive.Tip()->GetMedianTimePast() %lld vs txPos.nExpireTime %lld\n", stringFromVch(vchAlias).c_str(), chainActive.Tip()->GetMedianTimePast(), txPos.nExpireTime);
 		return false;
 	}
 	
