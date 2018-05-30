@@ -546,12 +546,12 @@ static void SetupUIArgs()
 #ifdef ENABLE_WALLET
     gArgs.AddArg("-allowselfsignedrootcertificates", strprintf("Allow self signed root certificates (default: %u)", DEFAULT_SELFSIGNED_ROOTCERTS), true, OptionsCategory::GUI);
 #endif
-    gArgs.AddArg("-choosedatadir", strprintf(QObject::tr("Choose data directory on startup (default: %u)").toStdString(), DEFAULT_CHOOSE_DATADIR), false, OptionsCategory::GUI);
-    gArgs.AddArg("-lang=<lang>", QObject::tr("Set language, for example \"de_DE\" (default: system locale)").toStdString(), false, OptionsCategory::GUI);
-    gArgs.AddArg("-min", QObject::tr("Start minimized").toStdString(), false, OptionsCategory::GUI);
-    gArgs.AddArg("-resetguisettings", QObject::tr("Reset all settings changed in the GUI").toStdString(), false, OptionsCategory::GUI);
-    gArgs.AddArg("-rootcertificates=<file>", QObject::tr("Set SSL root certificates for payment request (default: -system-)").toStdString(), false, OptionsCategory::GUI);
-    gArgs.AddArg("-splash", strprintf(QObject::tr("Show splash screen on startup (default: %u)").toStdString(), DEFAULT_SPLASHSCREEN), false, OptionsCategory::GUI);
+    gArgs.AddArg("-choosedatadir", strprintf("Choose data directory on startup (default: %u)", DEFAULT_CHOOSE_DATADIR), false, OptionsCategory::GUI);
+    gArgs.AddArg("-lang=<lang>", "Set language, for example \"de_DE\" (default: system locale)", false, OptionsCategory::GUI);
+    gArgs.AddArg("-min", "Start minimized", false, OptionsCategory::GUI);
+    gArgs.AddArg("-resetguisettings", "Reset all settings changed in the GUI", false, OptionsCategory::GUI);
+    gArgs.AddArg("-rootcertificates=<file>", "Set SSL root certificates for payment request (default: -system-)", false, OptionsCategory::GUI);
+    gArgs.AddArg("-splash", strprintf("Show splash screen on startup (default: %u)", DEFAULT_SPLASHSCREEN), false, OptionsCategory::GUI);
     gArgs.AddArg("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", BitcoinGUI::DEFAULT_UIPLATFORM), true, OptionsCategory::GUI);
 }
 
