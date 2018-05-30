@@ -210,7 +210,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 		dbAssetAllocation.nLastInterestClaimHeight = nHeight;
 	}
 	// write the state back to previous state
-	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, asset, INT64_MAX, "", false))
+	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, 0, asset, INT64_MAX, "", false))
 	{
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1000 - " + _("Failed to write to asset allocation DB");
 		return error(errorMessage.c_str());
@@ -673,7 +673,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 		}
 
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, dbAsset, ms, "", fJustCheck))
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, dbAsset, ms, "", fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
