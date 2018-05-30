@@ -277,6 +277,7 @@ class CCertDB;
 class CEscrowDB;
 class CAssetDB;
 class CAssetAllocationDB;
+class CAssetAllocationTransactionsDB;
 extern CAliasDB *paliasdb;
 extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
