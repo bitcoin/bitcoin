@@ -123,8 +123,7 @@ UniValue issue(const JSONRPCRequest& request)
     if (request.params.size() > 6 && has_ipfs)
         ipfs_hash = request.params[6].get_str();
 
-    int length = asset_name.size() / 8 + 1;
-    CNewAsset asset(asset_name, nAmount, length, units, reissuable ? 1 : 0, has_ipfs ? 1 : 0, ipfs_hash);
+    CNewAsset asset(asset_name, nAmount, units, reissuable ? 1 : 0, has_ipfs ? 1 : 0, ipfs_hash);
 
     // Validate the assets data
     std::string strError;
@@ -232,12 +231,15 @@ UniValue getaddressbalances(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue getallassets(const JSONRPCRequest& request)
+UniValue getassetdata(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 0)
+    if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-                "getallassets\n"
-                "\nReturns a list of all asset names\n"
+                "getallassets assets_name\n"
+                "\nReturns assets metadata if that asset exists\n"
+
+                "\nArguments:\n"
+                "1. \"assets_name\"               (string, required) the name of the asset\n"
 
                 "\nResult:\n"
                 "[ "
@@ -252,29 +254,35 @@ UniValue getallassets(const JSONRPCRequest& request)
                 "]\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("getallassets", "")
-                + HelpExampleCli("getallassets", "")
+                + HelpExampleCli("getallassets", "\"assetname\"")
         );
 
 
+    std::string asset_name = request.params[0].get_str();
+
     LOCK(cs_main);
     UniValue result (UniValue::VARR);
-    if (passets)
-        for (auto it : passets->setAssets) {
-            UniValue value(UniValue::VOBJ);
-            value.push_back(Pair("name: ", it.strName));
-            value.push_back(Pair("name_length: ", it.nNameLength));
-            value.push_back(Pair("amount: ", it.nAmount));
-            value.push_back(Pair("units: ", it.units));
-            value.push_back(Pair("reissuable: ", it.nReissuable));
-            value.push_back(Pair("has_ipfs: ", it.nHasIPFS));
-            if (it.nHasIPFS)
-                value.push_back(Pair("ipfs_hash: ", it.strIPFSHash));
 
-            result.push_back(value);
-        }
+    if (passets) {
+        CNewAsset asset;
+        if (!passets->GetAssetIfExists(asset_name, asset))
+            return NullUniValue;
 
-    return result;
+        UniValue value(UniValue::VOBJ);
+        value.push_back(Pair("name: ", asset.strName));
+        value.push_back(Pair("amount: ", asset.nAmount));
+        value.push_back(Pair("units: ", asset.units));
+        value.push_back(Pair("reissuable: ", asset.nReissuable));
+        value.push_back(Pair("has_ipfs: ", asset.nHasIPFS));
+        if (asset.nHasIPFS)
+            value.push_back(Pair("ipfs_hash: ", asset.strIPFSHash));
+
+        result.push_back(value);
+
+        return result;
+    }
+
+    return NullUniValue;
 }
 
 UniValue getmyassets(const JSONRPCRequest& request)
@@ -425,11 +433,15 @@ UniValue transfer(const JSONRPCRequest& request)
     if (myAssetOutPoints.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name);
 
+    // If it is an ownership transfer, make a quick check to make sure the amount is 1
+    if (IsAssetNameAnOwner(asset_name))
+        if (nAmount != COIN * 1)
+            throw JSONRPCError(RPC_INVALID_PARAMS, std::string("When transfer an 'Ownership Asset' the amount must always be 1. Please try again with the amount of 1"));
+
     CAmount curBalance = pwallet->GetBalance();
 
-    if (curBalance < Params().IssueAssetBurnAmount()) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
-    }
+    if (curBalance == 0)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, std::string("This wallet doesn't contain any RVN, transfering an asset requires a network fee"));
 
     if (pwallet->GetBroadcastTransactions() && !g_connman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -457,7 +469,7 @@ UniValue transfer(const JSONRPCRequest& request)
     CRecipient recipient = {scriptPubKey, 0, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     if (!pwallet->CreateTransactionWithTransferAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, myAssetOutPoints)) {
-        if (!fSubtractFeeFromAmount && Params().IssueAssetBurnAmount() + nFeeRequired > curBalance)
+        if (!fSubtractFeeFromAmount && nFeeRequired > curBalance)
             strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
     }
@@ -492,7 +504,7 @@ UniValue transfer(const JSONRPCRequest& request)
 //This sends assets from one asset holder to another.
 
 //sendassetfrom(from_address, to_address, asset, amount)
-//This sends asset from one asset holder to another, but allows specifying which address to send from, so that if a wallet that has multiple addresses holding a given asset, the send can disambiguate the address from which to send.
+//This sends asset from one asset holder to another, but allows spIsecifying which address to send from, so that if a wallet that has multiple addresses holding a given asset, the send can disambiguate the address from which to send.
 
 //getassettransaction(asset, txid)
 //This returns details for a specific asset transaction.
@@ -511,7 +523,7 @@ static const CRPCCommand commands[] =
   //  ----------- ------------------------  -----------------------  ----------
     { "assets",   "issue",                  &issue,                  {"asset_name","qty","to_address","units","reissuable","has_ipfs","ipfs_hash"} },
     { "assets",   "getaddressbalances",     &getaddressbalances,     {"address", "minconf"} },
-    { "assets",   "getallassets",           &getallassets,           {}},
+    { "assets",   "getassetdata",           &getassetdata,           {"asset_name"}},
     { "assets",   "getmyassets",            &getmyassets,            {}},
     { "assets",   "getassetaddresses",      &getassetaddresses,      {"asset_name"}},
     { "assets",   "transfer",               &transfer,               {"asset_name, address, amount"}}

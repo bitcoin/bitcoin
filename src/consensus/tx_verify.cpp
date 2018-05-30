@@ -13,6 +13,7 @@
 #include "primitives/transaction.h"
 #include "script/interpreter.h"
 #include "validation.h"
+#include <cmath>
 
 // TODO remove the following dependencies
 #include "chain.h"
@@ -161,7 +162,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs, bool fMemPoolCheck)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCache* assetCache, bool fCheckDuplicateInputs, bool fMemPoolCheck)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -183,6 +184,40 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
+
+        /** RVN START */
+        // Check for transfers that don't meet the assets units only if the assetCache is not null
+        if (assetCache) {
+            // Get the transfer transaction data from the scriptPubKey
+            if (txout.scriptPubKey.IsTransferAsset()) {
+                CAssetTransfer transfer;
+                std::string address;
+                if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-tsnx-transfer-asset-bad-deserialize");
+
+                // If we aren't reindexing
+                if (!fReindex) {
+                    // If the transfer is an ownership asset. Check to make sure that it is 1 * COIN
+                    if (IsAssetNameAnOwner(transfer.strName)) {
+                        if (transfer.nAmount != 1 * COIN)
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-wasn't-1");
+                    } else {
+                        // For all other types of assets, make sure they are sending the right type of units
+                        CNewAsset asset;
+                        if (!assetCache->GetAssetIfExists(transfer.strName, asset))
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-not-exist");
+
+                        if (asset.strName != transfer.strName)
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-asset-database-corrupted");
+
+                        if (transfer.nAmount % int64_t(pow(10, (MAX_UNIT - asset.units))) != 0)
+                            return state.DoS(100, false, REJECT_INVALID,
+                                             "bad-txns-transfer-asset-amount-not-match-units");
+                    }
+                }
+            }
+        }
+        /** RVN END */
     }
 
     // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
@@ -208,18 +243,22 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     }
 
     /** RVN START */
-    if (tx.IsNewAsset()) {
-        CNewAsset asset;
-        std::string strAddress;
-        if (!AssetFromTransaction(tx, asset, strAddress))
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-asset");
+    if (assetCache) {
+        // Get the new asset from the transaction
+        if (tx.IsNewAsset()) {
+            CNewAsset asset;
+            std::string strAddress;
+            if (!AssetFromTransaction(tx, asset, strAddress))
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-asset");
 
-        std::string strError = "";
-        if(!IsNewOwnerTxValid(tx, asset.strName, strAddress, strError))
-            return state.DoS(100, false, REJECT_INVALID, strError);
+            // Validate the new assets information
+            std::string strError = "";
+            if (!IsNewOwnerTxValid(tx, asset.strName, strAddress, strError))
+                return state.DoS(100, false, REJECT_INVALID, strError);
 
-        if (!asset.IsValid(strError, *passets, fMemPoolCheck, fCheckDuplicateInputs))
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
+            if (!asset.IsValid(strError, *assetCache, fMemPoolCheck, fCheckDuplicateInputs))
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
+        }
     }
     /** RVN END */
 

@@ -89,6 +89,9 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
         BOOST_CHECK(!IsAssetNameValid("RVN~X_.X"));
         BOOST_CHECK(!IsAssetNameValid("RVN~X..X"));
         BOOST_CHECK(!IsAssetNameValid("RVN~nolower"));
+
+        BOOST_CHECK(IsAssetNameAnOwner("RVN!"));
+        BOOST_CHECK(!IsAssetNameAnOwner("RVN"));
     }
 
 BOOST_AUTO_TEST_SUITE_END()

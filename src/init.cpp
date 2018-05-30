@@ -253,6 +253,8 @@ void Shutdown()
         passets = nullptr;
         delete passetsdb;
         passetsdb = nullptr;
+        delete passetsCache;
+        passetsCache = nullptr;
     }
 #ifdef ENABLE_WALLET
     StopWallets();
@@ -1428,15 +1430,20 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReset);
 
+
+                delete passets;
+                delete passetsdb;
+                delete passetsCache;
                 passetsdb = new CAssetsDB(nBlockTreeDBCache, false, fReset);
                 passets = new CAssetsCache();
+                passetsCache = new CLRUCache<std::string, CNewAsset>(MAX_CACHE_ASSETS_SIZE);
 
                 // Need to load assets before we verify the database
                 if (!passetsdb->LoadAssets()) {
                     strLoadError = _("Failed to load Assets Database");
                     break;
                 }
-                std::cout << std::endl << "Loaded Assets without error" << std::endl << "set of assets size: " << passets->setAssets.size() << std::endl  << "number of assets I have: " << passets->mapMyUnspentAssets.size() << std::endl;
+                std::cout << std::endl << "Loaded Assets without error" << std::endl << "Cache of assets size: " << passetsCache->Size() << std::endl  << "number of assets I have: " << passets->mapMyUnspentAssets.size() << std::endl;
 
 
                 if (fReset) {

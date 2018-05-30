@@ -112,6 +112,14 @@ bool IsAssetNameValid(const std::string& name)
     }
 }
 
+bool IsAssetNameAnOwner(const std::string& name)
+{
+    if (name.size() == 0 || name.size() > MAX_NAME_LENGTH)
+        return false;
+
+    return name[name.size() - 1] == '!';
+}
+
 bool CNewAsset::IsNull() const
 {
     return strName == "";
@@ -123,9 +131,10 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
 
     // Check our current passets to see if the asset has been created yet
     if (fCheckDuplicateInputs) {
-        if (assetCache.setAssets.count(*this))
-            strError =
-                    std::string("Invalid parameter: asset_name '") + strName + std::string("' has already been used");
+        if (assetCache.CheckIfAssetExists(this->strName)) {
+            strError = std::string("Invalid parameter: asset_name '") + strName + std::string("' has already been used");
+            return false;
+        }
     }
 
     if (fCheckMempool) {
@@ -149,9 +158,6 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
     if (nAmount <= 0)
         strError  = "Invalid parameter: asset amount can't be equal to or less than zero.";
 
-    if (nNameLength < 1 || nNameLength > 9)
-        strError  = "Invalid parameter: name_length must be between 1-9";
-
     if (units < 0 || units > 8)
         strError  = "Invalid parameter: units must be between 0-8.";
 
@@ -167,13 +173,33 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
     return strError == "";
 }
 
+CNewAsset::CNewAsset(const CNewAsset& asset)
+{
+    this->strName = asset.strName;
+    this->nAmount = asset.nAmount;
+    this->units = asset.units;
+    this->nHasIPFS = asset.nHasIPFS;
+    this->nReissuable = asset.nReissuable;
+    this->strIPFSHash = asset.strIPFSHash;
+}
+
+CNewAsset& CNewAsset::operator=(const CNewAsset& asset)
+{
+    this->strName = asset.strName;
+    this->nAmount = asset.nAmount;
+    this->units = asset.units;
+    this->nHasIPFS = asset.nHasIPFS;
+    this->nReissuable = asset.nReissuable;
+    this->strIPFSHash = asset.strIPFSHash;
+    return *this;
+}
+
 std::string CNewAsset::ToString()
 {
     std::stringstream ss;
     ss << "Printing an asset" << "\n";
     ss << "name : " << strName << "\n";
     ss << "amount : " << nAmount << "\n";
-    ss << "name_length : " << std::to_string(nNameLength) << "\n";
     ss << "units : " << std::to_string(units) << "\n";
     ss << "reissuable : " << std::to_string(nReissuable) << "\n";
     ss << "has_ipfs : " << std::to_string(nHasIPFS) << "\n";
@@ -184,12 +210,11 @@ std::string CNewAsset::ToString()
     return ss.str();
 }
 
-CNewAsset::CNewAsset(const std::string& strName, const CAmount& nAmount, const int& nNameLength, const int& units, const int& nReissuable, const int& nHasIPFS, const std::string& strIPFSHash)
+CNewAsset::CNewAsset(const std::string& strName, const CAmount& nAmount, const int& units, const int& nReissuable, const int& nHasIPFS, const std::string& strIPFSHash)
 {
     this->SetNull();
     this->strName = strName;
     this->nAmount = nAmount;
-    this->nNameLength = int8_t(nNameLength);
     this->units = int8_t(units);
     this->nReissuable = int8_t(nReissuable);
     this->nHasIPFS = int8_t(nHasIPFS);
@@ -429,6 +454,14 @@ bool CAssetsCache::AddTransferAsset(const CAssetTransfer& transferAsset, const s
 
     AddToAssetBalance(transferAsset.strName, address, transferAsset.nAmount);
 
+    // Add to cache so we can save to database
+    CAssetCacheNewTransfer newTransfer(CAssetTransfer(transferAsset.strName, transferAsset.nAmount), address, out);
+
+    if (setNewTransferAssetsToRemove.count(newTransfer))
+        setNewTransferAssetsToRemove.erase(newTransfer);
+
+    setNewTransferAssetsToAdd.insert(newTransfer);
+
     return true;
 }
 
@@ -447,15 +480,6 @@ void CAssetsCache::AddToAssetBalance(const std::string& strName, const std::stri
         mapAssetsAddresses.insert(std::make_pair(strName, std::set<std::string>()));
     }
     mapAssetsAddresses.at(strName).insert(address);
-
-
-    // Add to cache so we can save to database
-    CAssetCacheNewTransfer newTransfer(CAssetTransfer(strName, nAmount), address);
-
-    if (setNewTransferAssetsToRemove.count(newTransfer))
-        setNewTransferAssetsToRemove.erase(newTransfer);
-
-    setNewTransferAssetsToAdd.insert(newTransfer);
 }
 
 bool CAssetsCache::TrySpendCoin(const COutPoint& out, const CTxOut& txOut)
@@ -541,7 +565,7 @@ bool CAssetsCache::AddToMyUpspentOutPoints(const std::string& strName, const COu
 
 bool CAssetsCache::ContainsAsset(const CNewAsset& asset)
 {
-    return setAssets.find(asset) != setAssets.end();
+    return CheckIfAssetExists(asset.strName);
 }
 
 bool CAssetsCache::AddPossibleOutPoint(const CAssetCachePossibleMine& possibleMine)
@@ -663,11 +687,8 @@ bool CAssetsCache::UndoTransfer(const CAssetTransfer& transfer, const std::strin
 //! Changes Memory Only
 bool CAssetsCache::RemoveNewAsset(const CNewAsset& asset, const std::string address)
 {
-    if (!setAssets.count(asset)) {
-        return error("%s : Tried removeing an asset that isn't in our set of assets %s", __func__, asset.strName);
-    }
-
-    setAssets.erase(asset);
+    if (!CheckIfAssetExists(asset.strName))
+        return error("%s : Tried removing an asset that didn't exist. Asset Name : %s", __func__, asset.strName);
 
     if (mapMyUnspentAssets.count(asset.strName)) {
         mapMyUnspentAssets.erase(asset.strName);
@@ -693,7 +714,7 @@ bool CAssetsCache::RemoveNewAsset(const CNewAsset& asset, const std::string addr
 //! Changes Memory Only
 bool CAssetsCache::AddNewAsset(const CNewAsset& asset, const std::string address)
 {
-    if (!setAssets.insert(asset).second)
+    if(CheckIfAssetExists(asset.strName))
         return error("%s: Tried adding new asset, but it already exsisted in the set of assets: %s", __func__, asset.strName);
 
     // Insert the asset into the assets address map
@@ -786,7 +807,7 @@ bool CAssetsCache::RemoveTransfer(const CAssetTransfer &transfer, const std::str
     // Update the cache
     setChangeOwnedOutPoints.insert(transfer.strName);
 
-    CAssetCacheNewTransfer newTransfer(transfer, address);
+    CAssetCacheNewTransfer newTransfer(transfer, address, out);
     if (setNewTransferAssetsToAdd.count(newTransfer))
         setNewTransferAssetsToAdd.erase(newTransfer);
 
@@ -804,6 +825,8 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
 
             // Remove new assets from the database
             for (auto newAsset : setNewAssetsToRemove) {
+
+                passetsCache->Erase(newAsset.asset.strName);
                 if (!passetsdb->EraseAssetData(newAsset.asset.strName)) {
                     dirty = true;
                     message = "_Failed Erasing New Asset Data from database";
@@ -825,6 +848,8 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
 
             // Add the new assets to the database
             for (auto newAsset : setNewAssetsToAdd) {
+
+                passetsCache->Put(newAsset.asset.strName, newAsset.asset);
                 if (!passetsdb->WriteAssetData(newAsset.asset)) {
                     dirty = true;
                     message = "_Failed Writing New Asset Data to database";
@@ -897,6 +922,25 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
                 }
             }
 
+            // Save the new transfers by updating the quantity in the database
+            for (auto newTransfer : setNewTransferAssetsToAdd) {
+                auto pair = std::make_pair(newTransfer.transfer.strName, newTransfer.address);
+                // During init and reindex it disconnects and verifies blocks, can create a state where vNewTransfer will contain transfers that have already been spent. So if they aren't in the map, we can skip them.
+                if (mapAssetsAddressAmount.count(pair)) {
+                    if (!passetsdb->WriteAssetAddressQuantity(newTransfer.transfer.strName, newTransfer.address,
+                                                              mapAssetsAddressAmount.at(pair))) {
+                        dirty = true;
+                        message = "_Failed Writing new address quantity to database";
+                    }
+
+                    if (dirty) {
+                        return error("%s : %s", __func__, message);
+                    }
+                } else {
+                    LogPrintf("%s : This should be happening!, setNewTransferAssetToAdd has a value that isn't in the mapAssetsAddressAmount\n", __func__);
+                }
+            }
+
             // Undo the asset spends by updating there balance in the database
             for (auto undoSpend : vUndoAssetAmount) {
                 auto pair = std::make_pair(undoSpend.assetName, undoSpend.address);
@@ -919,23 +963,6 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
                     if (!passetsdb->WriteMyAssetsData(updateOutPoints, mapMyUnspentAssets.at(updateOutPoints))) {
                         dirty = true;
                         message = "_Failed Writing my set of outpoints to database";
-                    }
-
-                    if (dirty) {
-                        return error("%s : %s", __func__, message);
-                    }
-                }
-            }
-
-            // Save the new transfers by updating the quantity in the database
-            for (auto newTransfer : setNewTransferAssetsToAdd) {
-                auto pair = std::make_pair(newTransfer.transfer.strName, newTransfer.address);
-                // During init and reindex it disconnects and verifies blocks, can create a state where vNewTransfer will contain transfers that have already been spent. So if they aren't in the map, we can skip them.
-                if (mapAssetsAddressAmount.count(pair)) {
-                    if (!passetsdb->WriteAssetAddressQuantity(newTransfer.transfer.strName, newTransfer.address,
-                                                              mapAssetsAddressAmount.at(pair))) {
-                        dirty = true;
-                        message = "_Failed Writing new address quantity to database";
                     }
 
                     if (dirty) {
@@ -969,34 +996,11 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
     }
 }
 
-void CAssetsCache::Copy(const CAssetsCache& cache)
-{
-    // Copy current state
-    mapMyUnspentAssets = cache.mapMyUnspentAssets;
-    mapAssetsAddressAmount = cache.mapAssetsAddressAmount;
-    mapAssetsAddresses = cache.mapAssetsAddresses;
-    setAssets = cache.setAssets;
-
-    // Copy dirty cache also
-    vSpentAssets = cache.vSpentAssets;
-    vUndoAssetAmount = cache.vUndoAssetAmount;
-
-    setNewAssetsToRemove = cache.setNewAssetsToRemove;
-    setNewAssetsToAdd = cache.setNewAssetsToAdd;
-
-    setNewOwnerAssetsToRemove = cache.setNewOwnerAssetsToRemove;
-    setNewOwnerAssetsToAdd = cache.setNewOwnerAssetsToAdd;
-
-    setNewTransferAssetsToRemove = cache.setNewTransferAssetsToRemove;
-    setNewTransferAssetsToAdd = cache.setNewTransferAssetsToAdd;
-
-    setChangeOwnedOutPoints = cache.setChangeOwnedOutPoints;
-}
-
 //! Get the amount of memory the cache is using
 size_t CAssetsCache::DynamicMemoryUsage() const
 {
-    return memusage::DynamicUsage(mapAssetsAddresses) + memusage::DynamicUsage(mapAssetsAddressAmount) + memusage::DynamicUsage(mapMyUnspentAssets) + memusage::DynamicUsage(setAssets);
+    // TODO make sure this is accurate
+    return memusage::DynamicUsage(mapAssetsAddresses) + memusage::DynamicUsage(mapAssetsAddressAmount) + memusage::DynamicUsage(mapMyUnspentAssets);
 }
 
 //! Get an estimated size of the cache in bytes that will be needed inorder to save to database
@@ -1098,7 +1102,6 @@ bool IsScriptTransferAsset(const CScript& scriptPubKey)
 void UpdatePossibleAssets()
 {
     if (passets) {
-
         for (auto item : passets->setPossiblyMineRemove) {
             // If the CTxOut is mine add it to the list of unspent outpoints
             if (vpwallets[0]->IsMine(item.txOut) == ISMINE_SPENDABLE) {
@@ -1130,4 +1133,78 @@ void UpdatePossibleAssets()
         }
 
     }
+}
+
+
+//! Returns a boolean on if the asset exists
+bool CAssetsCache::CheckIfAssetExists(const std::string& name)
+{
+    // TODO we need to add some Locks to this I would think
+
+    // Create objects that will be used to check the dirty cache
+    CNewAsset asset;
+    asset.strName = name;
+    CAssetCacheNewAsset cachedAsset(asset, "");
+
+    // Check the dirty caches first and see if it was recently added or removed
+    if (setNewAssetsToRemove.count(cachedAsset))
+        return false;
+
+    if (setNewAssetsToAdd.count(cachedAsset))
+        return true;
+
+    // Check the cache, if it doesn't exist in the cache. Try and read it from database
+    if (passetsCache) {
+        if (passetsCache->Exists(name)) {
+            return true;
+        } else {
+            if (passetsdb) {
+                CNewAsset readAsset;
+                if (passetsdb->ReadAssetData(name, readAsset)) {
+                    passetsCache->Put(readAsset.strName, readAsset);
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool CAssetsCache::GetAssetIfExists(const std::string& name, CNewAsset& asset)
+{
+    // Create objects that will be used to check the dirty cache
+    CNewAsset tempAsset;
+    tempAsset.strName = name;
+    CAssetCacheNewAsset cachedAsset(tempAsset, "");
+
+    // Check the dirty caches first and see if it was recently added or removed
+    if (setNewAssetsToRemove.count(cachedAsset)) {
+        return false;
+    }
+
+    auto setIterator = setNewAssetsToAdd.find(cachedAsset);
+    if (setIterator != setNewAssetsToAdd.end()) {
+        asset = setIterator->asset;
+        return true;
+    }
+
+    // Check the cache, if it doesn't exist in the cache. Try and read it from database
+    if (passetsCache) {
+        if (passetsCache->Exists(name)) {
+            asset = passetsCache->Get(name);
+            return true;
+        }
+    }
+
+    if (passetsdb && passetsCache) {
+        CNewAsset readAsset;
+        if (passetsdb->ReadAssetData(name, readAsset)) {
+            asset = readAsset;
+            passetsCache->Put(readAsset.strName, readAsset);
+            return true;
+        }
+    }
+
+    return false;
 }
