@@ -81,7 +81,11 @@ BITCOIN_CORE_H = \
   addrman.h \
   base58.h \
   bloom.h \
+  bignum.h \
   blockencodings.h \
+  groestlcoin.h \
+  sphlib/sph_types.h \
+  sphlib/sph_groestl.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
