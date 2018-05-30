@@ -323,7 +323,7 @@ bool RevertOffer(const std::vector<unsigned char>& vchOffer, const int op, const
 		}
 	}
 	// write the state back to previous state
-	else if (!pofferdb->WriteOffer(dbOffer, op, INT64_MAX, false))
+	else if (!pofferdb->WriteOffer(dbOffer, op, INT64_MAX, false, false))
 	{
 		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to offer DB");
 		return error(errorMessage.c_str());
