@@ -1216,7 +1216,7 @@ UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 
 	UniValue oRes(UniValue::VARR);
 	if (!passetallocationdb->ScanAssetAllocations(count, from, oRes))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1511 - " + _("Scan failed"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Scan failed"));
 	return oRes;
 }
 
