@@ -818,18 +818,13 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 bool GetAlias(const vector<unsigned char> &vchAlias,
 	CAliasIndex& txPos) {
 	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos)) {
-		printf("alias %s doesnt exist, paliasdb? %d\n", stringFromVch(vchAlias).c_str(), paliasdb? 1: 0);
 		return false;
 	}
 	
 	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
 		txPos.SetNull();
-		printf("alias %s expired chainActive.Tip()->GetMedianTimePast() %lld vs txPos.nExpireTime %lld\n", stringFromVch(vchAlias).c_str(), chainActive.Tip()->GetMedianTimePast(), txPos.nExpireTime);
 		return false;
-	}
-	if (stringFromVch(vchAlias) == "jagassetcollection")
-		printf("GetAlias jagassetcollection true!\n");
-	
+	}	
 	return true;
 }
 bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey) {
