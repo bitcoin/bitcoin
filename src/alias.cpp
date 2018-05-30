@@ -751,7 +751,6 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
   				if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime)
 				{
 					servicesCleaned++;
-					printf("erased %s\n", stringFromVch(key.second).c_str());
 					EraseAlias(key.second, true);
 				} 
 				
@@ -763,7 +762,6 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 				if (GetAlias(value, alias) && chainActive.Tip()->GetMedianTimePast() >= alias.nExpireTime)
 				{
 					servicesCleaned++;
-					printf("erased alias address\n");
 					EraseAddress(alias.vchAddress);
 				}
 
@@ -829,6 +827,8 @@ bool GetAlias(const vector<unsigned char> &vchAlias,
 		printf("alias %s expired chainActive.Tip()->GetMedianTimePast() %lld vs txPos.nExpireTime %lld\n", stringFromVch(vchAlias).c_str(), chainActive.Tip()->GetMedianTimePast(), txPos.nExpireTime);
 		return false;
 	}
+	if (stringFromVch(vchAlias) == "jagassetcollection")
+		printf("GetAlias jagassetcollection true!\n");
 	
 	return true;
 }
