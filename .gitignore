@@ -113,3 +113,5 @@ test/cache/*
 
 libravenconsensus.pc
 contrib/devtools/split-debug.sh
+
+CMakeLists.txt
