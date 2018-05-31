@@ -182,13 +182,6 @@ enum opcodetype
     OP_ISCOINSTAKE = OP_NOP9,
     OP_NOP10 = 0xb9,
 
-    // template matching params
-    OP_SMALLINTEGER = 0xfa,
-    OP_PUBKEYS = 0xfb,
-    OP_PUBKEYHASH256 = 0xfc,
-    OP_PUBKEYHASH = 0xfd,
-    OP_PUBKEY = 0xfe,
-
     OP_INVALIDOPCODE = 0xff,
 };
 

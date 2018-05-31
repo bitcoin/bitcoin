@@ -415,7 +415,7 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
-void ArgsManager::ParseParameters(int argc, const char* const argv[])
+bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
 {
     LOCK(cs_args);
     m_override_args.clear();
@@ -447,6 +447,14 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
         } else {
             m_override_args[key].push_back(val);
         }
+
+        // Check that the arg is known
+        if (!(IsSwitchChar(key[0]) && key.size() == 1)) {
+            if (!IsArgKnown(key, error)) {
+                error = strprintf("Invalid parameter %s", key.c_str());
+                return false;
+            }
+        }
     }
 
     // we do not allow -includeconf from command line, so we clear it here
@@ -459,6 +467,23 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
             m_override_args.erase(it);
         }
     }
+    return true;
+}
+
+bool ArgsManager::IsArgKnown(const std::string& key, std::string& error)
+{
+    size_t option_index = key.find('.');
+    std::string arg_no_net;
+    if (option_index == std::string::npos) {
+        arg_no_net = key;
+    } else {
+        arg_no_net = std::string("-") + key.substr(option_index + 1, std::string::npos);
+    }
+
+    for (const auto& arg_map : m_available_args) {
+        if (arg_map.second.count(arg_no_net)) return true;
+    }
+    return false;
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
@@ -772,54 +797,89 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
 
 void ArgsManager::AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat)
 {
-    std::pair<OptionsCategory, std::string> key(cat, name);
-    assert(m_available_args.count(key) == 0);
-    m_available_args.emplace(key, std::pair<std::string, bool>(help, debug_only));
+    // Split arg name from its help param
+    size_t eq_index = name.find('=');
+    if (eq_index == std::string::npos) {
+        eq_index = name.size();
+    }
+
+    std::map<std::string, Arg>& arg_map = m_available_args[cat];
+    auto ret = arg_map.emplace(name.substr(0, eq_index), Arg(name.substr(eq_index, name.size() - eq_index), help, debug_only));
+    assert(ret.second); // Make sure an insertion actually happened
 }
 
 std::string ArgsManager::GetHelpMessage()
 {
     const bool show_debug = gArgs.GetBoolArg("-help-debug", false);
 
-    std::string usage = HelpMessageGroup(_("Options:"));
-
-    OptionsCategory last_cat = OptionsCategory::OPTIONS;
-    for (auto& arg : m_available_args) {
-        if (arg.first.first != last_cat) {
-            last_cat = arg.first.first;
-            if (last_cat == OptionsCategory::CONNECTION)
-                usage += HelpMessageGroup(_("Connection options:"));
-            else if (last_cat == OptionsCategory::ZMQ)
-                usage += HelpMessageGroup(_("ZeroMQ notification options:"));
-            else if (last_cat == OptionsCategory::DEBUG_TEST)
-                usage += HelpMessageGroup(_("Debugging/Testing options:"));
-            else if (last_cat == OptionsCategory::NODE_RELAY)
-                usage += HelpMessageGroup(_("Node relay options:"));
-            else if (last_cat == OptionsCategory::BLOCK_CREATION)
-                usage += HelpMessageGroup(_("Block creation options:"));
-            else if (last_cat == OptionsCategory::RPC)
-                usage += HelpMessageGroup(_("RPC server options:"));
-            else if (last_cat == OptionsCategory::WALLET)
-                usage += HelpMessageGroup(_("Wallet options:"));
-            else if (last_cat == OptionsCategory::WALLET_DEBUG_TEST && show_debug)
-                usage += HelpMessageGroup(_("Wallet debugging/testing options:"));
-            else if (last_cat == OptionsCategory::CHAINPARAMS)
-                usage += HelpMessageGroup(_("Chain selection options:"));
-            else if (last_cat == OptionsCategory::GUI)
-                usage += HelpMessageGroup(_("UI Options:"));
-            else if (last_cat == OptionsCategory::COMMANDS)
-                usage += HelpMessageGroup(_("Commands:"));
-            else if (last_cat == OptionsCategory::REGISTER_COMMANDS)
-                usage += HelpMessageGroup(_("Register Commands:"));
-            else if (last_cat == OptionsCategory::SMSG)
-                usage += HelpMessageGroup(_("SMSG Commands:"));
-            else if (last_cat == OptionsCategory::PART_WALLET)
-                usage += HelpMessageGroup(_("Particl wallet Commands:"));
-            else if (last_cat == OptionsCategory::PART_STAKING)
-                usage += HelpMessageGroup(_("Staking Commands:"));
+    std::string usage = "";
+    for (const auto& arg_map : m_available_args) {
+        switch(arg_map.first) {
+            case OptionsCategory::OPTIONS:
+                usage += HelpMessageGroup("Options:");
+                break;
+            case OptionsCategory::CONNECTION:
+                usage += HelpMessageGroup("Connection options:");
+                break;
+            case OptionsCategory::ZMQ:
+                usage += HelpMessageGroup("ZeroMQ notification options:");
+                break;
+            case OptionsCategory::DEBUG_TEST:
+                usage += HelpMessageGroup("Debugging/Testing options:");
+                break;
+            case OptionsCategory::NODE_RELAY:
+                usage += HelpMessageGroup("Node relay options:");
+                break;
+            case OptionsCategory::BLOCK_CREATION:
+                usage += HelpMessageGroup("Block creation options:");
+                break;
+            case OptionsCategory::RPC:
+                usage += HelpMessageGroup("RPC server options:");
+                break;
+            case OptionsCategory::WALLET:
+                usage += HelpMessageGroup("Wallet options:");
+                break;
+            case OptionsCategory::WALLET_DEBUG_TEST:
+                if (show_debug) usage += HelpMessageGroup("Wallet debugging/testing options:");
+                break;
+            case OptionsCategory::CHAINPARAMS:
+                usage += HelpMessageGroup("Chain selection options:");
+                break;
+            case OptionsCategory::GUI:
+                usage += HelpMessageGroup("UI Options:");
+                break;
+            case OptionsCategory::COMMANDS:
+                usage += HelpMessageGroup("Commands:");
+                break;
+            case OptionsCategory::REGISTER_COMMANDS:
+                usage += HelpMessageGroup("Register Commands:");
+                break;
+            case OptionsCategory::SMSG:
+                usage += HelpMessageGroup("SMSG Commands:");
+                break;
+            case OptionsCategory::PART_WALLET:
+                usage += HelpMessageGroup("Particl wallet Commands:");
+                break;
+            case OptionsCategory::PART_STAKING:
+                usage += HelpMessageGroup("Staking Commands:");
+                break;
+            default:
+                break;
         }
-        if (show_debug || !arg.second.second) {
-            usage += HelpMessageOpt(arg.first.second, arg.second.first);
+
+        // When we get to the hidden options, stop
+        if (arg_map.first == OptionsCategory::HIDDEN) break;
+
+        for (const auto& arg : arg_map.second) {
+            if (show_debug || !arg.second.m_debug_only) {
+                std::string name;
+                if (arg.second.m_help_param.empty()) {
+                    name = arg.first;
+                } else {
+                    name = arg.first + arg.second.m_help_param;
+                }
+                usage += HelpMessageOpt(name, arg.second.m_help_text);
+            }
         }
     }
     return usage;
@@ -975,7 +1035,7 @@ fs::path GetConfigFile(const std::string& confPath)
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
 
-void ArgsManager::ReadConfigStream(std::istream& stream)
+bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys)
 {
     LOCK(cs_args);
 
@@ -986,15 +1046,23 @@ void ArgsManager::ReadConfigStream(std::istream& stream)
     {
         std::string strKey = std::string("-") + it->string_key;
         std::string strValue = it->value[0];
+
         if (InterpretNegatedOption(strKey, strValue)) {
             m_config_args[strKey].clear();
         } else {
             m_config_args[strKey].push_back(strValue);
         }
+
+        // Check that the arg is known
+        if (!IsArgKnown(strKey, error) && !ignore_invalid_keys) {
+            error = strprintf("Invalid configuration value %s", it->string_key.c_str());
+            return false;
+        }
     }
+    return true;
 }
 
-void ArgsManager::ReadConfigFiles()
+bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 {
     {
         LOCK(cs_args);
@@ -1006,7 +1074,9 @@ void ArgsManager::ReadConfigFiles()
 
     // ok to not have a config file
     if (stream.good()) {
-        ReadConfigStream(stream);
+        if (!ReadConfigStream(stream, error, ignore_invalid_keys)) {
+            return false;
+        }
         // if there is an -includeconf in the override args, but it is empty, that means the user
         // passed '-noincludeconf' on the command line, in which case we should not include anything
         if (m_override_args.count("-includeconf") == 0) {
@@ -1029,7 +1099,9 @@ void ArgsManager::ReadConfigFiles()
             for (const std::string& to_include : includeconf) {
                 fs::ifstream include_config(GetConfigFile(to_include));
                 if (include_config.good()) {
-                    ReadConfigStream(include_config);
+                    if (!ReadConfigStream(include_config, error, ignore_invalid_keys)) {
+                        return false;
+                    }
                     LogPrintf("Included configuration file %s\n", to_include.c_str());
                 } else {
                     fprintf(stderr, "Failed to include configuration file %s\n", to_include.c_str());
@@ -1051,8 +1123,10 @@ void ArgsManager::ReadConfigFiles()
     // If datadir is changed in .conf file:
     ClearDatadirCache();
     if (!fs::is_directory(GetDataDir(false))) {
-        throw std::runtime_error(strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str()));
+        error = strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str());
+        return false;
     }
+    return true;
 }
 
 std::string ArgsManager::GetChainName() const

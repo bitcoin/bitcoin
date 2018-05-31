@@ -50,42 +50,80 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_SCRIPTHASH256: return "scripthash256";
     case TX_PUBKEYHASH256: return "pubkeyhash256";
     case TX_TIMELOCKED_SCRIPTHASH: return "timelocked_scripthash";
+    case TX_TIMELOCKED_SCRIPTHASH256: return "timelocked_scripthash256";
     case TX_TIMELOCKED_PUBKEYHASH: return "timelocked_pubkeyhash";
+    case TX_TIMELOCKED_PUBKEYHASH256: return "timelocked_pubkeyhash256";
     case TX_TIMELOCKED_MULTISIG: return "timelocked_multisig";
-    case TX_CONDITIONAL_STAKE: return "conditional_stake";
     }
     return nullptr;
 }
 
-bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet)
+static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 {
-    // Templates
-    static std::multimap<txnouttype, CScript> mTemplates;
-    if (mTemplates.empty())
-    {
-        // Standard tx, sender provides pubkey, receiver adds signature
-        mTemplates.insert(std::make_pair(TX_PUBKEY, CScript() << OP_PUBKEY << OP_CHECKSIG));
-
-        // Bitcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
-        mTemplates.insert(std::make_pair(TX_PUBKEYHASH, CScript() << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG));
-
-        // Sender provides N pubkeys, receivers provides M signatures
-        mTemplates.insert(std::make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
-
-        //mTemplates.insert(make_pair(TX_TIMELOCKED_PUBKEYHASH, CScript() << OP_INTEGER << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG));
-
-        mTemplates.insert(std::make_pair(TX_PUBKEYHASH256, CScript() << OP_DUP << OP_SHA256 << OP_PUBKEYHASH256 << OP_EQUALVERIFY << OP_CHECKSIG));
+    if (script.size() == CPubKey::PUBLIC_KEY_SIZE + 2 && script[0] == CPubKey::PUBLIC_KEY_SIZE && script.back() == OP_CHECKSIG) {
+        pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::PUBLIC_KEY_SIZE + 1);
+        return CPubKey::ValidSize(pubkey);
     }
+    if (script.size() == CPubKey::COMPRESSED_PUBLIC_KEY_SIZE + 2 && script[0] == CPubKey::COMPRESSED_PUBLIC_KEY_SIZE && script.back() == OP_CHECKSIG) {
+        pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::COMPRESSED_PUBLIC_KEY_SIZE + 1);
+        return CPubKey::ValidSize(pubkey);
+    }
+    return false;
+}
 
+static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
+{
+    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 20 && script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
+        pubkeyhash = valtype(script.begin () + 3, script.begin() + 23);
+        return true;
+    }
+    return false;
+}
+
+static bool MatchPayToPubkeyHash256(const CScript& script, valtype& pubkeyhash)
+{
+    if (!script.IsPayToPublicKeyHash256())
+        return false;
+    pubkeyhash = valtype(script.begin () + 3, script.begin() + 35);
+    return true;
+}
+
+
+/** Test for "small positive integer" script opcodes - OP_1 through OP_16. */
+static constexpr bool IsSmallInteger(opcodetype opcode)
+{
+    return opcode >= OP_1 && opcode <= OP_16;
+}
+
+static bool MatchMultisig(const CScript& script, unsigned int& required, std::vector<valtype>& pubkeys)
+{
+    opcodetype opcode;
+    valtype data;
+    CScript::const_iterator it = script.begin();
+    if (script.size() < 1 || script.back() != OP_CHECKMULTISIG) return false;
+
+    if (!script.GetOp(it, opcode, data) || !IsSmallInteger(opcode)) return false;
+    required = CScript::DecodeOP_N(opcode);
+    while (script.GetOp(it, opcode, data) && CPubKey::ValidSize(data)) {
+        pubkeys.emplace_back(std::move(data));
+    }
+    if (!IsSmallInteger(opcode)) return false;
+    unsigned int keys = CScript::DecodeOP_N(opcode);
+    if (pubkeys.size() != keys || keys < required) return false;
+    return (it + 1 == script.end());
+}
+
+bool Solver(const CScript& scriptPubKeyIn, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet)
+{
     vSolutionsRet.clear();
 
     opcodetype opcode;
     std::vector<unsigned char> vch1;
-    CScript::const_iterator pc1 = scriptPubKey.begin();
+    CScript::const_iterator pc1 = scriptPubKeyIn.begin();
     size_t k;
     for (k = 0; k < 3; ++k)
     {
-        if (!scriptPubKey.GetOp(pc1, opcode, vch1))
+        if (!scriptPubKeyIn.GetOp(pc1, opcode, vch1))
             break;
 
         if (k == 0)
@@ -110,57 +148,34 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         };
     };
     bool fIsTimeLocked = k == 3;
-    CScript::const_iterator tli = pc1;
 
-    if (fIsTimeLocked) // Check further for TX_TIMELOCKED_SCRIPTHASH
-    for (k = 0; k < 3; ++k)
+    CScript scriptPubKeyTemp;
+    if (fIsTimeLocked)
     {
-        if (!scriptPubKey.GetOp(pc1, opcode, vch1))
-            break;
-
-        if (k == 0)
-        {
-            if (opcode != OP_HASH160)
-                break;
-        }  else
-        if (k == 1)
-        {
-            if (vch1.size() != sizeof(uint160))
-                break;
-            vSolutionsRet.push_back(vch1);
-        } else
-        if (k == 2)
-        {
-            if (opcode != OP_EQUAL)
-                break;
-            typeRet = TX_TIMELOCKED_SCRIPTHASH;
-            return true;
-        }
+        scriptPubKeyTemp.insert(scriptPubKeyTemp.end(), pc1, scriptPubKeyIn.end());
     };
+    const CScript& scriptPubKey = !fIsTimeLocked ? scriptPubKeyIn : scriptPubKeyTemp;
 
-    vSolutionsRet.clear();
-
-
-    if (!fIsTimeLocked)
+    // Shortcut for pay-to-script-hash, which are more constrained than the other types:
+    // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
+    if (scriptPubKey.IsPayToScriptHash())
     {
-        // Shortcut for pay-to-script-hash, which are more constrained than the other types:
-        // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
-        if (scriptPubKey.IsPayToScriptHash())
-        {
-            typeRet = TX_SCRIPTHASH;
-            std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
-            vSolutionsRet.push_back(hashBytes);
-            return true;
-        }
+        typeRet = fIsTimeLocked ? TX_TIMELOCKED_SCRIPTHASH : TX_SCRIPTHASH;
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
+        vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
 
-        if (scriptPubKey.IsPayToScriptHash256())
-        {
-            typeRet = TX_SCRIPTHASH256;
-            std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+34);
-            vSolutionsRet.push_back(hashBytes);
-            return true;
-        }
+    if (scriptPubKey.IsPayToScriptHash256())
+    {
+        typeRet = fIsTimeLocked ? TX_TIMELOCKED_SCRIPTHASH256 : TX_SCRIPTHASH256;
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+34);
+        vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
 
+    if (!fParticlMode)
+    {
         int witnessversion;
         std::vector<unsigned char> witnessprogram;
         if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
@@ -194,100 +209,33 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         return true;
     }
 
-    // Scan templates
-    const CScript& script1 = scriptPubKey;
-    for (const std::pair<txnouttype, CScript>& tplate : mTemplates)
-    {
-        const CScript& script2 = tplate.second;
-        vSolutionsRet.clear();
+    std::vector<unsigned char> data;
+    if (MatchPayToPubkey(scriptPubKey, data)) {
+        typeRet = TX_PUBKEY;
+        vSolutionsRet.push_back(std::move(data));
+        return true;
+    }
 
-        opcodetype opcode1, opcode2;
-        std::vector<unsigned char> vch1, vch2;
+    if (MatchPayToPubkeyHash(scriptPubKey, data)) {
+        typeRet = fIsTimeLocked ? TX_TIMELOCKED_PUBKEYHASH : TX_PUBKEYHASH;
+        vSolutionsRet.push_back(std::move(data));
+        return true;
+    }
 
-        // Compare
-        CScript::const_iterator pc1 = fIsTimeLocked ? tli : script1.begin();
-        CScript::const_iterator pc2 = script2.begin();
-        while (true)
-        {
-            if (pc1 == script1.end() && pc2 == script2.end())
-            {
-                // Found a match
-                typeRet = tplate.first;
-                if (typeRet == TX_MULTISIG || typeRet == TX_TIMELOCKED_MULTISIG)
-                {
-                    // Additional checks for TX_MULTISIG:
-                    unsigned char m = vSolutionsRet.front()[0];
-                    unsigned char n = vSolutionsRet.back()[0];
-                    if (m < 1 || n < 1 || m > n || vSolutionsRet.size()-2 != n)
-                        return false;
-                }
+    if (MatchPayToPubkeyHash256(scriptPubKey, data)) {
+        typeRet = fIsTimeLocked ? TX_TIMELOCKED_PUBKEYHASH256 : TX_PUBKEYHASH256;
+        vSolutionsRet.push_back(std::move(data));
+        return true;
+    }
 
-                if (fIsTimeLocked)
-                switch (typeRet)
-                {
-                    case TX_SCRIPTHASH: typeRet = TX_TIMELOCKED_SCRIPTHASH; break;
-                    case TX_PUBKEYHASH: typeRet = TX_TIMELOCKED_PUBKEYHASH; break;
-                    case TX_MULTISIG:   typeRet = TX_TIMELOCKED_MULTISIG;   break;
-                    default: break;
-                };
-
-                return true;
-            }
-            if (!script1.GetOp(pc1, opcode1, vch1))
-                break;
-            if (!script2.GetOp(pc2, opcode2, vch2))
-                break;
-
-            // Template matching opcodes:
-            if (opcode2 == OP_PUBKEYS)
-            {
-                while (CPubKey::ValidSize(vch1))
-                {
-                    vSolutionsRet.push_back(vch1);
-                    if (!script1.GetOp(pc1, opcode1, vch1))
-                        break;
-                }
-                if (!script2.GetOp(pc2, opcode2, vch2))
-                    break;
-                // Normal situation is to fall through
-                // to other if/else statements
-            }
-
-            if (opcode2 == OP_PUBKEY)
-            {
-                if (!CPubKey::ValidSize(vch1))
-                    break;
-                vSolutionsRet.push_back(vch1);
-            }
-            else if (opcode2 == OP_PUBKEYHASH)
-            {
-                if (vch1.size() != sizeof(uint160))
-                    break;
-                vSolutionsRet.push_back(vch1);
-            }
-            else if (opcode2 == OP_PUBKEYHASH256)
-            {
-                if (vch1.size() != sizeof(uint256))
-                    break;
-                vSolutionsRet.push_back(vch1);
-            }
-            else if (opcode2 == OP_SMALLINTEGER)
-            {   // Single-byte small integer pushed onto vSolutions
-                if (opcode1 == OP_0 ||
-                    (opcode1 >= OP_1 && opcode1 <= OP_16))
-                {
-                    char n = (char)CScript::DecodeOP_N(opcode1);
-                    vSolutionsRet.push_back(valtype(1, n));
-                }
-                else
-                    break;
-            }
-            else if (opcode1 != opcode2 || vch1 != vch2)
-            {
-                // Others must match exactly
-                break;
-            }
-        }
+    unsigned int required;
+    std::vector<std::vector<unsigned char>> keys;
+    if (MatchMultisig(scriptPubKey, required, keys)) {
+        typeRet = fIsTimeLocked ? TX_TIMELOCKED_MULTISIG : TX_MULTISIG;
+        vSolutionsRet.push_back({static_cast<unsigned char>(required)}); // safe as required is in range 1..16
+        vSolutionsRet.insert(vSolutionsRet.end(), keys.begin(), keys.end());
+        vSolutionsRet.push_back({static_cast<unsigned char>(keys.size())}); // safe as size is in range 1..16
+        return true;
     }
 
     vSolutionsRet.clear();

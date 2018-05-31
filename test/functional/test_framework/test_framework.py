@@ -404,7 +404,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Create cache directories, run bitcoinds:
             for i in range(MAX_NODES):
                 datadir = initialize_datadir(self.options.cachedir, i)
-                args = [self.options.bitcoind, "-datadir=" + datadir, "-legacymode"]
+                args = [self.options.bitcoind, "-datadir=" + datadir]
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
                 self.nodes.append(TestNode(i, get_datadir_path(self.options.cachedir, i), extra_conf=["bind=127.0.0.1"], extra_args=[], rpchost=None, timewait=None, bitcoind=self.options.bitcoind, bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=None))

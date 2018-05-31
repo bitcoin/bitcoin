@@ -18,10 +18,10 @@ class AddressIndexTest(ParticlTestFramework):
         self.num_nodes = 4
         self.extra_args = [
             # Nodes 0/1 are "wallet" nodes
-            ['-debug','-relaypriority=0'],
+            ['-debug',],
             ['-debug','-addressindex'],
             # Nodes 2/3 are used for testing
-            ['-debug','-addressindex','-relaypriority=0'],
+            ['-debug','-addressindex',],
             ['-debug','-addressindex'],]
 
     def setup_network(self):

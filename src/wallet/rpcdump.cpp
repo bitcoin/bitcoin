@@ -561,7 +561,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         std::string sJson;
         bool fJson = false;
         // Use uiInterface.ShowProgress instead of pwallet.ShowProgress because pwallet.ShowProgress has a cancel button tied to AbortRescan which
-        // we don't want for this progress bar shoing the import progress. uiInterface.ShowProgress does not have a cancel button.
+        // we don't want for this progress bar showing the import progress. uiInterface.ShowProgress does not have a cancel button.
         uiInterface.ShowProgress(_("Importing..."), 0, false); // show progress dialog in GUI
         while (file.good()) {
             uiInterface.ShowProgress("", std::max(1, std::min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))), false);

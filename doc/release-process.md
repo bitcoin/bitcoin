@@ -276,14 +276,14 @@ bitcoin.org (see below for bitcoin.org update instructions).
 - Update bitcoin.org version
 
   - First, check to see if the Bitcoin.org maintainers have prepared a
-    release: https://github.com/bitcoin-dot-org/bitcoin.org/labels/Releases
+    release: https://github.com/bitcoin-dot-org/bitcoin.org/labels/Core
 
       - If they have, it will have previously failed their Travis CI
         checks because the final release files weren't uploaded.
         Trigger a Travis CI rebuild---if it passes, merge.
 
   - If they have not prepared a release, follow the Bitcoin.org release
-    instructions: https://github.com/bitcoin-dot-org/bitcoin.org#release-notes
+    instructions: https://github.com/bitcoin-dot-org/bitcoin.org/blob/master/docs/adding-events-release-notes-and-alerts.md#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
     as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
