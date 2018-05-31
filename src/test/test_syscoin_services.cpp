@@ -1294,8 +1294,8 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 		GenerateBlocks(1, node);
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetallocationtransactions"));
 		BOOST_CHECK(r.isArray());
-		assetTxArray = r.get_array();
-		firstAssetTx = assetTxArray[0].get_obj();
+		UniValue assetTxArray = r.get_array();
+		UniValue firstAssetTx = assetTxArray[0].get_obj();
 		BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid);
 		BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), true);
 	}
