@@ -49,6 +49,14 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0.23 * COIN);
 
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetallocationtransactions 100"));
+	BOOST_CHECK(r.isArray());
+	UniValue assetTxArray = r.get_array();
+	UniValue firstAssetTx = assetTxArray[0].get_obj();
+	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid1);
+	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), false);
+
+
 	// non zdag cannot be found since it was already mined, but ends up briefly in conflict state because sender is conflicted
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " jagassetallocationsend1 " + txid0));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MINOR_CONFLICT_OK);
@@ -69,6 +77,13 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetallocationsend2 false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0.36 * COIN);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetallocationtransactions 100"));
+	BOOST_CHECK(r.isArray());
+	assetTxArray = r.get_array();
+	firstAssetTx = assetTxArray[0].get_obj();
+	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid2);
+	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), false);
 	
 	// sender is conflicted so txid0 is conflicted by extension even if its not found
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " jagassetallocationsend1 " + txid0));
@@ -121,5 +136,11 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " jagassetallocationsend1 ''"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetallocationtransactions 100"));
+	BOOST_CHECK(r.isArray());
+	assetTxArray = r.get_array();
+	firstAssetTx = assetTxArray[0].get_obj();
+	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid2);
+	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), true);
 }
 BOOST_AUTO_TEST_SUITE_END ()
