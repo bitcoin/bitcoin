@@ -60,13 +60,13 @@ int main(int argc, char** argv)
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
         fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
-        return false;
+        return EXIT_FAILURE;
     }
 
     if (HelpRequested(gArgs)) {
         std::cout << gArgs.GetHelpMessage();
 
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     // Set the datadir after parsing the bench options
@@ -111,4 +111,6 @@ int main(int argc, char** argv)
     CleanupBLSTests();
 
     ECC_Stop();
+
+    return EXIT_SUCCESS;
 }
