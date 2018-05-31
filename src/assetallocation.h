@@ -213,7 +213,7 @@ public:
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
-	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver, const bool& fJustCheck, const int nHeight=0);
+	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver, const int nHeight=0);
 	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
 };
 class CAssetAllocationTransactionsDB : public CDBWrapper {
