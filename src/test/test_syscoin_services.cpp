@@ -1282,7 +1282,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	if (usezdag) {
-		MilliSleep(100);
+		MilliSleep(500);
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetallocationtransactions"));
 		BOOST_CHECK(r.isArray());
 		UniValue assetTxArray = r.get_array();
