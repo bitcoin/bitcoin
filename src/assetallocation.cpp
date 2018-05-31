@@ -93,13 +93,8 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 			const string& strObj = oName.write();
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
 			if (isMine && fAssetAllocationIndex && !assetallocation.txHash.IsNull()) {
-				vector<unsigned char> vchKey = vchFromString(assetallocation.txHash.GetHex());
-				const vector<unsigned char> &vchSep = vchFromString("-");
-				vchKey.insert(vchKey.end(), vchSep.begin(), vchSep.end());
-				vchKey.insert(vchKey.end(), asset.vchAlias.begin(), asset.vchAlias.end());
-				vchKey.insert(vchKey.end(), vchSep.begin(), vchSep.end());
-				vchKey.insert(vchKey.end(), vchReceiver.begin(), vchReceiver.end());
-				passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(nHeight, vchKey, strObj);
+				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAlias)+"-"+ stringFromVch(vchReceiver);
+				passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(nHeight, strKey, strObj);
 			}
 		}
 	}
