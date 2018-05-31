@@ -81,7 +81,7 @@ public:
         consensus.nMasternodePaymentsStartBlock = 1800000; // PM-Tech: to be set after activation, for now we are looking at SegWit activation
         consensus.nMasternodePaymentsIncreaseBlock = 2250000; // PM-Tech: estimation
         consensus.nMasternodePaymentsIncreasePeriod = 175000; // PM-Tech: approx. 6 months
-        consensus.nSuperblockStartBlock = 1900000; // PM-Tech: to be defined
+        consensus.nSuperblockStartBlock = 1550000; // PM-Tech: to be defined
         consensus.nSuperblockCycle = 28800; // PM-Tech: to be defined
         consensus.nGovernanceMinQuorum = 10;
         consensus.nGovernanceFilterElements = 20000;
@@ -101,7 +101,7 @@ public:
         consensus.nAveragingInterval = 8; // PM-Tech: ChainCoin
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 12768; // 95% of 13440
+        consensus.nRuleChangeActivationThreshold = 10752; // 80% of 13440
         consensus.nMinerConfirmationWindow = 13440; // average of 2 weeks
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
