@@ -3539,7 +3539,7 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
         return false;
     }
 
-    LogPrint(BCLog::PRIVSEND, "Created PS collateral: %s\n", txCollateral.ToString());
+    LogPrint(BCLog::PRIVSEND, "Created PS collateral: %s\n", txCollateral.GetHash().ToString());
     return true;
 }
 
