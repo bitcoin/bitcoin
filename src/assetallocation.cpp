@@ -1096,6 +1096,7 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("amount", ValueFromAssetAmount(nAmount, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
 	if (fAssetAllocationIndex) {
+		string strCat = "";
 		isMine = true;
 		CAliasIndex fromAlias;
 		if (!GetAlias(vchSender, fromAlias))
@@ -1114,7 +1115,6 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 
 			isminefilter filter = ISMINE_SPENDABLE;
 			isminefilter mine = IsMine(*pwalletMain, fromAddress.Get());
-			string strCat = "";
 			if ((mine & filter))
 				strCat = "send";
 			else {
