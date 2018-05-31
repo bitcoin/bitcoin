@@ -217,8 +217,8 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     for (const auto& txout : txCollateral.vout) {
         nValueOut += txout.nValue;
 
-        if(/*(!txout.scriptPubKey.IsPayToPublicKeyHash()) && */!(txout.scriptPubKey.IsUnspendable())) {
-            LogPrintf ("CPrivateSend::IsCollateralValid -- Invalid Script, txCollateral=%s", txCollateral.ToString());
+        if(txout.scriptPubKey.IsUnspendable()) {
+            LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- Invalid Script, txCollateral=%s\n", txCollateral.ToString());
             return false;
         }
     }
@@ -226,7 +226,7 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     for (const auto& txin : txCollateral.vin) {
         Coin coin;
         if(!GetUTXOCoin(txin.prevout, coin)) {
-            LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString());
+            LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s\n", txCollateral.ToString());
             return false;
         }
         nValueIn += coin.out.nValue;
@@ -234,7 +234,7 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
     //collateral transactions are required to pay out a small fee to the miners
     if(nValueIn - nValueOut < GetCollateralAmount()) {
-        LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- did not include enough fees in transaction: fees: %d, txCollateral=%s", nValueOut - nValueIn, txCollateral.ToString());
+        LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- did not include enough fees in transaction: fees: %d, txCollateral=%s\n", nValueOut - nValueIn, txCollateral.ToString());
         return false;
     }
 

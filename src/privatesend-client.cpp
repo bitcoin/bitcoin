@@ -781,7 +781,7 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman, bool fDryRun
 
     // should be no unconfirmed denoms in non-multi-session mode
     if(!fPrivateSendMultiSession && nBalanceDenominatedUnconf > 0) {
-        LogPrintf("CPrivateSendClient::DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
+        LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
         strAutoDenomResult = _("Found unconfirmed denominated outputs, will wait till they confirm to continue.");
         return false;
     }
@@ -790,14 +790,14 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman, bool fDryRun
     std::string strReason;
     if(txMyCollateral == CMutableTransaction()) {
         if(!pwallet->CreateCollateralTransaction(txMyCollateral, strReason)) {
-            LogPrintf("CPrivateSendClient::DoAutomaticDenominating -- create collateral error:%s\n", strReason);
+            LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::DoAutomaticDenominating -- create collateral error:%s\n", strReason);
             return false;
         }
     } else {
         if(!CPrivateSend::IsCollateralValid(txMyCollateral)) {
             LogPrintf("CPrivateSendClient::DoAutomaticDenominating -- invalid collateral, recreating...\n");
             if(!pwallet->CreateCollateralTransaction(txMyCollateral, strReason)) {
-                LogPrintf("CPrivateSendClient::DoAutomaticDenominating -- create collateral error: %s\n", strReason);
+                LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::DoAutomaticDenominating -- create collateral error: %s\n", strReason);
                 return false;
             }
         }
