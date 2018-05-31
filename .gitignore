@@ -1,3 +1,5 @@
+buildspecs
+Jenkinsfile
 *.tar.gz
 
 *.exe
