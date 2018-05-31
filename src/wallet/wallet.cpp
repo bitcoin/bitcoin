@@ -621,6 +621,8 @@ void CWallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid)
 {
     mapTxSpends.insert(std::make_pair(outpoint, wtxid));
 
+    UnlockCoin(outpoint);
+
     std::pair<TxSpends::iterator, TxSpends::iterator> range;
     range = mapTxSpends.equal_range(outpoint);
     SyncMetaData(range);
@@ -3965,22 +3967,34 @@ void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
     script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
 }
 
-void CWallet::LockCoin(const COutPoint& output)
+void CWallet::LockCoin(const COutPoint& output, bool fPermanent)
 {
     AssertLockHeld(cs_wallet); // setLockedCoins
     setLockedCoins.insert(output);
+    if (fPermanent)
+    {
+        WalletBatch batch(*database);
+        batch.WriteLockedUnspentOutput(output);
+    };
 }
 
 void CWallet::UnlockCoin(const COutPoint& output)
 {
     AssertLockHeld(cs_wallet); // setLockedCoins
-    setLockedCoins.erase(output);
+    if (setLockedCoins.erase(output))
+    {
+        WalletBatch batch(*database);
+        batch.EraseLockedUnspentOutput(output);
+    };
 }
 
 void CWallet::UnlockAllCoins()
 {
     AssertLockHeld(cs_wallet); // setLockedCoins
     setLockedCoins.clear();
+
+    WalletBatch batch(*database);
+    batch.EraseAllByPrefix("luo");
 }
 
 bool CWallet::IsLockedCoin(uint256 hash, unsigned int n) const

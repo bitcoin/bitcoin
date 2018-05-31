@@ -246,6 +246,10 @@ public:
     //! Write wallet version
     bool WriteVersion(int nVersion);
 
+    bool WriteLockedUnspentOutput(const COutPoint &o);
+    bool EraseLockedUnspentOutput(const COutPoint &o);
+    bool EraseAllByPrefix(std::string sPrefix);
+
 //private:
     BerkeleyBatch m_batch;
     WalletDatabase& m_database;
