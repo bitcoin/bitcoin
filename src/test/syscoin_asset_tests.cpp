@@ -825,14 +825,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(inputsArray.size(), 0);
 
 
-	string txid = AssetAllocationTransfer(true, "node1", guid, "jagassetsendrangesownerallocation", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesa\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":199}]},{\\\"aliasto\\\":\\\"jagassetsendrangesb\\\",\\\"ranges\\\":[{\\\"start\\\":200,\\\"end\\\":399}]},{\\\"aliasto\\\":\\\"jagassetsendrangesc\\\",\\\"ranges\\\":[{\\\"start\\\":400,\\\"end\\\":599}]},{\\\"aliasto\\\":\\\"jagassetsendrangesd\\\",\\\"ranges\\\":[{\\\"start\\\":600,\\\"end\\\":799}]},{\\\"aliasto\\\":\\\"jagassetsendrangese\\\",\\\"ranges\\\":[{\\\"start\\\":800,\\\"end\\\":999}]}]\"", "memo");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetallocationtransactions 100"));
-	BOOST_CHECK(r.isArray());
-	UniValue assetTxArray = r.get_array();
-	UniValue firstAssetTx = assetTxArray[0].get_obj();
-	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), false);
-
+	AssetAllocationTransfer(true, "node1", guid, "jagassetsendrangesownerallocation", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesa\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":199}]},{\\\"aliasto\\\":\\\"jagassetsendrangesb\\\",\\\"ranges\\\":[{\\\"start\\\":200,\\\"end\\\":399}]},{\\\"aliasto\\\":\\\"jagassetsendrangesc\\\",\\\"ranges\\\":[{\\\"start\\\":400,\\\"end\\\":599}]},{\\\"aliasto\\\":\\\"jagassetsendrangesd\\\",\\\"ranges\\\":[{\\\"start\\\":600,\\\"end\\\":799}]},{\\\"aliasto\\\":\\\"jagassetsendrangese\\\",\\\"ranges\\\":[{\\\"start\\\":800,\\\"end\\\":999}]}]\"", "memo");
 	// ensure receiver get's it
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetsendrangesa true"));
 	inputs = find_value(r.get_obj(), "inputs");
