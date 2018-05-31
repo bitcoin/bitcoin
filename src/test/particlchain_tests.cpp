@@ -69,12 +69,11 @@ BOOST_AUTO_TEST_CASE(signature_test)
     std::vector<uint8_t> vchAmount(8);
     memcpy(&vchAmount[0], &out1->nValue, 8);
 
-    CTransaction txToConst(txn2);
     SignatureData sigdata;
-    BOOST_CHECK(ProduceSignature(keystore, TransactionSignatureCreator(&txToConst, 0, vchAmount, SIGHASH_ALL), script, sigdata));
+    BOOST_CHECK(ProduceSignature(keystore, MutableTransactionSignatureCreator(&txn2, 0, vchAmount, SIGHASH_ALL), script, sigdata));
 
     ScriptError serror = SCRIPT_ERR_OK;
-    BOOST_CHECK(VerifyScript(txn2.vin[0].scriptSig, out1->scriptPubKey, &sigdata.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txToConst, 0, vchAmount), &serror));
+    BOOST_CHECK(VerifyScript(txn2.vin[0].scriptSig, out1->scriptPubKey, &sigdata.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&txn2, 0, vchAmount), &serror));
     BOOST_CHECK(serror == SCRIPT_ERR_OK);
 }
 
@@ -218,36 +217,34 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
     out0->scriptPubKey = script;
     txn.vpout.push_back(out0);
     txn.vin.push_back(CTxIn(COutPoint(uint256S("d496208ea84193e0c5ed05ac708aec84dfd2474b529a7608b836e282958dc72b"), 0)));
-    CTransaction txnConst(txn);
-    BOOST_CHECK(txnConst.IsCoinStake());
+    BOOST_CHECK(txn.IsCoinStake());
 
     std::vector<uint8_t> vchAmount(8);
     memcpy(&vchAmount[0], &nValue, 8);
 
 
 
-    BOOST_CHECK(ProduceSignature(keystoreA, TransactionSignatureCreator(&txnConst, 0, vchAmount, SIGHASH_ALL), script, sigdataA));
-    BOOST_CHECK(!ProduceSignature(keystoreB, TransactionSignatureCreator(&txnConst, 0, vchAmount, SIGHASH_ALL), script, sigdataB));
+    BOOST_CHECK(ProduceSignature(keystoreA, MutableTransactionSignatureCreator(&txn, 0, vchAmount, SIGHASH_ALL), script, sigdataA));
+    BOOST_CHECK(!ProduceSignature(keystoreB, MutableTransactionSignatureCreator(&txn, 0, vchAmount, SIGHASH_ALL), script, sigdataB));
 
 
     ScriptError serror = SCRIPT_ERR_OK;
     int nFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
     CScript scriptSig;
-    BOOST_CHECK(VerifyScript(scriptSig, script, &sigdataA.scriptWitness, nFlags, TransactionSignatureChecker(&txnConst, 0, vchAmount), &serror));
+    BOOST_CHECK(VerifyScript(scriptSig, script, &sigdataA.scriptWitness, nFlags, MutableTransactionSignatureChecker(&txn, 0, vchAmount), &serror));
 
 
     txn.nVersion = PARTICL_TXN_VERSION;
     txn.SetType(TXN_STANDARD);
-    CTransaction txnConst2(txn);
-    BOOST_CHECK(!txnConst2.IsCoinStake());
+    BOOST_CHECK(!txn.IsCoinStake());
 
     // This should fail anyway as the txn changed
-    BOOST_CHECK(!VerifyScript(scriptSig, script, &sigdataA.scriptWitness, nFlags, TransactionSignatureChecker(&txnConst2, 0, vchAmount), &serror));
+    BOOST_CHECK(!VerifyScript(scriptSig, script, &sigdataA.scriptWitness, nFlags, MutableTransactionSignatureChecker(&txn, 0, vchAmount), &serror));
 
-    BOOST_CHECK(!ProduceSignature(keystoreA, TransactionSignatureCreator(&txnConst2, 0, vchAmount, SIGHASH_ALL), script, sigdataC));
-    BOOST_CHECK(ProduceSignature(keystoreB, TransactionSignatureCreator(&txnConst2, 0, vchAmount, SIGHASH_ALL), script, sigdataB));
+    BOOST_CHECK(!ProduceSignature(keystoreA, MutableTransactionSignatureCreator(&txn, 0, vchAmount, SIGHASH_ALL), script, sigdataC));
+    BOOST_CHECK(ProduceSignature(keystoreB, MutableTransactionSignatureCreator(&txn, 0, vchAmount, SIGHASH_ALL), script, sigdataB));
 
-    BOOST_CHECK(VerifyScript(scriptSig, script, &sigdataB.scriptWitness, nFlags, TransactionSignatureChecker(&txnConst2, 0, vchAmount), &serror));
+    BOOST_CHECK(VerifyScript(scriptSig, script, &sigdataB.scriptWitness, nFlags, MutableTransactionSignatureChecker(&txn, 0, vchAmount), &serror));
 
 
 

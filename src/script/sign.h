@@ -40,28 +40,20 @@ public:
 };
 
 /** A signature creator for transactions. */
-class TransactionSignatureCreator : public BaseSignatureCreator {
-    const CTransaction* txTo;
+class MutableTransactionSignatureCreator : public BaseSignatureCreator {
+    const CMutableTransaction* txTo;
     unsigned int nIn;
     int nHashType;
     std::vector<uint8_t> amount;
-    const TransactionSignatureChecker checker;
+    const MutableTransactionSignatureChecker checker;
 
 public:
-    TransactionSignatureCreator(const CTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn, int nHashTypeIn=SIGHASH_ALL);
+    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn, int nHashTypeIn = SIGHASH_ALL);
     const BaseSignatureChecker& Checker() const override { return checker; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
 
     bool IsParticlVersion() const override { return txTo && txTo->IsParticlVersion(); }
     bool IsCoinStake() const override { return txTo && txTo->IsCoinStake(); }
-};
-
-class MutableTransactionSignatureCreator : public TransactionSignatureCreator {
-    CTransaction tx;
-
-public:
-    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn, int nHashTypeIn) : TransactionSignatureCreator(&tx, nInIn, amountIn, nHashTypeIn), tx(*txToIn) {}
-    bool IsParticlVersion() const override { return tx.IsParticlVersion(); }
 };
 
 /** A signature creator that just produces 72-byte empty signatures. */

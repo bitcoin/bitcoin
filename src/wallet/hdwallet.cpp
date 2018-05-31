@@ -3734,8 +3734,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
             nBytes = GetVirtualTransactionSize(txNew);
 
-            CTransaction txNewConst(txNew);
-
             // Remove scriptSigs to eliminate the fee calculation dummy signatures
             for (auto &vin : txNew.vin) {
                 vin.scriptSig = CScript();
@@ -3841,7 +3839,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
         if (sign)
         {
-            CTransaction txNewConst(txNew);
             int nIn = 0;
             for (const auto &coin : setCoins)
             {
@@ -3858,7 +3855,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 memcpy(vchAmount.data(), &coin.txout.nValue, 8);
 
                 SignatureData sigdata;
-                if (!ProduceSignature(*this, TransactionSignatureCreator(&txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
+                if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&txNew, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, _("Signing transaction failed").c_str());
 
                 UpdateTransaction(txNew, nIn, sigdata);
@@ -3869,8 +3866,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 #if ENABLE_USBDEVICE
             if (coinControl->fNeedHardwareKey)
             {
-                CTransaction txNewConst(txNew);
-
                 CCoinsView viewDummy;
                 CCoinsViewCache view(&viewDummy);
                 for (const auto &coin : setCoins)
@@ -3891,7 +3886,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
                 NotifyWaitingForDevice(false);
 
-                pDevice->PrepareTransaction(&txNewConst, view);
+                pDevice->PrepareTransaction(&txNew, view);
                 if (!pDevice->sError.empty())
                 {
                     pDevice->Close();
@@ -3915,7 +3910,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
                     pDevice->sError.clear();
                     SignatureData sigdata;
-                    ProduceSignature(*this, DeviceSignatureCreator(pDevice, &txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata);
+                    ProduceSignature(*this, DeviceSignatureCreator(pDevice, &txNew, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata);
 
                     if (!pDevice->sError.empty())
                     {
@@ -4260,8 +4255,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
             nBytes = GetVirtualTransactionSize(txNew);
 
-            CTransaction txNewConst(txNew);
-
             nFeeNeeded = GetMinimumFee(*this, nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
 
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
@@ -4456,7 +4449,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
         if (sign)
         {
-            CTransaction txNewConst(txNew);
             int nIn = 0;
             for (const auto &coin : setCoins)
             {
@@ -4475,7 +4467,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
                 SignatureData sigdata;
 
-                if (!ProduceSignature(*this, TransactionSignatureCreator(&txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
+                if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&txNew, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, _("Signing transaction failed").c_str());
                 UpdateTransaction(txNew, nIn, sigdata);
 
@@ -4935,8 +4927,6 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             };
 
             nBytes = GetVirtualTransactionSize(txNew);
-
-            CTransaction txNewConst(txNew);
 
             nFeeNeeded = GetMinimumFee(*this, nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
 
@@ -8193,7 +8183,6 @@ bool CHDWallet::SignTransaction(CMutableTransaction &tx)
     AssertLockHeld(cs_wallet); // mapWallet
 
     // sign the new tx
-    CTransaction txNewConst(tx);
     int nIn = 0;
     for (const auto& input : tx.vin) {
         CScript scriptPubKey;
@@ -8233,7 +8222,7 @@ bool CHDWallet::SignTransaction(CMutableTransaction &tx)
 
         std::vector<uint8_t> vchAmount(8);
         memcpy(&vchAmount[0], &amount, 8);
-        if (!ProduceSignature(*this, TransactionSignatureCreator(&txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata)) {
+        if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&tx, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata)) {
             return false;
         }
         UpdateTransaction(tx, nIn, sigdata);
@@ -12075,8 +12064,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         prevOut->PutValue(vchAmount);
 
         SignatureData sigdata;
-        CTransaction txToConst(txNew);
-        if (!ProduceSignature(*this, TransactionSignatureCreator(&txToConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKeyOut, sigdata))
+        if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&txNew, nIn, vchAmount, SIGHASH_ALL), scriptPubKeyOut, sigdata))
             return error("%s: ProduceSignature failed.", __func__);
 
         UpdateTransaction(txNew, nIn, sigdata);

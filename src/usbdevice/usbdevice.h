@@ -114,10 +114,10 @@ public:
 
     virtual int SignMessage(const std::vector<uint32_t> &vPath, const std::string &sMessage, std::vector<uint8_t> &vchSig, std::string &sError) { return 0; };
 
-    virtual int PrepareTransaction(const CTransaction *tx, const CCoinsViewCache &view) { return 0; };
+    virtual int PrepareTransaction(const CMutableTransaction *tx, const CCoinsViewCache &view) { return 0; };
 
     //int SignHash(const std::vector<uint32_t> &vPath, const uint256 &hash, std::vector<uint8_t> &vchSig, std::string &sError);
-    virtual int SignTransaction(const std::vector<uint32_t> &vPath, const std::vector<uint8_t> &vSharedSecret, const CTransaction *tx,
+    virtual int SignTransaction(const std::vector<uint32_t> &vPath, const std::vector<uint8_t> &vSharedSecret, const CMutableTransaction *tx,
         int nIn, const CScript &scriptCode, int hashType, const std::vector<uint8_t> &amount, SigVersion sigversion,
         std::vector<uint8_t> &vchSig, std::string &sError) { return 0; };
 
@@ -144,15 +144,15 @@ public:
 */
 /** A signature creator for transactions. */
 class DeviceSignatureCreator : public BaseSignatureCreator {
-    const CTransaction* txTo;
+    const CMutableTransaction* txTo;
     unsigned int nIn;
     int nHashType;
     std::vector<uint8_t> amount;
-    const TransactionSignatureChecker checker;
+    const MutableTransactionSignatureChecker checker;
     CUSBDevice *pDevice;
 
 public:
-    DeviceSignatureCreator(CUSBDevice *pDeviceIn, const CTransaction *txToIn, unsigned int nInIn, const std::vector<uint8_t> &amountIn, int nHashTypeIn=SIGHASH_ALL);
+    DeviceSignatureCreator(CUSBDevice *pDeviceIn, const CMutableTransaction *txToIn, unsigned int nInIn, const std::vector<uint8_t> &amountIn, int nHashTypeIn=SIGHASH_ALL);
     const BaseSignatureChecker &Checker() const override { return checker; }
 
     bool IsParticlVersion() const override { return txTo && txTo->IsParticlVersion(); }

@@ -2793,7 +2793,6 @@ bool CWallet::SignTransaction(CMutableTransaction &tx)
     AssertLockHeld(cs_wallet); // mapWallet
 
     // sign the new tx
-    CTransaction txNewConst(tx);
     int nIn = 0;
     for (const auto& input : tx.vin) {
         std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(input.prevout.hash);
@@ -2806,7 +2805,7 @@ bool CWallet::SignTransaction(CMutableTransaction &tx)
 
         std::vector<uint8_t> vchAmount(8);
         memcpy(&vchAmount[0], &amount, 8);
-        if (!ProduceSignature(*this, TransactionSignatureCreator(&txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata)) {
+        if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&tx, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata)) {
             return false;
         }
         UpdateTransaction(tx, nIn, sigdata);
@@ -3228,7 +3227,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
 
         if (sign)
         {
-            CTransaction txNewConst(txNew);
             int nIn = 0;
             for (const auto& coin : selected_coins)
             {
@@ -3238,7 +3236,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 CAmount nValue = coin.GetValue();
                 std::vector<uint8_t> vchAmount(8);
                 memcpy(&vchAmount[0], &nValue, 8);
-                if (!ProduceSignature(*this, TransactionSignatureCreator(&txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
+                if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&txNew, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
                 {
                     strFailReason = _("Signing transaction failed");
                     return false;

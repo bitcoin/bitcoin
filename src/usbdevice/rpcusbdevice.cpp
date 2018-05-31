@@ -485,7 +485,7 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
     // Prepare transaction
     if (0 != pDevice->Open())
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Failed to open dongle."));
-    pDevice->PrepareTransaction(&txConst, view);
+    pDevice->PrepareTransaction(&mtx, view);
     if (!pDevice->sError.empty())
     {
         pDevice->Close();
@@ -525,7 +525,7 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
         if (!fHashSingle || (i < mtx.GetNumVOuts()))
         {
             pDevice->sError.clear();
-            ProduceSignature(keystore, DeviceSignatureCreator(pDevice, &txConst, i, vchAmount, nHashType), prevPubKey, sigdata);
+            ProduceSignature(keystore, DeviceSignatureCreator(pDevice, &mtx, i, vchAmount, nHashType), prevPubKey, sigdata);
 
             if (!pDevice->sError.empty())
             {

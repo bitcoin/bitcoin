@@ -953,6 +953,18 @@ struct CMutableTransaction
         return IsParticlTxVersion(nVersion);
     }
 
+    int GetType() const {
+        return (nVersion >> 8) & 0xFF;
+    }
+
+    bool IsCoinStake() const
+    {
+        return GetType() == TXN_COINSTAKE
+            && vin.size() > 0 && vpout.size() > 1
+            && vpout[0]->nVersion == OUTPUT_DATA
+            && vpout[1]->nVersion == OUTPUT_STANDARD;
+    }
+
     size_t GetNumVOuts() const
     {
         return IsParticlTxVersion(nVersion) ? vpout.size() : vout.size();

@@ -92,7 +92,7 @@ CUSBDevice *SelectDevice(std::vector<std::unique_ptr<CUSBDevice> > &vDevices, st
     return vDevices[0].get();
 };
 
-DeviceSignatureCreator::DeviceSignatureCreator(CUSBDevice *pDeviceIn, const CTransaction *txToIn,
+DeviceSignatureCreator::DeviceSignatureCreator(CUSBDevice *pDeviceIn, const CMutableTransaction *txToIn,
     unsigned int nInIn, const std::vector<uint8_t> &amountIn, int nHashTypeIn)
     : BaseSignatureCreator(), txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn), pDevice(pDeviceIn)
 {

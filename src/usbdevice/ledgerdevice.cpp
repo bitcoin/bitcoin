@@ -428,7 +428,7 @@ int CLedgerDevice::SignMessage(const std::vector<uint32_t> &vPath, const std::st
     return 0;
 };
 
-int CLedgerDevice::PrepareTransaction(const CTransaction *tx, const CCoinsViewCache &view)
+int CLedgerDevice::PrepareTransaction(const CMutableTransaction *tx, const CCoinsViewCache &view)
 {
     if (!handle)
         return errorN(1, sError, __func__, "Device not open.");
@@ -598,7 +598,7 @@ int CLedgerDevice::PrepareTransaction(const CTransaction *tx, const CCoinsViewCa
     return 0;
 };
 
-int CLedgerDevice::SignTransaction(const std::vector<uint32_t> &vPath, const std::vector<uint8_t> &vSharedSecret, const CTransaction *tx,
+int CLedgerDevice::SignTransaction(const std::vector<uint32_t> &vPath, const std::vector<uint8_t> &vSharedSecret, const CMutableTransaction *tx,
     int nIn, const CScript &scriptCode, int hashType, const std::vector<uint8_t>& amount, SigVersion sigversion,
     std::vector<uint8_t> &vchSig, std::string &sError)
 {
