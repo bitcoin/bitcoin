@@ -1283,7 +1283,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	if (usezdag) {
 		MilliSleep(100);
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetallocationtransactions"));
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetallocationtransactions"));
 		BOOST_CHECK(r.isArray());
 		UniValue assetTxArray = r.get_array();
 		UniValue firstAssetTx = assetTxArray[0].get_obj();
@@ -1292,7 +1292,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	}
 	else {
 		GenerateBlocks(1, node);
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetallocationtransactions"));
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetallocationtransactions"));
 		BOOST_CHECK(r.isArray());
 		assetTxArray = r.get_array();
 		firstAssetTx = assetTxArray[0].get_obj();
