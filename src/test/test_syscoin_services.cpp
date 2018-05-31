@@ -1281,13 +1281,16 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetallocationtransactions"));
-	BOOST_CHECK(r.isArray());
-	UniValue assetTxArray = r.get_array();
-	UniValue firstAssetTx = assetTxArray[0].get_obj();
-	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), false);
-	if (!usezdag) {
+	if (usezdag) {
+		MilliSleep(100);
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetallocationtransactions"));
+		BOOST_CHECK(r.isArray());
+		UniValue assetTxArray = r.get_array();
+		UniValue firstAssetTx = assetTxArray[0].get_obj();
+		BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid);
+		BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), false);
+	}
+	else {
 		GenerateBlocks(1, node);
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetallocationtransactions"));
 		BOOST_CHECK(r.isArray());
