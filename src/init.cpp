@@ -45,6 +45,8 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validationinterface.h"
+#include "assets/assets.h"
+#include "assets/assetdb.h"
 #ifdef ENABLE_WALLET
 #include "wallet/init.h"
 #endif
@@ -247,6 +249,12 @@ void Shutdown()
         pcoinsdbview = nullptr;
         delete pblocktree;
         pblocktree = nullptr;
+        delete passets;
+        passets = nullptr;
+        delete passetsdb;
+        passetsdb = nullptr;
+        delete passetsCache;
+        passetsCache = nullptr;
     }
 #ifdef ENABLE_WALLET
     StopWallets();
@@ -1422,6 +1430,22 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReset);
 
+
+                delete passets;
+                delete passetsdb;
+                delete passetsCache;
+                passetsdb = new CAssetsDB(nBlockTreeDBCache, false, fReset);
+                passets = new CAssetsCache();
+                passetsCache = new CLRUCache<std::string, CNewAsset>(MAX_CACHE_ASSETS_SIZE);
+
+                // Need to load assets before we verify the database
+                if (!passetsdb->LoadAssets()) {
+                    strLoadError = _("Failed to load Assets Database");
+                    break;
+                }
+                std::cout << std::endl << "Loaded Assets without error" << std::endl << "Cache of assets size: " << passetsCache->Size() << std::endl  << "number of assets I have: " << passets->mapMyUnspentAssets.size() << std::endl;
+
+
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
@@ -1725,5 +1749,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     StartWallets(scheduler);
 #endif
 
+
+    UpdatePossibleAssets();
     return !fRequestShutdown;
 }

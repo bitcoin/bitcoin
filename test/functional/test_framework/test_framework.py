@@ -337,9 +337,12 @@ class RavenTestFramework():
         mocktime then the mempools will not sync due to IBD.
 
         For backwared compatibility of the python scripts with previous
-        versions of the cache, this helper function sets mocktime to Jan 1,
-        2014 + (201 * 10 * 60)"""
-        self.mocktime = 1510082300 + (201 * 1 * 60)
+        versions of the cache, this helper function sets mocktime to November 7,
+        2017 + (201 * 1 * 60)
+
+        NOTE: the timestamp should match time of genesis block.
+        NOTE: the timestamp could be retrieved via "getblockhash 0" + "getblock <hash>"."""
+        self.mocktime = 1524179366 + (201 * 1 * 60)
 
     def disable_mocktime(self):
         self.mocktime = 0

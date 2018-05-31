@@ -4,6 +4,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <assets/assets.h>
 #include "script.h"
 
 #include "tinyformat.h"
@@ -140,6 +141,10 @@ const char* GetOpName(opcodetype opcode)
     case OP_NOP9                   : return "OP_NOP9";
     case OP_NOP10                  : return "OP_NOP10";
 
+    /** RVN START */
+    case OP_RVN_ASSET              : return "OP_RVN_ASSET";
+    /** RVN END */
+
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
     // Note:
@@ -207,6 +212,39 @@ bool CScript::IsPayToScriptHash() const
             (*this)[0] == OP_HASH160 &&
             (*this)[1] == 0x14 &&
             (*this)[22] == OP_EQUAL);
+}
+
+bool CScript::IsNewAsset() const
+{
+    // Extra-fast test for new-asset CScripts:
+    return (this->size() > 39 &&
+            (*this)[25] == OP_RVN_ASSET &&
+            (*this)[27] == RVN_R &&
+            (*this)[28] == RVN_V &&
+            (*this)[29] == RVN_N &&
+            (*this)[30] == RVN_Q);
+}
+
+bool CScript::IsOwnerAsset() const
+{
+    // Extra-fast test for new-asset CScripts:
+    return (this->size() > 30 &&
+            (*this)[25] == OP_RVN_ASSET &&
+            (*this)[27] == RVN_R &&
+            (*this)[28] == RVN_V &&
+            (*this)[29] == RVN_N &&
+            (*this)[30] == RVN_O);
+}
+
+bool CScript::IsTransferAsset() const
+{
+    // Extra-fast test for new-asset CScripts:
+    return (this->size() > 30 &&
+            (*this)[25] == OP_RVN_ASSET &&
+            (*this)[27] == RVN_R &&
+            (*this)[28] == RVN_V &&
+            (*this)[29] == RVN_N &&
+            (*this)[30] == RVN_T);
 }
 
 bool CScript::IsPayToWitnessScriptHash() const

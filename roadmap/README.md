@@ -70,7 +70,7 @@ are unique tokens.
 
 ### Phase 5 - Messaging
 
-Messaging to token holders by authorized senders will be layered on top of the Phase 4 unique assets. See KAAAWWW Protocol for additional information.
+Messaging to token holders by authorized senders will be layered on top of the Phase 3 unique assets. See KAAAWWW Protocol for additional information.
 
 ### Phase 6 - Voting
 

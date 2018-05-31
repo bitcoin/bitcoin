@@ -202,11 +202,17 @@ libraven_server_a_SOURCES = \
   net.cpp \
   net_processing.cpp \
   noui.cpp \
+  assets/assets.cpp \
+  assets/assets.h \
+  assets/assetdb.cpp \
+  assets/assetdb.h \
+  assets/assettypes.h \
   policy/fees.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
   pow.cpp \
   rest.cpp \
+  rpc/assets.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \

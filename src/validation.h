@@ -30,6 +30,7 @@
 #include <vector>
 
 #include <atomic>
+#include <assets/assets.h>
 
 class CBlockIndex;
 class CBlockTreeDB;
@@ -41,7 +42,11 @@ class CScriptCheck;
 class CBlockPolicyEstimator;
 class CTxMemPool;
 class CValidationState;
+class CTxUndo;
 struct ChainTxData;
+
+class CAssetsDB;
+class CAssets;
 
 struct PrecomputedTransactionData;
 struct LockPoints;
@@ -325,6 +330,8 @@ int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::D
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
 
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo& txundo, int nHeight, CAssetsCache* assetCache = nullptr);
+
 /** Transaction validation functions */
 
 /**
@@ -451,6 +458,15 @@ extern CCoinsViewCache *pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
+
+/** RVN START */
+/** Global variable that point to the active assets database (protexted by cs_main) */
+extern CAssetsDB *passetsdb;
+/** Global variable that point to the active assets (protexted by cs_main) */
+extern CAssetsCache *passets;
+/** Global variable that point to the assets LRU Cache (protexted by cs_main) */
+extern CLRUCache<std::string, CNewAsset> *passetsCache;
+/** RVN END */
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
