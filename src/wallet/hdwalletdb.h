@@ -57,6 +57,7 @@ prefixes
     lastfilteredheight
     lns                 - stealth link, key: keyid, value uint32_t (stealth index)
     lne                 - extkey link key: keyid, value uint32_t (stealth index)
+    luo                 - locked unspent output
 
     mkey                - CMasterKey
     minversion

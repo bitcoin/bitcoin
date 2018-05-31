@@ -330,7 +330,7 @@ public:
     };
 
 
-    virtual bool IsEmpty() const
+    bool IsEmpty() const override
     {
         return (nValue == 0 && scriptPubKey.empty());
     }
