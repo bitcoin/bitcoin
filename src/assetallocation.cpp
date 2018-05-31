@@ -88,10 +88,11 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver) {
 	if (!vchReceiver.empty() && (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex)) {
 		UniValue oName(UniValue::VOBJ);
-		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, asset.vchAlias, vchReceiver, oName)) {
+		bool isMine = true;
+		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, asset.vchAlias, vchReceiver, isMine, oName)) {
 			const string& strObj = oName.write();
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
-			if (fAssetAllocationIndex) {
+			if (isMine && fAssetAllocationIndex) {
 				passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias), strObj);
 			}
 		}
@@ -1071,7 +1072,7 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
 	oAssetAllocation.push_back(Pair("accumulated_interest", ValueFromAssetAmount(GetAssetAllocationInterest(assetallocation, chainActive.Tip()->nHeight, errorMessage), asset.nPrecision, asset.bUseInputRanges)));
 	return true;
 }
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const vector<unsigned char>& vchSender, const vector<unsigned char>& vchReceiver, UniValue& oAssetAllocation)
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const vector<unsigned char>& vchSender, const vector<unsigned char>& vchReceiver, bool &isMine, UniValue& oAssetAllocation)
 {
 	int64_t nTime = 0;
 	bool bConfirmed = false;
@@ -1095,33 +1096,34 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("amount", ValueFromAssetAmount(nAmount, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
 	if (fAssetAllocationIndex) {
+		isMine = true;
 		CAliasIndex fromAlias;
 		if (!GetAlias(vchSender, fromAlias))
 		{
-			if(fDebug)
-				LogPrintf("BuildAssetAllocationIndexerJson: Cannot find sender alias %s when building asset allocation index!\n", stringFromVch(vchSender).c_str());
-			return false;
+			isMine = false;
 		}
 		CAliasIndex toAlias;
 		if (!GetAlias(vchReceiver, toAlias))
 		{
-			if(fDebug)
-				LogPrintf("BuildAssetAllocationIndexerJson: Cannot find receiver alias %s when building asset allocation index!\n", stringFromVch(vchReceiver).c_str());
-			return false;
+			isMine = false;
 		}
+		if (isMine)
+		{
+			const CSyscoinAddress fromAddress(EncodeBase58(fromAlias.vchAddress));
+			const CSyscoinAddress toAddress(EncodeBase58(toAlias.vchAddress));
 
-		const CSyscoinAddress fromAddress(EncodeBase58(fromAlias.vchAddress));
-		const CSyscoinAddress toAddress(EncodeBase58(toAlias.vchAddress));
-
-		isminefilter filter = ISMINE_SPENDABLE;
-		isminefilter mine = IsMine(*pwalletMain, fromAddress.Get());
-		string strCat = "";
-		if ((mine & filter))
-			strCat = "send";
-		else {
-			mine = IsMine(*pwalletMain, toAddress.Get());
+			isminefilter filter = ISMINE_SPENDABLE;
+			isminefilter mine = IsMine(*pwalletMain, fromAddress.Get());
+			string strCat = "";
 			if ((mine & filter))
-				strCat = "receive";
+				strCat = "send";
+			else {
+				mine = IsMine(*pwalletMain, toAddress.Get());
+				if ((mine & filter))
+					strCat = "receive";
+				else
+					isMine = false;
+			}
 		}
 		oAssetAllocation.push_back(Pair("category", strCat));
 	}
