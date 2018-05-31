@@ -3124,7 +3124,7 @@ bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWall
 
                 // Fill in dummy signatures for fee calculation.
                 if (!DummySignTx(txNew, setCoins)) {
-                    strFailReason = _("Signing transaction failed");
+                    strFailReason = _("Signing transaction for fee calculation failed");
                     return false;
                 }
 

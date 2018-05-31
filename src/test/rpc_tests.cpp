@@ -41,44 +41,8 @@ UniValue CallRPC(std::string args)
 // asset fixtures
 static const std::string ok_address = "R9hNxkyzXrHmpxg7Z1qbW1PrKFriqzXBAU";
 static const std::string bad_address = "X9hNxkyzXrHmpxg7Z1qbW1PrKFriqzXBAU";
-static const std::string ok_asset_name = "OK_ASSET";
 
 BOOST_FIXTURE_TEST_SUITE(rpc_tests, TestingSetup)
-
-BOOST_AUTO_TEST_CASE(rpc_assets_issue)
-{
-    // missing required params
-    BOOST_CHECK_THROW(CallRPC("issue"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name), std::runtime_error);
-
-    // valid params
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000"));
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 1"));
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 0.00000001 true"));
-
-    // invalid to_address
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+bad_address+" "+ok_asset_name+" 1000 0.0001 true"), std::runtime_error);
-
-    // invalid asset_name
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+"X"+" 1000 0.0001 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+"XX"+" 1000 0.0001 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+"BAD_A$$ET"+" 1000 0.0001 true"), std::runtime_error);
-
-    // invalid qty
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 0 0.0001 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" -1 0.0001 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" NaN 0.0001 true"), std::runtime_error);
-
-    // invalid units
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 2 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 0.0002 true"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 0.000000001 true"), std::runtime_error);
-
-    // invalid reissuable
-    BOOST_CHECK_THROW(CallRPC(std::string("issue ")+ok_address+" "+ok_asset_name+" 1000 1 NaB"), std::runtime_error);
-
-}
 
 BOOST_AUTO_TEST_CASE(rpc_assets_getaddressbalances)
 {
@@ -87,7 +51,7 @@ BOOST_AUTO_TEST_CASE(rpc_assets_getaddressbalances)
 
     // valid params
     BOOST_CHECK_NO_THROW(CallRPC(std::string("getaddressbalances ")+ok_address));
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("getaddressbalances ")+ok_address+" 5"));
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("getaddressbalances ")+ok_address+" 1"));
 
     // invalid address
     BOOST_CHECK_THROW(CallRPC(std::string("getaddressbalances ")+bad_address), std::runtime_error);
@@ -200,21 +164,21 @@ BOOST_AUTO_TEST_CASE(rpc_createraw_op_return)
 BOOST_AUTO_TEST_CASE(rpc_createraw_assets)
 {
     BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":20000}"));
-    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":{\"transfer\":{\"ravenasset\":20000}}}"));
-    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":{\"issue\":{\"ravenasset\":20000}}}"));
-    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":{\"reissue\":{\"ravenasset\":20000}}}"));
+    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":{\"transfer\":{\"RAVEN_ASSET\":20000}}}"));
+    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":{\"issue\":{\"name_length\":1,\"asset_name\":\"RAVEN_ASSET\",\"asset_quantity\":20000,\"units\":0,\"reissuable\":1,\"has_ipfs\":0}}}"));
+    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":{\"reissue\":{\"name_length\":1,\"asset_name\":\"RAVEN_ASSET\",\"asset_quantity\":10000,\"units\":0,\"reissuable\":0,\"has_ipfs\":0}}}"));
 
     // one address multiple asset outs
-    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":{\"transfer\":{\"ravenasset\":20000,\"ravenasset2\":20000}}}"));
+    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":{\"transfer\":{\"RAVEN_ASSET\":20000,\"RAVEN_ASSET_2\":20000}}}"));
 
     // multiple coin outs
     BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":20000,\"RUrmBNPvWemcczvE9uWMmkaVxHik753vKm\":20000}"));
 
     // coin and asset out
-    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":20000,\"RUrmBNPvWemcczvE9uWMmkaVxHik753vKm\":{\"transfer\":{\"ravenasset\":20000}}}"));
+    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":20000,\"RUrmBNPvWemcczvE9uWMmkaVxHik753vKm\":{\"transfer\":{\"RAVEN_ASSET\":20000}}}"));
 
     // bad command
-    BOOST_CHECK_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":{\"badcommand\":{\"ravenasset\":20000}}}"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"rNNjqrDbSHxJZNfC54WsF8dxqbcue9SoiB\":{\"badcommand\":{\"RAVEN_ASSET\":20000}}}"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)

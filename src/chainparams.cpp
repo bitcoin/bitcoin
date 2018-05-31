@@ -204,8 +204,20 @@ public:
         };
 
         /** RVN Start **/
+        // Burn Amounts
         nIssueAssetBurnAmount = 500 * COIN;
-        strIssueAssetBurnAddress = "RL43MXYUbZ5yk6JJiucZL2trbgKdaS6zjx";
+        nReissueAssetBurnAmount = 100 * COIN;
+        nIssueSubAssetBurnAmount = 100 * COIN;
+        nIssueUniqueAssetBurnAmount = 5 * COIN;
+
+        // Burn Addresses
+        strIssueAssetBurnAddress = "RXissueAssetXXXXXXXXXXXXXXXXXhhZGt";
+        strReissueAssetBurnAddress = "RXReissueAssetXXXXXXXXXXXXXXVEFAWu";
+        strIssueSubAssetBurnAddress = "RXissueSubAssetXXXXXXXXXXXXXWcwhwL";
+        strIssueUniqueAssetBurnAddress = "RXissueUniqueAssetXXXXXXXXXXWEAe58";
+
+        //Global Burn Address
+        strGlobalBurnAddress = "RXBurnXXXXXXXXXXXXXXXXXXXXXXWUo9FV";
         /** RVN End **/
     }
 };
@@ -292,8 +304,20 @@ public:
         };
 
         /** RVN Start **/
+        // Burn Amounts
         nIssueAssetBurnAmount = 500 * COIN;
-        strIssueAssetBurnAddress = "mssiSaYW18h3vj8LpqdNjjNjYsAPvg7sWB";
+        nReissueAssetBurnAmount = 100 * COIN;
+        nIssueSubAssetBurnAmount = 100 * COIN;
+        nIssueUniqueAssetBurnAmount = 5 * COIN;
+
+        // Burn Addresses
+        strIssueAssetBurnAddress = "n1issueAssetXXXXXXXXXXXXXXXXWdnemQ";
+        strReissueAssetBurnAddress = "n1ReissueAssetXXXXXXXXXXXXXXWG9NLd";
+        strIssueSubAssetBurnAddress = "n1issueSubAssetXXXXXXXXXXXXXbNiH6v";
+        strIssueUniqueAssetBurnAddress = "n1issueUniqueAssetXXXXXXXXXXS4695i";
+
+        // Global Burn Address
+        strGlobalBurnAddress = "n1BurnXXXXXXXXXXXXXXXXXXXXXXU1qejP";
         /** RVN End **/
     }
 };
@@ -429,8 +453,20 @@ public:
         bech32_hrp = "rcrt";
 
         /** RVN Start **/
+        // Burn Amounts
         nIssueAssetBurnAmount = 500 * COIN;
-        strIssueAssetBurnAddress = "mssiSaYW18h3vj8LpqdNjjNjYsAPvg7sWB";
+        nReissueAssetBurnAmount = 100 * COIN;
+        nIssueSubAssetBurnAmount = 100 * COIN;
+        nIssueUniqueAssetBurnAmount = 5 * COIN;
+
+        // Burn Addresses
+        strIssueAssetBurnAddress = "n1issueAssetXXXXXXXXXXXXXXXXWdnemQ";
+        strReissueAssetBurnAddress = "n1ReissueAssetXXXXXXXXXXXXXXWG9NLd";
+        strIssueSubAssetBurnAddress = "n1issueSubAssetXXXXXXXXXXXXXbNiH6v";
+        strIssueUniqueAssetBurnAddress = "n1issueUniqueAssetXXXXXXXXXXS4695i";
+
+        // Global Burn Address
+        strGlobalBurnAddress = "n1BurnXXXXXXXXXXXXXXXXXXXXXXU1qejP";
         /** RVN End **/
     }
 };

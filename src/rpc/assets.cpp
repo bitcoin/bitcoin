@@ -66,9 +66,9 @@ UniValue issue(const JSONRPCRequest& request)
             "\"txid\"                     (string) The transaction id\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("issue", "\"myaddress\" \"myassetname\" 1000")
-            + HelpExampleCli("issue", "\"myaddress\" \"myassetname\" 1000 \"0.0001\"")
-            + HelpExampleCli("issue", "\"myaddress\" \"myassetname\" 1000 \"0.01\" true")
+            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\"")
+            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"0.0001\"")
+            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"0.01\" true")
         );
 
 
@@ -133,7 +133,11 @@ UniValue issue(const JSONRPCRequest& request)
 
     CAmount curBalance = pwallet->GetBalance();
 
-    if (curBalance < Params().IssueAssetBurnAmount()) {
+    // Get the current burn amount for issuing an asset
+    CAmount burnAmount = GetIssueAssetBurnAmount();
+
+    // Check to make sure the wallet has the RVN required by the burnAmount
+    if (curBalance < burnAmount) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
     }
 
@@ -156,10 +160,10 @@ UniValue issue(const JSONRPCRequest& request)
     std::vector<CRecipient> vecSend;
     int nChangePosRet = -1;
     bool fSubtractFeeFromAmount = false;
-    CRecipient recipient = {scriptPubKey, Params().IssueAssetBurnAmount(), fSubtractFeeFromAmount};
+    CRecipient recipient = {scriptPubKey, burnAmount, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     if (!pwallet->CreateTransactionWithAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, asset, DecodeDestination(address))) {
-        if (!fSubtractFeeFromAmount && Params().IssueAssetBurnAmount() + nFeeRequired > curBalance)
+        if (!fSubtractFeeFromAmount && burnAmount + nFeeRequired > curBalance)
             strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
     }
@@ -244,7 +248,6 @@ UniValue getassetdata(const JSONRPCRequest& request)
                 "\nResult:\n"
                 "[ "
                 "{ name : (string)\n"
-                "  name_length : (number)\n"
                 "  amount : (number)\n"
                 "  units : (number)\n"
                 "  reissuable : (number)\n"
@@ -295,7 +298,6 @@ UniValue getmyassets(const JSONRPCRequest& request)
                 "\nResult:\n"
                 "[ "
                 "{ name : (string)\n"
-                "  name_length : (number)\n"
                 "  amount : (number)\n"
                 "  units : (number)\n"
                 "  reissuable : (number)\n"
@@ -336,7 +338,7 @@ UniValue getassetaddresses(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-                "getassetsaddresses asset_name\n"
+                "getassetaddresses asset_name\n"
                 "\nReturns a list of all address that own the given asset"
 
                 "\nArguments:\n"
@@ -521,7 +523,7 @@ UniValue transfer(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category    name                      actor (function)         argNames
   //  ----------- ------------------------  -----------------------  ----------
-    { "assets",   "issue",                  &issue,                  {"to_address","asset_name","qty","units","reissuable"} },
+    { "assets",   "issue",                  &issue,                  {"asset_name","qty","to_address","units","reissuable","has_ipfs","ipfs_hash"} },
     { "assets",   "getaddressbalances",     &getaddressbalances,     {"address", "minconf"} },
     { "assets",   "getassetdata",           &getassetdata,           {"asset_name"}},
     { "assets",   "getmyassets",            &getmyassets,            {}},

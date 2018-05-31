@@ -92,7 +92,15 @@ public:
 
     /** RVN Start **/
     const CAmount& IssueAssetBurnAmount() const { return nIssueAssetBurnAmount; }
+    const CAmount& ReissueAssetBurnAmount() const { return nReissueAssetBurnAmount; }
+    const CAmount& IssueSubAssetBurnAmount() const { return nIssueSubAssetBurnAmount; }
+    const CAmount& IssueUniqueAssetBurnAmount() const { return nIssueUniqueAssetBurnAmount; }
+
     const std::string& IssueAssetBurnAddress() const { return strIssueAssetBurnAddress; }
+    const std::string& ReissueAssetBurnAddress() const { return strReissueAssetBurnAddress; }
+    const std::string& IssueSubAssetBurnAddress() const { return strIssueSubAssetBurnAddress; }
+    const std::string& IssueUniqueAssetBurnAddress() const { return strIssueUniqueAssetBurnAddress; }
+    const std::string& GlobalBurnAddress() const { return strGlobalBurnAddress; }
     /** RVN End **/
 
 protected:
@@ -116,8 +124,20 @@ protected:
     ChainTxData chainTxData;
 
     /** RVN Start **/
+    // Burn Amounts
     CAmount nIssueAssetBurnAmount;
+    CAmount nReissueAssetBurnAmount;
+    CAmount nIssueSubAssetBurnAmount;
+    CAmount nIssueUniqueAssetBurnAmount;
+
+    // Burn Addresses
     std::string strIssueAssetBurnAddress;
+    std::string strReissueAssetBurnAddress;
+    std::string strIssueSubAssetBurnAddress;
+    std::string strIssueUniqueAssetBurnAddress;
+
+    // Global Burn Address
+    std::string strGlobalBurnAddress;
     /** RVN End **/
 };
 

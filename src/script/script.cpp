@@ -141,6 +141,10 @@ const char* GetOpName(opcodetype opcode)
     case OP_NOP9                   : return "OP_NOP9";
     case OP_NOP10                  : return "OP_NOP10";
 
+    /** RVN START */
+    case OP_RVN_ASSET              : return "OP_RVN_ASSET";
+    /** RVN END */
+
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
     // Note:
@@ -214,7 +218,7 @@ bool CScript::IsNewAsset() const
 {
     // Extra-fast test for new-asset CScripts:
     return (this->size() > 39 &&
-            (*this)[25] == OP_15 &&
+            (*this)[25] == OP_RVN_ASSET &&
             (*this)[27] == RVN_R &&
             (*this)[28] == RVN_V &&
             (*this)[29] == RVN_N &&
@@ -225,7 +229,7 @@ bool CScript::IsOwnerAsset() const
 {
     // Extra-fast test for new-asset CScripts:
     return (this->size() > 30 &&
-            (*this)[25] == OP_15 &&
+            (*this)[25] == OP_RVN_ASSET &&
             (*this)[27] == RVN_R &&
             (*this)[28] == RVN_V &&
             (*this)[29] == RVN_N &&
@@ -236,7 +240,7 @@ bool CScript::IsTransferAsset() const
 {
     // Extra-fast test for new-asset CScripts:
     return (this->size() > 30 &&
-            (*this)[25] == OP_15 &&
+            (*this)[25] == OP_RVN_ASSET &&
             (*this)[27] == RVN_R &&
             (*this)[28] == RVN_V &&
             (*this)[29] == RVN_N &&

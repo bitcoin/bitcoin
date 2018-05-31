@@ -99,6 +99,7 @@ public:
     }
 
     CAssetTransfer(const std::string& strAssetName, const CAmount& nAmount);
+    bool IsValid(std::string& strError) const;
     void ConstructTransaction(CScript& script) const;
 };
 
