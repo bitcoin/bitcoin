@@ -93,8 +93,10 @@ public:
 // using only serialization with and without witness data. As witness_size
 // is equal to total_size - stripped_size, this formula is identical to:
 // weight = (stripped_size * 3) + total_size.
-static inline int64_t GetTransactionWeight(const CTransaction& tx)
+template <typename T>
+static inline int64_t GetTransactionWeight(const T& tx)
 {
+    static_assert(std::is_same<T, CTransaction>::value || std::is_same<T, CMutableTransaction>::value, "no need to allow other types");
     return ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 }
 static inline int64_t GetBlockWeight(const CBlock& block)

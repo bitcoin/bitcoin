@@ -128,12 +128,15 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
     return str;
 }
 
-std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags)
+template <typename T>
+std::string EncodeHexTx(const T& tx, const int serializeFlags)
 {
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | serializeFlags);
     ssTx << tx;
     return HexStr(ssTx.begin(), ssTx.end());
 }
+template std::string EncodeHexTx(const CTransaction&, const int);
+template std::string EncodeHexTx(const CMutableTransaction&, const int);
 
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_address)
 {
