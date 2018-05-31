@@ -216,7 +216,7 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
 }
 
 
-bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck, bool *bAliasFound) {
+bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
@@ -396,16 +396,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	string strName = stringFromVch(vvchArgs[0]);
 	boost::algorithm::to_lower(strName);
 	vchAlias = vchFromString(strName);
-	if(bAliasFound)
-		*bAliasFound = true;
 	// get the alias from the DB
 	if (!GetAlias(vchAlias, dbAlias))
 	{
 		if (op == OP_ALIAS_UPDATE)
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5016 - " + _("Failed to read from alias DB");
-			if (bAliasFound)
-				*bAliasFound = false;
 			return true;
 		}
 	}
