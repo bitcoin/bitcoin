@@ -92,8 +92,8 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, asset.vchAlias, vchReceiver, isMine, oName)) {
 			const string& strObj = oName.write();
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
-			if (isMine && fAssetAllocationIndex) {
-				passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias), strObj);
+			if (isMine && fAssetAllocationIndex && !assetallocation.txHash.IsNull()) {
+				passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(assetallocation.txHash.GetHex()+"-"+stringfromVch(asset.vchAlias) + "-" + stringfromVch(vchReceiver), strObj);
 			}
 		}
 	}
