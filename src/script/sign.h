@@ -37,24 +37,17 @@ public:
 };
 
 /** A signature creator for transactions. */
-class TransactionSignatureCreator : public BaseSignatureCreator {
-    const CTransaction* txTo;
+class MutableTransactionSignatureCreator : public BaseSignatureCreator {
+    const CMutableTransaction* txTo;
     unsigned int nIn;
     int nHashType;
     CAmount amount;
-    const TransactionSignatureChecker checker;
+    const MutableTransactionSignatureChecker checker;
 
 public:
-    TransactionSignatureCreator(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn=SIGHASH_ALL);
+    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn = SIGHASH_ALL);
     const BaseSignatureChecker& Checker() const  override{ return checker; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
-};
-
-class MutableTransactionSignatureCreator : public TransactionSignatureCreator {
-    CTransaction tx;
-
-public:
-    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amount, int nHashTypeIn) : TransactionSignatureCreator(&tx, nInIn, amount, nHashTypeIn), tx(*txToIn) {}
 };
 
 /** A signature creator that just produces 72-byte empty signatures. */
