@@ -2032,6 +2032,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             "2. \"scanobjects\"                  (array, optional) Array of scan objects (only one object type per scan object allowed)\n"
             "      [\n"
             "        { \"address\" : \"<address>\" },       (string, optional) Bitcoin address\n"
+            "        { \"script\"  : \"<scriptPubKey>\" },  (string, optional) HEX encoded script (scriptPubKey)\n"
             "        { \"pubkey\"  :                      (object, optional) Public key\n"
             "          {\n"
             "            \"pubkey\" : \"<pubkey\">,         (string, required) HEX encoded public key\n"
@@ -2089,14 +2090,17 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             }
             UniValue address_uni = find_value(scanobject, "address");
             UniValue pubkey_uni  = find_value(scanobject, "pubkey");
+            UniValue script_uni  = find_value(scanobject, "script");
 
             // make sure only one object type is present
-            if (1 != !address_uni.isNull() + !pubkey_uni.isNull()) {
+            if (1 != !address_uni.isNull() + !pubkey_uni.isNull() + !script_uni.isNull()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Only one object type is allowed per scan object");
             } else if (!address_uni.isNull() && !address_uni.isStr()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Scanobject \"address\" must contain a single string as value");
             } else if (!pubkey_uni.isNull() && !pubkey_uni.isObject()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Scanobject \"pubkey\" must contain an object as value");
+            } else if (!script_uni.isNull() && !script_uni.isStr()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scanobject \"script\" must contain a single string as value");
             } else if (address_uni.isStr()) {
                 // type: address
                 // decode destination and derive the scriptPubKey
@@ -2117,8 +2121,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
                 // check the script types and use the default if not provided
                 if (!script_types_uni.isNull() && !script_types_uni.isArray()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "script_types must be an array");
-                }
-                else if (script_types_uni.isNull()) {
+                } else if (script_types_uni.isNull()) {
                     // use the default script types
                     script_types_uni = UniValue(UniValue::VARR);
                     for (const char *t : g_default_scantxoutset_script_types) {
@@ -2144,6 +2147,12 @@ UniValue scantxoutset(const JSONRPCRequest& request)
                     assert(!script.empty());
                     needles.insert(script);
                 }
+            } else if (script_uni.isStr()) {
+                // type: script
+                // check and add the script to the scan containers (needles array)
+                CScript script(ParseHexV(script_uni, "script"));
+                // TODO: check script: max length, has OP, is unspenable etc.
+                needles.insert(script);
             }
         }
 
