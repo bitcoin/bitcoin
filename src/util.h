@@ -55,8 +55,8 @@ extern bool fLogIPs;
 extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
-extern const char * const BITCOIN_CONF_FILENAME;
-extern const char * const BITCOIN_PID_FILENAME;
+extern const char * const XPCHAIN_CONF_FILENAME;
+extern const char * const XPCHAIN_PID_FILENAME;
 
 extern std::atomic<uint32_t> logCategories;
 
