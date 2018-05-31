@@ -325,9 +325,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     case OP_12:
                     case OP_13:
                     case OP_14:
-                    case OP_15: {
-                        break;
-                    }
+                    case OP_15:
                     case OP_16: {
                         // ( -- value)
                         CScriptNum bn((int) opcode - (int) (OP_1 - 1));
@@ -1012,6 +1010,12 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         }
                     }
                         break;
+
+                    /** RVN START */
+                    case OP_RVN_ASSET:
+                        break;
+                    /** RVN END */
+
 
                     default:
                         return set_error(serror, SCRIPT_ERR_BAD_OPCODE);

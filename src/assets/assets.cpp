@@ -238,7 +238,7 @@ void CNewAsset::ConstructTransaction(CScript& script) const
     vchMessage.push_back(RVN_Q); // q
 
     vchMessage.insert(vchMessage.end(), ssAsset.begin(), ssAsset.end());
-    script << OP_15 << vchMessage << OP_DROP;
+    script << OP_RVN_ASSET << vchMessage << OP_DROP;
 }
 
 void CNewAsset::ConstructOwnerTransaction(CScript& script) const
@@ -253,7 +253,7 @@ void CNewAsset::ConstructOwnerTransaction(CScript& script) const
     vchMessage.push_back(RVN_O); // o
 
     vchMessage.insert(vchMessage.end(), ssOwner.begin(), ssOwner.end());
-    script << OP_15 << vchMessage << OP_DROP;
+    script << OP_RVN_ASSET << vchMessage << OP_DROP;
 }
 
 bool AssetFromTransaction(const CTransaction& tx, CNewAsset& asset, std::string& strAddress)
@@ -433,7 +433,7 @@ void CAssetTransfer::ConstructTransaction(CScript& script) const
     vchMessage.push_back(RVN_T); // t
 
     vchMessage.insert(vchMessage.end(), ssTransfer.begin(), ssTransfer.end());
-    script << OP_15 << vchMessage << OP_DROP;
+    script << OP_RVN_ASSET << vchMessage << OP_DROP;
 }
 
 bool CAssetsCache::GetAssetsOutPoints(const std::string& strName, std::set<COutPoint>& outpoints)
@@ -1069,7 +1069,7 @@ bool CheckOwnerDataTx(const CTxOut& txOut)
 bool IsScriptNewAsset(const CScript& scriptPubKey)
 {
     if (scriptPubKey.size() > 39) {
-        if (scriptPubKey[25] == OP_15 && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_Q) {
+        if (scriptPubKey[25] == OP_RVN_ASSET && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_Q) {
             return true;
         }
     }
@@ -1080,7 +1080,7 @@ bool IsScriptNewAsset(const CScript& scriptPubKey)
 bool IsScriptOwnerAsset(const CScript& scriptPubKey)
 {
     if (scriptPubKey.size() > 30) {
-        if (scriptPubKey[25] == OP_15 && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_O) {
+        if (scriptPubKey[25] == OP_RVN_ASSET && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_O) {
             return true;
         }
     }
@@ -1091,7 +1091,7 @@ bool IsScriptOwnerAsset(const CScript& scriptPubKey)
 bool IsScriptTransferAsset(const CScript& scriptPubKey)
 {
     if (scriptPubKey.size() > 30) {
-        if (scriptPubKey[25] == OP_15 && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_T) {
+        if (scriptPubKey[25] == OP_RVN_ASSET && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_T) {
             return true;
         }
     }
