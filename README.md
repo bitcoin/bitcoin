@@ -1,7 +1,7 @@
-Chaincoin Core staging tree 0.13.99
+Chaincoin Core staging tree 0.16.00
 ===============================
 
-THIS IS AN ALPHA VERSION - DO NOT USE FOR MINING OR MERCHANT APPLICATIONS!!!
+THIS IS A BETA VERSION - DO NOT USE FOR MINING OR MERCHANT APPLICATIONS!!!
 ===============================
 
 
