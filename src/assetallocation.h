@@ -219,8 +219,8 @@ class CAssetAllocationTransactionsDB : public CDBWrapper {
 public:
 	CAssetAllocationTransactionsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationtransactions", nCacheSize, fMemory, fWipe) {}
 
-	bool WriteAssetAllocationWalletIndex(const std::string& key, const std::string& value) {
-		return Write(make_pair(std::string("assetallocationtxi"), key), value);
+	bool WriteAssetAllocationWalletIndex(const std::vector<unsigned char>& vchKey, const std::string& value) {
+		return Write(make_pair(std::string("assetallocationtxi"), vchKey), value);
 	}
 	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
 };
