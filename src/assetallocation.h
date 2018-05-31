@@ -165,7 +165,7 @@ public:
 
 class CAssetAllocationDB : public CDBWrapper {
 public:
-	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
+	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe, false, true) {}
 
     bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAmount& nAmount, const CAsset& asset, const int64_t& arrivalTime, const std::vector<unsigned char>& vchReceiver, const bool& fJustCheck) {
 		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
@@ -180,7 +180,7 @@ public:
 				writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 			}
 		}
-		WriteAssetAllocationIndex(assetallocation, asset, nAmount, vchReceiver);
+		WriteAssetAllocationIndex(assetallocation, asset, nAmount, vchReceiver, fJustCheck);
         return writeState;
     }
 	bool EraseAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup = false) {
@@ -212,15 +212,22 @@ public:
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
-	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver);
+	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver, const bool& fJustCheck);
 	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
 };
 class CAssetAllocationTransactionsDB : public CDBWrapper {
 public:
-	CAssetAllocationTransactionsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationtransactions", nCacheSize, fMemory, fWipe) {}
+	CAssetAllocationTransactionsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationtransactions", nCacheSize, fMemory, fWipe, false, true) {}
 
-	bool WriteAssetAllocationWalletIndex(const std::vector<unsigned char>& vchKey, const std::string& value) {
-		return Write(make_pair(std::string("assetallocationtxi"), vchKey), value);
+	bool WriteAssetAllocationWalletIndex(const int nHeight, const std::string &key, const std::string &value) {
+		std::map<std::string key, std::string value> valueMap;
+		if (!ReadAssetAllocationWalletIndex(nHeight, valueMap))
+			return false;
+		valueMap[key] = value;
+		return Write(make_pair(std::string("assetallocationtxi"), nHeight), valueMap);
+	}
+	bool ReadAssetAllocationWalletIndex(const int nHeight, std::map<std::string key, std::string value> &valueMap) {
+		return Read(make_pair(std::string("assetallocationtxi"), nHeight), valueMap);
 	}
 	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
 };

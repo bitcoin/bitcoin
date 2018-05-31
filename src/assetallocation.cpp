@@ -85,7 +85,7 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver) {
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver,const bool& fJustCheck) {
 	if (!vchReceiver.empty() && (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex)) {
 		UniValue oName(UniValue::VOBJ);
 		bool isMine = true;
@@ -99,7 +99,7 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 				vchKey.insert(vchKey.end(), asset.vchAlias.begin(), asset.vchAlias.end());
 				vchKey.insert(vchKey.end(), vchSep.begin(), vchSep.end());
 				vchKey.insert(vchKey.end(), vchReceiver.begin(), vchReceiver.end());
-				passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(vchKey, strObj);
+				passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(fJustCheck? assetallocation.nHeight+1, assetallocation.nHeight, vchKey, strObj);
 			}
 		}
 	}
