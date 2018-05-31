@@ -85,7 +85,7 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver,const bool& fJustCheck) {
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver,const int nHeight) {
 	if (!vchReceiver.empty() && (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex)) {
 		UniValue oName(UniValue::VOBJ);
 		bool isMine = true;
@@ -99,7 +99,7 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 				vchKey.insert(vchKey.end(), asset.vchAlias.begin(), asset.vchAlias.end());
 				vchKey.insert(vchKey.end(), vchSep.begin(), vchSep.end());
 				vchKey.insert(vchKey.end(), vchReceiver.begin(), vchReceiver.end());
-				passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(fJustCheck? assetallocation.nHeight+1, assetallocation.nHeight, vchKey, strObj);
+				passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(nHeight, vchKey, strObj);
 			}
 		}
 	}
@@ -545,7 +545,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= amountTuple.second;
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck, !fJustCheck ? dbAssetAllocation.nHeight : nHeight))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -649,7 +649,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= rangeTotals[i];
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck, !fJustCheck? dbAssetAllocation.nHeight: nHeight))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1030 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
