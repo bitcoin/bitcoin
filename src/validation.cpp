@@ -698,11 +698,12 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 					op = OP_ALIAS_UPDATE;
 				}
 				errorMessage.clear();
-				good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+				bool bAliasFound = true;
+				good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, false, &bAliasFound);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 
-				if (!vvchAliasArgs.empty() && good)
+				if (!vvchAliasArgs.empty() && good && bAliasFound)
 				{
 					if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 					{
