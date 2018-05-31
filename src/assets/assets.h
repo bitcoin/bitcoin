@@ -237,6 +237,12 @@ public :
     }
 };
 
+// Functions to be used to get access to the current burn amount required for specific asset issuance transactions
+CAmount GetIssueAssetBurnAmount();
+CAmount GetReissueAssetBurnAmount();
+CAmount GetIssueSubAssetBurnAmount();
+CAmount GetIssueUniqueAssetBurnAmount();
+
 bool IsAssetNameValid(const std::string& name);
 bool IsAssetNameAnOwner(const std::string& name);
 

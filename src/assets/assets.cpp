@@ -1208,3 +1208,23 @@ bool CAssetsCache::GetAssetIfExists(const std::string& name, CNewAsset& asset)
 
     return false;
 }
+
+CAmount GetIssueAssetBurnAmount()
+{
+    return Params().IssueAssetBurnAmount();
+}
+
+CAmount GetReissueAssetBurnAmount()
+{
+    return Params().ReissueAssetBurnAmount();
+}
+
+CAmount GetIssueSubAssetBurnAmount()
+{
+    return Params().IssueSubAssetBurnAmount();
+}
+
+CAmount GetIssueUniqueAssetBurnAmount()
+{
+    return Params().IssueUniqueAssetBurnAmount();
+}

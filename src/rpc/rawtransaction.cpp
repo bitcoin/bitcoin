@@ -305,8 +305,8 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "\nPaying for Asset Operations:\n"
             "  Some operations require an amount of RVN to be sent to a burn address:\n"
             "    transfer:       0\n"
-            "    issue:        500 to RXissueAssetXXXXXXXXXXXXXXXXXhhZGt\n"
-            "    reissue:        0\n"
+            "    issue:        500 to Issue Burn Address\n"
+            "    reissue:      100 to Reissue Burn Address\n"
 
             "\nOwnership:\n"
             "  These operations require an ownership token input for the asset being operated upon:\n"
@@ -346,7 +346,6 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "         {                                 (object) A json object describing new assets to issue\n"
             "           \"issue\":\n"
             "             {\n"
-            "               \"name_length\":n,            (number, required) DEPRECATED\n"
             "               \"asset_name\":\"asset-name\",  (string, required) new asset name\n"
             "               \"asset_quantity\":n,         (number, required) the number of raw units to issue\n"
             "               \"units\":[1-8],              (number, required) display units, between 1 (integral) to 8 (max precision)\n"
@@ -359,7 +358,6 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "         {                                 (object) A json object describing follow-on asset issue.  Requires matching ownership input.\n"
             "           \"reissue\":\n"
             "             {\n"
-            "               \"name_length\":n,            (number, required) DEPRECATED\n"
             "               \"asset_name\":\"asset-name\",  (string, required) name of asset to be reissued\n"
             "               \"asset_quantity\":n,         (number, required) the number of raw units to issue\n"
             "               \"reissuable\":[0-1],         (number, optional) 1=reissuable asset\n"
@@ -381,9 +379,9 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "\nExamples:\n"
             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0}]\" \"{\\\"address\\\":0.01}\"")
             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0}]\" \"{\\\"data\\\":\\\"00010203\\\"}\"")
-            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0}]\" \"{\\\"RXissueAssetXXXXXXXXXXXXXXXXXhhZGt\\\":500,\\\"change_address\\\":change_amount,\\\"issuer_address\\\":{\\\"issue\\\":{\\\"name_length\\\":3,\\\"asset_name\\\":\\\"MYASSET\\\",\\\"asset_quantity\\\":1000000,\\\"units\\\":1,\\\"reissuable\\\":0,\\\"has_ipfs\\\":1,\\\"ipfs_hash\\\":\\\"43f81c6f2c0593bde5a85e09ae662816eca80797\\\"}}}\"")
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0}]\" \"{\\\"RXissueAssetXXXXXXXXXXXXXXXXXhhZGt\\\":500,\\\"change_address\\\":change_amount,\\\"issuer_address\\\":{\\\"issue\\\":{\\\"asset_name\\\":\\\"MYASSET\\\",\\\"asset_quantity\\\":1000000,\\\"units\\\":1,\\\"reissuable\\\":0,\\\"has_ipfs\\\":1,\\\"ipfs_hash\\\":\\\"43f81c6f2c0593bde5a85e09ae662816eca80797\\\"}}}\"")
             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0},{\\\"txid\\\":\\\"myasset\\\",\\\"vout\\\":0}]\" \"{\\\"address\\\":{\\\"transfer\\\":{\\\"MYASSET\\\":50}}}\"")
-            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0},{\\\"txid\\\":\\\"myownership\\\",\\\"vout\\\":0}]\" \"{\\\"issuer_address\\\":{\\\"reissue\\\":{\\\"name_length\\\":3,\\\"asset_name\\\":\\\"MYASSET\\\",\\\"asset_quantity\\\":2000000}}}\"")
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0},{\\\"txid\\\":\\\"myownership\\\",\\\"vout\\\":0}]\" \"{\\\"issuer_address\\\":{\\\"reissue\\\":{\\\"asset_name\\\":\\\"MYASSET\\\",\\\"asset_quantity\\\":2000000}}}\"")
             + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"mycoin\\\",\\\"vout\\\":0}]\", \"{\\\"data\\\":\\\"00010203\\\"}\"")
         );
 
