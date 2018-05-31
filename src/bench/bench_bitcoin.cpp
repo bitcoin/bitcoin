@@ -39,20 +39,19 @@ static void SetupBenchArgs()
     gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
 }
 
-int
-main(int argc, char** argv)
+int main(int argc, char** argv)
 {
     SetupBenchArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
         fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
-        return false;
+        return EXIT_FAILURE;
     }
 
     if (HelpRequested(gArgs)) {
         std::cout << gArgs.GetHelpMessage();
 
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     SHA256AutoDetect();
@@ -80,4 +79,6 @@ main(int argc, char** argv)
     benchmark::BenchRunner::RunAll(*printer, evaluations, scaling_factor, regex_filter, is_list_only);
 
     ECC_Stop();
+
+    return EXIT_SUCCESS;
 }
