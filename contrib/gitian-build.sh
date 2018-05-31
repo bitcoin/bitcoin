@@ -277,7 +277,7 @@ popd
 if [[ $build = true ]]
 then
 	# Make output folder
-	mkdir -p ./dash-binaries/${VERSION}
+	mkdir -p ./dashcore-binaries/${VERSION}
 	
 	# Build Dependencies
 	echo ""
@@ -297,7 +297,7 @@ then
 	    echo ""
 	    ./bin/gbuild -j ${proc} -m ${mem} --commit dash=${COMMIT} --url dash=${url} ../dash/contrib/gitian-descriptors/gitian-linux.yml
 	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-linux --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-linux.yml
-	    mv build/out/dash-*.tar.gz build/out/src/dash-*.tar.gz ../dash-binaries/${VERSION}
+	    mv build/out/dashcore-*.tar.gz build/out/src/dashcore-*.tar.gz ../dashcore-binaries/${VERSION}
 	fi
 	# Windows
 	if [[ $windows = true ]]
@@ -307,8 +307,8 @@ then
 	    echo ""
 	    ./bin/gbuild -j ${proc} -m ${mem} --commit dash=${COMMIT} --url dash=${url} ../dash/contrib/gitian-descriptors/gitian-win.yml
 	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-win.yml
-	    mv build/out/dash-*-win-unsigned.tar.gz inputs/dash-win-unsigned.tar.gz
-	    mv build/out/dash-*.zip build/out/dash-*.exe ../dash-binaries/${VERSION}
+	    mv build/out/dashcore-*-win-unsigned.tar.gz inputs/dashcore-win-unsigned.tar.gz
+	    mv build/out/dashcore-*.zip build/out/dashcore-*.exe ../dashcore-binaries/${VERSION}
 	fi
 	# Mac OSX
 	if [[ $osx = true ]]
@@ -318,8 +318,8 @@ then
 	    echo ""
 	    ./bin/gbuild -j ${proc} -m ${mem} --commit dash=${COMMIT} --url dash=${url} ../dash/contrib/gitian-descriptors/gitian-osx.yml
 	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-osx.yml
-	    mv build/out/dash-*-osx-unsigned.tar.gz inputs/dash-osx-unsigned.tar.gz
-	    mv build/out/dash-*.tar.gz build/out/dash-*.dmg ../dash-binaries/${VERSION}
+	    mv build/out/dashcore-*-osx-unsigned.tar.gz inputs/dashcore-osx-unsigned.tar.gz
+	    mv build/out/dashcore-*.tar.gz build/out/dashcore-*.dmg ../dashcore-binaries/${VERSION}
 	fi
 	popd
 
@@ -383,8 +383,8 @@ then
 	    echo ""
 	    ./bin/gbuild -i --commit signature=${COMMIT} ../dash/contrib/gitian-descriptors/gitian-win-signer.yml
 	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-win-signer.yml
-	    mv build/out/dash-*win64-setup.exe ../dash-binaries/${VERSION}
-	    mv build/out/dash-*win32-setup.exe ../dash-binaries/${VERSION}
+	    mv build/out/dashcore-*win64-setup.exe ../dashcore-binaries/${VERSION}
+	    mv build/out/dashcore-*win32-setup.exe ../dashcore-binaries/${VERSION}
 	fi
 	# Sign Mac OSX
 	if [[ $osx = true ]]
@@ -394,7 +394,7 @@ then
 	    echo ""
 	    ./bin/gbuild -i --commit signature=${COMMIT} ../dash/contrib/gitian-descriptors/gitian-osx-signer.yml
 	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    mv build/out/dash-osx-signed.dmg ../dash-binaries/${VERSION}/dash-${VERSION}-osx.dmg
+	    mv build/out/dashcore-osx-signed.dmg ../dashcore-binaries/${VERSION}/dashcore-${VERSION}-osx.dmg
 	fi
 	popd
 
