@@ -224,10 +224,10 @@ public:
 		AssetAllocationIndex valueMap;
 		ReadAssetAllocationWalletIndex(nHeight, valueMap);
 		valueMap[key] = value;
-		return Write(make_pair(std::string("assetallocationtxi"), nHeight), valueMap);
+		return Write(nHeight, valueMap);
 	}
 	bool ReadAssetAllocationWalletIndex(const int nHeight, AssetAllocationIndex &valueMap) {
-		return Read(make_pair(std::string("assetallocationtxi"), nHeight), valueMap);
+		return Read(nHeight, valueMap);
 	}
 	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
 };
