@@ -23,7 +23,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
 #include <chrono>
 
 using namespace std::chrono;
@@ -1213,17 +1213,14 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 			continue;
 		for (auto& indexItem : indexObj.second) {
 			if (bParseKey) {
-				boost::char_separator<char> sep("-");
-				boost::tokenizer< boost::char_separator<char> > tok(indexObj.first, sep);
-				boost::tokenizer< boost::char_separator<char> >::iterator it = tok.begin();
-				string indexTxid = *it++;
-				if (!strTxid.empty()) && strTxid != indexTxid)
+				vector<string> contents;
+				contents.reserve(4);
+				boost::algorithm::split(contents, indexObj.first, is_any_of("-"));
+				if (!strTxid.empty()) && strTxid != contents[0])
 					continue;
-				string indexSender = *it++;
-				if (!strSender.empty()) && strSender != indexSender)
+				if (!strSender.empty()) && strSender != contents[1])
 					continue;
-				string indexReceiver = *it;
-				if (!strReceiver.empty()) && strReceiver != indexReceiver)
+				if (!strReceiver.empty()) && strReceiver != contents[2])
 					continue;
 			}
 			index++;
