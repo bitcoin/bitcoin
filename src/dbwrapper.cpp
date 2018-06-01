@@ -73,13 +73,14 @@ public:
     }
 };
 
-static leveldb::Options GetOptions(size_t nCacheSize)
+static leveldb::Options GetOptions(size_t nCacheSize, bool bSyscoin)
 {
     leveldb::Options options;
     options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
     options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
-    options.compression = leveldb::kNoCompression;
+	if(!bSyscoin)
+		options.compression = leveldb::kNoCompression;
     options.max_open_files = 64;
     options.info_log = new CSyscoinLevelDBLogger();
     if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
@@ -90,14 +91,14 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     return options;
 }
 
-CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
+CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate, bool bSyscoin)
 {
     penv = NULL;
     readoptions.verify_checksums = true;
     iteroptions.verify_checksums = true;
     iteroptions.fill_cache = false;
     syncoptions.sync = true;
-    options = GetOptions(nCacheSize);
+    options = GetOptions(nCacheSize, bSyscoin);
     options.create_if_missing = true;
     if (fMemory) {
         penv = leveldb::NewMemEnv(leveldb::Env::Default());
@@ -193,7 +194,6 @@ CDBIterator::~CDBIterator() { delete piter; }
 bool CDBIterator::Valid() { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
 void CDBIterator::Next() { piter->Next(); }
-
 namespace dbwrapper_private {
 
 void HandleError(const leveldb::Status& status)

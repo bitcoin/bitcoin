@@ -277,12 +277,14 @@ class CCertDB;
 class CEscrowDB;
 class CAssetDB;
 class CAssetAllocationDB;
+class CAssetAllocationTransactionsDB;
 extern CAliasDB *paliasdb;
 extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
 extern CEscrowDB *pescrowdb;
 extern CAssetDB *passetdb;
 extern CAssetAllocationDB *passetallocationdb;
+extern CAssetAllocationTransactionsDB *passetallocationtransactionsdb;
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);

@@ -93,7 +93,7 @@ class CCertDB : public CDBWrapper {
 public:
     CCertDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "certificates", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteCert(const CCert& cert, const int &op, const int64_t& arrivalTime, const bool &fJustCheck) {
+    bool WriteCert(const CCert& cert, const int &op, const int64_t& arrivalTime, const bool &fJustCheck, const bool bNotify=true) {
 		bool writeState =  Write(make_pair(std::string("certi"), cert.vchCert), cert);
 		if (!fJustCheck) {
 			writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert), cert);
@@ -108,7 +108,8 @@ public:
 				writeState = writeState && Write(make_pair(std::string("certa"), cert.vchCert), arrivalTimes);
 			}
 		}
-		WriteCertIndex(cert, op);
+		if(bNotify)
+			WriteCertIndex(cert, op);
         return writeState;
     }
 

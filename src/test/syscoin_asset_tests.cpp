@@ -354,6 +354,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	AliasNew("node1", "jagassetcollectionreceiver", "data");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
 	string guid = AssetNew("node1", "cad", "jagassetcollection", "data", "8", "false", "10000", "-1", "0.05");
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagassetcollection"));
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasinfo jagassetcollection"));
+	BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasinfo jagassetcollection"));
 	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionreceiver\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
 	UniValue balance = find_value(r.get_obj(), "balance");

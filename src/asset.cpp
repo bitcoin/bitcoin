@@ -90,17 +90,21 @@ void CAsset::Serialize( vector<unsigned char> &vchData) {
 
 }
 void CAssetDB::WriteAssetIndex(const CAsset& asset, const int& op) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildAssetIndexerJson(asset, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
+	if (IsArgSet("-zmqpubassetrecord")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildAssetIndexerJson(asset, oName)) {
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
+		}
 	}
 	WriteAssetIndexHistory(asset, op);
 }
 void CAssetDB::WriteAssetIndexHistory(const CAsset& asset, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildAssetIndexerHistoryJson(asset, oName)) {
-		oName.push_back(Pair("op", assetFromOp(op)));
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assethistory");
+	if (IsArgSet("-zmqpubassethistory")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildAssetIndexerHistoryJson(asset, oName)) {
+			oName.push_back(Pair("op", assetFromOp(op)));
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assethistory");
+		}
 	}
 }
 bool GetAsset(const vector<unsigned char> &vchAsset,
@@ -489,7 +493,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						receiverAllocation.nBalance += amountTuple.second;
 						// adjust sender balance
 						theAsset.nBalance -= amountTuple.second;
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2034 - " + _("Failed to write to asset allocation DB");
 							continue;
@@ -560,7 +564,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						subtractRanges(dbAsset.listAllocationInputs, input.second, outputSubtract);
 						theAsset.listAllocationInputs = outputSubtract;
 						theAsset.nBalance -= rangeTotals[i];
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2039 - " + _("Failed to write to asset allocation DB");
 							return error(errorMessage.c_str());

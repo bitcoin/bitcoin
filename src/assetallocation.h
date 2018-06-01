@@ -76,6 +76,11 @@ typedef std::pair<std::vector<unsigned char>, std::vector<CRange> > InputRanges;
 typedef std::vector<InputRanges> RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
+typedef std::map<std::string, std::string> AssetAllocationIndexItem;
+typedef std::map<uint256, int> ReverseAssetAllocationHeightItem;
+typedef std::map<int, AssetAllocationIndexItem> AssetAllocationIndexItemMap;
+static ReverseAssetAllocationHeightItem ReverseAssetAllocationHeight;
+static AssetAllocationIndexItemMap AssetAllocationIndex;
 static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 static const int MAX_MEMO_LENGTH = 128;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
@@ -165,9 +170,9 @@ public:
 
 class CAssetAllocationDB : public CDBWrapper {
 public:
-	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
+	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe, false, true) {}
 
-    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAsset& asset, const int64_t& arrivalTime, const bool& fJustCheck) {
+    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAmount& nAmount, const CAsset& asset, const int64_t& arrivalTime, const std::vector<unsigned char>& vchReceiver, const bool& fJustCheck) {
 		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
 		bool writeState = Write(make_pair(std::string("assetallocationi"), allocationTuple), assetallocation);
 		if (!fJustCheck)
@@ -180,7 +185,7 @@ public:
 				writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 			}
 		}
-		WriteAssetAllocationIndex(assetallocation, asset);
+		WriteAssetAllocationIndex(assetallocation, asset, nAmount, vchReceiver);
         return writeState;
     }
 	bool EraseAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup = false) {
@@ -212,12 +217,30 @@ public:
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
-	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset);
+	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver);
+	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
+};
+class CAssetAllocationTransactionsDB : public CDBWrapper {
+public:
+	CAssetAllocationTransactionsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationtransactions", nCacheSize, fMemory, fWipe, false, true) {
+		ReadAssetAllocationWalletIndex(AssetAllocationIndex);
+	}
+	~CAssetAllocationTransactionsDB() {
+		WriteAssetAllocationWalletIndex(AssetAllocationIndex);
+		Flush();
+	}
 
+	bool WriteAssetAllocationWalletIndex(const AssetAllocationIndexItemMap &valueMap) {
+		return Write(std::string("assetallocationtxi"), valueMap);
+	}
+	bool ReadAssetAllocationWalletIndex(AssetAllocationIndexItemMap &valueMap) {
+		return Read(std::string("assetallocationtxi"), valueMap);
+	}
+	bool ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 };
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool bSanityCheck = false);
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& asset, const bool bGetInputs, UniValue& oName);
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oName);
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& strSender, const std::vector<unsigned char>& strReceiver, bool &isMine, UniValue& oAssetAllocation);
 bool AccumulateInterestSinceLastClaim(CAssetAllocation & assetAllocation, const int& nHeight);
 #endif // ASSETALLOCATION_H
