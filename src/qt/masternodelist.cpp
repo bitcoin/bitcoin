@@ -623,7 +623,7 @@ void MasternodeList::VoteMany(std::string strCommand)
 
     const int blockStart = ui->tableWidgetVoting->item(r, 3)->text().toInt();
     const int blockEnd = ui->tableWidgetVoting->item(r, 4)->text().toInt();
-    if (budget.CanSubmitVotes(blockStart, blockEnd))
+    if (!budget.CanSubmitVotes(blockStart, blockEnd))
     {
         QMessageBox::critical(
             this,
