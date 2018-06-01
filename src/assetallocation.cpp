@@ -95,12 +95,14 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 			if (isMine && fAssetAllocationIndex && !assetallocation.txHash.IsNull()) {
 				int nHeight = assetallocation.nHeight;
 				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAlias)+"-"+ stringFromVch(vchReceiver);
-				// we want to the height from mempool if it exists or use the one stored in assetallocation
-				CTxMemPool::txiter it = mempool.mapTx.find(assetallocation.txHash);
-				if (it != mempool.mapTx.end())
-					nHeight = (*it).GetHeight();
-				AssetAllocationIndex[nHeight][strKey] = strObj;
-				
+				{
+					LOCK(mempool.cs);
+					// we want to the height from mempool if it exists or use the one stored in assetallocation
+					CTxMemPool::txiter it = mempool.mapTx.find(assetallocation.txHash);
+					if (it != mempool.mapTx.end())
+						nHeight = (*it).GetHeight();
+					AssetAllocationIndex[nHeight][strKey] = strObj;
+				}
 			}
 		}
 	}
