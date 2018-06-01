@@ -1216,11 +1216,11 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 		for (auto& indexItem : indexObj.second) {
 			if (bParseKey) {
 				boost::algorithm::split(contents, indexObj.first, boost::is_any_of("-"));
-				if (!strTxid.empty()) && strTxid != contents[0])
+				if (!strTxid.empty() && strTxid != contents[0])
 					continue;
-				if (!strSender.empty()) && strSender != contents[1])
+				if (!strSender.empty() && strSender != contents[1])
 					continue;
-				if (!strReceiver.empty()) && strReceiver != contents[2])
+				if (!strReceiver.empty() && strReceiver != contents[2])
 					continue;
 			}
 			index++;
