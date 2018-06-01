@@ -1840,10 +1840,6 @@
         <translation>&amp;בקשת תשלום</translation>
     </message>
     <message>
-        <source>Generate Bech32 address</source>
-        <translation>ייצר כתובת bech32</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>הצגת בקשות נבחרות (דומה ללחיצה כפולה על רשומה)</translation>
     </message>

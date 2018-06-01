@@ -1884,14 +1884,6 @@
         <translation>Ödeme &amp;talep et</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32 adresleri (BIP-173) harcama yapmak için daha ucuzdur ve yazım hatalarına karşı daha iyi koruma sunar. SegWit ile sarılı kontrol edilmemiş bir P2SH adresi oluşturulduğunda eski cüzdanlarla uyumludur.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Bech32 adresi oluştur</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Seçilen talebi göster (bir unsura çift tıklamakla aynı anlama gelir)</translation>
     </message>

@@ -1892,20 +1892,20 @@
         <translation>Ryd</translation>
     </message>
     <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>Rene segwit-adresser (kendt som Bech32 eller BIP-173) reducerer dine transaktionsgebyrer i det lange løb og giver bedre beskyttelse imod tastefejl, men gamle tegnebøger understøtter dem ikke. Hvis dette ikke vælges, vil i stedet en adresse, der fungerer med ældre tegnebøger, oprettes.</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>Generér rene segwit-adresser (Bech32)</translation>
+    </message>
+    <message>
         <source>Requested payments history</source>
         <translation>Historik over betalingsanmodninger</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Anmod om betaling</translation>
-    </message>
-    <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32-adresser (BIP-173) er billigere at betale fra og tilbyder bedre beskyttelse imod tastefejl. Hvis denne ikke er markeret, vil en SegWit-adresse pakket ind i P2SH, som er kompatibel med ældre tegnebøger, blive oprettet.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Generér Bech32-adresse</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -3884,10 +3884,6 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>Udskriv fejlsøgningsinformation (standard: %u, angivelse af &lt;kategori&gt; er valgfri)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>Sæt maksimal BIP141-blokvægt til dette * 4. Uddateret; brug blockmaxweight</translation>
     </message>
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>

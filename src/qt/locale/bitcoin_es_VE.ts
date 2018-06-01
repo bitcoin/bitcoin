@@ -42,6 +42,10 @@
         <translation>&amp;Borrar</translation>
     </message>
     <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Escoja la direccion a enviar las monedas</translation>
+    </message>
+    <message>
         <source>Choose the address to receive coins with</source>
         <translation>Elige la dirección para recibir monedas</translation>
     </message>
@@ -52,6 +56,14 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Direcciones de recepción</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Estas son tus direcciones Bitcoin para realizar pagos. Verifica siempre el monto y la dirección de recepción antes de enviar monedas. </translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Estas son tus direcciones Bitcoin para recibir pagos. Es recomendable usar una nueva dirección de recibo para cada transacción.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -742,6 +754,46 @@
     <message>
         <source>Warning</source>
         <translation>Advertencia</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation>Esta es la tarifa mínima a pagar en cada transacción.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Esta es la tarifa a pagar si realizas una transacción.</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation>Los montos de la transacción no debe ser negativo</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation>La transacción tiene largo tiempo en una cadena mempool</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation>La transacción debe tener al menos un destinatario</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation>Fondos insuficientes</translation>
+    </message>
+    <message>
+        <source>Loading wallet...</source>
+        <translation>Cargando monedero...</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation>No se puede rebajar monedero</translation>
+    </message>
+    <message>
+        <source>Rescanning...</source>
+        <translation>Escaneando...</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation>Carga lista</translation>
     </message>
     <message>
         <source>Error</source>

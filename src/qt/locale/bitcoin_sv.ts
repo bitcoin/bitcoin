@@ -1893,14 +1893,6 @@ Var vänlig och försök igen.</translation>
         <translation>Begä&amp;r betalning</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32-adresser (BIP-173) är billigare att spendera från samt har ett bättre skydd mot skrivfel. När det inte kryssats för kommer en SegWit-adress i P2SH att skapas, och den är då kompatibel med äldre plånböcker.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Skapa Bech32-adress</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Visa valda begäranden (gör samma som att dubbelklicka på en post)</translation>
     </message>

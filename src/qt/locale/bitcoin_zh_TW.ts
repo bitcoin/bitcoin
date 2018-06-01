@@ -1892,20 +1892,20 @@
         <translation>清空</translation>
     </message>
     <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>使用 segwit 原生位址(也叫做 Bech32 或 BIP-173)可以減少日後的交易手續費，也比較不容易打錯字，不過會跟舊版的錢包軟體不相容。如果沒有勾選的話，會改產生與舊版錢包軟體相容的位址。</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>產生 segwit 原生位址(Bech32)</translation>
+    </message>
+    <message>
         <source>Requested payments history</source>
         <translation>先前要求付款的記錄</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
         <translation>要求付款(&amp;R)</translation>
-    </message>
-    <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32 位址(BIP-173)是一種花費成本較小，且較不容易打錯的位址類型。如果沒有勾選的話，會使用以 P2SH 包裝的 SegWit 位址，這種位址類型跟舊版錢包相容。</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>產生 Bech32 位址</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -3893,10 +3893,6 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>輸出除錯資訊(預設值: %u, 不一定要指定 &lt;category&gt;)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>設定 BIP141 區塊重量的最大值為指定值乘以 4。此設定即將淘汰，請改用 blockmaxweight</translation>
     </message>
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>

@@ -1889,14 +1889,6 @@
         <translation>请求付款(&amp;R)</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32地址（BIP-173）是一种花费成本较小，且较不容易打错的地址类型。如果没有勾选的话，会使用以P2SH包装的SegWit地址，这种地址类型跟旧版钱包兼容。</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>生成Bech32地址</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>显示选中的请求 (双击也可以显示)</translation>
     </message>
@@ -3887,10 +3879,6 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>输出调试信息 (默认: %u, 提供 &lt;category&gt; 是可选项)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>设置BIP141最大区块权重为指定值乘以4。此设置即将淘汰，请改用blockmaxweight</translation>
     </message>
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>

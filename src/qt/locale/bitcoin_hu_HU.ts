@@ -1872,10 +1872,6 @@
         <translation>&amp;Fizetési kérelem</translation>
     </message>
     <message>
-        <source>Generate Bech32 address</source>
-        <translation>Bech32 cím generálás</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Mutassa meg a kiválasztott kérelmet (ugyanaz, mint a duplaklikk)</translation>
     </message>

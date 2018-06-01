@@ -1900,14 +1900,6 @@
         <translation>支払をリクエストする (&amp;R)</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32形式(BIP-173を参照)のアドレスを利用するとアドレスからの出金時に安い手数料で済み、また誤入力の可能性を減らすことができます。チェックを外すと、古いウォレットと互換性を保つことができるP2SH形式のセグウィットアドレスが作られます。</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Bech32形式のアドレスを生成</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>選択されたリクエストを表示する（項目をダブルクリックすることでも表示できます）</translation>
     </message>
@@ -3885,10 +3877,6 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>デバッグ情報を出力する (初期値: %u, &lt;category&gt; の指定は任意です)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>BIP141:SegWitの最大ブロックサイズはこれを4倍したものとします。注意: 非推奨です。代わりにblockmaxweightを使用してください。</translation>
     </message>
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>

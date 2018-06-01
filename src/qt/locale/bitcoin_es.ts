@@ -1900,14 +1900,6 @@
         <translation>&amp;Solicitar pago</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Las direcciones Bech32 (BIP-173) son mas baratas al gastar y ofrecen mejor proteción contra errores de tipeo. Cuando no se marque una dirección SegWit envuelta en P2SH será creada, compatible con monederos antiguos. </translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Generar dirección Bech32</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Muestra la petición seleccionada (También doble clic)</translation>
     </message>
@@ -3897,11 +3889,6 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>Mostrar depuración (por defecto: %u, proporcionar &lt;category&gt; es opcional)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>Configurar máximo peso de bloque BIP141 a este * 4.
-Descontinuado, use blockmaxweight</translation>
     </message>
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>

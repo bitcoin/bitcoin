@@ -1901,14 +1901,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>&amp;Richiedi pagamento</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Indirizzi Bech32 (BIP-173) sono piu' economici per spendere e offrono maggior protezione contro errori di battitura. Quando non selezionati, un indirizzo di tipo P2SH wrapped SegWit sara' creato, compatibile con i portafogli precedenti. </translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Genera un indirizzo Bech32</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Mostra la richiesta selezionata (produce lo stesso effetto di un doppio click su una voce)</translation>
     </message>
@@ -3889,10 +3881,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>Emette informazioni di debug (predefinito: %u, fornire &lt;category&gt; è opzionale)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>Impostare massimo per il peso del blocco BIP141 a * 4. Obsoleto, usare blockmaxweight</translation>
     </message>
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>

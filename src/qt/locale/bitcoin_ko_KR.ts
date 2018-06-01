@@ -1892,20 +1892,20 @@
         <translation>지우기</translation>
     </message>
     <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>Bech32 주소 (BIP-173)는 더 적은 수수료와 오입금으로부터 방지해 줍니다. Bech32가 비활성화 되어있으면 P2SH 기반의 세그윗 주소가 대신 생성됩니다.</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>Bech32 세그윗 주소 생성</translation>
+    </message>
+    <message>
         <source>Requested payments history</source>
         <translation>지출기록 확인</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
         <translation>지불 요청(&amp;R)</translation>
-    </message>
-    <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32 주소 (BIP-173)는 더 적은 수수료와 오입금으로부터 방지해 줍니다. Bech32가 비활성화 되어있으면 P2SH 기반의 세그윗 주소가 대신 생성됩니다.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Bech32 주소 생성</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -3881,10 +3881,6 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>디버그 정보 출력 (기본값: %u, &lt;category&gt; 제공은 선택입니다)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>최대 BIP141 블록 무게: 설정값 *4. 현재 미 지원 옵션입니다. -blockmaxweight 를 대신 쓰세요.</translation>
     </message>
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>

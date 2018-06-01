@@ -1886,14 +1886,6 @@
         <translation>Н&amp;адіслати запит платежу</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Витрати з адрес Bech32 (BIP-173) мають нижчу комісію і пропонують кращий захист від помилок. Якщо знято позначку, буде створено обернуту у P2SH адресу SegWit, сумісну зі старими гаманцями.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Згенерувати Bech32 адресу</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Показати вибраний запит (робить те ж саме, що й подвійний клік по запису)</translation>
     </message>
@@ -3882,10 +3874,6 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>Виводити налагоджувальну інформацію (типово: %u, вказання &lt;category&gt; необов'язкове)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>Встановлення максимального розміру блоку BIP141 на цей * 4. Не застосовується, використовуйте blockmaxweight</translation>
     </message>
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>

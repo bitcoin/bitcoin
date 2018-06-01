@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Направи нову адресу</translation>
+        <translation>Направите нову адресу</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -55,11 +55,11 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Adresa za slanje</translation>
+        <translation>Адресе за слање</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Адреса за примање</translation>
+        <translation>Адресе за примање</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -87,7 +87,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Фајл раздојен тачком (*.csv)</translation>
+        <translation>Зарезом одвојене вредности (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -102,7 +102,7 @@
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Налепница</translation>
+        <translation>Етикета</translation>
     </message>
     <message>
         <source>Address</source>
@@ -110,11 +110,15 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(без налепнице)</translation>
+        <translation>(без етикете)</translation>
     </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation>Прозор за унос лозинке</translation>
+    </message>
     <message>
         <source>Enter passphrase</source>
         <translation>Унесите лозинку</translation>
@@ -133,7 +137,7 @@
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Унесите лозинку за новчаник. &lt;br/&gt;Молимо да користите лозинку од &lt;b&gt;десет или више насумично одабраних карактера, или &lt;b&gt;осам или више речи&lt;/b&gt;.</translation>
+        <translation>Унесите нову лозинку за приступ новчанику. &lt;br/&gt;Молимо да користите лозинку од &lt;b&gt;десет или више насумично одабраних карактера, или &lt;b&gt;осам или више речи&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -414,6 +418,50 @@
         <translation>Трака са картицама</translation>
     </message>
     <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>Затражи плаћање (генерише QR кодове и биткоин: URI-е)</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>Прегледајте листу коришћених адреса и етикета за слање уплата</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Прегледајте листу коришћених адреса и етикета за пријем уплата</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>Отворите биткоин: URI или захтев за плаћање</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Опције командне линије</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>Идексирање блокова на диску...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Обрада блокова на диску...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Обрађенo %n блокова историјата трансакција.</numerusform><numerusform>Обрађенo %n блокова историјата трансакција.</numerusform><numerusform>Обрађенo је %n блокова историјата трансакција.</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 уназад</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Последњи примљени блок је направљен пре %1.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Трансакције након овога још неће бити видљиве.</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Greška</translation>
     </message>
@@ -430,8 +478,42 @@
         <translation>Ажурно</translation>
     </message>
     <message>
+        <source>%1 client</source>
+        <translation>%1 клијент</translation>
+    </message>
+    <message>
         <source>Catching up...</source>
         <translation>Ажурирање у току...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Датум: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Износ: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Тип: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Етикета: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Адреса: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -473,6 +555,10 @@
         <translation>Количина:</translation>
     </message>
     <message>
+        <source>Bytes:</source>
+        <translation>Бајта:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Износ:</translation>
     </message>
@@ -493,8 +579,17 @@
         <translation>Промени:</translation>
     </message>
     <message>
+        <source>(un)select all</source>
+        <translation>изаберите / поништите све
+</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Износ</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>Примљено са етикетом</translation>
     </message>
     <message>
         <source>Received with address</source>
@@ -592,6 +687,14 @@
         <translation>&amp;Етикета</translation>
     </message>
     <message>
+        <source>The label associated with this address list entry</source>
+        <translation>Етикета повезана са овом ставком из листе адреса</translation>
+    </message>
+    <message>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation>Адреса повезана са овом ставком из листе адреса. Ово можете променити једини у случају адреса за плаћање.</translation>
+    </message>
+    <message>
         <source>&amp;Address</source>
         <translation>&amp;Адреса</translation>
     </message>
@@ -612,6 +715,10 @@
         <translation>Измени адресу за слање</translation>
     </message>
     <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Унета адреса "%1" се већ налази у адресару.</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation>Новчаник није могуће откључати.</translation>
     </message>
@@ -623,10 +730,26 @@
 <context>
     <name>FreespaceChecker</name>
     <message>
+        <source>A new data directory will be created.</source>
+        <translation>Нови директоријум података ће бити креиран.</translation>
+    </message>
+    <message>
         <source>name</source>
         <translation>име</translation>
     </message>
-    </context>
+    <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation>Директоријум већ постоји. Додајте %1 ако намеравате да креирате нови директоријум овде.</translation>
+    </message>
+    <message>
+        <source>Path already exists, and is not a directory.</source>
+        <translation>Путања већ постоји и није директоријум.</translation>
+    </message>
+    <message>
+        <source>Cannot create data directory here.</source>
+        <translation>Не можете креирати директоријум података овде.</translation>
+    </message>
+</context>
 <context>
     <name>HelpMessageDialog</name>
     <message>
@@ -634,8 +757,28 @@
         <translation>верзија</translation>
     </message>
     <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation>Приближно %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation>Опције командне линије</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>Korišćenje:</translation>
+    </message>
+    <message>
+        <source>command-line options</source>
+        <translation>опције командне линије</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Изаберите директоријум података при покретању (подразумевано: %u)</translation>
     </message>
     </context>
 <context>
@@ -647,6 +790,30 @@
     <message>
         <source>Welcome to %1.</source>
         <translation>Добродошли на  %1.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>Пошто је ово први пут да је програм покренут, можете изабрати где ће %1 чувати своје податке.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>Када кликнете на ОК, %1 ће почети с преузимањем и процесирањем целокупног ланца блокова %4 (%2GB), почевши од најранијих трансакција у %3 када је %4 покренут.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>Ова иницијална синхронизација је веома захтевна и може изложити ваш рачунар хардверским проблемима који раније нису били примећени. Сваки пут када покренете %1, преузимање ће се наставити тамо где је било прекинуто.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>Ако сте одлучили да ограничите складиштење ланаца блокова (тримовање), историјски подаци се ипак морају преузети и обрадити, али ће након тога бити избрисани како би се ограничила употреба диска.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation>Користите подразумевани директоријум података</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation>Користите прилагођени директоријум података:</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -862,6 +1029,10 @@
     <message>
         <source>Quantity:</source>
         <translation>Количина:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>Бајта:</translation>
     </message>
     <message>
         <source>Amount:</source>

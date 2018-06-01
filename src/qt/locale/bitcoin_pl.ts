@@ -1024,6 +1024,14 @@
         <translation>Pakazuje czy dostarczone domyślne SOCKS5 proxy jest użyte do połączenia z węzłami przez sieć tego typu.</translation>
     </message>
     <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Ukryj ikonę z zasobnika systemowego.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Ukryj ikonę z zasobnika</translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Minimalizuje zamiast zakończyć działanie programu przy zamykaniu okna. Kiedy ta opcja jest włączona, program zakończy działanie po wybieraniu Zamknij w menu.</translation>
     </message>
@@ -1086,6 +1094,14 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Mapuj port używając &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>Akceptuj połączenia z zewnątrz.</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Zezwól na &amp;połączenia przychodzące</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
@@ -1166,6 +1182,10 @@
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>Wybierz pokazywanie lub nie funkcji kontroli monet.</translation>
+    </message>
+    <message>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>&amp;Zewnętrzny URL podglądu transakcji</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1781,6 +1801,14 @@
         <translation>Użyj strzałek do przewijania historii i %1 aby wyczyścić ekran</translation>
     </message>
     <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Wpisz %1 aby uzyskać listę dostępnych komend.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>Aby uzyskać więcej informacji jak używać tej konsoli wpisz %1.</translation>
+    </message>
+    <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
         <translation>UWAGA: Oszuści nakłaniają do wpisywania tutaj różnych poleceń aby ukraść portfel. Nie używaj tej konsoli bez pełnego zrozumienia wpisywanych poleceń.</translation>
     </message>
@@ -1858,6 +1886,14 @@
     <message>
         <source>Clear</source>
         <translation>Wyczyść</translation>
+    </message>
+    <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>Natywne adresy segwit (aka Bech32 lub BIP-173) zmniejszają później twoje opłaty transakcyjne i dają lepsze zabezpieczenie przed literówkami, ale stare portfele ich nie obsługują. Jeżeli odznaczone, stworzony zostanie adres kompatybilny ze starszymi portfelami.</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>Wygeneruj natywny adres segwit (Bech32)</translation>
     </message>
     <message>
         <source>Requested payments history</source>
@@ -2107,6 +2143,10 @@
     <message>
         <source>Confirmation time target:</source>
         <translation>Docelowy czas potwierdzenia:</translation>
+    </message>
+    <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation>Włącz RBF (podmiana transakcji przez podniesienie opłaty)</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>

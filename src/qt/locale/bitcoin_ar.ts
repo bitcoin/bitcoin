@@ -1854,14 +1854,6 @@
         <translation>&amp;طلب دفعة</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>عناوين Bech32 (BIP-173) أرخص في الإنفاق وتوفير أفضل حماية ضد الأخطاء المطبعية. عند إلغاء التحديد، سيتم إنشاء عنوان SegWit من نوع P2SH متوافق مع المحافظ القديمة.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>توليد عنوان Bech32</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>إظهار الطلب المحدد (يقوم بنفس نتيجة النقر المزدوج على أي إدخال)</translation>
     </message>
@@ -3366,10 +3358,6 @@
     <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
         <translation>خطأ أثناء تحميل %s: لا يمكنك تفعيل خاصية الهرمية الحتمية HD في محفظة لا تملك خاصية الهرمية الحتمية non-HD مسبقاً</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>تعيين أقصى وزن كتلة BIP141 لهذا * 4. موقوف ، استخدم blockmaxweight</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>

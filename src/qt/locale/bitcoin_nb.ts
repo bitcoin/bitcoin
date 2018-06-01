@@ -1900,14 +1900,6 @@
         <translation>&amp;Etterspør betaling</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32 adresser (BIP-173) er billigere å sende fra og gir bedre beskyttelse mot skrivefeil. Når dette ikke er valgt vil en P2SH SegWit adresse bli laget, som er kompatibel med eldre wallets. </translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Generer Bech32 adresse</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Vis den valgte etterspørringen (gjør det samme som å dobbelklikke på en oppføring)</translation>
     </message>
