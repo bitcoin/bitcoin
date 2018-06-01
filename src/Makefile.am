@@ -180,6 +180,7 @@ BITCOIN_CORE_H = \
   streams.h \
   smsg/db.h \
   smsg/crypter.h \
+  smsg/net.h \
   smsg/smessage.h \
   smsg/rpcsmessage.h \
   support/allocators/secure.h \

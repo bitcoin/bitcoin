@@ -1101,6 +1101,13 @@ int CSMSG::ReceiveData(CNode *pfrom, const std::string &strCommand, CDataStream 
     if (LogAcceptCategory(BCLog::SMSG))
         LogPrintf("%s: %s %s.\n", __func__, pfrom->GetAddrName(), strCommand);
 
+    if (IsInitialBlockDownload()) // Wait until chain synced
+    {
+        if (strCommand == "smsgPing")
+            pfrom->smsgData.lastSeen = -1; // Mark node as requiring a response once chain is synced
+        return SMSG_NO_ERROR;
+    };
+
     if (!fSecMsgEnabled)
     {
         if (strCommand == "smsgPing") // ignore smsgPing
@@ -1594,18 +1601,31 @@ bool CSMSG::SendData(CNode *pto, bool fSendTrickle)
         Runs in ThreadMessageHandler2
     */
 
+    if (IsInitialBlockDownload()) // Wait until chain synced
+    {
+        return true;
+    };
+
     LOCK(pto->smsgData.cs_smsg_net);
 
     //LogPrintf("SecureMsgSendData() %s.\n", pto->GetAddrName());
     int64_t now = GetTime();
 
-    if (pto->smsgData.lastSeen == 0)
+    if (pto->smsgData.lastSeen <= 0)
     {
         // First contact
         LogPrint(BCLog::SMSG, "%s: New node %s, peer id %u.\n", __func__, pto->GetAddrName(), pto->GetId());
         // Send smsgPing once, do nothing until receive 1st smsgPong (then set fEnabled)
         g_connman->PushMessage(pto,
             CNetMsgMaker(INIT_PROTO_VERSION).Make("smsgPing"));
+
+        // Send smsgPong message if received smsgPing from peer while syncing chain
+        if (pto->smsgData.lastSeen < 0)
+        {
+            g_connman->PushMessage(pto,
+                CNetMsgMaker(INIT_PROTO_VERSION).Make("smsgPong"));
+        };
+
         pto->smsgData.lastSeen = GetTime();
         return true;
     } else

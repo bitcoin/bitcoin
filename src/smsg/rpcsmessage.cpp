@@ -30,10 +30,13 @@ static void EnsureSMSGIsEnabled()
 
 static UniValue smsgenable(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() != 0)
+    if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "smsgenable\n"
-            "Enable secure messaging.");
+            "smsgenable ( \"walletname\" )\n"
+            "\nArguments:\n"
+            "1. \"walletname\"      (string, optional, default=\"wallet.dat\") enable smsg on a specific wallet.\n"
+            "Enable secure messaging.\n"
+            "SMSG only be active on one wallet.\n");
 
     if (smsg::fSecMsgEnabled)
         throw JSONRPCError(RPC_MISC_ERROR, "Secure messaging is already enabled.");
@@ -43,11 +46,29 @@ static UniValue smsgenable(const JSONRPCRequest &request)
     CWallet *pwallet = nullptr;
 #ifdef ENABLE_WALLET
     auto vpwallets = GetWallets();
-    assert(vpwallets.size() > 0);
-    pwallet = vpwallets[0].get();
+
+    if (!request.params[0].isNull())
+    {
+        std::string sFindWallet = request.params[0].get_str();
+
+        for (auto pw : vpwallets)
+        {
+            if (pw->GetName() != sFindWallet)
+                continue;
+            pwallet = pw.get();
+            break;
+        };
+        if (!pwallet)
+            throw JSONRPCError(RPC_MISC_ERROR, "Wallet not found: \"" + sFindWallet + "\"");
+    } else
+    {
+        if (vpwallets.size() > 0)
+            pwallet = vpwallets[0].get();
+    };
 #endif
 
     result.pushKV("result", (smsgModule.Enable(pwallet) ? "Enabled secure messaging." : "Failed to enable secure messaging."));
+    result.pushKV("wallet", (pwallet ? pwallet->GetName() : "none"));
 
     return result;
 }
@@ -62,7 +83,8 @@ static UniValue smsgdisable(const JSONRPCRequest &request)
     if (!smsg::fSecMsgEnabled)
         throw JSONRPCError(RPC_MISC_ERROR, "Secure messaging is already disabled.");
 
-    UniValue result;
+    UniValue result(UniValue::VOBJ);
+
     result.pushKV("result", (smsgModule.Disable() ? "Disabled secure messaging." : "Failed to disable secure messaging."));
 
     return result;
