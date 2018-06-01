@@ -85,7 +85,7 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver,const int nHeight) {
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver) {
 	if (!vchReceiver.empty() && (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex)) {
 		UniValue oName(UniValue::VOBJ);
 		bool isMine = true;
@@ -93,8 +93,14 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 			const string& strObj = oName.write();
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
 			if (isMine && fAssetAllocationIndex && !assetallocation.txHash.IsNull()) {
+				int nHeight = assetallocation.nHeight;
 				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAlias)+"-"+ stringFromVch(vchReceiver);
+				// we want to the height from mempool if it exists or use the one stored in assetallocation
+				CTxMemPool::txiter it = mempool.mapTx.find(assetallocation.txHash);
+				if (it != mempool.mapTx.end()) {
+					nHeight = (*it).GetHeight();
 				AssetAllocationIndex[nHeight][strKey] = strObj;
+				
 			}
 		}
 	}
@@ -540,7 +546,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= amountTuple.second;
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck, fJustCheck ? nHeight : dbAssetAllocation.nHeight))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -644,7 +650,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= rangeTotals[i];
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck, fJustCheck? nHeight: dbAssetAllocation.nHeight))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1030 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
