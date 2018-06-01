@@ -23,6 +23,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/algorithm/string.hpp>
 #include <chrono>
 
 using namespace std::chrono;
@@ -85,15 +86,30 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildAssetAllocationIndexerJson(assetallocation, asset, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetallocation");
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver) {
+	if (!vchReceiver.empty() && (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex)) {
+		UniValue oName(UniValue::VOBJ);
+		bool isMine = true;
+		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, asset.vchAlias, vchReceiver, isMine, oName)) {
+			const string& strObj = oName.write();
+			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
+			if (isMine && fAssetAllocationIndex && !assetallocation.txHash.IsNull()) {
+				int nHeight = assetallocation.nHeight;
+				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAlias)+"-"+ stringFromVch(vchReceiver);
+				{
+					LOCK(mempool.cs);
+					// we want to the height from mempool if it exists or use the one stored in assetallocation
+					CTxMemPool::txiter it = mempool.mapTx.find(assetallocation.txHash);
+					if (it != mempool.mapTx.end())
+						nHeight = (*it).GetHeight();
+					AssetAllocationIndex[nHeight][strKey] = strObj;
+				}
+			}
+		}
 	}
 
 }
-bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple,
-        CAssetAllocation& txPos) {
+bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple, CAssetAllocation& txPos) {
     if (!passetallocationdb || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
         return false;
     return true;
@@ -204,7 +220,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 		dbAssetAllocation.nLastInterestClaimHeight = nHeight;
 	}
 	// write the state back to previous state
-	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, asset, INT64_MAX, false))
+	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, 0, asset, INT64_MAX, vchFromString(""), false))
 	{
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1000 - " + _("Failed to write to asset allocation DB");
 		return error(errorMessage.c_str());
@@ -533,7 +549,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= amountTuple.second;
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -637,7 +653,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= rangeTotals[i];
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1030 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -667,7 +683,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 		}
 
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, dbAsset, ms, fJustCheck))
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, dbAsset, ms, vchFromString(""), fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
@@ -1066,16 +1082,61 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
 	oAssetAllocation.push_back(Pair("accumulated_interest", ValueFromAssetAmount(GetAssetAllocationInterest(assetallocation, chainActive.Tip()->nHeight, errorMessage), asset.nPrecision, asset.bUseInputRanges)));
 	return true;
 }
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oAssetAllocation)
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const vector<unsigned char>& vchSender, const vector<unsigned char>& vchReceiver, bool &isMine, UniValue& oAssetAllocation)
 {
+	int64_t nTime = 0;
+	bool bConfirmed = false;
+	if (chainActive.Height() >= assetallocation.nHeight - 1) {
+		bConfirmed = (chainActive.Height() - assetallocation.nHeight) >= 1;
+		CBlockIndex *pindex = chainActive[chainActive.Height() >= assetallocation.nHeight ? assetallocation.nHeight : assetallocation.nHeight - 1];
+		if (pindex) {
+			nTime = pindex->GetMedianTimePast();
+		}
+	}
 	oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias).ToString()));
 	oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
+	oAssetAllocation.push_back(Pair("time", nTime));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	oAssetAllocation.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
 	oAssetAllocation.push_back(Pair("interest_rate", asset.fInterestRate));
 	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
-	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
+	oAssetAllocation.push_back(Pair("sender", stringFromVch(vchSender)));
+	oAssetAllocation.push_back(Pair("receiver", stringFromVch(vchReceiver)));
 	oAssetAllocation.push_back(Pair("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
+	oAssetAllocation.push_back(Pair("amount", ValueFromAssetAmount(nAmount, asset.nPrecision, asset.bUseInputRanges)));
+	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
+	if (fAssetAllocationIndex) {
+		string strCat = "";
+		isMine = true;
+		CAliasIndex fromAlias;
+		if (!GetAlias(vchSender, fromAlias))
+		{
+			isMine = false;
+		}
+		CAliasIndex toAlias;
+		if (!GetAlias(vchReceiver, toAlias))
+		{
+			isMine = false;
+		}
+		if (isMine)
+		{
+			const CSyscoinAddress fromAddress(EncodeBase58(fromAlias.vchAddress));
+			const CSyscoinAddress toAddress(EncodeBase58(toAlias.vchAddress));
+
+			isminefilter filter = ISMINE_SPENDABLE;
+			isminefilter mine = IsMine(*pwalletMain, fromAddress.Get());
+			if ((mine & filter))
+				strCat = "send";
+			else {
+				mine = IsMine(*pwalletMain, toAddress.Get());
+				if ((mine & filter))
+					strCat = "receive";
+				else
+					isMine = false;
+			}
+		}
+		oAssetAllocation.push_back(Pair("category", strCat));
+	}
 	return true;
 }
 void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
@@ -1117,6 +1178,93 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 	entry.push_back(Pair("allocations", oAssetAllocationReceiversArray));
 
 
+}
+bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+	string strTxid = "";
+	string strSender = "";
+	string strReceiver = "";
+	bool bParseKey = false;
+	int nStartBlock = 0;
+	if (!oOptions.isNull()) {
+		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
+		const UniValue &txid = find_value(optionsObj, "txid");
+		if (txid.isStr()) {
+			strTxid = txid.get_str();
+			bParseKey = true;
+		}
+		const UniValue &sender = find_value(optionsObj, "sender");
+		if (sender.isStr()) {
+			strSender = sender.get_str();
+			bParseKey = true;
+		}
+		const UniValue &receiver = find_value(optionsObj, "receiver");
+		if (receiver.isStr()) {
+			strReceiver = receiver.get_str();
+			bParseKey = true;
+		}
+		const UniValue &startblock = find_value(optionsObj, "startblock");
+		if (startblock.isNum())
+			nStartBlock = startblock.get_int();
+	}
+	int index = 0;
+	UniValue assetValue;
+	vector<string> contents;
+	contents.reserve(4);
+	for (auto&indexObj : boost::adaptors::reverse(AssetAllocationIndex)) {
+		if (nStartBlock > 0 && indexObj.first < nStartBlock)
+			continue;
+		for (auto& indexItem : indexObj.second) {
+			if (bParseKey) {
+				boost::algorithm::split(contents, indexItem.first, boost::is_any_of("-"));
+				if (!strTxid.empty() && strTxid != contents[0])
+					continue;
+				if (!strSender.empty() && strSender != contents[1])
+					continue;
+				if (!strReceiver.empty() && strReceiver != contents[2])
+					continue;
+			}
+			index++;
+			if (from > 0 && index <= from) {
+				continue;
+			}
+			if (assetValue.read(indexItem.second))
+				oRes.push_back(assetValue);
+			if (index >= count + from)
+				break;
+		}
+	}
+	return true;
+}
+UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 3 < params.size())
+		throw runtime_error("listassetallocationtransactions [count] [from] [options]\n"
+			"list asset allocations sent or recieved in this wallet.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
+			"[options]        (array, optional) A json object with options to filter results\n"
+			"    {\n"
+			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
+			"      \"sender\":sender alias		(string) Sender alias name to filter.\n"
+			"      \"receiver\":receiver alias   (string) Receiver alias name to filter.\n"
+			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have entered your mempool.\n"
+			"      ,...\n"
+			"    }\n"
+		);
+	UniValue options;
+	int count = 10;
+	int from = 0;
+	if (params.size() > 0)
+		count = params[0].get_int();
+	if (params.size() > 1)
+		from = params[1].get_int();
+	if (params.size() > 2)
+		options = params[2];
+
+	UniValue oRes(UniValue::VARR);
+	if (!passetallocationtransactionsdb->ScanAssetAllocations(count, from, options, oRes))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Scan failed"));
+	return oRes;
 }
 
 

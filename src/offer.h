@@ -206,7 +206,7 @@ class COfferDB : public CDBWrapper {
 public:
 	COfferDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "offers", nCacheSize, fMemory, fWipe) {}
 
-	bool WriteOffer(const COffer& offer, const int &op, const int64_t& arrivalTime, const bool& fJustCheck) {
+	bool WriteOffer(const COffer& offer, const int &op, const int64_t& arrivalTime, const bool& fJustCheck, const bool bNotify = true) {
 		bool writeState = Write(make_pair(std::string("offeri"), offer.vchOffer), offer);
 		if (!fJustCheck)
 			writeState = writeState && Write(make_pair(std::string("offerp"), offer.vchOffer), offer);
@@ -218,7 +218,8 @@ public:
 				writeState = writeState && Write(make_pair(std::string("offera"), offer.vchOffer), arrivalTimes);
 			}
 		}
-		WriteOfferIndex(offer, op);
+		if(bNotify)
+			WriteOfferIndex(offer, op);
 		return writeState;
 	}
 

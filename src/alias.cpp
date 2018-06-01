@@ -44,6 +44,7 @@ CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CAssetDB *passetdb = NULL;
 CAssetAllocationDB *passetallocationdb = NULL;
+CAssetAllocationTransactionsDB *passetallocationtransactionsdb = NULL;
 typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
 typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
 mapAliasRegistrationsType mapAliasRegistrations;
@@ -814,17 +815,22 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		if (!passetallocationdb->Flush())
 			LogPrintf("Failed to write to asset allocation database!");
 	}
+	if (passetallocationtransactionsdb != NULL)
+	{
+		if (!passetallocationtransactionsdb->Flush())
+			LogPrintf("Failed to write to asset allocation transactions database!");
+	}
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
 	CAliasIndex& txPos) {
-	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos))
+	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos)) {
 		return false;
+	}
 	
 	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
 		txPos.SetNull();
 		return false;
-	}
-	
+	}	
 	return true;
 }
 bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey) {
@@ -1051,21 +1057,25 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 }
 
 void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
-	CSyscoinAddress address(EncodeBase58(alias.vchAddress));
-	oName.push_back(Pair("address", address.ToString()));
-	oName.push_back(Pair("expires_on", alias.nExpireTime));
-	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
-	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliasrecord");
+	if (IsArgSet("-zmqpubaliasrecord")) {
+		UniValue oName(UniValue::VOBJ);
+		oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
+		CSyscoinAddress address(EncodeBase58(alias.vchAddress));
+		oName.push_back(Pair("address", address.ToString()));
+		oName.push_back(Pair("expires_on", alias.nExpireTime));
+		oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
+		oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliasrecord");
+	}
 	WriteAliasIndexHistory(alias, op);
 }
 void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	BuildAliasIndexerHistoryJson(alias, oName);
-	oName.push_back(Pair("op", aliasFromOp(op)));
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliashistory");
+	if (IsArgSet("-zmqpubaliashistory")) {
+		UniValue oName(UniValue::VOBJ);
+		BuildAliasIndexerHistoryJson(alias, oName);
+		oName.push_back(Pair("op", aliasFromOp(op)));
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliashistory");
+	}
 }
 bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const unsigned int& nHeight, const string &type, const string &guid, UniValue& oName)
 {
@@ -1086,9 +1096,11 @@ bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, co
 	return true;
 }
 void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const unsigned int& nHeight, const string &type, const string &guid) {
-	UniValue oName(UniValue::VOBJ);
-	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
+	if (IsArgSet("-zmqpubaliastxhistory")) {
+		UniValue oName(UniValue::VOBJ);
+		BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
+	}
 }
 UniValue SyscoinListReceived(bool includeempty=true)
 {
@@ -1982,6 +1994,8 @@ UniValue prunesyscoinservices(const JSONRPCRequest& request)
 	CleanupSyscoinServiceDatabases(servicesCleaned);
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("services_cleaned", servicesCleaned));
+	if (fDebug)
+		LogPrintf("prunesyscoinservices # cleaned: %d\n", servicesCleaned);
 	return res;
 }
 UniValue aliasbalancemulti(const JSONRPCRequest& request)

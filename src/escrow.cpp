@@ -205,22 +205,28 @@ void CEscrow::Serialize(vector<unsigned char>& vchData) {
 
 }
 void CEscrowDB::WriteEscrowIndex(const COffer& offer, const CEscrow& escrow, const std::vector<std::vector<unsigned char> > &vvchArgs) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildEscrowIndexerJson(offer, escrow, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "escrowrecord");
+	if (IsArgSet("-zmqpubescrowrecord")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildEscrowIndexerJson(offer, escrow, oName)) {
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "escrowrecord");
+		}
 	}
 }
 void CEscrowDB::WriteEscrowFeedbackIndex(const COffer &offer, const CEscrow& escrow) {
-	UniValue oName(UniValue::VOBJ);
-	BuildFeedbackJson(offer, escrow, oName);
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "escrowfeedback");
+	if (IsArgSet("-zmqpubescrowfeedback")) {
+		UniValue oName(UniValue::VOBJ);
+		BuildFeedbackJson(offer, escrow, oName);
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "escrowfeedback");
+	}
 }
 void CEscrowDB::WriteEscrowBidIndex(const COffer& offer, const CEscrow& escrow, const string& status) {
 	if (escrow.op != OP_ESCROW_ACTIVATE)
 		return;
-	UniValue oName(UniValue::VOBJ);
-	BuildEscrowBidJson(offer, escrow, status, oName);
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "escrowbid");
+	if (IsArgSet("-zmqpubescrowbid")) {
+		UniValue oName(UniValue::VOBJ);
+		BuildEscrowBidJson(offer, escrow, status, oName);
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "escrowbid");
+	}
 }
 bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
 {
