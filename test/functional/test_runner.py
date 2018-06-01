@@ -296,7 +296,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     #Set env vars
     if "XPCHAIND" not in os.environ:
         os.environ["XPCHAIND"] = build_dir + '/src/xpchaind' + exeext
-        os.environ["BITCOINCLI"] = build_dir + '/src/bitcoin-cli' + exeext
+        os.environ["XPCHAINCLI"] = build_dir + '/src/xpchain-cli' + exeext
 
     tests_dir = src_dir + '/test/functional/'
 
@@ -511,7 +511,7 @@ class RPCCoverage():
     Coverage calculation works by having each test script subprocess write
     coverage files into a particular directory. These files contain the RPC
     commands invoked during testing, as well as a complete listing of RPC
-    commands per `bitcoin-cli help` (`rpc_interface.txt`).
+    commands per `xpchain-cli help` (`rpc_interface.txt`).
 
     After all tests complete, the commands run are combined and diff'd against
     the complete list to calculate uncovered RPC commands.

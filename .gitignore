@@ -3,7 +3,7 @@
 *.exe
 src/bitcoin
 src/xpchaind
-src/bitcoin-cli
+src/xpchain-cli
 src/bitcoin-tx
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
