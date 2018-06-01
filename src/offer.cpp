@@ -26,7 +26,6 @@
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/tokenizer.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <chrono>
 
