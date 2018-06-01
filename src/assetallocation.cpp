@@ -1173,7 +1173,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const int from, UniValue& oRes) {
 
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-	pcursor->SeekToLast();
+	pcursor->SeekToFirst();
 	pair<string, vector<unsigned char> > key;
 	string assetStr;
 	UniValue assetValue;
@@ -1186,7 +1186,7 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 				for (auto&indexObj : allocationIndex) {
 					index++;
 					if (from > 0 && index <= from) {
-						pcursor->Prev();
+						pcursor->Next();
 						continue;
 					}
 					if (assetValue.read(indexObj.second))
@@ -1196,7 +1196,7 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 				}
 
 			}
-			pcursor->Prev();
+			pcursor->Next();
 		}
 		catch (std::exception &e) {
 			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
