@@ -22,11 +22,11 @@ struct DbTest
     {
         READWRITE(m_testData);
     }
-    void Clear() const
+    void Clear()
     {
         m_cleared = true;
     }
-    void CheckAndRemove() const
+    void CheckAndRemove()
     {
         m_checkedAndRemoved = true;
     }
