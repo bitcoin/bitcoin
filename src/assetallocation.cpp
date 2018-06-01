@@ -1172,6 +1172,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 }
 bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const int from, UniValue& oRes) {
 	int index = 0;
+	UniValue assetValue;
 	for (auto&indexObj : boost::adaptors::reverse(AssetAllocationIndex)) {
 		for (auto& indexItem : indexObj.second) {
 			index++;
