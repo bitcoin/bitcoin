@@ -3262,7 +3262,8 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
         LOCK(cs_wallet); // mapAddressBook
         std::map<CTxDestination, CAddressBookData>::iterator mi = mapAddressBook.find(address);
         fUpdated = mi != mapAddressBook.end();
-        mapAddressBook[address].name = strName;
+        if (!strName.empty()) /* update name only if requested */
+            mapAddressBook[address].name = strName;
         if (!strPurpose.empty()) /* update purpose only if requested */
             mapAddressBook[address].purpose = strPurpose;
     }
