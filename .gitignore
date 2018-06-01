@@ -2,7 +2,7 @@
 
 *.exe
 src/bitcoin
-src/bitcoind
+src/xpchaind
 src/bitcoin-cli
 src/bitcoin-tx
 src/test/test_bitcoin

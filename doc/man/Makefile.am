@@ -1,6 +1,6 @@
 dist_man1_MANS=
 
-if BUILD_BITCOIND
+if BUILD_XPCHAIND
   dist_man1_MANS+=bitcoind.1
 endif
 

@@ -399,7 +399,7 @@ class FullBlockTest(ComparisonTestFramework):
         b26 = update_block(26, [])
         yield rejected(RejectResult(16, b'bad-cb-length'))
 
-        # Extend the b26 chain to make sure bitcoind isn't accepting b26
+        # Extend the b26 chain to make sure xpchaind isn't accepting b26
         block(27, spend=out[7])
         yield rejected(False)
 
@@ -411,7 +411,7 @@ class FullBlockTest(ComparisonTestFramework):
         b28 = update_block(28, [])
         yield rejected(RejectResult(16, b'bad-cb-length'))
 
-        # Extend the b28 chain to make sure bitcoind isn't accepting b28
+        # Extend the b28 chain to make sure xpchaind isn't accepting b28
         block(29, spend=out[7])
         yield rejected(False)
 
