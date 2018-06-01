@@ -23,6 +23,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/tokenizer.hpp>
 #include <chrono>
 
 using namespace std::chrono;
@@ -1178,11 +1179,53 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 
 
 }
-bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const int from, UniValue& oRes) {
+bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+	string strTxid = "";
+	string strSender = "";
+	string strReceiver = "";
+	bool bParseKey = false;
+	int nStartBlock = 0;
+	if (!oOptions.IsNull()) {
+		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
+		const UniValue &txid = find_value(oOptions, "txid");
+		if (txid.IsStr()) {
+			strTxid = txid.get_str();
+			bParseKey = true;
+		}
+		const UniValue &sender = find_value(oOptions, "sender");
+		if (sender.IsStr()) {
+			strSender = sender.get_str();
+			bParseKey = true;
+		}
+		const UniValue &receiver = find_value(oOptions, "receiver");
+		if (receiver.IsStr()) {
+			strReceiver = receiver.get_str();
+			bParseKey = true;
+		}
+		const UniValue &startblock = find_value(oOptions, "startblock");
+		if (startblock.IsStr())
+			nStartBlock = startblock.get_num();
+	}
 	int index = 0;
 	UniValue assetValue;
 	for (auto&indexObj : boost::adaptors::reverse(AssetAllocationIndex)) {
+		if (nStartBlock > 0 && indexObj.first < nStartBlock)
+			continue;
 		for (auto& indexItem : indexObj.second) {
+			if (bParseKey) {
+				boost::char_separator<char> sep("-");
+				boost::tokenizer< boost::char_separator<char> > tok(indexObj.first, sep);
+				boost::tokenizer< boost::char_separator<char> >::iterator it = tok.begin();
+				string indexTxid = *it++;
+				if (!strTxid.empty()) && strTxid != indexTxid)
+					continue;
+				string indexSender = *it++;
+				if (!strSender.empty()) && strSender != indexSender)
+					continue;
+				string indexReceiver = *it;
+				if (!strReceiver.empty()) && strReceiver != indexReceiver)
+					continue;
+			}
 			index++;
 			if (from > 0 && index <= from) {
 				continue;
@@ -1197,20 +1240,31 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 }
 UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || 2 < params.size())
-		throw runtime_error("listassetallocationtransactions [count] [from]\n"
+	if (request.fHelp || 3 < params.size())
+		throw runtime_error("listassetallocationtransactions [count] [from] [options]\n"
 			"list asset allocations sent or recieved in this wallet.\n"
 			"[count]          (numeric, optional, default=10) The number of results to return.\n"
-			"[from]           (numeric, optional, default=0) The number of results to skip.\n");
+			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
+			"[options]        (array, optional) A json object with options to filter results\n"
+			"    {\n"
+			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
+			"      \"sender\":sender alias		(string) Sender alias name to filter.\n"
+			"      \"receiver\":receiver alias   (string) Receiver alias name to filter.\n"
+			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have entered your mempool.\n"
+			"      ,...\n"
+			"    }\n"
+		);
 	int count = 10;
 	int from = 0;
 	if (params.size() > 0)
 		count = params[0].get_int();
 	if (params.size() > 1)
 		from = params[1].get_int();
+	if (params.size() > 2)
+		options = params[2];
 
 	UniValue oRes(UniValue::VARR);
-	if (!passetallocationtransactionsdb->ScanAssetAllocations(count, from, oRes))
+	if (!passetallocationtransactionsdb->ScanAssetAllocations(count, from, options, oRes))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Scan failed"));
 	return oRes;
 }
