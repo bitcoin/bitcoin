@@ -222,8 +222,7 @@ public:
 
 	bool WriteAssetAllocationWalletIndex(const int nHeight, const std::string &key, const std::string &value) {
 		AssetAllocationIndex valueMap;
-		if (!ReadAssetAllocationWalletIndex(nHeight, valueMap))
-			return false;
+		ReadAssetAllocationWalletIndex(nHeight, valueMap);
 		valueMap[key] = value;
 		return Write(make_pair(std::string("assetallocationtxi"), nHeight), valueMap);
 	}
