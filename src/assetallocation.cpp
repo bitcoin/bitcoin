@@ -367,6 +367,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 	bool bRevert = false;
 	bool bBalanceOverrun = false;
 	bool bAddAllReceiversToConflictList = false;
+        bool bTPSTestFoundReceiver = false;
 	if (op == OP_ASSET_COLLECT_INTEREST)
 	{
 		if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
@@ -531,6 +532,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
 						receiverAllocation.nBalance += amountTuple.second;
 						theAssetAllocation.nBalance -= amountTuple.second;
+                       
 					}
 
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset, INT64_MAX, fJustCheck))
@@ -664,7 +666,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
-			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();        
 		}
 
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, dbAsset, ms, fJustCheck))
@@ -778,6 +780,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	ArrivalTimesMap arrivalTimes;
 	passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
 	const int64_t & nNow = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+        /*
 	for (auto& arrivalTime : arrivalTimes) {
 		int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS*1000;
 		if (fUnitTest)
@@ -786,7 +789,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 		if ((nNow - arrivalTime.second) < minLatency) {
 			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1503 - " + _("Please wait a few more seconds and try again..."));
 		}
-	}
+	} */
 	
 	if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1504 - " + _("This asset allocation is involved in a conflict which must be resolved with Proof-Of-Work. Please wait for a block confirmation and try again..."));
@@ -886,6 +889,7 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 
 	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
 }
+
 UniValue assetallocationinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || 3 != params.size())
