@@ -236,7 +236,7 @@ public:
 	bool ReadAssetAllocationWalletIndex(AssetAllocationIndexItemMap &valueMap) {
 		return Read(std::string("assetallocationtxi"), valueMap);
 	}
-	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
+	bool ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 };
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool bSanityCheck = false);
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
