@@ -1254,6 +1254,7 @@ UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 			"      ,...\n"
 			"    }\n"
 		);
+	UniValue options;
 	int count = 10;
 	int from = 0;
 	if (params.size() > 0)
