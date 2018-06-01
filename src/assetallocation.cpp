@@ -1177,22 +1177,25 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 	pair<string, vector<unsigned char> > key;
 	string assetStr;
 	UniValue assetValue;
+	AssetAllocationIndex allocationIndex;
 	int index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
 			if (pcursor->GetKey(key) && key.first == "assetallocationtxi") {
-				index++;
-				if (from > 0 && index <= from) {
-					pcursor->Prev();
-					continue;
+				pcursor->GetValue(allocationIndex);
+				for (auto&indexObj : allocationIndex) {
+					index++;
+					if (from > 0 && index <= from) {
+						pcursor->Prev();
+						continue;
+					}
+					if (assetValue.read(indexObj.second))
+						oRes.push_back(assetValue);
+					if (index >= count + from)
+						break;
 				}
-				pcursor->GetValue(assetStr);
-				if(assetValue.read(assetStr))
-					oRes.push_back(assetValue);
 
-				if (index >= count + from)
-					break;
 			}
 			pcursor->Prev();
 		}
