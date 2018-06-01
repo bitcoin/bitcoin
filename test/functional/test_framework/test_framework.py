@@ -163,9 +163,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         self.extra_args_from_options = self.options.dashd_extra_args
 
-        os.environ['PATH'] = config['environment']['BUILDDIR'] + os.pathsep + \
-                             config['environment']['BUILDDIR'] + os.path.sep + "qt" + os.pathsep + \
-                             os.environ['PATH']
+        os.environ['PATH'] = os.pathsep.join([
+            os.path.join(config['environment']['BUILDDIR'], 'src'),
+            os.path.join(config['environment']['BUILDDIR'], 'src', 'qt'),
+            os.environ['PATH']
+        ])
 
         # Set up temp directory and start logging
         if self.options.tmpdir:
