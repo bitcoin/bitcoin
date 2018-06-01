@@ -77,7 +77,9 @@ typedef std::vector<InputRanges> RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
 typedef std::map<std::string, std::string> AssetAllocationIndexItem;
+typedef std::map<uint256, int> ReverseAssetAllocationHeightItem;
 typedef std::map<int, AssetAllocationIndexItem> AssetAllocationIndexItemMap;
+static ReverseAssetAllocationHeightItem ReverseAssetAllocationHeight;
 static AssetAllocationIndexItemMap AssetAllocationIndex;
 static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 static const int MAX_MEMO_LENGTH = 128;
@@ -170,7 +172,7 @@ class CAssetAllocationDB : public CDBWrapper {
 public:
 	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe, false, true) {}
 
-    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAmount& nAmount, const CAsset& asset, const int64_t& arrivalTime, const std::vector<unsigned char>& vchReceiver, const bool& fJustCheck, const int nHeight=0) {
+    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAmount& nAmount, const CAsset& asset, const int64_t& arrivalTime, const std::vector<unsigned char>& vchReceiver, const bool& fJustCheck) {
 		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
 		bool writeState = Write(make_pair(std::string("assetallocationi"), allocationTuple), assetallocation);
 		if (!fJustCheck)
@@ -183,7 +185,7 @@ public:
 				writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 			}
 		}
-		WriteAssetAllocationIndex(assetallocation, asset, nAmount, vchReceiver, nHeight);
+		WriteAssetAllocationIndex(assetallocation, asset, nAmount, vchReceiver);
         return writeState;
     }
 	bool EraseAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup = false) {
@@ -215,7 +217,7 @@ public:
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
-	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver, const int nHeight);
+	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver);
 	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
 };
 class CAssetAllocationTransactionsDB : public CDBWrapper {
