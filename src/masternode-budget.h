@@ -142,6 +142,7 @@ public:
 
     // SubmitProposalVote is used when current node submits a vote. ReceiveProposalVote is used when
     // a vote is received from a peer
+    bool CanSubmitVotes(int blockStart, int blockEnd) const;
     bool SubmitProposalVote(const CBudgetVote& vote, std::string& strError);
     bool ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError);
 
