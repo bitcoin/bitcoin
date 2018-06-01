@@ -58,7 +58,7 @@ namespace details
     }
 
     template <typename T>
-    ReadResult Read(T& objToLoad, const std::string& magicMessage, const std::string& filename, bool fDryRun)
+    ReadResult Read(T& objToLoad, const std::string& filename, const std::string& magicMessage, bool fDryRun = false)
     {
         CDataStream ssObj(SER_DISK, CLIENT_VERSION);
         ReadResult result = ReadStream(ssObj, filename);

@@ -11,7 +11,7 @@ template <typename T>
 bool Load(T& objToLoad, const std::string& filename, const std::string& magicMessage, bool fDryRun = false)
 {
     LogPrintf("Reading info from %s...\n", filename);
-    ::details::ReadResult readResult = ::details::Read(objToLoad, magicMessage, filename, fDryRun);
+    ::details::ReadResult readResult = ::details::Read(objToLoad, filename, magicMessage, fDryRun);
     switch(readResult)
     {
         case ::details::Ok:
