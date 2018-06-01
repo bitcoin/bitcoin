@@ -44,6 +44,7 @@ static UniValue smsgenable(const JSONRPCRequest &request)
     UniValue result(UniValue::VOBJ);
 
     CWallet *pwallet = nullptr;
+    std::string walletName = "none";
 #ifdef ENABLE_WALLET
     auto vpwallets = GetWallets();
 
@@ -65,10 +66,12 @@ static UniValue smsgenable(const JSONRPCRequest &request)
         if (vpwallets.size() > 0)
             pwallet = vpwallets[0].get();
     };
+    if (pwallet)
+        walletName = pwallet->GetName();
 #endif
 
     result.pushKV("result", (smsgModule.Enable(pwallet) ? "Enabled secure messaging." : "Failed to enable secure messaging."));
-    result.pushKV("wallet", (pwallet ? pwallet->GetName() : "none"));
+    result.pushKV("wallet", walletName);
 
     return result;
 }
