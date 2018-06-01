@@ -76,7 +76,8 @@ typedef std::pair<std::vector<unsigned char>, std::vector<CRange> > InputRanges;
 typedef std::vector<InputRanges> RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
-typedef std::map<std::string, std::string> AssetAllocationIndex;
+typedef std::map<std::string, std::string> AssetAllocationIndexItem;
+static std::map<int, AssetAllocationIndexItem> AssetAllocationIndex;
 static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 static const int MAX_MEMO_LENGTH = 128;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
@@ -218,16 +219,19 @@ public:
 };
 class CAssetAllocationTransactionsDB : public CDBWrapper {
 public:
-	CAssetAllocationTransactionsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationtransactions", nCacheSize, fMemory, fWipe, false, true) {}
-
-	bool WriteAssetAllocationWalletIndex(const int nHeight, const std::string &key, const std::string &value) {
-		AssetAllocationIndex valueMap;
-		ReadAssetAllocationWalletIndex(nHeight, valueMap);
-		valueMap[key] = value;
-		return Write(nHeight, valueMap);
+	CAssetAllocationTransactionsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationtransactions", nCacheSize, fMemory, fWipe, false, true) {
+		ReadAssetAllocationWalletIndex(AssetAllocationIndex);
 	}
-	bool ReadAssetAllocationWalletIndex(const int nHeight, AssetAllocationIndex &valueMap) {
-		return Read(nHeight, valueMap);
+	~CAssetAllocationTransactionsDB() {
+		WriteAssetAllocationWalletIndex(AssetAllocationIndex);
+		Flush();
+	}
+
+	bool WriteAssetAllocationWalletIndex(const AssetAllocationIndex &valueMap) {
+		return Write(std::string("assetallocationtxi"), valueMap);
+	}
+	bool ReadAssetAllocationWalletIndex(AssetAllocationIndex &valueMap) {
+		return Read(std::string("assetallocationtxi"), valueMap);
 	}
 	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
 };
