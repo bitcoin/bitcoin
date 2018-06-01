@@ -21,6 +21,7 @@ url=https://github.com/bitcoin/bitcoin
 proc=2
 mem=2000
 lxc=true
+docker=false
 osslTarUrl=http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
 osslPatchUrl=https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
 scriptName=$(basename -- "$0")
@@ -48,6 +49,7 @@ Options:
 -j		Number of processes to use. Default 2
 -m		Memory to allocate in MiB. Default 2000
 --kvm           Use KVM instead of LXC
+--docker        Use Docker instead of LXC
 --setup         Set up the Gitian building environment. Uses LXC. If you want to use KVM, use the --kvm option. Only works on Debian-based systems (Ubuntu, Debian)
 --detach-sign   Create the assert file for detached signing. Will not commit anything.
 --no-commit     Do not commit anything to git
@@ -156,6 +158,16 @@ while :; do
         --kvm)
             lxc=false
             ;;
+        # docker
+        --docker)
+            if [[ $lxc = false ]]
+            then
+                echo 'Error: cannot have both kvm and docker'
+                exit 1
+            fi
+            lxc=false
+            docker=true
+            ;;
         # Detach sign
         --detach-sign)
             signProg="true"
@@ -179,6 +191,12 @@ done
 if [[ $lxc = true ]]
 then
     export USE_LXC=1
+fi
+
+# Setup docker
+if [[ $docker = true ]]
+then
+    export USE_DOCKER=1
 fi
 
 # Check for OSX SDK
@@ -238,6 +256,10 @@ then
     then
         sudo apt-get install lxc
         bin/make-base-vm --suite trusty --arch amd64 --lxc
+    elif [[ -n "$USE_DOCKER" ]]
+    then
+        sudo apt-get install docker-ce
+        bin/make-base-vm --suite trusty --arch amd64 --docker
     else
         bin/make-base-vm --suite trusty --arch amd64
     fi
