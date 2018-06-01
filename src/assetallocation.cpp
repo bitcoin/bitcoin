@@ -94,7 +94,7 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
 			if (isMine && fAssetAllocationIndex && !assetallocation.txHash.IsNull()) {
 				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAlias)+"-"+ stringFromVch(vchReceiver);
-				passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(nHeight, strKey, strObj);
+				AssetAllocationIndex[nHeight][strKey] = strObj;
 			}
 		}
 	}
@@ -1171,35 +1171,17 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 
 }
 bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const int from, UniValue& oRes) {
-
-	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-	pcursor->SeekToLast();
-	pair<string, vector<unsigned char> > key;
-	string assetStr;
-	UniValue assetValue;
-	AssetAllocationIndex allocationIndex;
 	int index = 0;
-	while (pcursor->Valid()) {
-		boost::this_thread::interruption_point();
-		try {
-			if (pcursor->GetValue(allocationIndex)) {
-				for (auto&indexObj : allocationIndex) {
-					index++;
-					if (from > 0 && index <= from) {
-						pcursor->Prev();
-						continue;
-					}
-					if (assetValue.read(indexObj.second))
-						oRes.push_back(assetValue);
-					if (index >= count + from)
-						break;
-				}
-
+	for (auto&indexObj : boost::adaptors::reverse(AssetAllocationIndex)) {
+		for (auto& indexItem : indexObj.second) {
+			index++;
+			if (from > 0 && index <= from) {
+				continue;
 			}
-			pcursor->Prev();
-		}
-		catch (std::exception &e) {
-			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+			if (assetValue.read(indexItem.second))
+				oRes.push_back(assetValue);
+			if (index >= count + from)
+				break;
 		}
 	}
 	return true;
