@@ -1182,8 +1182,7 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
-			if (pcursor->GetKey(key) && key.first == "assetallocationtxi") {
-				pcursor->GetValue(allocationIndex);
+			if (pcursor->GetValue(allocationIndex)) {
 				for (auto&indexObj : allocationIndex) {
 					index++;
 					if (from > 0 && index <= from) {
