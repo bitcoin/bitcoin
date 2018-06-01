@@ -1187,22 +1187,22 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 	int nStartBlock = 0;
 	if (!oOptions.isNull()) {
 		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
-		const UniValue &txid = find_value(oOptions, "txid");
+		const UniValue &txid = find_value(optionsObj, "txid");
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 			bParseKey = true;
 		}
-		const UniValue &sender = find_value(oOptions, "sender");
+		const UniValue &sender = find_value(optionsObj, "sender");
 		if (sender.isStr()) {
 			strSender = sender.get_str();
 			bParseKey = true;
 		}
-		const UniValue &receiver = find_value(oOptions, "receiver");
+		const UniValue &receiver = find_value(optionsObj, "receiver");
 		if (receiver.isStr()) {
 			strReceiver = receiver.get_str();
 			bParseKey = true;
 		}
-		const UniValue &startblock = find_value(oOptions, "startblock");
+		const UniValue &startblock = find_value(optionsObj, "startblock");
 		if (startblock.isNum())
 			nStartBlock = startblock.get_int();
 	}
@@ -1215,7 +1215,7 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 			continue;
 		for (auto& indexItem : indexObj.second) {
 			if (bParseKey) {
-				boost::algorithm::split(contents, indexObj.first, boost::is_any_of("-"));
+				boost::algorithm::split(contents, indexItem.first, boost::is_any_of("-"));
 				if (!strTxid.empty() && strTxid != contents[0])
 					continue;
 				if (!strSender.empty() && strSender != contents[1])
