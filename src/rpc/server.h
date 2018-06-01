@@ -252,3 +252,4 @@ std::string JSONRPCExecBatch(const UniValue& vReq);
 void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
 
 #endif // SYSCOIN_RPCSERVER_H
+

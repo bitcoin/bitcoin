@@ -215,7 +215,7 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
 }
 
 
-bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
+bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
@@ -276,8 +276,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
 			int pop;
-			if (!GetUTXOCoin(tx.vin[i].prevout, prevCoins))
+			prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
+			if (prevCoins.IsSpent()) {
 				continue;
+			}
+	
 			// ensure inputs are unspent when doing consensus check to add to block
 			if(!DecodeAliasScript(prevCoins.out.scriptPubKey, pop, vvch))
 			{
@@ -295,11 +298,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				vector<vector<unsigned char> > vvch;
 				int pop;
-				Coin prevCoins;
-				if (!GetUTXOCoin(tx.vin[i].prevout, prevCoins))
+				const Coin& prevCoinsW = inputs.AccessCoin(tx.vin[i].prevout);
+				if (prevCoinsW.IsSpent()) {
 					continue;
+				}
 				// ensure inputs are unspent when doing consensus check to add to block
-				if (!DecodeAliasScript(prevCoins.out.scriptPubKey, pop, vvch))
+				if (!DecodeAliasScript(prevCoinsW.out.scriptPubKey, pop, vvch))
 				{
 					continue;
 				}
@@ -929,12 +933,13 @@ bool DecodeAliasTx(const CTransaction& tx, int& op,
 
 	return found;
 }
-bool FindAliasInTx(const CTransaction& tx, vector<vector<unsigned char> >& vvch) {
+bool FindAliasInTx(const CCoinsViewCache &inputs, const CTransaction& tx, vector<vector<unsigned char> >& vvch) {
 	int op;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		Coin prevCoins;
-		if (!GetUTXOCoin(tx.vin[i].prevout, prevCoins))
+		const Coin& prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
+		if (prevCoins.IsSpent()) {
 			continue;
+		}
 		// ensure inputs are unspent when doing consensus check to add to block
 		if (DecodeAliasScript(prevCoins.out.scriptPubKey, op, vvch)) {
 			return true;
@@ -1096,6 +1101,8 @@ UniValue SyscoinListReceived(bool includeempty=true)
 		return NullUniValue;
 	map<string, int> mapAddress;
 	UniValue ret(UniValue::VARR);
+	std::set<CKeyID> setKeyPool;
+	pwalletMain->GetAllReserveKeys(setKeyPool);
 	BOOST_FOREACH(const PAIRTYPE(CSyscoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
 	{
 		const CSyscoinAddress& address = item.first;
@@ -1128,6 +1135,12 @@ UniValue SyscoinListReceived(bool includeempty=true)
 			obj.push_back(Pair("balance", ValueFromAmount(nBalance)));
 			obj.push_back(Pair("label", strAccount));
 			obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+			CKeyID keyid;
+			if (address.GetKeyID(keyid) && !pwalletMain->mapAddressBook.count(keyid) && !setKeyPool.count(keyid)) {
+				obj.push_back(Pair("change", true));
+			}
+			else
+				obj.push_back(Pair("change", false));
 			ret.push_back(obj);
 		}
 		mapAddress[strAddress] = 1;
@@ -1169,6 +1182,12 @@ UniValue SyscoinListReceived(bool includeempty=true)
 			obj.push_back(Pair("balance", ValueFromAmount(nBalance)));
 			obj.push_back(Pair("label", ""));
 			obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+			CKeyID keyid;
+			if (sysAddress.GetKeyID(keyid) && !pwalletMain->mapAddressBook.count(keyid) && !setKeyPool.count(keyid)) {
+				obj.push_back(Pair("change", true));
+			}
+			else
+				obj.push_back(Pair("change", false));
 			ret.push_back(obj);
 		}
 		mapAddress[strAddress] = 1;
@@ -1339,18 +1358,18 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 		throw runtime_error(_("InstantSend doesn't support sending values that high yet. Transactions are currently limited to 100000 SYS."));
 	}
 	CAmount nCurrentAmount = 0;
-	{
-		LOCK(cs_main);
-		CCoinsViewCache view(pcoinsTip);
-		// get value of inputs
-		nCurrentAmount = view.GetValueIn(txIn_t);
-	}
+	
+	LOCK(cs_main);
+	CCoinsViewCache view(pcoinsTip);
+	// get value of inputs
+	nCurrentAmount = view.GetValueIn(txIn_t);
+	
 	int op, aliasOp;
 	vector<vector<unsigned char> > vvch;
 	vector<vector<unsigned char> > vvchAlias;
 	if (tx.nVersion == SYSCOIN_TX_VERSION && !DecodeAliasTx(tx, op, vvchAlias))
 	{
-		FindAliasInTx(tx, vvchAlias);
+		FindAliasInTx(view, tx, vvchAlias);
 		// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 		op = OP_ALIAS_UPDATE;
 
@@ -1489,9 +1508,9 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION) {
 		// call this twice, with fJustCheck and !fJustCheck both with bSanity enabled so it doesn't actually write out to the databases just does the checks
-		if (!CheckSyscoinInputs(tx, state, true, 0, CBlock(), true))
+		if (!CheckSyscoinInputs(tx, state, view, true, 0, CBlock(), true))
 			throw runtime_error(FormatStateMessage(state));
-		if (!CheckSyscoinInputs(tx, state, false, 0, CBlock(), true))
+		if (!CheckSyscoinInputs(tx, state, view, false, 0, CBlock(), true))
 			throw runtime_error(FormatStateMessage(state));
 	}
 	// pass back new raw transaction
@@ -1993,7 +2012,7 @@ UniValue aliasbalance(const JSONRPCRequest& request)
 		res.push_back(Pair("balance", ValueFromAmount(nAmount)));
 		return  res;
 	}
-
+	LOCK(cs_main);
 	const string &strAddressFrom = EncodeBase58(theAlias.vchAddress);
 	UniValue paramsUTXO(UniValue::VARR);
 	UniValue param(UniValue::VOBJ);
