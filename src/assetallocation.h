@@ -77,7 +77,8 @@ typedef std::vector<InputRanges> RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
 typedef std::map<std::string, std::string> AssetAllocationIndexItem;
-static std::map<int, AssetAllocationIndexItem> AssetAllocationIndex;
+typedef std::map<int, AssetAllocationIndexItem> AssetAllocationIndexItemMap;
+static AssetAllocationIndexItemMap AssetAllocationIndex;
 static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 static const int MAX_MEMO_LENGTH = 128;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
@@ -227,10 +228,10 @@ public:
 		Flush();
 	}
 
-	bool WriteAssetAllocationWalletIndex(const AssetAllocationIndex &valueMap) {
+	bool WriteAssetAllocationWalletIndex(const AssetAllocationIndexItemMap &valueMap) {
 		return Write(std::string("assetallocationtxi"), valueMap);
 	}
-	bool ReadAssetAllocationWalletIndex(AssetAllocationIndex &valueMap) {
+	bool ReadAssetAllocationWalletIndex(AssetAllocationIndexItemMap &valueMap) {
 		return Read(std::string("assetallocationtxi"), valueMap);
 	}
 	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
