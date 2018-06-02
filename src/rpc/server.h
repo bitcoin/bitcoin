@@ -228,6 +228,7 @@ extern UniValue assetallocationcollectinterest(const JSONRPCRequest& request);
 extern UniValue assetallocationinfo(const JSONRPCRequest& request);
 extern UniValue assetallocationsenderstatus(const JSONRPCRequest& request);
 extern UniValue listassetallocationtransactions(const JSONRPCRequest& request);
+extern UniValue tpstestinfo(const JSONRPCRequest& request);
 /**
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).

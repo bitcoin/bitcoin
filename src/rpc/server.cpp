@@ -324,6 +324,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "assetallocationinfo",          &assetallocationinfo,      false ,  {}},
 	{ "wallet", "assetallocationsenderstatus",          &assetallocationsenderstatus,      false ,  {}},
 	{ "wallet", "listassetallocationtransactions",          &listassetallocationtransactions,      false ,{} },
+	{ "wallet", "tpstestinfo",          &tpstestinfo,      false ,{} },
     /* Overall control/query calls */
     { "control",            "help",                   &help,                   true,  {"command"}  },
     { "control",            "stop",                   &stop,                   true,  {}  },
