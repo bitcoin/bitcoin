@@ -87,16 +87,16 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchReceiver) {
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const std::vector<unsigned char>& vchSender, const std::vector<unsigned char>& vchReceiver) {
 	if (!vchReceiver.empty() && (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex)) {
 		UniValue oName(UniValue::VOBJ);
 		bool isMine = true;
-		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, asset.vchAlias, vchReceiver, isMine, oName)) {
+		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nAmount, vchSender, vchReceiver, isMine, oName)) {
 			const string& strObj = oName.write();
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
 			if (isMine && fAssetAllocationIndex && !assetallocation.txHash.IsNull()) {
 				int nHeight = assetallocation.nHeight;
-				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAlias)+"-"+ stringFromVch(vchReceiver);
+				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(vchSender)+"-"+ stringFromVch(vchReceiver);
 				{
 					LOCK(mempool.cs);
 					// we want to the height from mempool if it exists or use the one stored in assetallocation
@@ -221,7 +221,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 		dbAssetAllocation.nLastInterestClaimHeight = nHeight;
 	}
 	// write the state back to previous state
-	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, 0, asset, INT64_MAX, vchFromString(""), false))
+	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, 0, asset, INT64_MAX, vchFromString(""), vchFromString(""), false))
 	{
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1000 - " + _("Failed to write to asset allocation DB");
 		return error(errorMessage.c_str());
@@ -550,7 +550,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= amountTuple.second;
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, amountTuple.second, dbAsset, INT64_MAX, vchAlias, receiverAllocation.vchAlias, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -654,7 +654,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 						theAssetAllocation.nBalance -= rangeTotals[i];
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, receiverAllocation.vchAlias, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, rangeTotals[i], dbAsset, INT64_MAX, vchAlias, receiverAllocation.vchAlias, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1030 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
@@ -686,7 +686,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
 		}
 
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, dbAsset, ms, vchFromString(""), fJustCheck))
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, dbAsset, ms, vchFromString(""), vchFromString(""), fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
