@@ -1102,6 +1102,7 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
 }
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const vector<unsigned char>& vchSender, const vector<unsigned char>& vchReceiver, bool &isMine, UniValue& oAssetAllocation)
 {
+	CAmount nAmountDisplay = nAmount;
 	int64_t nTime = 0;
 	bool bConfirmed = false;
 	if (chainActive.Height() >= assetallocation.nHeight - 1) {
@@ -1143,7 +1144,7 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 			isminefilter mine = IsMine(*pwalletMain, fromAddress.Get());
 			if ((mine & filter)) {
 				strCat = "send";
-				nAmount *= -1;
+				nAmountDisplay *= -1;
 			}
 			else {
 				const CSyscoinAddress toAddress(EncodeBase58(toAlias.vchAddress));
@@ -1156,7 +1157,7 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 		}
 		oAssetAllocation.push_back(Pair("category", strCat));
 	}
-	oAssetAllocation.push_back(Pair("amount", ValueFromAssetAmount(nAmount, asset.nPrecision, asset.bUseInputRanges)));
+	oAssetAllocation.push_back(Pair("amount", ValueFromAssetAmount(nAmountDisplay, asset.nPrecision, asset.bUseInputRanges)));
 	return true;
 }
 void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
