@@ -225,10 +225,6 @@ public:
 	CAssetAllocationTransactionsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationtransactions", nCacheSize, fMemory, fWipe, false, true) {
 		ReadAssetAllocationWalletIndex(AssetAllocationIndex);
 	}
-	~CAssetAllocationTransactionsDB() {
-		WriteAssetAllocationWalletIndex(AssetAllocationIndex);
-		Flush();
-	}
 
 	bool WriteAssetAllocationWalletIndex(const AssetAllocationIndexItemMap &valueMap) {
 		return Write(std::string("assetallocationtxi"), valueMap);

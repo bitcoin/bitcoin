@@ -317,6 +317,7 @@ void PrepareShutdown()
 		}
 		if (passetallocationtransactionsdb != NULL)
 		{
+			passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(AssetAllocationIndex);
 			if (!passetallocationtransactionsdb->Flush())
 				LogPrintf("Failed to write to asset allocation transactions database!");
 			delete passetallocationtransactionsdb;
