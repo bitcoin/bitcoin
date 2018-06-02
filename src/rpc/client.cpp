@@ -202,7 +202,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "escrownew", 0, "getamountandaddress" },
 	{ "escrownew", 4, "quantity" },
 	{ "escrownew", 5, "buynow" },
-	{ "escrownew", 6, "total_in_payment_option" },
+	{ "escrownew", 6, "price_per_unit_in_payment_option" },
 	{ "escrownew", 7, "shipping_amount" },
 	{ "escrownew", 8, "network_fee" },
 	{ "escrownew", 9, "arbiter_fee" },
