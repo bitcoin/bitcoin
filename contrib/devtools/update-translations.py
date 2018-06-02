@@ -30,6 +30,8 @@ SOURCE_LANG = 'bitcoin_en.ts'
 LOCALE_DIR = 'src/qt/locale'
 # Minimum number of messages for translation to be considered at all
 MIN_NUM_MESSAGES = 10
+# Regular expression for addresses
+ADDRESS_RE = re.compile('(1|3|bc1)[a-zA-HJ-NP-Z0-9]{25,34}')
 
 def check_at_repository_root():
     if not os.path.exists('.git'):
@@ -80,6 +82,10 @@ def sanitize_string(s):
     return s.replace('\n',' ')
 
 def check_format_specifiers(source, translation, errors, numerus):
+    # Check for btc address in translation after removing whitespaces
+    if re.search(ADDRESS_RE, ''.join(translation.split())):
+        errors.append("WARNING...Address found in translation for '%s': '%s'\nMessage will be deleted" % (sanitize_string(source), sanitize_string(translation)))
+        return False
     source_f = split_format_specifiers(find_format_specifiers(source))
     # assert that no source messages contain both Qt and strprintf format specifiers
     # if this fails, go change the source as this is hacky and confusing!
@@ -159,6 +165,7 @@ def postprocess_translations(reduce_diff_hacks=False):
                 for translation in translations:
                     if translation is None:
                         continue
+
                     errors = []
                     valid = check_format_specifiers(source, translation, errors, numerus)
 
@@ -177,6 +184,7 @@ def postprocess_translations(reduce_diff_hacks=False):
                 # Remove entire message if it is an unfinished translation
                 if translation_node.get('type') == 'unfinished':
                     context.remove(message)
+
 
         # check if document is (virtually) empty, and remove it if so
         num_messages = 0
