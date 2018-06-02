@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	printf("creating sender 1000 aliases/asset...\n");
 	for (int i = 0; i < 1000; i++) {
 		string aliasname = "jagthroughput" + boost::lexical_cast<string>(i);
-		string aliasnameto = "jagthroughput3" + boost::lexical_cast<string>(i);
+		string aliasnameto = "jagthroughputto" + boost::lexical_cast<string>(i);
 		
 		// registration	
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' 3 0 '' '' '' ''"));
