@@ -596,6 +596,10 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Cannot adjust interest rate for this asset");
 					return true;
 				}
+				if (!theAsset.bCanAdjustInterestRate && theAsset.nBalance != dbAsset.nBalance) {
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Cannot adjust supply for this asset");
+					return true;
+				}
 			}
 			if (op == OP_ASSET_TRANSFER)
 			{
@@ -653,7 +657,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 11)
         throw runtime_error(
-			"assetnew [symbol] [alias] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
+			"assetnew [symbol] [alias] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate_and_supply] [witness]\n"
 						"<symbol> symbol of asset in uppercase, 1 characters miniumum, 8 characters max.\n"
 						"<alias> An alias you own.\n"
                         "<public value> public data, 256 characters max.\n"
@@ -663,7 +667,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 						"<supply> Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped.\n"
 						"<max_supply> Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be.\n"
 						"<interest_rate> The annual interest rate if any. Money supply is still capped to total supply. Should be between 0 and 1 and represents a percentage divided by 100.\n"
-						"<can_adjust_interest_rate> Ability to adjust interest rate through assetupdate in the future.\n"
+						"<can_adjust_interest_rate_and_supply> Ability to adjust interest rate and supply through assetupdate in the future.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
     vector<unsigned char> vchName = vchFromString(params[0].get_str());
