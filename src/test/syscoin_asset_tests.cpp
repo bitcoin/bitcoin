@@ -308,6 +308,16 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
 	map<string, string> assetAliasMap;
+	AliasNew("node1", "fundingthroughput", "data");
+	AliasNew("node3", "fundingthroughput3", "data");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingthroughput 2000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingthroughput3 2000"), runtime_error);
+	GenerateBlocks(5, "node1");
+	GenerateBlocks(5, "node3");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingthroughput"));
+	string strAddress = find_value(r.get_obj(), "address");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingthroughput3"));
+	string strAddress3 = find_value(r.get_obj(), "address");
 	// create 1000 aliases and assets for each asset	
 	printf("creating sender 1000 aliases/asset...\n");
 	for (int i = 0; i < 1000; i++) {
@@ -317,7 +327,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		// registration	
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' 3 0 '' '' '' ''"));
 		UniValue varray = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray[0].get_str() + " " + "\"{\\\"addresses\\\":[\\\"" + strAddress + "\\\"]}\""));
 		varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -325,7 +335,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		// activation	
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' 3 0 '' '' '' ''"));
 		UniValue varray1 = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray1[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray1[0].get_str() + " " + "\"{\\\"addresses\\\":[\\\"" + strAddress + "\\\"]}\""));
 		varray1 = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray1[0].get_str()));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -362,7 +372,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		// registration	
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasname + " '' 3 0 '' '' '' ''"));
 		UniValue varray = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray[0].get_str() + " " + "\"{\\\"addresses\\\":[\\\"" + strAddress3 + "\\\"]}\""));
 		varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -370,7 +380,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		// activation	
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasname + " '' 3 0 '' '' '' ''"));
 		UniValue varray1 = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray1[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray1[0].get_str() + " " + "\"{\\\"addresses\\\":[\\\"" + strAddress3 + "\\\"]}\""));
 		varray1 = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray1[0].get_str()));
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
