@@ -225,7 +225,7 @@ public:
 	}
 
 	bool WriteAssetAllocationWalletIndex(const AssetAllocationIndexItemMap &valueMap) {
-		return Write(std::string("assetallocationtxi"), valueMap);
+		return Write(std::string("assetallocationtxi"), valueMap, true);
 	}
 	bool ReadAssetAllocationWalletIndex(AssetAllocationIndexItemMap &valueMap) {
 		return Read(std::string("assetallocationtxi"), valueMap);
