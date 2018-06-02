@@ -76,7 +76,9 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
         result.txout_address_is_mine.reserve(nv);
 
         for (const auto& txout : wtx.tx->vpout) {
-            result.txout_is_mine.emplace_back(wallet.IsMine(txout.get()));
+            // Mark data outputs as owned so txn will show as payment to self
+            result.txout_is_mine.emplace_back(
+                txout->IsStandardOutput() ? wallet.IsMine(txout.get()) : ISMINE_SPENDABLE);
             result.txout_address.emplace_back();
 
             if (txout->IsStandardOutput())
