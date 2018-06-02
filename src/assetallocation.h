@@ -78,7 +78,7 @@ typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmoun
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
 typedef std::map<std::string, std::string> AssetAllocationIndexItem;
 typedef std::map<int, AssetAllocationIndexItem> AssetAllocationIndexItemMap;
-AssetAllocationIndexItemMap AssetAllocationIndex;
+extern AssetAllocationIndexItemMap AssetAllocationIndex;
 static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 static const int MAX_MEMO_LENGTH = 128;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
