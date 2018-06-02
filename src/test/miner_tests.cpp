@@ -270,37 +270,29 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vin[0].prevout.n = 0;
     tx.vout.resize(1);
     tx.vout[0].nValue = BLOCKSUBSIDY;
-
-    // Creates 1001 multisig transactions
-    std::vector<CTransaction> multisigTxs;
-
     for (unsigned int i = 0; i < 1001; ++i)
     {
         tx.vout[0].nValue -= LOWFEE;
-        CTransaction cTx(tx);
-        multisigTxs.push_back(cTx);
-        tx.vin[0].prevout.hash = cTx.GetHash();
-    }
-
-    for (unsigned int i = 0; i < multisigTxs.size(); ++i)
-    {
-        CTransaction &cTx = multisigTxs[i];
-        hash = cTx.GetHash();
+        hash = tx.GetHash();
         bool spendsCoinbase = i == 0; // only first tx spends coinbase
         // If we don't set the # of sig ops in the CTxMemPoolEntry, template creation fails
-        mempool.addUnchecked(hash, entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(spendsCoinbase).FromTx(cTx));
+        mempool.addUnchecked(hash, entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(spendsCoinbase).FromTx(tx));
+        tx.vin[0].prevout.hash = hash;
     }
 
     BOOST_CHECK_EXCEPTION(AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey), std::runtime_error, HasReason("bad-blk-sigops"));
     mempool.clear();
 
-    for (unsigned int i = 0; i < multisigTxs.size(); ++i)
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vout[0].nValue = BLOCKSUBSIDY;
+    for (unsigned int i = 0; i < 1001; ++i)
     {
-        CTransaction &cTx = multisigTxs[i];
-        hash = cTx.GetHash();
+        tx.vout[0].nValue -= LOWFEE;
+        hash = tx.GetHash();
         bool spendsCoinbase = i == 0; // only first tx spends coinbase
         // If we do set the # of sig ops in the CTxMemPoolEntry, template creation passes
-        mempool.addUnchecked(hash, entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(spendsCoinbase).SigOpsCost(80).FromTx(cTx));
+        mempool.addUnchecked(hash, entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(spendsCoinbase).SigOpsCost(80).FromTx(tx));
+        tx.vin[0].prevout.hash = hash;
     }
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
     mempool.clear();
