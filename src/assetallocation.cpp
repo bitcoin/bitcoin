@@ -1139,13 +1139,13 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 		if (isMine)
 		{
 			const CSyscoinAddress fromAddress(EncodeBase58(fromAlias.vchAddress));
-			const CSyscoinAddress toAddress(EncodeBase58(toAlias.vchAddress));
 
 			isminefilter filter = ISMINE_SPENDABLE;
 			isminefilter mine = IsMine(*pwalletMain, fromAddress.Get());
 			if ((mine & filter))
 				strCat = "send";
 			else {
+				const CSyscoinAddress toAddress(EncodeBase58(toAlias.vchAddress));
 				mine = IsMine(*pwalletMain, toAddress.Get());
 				if ((mine & filter))
 					strCat = "receive";
