@@ -315,9 +315,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingthroughput"));
-	string strAddress = find_value(r.get_obj(), "address");
+	string strAddress = find_value(r.get_obj(), "address").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingthroughput3"));
-	string strAddress3 = find_value(r.get_obj(), "address");
+	string strAddress3 = find_value(r.get_obj(), "address").get_str();
 	// create 1000 aliases and assets for each asset	
 	printf("creating sender 1000 aliases/asset...\n");
 	for (int i = 0; i < 1000; i++) {
