@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
 		
-			BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 		string guid = arr[1].get_str();
 		
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + aliasname + " " + "\"[{\\\"aliasto\\\":\\\"" + aliasname + "\\\",\\\"amount\\\":1}]\" '' ''"));
@@ -387,7 +387,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate 1"));
 		if (count % 100 == 0)
 			 printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
-		
 	}
 	GenerateBlocks(10);
 	printf("Creating assetsend transactions to node3 alias...\n");
@@ -432,7 +431,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 			continue;
 			
 		}
-		totalTime += timeRecv  sendTimes[txid];
+		totalTime += timeRecv - sendTimes[txid];
 	}
 	totalTime /= tpsresponse.size();
 	printf("totalTime %.2f, num responses %d\n", totalTime, tpsresponse.size());
