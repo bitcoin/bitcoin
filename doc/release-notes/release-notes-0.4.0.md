@@ -29,7 +29,7 @@ Wallet Encryption
 
 Bitcoin supports native wallet encryption so that people who steal your
 wallet file don't automatically get access to all of your Bitcoins.
-In order to enable this feature, choose "Encrypt Wallet" from the
+In order to enable this feature, choose "Create encrypted wallet" from the
 Options menu.  You will be prompted to enter a passphrase, which
 will be used as the key to encrypt your wallet and will be needed
 every time you wish to send Bitcoins.  If you lose this passphrase,
