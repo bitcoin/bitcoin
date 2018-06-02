@@ -306,7 +306,7 @@ AC_DEFUN([_BITCOIN_QT_CHECK_QT58],[
 
 
 dnl Internal. Check if the linked version of Qt was built as static libs.
-dnl Requires: Qt5. This check cannot determine if Qt4 is static.
+dnl Requires: Qt5.
 dnl Requires: INCLUDES and LIBS must be populated as necessary.
 dnl Output: bitcoin_cv_static_qt=yes|no
 dnl Output: Defines QT_STATICPLUGIN if plugins are static.
