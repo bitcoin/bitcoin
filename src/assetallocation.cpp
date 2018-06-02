@@ -1100,7 +1100,7 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
 	oAssetAllocation.push_back(Pair("accumulated_interest", ValueFromAssetAmount(GetAssetAllocationInterest(assetallocation, chainActive.Tip()->nHeight, errorMessage), asset.nPrecision, asset.bUseInputRanges)));
 	return true;
 }
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, CAmount nAmount, const vector<unsigned char>& vchSender, const vector<unsigned char>& vchReceiver, bool &isMine, UniValue& oAssetAllocation)
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nAmount, const vector<unsigned char>& vchSender, const vector<unsigned char>& vchReceiver, bool &isMine, UniValue& oAssetAllocation)
 {
 	int64_t nTime = 0;
 	bool bConfirmed = false;
