@@ -69,6 +69,7 @@ static void SetupBitcoinTxArgs()
     gArgs.AddArg("witness=N:HEX1(:HEX2...:HEXN)", "Add witness data to input N", false, OptionsCategory::COMMANDS);
     gArgs.AddArg("delwitness=N", "Delete all witness data from input N", false, OptionsCategory::COMMANDS);
     gArgs.AddArg("outblind=COMMITMENT:SCRIPT:RANGEPROOF[:DATA]", "Add blinded output to TX", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("outdatatype=DATA", "Add data-type output to TX", false, OptionsCategory::COMMANDS);
 
     // Hidden
     gArgs.AddArg("-h", "", false, OptionsCategory::HIDDEN);
@@ -794,6 +795,8 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 
 static void MutateTxAddOutBlind(CMutableTransaction& tx, const std::string& strInput)
 {
+    if (!tx.IsParticlVersion())
+        throw std::runtime_error("tx not particl version.");
     // separate COMMITMENT:SCRIPT:RANGEPROOF[:DATA]
     std::vector<std::string> vStrInputParts;
     boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
@@ -833,6 +836,19 @@ static void MutateTxAddOutBlind(CMutableTransaction& tx, const std::string& strI
     txout->vRangeproof = vRangeproof;
 
     tx.vpout.push_back(txbout);
+    return;
+}
+
+static void MutateTxAddOutDataType(CMutableTransaction& tx, const std::string& strInput)
+{
+    if (!tx.IsParticlVersion())
+        throw std::runtime_error("tx not particl version.");
+    if (!IsHex(strInput))
+        throw std::runtime_error("invalid TX output data");
+
+    std::vector<unsigned char> data = ParseHex(strInput);
+    tx.vpout.push_back(MAKE_OUTPUT<CTxOutData>(data));
+    return;
 }
 
 class Secp256k1Init
@@ -893,6 +909,8 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
 
     else if (command == "outblind") {
         MutateTxAddOutBlind(tx, commandVal);
+    } else if (command == "outdatatype") {
+        MutateTxAddOutDataType(tx, commandVal);
     }
 
     else if (command == "load")
