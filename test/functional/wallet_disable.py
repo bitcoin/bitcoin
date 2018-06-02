@@ -20,15 +20,15 @@ class DisableWalletTest (BitcoinTestFramework):
     def run_test (self):
         # Make sure wallet is really disabled
         assert_raises_rpc_error(-32601, 'Method not found', self.nodes[0].getwalletinfo)
-        x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
+        x = self.nodes[0].validateaddress('CYv1XWNSZhmC1LyQVNJx1gEozTiXitCPfX')
         assert(x['isvalid'] == False)
-        x = self.nodes[0].validateaddress('mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
+        x = self.nodes[0].validateaddress('xemq4hZL3nFmqgD48kwooRWWxU8JkC6NDn')
         assert(x['isvalid'] == True)
 
         # Checking mining to an address without a wallet. Generating to a valid address should succeed
         # but generating to an invalid address will fail.
-        self.nodes[0].generatetoaddress(1, 'mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
-        assert_raises_rpc_error(-5, "Invalid address", self.nodes[0].generatetoaddress, 1, '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
+        self.nodes[0].generatetoaddress(1, 'xemq4hZL3nFmqgD48kwooRWWxU8JkC6NDn')
+        assert_raises_rpc_error(-5, "Invalid address", self.nodes[0].generatetoaddress, 1, 'CYv1XWNSZhmC1LyQVNJx1gEozTiXitCPfX')
 
 if __name__ == '__main__':
     DisableWalletTest ().main ()

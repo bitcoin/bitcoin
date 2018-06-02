@@ -49,7 +49,7 @@ class WalletAccountsTest(BitcoinTestFramework):
         # send 50 from each address to a third address not in this wallet
         # There's some fee that will come back to us when the miner reward
         # matures.
-        common_address = "msf4WtN1YQKXvNtvdFYt9JBnUD2FB41kjr"
+        common_address = "xjnM6pQniGqC15fGHaYVEgY2TpyiMfgA2n"
         txid = node.sendmany(
             fromaccount="",
             amounts={common_address: 100},
