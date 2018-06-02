@@ -308,15 +308,15 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
 	map<string, string> assetAliasMap;
-	AliasNew("node1", "fundingthroughput", "data");
-	AliasNew("node3", "fundingthroughput3", "data");
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingthroughput 2000"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingthroughput3 2000"), runtime_error);
+	AliasNew("node1", "fundingtps", "data");
+	AliasNew("node3", "fundingtps3", "data");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingtps 2000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingtps3 2000"), runtime_error);
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingthroughput"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingtps"));
 	string strAddress = find_value(r.get_obj(), "address").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingthroughput3"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingtps3"));
 	string strAddress3 = find_value(r.get_obj(), "address").get_str();
 	// create 1000 aliases and assets for each asset	
 	printf("creating sender 1000 aliases/asset...\n");
