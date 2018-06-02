@@ -4,7 +4,7 @@
 src/bitcoin
 src/xpchaind
 src/xpchain-cli
-src/bitcoin-tx
+src/xpchain-tx
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt

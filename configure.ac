@@ -17,7 +17,7 @@ AC_CONFIG_MACRO_DIR([build-aux/m4])
 XPCHAIN_DAEMON_NAME=xpchaind
 XPCHAIN_GUI_NAME=bitcoin-qt
 XPCHAIN_CLI_NAME=xpchain-cli
-XPCHAIN_TX_NAME=bitcoin-tx
+XPCHAIN_TX_NAME=xpchain-tx
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -293,7 +293,7 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build xpchain-cli bitcoin-tx (default=yes)])],
+  [build xpchain-cli xpchain-tx (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
@@ -1064,7 +1064,7 @@ AC_MSG_CHECKING([whether to build xpchaind])
 AM_CONDITIONAL([BUILD_XPCHAIND], [test x$build_xpchaind = xyes])
 AC_MSG_RESULT($build_xpchaind)
 
-AC_MSG_CHECKING([whether to build utils (xpchain-cli bitcoin-tx)])
+AC_MSG_CHECKING([whether to build utils (xpchain-cli xpchain-tx)])
 AM_CONDITIONAL([BUILD_BITCOIN_UTILS], [test x$build_bitcoin_utils = xyes])
 AC_MSG_RESULT($build_bitcoin_utils)
 
