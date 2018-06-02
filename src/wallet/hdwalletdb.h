@@ -98,7 +98,7 @@ public:
     {
         pkEphem = pkEphem_;
         pkScan = pkScan_;
-    }
+    };
 
     CPubKey pkEphem;
     CPubKey pkScan;
@@ -109,8 +109,7 @@ public:
     {
         READWRITE(pkEphem);
         READWRITE(pkScan);
-    }
-
+    };
 };
 
 class CLockedAnonOutput
@@ -125,7 +124,7 @@ public:
         pkEphem = pkEphem_;
         pkScan = pkScan_;
         outpoint = outpoint_;
-    }
+    };
 
     CPubKey   pkEphem;
     CPubKey   pkScan;
@@ -138,8 +137,7 @@ public:
         READWRITE(pkEphem);
         READWRITE(pkScan);
         READWRITE(outpoint);
-    }
-
+    };
 };
 
 class COwnedAnonOutput
@@ -167,7 +165,7 @@ public:
     {
         READWRITE(outpoint);
         READWRITE(fSpent);
-    }
+    };
 };
 
 class CStealthAddressIndexed
@@ -209,8 +207,6 @@ public:
     };
 };
 
-
-
 /** Access to the wallet database */
 class CHDWalletDB : public WalletBatch
 {
@@ -236,12 +232,12 @@ public:
         if (ret != 0)
             return nullptr;
         return pcursor;
-    }
+    };
 
     Dbc *GetCursor()
     {
         return m_batch.GetCursor();
-    }
+    };
 
     template< typename T>
     bool Replace(Dbc *pcursor, const T &value)
@@ -275,20 +271,19 @@ public:
     {
         // Read at cursor
         Dbt datKey;
-        memset(&datKey, 0, sizeof(datKey));
         if (fFlags == DB_SET || fFlags == DB_SET_RANGE || fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
         {
             datKey.set_data(&ssKey[0]);
             datKey.set_size(ssKey.size());
-        }
+        };
 
         Dbt datValue;
-        memset(&datValue, 0, sizeof(datValue));
         if (fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
         {
             datValue.set_data(&ssValue[0]);
             datValue.set_size(ssValue.size());
-        }
+        };
+
         datKey.set_flags(DB_DBT_MALLOC);
         datValue.set_flags(DB_DBT_MALLOC);
         int ret = pcursor->get(&datKey, &datValue, fFlags);
@@ -318,7 +313,6 @@ public:
     {
         // Read key at cursor
         Dbt datKey;
-        memset(&datKey, 0, sizeof(datKey));
         if (fFlags == DB_SET || fFlags == DB_SET_RANGE)
         {
             datKey.set_data(&ssKey[0]);
@@ -327,7 +321,6 @@ public:
         datKey.set_flags(DB_DBT_MALLOC);
 
         Dbt datValue;
-        memset(&datValue, 0, sizeof(datValue));
         datValue.set_flags(DB_DBT_PARTIAL); // don't read data, dlen and doff are 0 after memset
 
         int ret = pcursor->get(&datKey, &datValue, fFlags);
