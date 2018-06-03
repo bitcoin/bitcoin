@@ -31,7 +31,6 @@ BOOST_AUTO_TEST_CASE(smsg_test)
 {
 #ifdef ENABLE_WALLET
     SeedInsecureRand();
-    fParticlMode = true;
 
     const std::string sTestMessage =
         "A short test message 0123456789 !@#$%^&*()_+-=";

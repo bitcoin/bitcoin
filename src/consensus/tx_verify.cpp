@@ -396,6 +396,12 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     state.fHasAnonOutput = false;
     state.fHasAnonInput = false;
 
+    // early out for particl txns
+    if (tx.IsParticlVersion() && tx.vin.size() < 1) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txn-no-inputs", false,
+                         strprintf("%s: no inputs", __func__));
+    }
+
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent", false,
@@ -426,7 +432,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             {
                 if (fParticlMode)
                 {
-                    // Ease in the restriction to start the chain
+                    // Scale in the depth restriction to start the chain
                     int nRequiredDepth = std::min(COINBASE_MATURITY, (int)(coin.nHeight / 2));
                     if (nSpendHeight - coin.nHeight < nRequiredDepth)
                         return state.Invalid(false,
@@ -465,9 +471,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         };
     }
 
-    if ((nStandard > 0 && (nCt > 0 || nRingCT > 0))
-        || (nCt > 0 && (nStandard > 0 || nRingCT > 0))
-        || (nRingCT > 0 && (nCt > 0 || nStandard > 0)))
+    if ((nStandard > 0) + (nCt > 0) + (nRingCT > 0) > 1)
         return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
 
     size_t nRingCTInputs = nRingCT;

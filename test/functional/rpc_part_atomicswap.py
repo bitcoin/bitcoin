@@ -15,8 +15,10 @@ import binascii
 
 from test_framework.test_particl import jsonDecimal
 
+
 def script_to_p2sh_part(b):
     return script_to_p2sh(b, False, False)
+
 
 def b58decode(v, length=None):
     long_value = 0
@@ -62,6 +64,7 @@ def SerializeNum(n):
 
     return rv
 
+
 def CreateAtomicSwapScript(payTo, refundTo, lockTime, secretHash):
     script = CScript([
         OP_IF,
@@ -91,6 +94,7 @@ def CreateAtomicSwapScript(payTo, refundTo, lockTime, secretHash):
         ])
     return script
 
+
 def getOutputByAddr(tx, addr):
     for i, vout in enumerate(tx['vout']):
         try:
@@ -100,9 +104,11 @@ def getOutputByAddr(tx, addr):
             continue
     return -1
 
+
 WITNESS_SCALE_FACTOR = 2
 def getVirtualSizeInner(sizeNoWitness, sizeTotal):
     return ((sizeNoWitness*(WITNESS_SCALE_FACTOR-1) + sizeTotal) + WITNESS_SCALE_FACTOR - 1) // WITNESS_SCALE_FACTOR
+
 
 # estimateRedeemSerializeSize returns a worst case serialize size estimates for
 # a transaction that redeems an atomic swap P2SH output.
@@ -112,11 +118,13 @@ def estimateRedeemSerializeSize(contract, txhex):
     witnessSize = 6 + 73 + 33 + 32 + 1 + 1 + len(contract)
     return getVirtualSizeInner(baseSize, baseSize+witnessSize)
 
+
 def estimateRefundSerializeSize(contract, txhex):
     baseSize = len(txhex) // 2
     # varintsize(height of stack) + height of stack, refundSig, refundPubKey, b0, contract
     witnessSize = 5 + 73 + 33 + 1 + len(contract)
     return getVirtualSizeInner(baseSize, baseSize+witnessSize)
+
 
 def createRefundTx(node, rawtx, script, lockTime, addrRefundFrom, addrRefundTo):
     p2sh = script_to_p2sh_part(script)
@@ -162,6 +170,7 @@ def createRefundTx(node, rawtx, script, lockTime, addrRefundFrom, addrRefundTo):
 
     rawtxrefund = node.tx([rawtxrefund,'witness=0:'+ ':'.join(witnessStack)])
     return rawtxrefund
+
 
 def createClaimTx(node, rawtx, script, secret, addrClaimFrom, addrClaimTo):
     p2sh = script_to_p2sh_part(script)
@@ -269,6 +278,7 @@ def createRefundTxCT(node, rawtx, output_amounts, script, lockTime, privKeySign,
 
     return rawtxrefund
 
+
 def createClaimTxCT(node, rawtx, output_amounts, script, secret, privKeySign, pubKeySign, addrClaimTo):
     p2sh = script_to_p2sh_part(script)
 
@@ -332,7 +342,6 @@ def createClaimTxCT(node, rawtx, output_amounts, script, secret, privKeySign, pu
     return rawtxClaim
 
 
-
 class AtomicSwapTest(ParticlTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -388,10 +397,7 @@ class AtomicSwapTest(ParticlTestFramework):
         except JSONRPCException as e:
             assert('non-final' in e.error['message'])
 
-
-
         # Party A sends B rawtxInitiate/txnid1 and script
-
 
         # auditcontract
         # Party B extracts the secrethash and verifies the txn:
@@ -453,7 +459,6 @@ class AtomicSwapTest(ParticlTestFramework):
         assert(ftxB[0]['confirmations'] == 1)
         assert(ftxB[0]['outputs'][0]['amount'] < 5.0 and ftxB[-1]['outputs'][0]['amount'] > 4.9)
         assert(isclose(ftxB[1]['outputs'][0]['amount'], -5.0))
-
 
 
         # Test Refund expired initiate tx
@@ -663,10 +668,16 @@ class AtomicSwapTest(ParticlTestFramework):
         ro = nodes[0].createrawparttransaction([], outputs)
         ro = nodes[0].fundrawtransactionfrom('blind', ro['hex'], {}, ro['amounts'])
 
+        r2 = nodes[0].verifyrawtransaction(ro['hex'])
+        assert(r2['complete'] == False)
+
         output_amounts_i = ro['output_amounts']
         ro = nodes[0].signrawtransactionwithwallet(ro['hex'])
         assert(ro['complete'] == True)
         rawtx_i = ro['hex']
+
+        r2 = nodes[0].verifyrawtransaction(rawtx_i)
+        assert(r2['complete'] == True)
 
 
         rawtx_i_refund = createRefundTxCT(nodes[0], rawtx_i, output_amounts_i, scriptInitiate, lockTime, privKeyA, pubKeyA, addrA_sx)

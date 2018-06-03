@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Particl Core developers
+// Copyright (c) 2017-2018 The Particl Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,9 @@
 #include <keystore.h>
 #include <script/script.h>
 #include <script/ismine.h>
+#include <consensus/validation.h>
 #include <consensus/merkle.h>
+#include <consensus/tx_verify.h>
 #include <key/extkey.h>
 #include <pos/kernel.h>
 
@@ -16,7 +18,12 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(particlchain_tests, BasicTestingSetup)
+struct ParticlBasicTestingSetup : public BasicTestingSetup {
+    ParticlBasicTestingSetup() : BasicTestingSetup(CBaseChainParams::MAIN, true) {}
+};
+
+
+BOOST_FIXTURE_TEST_SUITE(particlchain_tests, ParticlBasicTestingSetup)
 
 
 BOOST_AUTO_TEST_CASE(oldversion_test)
@@ -223,7 +230,6 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
     memcpy(&vchAmount[0], &nValue, 8);
 
 
-
     BOOST_CHECK(ProduceSignature(keystoreA, MutableTransactionSignatureCreator(&txn, 0, vchAmount, SIGHASH_ALL), script, sigdataA));
     BOOST_CHECK(!ProduceSignature(keystoreB, MutableTransactionSignatureCreator(&txn, 0, vchAmount, SIGHASH_ALL), script, sigdataB));
 
@@ -281,13 +287,13 @@ BOOST_AUTO_TEST_CASE(varints)
         BOOST_CHECK(0 == memcmp(c, &v[size], sz));
         size += sz;
         BOOST_CHECK(size == v.size());
-    }
+    };
 
     for (uint64_t i = 0;  i < 100000000000ULL; i += 999999937) {
         BOOST_CHECK(0 == PutVarInt(v, i));
         size += GetSizeOfVarInt<VarIntMode::DEFAULT>(i);
         BOOST_CHECK(size == v.size());
-    }
+    };
 
 
     // decode
@@ -297,14 +303,84 @@ BOOST_AUTO_TEST_CASE(varints)
         BOOST_CHECK(0 == GetVarInt(v, o, j, nB));
         BOOST_CHECK_MESSAGE(i == (int)j, "decoded:" << j << " expected:" << i);
         o += nB;
-    }
+    };
 
     for (uint64_t i = 0;  i < 100000000000ULL; i += 999999937) {
         uint64_t j = -1;
         BOOST_CHECK(0 == GetVarInt(v, o, j, nB));
         BOOST_CHECK_MESSAGE(i == j, "decoded:" << j << " expected:" << i);
         o += nB;
-    }
+    };
+}
+
+BOOST_AUTO_TEST_CASE(mixed_input_types)
+{
+    CMutableTransaction txn;
+    txn.nVersion = PARTICL_TXN_VERSION;
+    BOOST_CHECK(txn.IsParticlVersion());
+
+    CAmount txfee;
+    int nSpendHeight = 1;
+    CCoinsView viewDummy;
+    CCoinsViewCache inputs(&viewDummy);
+
+    CMutableTransaction txnPrev;
+    txnPrev.nVersion = PARTICL_TXN_VERSION;
+    BOOST_CHECK(txnPrev.IsParticlVersion());
+
+    CScript scriptPubKey;
+    txnPrev.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>(1 * COIN, scriptPubKey));
+    txnPrev.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>(2 * COIN, scriptPubKey));
+    txnPrev.vpout.push_back(MAKE_OUTPUT<CTxOutCT>());
+    txnPrev.vpout.push_back(MAKE_OUTPUT<CTxOutCT>());
+
+    CTransaction txnPrev_c(txnPrev);
+    AddCoins(inputs, txnPrev_c, 1);
+
+    uint256 prevHash = txnPrev_c.GetHash();
+
+    std::vector<std::pair<std::vector<int>, bool> > tests =
+    {
+        std::make_pair( (std::vector<int>) {0 }, true),
+        std::make_pair( (std::vector<int>) {0, 1}, true),
+        std::make_pair( (std::vector<int>) {0, 2}, false),
+        std::make_pair( (std::vector<int>) {0, 1, 2}, false),
+        std::make_pair( (std::vector<int>) {2}, true),
+        std::make_pair( (std::vector<int>) {2, 3}, true),
+        std::make_pair( (std::vector<int>) {2, 3, 1}, false),
+        std::make_pair( (std::vector<int>) {-1}, true),
+        std::make_pair( (std::vector<int>) {-1, -1}, true),
+        std::make_pair( (std::vector<int>) {2, -1}, false),
+        std::make_pair( (std::vector<int>) {0, -1}, false),
+        std::make_pair( (std::vector<int>) {0, 0, -1}, false),
+        std::make_pair( (std::vector<int>) {0, 2, -1}, false)
+    };
+
+    for (auto t : tests)
+    {
+        txn.vin.clear();
+
+        for (auto ti : t.first)
+        {
+            if (ti < 0)
+            {
+                CTxIn ai;
+                ai.prevout.n = COutPoint::ANON_MARKER;
+                txn.vin.push_back(ai);
+                continue;
+            };
+            txn.vin.push_back(CTxIn(prevHash, ti));
+        };
+
+        CTransaction tx_c(txn);
+        CValidationState state;
+        Consensus::CheckTxInputs(tx_c, state, inputs, nSpendHeight, txfee);
+
+        if (t.second)
+            BOOST_CHECK(state.GetRejectReason() != "mixed-input-types");
+        else
+            BOOST_CHECK(state.GetRejectReason() == "mixed-input-types");
+    };
 }
 
 

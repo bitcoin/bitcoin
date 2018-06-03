@@ -2692,23 +2692,21 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         // Index rct outputs and keyimages
         if (state.fHasAnonOutput || state.fHasAnonInput)
         {
-
             COutPoint op(txhash, 0);
             for (const auto &txin : tx.vin)
             {
                 if (txin.IsAnonInput())
                 {
-                    uint32_t nInputs, nRingSize;
-                    txin.GetAnonInfo(nInputs, nRingSize);
+                    uint32_t nAnonInputs, nRingSize;
+                    txin.GetAnonInfo(nAnonInputs, nRingSize);
                     if (txin.scriptData.stack.size() != 1
-                        || txin.scriptData.stack[0].size() != 33 * nInputs) {
+                        || txin.scriptData.stack[0].size() != 33 * nAnonInputs) {
                         control.Wait();
                         return error("%s: Bad scriptData stack, %s.", __func__, txhash.ToString());
                     };
 
                     const std::vector<uint8_t> &vKeyImages = txin.scriptData.stack[0];
-
-                    for (size_t k = 0; k < nInputs; ++k)
+                    for (size_t k = 0; k < nAnonInputs; ++k)
                     {
                         const CCmpPubKey &ki = *((CCmpPubKey*)&vKeyImages[k*33]);
 
@@ -2744,8 +2742,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                     control.Wait();
                     return error("%s: Duplicate anon-output (view) %s, index %d.", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists);
                 };
-
-
 
                 op.n = k;
                 view.nLastRCTOutput++;

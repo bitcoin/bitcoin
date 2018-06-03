@@ -6,6 +6,7 @@
 #include <base58.h>
 #include <chain.h>
 #include <consensus/validation.h>
+#include <consensus/tx_verify.h>
 #include <core_io.h>
 #include <init.h>
 #include <httpserver.h>
@@ -681,7 +682,6 @@ static int ManageExtKey(CStoredExtKey &sek, std::string &sOptName, std::string &
         result.pushKV("active", sek.nFlags & EAF_ACTIVE ? "true" : "false");
         result.pushKV("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false");
 
-
         mapEKValue_t::iterator itV = sek.mapValue.find(EKVT_N_LOOKAHEAD);
         if (itV != sek.mapValue.end())
         {
@@ -746,6 +746,7 @@ static int ExtractExtKeyId(const std::string &sInKey, CKeyID &keyId, CChainParam
     {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid key.");
     };
+
     return 0;
 };
 
@@ -2162,20 +2163,30 @@ static UniValue liststealthaddresses(const JSONRPCRequest &request)
 
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "liststealthaddresses ( show_secrets=0 )\n"
-            "List owned stealth addresses.");
+            "liststealthaddresses ( show_secrets )\n"
+            "List owned stealth addresses.\n"
+            "\nArguments:\n"
+            "1. \"show_secrets\"      (bool, optional, default = false) Print secret keys to stealth addresses, wallet must be unlocked.\n"
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"Account\": \"str\",          (string) Account name.\n"
+            "    \"Stealth Addresses\": [\n"
+            "      {\n"
+            "        \"Label\": \"str\",          (string) Stealth address label.\n"
+            "        \"Address\": \"str\",        (string) Stealth address.\n"
+            "        \"Scan Secret\": \"str\",    (string) Scan secret, if show_secrets=1.\n"
+            "        \"Spend Secret\": \"str\",   (string) Spend secret, if show_secrets=1.\n"
+            "      }\n"
+            "    ]\n"
+            "  }...\n"
+            "]\n"
+            "\"address\"              (string) The new particl stealth address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("liststealthaddresses", "")
+            + HelpExampleRpc("liststealthaddresses", ""));
 
-    bool fShowSecrets = false;
-
-    if (request.params.size() > 0)
-    {
-        std::string str = request.params[0].get_str();
-
-        if (part::IsStringBoolNegative(str))
-            fShowSecrets = false;
-        else
-            fShowSecrets = true;
-    };
+    bool fShowSecrets = request.params.size() > 0 ? GetBool(request.params[0]) : false;
 
     if (fShowSecrets)
         EnsureWalletIsUnlocked(pwallet);
@@ -5466,13 +5477,7 @@ static UniValue debugwallet(const JSONRPCRequest &request)
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    bool fAttemptRepair = false;
-    if (request.params.size() > 0)
-    {
-        std::string s = request.params[0].get_str();
-        if (part::IsStringBoolPositive(s))
-            fAttemptRepair = true;
-    };
+    bool fAttemptRepair = request.params.size() > 0 ? GetBool(request.params[0]) : false;
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -6243,8 +6248,7 @@ static UniValue votehistory(const JSONRPCRequest &request)
 
     if (request.params.size() > 0)
     {
-        std::string s = request.params[0].get_str();
-        if (part::IsStringBoolPositive(s))
+        if (GetBool(request.params[0]))
         {
             UniValue vote(UniValue::VOBJ);
 
@@ -7474,12 +7478,28 @@ static UniValue verifyrawtransaction(const JSONRPCRequest &request)
         }
     }
 
-    // Script verification errors
-    UniValue vErrors(UniValue::VARR);
 
     // Use CTransaction for the constant parts of the
     // transaction to avoid rehashing.
     const CTransaction txConst(mtx);
+
+    // Script verification errors
+    UniValue vErrors(UniValue::VARR);
+
+
+    int nSpendHeight = 0; // TODO: make option
+    {
+        LOCK(cs_main);
+        nSpendHeight = chainActive.Tip()->nHeight;
+    }
+
+    {
+        CValidationState state;
+        CAmount nFee = 0;
+        if (!Consensus::CheckTxInputs(txConst, state, view, nSpendHeight, nFee))
+            vErrors.push_back("CheckTxInputs: \"" + state.GetRejectReason() + "\"");
+    }
+
     // Sign what we can:
     for (unsigned int i = 0; i < mtx.vin.size(); i++) {
         CTxIn& txin = mtx.vin[i];
@@ -7508,12 +7528,7 @@ static UniValue verifyrawtransaction(const JSONRPCRequest &request)
 
         ScriptError serror = SCRIPT_ERR_OK;
         if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, vchAmount), &serror)) {
-            if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
-                // Unable to sign input and verification failed (possible attempt to partially sign).
-                TxInErrorToJSON(txin, vErrors, "Unable to sign input, invalid stack size (possibly missing key)");
-            } else {
-                TxInErrorToJSON(txin, vErrors, ScriptErrorString(serror));
-            }
+            TxInErrorToJSON(txin, vErrors, ScriptErrorString(serror));
         }
     }
     bool fComplete = vErrors.empty();
