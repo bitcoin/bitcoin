@@ -196,6 +196,8 @@ class TestNode():
             self.stop()
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
+        except (http.client.RemoteDisconnected, http.client.BadStatusLine):
+            pass
 
         # Check that stderr is as expected
         self.stderr.seek(0)
