@@ -329,8 +329,8 @@ class BitcoinTestFramework():
 
         For backwared compatibility of the python scripts with previous
         versions of the cache, this helper function sets mocktime to Jan 1,
-        2014 + (201 * 10 * 60)"""
-        self.mocktime = 1388534400 + (201 * 10 * 60)
+        2014 + (201 * 60)"""
+        self.mocktime = 1388534400 + (201 * 60)
 
     def disable_mocktime(self):
         self.mocktime = 0
@@ -405,16 +405,16 @@ class BitcoinTestFramework():
             # Note: To preserve compatibility with older versions of
             # initialize_chain, only 4 nodes will generate coins.
             #
-            # blocks are created with timestamps 10 minutes apart
-            # starting from 2010 minutes in the past
+            # blocks are created with timestamps 60 seconds apart
+            # starting from 201 minutes in the past
             self.enable_mocktime()
-            block_time = self.mocktime - (201 * 10 * 60)
+            block_time = self.mocktime - (201 * 60)
             for i in range(2):
                 for peer in range(4):
                     for j in range(25):
                         set_node_times(self.nodes, block_time)
                         self.nodes[peer].generate(1)
-                        block_time += 10 * 60
+                        block_time += 60
                     # Must sync before next peer starts generating blocks
                     sync_blocks(self.nodes)
 

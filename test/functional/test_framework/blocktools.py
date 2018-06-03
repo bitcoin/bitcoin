@@ -28,7 +28,7 @@ def create_block(hashprev, coinbase, nTime=None):
     block = CBlock()
     if nTime is None:
         import time
-        block.nTime = int(time.time()+600)
+        block.nTime = int(time.time()+60)
     else:
         block.nTime = nTime
     block.hashPrevBlock = hashprev
