@@ -37,18 +37,20 @@ int64_t GetMockTime()
     return nMockTime.load(std::memory_order_relaxed);
 }
 
-int64_t GetTimeMillis()
+int64_t GetTimeMillis() noexcept
 {
+    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
     int64_t now = (boost::posix_time::microsec_clock::universal_time() -
-                   boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_milliseconds();
+                   epoch).total_milliseconds();
     assert(now > 0);
     return now;
 }
 
-int64_t GetTimeMicros()
+int64_t GetTimeMicros() noexcept
 {
+    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
     int64_t now = (boost::posix_time::microsec_clock::universal_time() -
-                   boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_microseconds();
+                   epoch).total_microseconds();
     assert(now > 0);
     return now;
 }
