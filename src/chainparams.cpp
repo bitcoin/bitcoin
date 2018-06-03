@@ -146,6 +146,7 @@ public:
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
         vSeeds.emplace_back("chc1.hashunlimited.com");
+        vSeeds.emplace_back("chc2.hashunlimited.com");
         vSeeds.emplace_back("seed1.chaincoin.org");
         vSeeds.emplace_back("seed2.chaincoin.org");
         vSeeds.emplace_back("seed3.chaincoin.org");
