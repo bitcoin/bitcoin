@@ -36,7 +36,7 @@ private slots:
     void on_tabWidget_currentChanged(int index);
     /** open the debug.log from the current datadir */
     void on_openDebugLogfileButton_clicked();
-    /** open the novacoin.conf from the current datadir */
+    /** open the 42.conf from the current datadir */
     void on_openConfigurationfileButton_clicked();
     /** change the time range of the network traffic graph */
     void on_sldGraphRange_valueChanged(int value);

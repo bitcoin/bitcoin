@@ -26,7 +26,7 @@ SecondAuthDialog::SecondAuthDialog(QWidget *parent) :
 
 #if (QT_VERSION >= 0x040700)
     /* Do not move this to the XML file, Qt before 4.7 will choke on it */
-    ui->addressIn->setPlaceholderText(tr("Enter a NovaCoin address (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)"));
+    ui->addressIn->setPlaceholderText(tr("Enter a 42 address (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)"));
     ui->signatureOut->setPlaceholderText(tr("Click \"Sign data\" to generate signature"));
 #endif
 

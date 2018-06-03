@@ -181,7 +181,7 @@ void Intro::pickDataDirectory()
                 boost::filesystem::create_directory(GUIUtil::qstringToBoostPath(dataDir));
                 break;
             } catch (const fs::filesystem_error&) {
-                QMessageBox::critical(0, tr("Novacoin-qt"),
+                QMessageBox::critical(0, tr("42-qt"),
                     tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
                 /* fall through, back to choosing screen */
             }
