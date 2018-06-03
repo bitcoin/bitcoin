@@ -80,7 +80,7 @@ src/qt/bitcoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
+xpchain-qt
 XPChain-Qt.app
 background.tiff*
 

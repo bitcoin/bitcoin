@@ -59,7 +59,7 @@ bool AppInitMain();
 /** The help message mode determines what help message to show */
 enum HelpMessageMode {
     HMM_XPCHAIND,
-    HMM_BITCOIN_QT
+    HMM_XPCHAIN_QT
 };
 
 /** Help for options shared between UI and daemon (for -help) */
