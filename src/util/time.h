@@ -25,9 +25,9 @@ inline int64_t count_seconds(std::chrono::seconds t) { return t.count(); }
 int64_t GetTime();
 
 /** Returns the system time (not mockable) */
-int64_t GetTimeMillis();
+int64_t GetTimeMillis() noexcept;
 /** Returns the system time (not mockable) */
-int64_t GetTimeMicros();
+int64_t GetTimeMicros() noexcept;
 /** Returns the system time (not mockable) */
 int64_t GetSystemTimeInSeconds(); // Like GetTime(), but not mockable
 
