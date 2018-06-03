@@ -16,12 +16,13 @@ For a description of arguments recognized by test scripts, see
 
 import argparse
 from collections import deque
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import configparser
 import datetime
+import math
 import os
 import time
 import shutil
-import signal
 import sys
 import subprocess
 import tempfile
@@ -333,14 +334,16 @@ def run_tests(test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=Fal
             raise
 
     #Run Tests
-    job_queue = TestHandler(jobs, tests_dir, tmpdir, test_list, flags)
+    job_queue = TestHandler(jobs, tests_dir, tmpdir, test_list, flags).jobs
     start_time = time.time()
     test_results = []
 
     max_len_name = len(max(test_list, key=len))
 
-    for _ in range(len(test_list)):
-        test_result, testdir, stdout, stderr = job_queue.get_next()
+    for future in as_completed(job_queue):
+        if future.cancelled():
+            continue
+        test_result, testdir, stdout, stderr = future.result()
         test_results.append(test_result)
 
         if test_result.status == "Passed":
@@ -362,7 +365,9 @@ def run_tests(test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=Fal
 
             if failfast:
                 logging.debug("Early exiting after test failure")
-                break
+                for f in job_queue:
+                    f.cancel()
+                logging.debug("Waiting for unfinished jobs ...")
 
     print_results(test_results, max_len_name, (int(time.time() - start_time)))
 
@@ -377,10 +382,6 @@ def run_tests(test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=Fal
         os.rmdir(tmpdir)
 
     all_passed = all(map(lambda test_result: test_result.was_successful, test_results))
-
-    # This will be a no-op unless failfast is True in which case there may be dangling
-    # processes which need to be killed.
-    job_queue.kill_and_join()
 
     sys.exit(not all_passed)
 
@@ -411,77 +412,42 @@ class TestHandler:
     Trigger the test scripts passed in via the list.
     """
 
+    @staticmethod
+    def _run_test(name, proc_args, testdir, log_out, log_err):
+        start_time = time.time()
+        ret_code = subprocess.call(proc_args, universal_newlines=True, stdout=log_out, stderr=log_err, timeout=None if not os.getenv('TRAVIS') == 'true' else TRAVIS_TIMEOUT_DURATION)
+        duration = int(math.ceil(time.time() - start_time))
+        log_out.seek(0), log_err.seek(0)
+        [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
+        log_out.close(), log_err.close()
+        if ret_code == TEST_EXIT_PASSED and stderr == "":
+            status = "Passed"
+        elif ret_code == TEST_EXIT_SKIPPED:
+            status = "Skipped"
+        else:
+            status = "Failed"
+
+        return TestResult(name, status, duration), testdir, stdout, stderr
+
     def __init__(self, num_tests_parallel, tests_dir, tmpdir, test_list=None, flags=None):
-        assert(num_tests_parallel >= 1)
-        self.num_jobs = num_tests_parallel
-        self.tests_dir = tests_dir
-        self.tmpdir = tmpdir
-        self.test_list = test_list
-        self.flags = flags
-        self.num_running = 0
-        # In case there is a graveyard of zombie bitcoinds, we can apply a
-        # pseudorandom offset to hopefully jump over them.
-        # (625 is PORT_RANGE/MAX_NODES)
-        self.portseed_offset = int(time.time() * 1000) % 625
+        self.executor = ThreadPoolExecutor(max_workers=num_tests_parallel)
         self.jobs = []
 
-    def get_next(self):
-        while self.num_running < self.num_jobs and self.test_list:
-            # Add tests
-            self.num_running += 1
-            test = self.test_list.pop(0)
-            portseed = len(self.test_list) + self.portseed_offset
+        # Add tests
+        for i, test in enumerate(test_list):
+            portseed = i
             portseed_arg = ["--portseed={}".format(portseed)]
             log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
             log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
             test_argv = test.split()
-            testdir = "{}/{}_{}".format(self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)
+            testdir = "{}/{}_{}".format(tmpdir, re.sub(".py$", "", test_argv[0]), portseed)
             tmpdir_arg = ["--tmpdir={}".format(testdir)]
-            self.jobs.append((test,
-                              time.time(),
-                              subprocess.Popen([sys.executable, self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
-                                               universal_newlines=True,
-                                               stdout=log_stdout,
-                                               stderr=log_stderr),
+            self.jobs.append(self.executor.submit(TestHandler._run_test,
+                              test,
+                              [sys.executable, tests_dir + test_argv[0]] + test_argv[1:] + flags + portseed_arg + tmpdir_arg,
                               testdir,
                               log_stdout,
                               log_stderr))
-        if not self.jobs:
-            raise IndexError('pop from empty list')
-        while True:
-            # Return first proc that finishes
-            time.sleep(.5)
-            for job in self.jobs:
-                (name, start_time, proc, testdir, log_out, log_err) = job
-                if os.getenv('TRAVIS') == 'true' and int(time.time() - start_time) > TRAVIS_TIMEOUT_DURATION:
-                    # In travis, timeout individual tests (to stop tests hanging and not providing useful output).
-                    proc.send_signal(signal.SIGINT)
-                if proc.poll() is not None:
-                    log_out.seek(0), log_err.seek(0)
-                    [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
-                    log_out.close(), log_err.close()
-                    if proc.returncode == TEST_EXIT_PASSED and stderr == "":
-                        status = "Passed"
-                    elif proc.returncode == TEST_EXIT_SKIPPED:
-                        status = "Skipped"
-                    else:
-                        status = "Failed"
-                    self.num_running -= 1
-                    self.jobs.remove(job)
-
-                    return TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr
-            print('.', end='', flush=True)
-
-    def kill_and_join(self):
-        """Send SIGKILL to all jobs and block until all have ended."""
-        procs = [i[2] for i in self.jobs]
-
-        for proc in procs:
-            proc.kill()
-
-        for proc in procs:
-            proc.wait()
-
 
 class TestResult():
     def __init__(self, name, status, time):
