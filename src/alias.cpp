@@ -2716,7 +2716,7 @@ string GetSyscoinTransactionDescription(const CTransaction& tx, const int op, st
 	else {
 		strResponse = _("Unknown Op Type");
 		responseEnglish = "Unknown Op Type";
-		return strResponse + " " + string(type);
+		return strResponse + " " + string(1, type);
 	}
 	return strResponse + " " + responseGUID;
 }
