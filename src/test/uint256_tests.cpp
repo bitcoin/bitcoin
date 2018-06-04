@@ -95,6 +95,16 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK(OneL != ZeroL && OneS != ZeroS);
     BOOST_CHECK(MaxL != ZeroL && MaxS != ZeroS);
 
+    // truthiness
+    BOOST_CHECK(!ZeroL);
+    BOOST_CHECK(!ZeroS);
+    BOOST_CHECK(OneL);
+    BOOST_CHECK(OneS);
+    BOOST_CHECK(static_cast<bool>(OneS));
+    BOOST_CHECK(static_cast<bool>(OneL));
+    BOOST_CHECK(!static_cast<bool>(ZeroS));
+    BOOST_CHECK(!static_cast<bool>(ZeroL));
+
     // String Constructor and Copy Constructor
     BOOST_CHECK(uint256S("0x"+R1L.ToString()) == R1L);
     BOOST_CHECK(uint256S("0x"+R2L.ToString()) == R2L);
