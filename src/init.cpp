@@ -1699,13 +1699,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex || fReindexChainState);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
-				paliasdb = new CAliasDB(nCoinCacheUsage * 20, false, fReindex);
-				pofferdb = new COfferDB(nCoinCacheUsage * 2, false, fReindex);
-				pcertdb = new CCertDB(nCoinCacheUsage * 2, false, fReindex);
-				passetdb = new CAssetDB(nCoinCacheUsage * 2, false, fReindex);
-				passetallocationdb = new CAssetAllocationDB(nCoinCacheUsage * 20, false, fReindex);
+				paliasdb = new CAliasDB(nCoinCacheUsage, false, fReindex);
+				pofferdb = new COfferDB(nCoinCacheUsage, false, fReindex);
+				pcertdb = new CCertDB(nCoinCacheUsage, false, fReindex);
+				passetdb = new CAssetDB(nCoinCacheUsage, false, fReindex);
+				passetallocationdb = new CAssetAllocationDB(nCoinCacheUsage, false, fReindex);
 				passetallocationtransactionsdb = new CAssetAllocationTransactionsDB(0, false, fReindex);
-				pescrowdb = new CEscrowDB(nCoinCacheUsage * 2, false, fReindex);
+				pescrowdb = new CEscrowDB(nCoinCacheUsage, false, fReindex);
 
                 if (fReindex) {
                     pblocktree->WriteReindexing(true);
