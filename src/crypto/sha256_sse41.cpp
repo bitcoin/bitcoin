@@ -32,8 +32,8 @@ __m128i inline Rot(__m128i x, int n) { return Or(ShR(x, n), ShL(x, 32 - n)); }
 
 __m128i inline Ch(__m128i x, __m128i y, __m128i z) { return Xor(z, And(x, Xor(y, z))); }
 __m128i inline Maj(__m128i x, __m128i y, __m128i z) { return Or(And(x, y), And(z, Or(x, y))); }
-__m128i inline Sigma0(__m128i x) { return Xor(Rot(x, 2), Rot(x, 13), Rot(x, 22)); }
-__m128i inline Sigma1(__m128i x) { return Xor(Rot(x, 6), Rot(x, 11), Rot(x, 25)); }
+__m128i inline Sigma0(__m128i x) { return Rot(Xor(Rot(Xor(Rot(x, 9), x), 11), x), 2); }
+__m128i inline Sigma1(__m128i x) { return Rot(Xor(Rot(Xor(Rot(x, 14), x), 5), x), 6); }
 __m128i inline sigma0(__m128i x) { return Xor(Rot(x, 7), Rot(x, 18), ShR(x, 3)); }
 __m128i inline sigma1(__m128i x) { return Xor(Rot(x, 17), Rot(x, 19), ShR(x, 10)); }
 
