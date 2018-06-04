@@ -59,6 +59,7 @@ enum PoolMessage {
 // pool states
 enum PoolState {
     POOL_STATE_IDLE,
+    POOL_STATE_CONNECTING,
     POOL_STATE_QUEUE,
     POOL_STATE_ACCEPTING_ENTRIES,
     POOL_STATE_SIGNING,

@@ -168,6 +168,7 @@ std::string CPrivateSendBase::GetStateString() const
 {
     switch(nState) {
         case POOL_STATE_IDLE:                   return "IDLE";
+        case POOL_STATE_CONNECTING:             return "CONNECTING";
         case POOL_STATE_QUEUE:                  return "QUEUE";
         case POOL_STATE_ACCEPTING_ENTRIES:      return "ACCEPTING_ENTRIES";
         case POOL_STATE_SIGNING:                return "SIGNING";
