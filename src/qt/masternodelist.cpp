@@ -627,9 +627,12 @@ void MasternodeList::VoteMany(std::string strCommand)
     {
         QMessageBox::critical(
             this,
-            "Voting Details",
-            "Sorry, your vote has not been added to the proposal. "
-            "The proposal voting is currently disabled as we're too close to the proposal payment");
+            tr("Voting Details"),
+            tr(
+                "Sorry, your vote has not been added to the proposal. "
+                "The proposal voting is currently disabled as we're too close to the proposal payment"
+            )
+        );
         return;
     }
 
@@ -685,7 +688,7 @@ void MasternodeList::VoteMany(std::string strCommand)
 
     QMessageBox msg;
     msg.setText(QString::fromStdString(returnObj));
-    msg.setWindowTitle("Voting Details");
+    msg.setWindowTitle(tr("Voting Details"));
     msg.exec();
     updateVoteList(true);
 }

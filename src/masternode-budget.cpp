@@ -1219,8 +1219,6 @@ bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& st
     }
 
     CBudgetProposal& proposal = found->second;
-    int height = chainActive.Height();
-
     if (!CanSubmitVotes(proposal.nBlockStart, proposal.nBlockEnd))
     {
         strError = "The proposal voting is currently disabled as it is too close to the proposal payment";
@@ -1234,11 +1232,10 @@ bool CBudgetManager::CanSubmitVotes(int blockStart, int blockEnd) const
 {
     const int height = chainActive.Height();
 
-    return (
-        blockStart <= GetNextSuperblock(height) &&
-        blockEnd > GetNextSuperblock(height) &&
-        GetNextSuperblock(height) - height > GetVotingThreshold()
-    );
+    if (blockStart > GetNextSuperblock(height) || blockEnd <= GetNextSuperblock(height)) // Not for the next SB
+        return true;
+
+    return GetNextSuperblock(height) - height > GetVotingThreshold();
 }
 
 bool CBudgetManager::ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError)
