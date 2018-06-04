@@ -52,7 +52,7 @@ bool IsOfferTypeInMask(const uint32_t &mask, const uint32_t &offerType);
 std::string GetPaymentOptionsString(const uint64_t &paymentOptions);
 std::string GetOfferTypeString(const uint32_t &offerType);
 CChainParams::AddressType PaymentOptionToAddressType(const uint64_t &paymentOptions);
-
+static mutable CCriticalSection cs_offer;
 class CAuctionOffer {
 public:
 	uint64_t nExpireTime;
@@ -207,48 +207,62 @@ public:
 	COfferDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "offers", nCacheSize, fMemory, fWipe) {}
 
 	bool WriteOffer(const COffer& offer, const int &op, const int64_t& arrivalTime, const bool& fJustCheck, const bool bNotify = true) {
-		bool writeState = Write(make_pair(std::string("offeri"), offer.vchOffer), offer);
-		if (!fJustCheck)
-			writeState = writeState && Write(make_pair(std::string("offerp"), offer.vchOffer), offer);
-		else if (fJustCheck){
-			if (arrivalTime < INT64_MAX) {
-				ArrivalTimesMap arrivalTimes;
-				ReadISArrivalTimes(offer.vchOffer, arrivalTimes);
-				arrivalTimes[offer.txHash] = arrivalTime;
-				writeState = writeState && Write(make_pair(std::string("offera"), offer.vchOffer), arrivalTimes);
+		bool writeState = false;
+		{
+			LOCK(cs_offer);
+			writeState = Write(make_pair(std::string("offeri"), offer.vchOffer), offer);
+			if (!fJustCheck)
+				writeState = writeState && Write(make_pair(std::string("offerp"), offer.vchOffer), offer);
+			else if (fJustCheck) {
+				if (arrivalTime < INT64_MAX) {
+					ArrivalTimesMap arrivalTimes;
+					ReadISArrivalTimes(offer.vchOffer, arrivalTimes);
+					arrivalTimes[offer.txHash] = arrivalTime;
+					writeState = writeState && Write(make_pair(std::string("offera"), offer.vchOffer), arrivalTimes);
+				}
 			}
 		}
-		if(bNotify)
+		if(bNotify && writeState)
 			WriteOfferIndex(offer, op);
 		return writeState;
 	}
 
 	bool EraseOffer(const std::vector<unsigned char>& vchOffer, bool cleanup = false) {
+		LOCK(cs_offer);
 		bool eraseState = Erase(make_pair(std::string("offeri"), vchOffer));
-		Erase(make_pair(std::string("offerp"), vchOffer));
-		EraseISArrivalTimes(vchOffer);
+		if (eraseState) {
+			Erase(make_pair(std::string("offerp"), vchOffer));
+			EraseISArrivalTimes(vchOffer);
+		}
 	    return eraseState;
 	}
 
 	bool ReadOffer(const std::vector<unsigned char>& vchOffer, COffer& offer) {
+		LOCK(cs_offer);
 		return Read(make_pair(std::string("offeri"), vchOffer), offer);
 	}
 	bool ReadLastOffer(const std::vector<unsigned char>& vchGuid, COffer& offer) {
+		LOCK(cs_offer);
 		return Read(make_pair(std::string("offerp"), vchGuid), offer);
 	}
 	bool WriteExtTXID(const uint256& txid) {
+		LOCK(cs_offer);
 		return Write(make_pair(std::string("offert"), txid), txid);
 	}
 	bool ExistsExtTXID(const uint256& txid) {
+		LOCK(cs_offer);
 		return Exists(make_pair(std::string("offert"), txid));
 	}
 	bool EraseExtTXID(const uint256& txid) {
+		LOCK(cs_offer);
 		return Erase(make_pair(std::string("offert"), txid));
 	}
 	bool ReadISArrivalTimes(const std::vector<unsigned char>& vchOffer, ArrivalTimesMap& arrivalTimes) {
+		LOCK(cs_offer);
 		return Read(make_pair(std::string("offera"), vchOffer), arrivalTimes);
 	}
 	bool EraseISArrivalTimes(const std::vector<unsigned char>& vchOffer) {
+		LOCK(cs_offer);
 		return Erase(make_pair(std::string("offera"), vchOffer));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
