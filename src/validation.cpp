@@ -594,6 +594,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 	// but during runtime fLoaded should be true so it should check UTXO in correct state
 	if (!fLoaded)
 		return true;
+	static int64_t nFlushIndexBlocks = 0;
 	std::string statusRpc = "";
 	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(&statusRpc)))
 		return true;
@@ -746,6 +747,9 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 				}
 			}
 		}
+		nFlushIndexBlocks++;
+		if ((nFlushIndexBlocks % 200) == 0 && !FlushSyscoinDBs())
+			return state.DoS(0, false, REJECT_INVALID, "Failed to flush syscoin databases");
 	}
 
 
@@ -2697,9 +2701,6 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode, int n
             if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
                 return AbortNode(state, "Failed to write to block index database");
             }
-			// SYSCOIN
-			if (!FlushSyscoinDBs())
-				return AbortNode(state, "Failed to flush syscoin databases");
         }
         // Finally remove any pruned files
         if (fFlushForPrune)
@@ -2718,6 +2719,9 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode, int n
         // Flush the chainstate (which may refer to block index entries).
         if (!pcoinsTip->Flush())
             return AbortNode(state, "Failed to write to coin database");
+		// SYSCOIN
+		if (!FlushSyscoinDBs())
+			return AbortNode(state, "Failed to flush syscoin databases");
         nLastFlush = nNow;
     }
     if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000)) {
