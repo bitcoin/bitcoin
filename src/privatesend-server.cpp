@@ -697,7 +697,7 @@ bool CPrivateSendServer::IsAcceptableDSA(const CDarksendAccept& dsa, PoolMessage
     }
 
     if(dsa.nInputCount < 0 || dsa.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) {
-        LogPrint("privatesend", "CPrivateSendServer::%s -- requested count is not valid!\n", __func__);
+        LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::%s -- requested count is not valid!\n", __func__);
         nMessageIDRet = ERR_INVALID_INPUT_COUNT;
         return false;
     }
@@ -724,9 +724,7 @@ bool CPrivateSendServer::CreateNewSession(const CDarksendAccept& dsa, PoolMessag
     nMessageIDRet = MSG_NOERR;
     nSessionID = GetRandInt(999999)+1;
     nSessionDenom = dsa.nDenom;
-    // nInputCount is not covered by legacy signature, require SPORK_6_NEW_SIGS to activate to use new algo
-    // (to make sure nInputCount wasn't modified by some intermediary node)
-    nSessionInputCount = sporkManager.IsSporkActive(SPORK_6_NEW_SIGS) ? dsa.nInputCount : 0;
+    nSessionInputCount = dsa.nInputCount;
 
     SetState(POOL_STATE_QUEUE);
     nTimeLastSuccessfulStep = GetTime();
