@@ -24,7 +24,7 @@ bool IsCertOp(int op);
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string certFromOp(int op);
 bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
-static mutable CCriticalSection cs_cert;
+static CCriticalSection cs_cert;
 class CCert {
 public:
 	std::vector<unsigned char> vchCert;

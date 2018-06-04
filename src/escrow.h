@@ -35,7 +35,7 @@ enum EscrowStatus {
 	EscrowRefunded = 4,
 	EscrowRefundComplete = 5
 };
-static mutable CCriticalSection cs_escrow;
+static CCriticalSection cs_escrow;
 class CEscrow {
 public:
 	std::vector<unsigned char> vchEscrow;
