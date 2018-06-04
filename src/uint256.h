@@ -50,17 +50,17 @@ public:
 
     bool operator!() const
     {
-	return !(operator bool());
+        return !(operator bool());
     }
 
     explicit operator bool() const
     {
-	for (unsigned int i = 0; i < WIDTH; ++i) {
-	    if (data[i]) {
-		return true;
-	    }
-	}
-	return false;
+        for (unsigned int i = 0; i < WIDTH; ++i) {
+            if (data[i]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     std::string GetHex() const;

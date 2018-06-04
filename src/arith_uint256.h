@@ -68,16 +68,16 @@ public:
 
     bool operator!() const
     {
-	return !(operator bool());
+        return !(operator bool());
     }
 
     explicit operator bool() const
     {
-	for (unsigned int i = 0; i < WIDTH; ++i) {
+        for (unsigned int i = 0; i < WIDTH; ++i) {
             if (pn[i]) {
                 return true;
-	    }
-	}
+            }
+        }
         return false;
     }
 
