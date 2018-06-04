@@ -18,6 +18,8 @@ class uint256;
 class uint_error : public std::runtime_error {
 public:
     explicit uint_error(const std::string& str) : std::runtime_error(str) {}
+    explicit uint_error(const char* str) : std::runtime_error(str) {}
+    uint_error() = delete;
 };
 
 /** Template base class for unsigned big integers. */
