@@ -610,7 +610,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
 		{
-			bool bDestCheckFailed = false;
 			if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 			{
 				if (!FindAliasInTx(tx, vvchAliasArgs)) {
