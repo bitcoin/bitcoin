@@ -2715,6 +2715,9 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode, int n
         // Flush the chainstate (which may refer to block index entries).
         if (!pcoinsTip->Flush())
             return AbortNode(state, "Failed to write to coin database");
+		// SYSCOIN
+		if (!FlushSyscoinDBs())
+			return AbortNode(state, "Failed to flush syscoin databases");
         nLastFlush = nNow;
     }
     if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000)) {

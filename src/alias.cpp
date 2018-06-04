@@ -774,6 +774,58 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
     }
 	return true;
 }
+bool FlushSyscoinDBs() {
+	if (paliasdb != NULL)
+	{
+		if (!paliasdb->Flush()) {
+			LogPrintf("Failed to write to alias database!");
+			return false;
+		}
+	}
+	if (pofferdb != NULL)
+	{
+		if (!pofferdb->Flush()) {
+			LogPrintf("Failed to write to offer database!");
+			return false;
+		}
+	}
+	if (pcertdb != NULL)
+	{
+		if (!pcertdb->Flush()) {
+			LogPrintf("Failed to write to cert database!");
+			return false;
+		}
+	}
+	if (pescrowdb != NULL)
+	{
+		if (!pescrowdb->Flush()) {
+			LogPrintf("Failed to write to escrow database!");
+			return false;
+		}
+	}
+	if (passetdb != NULL)
+	{
+		if (!passetdb->Flush()) {
+			LogPrintf("Failed to write to asset database!");
+			return false;
+		}
+	}
+	if (passetallocationdb != NULL)
+	{
+		if (!passetallocationdb->Flush()) {
+			LogPrintf("Failed to write to asset allocation database!");
+			return false;
+		}
+	}
+	if (passetallocationtransactionsdb != NULL)
+	{
+		if (!passetallocationtransactionsdb->Flush()) {
+			LogPrintf("Failed to write to asset allocation transactions database!");
+			return false;
+		}
+	}
+	return true;
+}
 void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 {
 	if(pofferdb != NULL)
@@ -784,42 +836,7 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		pcertdb->CleanupDatabase(numServicesCleaned);
 	if (paliasdb != NULL) 
 		paliasdb->CleanupDatabase(numServicesCleaned);
-	
-	if(paliasdb != NULL)
-	{
-		if (!paliasdb->Flush())
-			LogPrintf("Failed to write to alias database!");
-	}
-	if(pofferdb != NULL)
-	{
-		if (!pofferdb->Flush())
-			LogPrintf("Failed to write to offer database!");
-	}
-	if(pcertdb != NULL)
-	{
-		if (!pcertdb->Flush())
-			LogPrintf("Failed to write to cert database!");
-	}
-	if(pescrowdb != NULL)
-	{
-		if (!pescrowdb->Flush())
-			LogPrintf("Failed to write to escrow database!");
-	}
-	if (passetdb != NULL)
-	{
-		if (!passetdb->Flush())
-			LogPrintf("Failed to write to asset database!");
-	}
-	if (passetallocationdb != NULL)
-	{
-		if (!passetallocationdb->Flush())
-			LogPrintf("Failed to write to asset allocation database!");
-	}
-	if (passetallocationtransactionsdb != NULL)
-	{
-		if (!passetallocationtransactionsdb->Flush())
-			LogPrintf("Failed to write to asset allocation transactions database!");
-	}
+	FlushSyscoinDBs();
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
 	CAliasIndex& txPos) {
