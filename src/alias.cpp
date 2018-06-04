@@ -2575,7 +2575,7 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 string GetSyscoinTransactionDescription(const CTransaction& tx, const int op, string& responseEnglish, const char &type, string& responseGUID)
 {
 	if (tx.IsNull()) {
-		return "";
+		return "Null Tx";
 	}
 	string strResponse = "";
 	if (type == ALIAS) {
