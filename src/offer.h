@@ -52,7 +52,7 @@ bool IsOfferTypeInMask(const uint32_t &mask, const uint32_t &offerType);
 std::string GetPaymentOptionsString(const uint64_t &paymentOptions);
 std::string GetOfferTypeString(const uint32_t &offerType);
 CChainParams::AddressType PaymentOptionToAddressType(const uint64_t &paymentOptions);
-static mutable CCriticalSection cs_offer;
+static CCriticalSection cs_offer;
 class CAuctionOffer {
 public:
 	uint64_t nExpireTime;

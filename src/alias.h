@@ -25,7 +25,7 @@ static const unsigned int MAX_SYMBOL_LENGTH = 8;
 static const unsigned int MIN_SYMBOL_LENGTH = 1;
 static const unsigned int MAX_ENCRYPTED_GUID_LENGTH = MAX_NAME_LENGTH;
 static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
-static mutable CCriticalSection cs_alias;
+static CCriticalSection cs_alias;
 enum {
 	ALIAS=0,
 	OFFER, 

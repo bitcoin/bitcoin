@@ -39,7 +39,7 @@ static const CAmount MAX_INPUTRANGE_ASSET = 10000000;
 */
 static const CAmount MAX_ASSET = 1000000000000000000LL - 1LL;
 inline bool AssetRange(const CAmount& nValue, bool bUseInputRange) { return (nValue > 0 && nValue <= (bUseInputRange? MAX_INPUTRANGE_ASSET: MAX_ASSET)); }
-static mutable CCriticalSection cs_asset;
+static CCriticalSection cs_asset;
 class CAsset {
 public:
 	std::vector<unsigned char> vchAsset;
