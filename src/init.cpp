@@ -1703,8 +1703,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 				pofferdb = new COfferDB(nCoinCacheUsage * 2, false, fReindex);
 				pcertdb = new CCertDB(nCoinCacheUsage * 2, false, fReindex);
 				passetdb = new CAssetDB(nCoinCacheUsage * 2, false, fReindex);
-				passetallocationdb = new CAssetAllocationDB(nCoinCacheUsage * 2, false, fReindex);
-				passetallocationtransactionsdb = new CAssetAllocationTransactionsDB(nCoinCacheUsage * 2, false, fReindex);
+				passetallocationdb = new CAssetAllocationDB(nCoinCacheUsage * 20, false, fReindex);
+				passetallocationtransactionsdb = new CAssetAllocationTransactionsDB(0, false, fReindex);
 				pescrowdb = new CEscrowDB(nCoinCacheUsage * 2, false, fReindex);
 
                 if (fReindex) {
