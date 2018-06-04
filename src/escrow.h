@@ -7,9 +7,8 @@
 
 #include "rpc/server.h"
 #include "dbwrapper.h"
-#include "script/script.h"
-#include "serialize.h"
 #include "feedback.h"
+#include "sync.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
