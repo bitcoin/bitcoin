@@ -700,31 +700,31 @@ bool CBitcoinAddress::GetIndexKey(uint256 &hashBytes, int &type) const
     if (!IsValid())
         return false;
 
-    memset(&hashBytes, 0, 32);
+    hashBytes.SetNull();
     if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
     {
-        memcpy(&hashBytes, &vchData[0], 20);
+        memcpy(hashBytes.begin(), vchData.data(), 20);
         type = ADDR_INDT_PUBKEY_ADDRESS;
         return true;
     };
 
     if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS))
     {
-        memcpy(&hashBytes, &vchData[0], 20);
+        memcpy(hashBytes.begin(), vchData.data(), 20);
         type = ADDR_INDT_SCRIPT_ADDRESS;
         return true;
     };
 
     if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_256))
     {
-        memcpy(&hashBytes, &vchData[0], 32);
+        memcpy(hashBytes.begin(), vchData.data(), 32);
         type = ADDR_INDT_PUBKEY_ADDRESS_256;
         return true;
     };
 
     if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_256))
     {
-        memcpy(&hashBytes, &vchData[0], 32);
+        memcpy(hashBytes.begin(), vchData.data(), 32);
         type = ADDR_INDT_SCRIPT_ADDRESS_256;
         return true;
     };

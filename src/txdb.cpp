@@ -408,7 +408,7 @@ bool CBlockTreeDB::WriteTimestampBlockIndex(const CTimestampBlockIndexKey &block
 
 bool CBlockTreeDB::ReadTimestampBlockIndex(const uint256 &hash, unsigned int &ltimestamp) {
 
-    CTimestampBlockIndexValue(lts);
+    CTimestampBlockIndexValue lts;
     if (!Read(std::make_pair(DB_BLOCKHASHINDEX, hash), lts))
         return false;
 
