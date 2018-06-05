@@ -703,11 +703,11 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	printf("Running generate_assetupdate...\n");
 	AliasNew("node1", "jagassetupdate", "data");
 	AliasNew("node2", "jagassetupdate1", "data");
-	string guid = AssetNew("node1", "b", "jagassetupdate", "data", "8", "false", "1", "10", "0", "false");
+	string guid = AssetNew("node1", "b", "jagassetupdate", "data");
 	// update an asset that isn't yours
 	UniValue r;
 	//"assetupdate [asset] [public] [category=assets] [supply] [interest_rate] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetupdate " + guid + " jagassetupdate assets 0 0 ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetupdate " + guid + " jagassetupdate assets 1 0 ''"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr[0].get_str()));
 	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
@@ -721,12 +721,12 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 6*COIN);
 	// update interest rate
-	string guid1 = AssetNew("node1", "c", "jagassetupdate", "data", "8", "false", "1", "10", "0.1");
+	string guid1 = AssetNew("node1", "c", "jagassetupdate", "data", "8", "false", "1", "10", "0.1", "true");
 	AssetUpdate("node1", guid1, "pub12", "''", "0.25");
 	// ensure can't update interest rate (use initial asset which has can_adjust_rate set to false)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetupdate assets 1 0.11 ''"), runtime_error);
-	// can't change supply > max supply (current balance already 1, max is 10)
-	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid1 + " jagassetupdate assets 10 0 ''"), runtime_error);
+	// can't change supply > max supply (current balance already 6, max is 10)
+	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetupdate assets 5 0 ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 {
