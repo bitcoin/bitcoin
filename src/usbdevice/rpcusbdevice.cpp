@@ -519,7 +519,7 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
         SignatureData sigdata;
         CScript prevPubKey = coin.out.scriptPubKey;
         CAmount amount = coin.out.nValue;
-        memcpy(&vchAmount[0], &amount, 8);
+        memcpy(vchAmount.data(), &amount, 8);
 
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.GetNumVOuts()))
@@ -536,7 +536,7 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
         };
 
         sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(mtx, i));
-        UpdateTransaction(mtx, i, sigdata);
+        UpdateInput(txin, sigdata);
 
         ScriptError serror = SCRIPT_ERR_OK;
         if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, vchAmount), &serror)) {

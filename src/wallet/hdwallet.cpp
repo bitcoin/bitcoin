@@ -3724,8 +3724,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 } else
                 if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR_PARTICL, scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, "Dummy signature failed.");
-                UpdateTransaction(txNew, nIn, sigdata);
-
+                UpdateInput(txNew.vin[nIn], sigdata);
                 nIn++;
 
                 if (::IsMine(*this, coin.txout.scriptPubKey) & ISMINE_HARDWARE_DEVICE)
@@ -3857,8 +3856,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 SignatureData sigdata;
                 if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&txNew, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, _("Signing transaction failed").c_str());
-
-                UpdateTransaction(txNew, nIn, sigdata);
+                UpdateInput(txNew.vin[nIn], sigdata);
 
                 nIn++;
             };
@@ -3918,7 +3916,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                         NotifyWaitingForDevice(true);
                         return errorN(1, sError, __func__, _("ProduceSignature from device failed: %s").c_str(), pDevice->sError);
                     };
-                    UpdateTransaction(txNew, nIn, sigdata);
+                    UpdateInput(txNew.vin[nIn], sigdata);
 
                     /*
                     ScriptError serror = SCRIPT_ERR_OK;
@@ -4249,7 +4247,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 } else
                 if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR_PARTICL, scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, "Dummy signature failed.");
-                UpdateTransaction(txNew, nIn, sigdata);
+                UpdateInput(txNew.vin[nIn], sigdata);
                 nIn++;
             };
 
@@ -4469,7 +4467,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
                 if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&txNew, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata))
                     return errorN(1, sError, __func__, _("Signing transaction failed").c_str());
-                UpdateTransaction(txNew, nIn, sigdata);
+                UpdateInput(txNew.vin[nIn], sigdata);
 
                 nIn++;
             };
@@ -8184,7 +8182,7 @@ bool CHDWallet::SignTransaction(CMutableTransaction &tx)
 
     // sign the new tx
     int nIn = 0;
-    for (const auto& input : tx.vin) {
+    for (auto& input : tx.vin) {
         CScript scriptPubKey;
         CAmount amount;
 
@@ -8225,7 +8223,7 @@ bool CHDWallet::SignTransaction(CMutableTransaction &tx)
         if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&tx, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata)) {
             return false;
         }
-        UpdateTransaction(tx, nIn, sigdata);
+        UpdateInput(input, sigdata);
         nIn++;
     }
     return true;
@@ -12067,7 +12065,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&txNew, nIn, vchAmount, SIGHASH_ALL), scriptPubKeyOut, sigdata))
             return error("%s: ProduceSignature failed.", __func__);
 
-        UpdateTransaction(txNew, nIn, sigdata);
+        UpdateInput(txNew.vin[nIn], sigdata);
         nIn++;
     };
 

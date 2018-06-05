@@ -262,16 +262,6 @@ void UpdateInput(CTxIn& input, const SignatureData& data)
     input.scriptWitness = data.scriptWitness;
 }
 
-void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const SignatureData& data)
-{
-    assert(tx.vin.size() > nIn);
-
-    if (tx.IsParticlVersion())
-        assert(data.scriptSig.empty());
-
-    UpdateInput(tx.vin[nIn], data);
-}
-
 bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const std::vector<uint8_t>& amount, int nHashType)
 {
     assert(nIn < txTo.vin.size());
@@ -280,7 +270,7 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 
     SignatureData sigdata;
     bool ret = ProduceSignature(provider, creator, fromPubKey, sigdata);
-    UpdateTransaction(txTo, nIn, sigdata);
+    UpdateInput(txTo.vin.at(nIn), sigdata);
     return ret;
 }
 

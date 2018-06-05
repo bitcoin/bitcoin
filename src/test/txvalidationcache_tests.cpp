@@ -326,12 +326,11 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
 
         // Sign
         SignatureData sigdata;
-
         CAmount amount = 11*CENT;
         std::vector<uint8_t> vchAmount(8);
         memcpy(vchAmount.data(), &amount, 8);
         ProduceSignature(keystore, MutableTransactionSignatureCreator(&valid_with_witness_tx, 0, vchAmount, SIGHASH_ALL), spend_tx.vout[1].scriptPubKey, sigdata);
-        UpdateTransaction(valid_with_witness_tx, 0, sigdata);
+        UpdateInput(valid_with_witness_tx.vin[0], sigdata);
 
         // This should be valid under all script flags.
         ValidateCheckInputsForAllFlags(valid_with_witness_tx, 0, true);
@@ -362,7 +361,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
             std::vector<uint8_t> vchAmount(8);
             memcpy(vchAmount.data(), &amount, 8);
             ProduceSignature(keystore, MutableTransactionSignatureCreator(&tx, i, vchAmount, SIGHASH_ALL), spend_tx.vout[i].scriptPubKey, sigdata);
-            UpdateTransaction(tx, i, sigdata);
+            UpdateInput(tx.vin[i], sigdata);
         }
 
         // This should be valid under all script flags

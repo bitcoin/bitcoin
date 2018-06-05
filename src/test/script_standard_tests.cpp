@@ -10,6 +10,7 @@
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/standard.h>
+#include <utilstrencodings.h>
 #include <test/test_bitcoin.h>
 
 #include <boost/test/unit_test.hpp>
@@ -722,6 +723,32 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
 
         scriptPubKey.clear();
         scriptPubKey << OP_RETURN << ToByteVector(pubkeys[0]);
+
+        result = IsMine(keystore, scriptPubKey, isInvalid);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+        BOOST_CHECK(!isInvalid);
+    }
+
+    // witness unspendable
+    {
+        CBasicKeyStore keystore;
+        keystore.AddKey(keys[0]);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(ParseHex("aabb"));
+
+        result = IsMine(keystore, scriptPubKey, isInvalid);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+        BOOST_CHECK(!isInvalid);
+    }
+
+    // witness unknown
+    {
+        CBasicKeyStore keystore;
+        keystore.AddKey(keys[0]);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_16 << ToByteVector(ParseHex("aabb"));
 
         result = IsMine(keystore, scriptPubKey, isInvalid);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
