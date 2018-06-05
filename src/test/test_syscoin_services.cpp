@@ -1050,7 +1050,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange) , AssetAmountFromValue(maxsupplytmp, nprecision, binputrange));
 	BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 	bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
-	bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
+	bool paramCanAdjustRates = canadjustinterestandsupply == "true" ? true : false;
 	BOOST_CHECK(storedCanAdjustRates == paramCanAdjustRates);
 
 
@@ -1069,7 +1069,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange), AssetAmountFromValue(maxsupplytmp, nprecision, binputrange));
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 		bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
-		bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
+		bool paramCanAdjustRates = canadjustinterestandsupply == "true" ? true : false;
 		BOOST_CHECK(storedCanAdjustRates == paramCanAdjustRates);
 	}
 	if (!otherNode2.empty())
@@ -1086,7 +1086,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange), AssetAmountFromValue(maxsupplytmp, nprecision, binputrange));
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 		bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
-		bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
+		bool paramCanAdjustRates = canadjustinterestandsupply == "true" ? true : false;
 		BOOST_CHECK(storedCanAdjustRates == paramCanAdjustRates);
 	}
 	return guid;
