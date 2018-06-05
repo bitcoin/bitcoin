@@ -703,7 +703,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	printf("Running generate_assetupdate...\n");
 	AliasNew("node1", "jagassetupdate", "data");
 	AliasNew("node2", "jagassetupdate1", "data");
-	string guid = AssetNew("node1", "b", "jagassetupdate", "data", "8", "false", "0", "10", "0", "false");
+	string guid = AssetNew("node1", "b", "jagassetupdate", "data", "8", "false", "1", "10", "0", "false");
 	// update an asset that isn't yours
 	UniValue r;
 	//"assetupdate [asset] [public] [category=assets] [supply] [interest_rate] [witness]\n"
