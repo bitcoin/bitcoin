@@ -99,7 +99,7 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 				int nHeight = assetallocation.nHeight;
 				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(vchSender)+"-"+ stringFromVch(vchReceiver);
 				{
-					LOCK(mempool.cs);
+					LOCK(mempool.cs, cs_assetallocation);
 					// we want to the height from mempool if it exists or use the one stored in assetallocation
 					CTxMemPool::txiter it = mempool.mapTx.find(assetallocation.txHash);
 					if (it != mempool.mapTx.end())
