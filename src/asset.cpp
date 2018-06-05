@@ -596,10 +596,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Cannot adjust interest rate for this asset");
 					return true;
 				}
-				if (!theAsset.bCanAdjustInterestRate && theAsset.nBalance != dbAsset.nBalance) {
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Cannot adjust supply for this asset");
-					return true;
-				}
 			}
 			if (op == OP_ASSET_TRANSFER)
 			{
@@ -657,7 +653,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 11)
         throw runtime_error(
-			"assetnew [symbol] [alias] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate_and_supply] [witness]\n"
+			"assetnew [symbol] [alias] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
 						"<symbol> symbol of asset in uppercase, 1 characters miniumum, 8 characters max.\n"
 						"<alias> An alias you own.\n"
                         "<public value> public data, 256 characters max.\n"

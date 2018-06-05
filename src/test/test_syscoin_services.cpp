@@ -1013,17 +1013,15 @@ int FindAliasDiscount(const string& node, const string& owneralias, const string
 	}
 	return 0;
 }
-string AssetNew(const string& node, const string& name, const string& alias, const string& pubdata, const string& precision, const string& useinputranges, const string& supply, const string& maxsupply, const string& interestrate, string canadjustinterestandsupply, const string& witness)
+string AssetNew(const string& node, const string& name, const string& alias, const string& pubdata, const string& precision, const string& useinputranges, const string& supply, const string& maxsupply, const string& interestrate, const string& canadjustinterest, const string& witness)
 {
-	if (useinputranges == "true")
-		canadjustinterestandsupply = "false";
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + alias));
 	
 	// "assetnew [name] [alias] [public] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetnew " + name + " " + alias + " " + pubdata + " " + " assets " + " " + precision + " " + useinputranges + " " + supply + " " + maxsupply + " " + interestrate + " " + canadjustinterestandsupply + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetnew " + name + " " + alias + " " + pubdata + " " + " assets " + " " + precision + " " + useinputranges + " " + supply + " " + maxsupply + " " + interestrate + " " + canadjustinterest + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1052,7 +1050,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange) , AssetAmountFromValue(maxsupplytmp, nprecision, binputrange));
 	BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 	bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
-	bool paramCanAdjustRates = canadjustinterestandsupply == "true" ? true : false;
+	bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
 	BOOST_CHECK(storedCanAdjustRates == paramCanAdjustRates);
 
 
@@ -1071,7 +1069,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange), AssetAmountFromValue(maxsupplytmp, nprecision, binputrange));
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 		bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
-		bool paramCanAdjustRates = canadjustinterestandsupply == "true" ? true : false;
+		bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
 		BOOST_CHECK(storedCanAdjustRates == paramCanAdjustRates);
 	}
 	if (!otherNode2.empty())
@@ -1088,7 +1086,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision, binputrange), AssetAmountFromValue(maxsupplytmp, nprecision, binputrange));
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "interest_rate").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(interestrate) * 1000)));
 		bool storedCanAdjustRates = find_value(r.get_obj(), "can_adjust_interest_rate").get_bool();
-		bool paramCanAdjustRates = canadjustinterestandsupply == "true" ? true : false;
+		bool paramCanAdjustRates = canadjustinterest == "true" ? true : false;
 		BOOST_CHECK(storedCanAdjustRates == paramCanAdjustRates);
 	}
 	return guid;
@@ -1975,7 +1973,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	const string &bid_in_payment_option1 = strprintf("%.*f", 8, strprintf("%.*f", 8, pegRates[currency] * fPaymentCurrency));
 
 
-	//										"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <price_per_unit_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
+	//										"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
