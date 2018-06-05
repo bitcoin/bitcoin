@@ -432,7 +432,7 @@ bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, c
             tx.vout.push_back(txout);
         }
 
-        LogPrintf("CPrivateSendClient::SendDenominate -- Submitting partial tx %s", tx.GetHash().ToString());
+        LogPrintf("CPrivateSendClient::SendDenominate -- Submitting partial tx %s\n", tx.GetHash().ToString());
     }
 
     // store our entry for later use
