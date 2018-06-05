@@ -810,19 +810,22 @@ bool FlushSyscoinDBs() {
 			return false;
 		}
 	}
-	if (passetallocationdb != NULL)
 	{
-		if (!passetallocationdb->Flush()) {
-			LogPrintf("Failed to write to asset allocation database!");
-			return false;
+		LOCK(cs_assetallocation);
+		if (passetallocationdb != NULL)
+		{
+			if (!passetallocationdb->Flush()) {
+				LogPrintf("Failed to write to asset allocation database!");
+				return false;
+			}
 		}
-	}
-	passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(AssetAllocationIndex);
-	if (passetallocationtransactionsdb != NULL)
-	{
-		if (!passetallocationtransactionsdb->Flush()) {
-			LogPrintf("Failed to write to asset allocation transactions database!");
-			return false;
+		if (passetallocationtransactionsdb != NULL)
+		{
+			passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(AssetAllocationIndex);
+			if (!passetallocationtransactionsdb->Flush()) {
+				LogPrintf("Failed to write to asset allocation transactions database!");
+				return false;
+			}
 		}
 	}
 	return true;
