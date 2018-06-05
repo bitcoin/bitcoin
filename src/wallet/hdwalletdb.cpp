@@ -6,8 +6,26 @@
 #include <wallet/hdwallet.h>
 
 #include <serialize.h>
-#include <boost/tuple/tuple.hpp>
 
+class PackKey
+{
+public:
+    PackKey(std::string s, const CKeyID &keyId, uint32_t nPack)
+        : m_prefix(s), m_keyId(keyId), m_nPack(nPack) { };
+
+    std::string m_prefix;
+    CKeyID m_keyId;
+    uint32_t m_nPack;
+
+    ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(m_prefix);
+        READWRITE(m_keyId);
+        READWRITE(m_nPack);
+    };
+};
 
 bool CHDWalletDB::WriteStealthKeyMeta(const CKeyID &keyId, const CStealthKeyMetadata &sxKeyMeta)
 {
@@ -72,34 +90,34 @@ bool CHDWalletDB::WriteExtAccount(const CKeyID &identifier, const CExtKeyAccount
 
 bool CHDWalletDB::ReadExtKeyPack(const CKeyID &identifier, const uint32_t nPack, std::vector<CEKAKeyPack> &ekPak, uint32_t nFlags)
 {
-    return m_batch.Read(boost::make_tuple(std::string("epak"), identifier, nPack), ekPak, nFlags);
+    return m_batch.Read(PackKey("epak", identifier, nPack), ekPak, nFlags);
 };
 
 bool CHDWalletDB::WriteExtKeyPack(const CKeyID &identifier, const uint32_t nPack, const std::vector<CEKAKeyPack> &ekPak)
 {
-    return WriteIC(boost::make_tuple(std::string("epak"), identifier, nPack), ekPak, true);
+    return WriteIC(PackKey("epak", identifier, nPack), ekPak, true);
 };
 
 
 bool CHDWalletDB::ReadExtStealthKeyPack(const CKeyID &identifier, const uint32_t nPack, std::vector<CEKAStealthKeyPack> &aksPak, uint32_t nFlags)
 {
-    return m_batch.Read(boost::make_tuple(std::string("espk"), identifier, nPack), aksPak, nFlags);
+    return m_batch.Read(PackKey("espk", identifier, nPack), aksPak, nFlags);
 };
 
 bool CHDWalletDB::WriteExtStealthKeyPack(const CKeyID &identifier, const uint32_t nPack, const std::vector<CEKAStealthKeyPack> &aksPak)
 {
-    return WriteIC(boost::make_tuple(std::string("espk"), identifier, nPack), aksPak, true);
+    return WriteIC(PackKey("espk", identifier, nPack), aksPak, true);
 };
 
 
 bool CHDWalletDB::ReadExtStealthKeyChildPack(const CKeyID &identifier, const uint32_t nPack, std::vector<CEKASCKeyPack> &asckPak, uint32_t nFlags)
 {
-    return m_batch.Read(boost::make_tuple(std::string("ecpk"), identifier, nPack), asckPak, nFlags);
+    return m_batch.Read(PackKey("ecpk", identifier, nPack), asckPak, nFlags);
 };
 
 bool CHDWalletDB::WriteExtStealthKeyChildPack(const CKeyID &identifier, const uint32_t nPack, const std::vector<CEKASCKeyPack> &asckPak)
 {
-    return WriteIC(boost::make_tuple(std::string("ecpk"), identifier, nPack), asckPak, true);
+    return WriteIC(PackKey("ecpk", identifier, nPack), asckPak, true);
 };
 
 

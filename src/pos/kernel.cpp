@@ -18,8 +18,6 @@
 #include <consensus/validation.h>
 #include <coins.h>
 
-#include <boost/assign/list_of.hpp>
-
 /**
  * Stake Modifier (hash modifier of proof-of-stake):
  * The purpose of stake modifier is to prevent a txout (coin) owner from

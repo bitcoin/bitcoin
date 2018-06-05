@@ -3971,7 +3971,7 @@ static UniValue getstakinginfo(const JSONRPCRequest &request)
     obj.pushKV("currentblocktx", (uint64_t)nLastBlockTx);
     obj.pushKV("pooledtx", (uint64_t)mempool.size());
 
-    obj.pushKV("difficulty", GetDifficulty());
+    obj.pushKV("difficulty", GetDifficulty(chainActive.Tip()));
     obj.pushKV("lastsearchtime", (uint64_t)pwallet->nLastCoinStakeSearchTime);
 
     obj.pushKV("weight", (uint64_t)nWeight);

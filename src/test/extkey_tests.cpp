@@ -9,13 +9,8 @@
 #include <utilstrencodings.h>
 #include <test/test_bitcoin.h>
 
-
 #include <string>
 #include <boost/test/unit_test.hpp>
-
-#include <boost/assign/list_of.hpp>
-
-namespace ba = boost::assign;
 
 BOOST_FIXTURE_TEST_SUITE(extkey_tests, BasicTestingSetup)
 
