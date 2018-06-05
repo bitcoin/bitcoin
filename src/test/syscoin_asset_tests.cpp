@@ -388,8 +388,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		if (count % 100 == 0)
 			 printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
 	}
-	StopNodes();
-	StartNodes();
+	StopNode("node1");
+	StartNode("node1");
+	StopNode("node3");
+	StartNode("node3");
 	printf("Creating assetsend transactions to node3 alias...\n");
 	vector<string> assetSendTxVec;
 	count = 0;
