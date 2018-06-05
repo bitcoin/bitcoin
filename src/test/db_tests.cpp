@@ -6,6 +6,19 @@
 #include <boost/test/unit_test.hpp>
 #include <fstream>
 
+struct DbCleanupFixture
+{
+    DbCleanupFixture()
+        : fileName("dbtest.dat")
+    {
+    }
+    void RemoveFile() const
+    {
+        boost::filesystem::remove(GetDataDir() / fileName);
+    }
+    std::string fileName;
+};
+
 // Test class which has minimal required functions to use Load and Dump
 struct DbTest
 {
@@ -55,13 +68,13 @@ struct DbTestWithSerializeException : public DbTest
     }
 };
 
-BOOST_AUTO_TEST_SUITE(db_tests)
+BOOST_FIXTURE_TEST_SUITE(db_tests, DbCleanupFixture)
 
     BOOST_AUTO_TEST_CASE(FileError)
     {
         // File doesn't exist
         DbTest db;
-        ::details::ReadResult readResult = ::details::Read(db, "dbtest1.dat", "MagicMessage");
+        ::details::ReadResult readResult = ::details::Read(db, fileName, "MagicMessage");
         BOOST_CHECK_EQUAL(readResult, ::details::FileError);
     }
 
@@ -71,58 +84,63 @@ BOOST_AUTO_TEST_SUITE(db_tests)
 
         // Create an empty file
         std::fstream fs;
-        fs.open((GetDataDir() / "dbtest2.dat").string().c_str(), std::ios::out);
+        fs.open((GetDataDir() / fileName).string().c_str(), std::ios::out);
         fs.close();
 
         ::details::ReadResult readResult = ::details::Read(db, "dbtest2.dat", "MagicMessage");
         BOOST_CHECK_EQUAL(readResult, ::details::HashReadError);
+        RemoveFile();
     }
 
     BOOST_AUTO_TEST_CASE(IncorrectMagicMessage)
     {
         DbTest db;
-        Dump(db, "dbtest3.dat", "MagicMessage");
+        Dump(db, fileName, "MagicMessage");
         
         // Try to read data with incorrect magic message
-        ::details::ReadResult readResult = ::details::Read(db, "dbtest3.dat", "IncorrectMagicMessage");
+        ::details::ReadResult readResult = ::details::Read(db, fileName, "IncorrectMagicMessage");
         BOOST_CHECK_EQUAL(readResult, ::details::IncorrectMagicMessage);
+        RemoveFile();
     }
     
     BOOST_AUTO_TEST_CASE(IncorrectMagicNumber)
     {
         DbTest db;
-        Dump(db, "dbtest4.dat", "MagicMessage");
+        Dump(db, fileName, "MagicMessage");
         const CBaseChainParams::Network prevParams = Params().NetworkID();
         // Change network params for magic number to be different
         SelectParams(CBaseChainParams::REGTEST);
-        ::details::ReadResult readResult = ::details::Read(db, "dbtest4.dat", "MagicMessage");
+        ::details::ReadResult readResult = ::details::Read(db, fileName, "MagicMessage");
         BOOST_CHECK_EQUAL(readResult, ::details::IncorrectMagicNumber);
 
         // Revert back network params
         SelectParams(prevParams);
+        RemoveFile();
     }
 
     BOOST_AUTO_TEST_CASE(IncorrectFormat)
     {
         DbTest db;
-        Dump(db, "dbtest5.dat", "MagicMessage");
+        Dump(db, fileName, "MagicMessage");
 
         DbTestWithSerializeException dbWithException;
-        ::details::ReadResult readResult = ::details::Read(dbWithException, "dbtest5.dat", "MagicMessage");
+        ::details::ReadResult readResult = ::details::Read(dbWithException, fileName, "MagicMessage");
         BOOST_CHECK_EQUAL(readResult, ::details::IncorrectFormat);
         BOOST_CHECK(dbWithException.m_cleared);
+        RemoveFile();
     }
 
     BOOST_AUTO_TEST_CASE(DbDumpAndLoad)
     {
         DbTest dbDump;
-        BOOST_CHECK(Dump(dbDump, "dbtest6.dat", "MagicMessage"));
+        BOOST_CHECK(Dump(dbDump, fileName, "MagicMessage"));
 
         DbTest dbLoad;
-        BOOST_CHECK(Load(dbLoad, "dbtest6.dat", "MagicMessage"));
+        BOOST_CHECK(Load(dbLoad, fileName, "MagicMessage"));
 
         BOOST_CHECK(dbDump == dbLoad);
         BOOST_CHECK(dbLoad.m_checkedAndRemoved);
+        RemoveFile();
     }
 
 BOOST_AUTO_TEST_SUITE_END()
