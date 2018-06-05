@@ -82,12 +82,12 @@ BITCOIN_CORE_H = \
   base58.h \
   bloom.h \
   blockencodings.h \
+  chain.h \
+  chainparams.h \
+  bignum.h \
   groestlcoin.h \
   sphlib/sph_types.h \
   sphlib/sph_groestl.h \
-  chain.h \
-  bignum.h \
-  chainparams.h \
   chainparamsbase.h \
   chainparamsseeds.h \
   checkpoints.h \
@@ -277,8 +277,8 @@ crypto_libbitcoin_crypto_a_SOURCES += crypto/sha256_sse4.cpp
 endif
 
 # consensus: shared between all executables that validate any consensus rules.
-libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(PIC_FLAGS)
+libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
@@ -418,7 +418,7 @@ microbitcoin_cli_LDADD = \
 microbitcoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
-# bitcoin-tx binary #
+# microbitcoin-tx binary #
 microbitcoin_tx_SOURCES = bitcoin-tx.cpp
 microbitcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 microbitcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)

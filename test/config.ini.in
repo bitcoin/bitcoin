@@ -14,5 +14,5 @@ EXEEXT=@EXEEXT@
 # Which components are enabled. These are commented out by `configure` if they were disabled when running config.
 @ENABLE_WALLET_TRUE@ENABLE_WALLET=true
 @BUILD_BITCOIN_UTILS_TRUE@ENABLE_UTILS=true
-@BUILD_microbitcoind_TRUE@ENABLE_microbitcoind=true
+@BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=true
 @ENABLE_ZMQ_TRUE@ENABLE_ZMQ=true

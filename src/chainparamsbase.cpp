@@ -4,17 +4,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparamsbase.h>
-#include <chainparams.h>
-#include <consensus/merkle.h>
-#include <pubkey.h>
-#include <tinyformat.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include "chainparamsbase.h"
+
+#include "tinyformat.h"
+#include "util.h"
+
 #include <assert.h>
-#include <script/standard.h>
-#include <chainparamsseeds.h>
-#include <amount.h>
 
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
@@ -38,7 +33,7 @@ class CBaseMainParams : public CBaseChainParams
 public:
     CBaseMainParams()
     {
-        nRPCPort = 5482;
+        nRPCPort = 6402;
     }
 };
 
@@ -50,7 +45,7 @@ class CBaseTestNetParams : public CBaseChainParams
 public:
     CBaseTestNetParams()
     {
-        nRPCPort = 15482;
+        nRPCPort = 16402;
         strDataDir = "testnet3";
     }
 };
@@ -63,7 +58,7 @@ class CBaseRegTestParams : public CBaseChainParams
 public:
     CBaseRegTestParams()
     {
-        nRPCPort = 15443;
+        nRPCPort = 16402;
         strDataDir = "regtest";
     }
 };

@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2018 MicroBitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,6 +50,87 @@ struct LockPoints
 };
 
 class CTxMemPool;
+
+struct CSpentIndexKeyCompare
+{
+    bool operator()(const CSpentIndexKey& a, const CSpentIndexKey& b) const {
+        if (a.txid == b.txid) {
+            return a.outputIndex < b.outputIndex;
+        } else {
+            return a.txid < b.txid;
+        }
+    }
+};
+
+struct CMempoolAddressDelta
+{
+    int64_t time;
+    CAmount amount;
+    uint256 prevhash;
+    unsigned int prevout;
+
+    CMempoolAddressDelta(int64_t t, CAmount a, uint256 hash, unsigned int out) {
+        time = t;
+        amount = a;
+        prevhash = hash;
+        prevout = out;
+    }
+
+    CMempoolAddressDelta(int64_t t, CAmount a) {
+        time = t;
+        amount = a;
+        prevhash.SetNull();
+        prevout = 0;
+    }
+};
+
+struct CMempoolAddressDeltaKey
+{
+    int type;
+    uint160 addressBytes;
+    uint256 txhash;
+    unsigned int index;
+    int spending;
+
+    CMempoolAddressDeltaKey(int addressType, uint160 addressHash, uint256 hash, unsigned int i, int s) {
+        type = addressType;
+        addressBytes = addressHash;
+        txhash = hash;
+        index = i;
+        spending = s;
+    }
+
+    CMempoolAddressDeltaKey(int addressType, uint160 addressHash) {
+        type = addressType;
+        addressBytes = addressHash;
+        txhash.SetNull();
+        index = 0;
+        spending = 0;
+    }
+};
+
+struct CMempoolAddressDeltaKeyCompare
+{
+    bool operator()(const CMempoolAddressDeltaKey& a, const CMempoolAddressDeltaKey& b) const {
+        if (a.type == b.type) {
+            if (a.addressBytes == b.addressBytes) {
+                if (a.txhash == b.txhash) {
+                    if (a.index == b.index) {
+                        return a.spending < b.spending;
+                    } else {
+                        return a.index < b.index;
+                    }
+                } else {
+                    return a.txhash < b.txhash;
+                }
+            } else {
+                return a.addressBytes < b.addressBytes;
+            }
+        } else {
+            return a.type < b.type;
+        }
+    }
+};
 
 /** \class CTxMemPoolEntry
  *
@@ -207,7 +289,7 @@ struct mempoolentry_txid
 class CompareTxMemPoolEntryByDescendantScore
 {
 public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
         bool fUseADescendants = UseDescendantScore(a);
         bool fUseBDescendants = UseDescendantScore(b);
@@ -229,7 +311,7 @@ public:
     }
 
     // Calculate which score to use for an entry (avoiding division).
-    bool UseDescendantScore(const CTxMemPoolEntry &a) const
+    bool UseDescendantScore(const CTxMemPoolEntry &a)
     {
         double f1 = (double)a.GetModifiedFee() * a.GetSizeWithDescendants();
         double f2 = (double)a.GetModFeesWithDescendants() * a.GetTxSize();
@@ -244,7 +326,7 @@ public:
 class CompareTxMemPoolEntryByScore
 {
 public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
         double f1 = (double)a.GetModifiedFee() * b.GetTxSize();
         double f2 = (double)b.GetModifiedFee() * a.GetTxSize();
@@ -258,7 +340,7 @@ public:
 class CompareTxMemPoolEntryByEntryTime
 {
 public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
         return a.GetTime() < b.GetTime();
     }
@@ -267,7 +349,7 @@ public:
 class CompareTxMemPoolEntryByAncestorFee
 {
 public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
         double aFees = a.GetModFeesWithAncestors();
         double aSize = a.GetSizeWithAncestors();
@@ -490,6 +572,19 @@ private:
     typedef std::map<txiter, TxLinks, CompareIteratorByHash> txlinksMap;
     txlinksMap mapLinks;
 
+    typedef std::map<CMempoolAddressDeltaKey, CMempoolAddressDelta, CMempoolAddressDeltaKeyCompare> addressDeltaMap;
+    addressDeltaMap mapAddress;
+
+    typedef std::map<uint256, std::vector<CMempoolAddressDeltaKey> > addressDeltaMapInserted;
+	
+    addressDeltaMapInserted mapAddressInserted;
+
+    typedef std::map<CSpentIndexKey, CSpentIndexValue, CSpentIndexKeyCompare> mapSpentIndex;
+    mapSpentIndex mapSpent;
+
+    typedef std::map<uint256, std::vector<CSpentIndexKey> > mapSpentIndexInserted;
+    mapSpentIndexInserted mapSpentInserted;
+
     void UpdateParent(txiter entry, txiter parent, bool add);
     void UpdateChild(txiter entry, txiter child, bool add);
 
@@ -518,6 +613,16 @@ public:
     // then invoke the second version.
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool validFeeEstimate = true);
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate = true);
+
+    void addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view);
+    bool getAddressIndex(std::vector<std::pair<uint160, int> > &addresses,
+                         std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> > &results);
+    bool removeAddressIndex(const uint256 txhash);
+
+	
+    void addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view);
+    bool getSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
+    bool removeSpentIndex(const uint256 txhash);
 
     void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);

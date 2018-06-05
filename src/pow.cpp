@@ -12,21 +12,19 @@
 #include "uint256.h"
 
 #include "bignum.h"
-#include "validation.h"
+static const int64_t DGWPastBlocksMax = 24;
 
-static const int64_t nTargetSpacing = 1 * 60;
-
-unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params) {
-    /* current difficulty formula, darkcoin - DarkGravity v3, written by Evan Duffield - evan@darkcoin.io */
+static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consensus::Params& params, bool isHardfork) {
+    /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dash.org */
     const CBlockIndex *BlockLastSolved = pindexLast;
     const CBlockIndex *BlockReading = pindexLast;
     int64_t nActualTimespan = 0;
     int64_t LastBlockTime = 0;
     int64_t PastBlocksMin = 24;
-    int64_t PastBlocksMax = 24;
+    int64_t PastBlocksMax = DGWPastBlocksMax;
     int64_t CountBlocks = 0;
-    CBigNum PastDifficultyAverage;
-    CBigNum PastDifficultyAveragePrev;
+    arith_uint256 PastDifficultyAverage;
+    arith_uint256 PastDifficultyAveragePrev;
 
     if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin) {
         return UintToArith256(params.powLimit).GetCompact();
@@ -38,7 +36,7 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 
         if(CountBlocks <= PastBlocksMin) {
             if (CountBlocks == 1) { PastDifficultyAverage.SetCompact(BlockReading->nBits); }
-            else { PastDifficultyAverage = ((PastDifficultyAveragePrev * CountBlocks)+(CBigNum().SetCompact(BlockReading->nBits))) / (CountBlocks+1); }
+            else { PastDifficultyAverage = ((PastDifficultyAveragePrev * CountBlocks) + (arith_uint256().SetCompact(BlockReading->nBits))) / (CountBlocks + 1); }
             PastDifficultyAveragePrev = PastDifficultyAverage;
         }
 
@@ -52,57 +50,70 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
         BlockReading = BlockReading->pprev;
     }
 
-    CBigNum bnNew(PastDifficultyAverage);
+    arith_uint256 bnNew(PastDifficultyAverage);
 
-    int64_t nTargetTimespan = CountBlocks*nTargetSpacing;
+    const auto powTargetSpacing = isHardfork ? params.nPowTargetSpacing : params.nBtcPowTargetSpacing;
+    int64_t _nTargetTimespan = CountBlocks * powTargetSpacing;
 
-    if (nActualTimespan < nTargetTimespan/3)
-        nActualTimespan = nTargetTimespan/3;
-    if (nActualTimespan > nTargetTimespan*3)
-        nActualTimespan = nTargetTimespan*3;
+    if (nActualTimespan < _nTargetTimespan/3)
+        nActualTimespan = _nTargetTimespan/3;
+    if (nActualTimespan > _nTargetTimespan*3)
+        nActualTimespan = _nTargetTimespan*3;
 
     // Retarget
     bnNew *= nActualTimespan;
-    bnNew /= nTargetTimespan;
+    bnNew /= _nTargetTimespan;
 
-    if (bnNew > CBigNum(params.powLimit)) {
-        bnNew = CBigNum(params.powLimit);
+    if (bnNew > UintToArith256(params.powLimit)){
+        bnNew = UintToArith256(params.powLimit);
     }
+
     return bnNew.GetCompact();
 }
-//----------------------
+
+static unsigned int BitcoinNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, bool isHardfork)
+{
+    // Go back by what we want to be 14 days worth of blocks
+    const auto difficultyAdjustmentInterval = isHardfork ? params.DifficultyAdjustmentInterval() : params.BitcoinDifficultyAdjustmentInterval();
+    int nHeightFirst = pindexLast->nHeight - (difficultyAdjustmentInterval-1);
+    assert(nHeightFirst >= 0);
+    const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
+    assert(pindexFirst);
+
+    return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+}
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
+
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+    if (pindexLast->nHeight + 1 >= params.hardforkHeight &&
+        pindexLast->nHeight + 1 < params.hardforkHeight + DGWPastBlocksMax)
+        return nProofOfWorkLimit;
+    if (params.fPowNoRetargeting) return pindexLast->nBits;
 
-    const CChainParams &chainParams = Params();
-    if (chainParams.IsDuringPremine(pindexLast->nHeight + 1))
-    {
-        return UintToArith256(uint256S("000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")).GetCompact();
-    }
-
-    if (IsHardForkEnabled(pindexLast->nHeight + 1, params))
-    {
-        return DarkGravityWave3(pindexLast, pblock, params);
-    }
+    const auto isHardfork = pindexLast->nHeight + 1 >= params.hardforkHeight;
+    const auto difficultyAdjustmentInterval = isHardfork
+        ? params.DifficultyAdjustmentInterval()
+        : params.BitcoinDifficultyAdjustmentInterval();
 
     // Only change once per difficulty adjustment interval
-    if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
+    if ((pindexLast->nHeight+1) % difficultyAdjustmentInterval != 0)
     {
         if (params.fPowAllowMinDifficultyBlocks)
         {
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
+            const auto powTargetSpacing = isHardfork ? params.nPowTargetSpacing : params.nBtcPowTargetSpacing;
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + powTargetSpacing*2)
                 return nProofOfWorkLimit;
             else
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % difficultyAdjustmentInterval != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
                 return pindex->nBits;
             }
@@ -110,13 +121,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
-    // Go back by what we want to be 14 days worth of blocks
-    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
-    assert(nHeightFirst >= 0);
-    const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
-    assert(pindexFirst);
-
-    return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+    return pblock->IsMicroBitcoin()
+        ? DarkGravityWave(pindexLast, params, isHardfork)
+        : BitcoinNextWorkRequired(pindexLast, pblock, params, isHardfork);
 }
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)

@@ -132,7 +132,7 @@ bool ShutdownRequested()
 /**
  * This is a minimally invasive approach to shutdown on LevelDB read errors from the
  * chainstate, while keeping user interface out of the common library, which is shared
- * between bitcoind, and bitcoin-qt and non-server tools.
+ * between microbitcoind, and microbitcoin-qt and non-server tools.
 */
 class CCoinsViewErrorCatcher : public CCoinsViewBacked
 {
@@ -827,7 +827,7 @@ void InitLogging()
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrintf("Bitcoin version %s\n", FormatFullVersion());
+    LogPrintf("MicroBitcoin version %s\n", FormatFullVersion());
 }
 
 namespace { // Variables internal to initialization process only

@@ -1,4 +1,4 @@
-#!/sbin/openrc-run
+#!/sbin/runscript
 
 # backward compatibility for existing gentoo layout 
 #

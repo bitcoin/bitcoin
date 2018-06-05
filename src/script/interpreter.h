@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2018 MicroBitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,10 +24,8 @@ enum
     SIGHASH_ALL = 1,
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
+    SIGHASH_FORKID = 0x20,
     SIGHASH_ANYONECANPAY = 0x80,
-    SIGHASH_FORKID = 0x10,
-    SIGHASH_MBC_ALL = SIGHASH_ALL | SIGHASH_FORKID,
-
 };
 
 /** Script verification flags */
@@ -113,7 +110,7 @@ enum
 
     // Do we accept signature using SIGHASH_FORKID
     //
-    SCRIPT_VERIFY_SIGHASH_FORKID = (1U << 16),
+    SCRIPT_ENABLE_SIGHASH_FORKID = (1U << 16),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);

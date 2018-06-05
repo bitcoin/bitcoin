@@ -6,21 +6,29 @@
 
 #include "primitives/block.h"
 
-#include <hash.h>
-#include <tinyformat.h>
-#include <utilstrencodings.h>
-#include <crypto/common.h>
-#include <versionbits.h>
+#include "hash.h"
+#include "tinyformat.h"
+#include "utilstrencodings.h"
+#include "crypto/common.h"
+#include "versionbits.h"
 
 uint256 CBlockHeader::GetHash() const
 {
-    if (CheckMBCVersion(nVersion))
+    if (IsMicroBitcoin())
     {
         XCoin::CGroestlHashWriter ss(SER_GETHASH, PROTOCOL_VERSION); //GRS
         ss << *this;
         return ss.GetHash();
+        // return SerializeHash(*this);
+    } else {
+        return SerializeHash(*this);
     }
-    return SerializeHash(*this);
+}
+
+bool CBlockHeader::IsMicroBitcoin() const
+{
+    // Time is the end of CSV deployment
+    return nTime > 1493596800 && nVersion & VERSIONBITS_MICROBITCOIN;
 }
 
 std::string CBlock::ToString() const

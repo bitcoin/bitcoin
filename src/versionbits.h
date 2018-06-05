@@ -1,4 +1,6 @@
 // Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2018 MicroBitcoin developers
+// Copyright (c) 2018 MicroBitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +18,8 @@ static const int32_t VERSIONBITS_TOP_BITS = 0x20000000UL;
 static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
 /** Total bits available for versionbits */
 static const int32_t VERSIONBITS_NUM_BITS = 29;
+
+static const int32_t VERSIONBITS_MICROBITCOIN = 1 << 27;
 
 enum ThresholdState {
     THRESHOLD_DEFINED,
@@ -76,14 +80,5 @@ ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::
 BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
-
-static const int32_t VERSIONBITS_MBC_MASK = 0x12000000UL;
-
-static inline bool CheckMBCVersion(int nVersion)
-{
-    static const int MBC_BIT = 24;
-    return (nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS
-        && (nVersion >> MBC_BIT) == ((VERSIONBITS_TOP_BITS | VERSIONBITS_MBC_MASK) >> MBC_BIT);
-}
 
 #endif

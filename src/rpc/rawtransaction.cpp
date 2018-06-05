@@ -60,6 +60,87 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     }
 }
 
+void TxToJSONExpanded(const CTransactionRef& tx, const uint256 hashBlock, UniValue& entry,
+                      int nHeight = 0, int nConfirmations = 0, int nBlockTime = 0)
+{
+
+    uint256 txid = tx->GetHash();
+    entry.push_back(Pair("txid", txid.GetHex()));
+    entry.push_back(Pair("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION)));
+    entry.push_back(Pair("version", tx->nVersion));
+    entry.push_back(Pair("locktime", (int64_t)tx->nLockTime));
+    UniValue vin(UniValue::VARR);
+    for (const CTxIn& txin : tx->vin) {
+        UniValue in(UniValue::VOBJ);
+        if (tx->IsCoinBase())
+            in.push_back(Pair("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
+        else {
+            in.push_back(Pair("txid", txin.prevout.hash.GetHex()));
+            in.push_back(Pair("vout", (int64_t)txin.prevout.n));
+            UniValue o(UniValue::VOBJ);
+            o.push_back(Pair("asm", ScriptToAsmStr(txin.scriptSig, true)));
+            o.push_back(Pair("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
+            in.push_back(Pair("scriptSig", o));
+
+            // Add address and value info if spentindex enabled
+            CSpentIndexValue spentInfo;
+            CSpentIndexKey spentKey(txin.prevout.hash, txin.prevout.n);
+            if (GetSpentIndex(spentKey, spentInfo)) {
+                in.push_back(Pair("value", ValueFromAmount(spentInfo.satoshis)));
+                in.push_back(Pair("valueSat", spentInfo.satoshis));
+                if (spentInfo.addressType == 1) {
+                    in.push_back(Pair("address", CBitcoinAddress(CKeyID(spentInfo.addressHash)).ToString()));
+                } else if (spentInfo.addressType == 2)  {
+                    in.push_back(Pair("address", CBitcoinAddress(CScriptID(spentInfo.addressHash)).ToString()));
+                } else if (spentInfo.addressType == 3)  {
+                    in.push_back(Pair("address", CBitcoinAddress(CKeyID(spentInfo.addressHash)).ToString()));
+                }
+             }
+        }
+        in.push_back(Pair("sequence", (int64_t)txin.nSequence));
+        vin.push_back(in);
+    }
+    entry.push_back(Pair("vin", vin));
+    UniValue vout(UniValue::VARR);
+    for (unsigned int i = 0; i < tx->vout.size(); i++) {
+        const CTxOut& txout = tx->vout[i];
+        UniValue out(UniValue::VOBJ);
+        out.push_back(Pair("value", ValueFromAmount(txout.nValue)));
+        out.push_back(Pair("valueSat", txout.nValue));
+        out.push_back(Pair("n", (int64_t)i));
+        UniValue o(UniValue::VOBJ);
+        ScriptPubKeyToUniv(txout.scriptPubKey, o, true);
+        out.push_back(Pair("scriptPubKey", o));
+        out.push_back(Pair("scriptPubKey", o));
+
+        // Add spent information if spentindex is enabled
+        CSpentIndexValue spentInfo;
+        CSpentIndexKey spentKey(txid, i);
+        if (GetSpentIndex(spentKey, spentInfo)) {
+            out.push_back(Pair("spentTxId", spentInfo.txid.GetHex()));
+            out.push_back(Pair("spentIndex", (int)spentInfo.inputIndex));
+            out.push_back(Pair("spentHeight", spentInfo.blockHeight));
+        }
+
+        vout.push_back(out);
+    }
+    entry.push_back(Pair("vout", vout));
+
+    if (!hashBlock.IsNull()) {
+        entry.push_back(Pair("blockhash", hashBlock.GetHex()));
+
+        if (nConfirmations > 0) {
+            entry.push_back(Pair("height", nHeight));
+            entry.push_back(Pair("confirmations", nConfirmations));
+            entry.push_back(Pair("time", nBlockTime));
+            entry.push_back(Pair("blocktime", nBlockTime));
+        } else {
+            entry.push_back(Pair("height", -1));
+            entry.push_back(Pair("confirmations", 0));
+        }
+    }
+}
+
 UniValue getrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -156,16 +237,36 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
 
     CTransactionRef tx;
     uint256 hashBlock;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string(fTxIndex ? "No such mempool or blockchain transaction"
-            : "No such mempool transaction. Use -txindex to enable blockchain transaction queries") +
-            ". Use gettransaction for wallet transactions.");
+    int nHeight = 0;
+    int nConfirmations = 0;
+    int nBlockTime = 0;
+
+    {
+        LOCK(cs_main);
+        if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
+
+        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+        if (mi != mapBlockIndex.end() && (*mi).second) {
+            CBlockIndex* pindex = (*mi).second;
+            if (chainActive.Contains(pindex)) {
+                nHeight = pindex->nHeight;
+                nConfirmations = 1 + chainActive.Height() - pindex->nHeight;
+                nBlockTime = pindex->GetBlockTime();
+            } else {
+                nHeight = -1;
+                nConfirmations = 0;
+                nBlockTime = pindex->GetBlockTime();
+            }
+        }
+    }
+
 
     if (!fVerbose)
         return EncodeHexTx(*tx, RPCSerializationFlags());
 
     UniValue result(UniValue::VOBJ);
-    TxToJSON(*tx, hashBlock, result);
+    TxToJSONExpanded(tx, hashBlock, result, nHeight, nConfirmations, nBlockTime);
     return result;
 }
 
@@ -825,7 +926,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     const CKeyStore& keystore = tempKeystore;
 #endif
 
-    int nHashType = SIGHASH_MBC_ALL;
+    int nHashType = SIGHASH_ALL | SIGHASH_FORKID;
     if (request.params.size() > 3 && !request.params[3].isNull()) {
         static std::map<std::string, int> mapSigHashValues = {
             {std::string("ALL"), int(SIGHASH_ALL)},
@@ -834,6 +935,12 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             {std::string("NONE|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_ANYONECANPAY)},
             {std::string("SINGLE"), int(SIGHASH_SINGLE)},
             {std::string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY)},
+            {std::string("ALL|FORKID"), int(SIGHASH_ALL|SIGHASH_FORKID)},
+            {std::string("NONE|FORKID"), int(SIGHASH_NONE|SIGHASH_FORKID)},
+            {std::string("SINGLE|FORKID"), int(SIGHASH_SINGLE|SIGHASH_FORKID)},
+            {std::string("ALL|FORKID|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_FORKID|SIGHASH_ANYONECANPAY)},
+            {std::string("NONE|FORKID|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_FORKID|SIGHASH_ANYONECANPAY)},
+            {std::string("SINGLE|FORKID|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_FORKID|SIGHASH_ANYONECANPAY)},
         };
         std::string strHashType = request.params[3].get_str();
         if (mapSigHashValues.count(strHashType))

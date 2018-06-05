@@ -4,15 +4,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <script/interpreter.h>
+#include "interpreter.h"
 
-#include <primitives/transaction.h>
-#include <crypto/ripemd160.h>
-#include <crypto/sha1.h>
-#include <crypto/sha256.h>
-#include <pubkey.h>
-#include <script/script.h>
-#include <uint256.h>
+#include "primitives/transaction.h"
+#include "crypto/ripemd160.h"
+#include "crypto/sha1.h"
+#include "crypto/sha256.h"
+#include "pubkey.h"
+#include "script/script.h"
+#include "uint256.h"
 
 typedef std::vector<unsigned char> valtype;
 
@@ -186,14 +186,14 @@ bool static IsDefinedHashtypeSignature(const valtype &vchSig) {
     if (vchSig.size() == 0) {
         return false;
     }
-    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY));
+    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID));
     if (nHashType < SIGHASH_ALL || nHashType > SIGHASH_SINGLE)
         return false;
 
     return true;
 }
 
-static uint32_t GetHashType(const valtype& vchSig) {
+static uint32_t GetHashType(const valtype &vchSig) {
     if (vchSig.size() == 0) {
         return 0;
     }
@@ -201,13 +201,15 @@ static uint32_t GetHashType(const valtype& vchSig) {
     return vchSig[vchSig.size() - 1];
 }
 
-static bool UsesForkId(uint32_t nHashType) {
-    return nHashType & SIGHASH_FORKID;
-}
-
-static bool UsesForkId(const valtype& vchSig) {
+static void CleanupScriptCode(CScript &scriptCode,
+                              const std::vector<uint8_t> &vchSig,
+                              uint32_t flags) {
+    // Drop the signature in scripts when SIGHASH_FORKID is not used.
     uint32_t nHashType = GetHashType(vchSig);
-    return UsesForkId(nHashType);
+    if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID) ||
+        !(nHashType & SIGHASH_FORKID)) {
+        scriptCode.FindAndDelete(CScript(vchSig));
+    }
 }
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror) {
@@ -221,17 +223,16 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
     } else if ((flags & SCRIPT_VERIFY_LOW_S) != 0 && !IsLowDERSignature(vchSig, serror)) {
         // serror is set
         return false;
-    } else if ((flags & SCRIPT_VERIFY_STRICTENC) != 0) { 
+    } else if ((flags & SCRIPT_VERIFY_STRICTENC) != 0) {
         if (!IsDefinedHashtypeSignature(vchSig)) {
             return set_error(serror, SCRIPT_ERR_SIG_HASHTYPE);
         }
-
-        bool usesForkId = UsesForkId(vchSig);
-        bool forkIdEnabled = flags & SCRIPT_VERIFY_SIGHASH_FORKID;
-        if (usesForkId && !forkIdEnabled) {
+        bool usesForkId = GetHashType(vchSig) & SIGHASH_FORKID;
+        bool forkIdEnabled = flags & SCRIPT_ENABLE_SIGHASH_FORKID;
+        if (!forkIdEnabled && usesForkId) {
             return set_error(serror, SCRIPT_ERR_ILLEGAL_FORKID);
         }
-        if (!usesForkId && forkIdEnabled) {
+        if (forkIdEnabled && !usesForkId) {
             return set_error(serror, SCRIPT_ERR_MUST_USE_FORKID);
         }
     }
@@ -919,7 +920,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
                     // Drop the signature in pre-segwit scripts but not segwit scripts
                     if (sigversion == SIGVERSION_BASE) {
-                        scriptCode.FindAndDelete(CScript(vchSig));
+                        CleanupScriptCode(scriptCode, vchSig, flags);
                     }
 
                     if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, sigversion, serror)) {
@@ -983,7 +984,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     {
                         valtype& vchSig = stacktop(-isig-k);
                         if (sigversion == SIGVERSION_BASE) {
-                            scriptCode.FindAndDelete(CScript(vchSig));
+                            CleanupScriptCode(scriptCode, vchSig, flags);
                         }
                     }
 

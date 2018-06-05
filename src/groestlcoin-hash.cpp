@@ -10,9 +10,6 @@
 #include "hash.h"
 #include "crypto/common.h"
 
-
-
-
 using namespace std;
 
 extern "C" {

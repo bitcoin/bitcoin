@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2018 MicroBitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -68,6 +69,12 @@ const std::map<unsigned char, std::string> mapSigHashTypes = {
     {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_ANYONECANPAY), std::string("NONE|ANYONECANPAY")},
     {static_cast<unsigned char>(SIGHASH_SINGLE), std::string("SINGLE")},
     {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY), std::string("SINGLE|ANYONECANPAY")},
+    {static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_FORKID), std::string("ALL|FORKID")},
+    {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_FORKID), std::string("NONE|FORKID")},
+    {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_FORKID), std::string("SINGLE|FORKID")},
+    {static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_FORKID|SIGHASH_ANYONECANPAY), std::string("ALL|FORKID|ANYONECANPAY")},
+    {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_FORKID|SIGHASH_ANYONECANPAY), std::string("NONE|FORKID|ANYONECANPAY")},
+    {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_FORKID|SIGHASH_ANYONECANPAY), std::string("SINGLE|FORKID|ANYONECANPAY")},
 };
 
 /**
@@ -102,7 +109,8 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
                     // this won't decode correctly formatted public keys in Pubkey or Multisig scripts due to
                     // the restrictions on the pubkey formats (see IsCompressedOrUncompressedPubKey) being incongruous with the
                     // checks in CheckSignatureEncoding.
-                    if (CheckSignatureEncoding(vch, SCRIPT_VERIFY_STRICTENC, nullptr)) {
+                    auto flags = SCRIPT_VERIFY_STRICTENC | SCRIPT_ENABLE_SIGHASH_FORKID;
+                    if (CheckSignatureEncoding(vch, flags, nullptr)) {
                         const unsigned char chSigHashType = vch.back();
                         if (mapSigHashTypes.count(chSigHashType)) {
                             strSigHashDecode = "[" + mapSigHashTypes.find(chSigHashType)->second + "]";

@@ -1,38 +1,32 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2018 MicroBitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <miner.h>
+#include "miner.h"
 
-#include <amount.h>
-#include <chain.h>
-#include <chainparams.h>
-#include <coins.h>
-#include <consensus/consensus.h>
-#include <consensus/tx_verify.h>
-#include <consensus/merkle.h>
-#include <consensus/validation.h>
-#include <hash.h>
-#include <validation.h>
-#include <net.h>
-#include <policy/feerate.h>
-#include <policy/policy.h>
-#include <pow.h>
-#include <primitives/transaction.h>
-#include <script/standard.h>
-#include <timedata.h>
-#include <txmempool.h>
-#include <util.h>
-#include <utilmoneystr.h>
-#include <validationinterface.h>
-#include <base58.h>
-#include <pubkey.h>
-#include <tinyformat.h>
-#include <util.h>
-#include <utilstrencodings.h>
-#include <assert.h>
+#include "amount.h"
+#include "chain.h"
+#include "base58.h"
+#include "chainparams.h"
+#include "coins.h"
+#include "consensus/consensus.h"
+#include "consensus/tx_verify.h"
+#include "consensus/merkle.h"
+#include "consensus/validation.h"
+#include "hash.h"
+#include "validation.h"
+#include "net.h"
+#include "policy/feerate.h"
+#include "policy/policy.h"
+#include "pow.h"
+#include "primitives/transaction.h"
+#include "script/standard.h"
+#include "timedata.h"
+#include "txmempool.h"
+#include "util.h"
+#include "utilmoneystr.h"
+#include "validationinterface.h"
 
 #include <algorithm>
 #include <queue>
@@ -40,7 +34,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// MicroBitcoinMiner
+// BitcoinMiner
 //
 
 //
@@ -168,19 +162,21 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     CMutableTransaction coinbaseTx;
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
+    coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-    coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
-    // Premine
-    const CChainParams &chainParams = Params();
-    if (chainParams.IsDuringPremine(nHeight))
-    {
+    // Add premine at hardfork height
+    if (nHeight == chainparams.GetConsensus().hardforkHeight) {
+        auto pmValue = chainparams.GetConsensus().premineValue;
         CBitcoinAddress pmAddr(chainparams.GetConsensus().premineAddress);
-        coinbaseTx.vout.push_back(CTxOut(GetBlockSubsidy(nHeight, chainparams.GetConsensus()), GetScriptForDestination(pmAddr.Get())));
+        coinbaseTx.vout.push_back(CTxOut(pmValue, GetScriptForDestination(pmAddr.Get())));
+
+        std::cout << "\n\n\n\n\n\nPREMINE\n\n\n\n\n\n" << chainparams.GetConsensus().premineValue << "\n\n\n\n\n\n";
+
     }
-    
+
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;

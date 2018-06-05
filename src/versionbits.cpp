@@ -17,6 +17,10 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
     {
         /*.name =*/ "segwit",
         /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "microbitcoin",
+        /*.gbt_force =*/ true,
     }
 };
 
@@ -217,10 +221,3 @@ void VersionBitsCache::Clear()
         caches[d].clear();
     }
 }
-
-
-bool IsVersionBitsActive(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
-{
-    return VersionBitsState(pindexPrev, params, pos, cache) == THRESHOLD_ACTIVE;
-}
-

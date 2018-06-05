@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multiwallet.
 
-Verify that a microbitcoind node can load multiple wallet files
+Verify that a bitcoind node can load multiple wallet files
 """
 import os
 import shutil
@@ -81,10 +81,6 @@ class MultiWalletTest(BitcoinTestFramework):
         w1.generate(1)
         assert_equal(w2.getbalance(), 1)
         assert_equal(w3.getbalance(), 2)
-
-        batch = w1.batch([w1.getblockchaininfo.get_request(), w1.getwalletinfo.get_request()])
-        assert_equal(batch[0]["result"]["chain"], "regtest")
-        assert_equal(batch[1]["result"]["walletname"], "w1")
 
 if __name__ == '__main__':
     MultiWalletTest().main()

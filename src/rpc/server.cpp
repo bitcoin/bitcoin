@@ -117,7 +117,7 @@ CAmount AmountFromValue(const UniValue& value)
     if (!value.isNum() && !value.isStr())
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
     CAmount amount;
-    if (!ParseFixedPoint(value.getValStr(), 8, &amount))
+    if (!ParseFixedPoint(value.getValStr(), 4, &amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     if (!MoneyRange(amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
@@ -388,10 +388,11 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
 }
 
-static UniValue JSONRPCExecOne(JSONRPCRequest jreq, const UniValue& req)
+static UniValue JSONRPCExecOne(const UniValue& req)
 {
     UniValue rpc_result(UniValue::VOBJ);
 
+    JSONRPCRequest jreq;
     try {
         jreq.parse(req);
 
@@ -411,11 +412,11 @@ static UniValue JSONRPCExecOne(JSONRPCRequest jreq, const UniValue& req)
     return rpc_result;
 }
 
-std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq)
+std::string JSONRPCExecBatch(const UniValue& vReq)
 {
     UniValue ret(UniValue::VARR);
     for (unsigned int reqIdx = 0; reqIdx < vReq.size(); reqIdx++)
-        ret.push_back(JSONRPCExecOne(jreq, vReq[reqIdx]));
+        ret.push_back(JSONRPCExecOne(vReq[reqIdx]));
 
     return ret.write() + "\n";
 }

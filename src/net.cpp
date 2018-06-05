@@ -10,19 +10,18 @@
 
 #include "net.h"
 
-#include <addrman.h>
-#include <chainparams.h>
-#include <clientversion.h>
-#include <consensus/consensus.h>
-#include <crypto/common.h>
-#include <crypto/sha256.h>
-#include <hash.h>
-#include <primitives/transaction.h>
-#include <netbase.h>
-#include <scheduler.h>
-#include <ui_interface.h>
-#include <utilstrencodings.h>
-#include <validation.h>
+#include "addrman.h"
+#include "chainparams.h"
+#include "clientversion.h"
+#include "consensus/consensus.h"
+#include "crypto/common.h"
+#include "crypto/sha256.h"
+#include "hash.h"
+#include "primitives/transaction.h"
+#include "netbase.h"
+#include "scheduler.h"
+#include "ui_interface.h"
+#include "utilstrencodings.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -711,7 +710,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         // get current incomplete message, or create a new one
         if (vRecvMsg.empty() ||
             vRecvMsg.back().complete())
-            vRecvMsg.push_back(CNetMessage(magic(), SER_NETWORK, INIT_PROTO_VERSION));
+            vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
 
         CNetMessage& msg = vRecvMsg.back();
 
@@ -2829,17 +2828,6 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
 }
 
-const CMessageHeader::MessageStartChars &CNode::magic() const
-{
-    // const CChainParams& chainparams = Params();
-    // if (IsHardForkEnabled(chainActive.Height() + 2, chainparams.GetConsensus()))
-    // {
-    //     return Params().MBCMessageStart();
-    // }
-    // return Params().MessageStart();
-    return Params().MBCMessageStart();
-}
-
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     size_t nMessageSize = msg.data.size();
@@ -2849,7 +2837,8 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     std::vector<unsigned char> serializedHeader;
     serializedHeader.reserve(CMessageHeader::HEADER_SIZE);
     uint256 hash = Hash(msg.data.data(), msg.data.data() + nMessageSize);
-    CMessageHeader hdr(pnode->magic(), msg.command.c_str(), nMessageSize);
+    CMessageHeader hdr(Params().MessageStart(),
+        msg.command.c_str(), nMessageSize);
     memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
 
     CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, serializedHeader, 0, hdr};

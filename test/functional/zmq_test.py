@@ -31,7 +31,7 @@ class ZMQTest (BitcoinTestFramework):
         config.read_file(open(self.options.configfile))
 
         if not config["components"].getboolean("ENABLE_ZMQ"):
-            raise SkipTest("microbitcoind has not been built with zmq enabled.")
+            raise SkipTest("bitcoind has not been built with zmq enabled.")
 
         self.zmqContext = zmq.Context()
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)

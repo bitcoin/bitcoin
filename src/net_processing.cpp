@@ -435,13 +435,13 @@ bool TipMayBeStale(const Consensus::Params &consensusParams)
     if (g_last_tip_update == 0) {
         g_last_tip_update = GetTime();
     }
-    return g_last_tip_update < GetTime() - consensusParams.nPowTargetSpacing * 3 && mapBlocksInFlight.empty();
+    return g_last_tip_update < GetTime() - consensusParams.nBtcPowTargetSpacing * 3 && mapBlocksInFlight.empty();
 }
 
 // Requires cs_main
 bool CanDirectFetch(const Consensus::Params &consensusParams)
 {
-    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nPowTargetSpacing * 20;
+    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nBtcPowTargetSpacing * 20;
 }
 
 // Requires cs_main
@@ -1293,7 +1293,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
     CBlockHeader first_invalid_header;
     if (!ProcessNewBlockHeaders(headers, state, chainparams, &pindexLast, &first_invalid_header)) {
         int nDoS;
-        if (state.IsInvalid(nDoS)) {
+        if (pindexLast == nullptr && state.IsInvalid(nDoS)) {
             LOCK(cs_main);
             if (nDoS > 0) {
                 Misbehaving(pfrom->GetId(), nDoS);
@@ -1929,7 +1929,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
             // If pruning, don't inv blocks unless we have on disk and are likely to still have
             // for some reasonable time window (1 hour) that block relay might require.
-            const int nPrunedBlocksLikelyToHave = MIN_BLOCKS_TO_KEEP - 3600 / chainparams.GetConsensus().nPowTargetSpacing;
+            const int nPrunedBlocksLikelyToHave = MIN_BLOCKS_TO_KEEP - 3600 / chainparams.GetConsensus().nBtcPowTargetSpacing;
             if (fPruneMode && (!(pindex->nStatus & BLOCK_HAVE_DATA) || pindex->nHeight <= chainActive.Tip()->nHeight - nPrunedBlocksLikelyToHave))
             {
                 LogPrint(BCLog::NET, " getblocks stopping, pruned or too old block at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
@@ -2267,7 +2267,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         CValidationState state;
         if (!ProcessNewBlockHeaders({cmpctblock.header}, state, chainparams, &pindex)) {
             int nDoS;
-            if (state.IsInvalid(nDoS)) {
+            if (pindex == nullptr && state.IsInvalid(nDoS)) {
                 if (nDoS > 0) {
                     LOCK(cs_main);
                     Misbehaving(pfrom->GetId(), nDoS);
@@ -2875,7 +2875,8 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
 
     msg.SetVersion(pfrom->GetRecvVersion());
     // Scan for message start
-    if (memcmp(msg.hdr.pchMessageStart, chainparams.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
+    auto messageStartValid = memcmp(msg.hdr.pchMessageStart, chainparams.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) == 0;
+    if (!messageStartValid) {
         LogPrintf("PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->GetId());
         pfrom->fDisconnect = true;
         return false;
@@ -2883,7 +2884,8 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
 
     // Read header
     CMessageHeader& hdr = msg.hdr;
-    if (!hdr.IsValid(chainparams.MessageStart()))
+    auto headerValid = hdr.IsValid(chainparams.MessageStart());
+    if (!headerValid)
     {
         LogPrintf("PROCESSMESSAGE: ERRORS IN HEADER %s peer=%d\n", SanitizeString(hdr.GetCommand()), pfrom->GetId());
         return fMoreWork;
@@ -3191,8 +3193,12 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
             // Only actively request headers from a single peer, unless we're close to today.
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
+                const auto powTargetSpacing = pindexBestHeader->nHeight >= consensusParams.hardforkHeight
+                        ? consensusParams.nPowTargetSpacing
+                        : consensusParams.nBtcPowTargetSpacing;
+
                 state.fSyncStarted = true;
-                state.nHeadersSyncTimeout = GetTimeMicros() + HEADERS_DOWNLOAD_TIMEOUT_BASE + HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER * (GetAdjustedTime() - pindexBestHeader->GetBlockTime())/(consensusParams.nPowTargetSpacing);
+                state.nHeadersSyncTimeout = GetTimeMicros() + HEADERS_DOWNLOAD_TIMEOUT_BASE + HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER * (GetAdjustedTime() - pindexBestHeader->GetBlockTime()) / powTargetSpacing;
                 nSyncStarted++;
                 const CBlockIndex *pindexStart = pindexBestHeader;
                 /* If possible, start at the block preceding the currently

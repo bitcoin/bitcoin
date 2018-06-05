@@ -1,12 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
 // Copyright (c) 2018 MicroBitcoin developers
-
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chain.h>
-#include <validation.h>
+#include "chain.h"
+#include "versionbits.h"
 
 /**
  * CChain implementation
@@ -146,13 +145,12 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
         sign = -1;
     }
 
-    if (IsHardForkEnabled(to.nHeight, params)) {
-        // New algo here
+	if (to.nHeight >= params.hardforkHeight) {
         r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip);
     } else {
         r = r * arith_uint256(params.nPowTargetSpacing * 5) / GetBlockProof(tip);
     }
-
+    
     if (r.bits() > 63) {
         return sign * std::numeric_limits<int64_t>::max();
     }
@@ -176,4 +174,10 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
     // Eventually all chain branches meet at the genesis block.
     assert(pa == pb);
     return pa;
+}
+
+bool CBlockIndex::IsMicroBitcoin() const
+{
+    // Time is the end of CSV deployment
+    return nTime > 1493596800 && nVersion & VERSIONBITS_MICROBITCOIN;
 }
