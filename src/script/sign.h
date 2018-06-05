@@ -72,7 +72,6 @@ SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignature
 
 /** Extract signature data from a transaction, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn);
-void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const SignatureData& data);
 void UpdateInput(CTxIn& input, const SignatureData& data);
 
 /* Check whether we know how to sign for an output like this, assuming we
