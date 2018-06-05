@@ -67,7 +67,7 @@ public:
 
     uint256 GetHash() const;
 
-    bool IsParticlVersion()
+    bool IsParticlVersion() const
     {
         return nVersion == PARTICL_BLOCK_VERSION;
     }

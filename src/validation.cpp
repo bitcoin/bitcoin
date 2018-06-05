@@ -4018,6 +4018,10 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
+    if (fParticlMode
+        && !block.IsParticlVersion())
+        return state.DoS(100, false, REJECT_INVALID, "block-version", false, "bad block version");
+
     // Check timestamp
     if (fParticlMode
         && !block.hashPrevBlock.IsNull() // allow genesis block to be created in the future
