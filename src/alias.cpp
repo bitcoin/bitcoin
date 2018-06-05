@@ -216,7 +216,7 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
 }
 
 
-bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
+bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
@@ -277,8 +277,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
 			int pop;
-			if (!GetUTXOCoin(tx.vin[i].prevout, prevCoins))
+			prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
+			if (prevCoins.IsSpent()) {
 				continue;
+			}
+	
 			// ensure inputs are unspent when doing consensus check to add to block
 			if(!DecodeAliasScript(prevCoins.out.scriptPubKey, pop, vvch))
 			{
@@ -296,11 +299,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				vector<vector<unsigned char> > vvch;
 				int pop;
-				Coin prevCoins;
-				if (!GetUTXOCoin(tx.vin[i].prevout, prevCoins))
+				const Coin& prevCoinsW = inputs.AccessCoin(tx.vin[i].prevout);
+				if (prevCoinsW.IsSpent()) {
 					continue;
+				}
 				// ensure inputs are unspent when doing consensus check to add to block
-				if (!DecodeAliasScript(prevCoins.out.scriptPubKey, pop, vvch))
+				if (!DecodeAliasScript(prevCoinsW.out.scriptPubKey, pop, vvch))
 				{
 					continue;
 				}
@@ -953,12 +957,13 @@ bool DecodeAliasTx(const CTransaction& tx, int& op,
 
 	return found;
 }
-bool FindAliasInTx(const CTransaction& tx, vector<vector<unsigned char> >& vvch) {
+bool FindAliasInTx(const CCoinsViewCache &inputs, const CTransaction& tx, vector<vector<unsigned char> >& vvch) {
 	int op;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		Coin prevCoins;
-		if (!GetUTXOCoin(tx.vin[i].prevout, prevCoins))
+		const Coin& prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
+		if (prevCoins.IsSpent()) {
 			continue;
+		}
 		// ensure inputs are unspent when doing consensus check to add to block
 		if (DecodeAliasScript(prevCoins.out.scriptPubKey, op, vvch)) {
 			return true;
@@ -1394,7 +1399,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	vector<vector<unsigned char> > vvchAlias;
 	if (tx.nVersion == SYSCOIN_TX_VERSION && !DecodeAliasTx(tx, op, vvchAlias))
 	{
-		FindAliasInTx(tx, vvchAlias);
+		FindAliasInTx(view, tx, vvchAlias);
 		// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 		op = OP_ALIAS_UPDATE;
 
@@ -1459,7 +1464,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 					int numSigs = 0;
 					CCountSigsVisitor(*pwalletMain, numSigs).Process(scriptPubKey);
 					// add fees to account for every input added to this transaction
-					nFees += GetFee(numSigs*150);
+					nFees += GetFee(numSigs*200);
 					tx.vin.push_back(txIn);
 					nCurrentAmount += nValue;
 					if (nCurrentAmount >= (nDesiredAmount + nFees)) {
@@ -1497,7 +1502,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 				int numSigs = 0;
 				CCountSigsVisitor(*pwalletMain, numSigs).Process(scriptPubKey);
 				// add fees to account for every input added to this transaction
-				nFees += GetFee(numSigs*150, fUseInstantSend);
+				nFees += GetFee(numSigs*200, fUseInstantSend);
 				tx.vin.push_back(txIn);
 				nCurrentAmount += nValue;
 				if (nCurrentAmount >= (nDesiredAmount + nFees)) {
@@ -1533,9 +1538,9 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION) {
 		// call this twice, with fJustCheck and !fJustCheck both with bSanity enabled so it doesn't actually write out to the databases just does the checks
-		if (!CheckSyscoinInputs(tx, state, true, 0, CBlock(), true))
+		if (!CheckSyscoinInputs(tx, state, view, true, 0, CBlock(), true))
 			throw runtime_error(FormatStateMessage(state));
-		if (!CheckSyscoinInputs(tx, state, false, 0, CBlock(), true))
+		if (!CheckSyscoinInputs(tx, state, view, false, 0, CBlock(), true))
 			throw runtime_error(FormatStateMessage(state));
 	}
 	// pass back new raw transaction
