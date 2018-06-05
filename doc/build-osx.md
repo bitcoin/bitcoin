@@ -1,11 +1,11 @@
-Mac OS X Build Instructions and Notes
+macOS Build Instructions and Notes
 ====================================
 The commands in this guide should be executed in a Terminal application.
 The built-in one is located in `/Applications/Utilities/Terminal.app`.
 
 Preparation
 -----------
-Install the OS X command line tools:
+Install the macOS command line tools:
 
 `xcode-select --install`
 
@@ -93,6 +93,6 @@ Other commands:
 Notes
 -----
 
-* Tested on OS X 10.8 through 10.13 on 64-bit Intel processors only.
+* Tested on OS X 10.8 Mountain Lion through macOS 10.13 High Sierra on 64-bit Intel processors only.
 
 * Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714)
