@@ -775,7 +775,6 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 	return true;
 }
 bool FlushSyscoinDBs() {
-	printf("flushing syscoin dbs\n");
 	if (paliasdb != NULL)
 	{
 		if (!paliasdb->Flush()) {
@@ -826,7 +825,6 @@ bool FlushSyscoinDBs() {
 			return false;
 		}
 	}
-	printf("flushed syscoin dbs\n");
 	return true;
 }
 void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
