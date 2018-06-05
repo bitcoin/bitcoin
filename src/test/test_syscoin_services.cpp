@@ -1013,8 +1013,10 @@ int FindAliasDiscount(const string& node, const string& owneralias, const string
 	}
 	return 0;
 }
-string AssetNew(const string& node, const string& name, const string& alias, const string& pubdata, const string& precision, const string& useinputranges, const string& supply, const string& maxsupply, const string& interestrate, const string& canadjustinterestandsupply, const string& witness)
+string AssetNew(const string& node, const string& name, const string& alias, const string& pubdata, const string& precision, const string& useinputranges, const string& supply, const string& maxsupply, const string& interestrate, string canadjustinterestandsupply, const string& witness)
 {
+	if (useinputranges == "true")
+		canadjustinterestandsupply = "false";
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
