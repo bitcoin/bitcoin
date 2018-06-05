@@ -28,13 +28,14 @@ __m128i inline Or(__m128i x, __m128i y) { return _mm_or_si128(x, y); }
 __m128i inline And(__m128i x, __m128i y) { return _mm_and_si128(x, y); }
 __m128i inline ShR(__m128i x, int n) { return _mm_srli_epi32(x, n); }
 __m128i inline ShL(__m128i x, int n) { return _mm_slli_epi32(x, n); }
+__m128i inline Rot(__m128i x, int n) { return Or(ShR(x, n), ShL(x, 32 - n)); }
 
 __m128i inline Ch(__m128i x, __m128i y, __m128i z) { return Xor(z, And(x, Xor(y, z))); }
 __m128i inline Maj(__m128i x, __m128i y, __m128i z) { return Or(And(x, y), And(z, Or(x, y))); }
-__m128i inline Sigma0(__m128i x) { return Xor(Or(ShR(x, 2), ShL(x, 30)), Or(ShR(x, 13), ShL(x, 19)), Or(ShR(x, 22), ShL(x, 10))); }
-__m128i inline Sigma1(__m128i x) { return Xor(Or(ShR(x, 6), ShL(x, 26)), Or(ShR(x, 11), ShL(x, 21)), Or(ShR(x, 25), ShL(x, 7))); }
-__m128i inline sigma0(__m128i x) { return Xor(Or(ShR(x, 7), ShL(x, 25)), Or(ShR(x, 18), ShL(x, 14)), ShR(x, 3)); }
-__m128i inline sigma1(__m128i x) { return Xor(Or(ShR(x, 17), ShL(x, 15)), Or(ShR(x, 19), ShL(x, 13)), ShR(x, 10)); }
+__m128i inline Sigma0(__m128i x) { return Rot(Xor(Rot(Xor(Rot(x, 9), x), 11), x), 2); }
+__m128i inline Sigma1(__m128i x) { return Rot(Xor(Rot(Xor(Rot(x, 14), x), 5), x), 6); }
+__m128i inline sigma0(__m128i x) { return Xor(Rot(x, 7), Rot(x, 18), ShR(x, 3)); }
+__m128i inline sigma1(__m128i x) { return Xor(Rot(x, 17), Rot(x, 19), ShR(x, 10)); }
 
 /** One round of SHA-256. */
 void inline __attribute__((always_inline)) Round(__m128i a, __m128i b, __m128i c, __m128i& d, __m128i e, __m128i f, __m128i g, __m128i& h, __m128i k)
