@@ -707,7 +707,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate)
 	// update an asset that isn't yours
 	UniValue r;
 	//"assetupdate [asset] [public] [category=assets] [supply] [interest_rate] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetupdate " + guid + " jagassetupdate assets 1 0 ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetupdate " + guid + " jagassetupdate assets 0 0 ''"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr[0].get_str()));
 	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
