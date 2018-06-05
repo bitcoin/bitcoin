@@ -120,6 +120,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     modalOverlay(0),
     prevBlocks(0),
     spinnerFrame(0),
+    m_wallet_selector_label(nullptr),
     platformStyle(_platformStyle)
 {
     QSettings settings;
@@ -477,6 +478,16 @@ void BitcoinGUI::createToolBars()
 
         m_wallet_selector = new QComboBox();
         connect(m_wallet_selector, SIGNAL(currentIndexChanged(int)), this, SLOT(setCurrentWalletBySelectorIndex(int)));
+
+        m_wallet_selector_label = new QLabel();
+        m_wallet_selector_label->setText(tr("Wallet:") + " ");
+        m_wallet_selector_label->setBuddy(m_wallet_selector);
+
+        m_wallet_selector_label_action = appToolBar->addWidget(m_wallet_selector_label);
+        m_wallet_selector_action = appToolBar->addWidget(m_wallet_selector);
+
+        m_wallet_selector_label_action->setVisible(false);
+        m_wallet_selector_action->setVisible(false);
 #endif
     }
 }
@@ -556,14 +567,27 @@ bool BitcoinGUI::addWallet(WalletModel *walletModel)
     setWalletActionsEnabled(true);
     m_wallet_selector->addItem(display_name, name);
     if (m_wallet_selector->count() == 2) {
-        m_wallet_selector_label = new QLabel();
-        m_wallet_selector_label->setText(tr("Wallet:") + " ");
-        m_wallet_selector_label->setBuddy(m_wallet_selector);
-        appToolBar->addWidget(m_wallet_selector_label);
-        appToolBar->addWidget(m_wallet_selector);
+        m_wallet_selector_label_action->setVisible(true);
+        m_wallet_selector_action->setVisible(true);
     }
     rpcConsole->addWallet(walletModel);
     return walletFrame->addWallet(walletModel);
+}
+
+bool BitcoinGUI::removeWallet(WalletModel* walletModel)
+{
+    if (!walletFrame) return false;
+    QString name = walletModel->getWalletName();
+    int index = m_wallet_selector->findData(name);
+    m_wallet_selector->removeItem(index);
+    if (m_wallet_selector->count() == 0) {
+        setWalletActionsEnabled(false);
+    } else if (m_wallet_selector->count() == 1) {
+        m_wallet_selector_label_action->setVisible(false);
+        m_wallet_selector_action->setVisible(false);
+    }
+    rpcConsole->removeWallet(walletModel);
+    return walletFrame->removeWallet(name);
 }
 
 bool BitcoinGUI::setCurrentWallet(const QString& name)
