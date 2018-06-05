@@ -14,7 +14,7 @@ static const char ASSET_FLAG = 'A';
 static const char ASSET_ADDRESS_QUANTITY_FLAG = 'B';
 static const char MY_ASSET_FLAG = 'M';
 
-CAssetsDB::CAssetsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets" / "assets", nCacheSize, fMemory, fWipe) {
+CAssetsDB::CAssetsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {
 }
 
 bool CAssetsDB::WriteAssetData(const CNewAsset &asset)

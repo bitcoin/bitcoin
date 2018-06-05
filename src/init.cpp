@@ -1438,12 +1438,15 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 passets = new CAssetsCache();
                 passetsCache = new CLRUCache<std::string, CNewAsset>(MAX_CACHE_ASSETS_SIZE);
 
+
                 // Need to load assets before we verify the database
                 if (!passetsdb->LoadAssets()) {
                     strLoadError = _("Failed to load Assets Database");
                     break;
                 }
-                std::cout << std::endl << "Loaded Assets without error" << std::endl << "Cache of assets size: " << passetsCache->Size() << std::endl  << "number of assets I have: " << passets->mapMyUnspentAssets.size() << std::endl;
+                std::cout << std::endl << "Loaded Assets without error" << std::endl << "Cache of assets size: "
+                          << passetsCache->Size() << std::endl << "number of assets I have: "
+                          << passets->mapMyUnspentAssets.size() << std::endl;
 
 
                 if (fReset) {
