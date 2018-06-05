@@ -63,6 +63,7 @@
 #include "graph.h"
 #include "base58.h"
 #include "rpc/server.h"
+#include "thread_pool.hpp"
 #include <future>
 #include <functional>
 #include "cuckoocache.h"
@@ -83,7 +84,9 @@ CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
 // SYSCOIN
+int64_t nLastMultithreadMempoolFailure = 0;
 bool fLoaded = false;
+tp::ThreadPool threadpool;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
 bool fTxIndex = true;
@@ -588,7 +591,7 @@ void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) {
         pcoinsTip->Uncache(removed);
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJustCheck, int nHeight, const CBlock& block, bool bSanity)
+bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock& block, bool bSanity)
 {
 	// Ensure that we don't fail on verifydb which loads recent UTXO and will fail if the input is already spent, 
 	// but during runtime fLoaded should be true so it should check UTXO in correct state
@@ -613,7 +616,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 		{
 			if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 			{
-				if (!FindAliasInTx(tx, vvchAliasArgs)) {
+				if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
 					return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
 				}
 				// it is assumed if no alias output is found, then it is for another service so this would be an alias update
@@ -621,7 +624,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 
 			}
 			errorMessage.clear();
-			good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
+			good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
 			if (!errorMessage.empty())
 				return state.DoS(100, false, REJECT_INVALID, errorMessage);
 	
@@ -689,16 +692,16 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, bool fJ
 				good = false;
 				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				{
-					if (!FindAliasInTx(tx, vvchAliasArgs)) {
+					if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
 						if (fDebug)
-							LogPrintf("CheckSyscoinInputs: FindAliasInTx failed");
+							LogPrintf("CheckSyscoinInputs: FindAliasInTx failed\n");
 						return true;
 					}
 					// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 					op = OP_ALIAS_UPDATE;
 				}
 				errorMessage.clear();
-				good = CheckAliasInputs(tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+				good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 
@@ -775,15 +778,19 @@ static bool IsCurrentForFeeEstimation()
         return false;
     return true;
 }
+static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
+static std::map<uint256, std::vector<CScriptCheck> > scriptCheckMap;
+static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
+static uint256 scriptExecutionCacheNonce(GetRandHash());
 
 bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const CTransactionRef& ptx, bool fLimitFree,
                               bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                               bool fOverrideMempoolLimit, const CAmount& nAbsurdFee,
-                              std::vector<COutPoint>& coins_to_uncache, bool fDryRun)
+                              std::vector<COutPoint>& coins_to_uncache, bool fDryRun, bool bMultiThreaded)
 {
     const CTransaction& tx = *ptx;
     const uint256 hash = tx.GetHash();
-    AssertLockHeld(cs_main);
+	AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
@@ -1179,14 +1186,30 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
-
+		std::vector<CScriptCheck> vChecks;
+		uint256 hashCacheEntry;
+		bool isCached = false;
 		// Check against previous transactions
 		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true)) {
+		if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, true, &vChecks, &hashCacheEntry, &isCached)) {
 			return false;
 		}
-		if (!CheckSyscoinInputs(tx, state, true, chainActive.Height(), CBlock())) {
-			return false;
+		// if cache was hit we return, we already have processed this tx
+		if (isCached)
+			return true;
+
+		if (!bMultiThreaded) {
+			CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+			control.Add(vChecks);
+			if (!control.Wait())
+				return false;
+			if (!CheckSyscoinInputs(tx, state, view, true, chainActive.Height(), CBlock())) {
+				return false;
+			}
+		}
+		else
+		{
+			scriptCheckMap[hash] = vChecks;
 		}
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
@@ -1227,19 +1250,60 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			if (!pool.exists(hash))
 				return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 		}
-	}
-	
-	GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+		if (bMultiThreaded)
+		{
 
+			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry]() {
+				CValidationState vstate;
+				const CTransaction& txIn = *ptx;
+				CCoinsViewCache vView(pcoinsTip);
+				std::vector<CScriptCheck> &vCheckRef = scriptCheckMap[hash];
+				for (auto& check : vCheckRef) {
+					if (!check())
+					{
+						LOCK2(cs_main, mempool.cs);
+						LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
+						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+							pcoinsTip->Uncache(hashTx);
+						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+						pool.ClearPrioritisation(hash);
+						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+						CValidationState stateDummy;
+						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+						nLastMultithreadMempoolFailure = GetTime();
+						scriptCheckMap.erase(hash);
+						return;
+					}
+				}
+				// we don't actually care if this doesn't pass, it will just be a NO-OP and fee's used for someone who tries to create invalid syscoin tx's, 
+				// the checkblock validation of syscoin tx's does the same thing anyway and syscointxfund ensures for normal users that bad tx's simply will be errored out before allowing to add to mempool
+				CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock());
+				{
+					LOCK(cs_main);
+					scriptCheckMap.erase(hash);
+					scriptExecutionCache.insert(hashCacheEntry);
+				}
+			});
+			threadpool.post(t);
+		}
+	}
+
+	GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+	
     return true;
 }
 
 bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
                         bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
-                        bool fOverrideMempoolLimit, const CAmount nAbsurdFee, bool fDryRun)
+                        bool fOverrideMempoolLimit, const CAmount nAbsurdFee, bool fDryRun, bool bMultiThreaded)
 {
+	// SYSCOIN if its been less 60 seconds since the last MT mempool verification failure then fallback to single threaded
+	if (GetTime() - nLastMultithreadMempoolFailure < 60) {
+		LogPrint("mempool", "%s\n", "AcceptToMemoryPoolWithTime: switching to single thread verification...");
+		bMultiThreaded = false;
+	}
     std::vector<COutPoint> coins_to_uncache;
-    bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, nAcceptTime, plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, coins_to_uncache, fDryRun);
+    bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, nAcceptTime, plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, coins_to_uncache, fDryRun, bMultiThreaded);
     if (!res || fDryRun) {
         if(!res) LogPrint("mempool", "%s: %s %s (%s)\n", __func__, tx->GetHash().ToString(), state.GetRejectReason(), state.GetDebugMessage());
         BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
@@ -1253,9 +1317,9 @@ bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
-                        bool fOverrideMempoolLimit, const CAmount nAbsurdFee, bool fDryRun)
+                        bool fOverrideMempoolLimit, const CAmount nAbsurdFee, bool fDryRun, bool bMultiThreaded)
 {
-    return AcceptToMemoryPoolWithTime(pool, state, tx, fLimitFree, pfMissingInputs, GetTime(), plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, fDryRun);
+    return AcceptToMemoryPoolWithTime(pool, state, tx, fLimitFree, pfMissingInputs, GetTime(), plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, fDryRun, bMultiThreaded);
 }
 bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &hashes)
 {
@@ -1773,8 +1837,6 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
     return true;
 }
 }// namespace Consensus
-static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
-static uint256 scriptExecutionCacheNonce(GetRandHash());
 
 void InitScriptExecutionCache() {
 	// nMaxCacheSize is unsigned. If -maxsigcachesize is set to zero,
@@ -1784,7 +1846,7 @@ void InitScriptExecutionCache() {
 	LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
 		(nElems * sizeof(uint256)) >> 20, (nMaxCacheSize * 2) >> 20, nElems);
 }
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks, uint256* hashCacheEntryOut, bool *isCached)
 {
     if (!tx.IsCoinBase())
     {
@@ -1814,7 +1876,11 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			// round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
 			static_assert(55 - sizeof(flags) - 32 >= 128 / 8, "Want at least 128 bits of nonce for script execution cache");
 			CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetHash().begin(), 32).Finalize(hashCacheEntry.begin());
+			if (hashCacheEntryOut)
+				*hashCacheEntryOut = hashCacheEntry;
 			if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
+				if (isCached)
+					*isCached = true;
 				return true;
 			}
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
@@ -2187,7 +2253,6 @@ void static FlushBlockFile(bool fFinalize = false)
 
 bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
 
-static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck() {
     RenameThread("syscoin-scriptch");
@@ -2456,7 +2521,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
             std::vector<CScriptCheck> vChecks;
-            bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
+            bool fCacheResults = fJustCheck;  /* Don't cache results if we're actually connecting blocks (still consult the cache, though */
             if (!CheckInputs(tx, state, view, fScriptChecks, STANDARD_SCRIPT_VERIFY_FLAGS, fCacheResults, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
@@ -2526,7 +2591,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
-	if (!CheckSyscoinInputs(*block.vtx[0], state, fJustCheck, pindex->nHeight, block))
+	if (!control.Wait())
+		return state.DoS(100, false);
+
+	CCoinsViewCache viewOld(pcoinsTip);
+	if (!CheckSyscoinInputs(*block.vtx[0], state, viewOld, fJustCheck, pindex->nHeight, block))
 		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n",
 			block.GetHash().ToString());
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
@@ -2555,8 +2624,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     }
     // END SYSCOIN
 
-    if (!control.Wait())
-        return state.DoS(100, false);
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint("bench", "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime4 - nTime2), nInputs <= 1 ? 0 : 0.001 * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * 0.000001);
 
