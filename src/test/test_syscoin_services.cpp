@@ -1013,7 +1013,7 @@ int FindAliasDiscount(const string& node, const string& owneralias, const string
 	}
 	return 0;
 }
-string AssetNew(const string& node, const string& name, const string& alias, const string& pubdata, const string& precision, const string& useinputranges, const string& supply, const string& maxsupply, const string& interestrate, const string& canadjustinterest, const string& witness)
+string AssetNew(const string& node, const string& name, const string& alias, const string& pubdata, const string& precision, const string& useinputranges, const string& supply, const string& maxsupply, const string& interestrate, const string& canadjustinterestandsupply, const string& witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -1021,7 +1021,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + alias));
 	
 	// "assetnew [name] [alias] [public] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetnew " + name + " " + alias + " " + pubdata + " " + " assets " + " " + precision + " " + useinputranges + " " + supply + " " + maxsupply + " " + interestrate + " " + canadjustinterest + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetnew " + name + " " + alias + " " + pubdata + " " + " assets " + " " + precision + " " + useinputranges + " " + supply + " " + maxsupply + " " + interestrate + " " + canadjustinterestandsupply + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
