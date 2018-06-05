@@ -87,7 +87,7 @@ BOOST_FIXTURE_TEST_SUITE(db_tests, DbCleanupFixture)
         fs.open((GetDataDir() / fileName).string().c_str(), std::ios::out);
         fs.close();
 
-        ::details::ReadResult readResult = ::details::Read(db, "dbtest2.dat", "MagicMessage");
+        ::details::ReadResult readResult = ::details::Read(db, fileName, "MagicMessage");
         BOOST_CHECK_EQUAL(readResult, ::details::HashReadError);
         RemoveFile();
     }
