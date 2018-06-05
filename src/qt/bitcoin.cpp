@@ -238,6 +238,7 @@ public Q_SLOTS:
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);
     void addWallet(WalletModel* walletModel);
+    void removeWallet();
 
 Q_SIGNALS:
     void requestedInitialize();
@@ -467,8 +468,19 @@ void BitcoinApplication::addWallet(WalletModel* walletModel)
 
     connect(walletModel, SIGNAL(coinsSent(WalletModel*, SendCoinsRecipient, QByteArray)),
         paymentServer, SLOT(fetchPaymentACK(WalletModel*, const SendCoinsRecipient&, QByteArray)));
+    connect(walletModel, SIGNAL(unload()), this, SLOT(removeWallet()));
 
     m_wallet_models.push_back(walletModel);
+#endif
+}
+
+void BitcoinApplication::removeWallet()
+{
+#ifdef ENABLE_WALLET
+    WalletModel* walletModel = static_cast<WalletModel*>(sender());
+    m_wallet_models.erase(std::find(m_wallet_models.begin(), m_wallet_models.end(), walletModel));
+    window->removeWallet(walletModel);
+    walletModel->deleteLater();
 #endif
 }
 
@@ -491,8 +503,10 @@ void BitcoinApplication::initializeResult(bool success)
 
 #ifdef ENABLE_WALLET
         m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
-            QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection,
-                Q_ARG(WalletModel*, new WalletModel(std::move(wallet), m_node, platformStyle, optionsModel)));
+            WalletModel* wallet_model = new WalletModel(std::move(wallet), m_node, platformStyle, optionsModel, nullptr);
+            // Fix wallet model thread affinity.
+            wallet_model->moveToThread(thread());
+            QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
         });
 
         for (auto& wallet : m_node.getWallets()) {
