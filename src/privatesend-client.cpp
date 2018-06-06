@@ -876,8 +876,8 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
         CAmount nValueInTmp = 0;
         std::vector<CTxDSIn> vecTxDSInTmp;
         std::vector<COutput> vCoinsTmp;
-        int nMinAmount = vecStandardDenoms[vecBits.front()];
-        int nMaxAmount = nBalanceNeedsAnonymized;
+        CAmount nMinAmount = vecStandardDenoms[vecBits.front()];
+        CAmount nMaxAmount = nBalanceNeedsAnonymized;
         // nInputCount is not covered by legacy signature, require SPORK_6_NEW_SIGS to activate to use new algo
         // (to make sure nInputCount wasn't modified by some intermediary node)
         bool fNewAlgo = infoMn.nProtocolVersion > 70208 && sporkManager.IsSporkActive(SPORK_6_NEW_SIGS);
