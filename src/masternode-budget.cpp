@@ -48,7 +48,7 @@ namespace
 
         const boost::filesystem::path filename = GetDataDir() / "budgetdebuglog.csv";
 
-        std::ofstream log(filename.string(), std::ios_base::out | std::ios_base::app);
+        std::ofstream log(filename.string().c_str(), std::ios_base::out | std::ios_base::app);
 
         log << currentTime << "\t";
         log << objectTime << "\t";
