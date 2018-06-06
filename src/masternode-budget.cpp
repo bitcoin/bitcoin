@@ -33,6 +33,40 @@ namespace
         ExtractDestination(script, destination);
         return destination;
     }
+
+    void DebugLogBudget(
+        int64_t currentTime,
+        int64_t objectTime,
+        const std::string& from,
+        const std::string& proposalHash,
+        const std::string& voteHash,
+        const std::string& opcode
+    )
+    {
+        if(GetArg("-budgetdebug", "") != "true")
+            return;
+
+        const boost::filesystem::path filename = GetDataDir() / "budgetdebuglog.csv";
+
+        std::ofstream log(filename.string(), std::ios_base::out | std::ios_base::app);
+
+        log << currentTime << "\t";
+        log << objectTime << "\t";
+        log << from << "\t";
+        log << proposalHash << "\t";
+        log << voteHash << "\t";
+        log << opcode << std::endl;
+    }
+
+    void DebugLogBudget(const CBudgetVote& vote, const CAddress& from, const std::string& opcode)
+    {
+        DebugLogBudget(GetTime(), vote.nTime, from.ToString(), vote.nProposalHash.ToString(), vote.GetHash().ToString(), opcode);
+    }
+
+    void DebugLogBudget(const CBudgetProposal& proposal, const CAddress& from, const std::string& opcode)
+    {
+        DebugLogBudget(GetTime(), proposal.nTime, from.ToString(), proposal.GetHash().ToString(), "", opcode);
+    }
 }
 
 CAmount BlocksBeforeSuperblockToSubmitFinalBudget()
@@ -776,6 +810,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CBudgetProposalBroadcast budgetProposalBroadcast;
         vRecv >> budgetProposalBroadcast;
 
+        DebugLogBudget(budgetProposalBroadcast, pfrom->addr, "PR");
+
         if(mapSeenMasternodeBudgetProposals.count(budgetProposalBroadcast.GetHash())){
             masternodeSync.AddedBudgetItem(budgetProposalBroadcast.GetHash());
             return;
@@ -800,6 +836,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(AddProposal(budgetProposal)) {budgetProposalBroadcast.Relay();}
         masternodeSync.AddedBudgetItem(budgetProposalBroadcast.GetHash());
 
+        DebugLogBudget(budgetProposalBroadcast, pfrom->addr, "PA");
         LogPrintf("mprop - new budget - %s\n", budgetProposalBroadcast.GetHash().ToString());
 
         //We might have active votes for this proposal that are valid now
@@ -810,6 +847,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CBudgetVote vote;
         vRecv >> vote;
         vote.fValid = true;
+
+        DebugLogBudget(vote, pfrom->addr, "VR");
 
         if(mapSeenMasternodeBudgetVotes.count(vote.GetHash())){
             masternodeSync.AddedBudgetItem(vote.GetHash());
@@ -839,6 +878,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             masternodeSync.AddedBudgetItem(vote.GetHash());
         }
 
+        DebugLogBudget(vote, pfrom->addr, "VA");
         LogPrintf("mvote - new budget vote - %s\n", vote.GetHash().ToString());
     }
 
@@ -1040,6 +1080,7 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial) const
 
 bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& strError)
 {
+    DebugLogBudget(vote, CAddress(), "VR");
     map<uint256, CBudgetProposal>::iterator found = mapProposals.find(vote.nProposalHash);
     if (found == mapProposals.end())
     {
@@ -1054,6 +1095,7 @@ bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& st
         return false;
     }
 
+    DebugLogBudget(vote, CAddress(), "VA");
     return proposal.AddOrUpdateVote(vote, strError);
 }
 
@@ -1074,6 +1116,7 @@ bool CBudgetManager::ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, 
 
     if(!mapProposals.count(vote.nProposalHash)){
         if(pfrom){
+            DebugLogBudget(vote, pfrom->addr, "VO");
             // only ask for missing items after our syncing process is complete -- 
             //   otherwise we'll think a full sync succeeded when they return a result
             if(!masternodeSync.IsSynced()) return false;
