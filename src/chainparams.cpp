@@ -47,8 +47,8 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  */
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    const char* pszTimestamp = "The Times 28/Apr/2018 This is just a test";
-    const CScript genesisOutputScript = CScript() << ParseHex("0427a505f67abd3f61882d7840af25346661fe96582af181351cb2e088d2d2c909ffdbc406be350da657974df0fc3dcbc47cb0ecccc459aed41269dd7b39f6dc59") << OP_CHECKSIG;
+    const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+    const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
@@ -111,7 +111,7 @@ public:
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000f91c579d57cad4bc5278cc");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000000000000000003b9ce759c2a087d52abc4266f8f4ebd6d768b89defa50a"); //477890
+        consensus.defaultAssumeValid = uint256S("0x0000000000000000005214481d2d96f898e3d5416e43359c145944a909d242e0"); //477890
 
         consensus.hardforkHeight = 525000;
         consensus.premineAddress = "Mf8RVs3b4MM2s4pY9W5pyqTgbNPTVE8qT6";
@@ -122,14 +122,14 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchBitcoinMessageStart[0] = 0xb4;
+        pchBitcoinMessageStart[0] = 0xf9;
         pchBitcoinMessageStart[1] = 0xbe;
         pchBitcoinMessageStart[2] = 0xb4;
-        pchBitcoinMessageStart[3] = 0xbe;
-
+        pchBitcoinMessageStart[3] = 0xd9;
+        
         pchMessageStart[0] = 0xf4;
         pchMessageStart[1] = 0xb2;
-        pchMessageStart[2] = 0xb5;
+        pchMessageStart[2] = 0xbe;
         pchMessageStart[3] = 0xd8;
 
         nDefaultPort = 6403;
@@ -137,8 +137,8 @@ public:
 
         genesis = CreateGenesisBlock(1524897652, 2962302098, 0x1d00ffff, 1, 50 * COIN * BTC_2_MBC_RATE);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000000065b4d430420f6c442baa9623c4adf9736bd0017bb550d8c84635ce86"));
-        assert(genesis.hashMerkleRoot == uint256S("0x717eb4d8bc13ad843bcc2c2501b75fa37444ff58521d8b5b0e4aa216d07314e2"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
+        assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
         // vSeeds.emplace_back("", true);
