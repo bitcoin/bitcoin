@@ -507,7 +507,7 @@ UniValue gobject(const JSONRPCRequest& request)
     if(strCommand == "vote-name")
     {
         if(request.params.size() != 5)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-name <governance-hash> [funding|valid|delete] [yes|no|abstain] <name-name>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-name <governance-hash> [funding|valid|delete] [yes|no|abstain] <masternode-name>'");
 
         uint256 hash;
         std::string strVote;
