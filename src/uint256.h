@@ -31,9 +31,11 @@ public:
 
     bool IsNull() const
     {
-        for (int i = 0; i < WIDTH; i++)
-            if (data[i] != 0)
+        for (unsigned int i = 0; i < WIDTH; ++i) {
+            if (data[i] != 0) {
                 return false;
+	    }
+	}
         return true;
     }
 
@@ -55,12 +57,7 @@ public:
 
     explicit operator bool() const
     {
-        for (unsigned int i = 0; i < WIDTH; ++i) {
-            if (data[i]) {
-                return true;
-            }
-        }
-        return false;
+        return !IsNull();
     }
 
     std::string GetHex() const;
