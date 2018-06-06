@@ -450,8 +450,7 @@ void CGovernanceManager::UpdateCachesAndClean()
             mapObjects.erase(it++);
         } else {
             // NOTE: triggers are handled via triggerman
-            // DO NOT USE THIS UNTIL MAY, 2018 on mainnet
-            if ((GetAdjustedTime() >= 1526423380 || Params().NetworkIDString() != CBaseChainParams::MAIN) && pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+            if (pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
                 CProposalValidator validator(pObj->GetDataAsHexString());
                 if (!validator.Validate()) {
                     LogPrintf("CGovernanceManager::UpdateCachesAndClean -- set for deletion expired obj %s\n", (*it).first.ToString());
