@@ -25,54 +25,68 @@
 #define INSTANTX_SIGNATURES_REQUIRED           6
 #define INSTANTX_SIGNATURES_TOTAL              10
 
-using namespace std;
-using namespace boost;
-
 class CConsensusVote;
-class CTransaction;
 class CTransactionLock;
+class InstantSend;
 
 static const int MIN_INSTANTX_PROTO_VERSION = 70040;
 
-extern map<uint256, CTransaction> mapTxLockReq;
-extern map<uint256, CTransaction> mapTxLockReqRejected;
-extern map<uint256, CConsensusVote> mapTxLockVote;
-extern map<uint256, CTransactionLock> mapTxLocks;
-extern std::map<COutPoint, uint256> mapLockedInputs;
-extern int nCompleteTXLocks;
+extern std::auto_ptr<InstantSend> g_instantSend;
 
+InstantSend& GetInstantSend();
 
-int64_t CreateNewLock(CTransaction tx);
+class InstantSend
+{
+public:
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
+    void CheckAndRemove();
+    void Clear();
+    int64_t CreateNewLock(const CTransaction& tx);
+    int GetSignaturesCount(uint256 txHash) const;
+    int GetCompleteLocksCount() const;
+    bool IsLockTimedOut(uint256 txHash) const;
+    bool TxLockRequested(uint256 txHash) const;
+    bool AlreadyHave(uint256 txHash) const;
+    std::string ToString() const;
+    boost::optional<uint256> GetLockedTx(const COutPoint& out) const;
+    boost::optional<CConsensusVote> GetLockVote(uint256 txHash) const;
+    boost::optional<CTransaction> GetLockReq(uint256 txHash) const;
 
-bool IsIXTXValid(const CTransaction& txCollateral);
+    ADD_SERIALIZE_METHODS;
 
-// if two conflicting locks are approved by the network, they will cancel out
-bool CheckForConflictingLocks(CTransaction& tx);
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(m_lockedInputs);
+        READWRITE(m_txLockVote);
+        READWRITE(m_txLockReq);
+        READWRITE(m_txLocks);
+        READWRITE(m_unknownVotes);
+        READWRITE(m_txLockReqRejected);
+        READWRITE(m_completeTxLocks);
+    }
 
-void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+private:
+    void DoConsensusVote(const CTransaction& tx, int64_t nBlockHeight);
+    bool IsIxTxValid(const CTransaction& txCollateral) const;
+    bool ProcessConsensusVote(CNode* pnode, const CConsensusVote& ctx);
+    bool CheckForConflictingLocks(const CTransaction& tx);
+    int64_t GetAverageVoteTime() const;
 
-//check if we need to vote on this transaction
-void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight);
-
-//process consensus vote message
-bool ProcessConsensusVote(CNode *pnode, CConsensusVote& ctx);
-
-// keep transaction locks in memory for an hour
-void CleanTransactionLocksList();
-
-int64_t GetAverageVoteTime();
+private:
+    std::map<COutPoint, uint256> m_lockedInputs;
+    std::map<uint256, CConsensusVote> m_txLockVote;
+    std::map<uint256, CTransaction> m_txLockReq;
+    std::map<uint256, CTransactionLock> m_txLocks;
+    std::map<uint256, int64_t> m_unknownVotes; //track votes with no tx for DOS
+    std::map<uint256, CTransaction> m_txLockReqRejected;
+    int m_completeTxLocks;
+};
 
 class CConsensusVote
 {
 public:
-    CTxIn vinMasternode;
-    uint256 txHash;
-    int nBlockHeight;
-    std::vector<unsigned char> vchMasterNodeSignature;
-
     uint256 GetHash() const;
-
-    bool SignatureValid();
+    bool SignatureValid() const;
     bool Sign();
 
     ADD_SERIALIZE_METHODS;
@@ -84,26 +98,39 @@ public:
         READWRITE(vchMasterNodeSignature);
         READWRITE(nBlockHeight);
     }
+
+public:
+    CTxIn vinMasternode;
+    uint256 txHash;
+    int nBlockHeight;
+    std::vector<unsigned char> vchMasterNodeSignature;
 };
 
 class CTransactionLock
 {
+public:
+    bool SignaturesValid() const;
+    int CountSignatures() const;
+    void AddSignature(const CConsensusVote& cv);
+    uint256 GetHash() const;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(nBlockHeight);
+        READWRITE(txHash);
+        READWRITE(vecConsensusVotes);
+        READWRITE(nExpiration);
+        READWRITE(nTimeout);
+    }
+
 public:
     int nBlockHeight;
     uint256 txHash;
     std::vector<CConsensusVote> vecConsensusVotes;
     int nExpiration;
     int nTimeout;
-
-    bool SignaturesValid();
-    int CountSignatures();
-    void AddSignature(CConsensusVote& cv);
-
-    uint256 GetHash()
-    {
-        return txHash;
-    }
 };
-
 
 #endif

@@ -422,6 +422,7 @@ public:
     void EndMessage() UNLOCK_FUNCTION(cs_vSend);
 
     void PushVersion();
+    void PushTxLockedList();
 
 
     void PushMessage(const char* pszCommand)

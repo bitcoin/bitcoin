@@ -119,26 +119,14 @@ int CMerkleTx::GetTransactionLockSignatures() const
     if(!IsSporkActive(SPORK_2_INSTANTX)) return -3;
     if(!fEnableInstantX) return -1;
 
-    //compile consessus vote
-    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(GetHash());
-    if (i != mapTxLocks.end()){
-        return (*i).second.CountSignatures();
-    }
-
-    return -1;
+    return GetInstantSend().GetSignaturesCount(GetHash());
 }
 
 bool CMerkleTx::IsTransactionLockTimedOut() const
 {
     if(!fEnableInstantX) return 0;
 
-    //compile consessus vote
-    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(GetHash());
-    if (i != mapTxLocks.end()){
-        return GetTime() > (*i).second.nTimeout;
-    }
-
-    return false;
+    return GetInstantSend().IsLockTimedOut(GetHash());
 }
 
 bool

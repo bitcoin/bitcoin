@@ -188,8 +188,8 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
 
     static int cachedTxLocks = 0;
 
-    if(cachedTxLocks != nCompleteTXLocks){
-        cachedTxLocks = nCompleteTXLocks;
+    if(cachedTxLocks != GetInstantSend().GetCompleteLocksCount()){
+        cachedTxLocks = GetInstantSend().GetCompleteLocksCount();
         ui->listTransactions->update();
     }
 }
