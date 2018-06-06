@@ -1275,7 +1275,7 @@ UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have entered your mempool.\n"
 			"      ,...\n"
 			"    }\n"
-			+ HelpExampleCli("listassetallocationtransactions", "0 10") +
+			+ HelpExampleCli("listassetallocationtransactions", "0 10")
 			+ HelpExampleCli("listassetallocationtransactions", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"sender\":\"alias1\",\"receiver\":\"''\",\"startblock\":0}}")
 		);
 	UniValue options;
