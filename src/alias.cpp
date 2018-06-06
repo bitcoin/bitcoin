@@ -838,6 +838,9 @@ bool FlushSyscoinDBs() {
 				return false;
 			}
 		}
+	}
+	{
+		LOCK(cs_assetallocationindex);
 		if (passetallocationtransactionsdb != NULL)
 		{
 			passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(AssetAllocationIndex);
