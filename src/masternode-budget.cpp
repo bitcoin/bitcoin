@@ -1219,18 +1219,23 @@ bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& st
     }
 
     CBudgetProposal& proposal = found->second;
-    int height = chainActive.Height();
-
-    if (proposal.nBlockStart <= GetNextSuperblock(height) &&
-        proposal.nBlockEnd > GetNextSuperblock(height) &&
-        GetNextSuperblock(height) - height <= GetVotingThreshold()
-        )
+    if (!CanSubmitVotes(proposal.nBlockStart, proposal.nBlockEnd))
     {
-        strError = "Vote is too close to superblock. Voting during budget finalziation is not allowed";
+        strError = "The proposal voting is currently disabled as it is too close to the proposal payment";
         return false;
     }
 
     return proposal.AddOrUpdateVote(vote, strError);
+}
+
+bool CBudgetManager::CanSubmitVotes(int blockStart, int blockEnd) const
+{
+    const int height = chainActive.Height();
+
+    if (blockStart > GetNextSuperblock(height) || blockEnd <= GetNextSuperblock(height)) // Not for the next SB
+        return true;
+
+    return GetNextSuperblock(height) - height > GetVotingThreshold();
 }
 
 bool CBudgetManager::ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError)
