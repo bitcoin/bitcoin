@@ -86,6 +86,7 @@ static const int ONE_HOUR_IN_BLOCKS = 60;
 static const int ONE_MONTH_IN_BLOCKS = 43800;
 static sorted_vector<CAssetAllocationTuple> assetAllocationConflicts;
 static CCriticalSection cs_assetallocation;
+static CCriticalSection cs_assetallocationindex;
 enum {
 	ZDAG_NOT_FOUND = -1,
 	ZDAG_STATUS_OK = 0,
@@ -239,9 +240,11 @@ public:
 	}
 
 	bool WriteAssetAllocationWalletIndex(const AssetAllocationIndexItemMap &valueMap) {
+		LOCK(cs_assetallocationindex);
 		return Write(std::string("assetallocationtxi"), valueMap, true);
 	}
 	bool ReadAssetAllocationWalletIndex(AssetAllocationIndexItemMap &valueMap) {
+		LOCK(cs_assetallocationindex);
 		return Read(std::string("assetallocationtxi"), valueMap);
 	}
 	bool ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
