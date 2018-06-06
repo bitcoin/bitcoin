@@ -1365,9 +1365,9 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 		int numSigs = 0;
 		CCountSigsVisitor(*pwalletMain, numSigs).Process(coin.out.scriptPubKey);
 		if(tx.nVersion == SYSCOIN_TX_VERSION && params.size() > 1)
-			nFees += GetFee(numSigs*150);
+			nFees += GetFee(numSigs*200);
 		else
-			nFees += GetFee(numSigs * 150, fUseInstantSend);
+			nFees += GetFee(numSigs*200, fUseInstantSend);
 	}
 	for (auto& vout : tx.vout) {
 		const unsigned int nBytes = ::GetSerializeSize(vout, SER_NETWORK, PROTOCOL_VERSION);
@@ -1415,7 +1415,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 					int numSigs = 0;
 					CCountSigsVisitor(*pwalletMain, numSigs).Process(scriptPubKey);
 					// add fees to account for every input added to this transaction
-					nFees += GetFee(numSigs*150);
+					nFees += GetFee(numSigs*200);
 					tx.vin.push_back(txIn);
 					nCurrentAmount += nValue;
 					if (nCurrentAmount >= (nDesiredAmount + nFees)) {
@@ -1453,7 +1453,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 				int numSigs = 0;
 				CCountSigsVisitor(*pwalletMain, numSigs).Process(scriptPubKey);
 				// add fees to account for every input added to this transaction
-				nFees += GetFee(numSigs*150, fUseInstantSend);
+				nFees += GetFee(numSigs*200, fUseInstantSend);
 				tx.vin.push_back(txIn);
 				nCurrentAmount += nValue;
 				if (nCurrentAmount >= (nDesiredAmount + nFees)) {
@@ -2634,7 +2634,7 @@ bool IsOutpointMature(const COutPoint& outpoint, bool fUseInstantSend)
 	GetUTXOCoin(outpoint, coin);
 	if (coin.IsSpent())
 		return false;
-	int numConfirmationsNeeded = 2;
+	int numConfirmationsNeeded = 1;
 	if (coin.IsCoinBase())
 		numConfirmationsNeeded = COINBASE_MATURITY;
 	if (fUseInstantSend)
