@@ -3,30 +3,30 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "miner.h"
+#include <miner.h>
 
-#include "amount.h"
-#include "chain.h"
-#include "base58.h"
-#include "chainparams.h"
-#include "coins.h"
-#include "consensus/consensus.h"
-#include "consensus/tx_verify.h"
-#include "consensus/merkle.h"
-#include "consensus/validation.h"
-#include "hash.h"
-#include "validation.h"
-#include "net.h"
-#include "policy/feerate.h"
-#include "policy/policy.h"
-#include "pow.h"
-#include "primitives/transaction.h"
-#include "script/standard.h"
-#include "timedata.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "validationinterface.h"
+#include <amount.h>
+#include <chain.h>
+#include <base58.h>
+#include <chainparams.h>
+#include <coins.h>
+#include <consensus/consensus.h>
+#include <consensus/tx_verify.h>
+#include <consensus/merkle.h>
+#include <consensus/validation.h>
+#include <hash.h>
+#include <validation.h>
+#include <net.h>
+#include <policy/feerate.h>
+#include <policy/policy.h>
+#include <pow.h>
+#include <primitives/transaction.h>
+#include <script/standard.h>
+#include <timedata.h>
+#include <txmempool.h>
+#include <util.h>
+#include <utilmoneystr.h>
+#include <validationinterface.h>
 
 #include <algorithm>
 #include <queue>
@@ -61,7 +61,8 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     return nNewTime - nOldTime;
 }
 
-BlockAssembler::Options::Options() {
+BlockAssembler::Options::Options()
+{
     blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
     nBlockMaxWeight = DEFAULT_BLOCK_MAX_WEIGHT;
 }
@@ -164,17 +165,20 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     coinbaseTx.vout.resize(1);
-    coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
 
     // Add premine at hardfork height
-    if (nHeight == chainparams.GetConsensus().hardforkHeight) {
+    if (nHeight == chainparams.GetConsensus().hardforkHeight)
+    {
         auto pmValue = chainparams.GetConsensus().premineValue;
         CBitcoinAddress pmAddr(chainparams.GetConsensus().premineAddress);
-        coinbaseTx.vout.push_back(CTxOut(pmValue, GetScriptForDestination(pmAddr.Get())));
+        coinbaseTx.vout[0].scriptPubKey = GetScriptForDestination(pmAddr.Get());
+        coinbaseTx.vout[0].nValue = pmValue;
 
-        std::cout << "\n\n\n\n\n\nPREMINE\n\n\n\n\n\n" << chainparams.GetConsensus().premineValue << "\n\n\n\n\n\n";
+        // coinbaseTx.vout.push_back(CTxOut(pmValue, GetScriptForDestination(pmAddr.Get())));
 
+    } else {
+        coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+        coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     }
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));

@@ -59,8 +59,11 @@ struct Params {
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
     /** Proof of work parameters */
     uint256 powLimit;
+    uint256 powLimitPremine;
+    uint256 powLimitStart;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
+    int64_t nWarmUpWindow;
     int64_t nPowTargetSpacing;
     int64_t nBtcPowTargetSpacing;
     int64_t nPowTargetTimespan;

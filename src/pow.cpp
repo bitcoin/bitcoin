@@ -86,20 +86,36 @@ static unsigned int BitcoinNextWorkRequired(const CBlockIndex* pindexLast, const
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
+    int nHeight = pindexLast->nHeight + 1;
 
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
-    if (pindexLast->nHeight + 1 >= params.hardforkHeight &&
-        pindexLast->nHeight + 1 < params.hardforkHeight + DGWPastBlocksMax)
+
+    // Premine block
+    if (pindexLast->nHeight == params.hardforkHeight)
+    {
+        return UintToArith256(params.powLimitPremine).GetCompact();
+    }
+
+    // Pow limit start for warm-up period.
+    if (nHeight < params.hardforkHeight + params.nWarmUpWindow)
+    {
+        return UintToArith256(params.powLimitStart).GetCompact();
+    }
+
+    if (nHeight >= params.hardforkHeight && nHeight < params.hardforkHeight + DGWPastBlocksMax)
+    {
         return nProofOfWorkLimit;
+    }
+
     if (params.fPowNoRetargeting) return pindexLast->nBits;
 
-    const auto isHardfork = pindexLast->nHeight + 1 >= params.hardforkHeight;
+    const auto isHardfork = nHeight >= params.hardforkHeight;
     const auto difficultyAdjustmentInterval = isHardfork
         ? params.DifficultyAdjustmentInterval()
         : params.BitcoinDifficultyAdjustmentInterval();
 
     // Only change once per difficulty adjustment interval
-    if ((pindexLast->nHeight+1) % difficultyAdjustmentInterval != 0)
+    if ((nHeight) % difficultyAdjustmentInterval != 0)
     {
         if (params.fPowAllowMinDifficultyBlocks)
         {

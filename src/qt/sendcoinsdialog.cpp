@@ -190,7 +190,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         QSettings settings;
         if (settings.value("nSmartFeeSliderPosition").toInt() != 0) {
             // migrate nSmartFeeSliderPosition to nConfTarget
-            // nConfTarget is available since 0.15 (replaced nSmartFeeSliderPosition)
+            // nConfTarget is available since 0.16.1 (replaced nSmartFeeSliderPosition)
             int nConfirmTarget = 25 - settings.value("nSmartFeeSliderPosition").toInt(); // 25 == old slider range
             settings.setValue("nConfTarget", nConfirmTarget);
             settings.remove("nSmartFeeSliderPosition");

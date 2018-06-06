@@ -2077,20 +2077,38 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     auto premineValue = chainparams.GetConsensus().premineValue;
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
-    if (isPremineBlock) blockReward += premineValue;
+    if (premineValue) blockReward += premineValue;
     if (block.vtx[0]->GetValueOut() > blockReward)
-        return state.DoS(100,
-                         error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0]->GetValueOut(), blockReward),
-                               REJECT_INVALID, "bad-cb-amount");
+    {
+        std::cout << "\n\n\n\n" << blockReward << "\n\n\n\n";
+        return state.DoS(100, error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)", block.vtx[0]-> GetValueOut(), blockReward), REJECT_INVALID, "bad-cb-amount");
+    }
+
+    // Check premine tx-out at hardfork height
+    const auto& coinbaseVouts = block.vtx[0]->vout;
+    if (isPremineBlock && chainparams.GetConsensus().premineAddress != "")
+    {
+        const auto it = std::find(
+            coinbaseVouts.cbegin(), coinbaseVouts.cend(),
+            CTxOut(premineValue, GetScriptForDestination(CBitcoinAddress(chainparams.GetConsensus().premineAddress).Get())));
+        if (it == coinbaseVouts.cend())
+        {
+            return state.DoS(100, error("ConnectBlock(): coinbase has no premine (actual=%d vs premine=%d)", block.vtx[0]-> GetValueOut(), premineValue), REJECT_INVALID, "bad-cb-no-premine");
+        }
+    }
 
     if (!control.Wait())
+    {
         return state.DoS(100, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
+    }
+
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint(BCLog::BENCH, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime4 - nTime2), nInputs <= 1 ? 0 : 0.001 * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * 0.000001);
 
     if (fJustCheck)
+    {
         return true;
+    }
 
     // Write undo information to disk
     if (pindex->GetUndoPos().IsNull() || !pindex->IsValid(BLOCK_VALID_SCRIPTS))

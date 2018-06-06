@@ -24,12 +24,12 @@ shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over `/Applications/microbitcoin-qt` (on Mac)
 or `microbitcoind`/`microbitcoin-qt` (on Linux).
 
-The first time you run version 0.15.0, your chainstate database will be converted to a
+The first time you run version 0.16.1.0, your chainstate database will be converted to a
 new format, which will take anywhere from a few minutes to half an hour,
 depending on the speed of your machine.
 
 Note that the block database format also changed in version 0.8.0 and there is no
-automatic upgrade code from before version 0.8 to version 0.15.0. Upgrading
+automatic upgrade code from before version 0.8 to version 0.16.1.0. Upgrading
 directly from 0.7.x and earlier without redownloading the blockchain is not supported.
 However, as usual, old wallet versions are still supported.
 
@@ -37,7 +37,7 @@ Downgrading warning
 -------------------
 
 The chainstate database for this release is not compatible with previous
-releases, so if you run 0.15 and then decide to switch back to any
+releases, so if you run 0.16.1 and then decide to switch back to any
 older version, you will need to run the old release with the `-reindex-chainstate`
 option to rebuild the chainstate data structures in the old format.
 
@@ -128,7 +128,7 @@ Miner block size removed
 ------------------------
 
 The `-blockmaxsize` option for miners to limit their blocks' sizes was
-deprecated in V0.15.1, and has now been removed. Miners should use the
+deprecated in V0.16.1.1, and has now been removed. Miners should use the
 `-blockmaxweight` option if they want to limit the weight of their blocks'
 weights.
 
