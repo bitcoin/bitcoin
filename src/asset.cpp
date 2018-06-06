@@ -663,7 +663,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 						"<supply> Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped.\n"
 						"<max_supply> Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be.\n"
 						"<interest_rate> The annual interest rate if any. Money supply is still capped to total supply. Should be between 0 and 1 and represents a percentage divided by 100.\n"
-						"<can_adjust_interest_rate_and_supply> Ability to adjust interest rate and supply through assetupdate in the future.\n"
+						"<can_adjust_interest_rate> Ability to adjust interest rate through assetupdate in the future.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
     vector<unsigned char> vchName = vchFromString(params[0].get_str());
