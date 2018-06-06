@@ -936,8 +936,6 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
                     if (dirty) {
                         return error("%s : %s", __func__, message);
                     }
-                } else {
-                    LogPrintf("%s : This should be happening!, setNewTransferAssetToAdd has a value that isn't in the mapAssetsAddressAmount\n", __func__);
                 }
             }
 
@@ -1204,6 +1202,41 @@ bool CAssetsCache::GetAssetIfExists(const std::string& name, CNewAsset& asset)
             passetsCache->Put(readAsset.strName, readAsset);
             return true;
         }
+    }
+
+    return false;
+}
+
+bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount)
+{
+    if (!coin.IsAsset())
+        return false;
+
+    // Determine the type of asset that the scriptpubkey contains and return the name and amount
+    if (coin.out.scriptPubKey.IsNewAsset()) {
+        CNewAsset asset;
+        std::string address;
+        if (!AssetFromScript(coin.out.scriptPubKey, asset, address))
+            return false;
+        strName = asset.strName;
+        nAmount = asset.nAmount;
+        return true;
+    } else if (coin.out.scriptPubKey.IsTransferAsset()) {
+        CAssetTransfer asset;
+        std::string address;
+        if (!TransferAssetFromScript(coin.out.scriptPubKey, asset, address))
+            return false;
+        strName = asset.strName;
+        nAmount = asset.nAmount;
+        return true;
+    } else if (coin.out.scriptPubKey.IsOwnerAsset()) {
+        std::string name;
+        std::string address;
+        if (!OwnerAssetFromScript(coin.out.scriptPubKey, name, address))
+            return false;
+        strName = name;
+        nAmount = 1 * COIN;
+        return true;
     }
 
     return false;

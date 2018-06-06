@@ -268,4 +268,6 @@ bool IsScriptTransferAsset(const CScript& scriptPubKey);
 bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, const std::string& address, std::string& errorMsg);
 
 void UpdatePossibleAssets();
+
+bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount);
 #endif //RAVENCOIN_ASSET_PROTOCOL_H
