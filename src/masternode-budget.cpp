@@ -17,6 +17,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/algorithm_ext.hpp>
+#include <fstream>
 
 CBudgetManager budget;
 CCriticalSection cs_budget;
