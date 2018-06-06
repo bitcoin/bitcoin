@@ -120,6 +120,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
     {BCLog::VALIDATION, "validation"},
+    {BCLog::ASYNC, "async"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
