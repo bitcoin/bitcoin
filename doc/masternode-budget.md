@@ -148,7 +148,7 @@ The following RPC commands are supported:
   - projection         - Show the projection of which proposals will be paid the next cycle
   - vote               - Vote on a proposal by single masternode (using syscoin.conf setup)
   - vote-many          - Vote on a proposal by all masternodes (using masternode.conf setup)
-  - vote-alias         - Vote on a proposal by alias
+  - vote-name         - Vote on a proposal by name
  - mnfinalbudget "command"... ( "passphrase" )
   - vote-many   - Vote on a finalized budget
   - vote        - Vote on a finalized budget
