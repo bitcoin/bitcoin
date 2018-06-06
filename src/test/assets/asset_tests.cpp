@@ -9,6 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <amount.h>
+#include <base58.h>
+#include <chainparams.h>
 
 BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
 
@@ -92,6 +94,43 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
 
         BOOST_CHECK(IsAssetNameAnOwner("RVN!"));
         BOOST_CHECK(!IsAssetNameAnOwner("RVN"));
+    }
+
+    BOOST_AUTO_TEST_CASE(transfer_asset_coin_check) {
+
+        SelectParams(CBaseChainParams::MAIN);
+
+        // Create the asset scriptPubKey
+        CAssetTransfer asset("RAVEN", 1000);
+        CScript scriptPubKey = GetScriptForDestination(DecodeDestination(Params().GlobalBurnAddress()));
+        asset.ConstructTransaction(scriptPubKey);
+
+        CTxOut txOut;
+        txOut.nValue = 0;
+        txOut.scriptPubKey = scriptPubKey;
+
+
+        Coin coin(txOut, 0, 0);
+
+        BOOST_CHECK_MESSAGE(coin.IsAsset(), "Transfer Asset Coin isn't as asset");
+    }
+
+    BOOST_AUTO_TEST_CASE(new_asset_coin_check) {
+
+        SelectParams(CBaseChainParams::MAIN);
+
+        // Create the asset scriptPubKey
+        CNewAsset asset("RAVEN", 1000, 8, 1, 0, "");
+        CScript scriptPubKey = GetScriptForDestination(DecodeDestination(Params().GlobalBurnAddress()));
+        asset.ConstructTransaction(scriptPubKey);
+
+        CTxOut txOut;
+        txOut.nValue = 0;
+        txOut.scriptPubKey = scriptPubKey;
+
+        Coin coin(txOut, 0, 0);
+
+        BOOST_CHECK_MESSAGE(coin.IsAsset(), "New Asset Coin isn't as asset");
     }
 
 BOOST_AUTO_TEST_SUITE_END()

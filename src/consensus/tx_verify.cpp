@@ -197,9 +197,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
 
                 // If we aren't reindexing
                 if (!fReindex) {
-                    // If the transfer is an ownership asset. Check to make sure that it is 1 * COIN
+                    // If the transfer is an ownership asset. Check to make sure that it is OWNER_ASSET_AMOUNT
                     if (IsAssetNameAnOwner(transfer.strName)) {
-                        if (transfer.nAmount != 1 * COIN)
+                        if (transfer.nAmount != OWNER_ASSET_AMOUNT)
                             return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-wasn't-1");
                     } else {
                         // For all other types of assets, make sure they are sending the right type of units

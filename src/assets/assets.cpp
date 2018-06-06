@@ -612,7 +612,7 @@ bool CAssetsCache::UndoAssetCoin(const Coin& coin, const COutPoint& out)
         if (!OwnerAssetFromScript(coin.out.scriptPubKey, ownerName, strAddress))
             return error("%s : Failed to get owner asset from script while trying to unso asset spend. OutPoint : %s", __func__, out.ToString());
         assetName = ownerName;
-        nAmount = 1 * COIN;
+        nAmount = OWNER_ASSET_AMOUNT;
     }
 
     if (assetName == "" || strAddress == "" || nAmount == 0)
@@ -759,7 +759,7 @@ bool CAssetsCache::AddOwnerAsset(const std::string& assetsName, const std::strin
     }
 
     // Insert the asset into the assests address amount map
-    mapAssetsAddressAmount[std::make_pair(assetsName, address)] = 1 * COIN;
+    mapAssetsAddressAmount[std::make_pair(assetsName, address)] = OWNER_ASSET_AMOUNT;
 
 
     // Update the cache
@@ -887,7 +887,7 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
             for (auto ownerAsset : setNewOwnerAssetsToAdd) {
 
                 if (!passetsdb->WriteAssetAddressQuantity(ownerAsset.assetName, ownerAsset.address,
-                                                          1 * COIN)) {
+                                                          OWNER_ASSET_AMOUNT)) {
                     dirty = true;
                     message = "_Failed Writing Owner Address Balance to database";
                 }
@@ -1235,7 +1235,7 @@ bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount)
         if (!OwnerAssetFromScript(coin.out.scriptPubKey, name, address))
             return false;
         strName = name;
-        nAmount = 1 * COIN;
+        nAmount = OWNER_ASSET_AMOUNT;
         return true;
     }
 

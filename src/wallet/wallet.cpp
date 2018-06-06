@@ -2247,7 +2247,7 @@ void CWallet::AvailableCoinsAll(std::vector<COutput>& vCoins, std::map<std::stri
                                              : mapAssetTotals[strAssetName] += assetTransfer.nAmount;
 
                         if (fWasOwnerAssetOutPoint)
-                            mapAssetTotals[strAssetName] = 1 * COIN;
+                            mapAssetTotals[strAssetName] = OWNER_ASSET_AMOUNT;
                     }
 
                     // Checks the sum amount of all UTXO's, and adds to the set of assets that we found the max for
@@ -2696,7 +2696,7 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
                 std::string address;
                 if (!OwnerAssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, ownerName, address))
                     continue;
-                mapValueRet.at(ownerName) = 1 * COIN;
+                mapValueRet.at(ownerName) = OWNER_ASSET_AMOUNT;
             } else {
                 continue;
             }

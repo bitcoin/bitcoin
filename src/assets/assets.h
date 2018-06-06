@@ -29,6 +29,7 @@
 #define OWNER_LENGTH 1
 #define MIN_ASSET_LENGTH 3
 #define MAX_ASSET_LENGTH 31
+#define OWNER_ASSET_AMOUNT 1 * COIN
 
 class CScript;
 class CDataStream;
