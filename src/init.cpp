@@ -274,61 +274,47 @@ void PrepareShutdown()
         fFeeEstimatesInitialized = false;
     }
 
-    {
-        LOCK(cs_main);
-        if (pcoinsTip != NULL) {
-            FlushStateToDisk();
-        }
-		// SYSCOIN
-		if (paliasdb != NULL)
-		{
-			if (!paliasdb->Flush())
-				LogPrintf("Failed to write to alias database!");
-			delete paliasdb;
-			paliasdb = NULL;
-		}
-		if (pofferdb != NULL)
-		{
-			if (!pofferdb->Flush())
-				LogPrintf("Failed to write to offer database!");
-			delete pofferdb;
-			pofferdb = NULL;
-		}
-		if (pcertdb != NULL)
-		{
-			if (!pcertdb->Flush())
-				LogPrintf("Failed to write to cert database!");
-			delete pcertdb;
-			pcertdb = NULL;
-		}
-		if (passetdb != NULL)
-		{
-			if (!passetdb->Flush())
-				LogPrintf("Failed to write to asset database!");
-			delete passetdb;
-			passetdb = NULL;
-		}
-		if (passetallocationdb != NULL)
-		{
-			if (!passetallocationdb->Flush())
-				LogPrintf("Failed to write to asset allocation database!");
-			delete passetallocationdb;
-			passetallocationdb = NULL;
-		}
-		if (passetallocationtransactionsdb != NULL)
-		{
-			passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(AssetAllocationIndex);
-			if (!passetallocationtransactionsdb->Flush())
-				LogPrintf("Failed to write to asset allocation transactions database!");
-			delete passetallocationtransactionsdb;
-			passetallocationtransactionsdb = NULL;
-		}
-		if (pescrowdb != NULL)
-		{
-			if (!pescrowdb->Flush())
-				LogPrintf("Failed to write to escrow database!");
-			delete pescrowdb;
-			pescrowdb = NULL;
+	// SYSCOIN
+	FlushSyscoinDBs();
+	if (paliasdb != NULL)
+	{
+		delete paliasdb;
+		paliasdb = NULL;
+	}
+	if (pofferdb != NULL)
+	{
+		delete pofferdb;
+		pofferdb = NULL;
+	}
+	if (pcertdb != NULL)
+	{
+		delete pcertdb;
+		pcertdb = NULL;
+	}
+	if (passetdb != NULL)
+	{
+		delete passetdb;
+		passetdb = NULL;
+	}
+	if (passetallocationdb != NULL)
+	{
+		delete passetallocationdb;
+		passetallocationdb = NULL;
+	}
+	if (passetallocationtransactionsdb != NULL)
+	{
+		delete passetallocationtransactionsdb;
+		passetallocationtransactionsdb = NULL;
+	}
+	if (pescrowdb != NULL)
+	{
+		delete pescrowdb;
+		pescrowdb = NULL;
+	}
+	{
+		LOCK(cs_main);
+		if (pcoinsTip != NULL) {
+			FlushStateToDisk();
 		}
         delete pcoinsTip;
         pcoinsTip = NULL;
