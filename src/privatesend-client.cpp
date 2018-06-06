@@ -875,8 +875,8 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
         CAmount nValueInTmp = 0;
         std::vector<CTxDSIn> vecTxDSInTmp;
         std::vector<COutput> vCoinsTmp;
-        int nMinAmount = vecStandardDenoms[vecBits.front()];
-        int nMaxAmount = nBalanceNeedsAnonymized;
+        CAmount nMinAmount = vecStandardDenoms[vecBits.front()];
+        CAmount nMaxAmount = nBalanceNeedsAnonymized;
 
         if (dsq.nInputCount != 0) {
             nMinAmount = nMaxAmount = dsq.nInputCount * vecStandardDenoms[vecBits.front()];
