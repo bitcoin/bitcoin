@@ -779,39 +779,54 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 	return true;
 }
 bool FlushSyscoinDBs() {
-	if (paliasdb != NULL)
 	{
-		if (!paliasdb->Flush()) {
-			LogPrintf("Failed to write to alias database!");
-			return false;
+		LOCK(cs_alias);
+		if (paliasdb != NULL)
+		{
+			if (!paliasdb->Flush()) {
+				LogPrintf("Failed to write to alias database!");
+				return false;
+			}
 		}
 	}
-	if (pofferdb != NULL)
 	{
-		if (!pofferdb->Flush()) {
-			LogPrintf("Failed to write to offer database!");
-			return false;
+		LOCK(cs_offer);
+		if (pofferdb != NULL)
+		{
+			if (!pofferdb->Flush()) {
+				LogPrintf("Failed to write to offer database!");
+				return false;
+			}
 		}
 	}
-	if (pcertdb != NULL)
 	{
-		if (!pcertdb->Flush()) {
-			LogPrintf("Failed to write to cert database!");
-			return false;
+		LOCK(cs_cert);
+		if (pcertdb != NULL)
+		{
+			if (!pcertdb->Flush()) {
+				LogPrintf("Failed to write to cert database!");
+				return false;
+			}
 		}
 	}
-	if (pescrowdb != NULL)
 	{
-		if (!pescrowdb->Flush()) {
-			LogPrintf("Failed to write to escrow database!");
-			return false;
+		LOCK(cs_escrow);
+		if (pescrowdb != NULL)
+		{
+			if (!pescrowdb->Flush()) {
+				LogPrintf("Failed to write to escrow database!");
+				return false;
+			}
 		}
 	}
-	if (passetdb != NULL)
 	{
-		if (!passetdb->Flush()) {
-			LogPrintf("Failed to write to asset database!");
-			return false;
+		LOCK(cs_asset);
+		if (passetdb != NULL)
+		{
+			if (!passetdb->Flush()) {
+				LogPrintf("Failed to write to asset database!");
+				return false;
+			}
 		}
 	}
 	{
