@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="sn" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -76,10 +74,6 @@
         <translation>Vhara Application</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;Kuma %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>Taridza ruzivo rwekuma %1</translation>
     </message>
@@ -94,14 +88,6 @@
     <message>
         <source>&amp;Receiving addresses...</source>
         <translation>&amp;Makero ekutambira nawo</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Vhura &amp;URI</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -141,6 +127,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount</source>
@@ -156,6 +145,9 @@
     </message>
     </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     </context>
 <context>
@@ -166,10 +158,9 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -194,10 +185,6 @@
     <message>
         <source>Amount</source>
         <translation>Marii </translation>
-    </message>
-    <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Nyora kero ye Bitcoin (sekuti %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -226,6 +213,12 @@
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -316,10 +309,6 @@
         <translation>Zuva</translation>
     </message>
     <message>
-        <source>Label</source>
-        <translation>Zita</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(hapana zita)</translation>
     </message>
@@ -352,14 +341,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Information</source>
-        <translation>Ruzivo</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Hokoyo</translation>
-    </message>
+    <name>chaincoin-core</name>
     </context>
 </TS>

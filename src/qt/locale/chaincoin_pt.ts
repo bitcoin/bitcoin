@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="pt" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -42,14 +40,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Recebendo informações</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estas são suas informações para o envio de pagamentos por Bitcoins. Sempre cheque a quantia enviada e as informações do destinatário, antes de enviar os Bitcoins.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Estas são suas informações para o recebimento de pagamentos por Bitcoins. É recomendado que seja feito o uso de um novo conjunto de informações para cada transação.</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -150,6 +140,9 @@ Por favor, utilize uma senha com dez ou mais caracteres, ou com oito ou mais pal
     <name>BitcoinGUI</name>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Copy transaction ID</source>
@@ -159,6 +152,9 @@ Por favor, utilize uma senha com dez ou mais caracteres, ou com oito ou mais pal
         <source>(no label)</source>
         <translation>(sem etiqueta)</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -171,6 +167,9 @@ Por favor, utilize uma senha com dez ou mais caracteres, ou com oito ou mais pal
     </context>
 <context>
     <name>Intro</name>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -195,6 +194,12 @@ Por favor, utilize uma senha com dez ou mais caracteres, ou com oito ou mais pal
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -261,10 +266,6 @@ Por favor, utilize uma senha com dez ou mais caracteres, ou com oito ou mais pal
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Label</source>
-        <translation>Etiqueta</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(sem etiqueta)</translation>
     </message>
@@ -309,6 +310,6 @@ Por favor, utilize uma senha com dez ou mais caracteres, ou com oito ou mais pal
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>chaincoin-core</name>
     </context>
 </TS>

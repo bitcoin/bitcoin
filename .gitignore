@@ -1102,3 +1102,9 @@ src/test/data/script_tests.json.h
 src/test/data/sighash.json.h
 src/test/data/tx_invalid.json.h
 src/test/data/tx_valid.json.h
+Chaincoin.config
+Chaincoin.creator
+Chaincoin.files
+Chaincoin.includes
+*.user
+*.orig

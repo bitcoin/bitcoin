@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="ur_PK" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -89,6 +87,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
@@ -102,6 +103,9 @@
         <source>Date</source>
         <translation>تاریخ</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -126,6 +130,9 @@
         <source>Error</source>
         <translation>نقص</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -158,6 +165,12 @@
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -244,14 +257,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>ناکافی فنڈز</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>نقص</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

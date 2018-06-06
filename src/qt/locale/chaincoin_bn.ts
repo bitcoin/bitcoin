@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="bn" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -45,7 +43,13 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -58,6 +62,9 @@
     </context>
 <context>
     <name>Intro</name>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -82,6 +89,12 @@
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -160,38 +173,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Block creation options:</source>
-        <translation>ব্লক তৈরির অপশনগুলো:</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>ডিবাগিং/টেস্টিং অপশন:</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>আপনি কি পুনরায় ব্লক ডাটাবেইজ এখনই তৈরি করতে চান?</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>আরপিসি সার্ভার অপশন:</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation>এটি পরীক্ষামূলক সফটওয়্যার।</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>লেনদেনের পরিমান অনেক ছোট</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>লেনদেনর অংক অনেক বড়</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>সতর্কতা</translation>
-    </message>
+    <name>chaincoin-core</name>
     </context>
 </TS>

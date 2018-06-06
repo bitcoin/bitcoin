@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="si" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -57,6 +55,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Quantity:</source>
@@ -100,6 +101,9 @@
     </message>
 </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     </context>
 <context>
@@ -118,6 +122,9 @@
         <source>Welcome</source>
         <translation>ආයුබෝවන්</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -170,6 +177,12 @@
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -272,10 +285,6 @@
         <translation>දිනය</translation>
     </message>
     <message>
-        <source>Label</source>
-        <translation>ලේබලය</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(ලේබලයක් නැත)</translation>
     </message>
@@ -308,14 +317,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Information</source>
-        <translation>තොරතුර</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>අවවාදය</translation>
-    </message>
+    <name>chaincoin-core</name>
     </context>
 </TS>

@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="mn" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -128,10 +126,6 @@
         <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Биткойн</translation>
-    </message>
-    <message>
         <source>Wallet</source>
         <translation>Түрүйвч</translation>
     </message>
@@ -181,6 +175,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
@@ -202,6 +199,9 @@
         <source>Confirmed</source>
         <translation>Баталгаажлаа</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -235,13 +235,12 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
-        <translation>Биткойн</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Алдаа</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -318,6 +317,12 @@
 </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -540,7 +545,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Гүйлгээний дэлгэрэнгүйг энэ бичил цонх харуулж байна</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     </context>
@@ -560,42 +565,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Сонголтууд:</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Түрүйвчийн сонголтууд:</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Мэдээллэл</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Таны дансны үлдэгдэл хүрэлцэхгүй байна</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Блокийн индексүүдийг ачааллаж байна...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Түрүйвчийг ачааллаж байна...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Ахин уншиж байна...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Ачааллаж дууслаа</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Алдаа</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

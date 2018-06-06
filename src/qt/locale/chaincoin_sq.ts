@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="sq" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -54,14 +52,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Duke marr adresen</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Këto janë Bitcoin adresat e juaja për të dërguar pagesa. Gjithmon kontrolloni shumën dhe adresën pranuese para se të dërgoni monedha.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Këto janë Bitcoin adresat e juaja për të pranuar pagesa. Rekomandohet që gjithmon të përdorni një adresë të re për çdo transaksion.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -232,10 +222,6 @@
         <translation>Ndrysho frazkalimin e përdorur per enkriptimin e portofolit</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Wallet</source>
         <translation>Portofol</translation>
     </message>
@@ -305,6 +291,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
@@ -338,6 +327,9 @@
         <source>(no label)</source>
         <translation>(pa etiketë)</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -403,13 +395,12 @@
         <translation>Miresevini</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Problem</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -466,6 +457,12 @@
 </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -639,7 +636,7 @@
         <source>[testnet]</source>
         <translation>[testo rrjetin]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     </context>
@@ -684,7 +681,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ky panel tregon një përshkrim të detajuar të transaksionit</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -694,10 +691,6 @@
     <message>
         <source>Type</source>
         <translation>Lloji</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiketë</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -804,30 +797,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Opsionet:</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Berthama Bitcoin</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informacion</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Fonde te pamjaftueshme</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Rikerkim</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Problem</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>
