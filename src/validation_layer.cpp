@@ -27,10 +27,10 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
 void BlockValidationRequest::operator()()
 {
-    LogPrint(BCLog::VALIDATION, "%s: validating request=%s\n", __func__, GetId());
+    LogPrint(BCLog::ASYNC, "%s: validating request=%s\n", __func__, GetId());
     auto res = m_validation_layer.ValidateInternal(m_block, m_force_processing);
-    LogPrint(BCLog::VALIDATION, "%s: validation result request=%s block_valid=%d is_new=%d\n",
-             __func__, GetId(), res.block_valid, res.is_new);
+    LogPrint(BCLog::ASYNC, "%s: validation result request=%s block_valid=%d is_new=%d\n",
+        __func__, GetId(), res.block_valid, res.is_new);
 
     m_promise.set_value(res);
     if (m_on_ready) {
@@ -43,22 +43,10 @@ std::string BlockValidationRequest::GetId() const
     return strprintf("BlockValidationRequest[%s]", m_block->GetHash().ToString());
 }
 
-void ValidationLayer::Start()
-{
-    assert(!m_thread || !m_thread->IsActive());
-    m_thread = std::unique_ptr<ValidationThread>(new ValidationThread(m_validation_queue));
-}
-
-void ValidationLayer::Stop()
-{
-    assert(m_thread && m_thread->IsActive());
-    m_thread->Terminate();
-}
-
 std::future<BlockValidationResponse> ValidationLayer::SubmitForValidation(const std::shared_ptr<const CBlock> block, bool force_processing, std::function<void()> on_ready)
 {
     BlockValidationRequest* req = new BlockValidationRequest(*this, block, force_processing, on_ready);
-    return SubmitForValidation<BlockValidationResponse>(req);
+    return AddToQueue<BlockValidationRequest, BlockValidationResponse>(req);
 }
 
 BlockValidationResponse ValidationLayer::Validate(const std::shared_ptr<const CBlock> block, bool force_processing)
