@@ -947,6 +947,10 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                         __func__, hash.ToString(), FormatStateMessage(state));
                 } else {
                     LogPrintf("Warning: -promiscuousmempool flags set to not include currently enforced soft forks, this may break mining or otherwise cause instability!\n");
+
+                    // reset the validation state here as it was made invalid by the failure of CheckInputsFromMempoolAndCache
+                    // but we're choosing to ignore/override this validation failure
+                    state = CValidationState();
                 }
             }
         }
