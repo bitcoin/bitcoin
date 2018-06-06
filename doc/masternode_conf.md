@@ -6,7 +6,7 @@ Syscoin Core allows controlling multiple remote masternodes from a single wallet
  * Mac OS: ~/Library/Application Support/SyscoinCore/
  * Unix/Linux: ~/.syscoincore/
 
-`masternode.conf` is a space separated text file. Each line consists of an alias, IP address followed by port, masternode private key, collateral output transaction id and collateral output index.
+`masternode.conf` is a space separated text file. Each line consists of a name, IP address followed by port, masternode private key, collateral output transaction id and collateral output index.
 
 Example:
 ```
@@ -22,7 +22,7 @@ _Note: IPs like 127.0.0.* are not allowed actually, we are using them here for e
 
 The following RPC commands are available (type `help masternode` in Console for more info):
 * list-conf
-* start-alias \<alias\>
+* initialize \<name\>
 * start-all
 * start-missing
 * start-disabled
