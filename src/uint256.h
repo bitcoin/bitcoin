@@ -34,8 +34,8 @@ public:
         for (unsigned int i = 0; i < WIDTH; ++i) {
             if (data[i] != 0) {
                 return false;
-	    }
-	}
+            }
+        }
         return true;
     }
 

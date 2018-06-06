@@ -83,12 +83,6 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK(~MaxL == ZeroL);
     BOOST_CHECK( ((R1L ^ R2L) ^ R1L) == R2L);
 
-    // truthiness
-    BOOST_CHECK(static_cast<bool>(OneL));
-    BOOST_CHECK(!static_cast<bool>(ZeroL));
-    BOOST_CHECK(OneL);
-    BOOST_CHECK(!ZeroL);
-
     uint64_t Tmp64 = 0xc4dab720d9c7acaaULL;
     for (unsigned int i = 0; i < 256; ++i)
     {
@@ -210,6 +204,9 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
         BOOST_CHECK(!(!(OneL<<i)));
     BOOST_CHECK(!(!R1L));
     BOOST_CHECK(!(!MaxL));
+
+    BOOST_CHECK(static_cast<bool>(OneL));
+    BOOST_CHECK(!static_cast<bool>(ZeroL));
 
     BOOST_CHECK(~ZeroL == MaxL);
 
