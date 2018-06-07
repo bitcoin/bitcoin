@@ -30,8 +30,6 @@
 #include <memory>
 
 
-
-
 static std::string GetDefaultPath()
 {
     // Return path of default account: 44'/44'/0'

@@ -51,7 +51,6 @@ void ListDevices(std::vector<std::unique_ptr<CUSBDevice> > &vDevices)
     devs = hid_enumerate(0x0, 0x0);
     cur_dev = devs;
     while (cur_dev) {
-
         for (const auto &type : usbDeviceTypes)
         {
             if (cur_dev->vendor_id != type.nVendorId
@@ -59,7 +58,12 @@ void ListDevices(std::vector<std::unique_ptr<CUSBDevice> > &vDevices)
                 continue;
 
             if (type.type == USBDEVICE_LEDGER_NANO_S)
-                vDevices.push_back(std::unique_ptr<CUSBDevice>(new CLedgerDevice(&type, cur_dev->path, (char*)cur_dev->serial_number, cur_dev->interface_number)));
+            {
+                std::unique_ptr<CUSBDevice> device(new CLedgerDevice(&type, cur_dev->path, (char*)cur_dev->serial_number, cur_dev->interface_number));
+                std::string sValue, sError;
+                if (0 == device->GetFirmwareVersion(sValue, sError))
+                    vDevices.push_back(std::move(device));
+            };
         };
         cur_dev = cur_dev->next;
     }
@@ -158,5 +162,4 @@ bool DeviceSignatureCreator::CreateSig(const SigningProvider& provider, std::vec
 
     return false;
 };
-
 
