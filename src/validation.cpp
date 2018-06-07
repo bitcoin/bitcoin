@@ -593,6 +593,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
         }
 
+        /** RVN START */
+        if (!Consensus::CheckTxAssets(tx, state, view))
+            return error("%s: Consensus::CheckTxAssets: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
+        /** RVN END */
+
         // Check for non-standard pay-to-script-hash in inputs
         if (fRequireStandard && !AreInputsStandard(tx, view))
             return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
@@ -1875,6 +1880,12 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                 return state.DoS(100, error("%s: accumulated fee in the block out of range.", __func__),
                                  REJECT_INVALID, "bad-txns-accumulated-fee-outofrange");
             }
+
+            /** RVN START */
+            if (!Consensus::CheckTxAssets(tx, state, view)) {
+                return error("%s: Consensus::CheckTxAssets: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
+            }
+            /** RVN END */
 
             // Check that transaction is BIP68 final
             // BIP68 lock checks (as opposed to nLockTime checks) must

@@ -29,6 +29,7 @@
 #define OWNER_LENGTH 1
 #define MIN_ASSET_LENGTH 3
 #define MAX_ASSET_LENGTH 31
+#define OWNER_ASSET_AMOUNT 1 * COIN
 
 class CScript;
 class CDataStream;
@@ -268,4 +269,6 @@ bool IsScriptTransferAsset(const CScript& scriptPubKey);
 bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, const std::string& address, std::string& errorMsg);
 
 void UpdatePossibleAssets();
+
+bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount);
 #endif //RAVENCOIN_ASSET_PROTOCOL_H

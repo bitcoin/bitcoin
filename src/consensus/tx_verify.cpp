@@ -197,9 +197,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
 
                 // If we aren't reindexing
                 if (!fReindex) {
-                    // If the transfer is an ownership asset. Check to make sure that it is 1 * COIN
+                    // If the transfer is an ownership asset. Check to make sure that it is OWNER_ASSET_AMOUNT
                     if (IsAssetNameAnOwner(transfer.strName)) {
-                        if (transfer.nAmount != 1 * COIN)
+                        if (transfer.nAmount != OWNER_ASSET_AMOUNT)
                             return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-wasn't-1");
                     } else {
                         // For all other types of assets, make sure they are sending the right type of units
@@ -306,5 +306,70 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     }
 
     txfee = txfee_aux;
+    return true;
+}
+
+//! Check to make sure that the inputs and outputs CAmount match exactly.
+bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs)
+{
+    // are the actual inputs available?
+    if (!inputs.HaveInputs(tx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent", false,
+                         strprintf("%s: inputs missing/spent", __func__));
+    }
+
+    // Create map that stores the amount of an asset transaction input. Used to verify no assets are burned
+    std::map<std::string, CAmount> totalInputs;
+
+    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
+        const COutPoint &prevout = tx.vin[i].prevout;
+        const Coin& coin = inputs.AccessCoin(prevout);
+        assert(!coin.IsSpent());
+
+        if (coin.IsAsset()) {
+            std::string strName;
+            CAmount nAmount;
+
+            if (!GetAssetFromCoin(coin, strName, nAmount))
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-failed-to-get-asset-from-script");
+
+            // Add to the total value of assets in the inputs
+            if (totalInputs.count(strName))
+                totalInputs.at(strName) += nAmount;
+            else
+                totalInputs.insert(make_pair(strName, nAmount));
+        }
+    }
+
+    // Create map that stores the amount of an asset transaction output. Used to verify no assets are burned
+    std::map<std::string, CAmount> totalOutputs;
+
+    for (const auto& txout : tx.vout) {
+        if (txout.scriptPubKey.IsTransferAsset()) {
+            CAssetTransfer transfer;
+            std::string address;
+            if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))
+                return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-transfer-bad-deserialize");
+
+            // Add to the total value of assets in the outputs
+            if (totalOutputs.count(transfer.strName))
+                totalOutputs.at(transfer.strName) += transfer.nAmount;
+            else
+                totalOutputs.insert(make_pair(transfer.strName, transfer.nAmount));
+        }
+    }
+
+    // Check the input values and the output values
+    if (totalOutputs.size() != totalInputs.size())
+        return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-size-doesn't-match-outputs-size");
+
+    for (const auto& outValue : totalOutputs) {
+        if (!totalInputs.count(outValue.first))
+            return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-doesn't-have-asset-that-is-in-outputs");
+
+        if (totalInputs.at(outValue.first) != outValue.second)
+            return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-amount-mismatch-with-outputs-amount");
+    }
+
     return true;
 }

@@ -612,7 +612,7 @@ bool CAssetsCache::UndoAssetCoin(const Coin& coin, const COutPoint& out)
         if (!OwnerAssetFromScript(coin.out.scriptPubKey, ownerName, strAddress))
             return error("%s : Failed to get owner asset from script while trying to unso asset spend. OutPoint : %s", __func__, out.ToString());
         assetName = ownerName;
-        nAmount = 1 * COIN;
+        nAmount = OWNER_ASSET_AMOUNT;
     }
 
     if (assetName == "" || strAddress == "" || nAmount == 0)
@@ -759,7 +759,7 @@ bool CAssetsCache::AddOwnerAsset(const std::string& assetsName, const std::strin
     }
 
     // Insert the asset into the assests address amount map
-    mapAssetsAddressAmount[std::make_pair(assetsName, address)] = 1 * COIN;
+    mapAssetsAddressAmount[std::make_pair(assetsName, address)] = OWNER_ASSET_AMOUNT;
 
 
     // Update the cache
@@ -887,7 +887,7 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
             for (auto ownerAsset : setNewOwnerAssetsToAdd) {
 
                 if (!passetsdb->WriteAssetAddressQuantity(ownerAsset.assetName, ownerAsset.address,
-                                                          1 * COIN)) {
+                                                          OWNER_ASSET_AMOUNT)) {
                     dirty = true;
                     message = "_Failed Writing Owner Address Balance to database";
                 }
@@ -936,8 +936,6 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
                     if (dirty) {
                         return error("%s : %s", __func__, message);
                     }
-                } else {
-                    LogPrintf("%s : This should be happening!, setNewTransferAssetToAdd has a value that isn't in the mapAssetsAddressAmount\n", __func__);
                 }
             }
 
@@ -1204,6 +1202,41 @@ bool CAssetsCache::GetAssetIfExists(const std::string& name, CNewAsset& asset)
             passetsCache->Put(readAsset.strName, readAsset);
             return true;
         }
+    }
+
+    return false;
+}
+
+bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount)
+{
+    if (!coin.IsAsset())
+        return false;
+
+    // Determine the type of asset that the scriptpubkey contains and return the name and amount
+    if (coin.out.scriptPubKey.IsNewAsset()) {
+        CNewAsset asset;
+        std::string address;
+        if (!AssetFromScript(coin.out.scriptPubKey, asset, address))
+            return false;
+        strName = asset.strName;
+        nAmount = asset.nAmount;
+        return true;
+    } else if (coin.out.scriptPubKey.IsTransferAsset()) {
+        CAssetTransfer asset;
+        std::string address;
+        if (!TransferAssetFromScript(coin.out.scriptPubKey, asset, address))
+            return false;
+        strName = asset.strName;
+        nAmount = asset.nAmount;
+        return true;
+    } else if (coin.out.scriptPubKey.IsOwnerAsset()) {
+        std::string name;
+        std::string address;
+        if (!OwnerAssetFromScript(coin.out.scriptPubKey, name, address))
+            return false;
+        strName = name;
+        nAmount = OWNER_ASSET_AMOUNT;
+        return true;
     }
 
     return false;
