@@ -2268,8 +2268,7 @@ bool AppInitMain()
 
     // ********************************************************* Step 8: start indexers
     if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-        auto txindex_db = MakeUnique<TxIndexDB>(nTxIndexCache, false, fReindex);
-        g_txindex = MakeUnique<TxIndex>(std::move(txindex_db));
+        g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);
         g_txindex->Start();
     }
 

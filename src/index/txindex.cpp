@@ -2,41 +2,230 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
 #include <index/txindex.h>
 #include <init.h>
-#include <tinyformat.h>
 #include <ui_interface.h>
 #include <util/system.h>
 #include <validation.h>
-#include <warnings.h>
 
-constexpr int64_t SYNC_LOG_INTERVAL = 30; // seconds
-constexpr int64_t SYNC_LOCATOR_WRITE_INTERVAL = 30; // seconds
+#include <boost/thread.hpp>
+
+constexpr char DB_BEST_BLOCK = 'B';
+constexpr char DB_TXINDEX = 't';
+constexpr char DB_TXINDEX_BLOCK = 'T';
 
 std::unique_ptr<TxIndex> g_txindex;
 
-template<typename... Args>
-static void FatalError(const char* fmt, const Args&... args)
+struct CDiskTxPos : public CDiskBlockPos
 {
-    std::string strMessage = tfm::format(fmt, args...);
-    SetMiscWarning(strMessage);
-    LogPrintf("*** %s\n", strMessage);
-    uiInterface.ThreadSafeMessageBox(
-        "Error: A fatal internal error occurred, see debug.log for details",
-        "", CClientUIInterface::MSG_ERROR);
-    StartShutdown();
-}
+    unsigned int nTxOffset; // after header
 
-TxIndex::TxIndex(std::unique_ptr<TxIndexDB> db) :
-    m_db(std::move(db)), m_synced(false), m_best_block_index(nullptr)
+    SERIALIZE_METHODS(CDiskTxPos, obj)
+    {
+        READWRITEAS(CDiskBlockPos, obj);
+        READWRITE(VARINT(obj.nTxOffset));
+    }
+
+    CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
+    }
+
+    CDiskTxPos() {
+        SetNull();
+    }
+
+    void SetNull() {
+        CDiskBlockPos::SetNull();
+        nTxOffset = 0;
+    }
+};
+
+/**
+ * Access to the txindex database (indexes/txindex/)
+ *
+ * The database stores a block locator of the chain the database is synced to
+ * so that the TxIndex can efficiently determine the point it last stopped at.
+ * A locator is used instead of a simple hash of the chain tip because blocks
+ * and block index entries may not be flushed to disk until after this database
+ * is updated.
+ */
+class TxIndex::DB : public BaseIndex::DB
+{
+public:
+    explicit DB(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+
+    /// Read the disk location of the transaction data with the given hash. Returns false if the
+    /// transaction hash is not indexed.
+    bool ReadTxPos(const uint256& txid, CDiskTxPos& pos) const;
+
+    /// Write a batch of transaction positions to the DB.
+    bool WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_pos);
+
+    /// Migrate txindex data from the block tree DB, where it may be for older nodes that have not
+    /// been upgraded yet to the new database.
+    bool MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& best_locator);
+};
+
+TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
+    BaseIndex::DB(GetDataDir() / "indexes" / "txindex", n_cache_size, f_memory, f_wipe)
 {}
 
-TxIndex::~TxIndex()
+bool TxIndex::DB::ReadTxPos(const uint256 &txid, CDiskTxPos& pos) const
 {
-    Interrupt();
-    Stop();
+    return Read(std::make_pair(DB_TXINDEX, txid), pos);
 }
+
+bool TxIndex::DB::WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_pos)
+{
+    CDBBatch batch(*this);
+    for (const auto& tuple : v_pos) {
+        batch.Write(std::make_pair(DB_TXINDEX, tuple.first), tuple.second);
+    }
+    return WriteBatch(batch);
+}
+
+/*
+ * Safely persist a transfer of data from the old txindex database to the new one, and compact the
+ * range of keys updated. This is used internally by MigrateData.
+ */
+static void WriteTxIndexMigrationBatches(CDBWrapper& newdb, CDBWrapper& olddb,
+                                         CDBBatch& batch_newdb, CDBBatch& batch_olddb,
+                                         const std::pair<unsigned char, uint256>& begin_key,
+                                         const std::pair<unsigned char, uint256>& end_key)
+{
+    // Sync new DB changes to disk before deleting from old DB.
+    newdb.WriteBatch(batch_newdb, /*fSync=*/ true);
+    olddb.WriteBatch(batch_olddb);
+    olddb.CompactRange(begin_key, end_key);
+
+    batch_newdb.Clear();
+    batch_olddb.Clear();
+}
+
+bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& best_locator)
+{
+    // The prior implementation of txindex was always in sync with block index
+    // and presence was indicated with a boolean DB flag. If the flag is set,
+    // this means the txindex from a previous version is valid and in sync with
+    // the chain tip. The first step of the migration is to unset the flag and
+    // write the chain hash to a separate key, DB_TXINDEX_BLOCK. After that, the
+    // index entries are copied over in batches to the new database. Finally,
+    // DB_TXINDEX_BLOCK is erased from the old database and the block hash is
+    // written to the new database.
+    //
+    // Unsetting the boolean flag ensures that if the node is downgraded to a
+    // previous version, it will not see a corrupted, partially migrated index
+    // -- it will see that the txindex is disabled. When the node is upgraded
+    // again, the migration will pick up where it left off and sync to the block
+    // with hash DB_TXINDEX_BLOCK.
+    bool f_legacy_flag = false;
+    block_tree_db.ReadFlag("txindex", f_legacy_flag);
+    if (f_legacy_flag) {
+        if (!block_tree_db.Write(DB_TXINDEX_BLOCK, best_locator)) {
+            return error("%s: cannot write block indicator", __func__);
+        }
+        if (!block_tree_db.WriteFlag("txindex", false)) {
+            return error("%s: cannot write block index db flag", __func__);
+        }
+    }
+
+    CBlockLocator locator;
+    if (!block_tree_db.Read(DB_TXINDEX_BLOCK, locator)) {
+        return true;
+    }
+
+    int64_t count = 0;
+    LogPrintf("Upgrading txindex database... [0%%]\n");
+    uiInterface.ShowProgress(_("Upgrading txindex database"), 0, true);
+    int report_done = 0;
+    const size_t batch_size = 1 << 24; // 16 MiB
+
+    CDBBatch batch_newdb(*this);
+    CDBBatch batch_olddb(block_tree_db);
+
+    std::pair<unsigned char, uint256> key;
+    std::pair<unsigned char, uint256> begin_key{DB_TXINDEX, uint256()};
+    std::pair<unsigned char, uint256> prev_key = begin_key;
+
+    bool interrupted = false;
+    std::unique_ptr<CDBIterator> cursor(block_tree_db.NewIterator());
+    for (cursor->Seek(begin_key); cursor->Valid(); cursor->Next()) {
+        boost::this_thread::interruption_point();
+        if (ShutdownRequested()) {
+            interrupted = true;
+            break;
+        }
+
+        if (!cursor->GetKey(key)) {
+            return error("%s: cannot get key from valid cursor", __func__);
+        }
+        if (key.first != DB_TXINDEX) {
+            break;
+        }
+
+        // Log progress every 10%.
+        if (++count % 256 == 0) {
+            // Since txids are uniformly random and traversed in increasing order, the high 16 bits
+            // of the hash can be used to estimate the current progress.
+            const uint256& txid = key.second;
+            uint32_t high_nibble =
+                (static_cast<uint32_t>(*(txid.begin() + 0)) << 8) +
+                (static_cast<uint32_t>(*(txid.begin() + 1)) << 0);
+            int percentage_done = (int)(high_nibble * 100.0 / 65536.0 + 0.5);
+
+            uiInterface.ShowProgress(_("Upgrading txindex database"), percentage_done, true);
+            if (report_done < percentage_done/10) {
+                LogPrintf("Upgrading txindex database... [%d%%]\n", percentage_done);
+                report_done = percentage_done/10;
+            }
+        }
+
+        CDiskTxPos value;
+        if (!cursor->GetValue(value)) {
+            return error("%s: cannot parse txindex record", __func__);
+        }
+        batch_newdb.Write(key, value);
+        batch_olddb.Erase(key);
+
+        if (batch_newdb.SizeEstimate() > batch_size || batch_olddb.SizeEstimate() > batch_size) {
+            // NOTE: it's OK to delete the key pointed at by the current DB cursor while iterating
+            // because LevelDB iterators are guaranteed to provide a consistent view of the
+            // underlying data, like a lightweight snapshot.
+            WriteTxIndexMigrationBatches(*this, block_tree_db,
+                                         batch_newdb, batch_olddb,
+                                         prev_key, key);
+            prev_key = key;
+        }
+    }
+
+    // If these final DB batches complete the migration, write the best block
+    // hash marker to the new database and delete from the old one. This signals
+    // that the former is fully caught up to that point in the blockchain and
+    // that all txindex entries have been removed from the latter.
+    if (!interrupted) {
+        batch_olddb.Erase(DB_TXINDEX_BLOCK);
+        batch_newdb.Write(DB_BEST_BLOCK, locator);
+    }
+
+    WriteTxIndexMigrationBatches(*this, block_tree_db,
+                                 batch_newdb, batch_olddb,
+                                 begin_key, key);
+
+    if (interrupted) {
+        LogPrintf("[CANCELLED].\n");
+        return false;
+    }
+
+    uiInterface.ShowProgress("", 100, false);
+
+    LogPrintf("[DONE].\n");
+    return true;
+}
+
+TxIndex::TxIndex(size_t n_cache_size, bool f_memory, bool f_wipe)
+    : m_db(MakeUnique<TxIndex::DB>(n_cache_size, f_memory, f_wipe))
+{}
+
+TxIndex::~TxIndex() {}
 
 bool TxIndex::Init()
 {
@@ -49,88 +238,7 @@ bool TxIndex::Init()
         return false;
     }
 
-    CBlockLocator locator;
-    if (!m_db->ReadBestBlock(locator)) {
-        locator.SetNull();
-    }
-
-    m_best_block_index = FindForkInGlobalIndex(chainActive, locator);
-    m_synced = m_best_block_index.load() == chainActive.Tip();
-    return true;
-}
-
-static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev)
-{
-    AssertLockHeld(cs_main);
-
-    if (!pindex_prev) {
-        return chainActive.Genesis();
-    }
-
-    const CBlockIndex* pindex = chainActive.Next(pindex_prev);
-    if (pindex) {
-        return pindex;
-    }
-
-    return chainActive.Next(chainActive.FindFork(pindex_prev));
-}
-
-void TxIndex::ThreadSync()
-{
-    const CBlockIndex* pindex = m_best_block_index.load();
-    if (!m_synced) {
-        auto& consensus_params = Params().GetConsensus();
-
-        int64_t last_log_time = 0;
-        int64_t last_locator_write_time = 0;
-        while (true) {
-            if (m_interrupt) {
-                WriteBestBlock(pindex);
-                return;
-            }
-
-            {
-                LOCK(cs_main);
-                const CBlockIndex* pindex_next = NextSyncBlock(pindex);
-                if (!pindex_next) {
-                    WriteBestBlock(pindex);
-                    m_best_block_index = pindex;
-                    m_synced = true;
-                    break;
-                }
-                pindex = pindex_next;
-            }
-
-            int64_t current_time = GetTime();
-            if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
-                LogPrintf("Syncing txindex with block chain from height %d\n", pindex->nHeight);
-                last_log_time = current_time;
-            }
-
-            if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
-                WriteBestBlock(pindex);
-                last_locator_write_time = current_time;
-            }
-
-            CBlock block;
-            if (!ReadBlockFromDisk(block, pindex, consensus_params)) {
-                FatalError("%s: Failed to read block %s from disk",
-                           __func__, pindex->GetBlockHash().ToString());
-                return;
-            }
-            if (!WriteBlock(block, pindex)) {
-                FatalError("%s: Failed to write block %s to tx index database",
-                           __func__, pindex->GetBlockHash().ToString());
-                return;
-            }
-        }
-    }
-
-    if (pindex) {
-        LogPrintf("txindex is enabled at height %d\n", pindex->nHeight);
-    } else {
-        LogPrintf("txindex is enabled\n");
-    }
+    return BaseIndex::Init();
 }
 
 bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
@@ -145,114 +253,7 @@ bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
     return m_db->WriteTxs(vPos);
 }
 
-bool TxIndex::WriteBestBlock(const CBlockIndex* block_index)
-{
-    LOCK(cs_main);
-    if (!m_db->WriteBestBlock(chainActive.GetLocator(block_index))) {
-        return error("%s: Failed to write locator to disk", __func__);
-    }
-    return true;
-}
-
-void TxIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
-                    const std::vector<CTransactionRef>& txn_conflicted)
-{
-    if (!m_synced) {
-        return;
-    }
-
-    const CBlockIndex* best_block_index = m_best_block_index.load();
-    if (!best_block_index) {
-        if (pindex->nHeight != 0) {
-            FatalError("%s: First block connected is not the genesis block (height=%d)",
-                       __func__, pindex->nHeight);
-            return;
-        }
-    } else {
-        // Ensure block connects to an ancestor of the current best block. This should be the case
-        // most of the time, but may not be immediately after the the sync thread catches up and sets
-        // m_synced. Consider the case where there is a reorg and the blocks on the stale branch are
-        // in the ValidationInterface queue backlog even after the sync thread has caught up to the
-        // new chain tip. In this unlikely event, log a warning and let the queue clear.
-        if (best_block_index->GetAncestor(pindex->nHeight - 1) != pindex->pprev) {
-            LogPrintf("%s: WARNING: Block %s does not connect to an ancestor of " /* Continued */
-                      "known best chain (tip=%s); not updating txindex\n",
-                      __func__, pindex->GetBlockHash().ToString(),
-                      best_block_index->GetBlockHash().ToString());
-            return;
-        }
-    }
-
-    if (WriteBlock(*block, pindex)) {
-        m_best_block_index = pindex;
-    } else {
-        FatalError("%s: Failed to write block %s to txindex",
-                   __func__, pindex->GetBlockHash().ToString());
-        return;
-    }
-}
-
-void TxIndex::ChainStateFlushed(const CBlockLocator& locator)
-{
-    if (!m_synced) {
-        return;
-    }
-
-    const uint256& locator_tip_hash = locator.vHave.front();
-    const CBlockIndex* locator_tip_index;
-    {
-        LOCK(cs_main);
-        locator_tip_index = LookupBlockIndex(locator_tip_hash);
-    }
-
-    if (!locator_tip_index) {
-        FatalError("%s: First block (hash=%s) in locator was not found",
-                   __func__, locator_tip_hash.ToString());
-        return;
-    }
-
-    // This checks that ChainStateFlushed callbacks are received after BlockConnected. The check may fail
-    // immediately after the the sync thread catches up and sets m_synced. Consider the case where
-    // there is a reorg and the blocks on the stale branch are in the ValidationInterface queue
-    // backlog even after the sync thread has caught up to the new chain tip. In this unlikely
-    // event, log a warning and let the queue clear.
-    const CBlockIndex* best_block_index = m_best_block_index.load();
-    if (best_block_index->GetAncestor(locator_tip_index->nHeight) != locator_tip_index) {
-        LogPrintf("%s: WARNING: Locator contains block (hash=%s) not on known best " /* Continued */
-                  "chain (tip=%s); not writing txindex locator\n",
-                  __func__, locator_tip_hash.ToString(),
-                  best_block_index->GetBlockHash().ToString());
-        return;
-    }
-
-    if (!m_db->WriteBestBlock(locator)) {
-        error("%s: Failed to write locator to disk", __func__);
-    }
-}
-
-bool TxIndex::BlockUntilSyncedToCurrentChain()
-{
-    AssertLockNotHeld(cs_main);
-
-    if (!m_synced) {
-        return false;
-    }
-
-    {
-        // Skip the queue-draining stuff if we know we're caught up with
-        // chainActive.Tip().
-        LOCK(cs_main);
-        const CBlockIndex* chain_tip = chainActive.Tip();
-        const CBlockIndex* best_block_index = m_best_block_index.load();
-        if (best_block_index->GetAncestor(chain_tip->nHeight) == chain_tip) {
-            return true;
-        }
-    }
-
-    LogPrintf("%s: txindex is catching up on block notifications\n", __func__);
-    SyncWithValidationInterfaceQueue();
-    return true;
-}
+BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
 
 bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const
 {
@@ -286,32 +287,4 @@ bool TxIndex::HasTx(const uint256& tx_hash) const
 {
     CDiskTxPos postx;
     return m_db->ReadTxPos(tx_hash, postx);
-}
-
-void TxIndex::Interrupt()
-{
-    m_interrupt();
-}
-
-void TxIndex::Start()
-{
-    // Need to register this ValidationInterface before running Init(), so that
-    // callbacks are not missed if Init sets m_synced to true.
-    RegisterValidationInterface(this);
-    if (!Init()) {
-        FatalError("%s: txindex failed to initialize", __func__);
-        return;
-    }
-
-    m_thread_sync = std::thread(&TraceThread<std::function<void()>>, "txindex",
-                                std::bind(&TxIndex::ThreadSync, this));
-}
-
-void TxIndex::Stop()
-{
-    UnregisterValidationInterface(this);
-
-    if (m_thread_sync.joinable()) {
-        m_thread_sync.join();
-    }
 }
