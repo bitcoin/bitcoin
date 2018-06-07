@@ -421,13 +421,15 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
 
             const std::string &sEvkey = chain["evkey"].get_str();
 
-            size_t nDerives = 0;
-            size_t nDerivesH = 0;
+            uint32_t nDerives = 0;
+            uint32_t nDerivesH = 0;
 
-            if (chain["num_derives"].isStr())
-                nDerives = std::stoi(chain["num_derives"].get_str());
-            if (chain["num_derives_h"].isStr())
-                nDerivesH = std::stoi(chain["num_derives_h"].get_str());
+            if (chain["num_derives"].isStr()
+                && !ParseUInt32(chain["num_derives"].get_str(), &nDerives))
+                return errorN(false, sError, __func__, _("num_derives to int failed.").c_str());
+            if (chain["num_derives_h"].isStr()
+                && !ParseUInt32(chain["num_derives_h"].get_str(), &nDerivesH))
+                return errorN(false, sError, __func__, _("num_derives_h to int failed.").c_str());
 
             eKey58.Set58(sEvkey.c_str());
             CExtKeyPair kp = eKey58.GetKey();
@@ -451,7 +453,7 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
             {
                 CKey key;
                 uint32_t nChild = 0;
-                for (size_t k = 0; k < nDerives; ++k)
+                for (uint32_t k = 0; k < nDerives; ++k)
                 {
                     if (kp.Derive(key, nChild))
                     {
@@ -461,7 +463,7 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
                 };
                 chain.pushKV("derived_keys", derivedKeys);
 
-                for (size_t k = 0; k < nDerivesH; ++k)
+                for (uint32_t k = 0; k < nDerivesH; ++k)
                 {
                     nChild = k;
                     SetHardenedBit(nChild);

@@ -17,7 +17,7 @@
 #include <clientversion.h>
 #include <primitives/transaction.h>
 #include <memory>
-
+#include <txdb.h>
 
 #include <boost/thread.hpp>
 

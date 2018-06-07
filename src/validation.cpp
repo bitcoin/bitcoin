@@ -1235,25 +1235,14 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus
 
     LOCK(cs_main);
 
-    if (fTxIndex) {
-        CDiskTxPos postx;
-        if (pblocktree->ReadTxIndex(hash, postx)) {
-            CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
-            if (file.IsNull())
-                return error("%s: OpenBlockFile failed", __func__);
-            CBlockHeader header;
-            try {
-                file >> header;
-                fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
-                file >> txOut;
-            } catch (const std::exception& e) {
-                return error("%s: Deserialize or I/O error - %s", __func__, e.what());
-            }
+    if (g_txindex) {
+        CBlockHeader header;
+        if (g_txindex->FindTx(hash, header, txOut))
+        {
             block = CBlock(header);
-            if (txOut->GetHash() != hash)
-                return error("%s: txid mismatch", __func__);
             return true;
-        }
+        };
+        return false;
     }
 
     if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
@@ -2547,9 +2536,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nSigOpsCost = 0;
     int64_t nAnonIn = 0;
     int64_t nStakeReward = 0;
-    CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
-    std::vector<std::pair<uint256, CDiskTxPos> > vPos;
-    vPos.reserve(block.vtx.size());
 
     blockundo.vtxundo.reserve(block.vtx.size() - (fParticlMode ? 0 : 1));
 
@@ -2777,9 +2763,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint256(hashBytes.data(), hashBytes.size()), txhash, k), CAddressUnspentValue(nValue, *pScript, pindex->nHeight)));
             };
         }; // if (fAddressIndex)
-
-        vPos.push_back(std::make_pair(txhash, pos));
-        pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     };
 
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;

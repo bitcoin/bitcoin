@@ -10,7 +10,7 @@
 
 static bool IsDigits(const std::string &str)
 {
-    return std::all_of(str.begin(), str.end(), ::isdigit);
+    return str.length() && std::all_of(str.begin(), str.end(), ::isdigit);
 };
 
 UniValue anonoutput(const JSONRPCRequest &request)
@@ -34,9 +34,7 @@ UniValue anonoutput(const JSONRPCRequest &request)
     int64_t nIndex;
     if (IsDigits(sIn))
     {
-        errno = 0;
-        nIndex = strtoll(sIn.c_str(), nullptr, 10);
-        if (errno)
+        if (!ParseInt64(sIn, &nIndex))
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid index");
     } else
     {

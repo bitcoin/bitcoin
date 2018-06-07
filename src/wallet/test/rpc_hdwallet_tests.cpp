@@ -206,16 +206,12 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
     BOOST_CHECK(rv["errors"][0]["error"].getValStr() == "Locktime requirement not satisfied");
 
-    char bufferHex[64];
-    snprintf(bufferHex, sizeof(bufferHex), "%d", nSequence);
-
-
     sTxn = "[{\"txid\":\""
         + txn.GetHash().ToString() + "\","
         + "\"vout\":0,"
         + "\"scriptPubKey\":\""+HexStr(script.begin(), script.end())+"\","
         + "\"amount\":100,"
-        +"\"sequence\":"+std::string(bufferHex)+"}]";
+        +"\"sequence\":"+strprintf("%d", nSequence)+"}]";
     sCmd = "createrawtransaction " + sTxn + " {\""+CBitcoinAddress(vAddresses[0]).ToString()+"\":99.99}";
 
 

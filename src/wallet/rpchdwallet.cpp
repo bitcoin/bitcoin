@@ -652,10 +652,7 @@ static int ManageExtKey(CStoredExtKey &sek, std::string &sOptName, std::string &
 
         if (sOptValue.length() > 0)
         {
-            char *pend;
-            errno = 0;
-            nLookAhead = strtoul(sOptValue.c_str(), &pend, 10);
-            if (errno != 0 || !pend || *pend != '\0')
+            if (!ParseUInt64(sOptValue, &nLookAhead))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Failed: look_ahead invalid number.");
 
             if (nLookAhead < 1 || nLookAhead > 1000)
@@ -1129,9 +1126,7 @@ static UniValue extkey(const JSONRPCRequest &request)
             if (part::IsStrOnlyDigits(sVar))
             {
                 // Setting timestamp directly
-                errno = 0;
-                nTimeStartScan = strtoimax(sVar.c_str(), nullptr, 10);
-                if (errno != 0)
+                if (sVar.length() && !ParseInt64(sVar, &nTimeStartScan))
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Import Account failed - Parse time error.");
             } else
             {
@@ -1546,7 +1541,7 @@ static UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesi
     if (request.params[5].isStr())
     {
         std::string s = request.params[5].get_str();
-        if (!ParseInt64(s, &nScanFrom))
+        if (s.length() && !ParseInt64(s, &nScanFrom))
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown argument for scan_chain_from: %s.", s.c_str()));
     } else
     if (request.params[5].isNum())
@@ -1888,11 +1883,8 @@ static UniValue getnewstealthaddress(const JSONRPCRequest &request)
     uint32_t num_prefix_bits = 0;
     if (request.params.size() > 1)
     {
-        std::string sTemp = request.params[1].get_str();
-        char *pend;
-        errno = 0;
-        num_prefix_bits = strtoul(sTemp.c_str(), &pend, 10);
-        if (errno != 0 || !pend || *pend != '\0')
+        std::string s = request.params[1].get_str();
+        if (s.length() && !ParseUInt32(s, &num_prefix_bits))
             throw JSONRPCError(RPC_INVALID_PARAMETER, _("num_prefix_bits invalid number."));
     };
 
@@ -1968,11 +1960,8 @@ static UniValue importstealthaddress(const JSONRPCRequest &request)
     uint32_t num_prefix_bits = 0;
     if (request.params.size() > 3)
     {
-        std::string sTemp = request.params[3].get_str();
-        char *pend;
-        errno = 0;
-        num_prefix_bits = strtoul(sTemp.c_str(), &pend, 10);
-        if (errno != 0 || !pend || *pend != '\0')
+        std::string s = request.params[3].get_str();
+        if (s.length() && !ParseUInt32(s, &num_prefix_bits))
             throw JSONRPCError(RPC_INVALID_PARAMETER, _("num_prefix_bits invalid number."));
     };
 
@@ -3618,8 +3607,8 @@ static UniValue filteraddresses(const JSONRPCRequest &request)
     if (request.params.size() > 4)
     {
         std::string s = request.params[4].get_str();
-        if (s != "")
-            nMatchOwned = std::stoi(s);
+        if (s != "" && !ParseInt32(s, &nMatchOwned))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown nMatchOwned.");
     };
 
     if (request.params.size() > 5)

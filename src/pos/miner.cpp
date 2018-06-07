@@ -171,9 +171,8 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
         if (nOutput <= nMaxOutputsPerTxn * (nHeight-1))
             continue;
 
-        errno = 0;
-        uint64_t amount = strtoull(pAmount, nullptr, 10);
-        if (errno || !MoneyRange(amount))
+        uint64_t amount;
+        if (!ParseUInt64(std::string(pAmount), &amount) || !MoneyRange(amount))
         {
             LogPrintf("Warning: %s - Skipping invalid amount: %s, %s\n", __func__, pAmount, strerror(errno));
             continue;

@@ -845,11 +845,8 @@ static UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
     uint32_t num_prefix_bits = 0;
     if (request.params.size() > 1)
     {
-        std::string sTemp = request.params[1].get_str();
-        char *pend;
-        errno = 0;
-        num_prefix_bits = strtoul(sTemp.c_str(), &pend, 10);
-        if (errno != 0 || !pend || *pend != '\0')
+        std::string s = request.params[1].get_str();
+        if (s.length() && !ParseUInt32(s, &num_prefix_bits))
             throw JSONRPCError(RPC_INVALID_PARAMETER, _("num_prefix_bits invalid number."));
     };
 
