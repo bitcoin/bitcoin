@@ -114,7 +114,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 // should fail.
 // Capture this interaction with the upgraded_nop argument: set it when evaluating
 // any script flag that is implemented as an upgraded NOP code.
-static void ValidateCheckInputsForAllFlags(CMutableTransaction &tx, uint32_t failing_flags, bool add_to_cache)
+static void ValidateCheckInputsForAllFlags(const CTransaction &tx, uint32_t failing_flags, bool add_to_cache)
 {
     PrecomputedTransactionData txdata(tx);
     // If we add many more flags, this loop can get too expensive, but we can
