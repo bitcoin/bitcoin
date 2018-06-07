@@ -5,6 +5,7 @@
 
 # This script will locally construct a merge commit for a pull request on a
 # github repository, inspect it, sign it and optionally push it.
+# Supports also gitlab API v4 - see git config "githubmerge.gitlabbaseurl".
 
 # The following temporary branches are created/overwritten and deleted:
 # * pull/$PULL/base (the current master we're merging onto)
@@ -28,6 +29,11 @@ try:
 except:
     from urllib2 import Request,urlopen
 
+try:
+    from urllib import quote
+except:
+    from urllib.parse import quote
+
 # External tools (can be overridden using environment)
 GIT = os.getenv('GIT','git')
 BASH = os.getenv('BASH','bash')
@@ -50,12 +56,13 @@ def git_config_get(option, default=None):
     except subprocess.CalledProcessError:
         return default
 
-def retrieve_pr_info(repo,pull):
+def retrieve_pr_info_github(repo,pull):
     '''
     Retrieve pull request information from github.
     Return None if no title can be found, or an error happens.
     '''
     try:
+        # print("Using github API", file=stderr)
         req = Request("https://api.github.com/repos/"+repo+"/pulls/"+pull)
         result = urlopen(req)
         reader = codecs.getreader('utf-8')
@@ -64,6 +71,33 @@ def retrieve_pr_info(repo,pull):
     except Exception as e:
         print('Warning: unable to retrieve pull information from github: %s' % e)
         return None
+
+
+def retrieve_pr_info_gitlab(repo_raw,pull,baseurl):
+    '''
+    Retrieve pull request information from gitlab.
+    Return None if no title can be found, or an error happens.
+    '''
+    try:
+        print('Using gitlab API, with baseurl=%s' % baseurl, file=stderr)
+        # API cmd is eg.: https://gitlab.com/api/v4/projects/orgname%2Fsubname%2Fgproject/merge_requests?iids[]=1
+        repo_encoded = quote(repo_raw,"") # namespace/project must encode slashes
+        if not baseurl.endswith('/'):
+            baseurl = baseurl + '/'
+        url = baseurl + "api/v4/projects/" + repo_encoded + "/merge_requests?iids[]=" + pull
+        # print ("gitlab API command url: " + url, file=stderr)
+        req = Request(url)
+        result = urlopen(req)
+        reader = codecs.getreader('utf-8')
+        obj_all = json.load(reader(result))
+        for obj in obj_all:
+            return obj # returns 1st object, this should be the only iid from iids
+    except Exception as e:
+        print('Warning: unable to retrieve pull information from gitlab: %s for API command "%s"' % (e,url) )
+        return None
+
+    print('Warning: no PR / merge-request data received from server')
+    return None
 
 def ask_prompt(text):
     print(text,end=" ",file=stderr)
@@ -85,6 +119,7 @@ def tree_sha512sum(commit='HEAD'):
     files = []
     blob_by_name = {}
     for line in subprocess.check_output([GIT, 'ls-tree', '--full-tree', '-r', commit]).splitlines():
+        print("line: [%s]" % line)
         name_sep = line.index(b'\t')
         metadata = line[:name_sep].split() # perms, 'blob', blobid
         assert(metadata[1] == b'blob')
@@ -140,7 +175,8 @@ def parse_arguments():
         user.signingkey (mandatory),
         githubmerge.host (default: git@github.com),
         githubmerge.branch (no default),
-        githubmerge.testcmd (default: none).
+        githubmerge.testcmd (default: none),
+        githubmerge.gitlabbaseurl (default: none, you can put here own server, or: https://gitlab.com/).
     '''
     parser = argparse.ArgumentParser(description='Utility to merge, sign and push github pull requests',
             epilog=epilog)
@@ -152,18 +188,33 @@ def parse_arguments():
 
 def main():
     # Extract settings from git repo
+    host_default_github='git@github.com'
     repo = git_config_get('githubmerge.repository')
-    host = git_config_get('githubmerge.host','git@github.com')
+    host = git_config_get('githubmerge.host', host_default_github)
     opt_branch = git_config_get('githubmerge.branch',None)
     testcmd = git_config_get('githubmerge.testcmd')
     signingkey = git_config_get('user.signingkey')
+
+    baseurl_gitlab = git_config_get('githubmerge.gitlabbaseurl')
+
     if repo is None:
         print("ERROR: No repository configured. Use this command to set:", file=stderr)
         print("git config githubmerge.repository <owner>/<repo>", file=stderr)
+        print("if you want to use gitlab instead github, then in addition also set URL (of github.com or own server) with command:", file=stderr)
+        print("git config githubmerge.gitlabbaseurl https://gitlab.com/", file=stderr)
         sys.exit(1)
     if signingkey is None:
         print("ERROR: No GPG signing key set. Set one using:",file=stderr)
         print("git config --global user.signingkey <key>",file=stderr)
+        sys.exit(1)
+
+    api_mode='github'
+    if baseurl_gitlab is not None:
+        api_mode='gitlab'
+
+    if (api_mode == 'gitlab') and (host == host_default_github) :
+        print("You configured to use gitlab protocol (not github), so you must also configure option githubmerge.host with the ssh login of your own gitlab or of the default gitlab, for example with following command:", file=stderr)
+        print("git config --global githubmerge.host git@gitlab.com")
         sys.exit(1)
 
     host_repo = host+":"+repo # shortcut for push/pull target
@@ -173,23 +224,43 @@ def main():
     pull = str(args.pull[0])
 
     # Receive pull information from github
-    info = retrieve_pr_info(repo,pull)
+    if api_mode == 'github':
+        info = retrieve_pr_info_github(repo,pull)
+    elif api_mode == 'gitlab':
+        info = retrieve_pr_info_gitlab(repo,pull,baseurl_gitlab)
+
     if info is None:
         sys.exit(1)
+
+    if api_mode == 'github':
+        description = info['body'].strip()
+    elif api_mode == 'gitlab':
+        description = info['description'].strip()
+        info['base'] = dict()
+        info['base']['ref'] = info['target_branch'] # target_branch
+
     title = info['title'].strip()
-    body = info['body'].strip()
+    print("MR title: " + title, file=stdout);
+
     # precedence order for destination branch argument:
     #   - command line argument
     #   - githubmerge.branch setting
     #   - base branch for pull (as retrieved from github)
     #   - 'master'
     branch = args.branch or opt_branch or info['base']['ref'] or 'master'
+    print("branch (target): " + branch, file=stdout);
 
     # Initialize source branches
-    head_branch = 'pull/'+pull+'/head'
-    base_branch = 'pull/'+pull+'/base'
-    merge_branch = 'pull/'+pull+'/merge'
-    local_merge_branch = 'pull/'+pull+'/local-merge'
+    if api_mode == 'github':
+        refs_pull_name='pull' # this is how github.com names the refs
+    elif api_mode == 'gitlab':
+        refs_pull_name='merge-requests' # and this is how gitlab does name refs
+
+    # ref names e.g.: "refs/merge-requests/1/head" on gitlab; "refs/pull/1/head" on github
+    head_branch = refs_pull_name + '/' + pull + '/head'
+    base_branch = refs_pull_name + '/' + pull + '/base'
+    merge_branch = refs_pull_name + '/' + pull + '/merge'
+    local_merge_branch = refs_pull_name + '/' + pull + '/local-merge'
 
     devnull = open(os.devnull,'w')
     try:
@@ -197,22 +268,31 @@ def main():
     except subprocess.CalledProcessError:
         print("ERROR: Cannot check out branch %s." % (branch), file=stderr)
         sys.exit(3)
+
     try:
-        subprocess.check_call([GIT,'fetch','-q',host_repo,'+refs/pull/'+pull+'/*:refs/heads/pull/'+pull+'/*',
-                                                          '+refs/heads/'+branch+':refs/heads/'+base_branch])
+        subprocess.check_call([GIT,'fetch','-q',host_repo,
+            '+refs/'+refs_pull_name+'/'+pull+'/*:refs/heads/'+refs_pull_name+'/'+pull+'/*',
+            '+refs/heads/'+branch+':refs/heads/'+base_branch])
     except subprocess.CalledProcessError:
         print("ERROR: Cannot find pull request #%s or branch %s on %s." % (pull,branch,host_repo), file=stderr)
         sys.exit(3)
+
     try:
         subprocess.check_call([GIT,'log','-q','-1','refs/heads/'+head_branch], stdout=devnull, stderr=stdout)
     except subprocess.CalledProcessError:
         print("ERROR: Cannot find head of pull request #%s on %s." % (pull,host_repo), file=stderr)
         sys.exit(3)
+
     try:
         subprocess.check_call([GIT,'log','-q','-1','refs/heads/'+merge_branch], stdout=devnull, stderr=stdout)
     except subprocess.CalledProcessError:
-        print("ERROR: Cannot find merge of pull request #%s on %s." % (pull,host_repo), file=stderr)
-        sys.exit(3)
+        if api_mode == "github":
+            print("ERROR: Cannot find merge of pull request #%s on %s." % (pull,host_repo), file=stderr)
+            sys.exit(3)
+        else:
+            # gitlab does not (by default at least) create the /merge refs for pulls, so this is normal, ignore
+            print("Ignoring lack of refs merged, this is OK for gitlab.", file=stderr)
+
     subprocess.check_call([GIT,'checkout','-q',base_branch])
     subprocess.call([GIT,'branch','-q','-D',local_merge_branch], stderr=devnull)
     subprocess.check_call([GIT,'checkout','-q','-b',local_merge_branch])
@@ -228,7 +308,7 @@ def main():
             firstline = 'Merge #%s' % (pull,)
         message = firstline + '\n\n'
         message += subprocess.check_output([GIT,'log','--no-merges','--topo-order','--pretty=format:%h %s (%an)',base_branch+'..'+head_branch]).decode('utf-8')
-        message += '\n\nPull request description:\n\n  ' + body.replace('\n', '\n  ') + '\n'
+        message += '\n\nPull request description:\n\n  ' + description.replace('\n', '\n  ') + '\n'
         try:
             subprocess.check_call([GIT,'merge','-q','--commit','--no-edit','--no-ff','-m',message.encode('utf-8'),head_branch])
         except subprocess.CalledProcessError:
