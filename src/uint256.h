@@ -31,9 +31,11 @@ public:
 
     bool IsNull() const
     {
-        for (int i = 0; i < WIDTH; i++)
-            if (data[i] != 0)
+        for (unsigned int i = 0; i < WIDTH; ++i) {
+            if (data[i] != 0) {
                 return false;
+            }
+        }
         return true;
     }
 
@@ -47,6 +49,16 @@ public:
     friend inline bool operator==(const base_blob& a, const base_blob& b) { return a.Compare(b) == 0; }
     friend inline bool operator!=(const base_blob& a, const base_blob& b) { return a.Compare(b) != 0; }
     friend inline bool operator<(const base_blob& a, const base_blob& b) { return a.Compare(b) < 0; }
+
+    bool operator!() const
+    {
+        return !(operator bool());
+    }
+
+    explicit operator bool() const
+    {
+        return !IsNull();
+    }
 
     std::string GetHex() const;
     void SetHex(const char* psz);

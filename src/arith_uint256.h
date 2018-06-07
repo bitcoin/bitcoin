@@ -18,6 +18,8 @@ class uint256;
 class uint_error : public std::runtime_error {
 public:
     explicit uint_error(const std::string& str) : std::runtime_error(str) {}
+    explicit uint_error(const char* str) : std::runtime_error(str) {}
+    uint_error() = delete;
 };
 
 /** Template base class for unsigned big integers. */
@@ -33,7 +35,7 @@ public:
     {
         static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
 
-        for (int i = 0; i < WIDTH; i++)
+        for (unsigned int i = 0; i < WIDTH; ++i)
             pn[i] = 0;
     }
 
@@ -41,13 +43,13 @@ public:
     {
         static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
 
-        for (int i = 0; i < WIDTH; i++)
+        for (unsigned int i = 0; i < WIDTH; ++i)
             pn[i] = b.pn[i];
     }
 
     base_uint& operator=(const base_uint& b)
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (unsigned int i = 0; i < WIDTH; ++i)
             pn[i] = b.pn[i];
         return *this;
     }
@@ -66,16 +68,23 @@ public:
 
     bool operator!() const
     {
-        for (int i = 0; i < WIDTH; i++)
-            if (pn[i] != 0)
-                return false;
-        return true;
+        return !(operator bool());
+    }
+
+    explicit operator bool() const
+    {
+        for (unsigned int i = 0; i < WIDTH; ++i) {
+            if (pn[i]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     const base_uint operator~() const
     {
         base_uint ret;
-        for (int i = 0; i < WIDTH; i++)
+        for (unsigned int i = 0; i < WIDTH; ++i)
             ret.pn[i] = ~pn[i];
         return ret;
     }
@@ -83,7 +92,7 @@ public:
     const base_uint operator-() const
     {
         base_uint ret;
-        for (int i = 0; i < WIDTH; i++)
+        for (unsigned int i = 0; i < WIDTH; ++i)
             ret.pn[i] = ~pn[i];
         ++ret;
         return ret;
@@ -95,28 +104,28 @@ public:
     {
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
-        for (int i = 2; i < WIDTH; i++)
+        for (unsigned int i = 2; i < WIDTH; ++i)
             pn[i] = 0;
         return *this;
     }
 
     base_uint& operator^=(const base_uint& b)
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (unsigned int i = 0; i < WIDTH; ++i)
             pn[i] ^= b.pn[i];
         return *this;
     }
 
     base_uint& operator&=(const base_uint& b)
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (unsigned int i = 0; i < WIDTH; ++i)
             pn[i] &= b.pn[i];
         return *this;
     }
 
     base_uint& operator|=(const base_uint& b)
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (unsigned int i = 0; i < WIDTH; ++i)
             pn[i] |= b.pn[i];
         return *this;
     }
@@ -141,8 +150,7 @@ public:
     base_uint& operator+=(const base_uint& b)
     {
         uint64_t carry = 0;
-        for (int i = 0; i < WIDTH; i++)
-        {
+        for (unsigned int i = 0; i < WIDTH; ++i) {
             uint64_t n = carry + pn[i] + b.pn[i];
             pn[i] = n & 0xffffffff;
             carry = n >> 32;

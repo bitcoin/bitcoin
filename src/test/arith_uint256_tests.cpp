@@ -205,6 +205,9 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
     BOOST_CHECK(!(!R1L));
     BOOST_CHECK(!(!MaxL));
 
+    BOOST_CHECK(static_cast<bool>(OneL));
+    BOOST_CHECK(!static_cast<bool>(ZeroL));
+
     BOOST_CHECK(~ZeroL == MaxL);
 
     unsigned char TmpArray[32];
