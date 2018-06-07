@@ -258,6 +258,50 @@ static UniValue prioritisetransaction(const JSONRPCRequest& request)
     return true;
 }
 
+static UniValue testblocktemplatevalidity(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            "testblocktemplatevalidity <hexdata>\n"
+            "Decode the given hexdata as a block and return if it is a valid template to work on.\n"
+            "It des not check if the block has sufficient work.\n"
+            "The block must be built on top of the current tip.\n"
+            "\nArguments:\n"
+            "1. \"hexdata\"      (string, required) The hex encoded block data.\n"
+            "\nResult:\n"
+            " {\n"
+            "  \"block_hash\"     (string) The block hash in hex\n"
+            "  \"valid_template\" (boolean) If the block template is valid to work on\n"
+            "  \"invalid_msg\"    (string) Rejection string (only present when 'valid_template' is false)\n"
+            " }\n"
+            "\nExamples:\n" +
+            HelpExampleCli("testblocktemplatevalidity", "\"aabbcc\"") +
+            HelpExampleRpc("testblocktemplatevalidity", "\"aabbcc\""));
+    }
+
+    CBlock block;
+    if (!DecodeHexBlk(block, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+    }
+
+    LOCK(cs_main);
+    CBlockIndex* const tip = ::chainActive.Tip();
+
+    // TestBlockValidity only supports blocks built on the current Tip
+    if (block.hashPrevBlock != tip->GetBlockHash()) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, "Must submit block that is built on the current tip (" + tip->GetBlockHash().GetHex() + ")");
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("block_hash", block.GetHash().GetHex());
+    CValidationState state;
+    bool valid_template = TestBlockValidity(state, Params(), block, /* pindexPrev */ tip, /* fCheckPOW */ false, /* fCheckMerkleRoot */ true);
+    result.pushKV("valid_template", valid_template);
+    if (!valid_template) {
+        result.pushKV("invalid_msg", FormatStateMessage(state));
+    }
+    return result;
+}
 
 // NOTE: Assumes a conclusive result; if result is inconclusive, it must be handled by caller
 static UniValue BIP22ValidationResult(const CValidationState& state)
@@ -932,11 +976,13 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
     return result;
 }
 
+// clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
     { "mining",             "getnetworkhashps",       &getnetworkhashps,       {"nblocks","height"} },
     { "mining",             "getmininginfo",          &getmininginfo,          {} },
+    { "mining",             "testblocktemplatevalidity",&testblocktemplatevalidity,{"hexdata"} },
     { "mining",             "prioritisetransaction",  &prioritisetransaction,  {"txid","dummy","fee_delta"} },
     { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
@@ -949,6 +995,7 @@ static const CRPCCommand commands[] =
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
 };
+// clang-format on
 
 void RegisterMiningRPCCommands(CRPCTable &t)
 {
