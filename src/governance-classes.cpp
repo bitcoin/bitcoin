@@ -173,7 +173,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
             pObj = governance.FindGovernanceObject(it->first);
             if(!pObj || pObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) {
                 DBG( std::cout << "CGovernanceTriggerManager::CleanAndRemove: Unknown or non-trigger superblock" << std::endl; );
-                LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- Unknown or non-trigger superblock\n");
+                LogPrint(BCLog::GOV, "CGovernanceTriggerManager::CleanAndRemove -- Unknown or non-trigger superblock\n");
                 pSuperblock->SetStatus(SEEN_OBJECT_ERROR_INVALID);
             }
 
@@ -193,7 +193,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
                 break;
             }
         }
-        LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- %smarked for removal\n", remove ? "" : "NOT ");
+        LogPrint(BCLog::GOV, "CGovernanceTriggerManager::CleanAndRemove -- %smarked for removal\n", remove ? "" : "NOT ");
 
         if(remove) {
             DBG(
