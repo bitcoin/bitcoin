@@ -498,8 +498,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 					return true;
 				}
 			}
-
-			if (theAssetAllocation.nBalance < nTotal) {
+			const CAmount &nBalanceAfterSend = dbAssetAllocation.nBalance - nTotal;
+			if (nBalanceAfterSend < 0) {
 				bBalanceOverrun = true;
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Sender balance is insufficient");
 				if (fJustCheck && !bSanityCheck) {
@@ -552,7 +552,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
                        
 					}
 
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAssetAllocation.nBalance - nTotal, amountTuple.second, dbAsset, INT64_MAX, vchAlias, receiverAllocation.vchAlias, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, nBalanceAfterSend, amountTuple.second, dbAsset, INT64_MAX, vchAlias, receiverAllocation.vchAlias, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
