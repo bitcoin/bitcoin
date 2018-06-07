@@ -22,6 +22,7 @@
 #include <index/txindex.h>
 #include <key.h>
 #include <validation.h>
+#include <mempool_layer.h>
 #include <miner.h>
 #include <netbase.h>
 #include <net.h>
@@ -73,6 +74,7 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
 std::unique_ptr<ValidationLayer> g_validation_layer;
+std::unique_ptr<MempoolLayer> g_mempool_layer;
 
 #if !(ENABLE_WALLET)
 class DummyWalletInit : public WalletInitInterface {
@@ -225,6 +227,7 @@ void Shutdown()
     if (peerLogic) UnregisterValidationInterface(peerLogic.get());
     if (g_connman) g_connman->Stop();
     if (g_validation_layer) g_validation_layer->Stop();
+    if (g_mempool_layer) g_mempool_layer->Stop();
     peerLogic.reset();
     g_connman.reset();
     if (g_txindex) {
@@ -1325,7 +1328,10 @@ bool AppInitMain()
     g_validation_layer.reset(new ValidationLayer(chainparams));
     g_validation_layer->Start();
 
-    peerLogic.reset(new PeerLogicValidation(&connman, *g_validation_layer, scheduler));
+    g_mempool_layer.reset(new MempoolLayer(mempool));
+    g_mempool_layer->Start();
+
+    peerLogic.reset(new PeerLogicValidation(&connman, *g_validation_layer, *g_mempool_layer, scheduler));
     RegisterValidationInterface(peerLogic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size

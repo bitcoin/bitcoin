@@ -14,6 +14,7 @@
 #include <consensus/consensus.h>
 #include <crypto/common.h>
 #include <crypto/sha256.h>
+#include <mempool_layer.h>
 #include <netbase.h>
 #include <primitives/transaction.h>
 #include <scheduler.h>
@@ -2038,7 +2039,7 @@ void CConnman::ThreadMessageHandler()
             bool request_was_queued = pnode->IsAwaitingInternalRequest();
 
             // If an internal request was queued and it's not done yet, skip this node
-            if (request_was_queued && !pnode->ProcessInternalRequestResults(m_msgproc))
+            if (request_was_queued && !pnode->ProcessInternalRequestResults(this, m_msgproc))
                 continue;
 
             // If no internal request was queued receive messages
@@ -2829,13 +2830,12 @@ void CNode::AskFor(const CInv& inv)
 
 bool CNode::IsAwaitingInternalRequest()
 {
-    return m_block_validation_response.valid();
+    return m_block_validation_response.valid() || m_transaction_submission_response.valid();
 }
 
-bool CNode::ProcessInternalRequestResults(NetEventsInterface* peerlogic)
+bool CNode::ProcessInternalRequestResults(CConnman* connman, NetEventsInterface* peerlogic)
 {
     bool all_cleared = true;
-
     if (m_block_validation_response.valid()) {
         if (m_block_validation_response.wait_for(std::chrono::milliseconds::zero()) == std::future_status::ready) {
             peerlogic->ProcessBlockValidationResponse(this, m_block_validating, m_block_validating_index, m_block_validation_response.get());
@@ -2843,6 +2843,17 @@ bool CNode::ProcessInternalRequestResults(NetEventsInterface* peerlogic)
             m_block_validating = nullptr;
             m_block_validating_index = nullptr;
             m_block_validation_response = std::future<BlockValidationResponse>();
+        } else {
+            all_cleared = false;
+        }
+    }
+
+    if (m_transaction_submission_response.valid()) {
+        if (m_transaction_submission_response.wait_for(std::chrono::milliseconds::zero()) == std::future_status::ready) {
+            peerlogic->ProcessMempoolValidationResponse(connman, this, m_transaction_validating, m_transaction_submission_response.get());
+
+            m_transaction_validating = nullptr;
+            m_transaction_submission_response = std::future<TransactionSubmissionResponse>();
         } else {
             all_cleared = false;
         }
@@ -2856,6 +2867,12 @@ void CNode::SetPendingInternalRequest(const std::shared_ptr<const CBlock> block,
     m_block_validating = block;
     m_block_validating_index = pindex;
     m_block_validation_response = std::move(pending_response);
+}
+
+void CNode::SetPendingInternalRequest(const CTransactionRef tx, std::future<TransactionSubmissionResponse>&& pending_response)
+{
+    m_transaction_validating = tx;
+    m_transaction_submission_response = std::move(pending_response);
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)

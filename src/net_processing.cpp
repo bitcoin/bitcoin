@@ -12,6 +12,7 @@
 #include <consensus/validation.h>
 #include <hash.h>
 #include <init.h>
+#include <mempool_layer.h>
 #include <merkleblock.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
@@ -59,11 +60,9 @@ static CCriticalSection g_cs_orphans;
 std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 std::map<COutPoint, std::set<std::map<uint256, COrphanTx>::iterator, IteratorComparator>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
 void EraseOrphansFor(NodeId peer);
-static void ProcessMempoolAccept(CConnman *, CNode *, const CTransaction&, std::list<CTransactionRef>&) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
-static void ProcessMempoolReject(CConnman * connman, CNode * pfrom,
-                                 const CNetMsgMaker msgMaker, const std::string& strCommand,
-                                 const CTransactionRef& ptx, const CValidationState& state, bool missing_inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
-static void ProcessMempoolMissingInputs(CNode * pfrom, const CTransactionRef& ptx) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
+static void ProcessMempoolAccept(CConnman*, CNode*, const CTransaction&, std::list<CTransactionRef>&) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+static void ProcessMempoolReject(CConnman* connman, CNode* pfrom, const CTransactionRef& ptx, const CValidationState& state, bool missing_inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
+static void ProcessMempoolMissingInputs(CNode* pfrom, const CTransactionRef& ptx) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
 
 static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
 static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
@@ -816,8 +815,8 @@ static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Para
         (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, consensusParams) < STALE_RELAY_AGE_LIMIT);
 }
 
-PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, ValidationLayer& validation_layer, CScheduler& scheduler)
-    : connman(connmanIn), m_validation_layer(validation_layer), m_stale_tip_check_time(0)
+PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, ValidationLayer& validation_layer, MempoolLayer& mempool_layer, CScheduler& scheduler)
+    : connman(connmanIn), m_validation_layer(validation_layer), m_mempool_layer(mempool_layer), m_stale_tip_check_time(0)
 {
     // Initialize global variables that cannot be constructed at startup.
     recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
@@ -1552,7 +1551,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
     return true;
 }
 
-bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, ValidationLayer& validation_layer, const std::atomic<bool>& interruptMsgProc)
+bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, ValidationLayer& validation_layer, MempoolLayer& mempool_layer, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
@@ -2201,24 +2200,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        LOCK2(cs_main, g_cs_orphans);
-
-        bool fMissingInputs = false;
-        CValidationState state;
+        LOCK(cs_main);
 
         pfrom->setAskFor.erase(inv.hash);
         mapAlreadyAskedFor.erase(inv.hash);
 
-        std::list<CTransactionRef> lRemovedTxn;
-
         if (!AlreadyHave(inv)) {
-            if(AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
-                assert(!state.IsInvalid());
-                ProcessMempoolAccept(connman, pfrom, tx, lRemovedTxn);
-            } else {
-                assert(lRemovedTxn.empty());
-                ProcessMempoolReject(connman, pfrom, msgMaker, strCommand, ptx, state, fMissingInputs);
-            }
+            std::future<TransactionSubmissionResponse> resp = mempool_layer.SubmitForValidation(ptx, false, 0, false, std::bind(&CConnman::WakeMessageHandler, connman));
+            pfrom->SetPendingInternalRequest(ptx, std::move(resp));
         }
     }
 
@@ -2397,7 +2386,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         } // cs_main
 
         if (fProcessBLOCKTXN)
-            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, connman, validation_layer, interruptMsgProc);
+            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, connman, validation_layer, mempool_layer, interruptMsgProc);
 
         if (fRevertToHeaderProcessing) {
             // Headers received from HB compact block peers are permitted to be
@@ -2862,7 +2851,7 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     bool fRet = false;
     try
     {
-        fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nTime, chainparams, connman, m_validation_layer, interruptMsgProc);
+        fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nTime, chainparams, connman, m_validation_layer, m_mempool_layer, interruptMsgProc);
         if (interruptMsgProc)
             return false;
         if (!pfrom->vRecvGetData.empty())
@@ -2929,7 +2918,21 @@ void PeerLogicValidation::ProcessBlockValidationResponse(CNode* pfrom, const std
     }
 }
 
-static void ProcessMempoolAccept(CConnman * connman, CNode * pfrom, const CTransaction& tx, std::list<CTransactionRef>& lRemovedTxn) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+void PeerLogicValidation::ProcessMempoolValidationResponse(CConnman* connman, CNode* pfrom, const CTransactionRef& transaction, const TransactionSubmissionResponse& response)
+{
+    LOCK2(cs_main, g_cs_orphans);
+    if (response.accepted) {
+        assert(!response.status.IsInvalid());
+
+        auto copy = response.removed_transactions;
+        ProcessMempoolAccept(connman, pfrom, *transaction, copy);
+    } else {
+        assert(response.removed_transactions.empty());
+        ProcessMempoolReject(connman, pfrom, transaction, response.status, response.missing_inputs);
+    }
+}
+
+static void ProcessMempoolAccept(CConnman* connman, CNode* pfrom, const CTransaction& tx, std::list<CTransactionRef>& lRemovedTxn) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
 {
     std::deque<COutPoint> vWorkQueue;
     std::vector<uint256> vEraseQueue;
@@ -2943,9 +2946,9 @@ static void ProcessMempoolAccept(CConnman * connman, CNode * pfrom, const CTrans
     pfrom->nLastTXTime = GetTime();
 
     LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txn, %u kB)\n",
-             pfrom->GetId(),
-             tx.GetHash().ToString(),
-             mempool.size(), mempool.DynamicMemoryUsage() / 1000);
+        pfrom->GetId(),
+        tx.GetHash().ToString(),
+        mempool.size(), mempool.DynamicMemoryUsage() / 1000);
 
     // Recursively process any orphan transactions that depended on this one
     std::set<NodeId> setMisbehaving;
@@ -2956,8 +2959,7 @@ static void ProcessMempoolAccept(CConnman * connman, CNode * pfrom, const CTrans
             continue;
         for (auto mi = itByPrev->second.begin();
              mi != itByPrev->second.end();
-             ++mi)
-        {
+             ++mi) {
             const CTransactionRef& porphanTx = (*mi)->second.tx;
             const CTransaction& orphanTx = *porphanTx;
             const uint256& orphanHash = orphanTx.GetHash();
@@ -2978,12 +2980,9 @@ static void ProcessMempoolAccept(CConnman * connman, CNode * pfrom, const CTrans
                     vWorkQueue.emplace_back(orphanHash, i);
                 }
                 vEraseQueue.push_back(orphanHash);
-            }
-            else if (!fMissingInputs2)
-            {
+            } else if (!fMissingInputs2) {
                 int nDos = 0;
-                if (stateDummy.IsInvalid(nDos) && nDos > 0)
-                {
+                if (stateDummy.IsInvalid(nDos) && nDos > 0) {
                     // Punish peer that gave us an invalid orphan tx
                     Misbehaving(fromPeer, nDos);
                     setMisbehaving.insert(fromPeer);
@@ -3012,9 +3011,7 @@ static void ProcessMempoolAccept(CConnman * connman, CNode * pfrom, const CTrans
         AddToCompactExtraTransactions(removedTx);
 }
 
-static void ProcessMempoolReject(CConnman * connman, CNode * pfrom,
-                                 const CNetMsgMaker msgMaker, const std::string& strCommand,
-                                 const CTransactionRef& ptx, const CValidationState& state, bool missing_inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
+static void ProcessMempoolReject(CConnman* connman, CNode* pfrom, const CTransactionRef& ptx, const CValidationState& state, bool missing_inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
 {
     const CTransaction& tx = *ptx;
 
@@ -3054,14 +3051,14 @@ static void ProcessMempoolReject(CConnman * connman, CNode * pfrom,
     }
 
     int nDoS = 0;
-    if (state.IsInvalid(nDoS))
-    {
+    if (state.IsInvalid(nDoS)) {
         LogPrint(BCLog::MEMPOOLREJ, "%s from peer=%d was not accepted: %s\n", tx.GetHash().ToString(),
-                 pfrom->GetId(),
-                 FormatStateMessage(state));
+            pfrom->GetId(),
+            FormatStateMessage(state));
         if (g_enable_bip61 && state.GetRejectCode() > 0 && state.GetRejectCode() < REJECT_INTERNAL) { // Never send AcceptToMemoryPool's internal codes over P2P
-            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::REJECT, strCommand, (unsigned char)state.GetRejectCode(),
-                                                      state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), tx.GetHash()));
+            const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::REJECT, std::string(NetMsgType::TX), (unsigned char)state.GetRejectCode(),
+                                            state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), tx.GetHash()));
         }
         if (nDoS > 0) {
             Misbehaving(pfrom->GetId(), nDoS);
@@ -3069,7 +3066,7 @@ static void ProcessMempoolReject(CConnman * connman, CNode * pfrom,
     }
 }
 
-static void ProcessMempoolMissingInputs(CNode * pfrom, const CTransactionRef& ptx) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
+static void ProcessMempoolMissingInputs(CNode* pfrom, const CTransactionRef& ptx) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
 {
     const CTransaction& tx = *ptx;
 
@@ -3096,7 +3093,7 @@ static void ProcessMempoolMissingInputs(CNode * pfrom, const CTransactionRef& pt
             LogPrint(BCLog::MEMPOOL, "mapOrphan overflow, removed %u tx\n", nEvicted);
         }
     } else {
-        LogPrint(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s\n",tx.GetHash().ToString());
+        LogPrint(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s\n", tx.GetHash().ToString());
         // We will continue to reject this tx since it has rejected
         // parents so avoid re-requesting it from other peers.
         recentRejects->insert(tx.GetHash());

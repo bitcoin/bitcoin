@@ -11,6 +11,7 @@
 #include <consensus/params.h>
 
 struct BlockValidationResponse;
+class MempoolLayer;
 class ValidationLayer;
 
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
@@ -47,9 +48,10 @@ class PeerLogicValidation final : public CValidationInterface, public NetEventsI
 private:
     CConnman* const connman;
     ValidationLayer& m_validation_layer;
+    MempoolLayer& m_mempool_layer;
 
 public:
-    explicit PeerLogicValidation(CConnman* connman, ValidationLayer& validation_layer, CScheduler& scheduler);
+    explicit PeerLogicValidation(CConnman* connman, ValidationLayer& validation_layer, MempoolLayer& mempool_layer, CScheduler& scheduler);
 
     /**
      * Overridden from CValidationInterface.
@@ -91,6 +93,7 @@ public:
     void EvictExtraOutboundPeers(int64_t time_in_seconds);
 
     void ProcessBlockValidationResponse(CNode*, std::shared_ptr<const CBlock>, const CBlockIndex*, const BlockValidationResponse&) override;
+    void ProcessMempoolValidationResponse(CConnman* connman, CNode* pfrom, const CTransactionRef& transaction, const TransactionSubmissionResponse& response) override;
 
 private:
     int64_t m_stale_tip_check_time; //! Next time to check for stale tip

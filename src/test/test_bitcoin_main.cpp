@@ -13,6 +13,7 @@
 
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<ValidationLayer> g_validation_layer;
+std::unique_ptr<ValidationLayer> g_mempool_layer;
 
 [[noreturn]] void Shutdown(void* parg)
 {

@@ -15,12 +15,13 @@
 #include <limitedmap.h>
 #include <netaddress.h>
 #include <policy/feerate.h>
+#include <primitives/transaction.h>
 #include <protocol.h>
 #include <random.h>
 #include <streams.h>
 #include <sync.h>
-#include <uint256.h>
 #include <threadinterrupt.h>
+#include <uint256.h>
 
 #include <atomic>
 #include <chrono>
@@ -36,6 +37,8 @@
 #endif
 
 struct BlockValidationResponse;
+struct TransactionSubmissionResponse;
+
 class CScheduler;
 class CNode;
 class CBlock;
@@ -474,6 +477,7 @@ public:
     virtual void InitializeNode(CNode* pnode) = 0;
     virtual void FinalizeNode(NodeId id, bool& update_connection_time) = 0;
     virtual void ProcessBlockValidationResponse(CNode* pfrom, const std::shared_ptr<const CBlock> pblock, const CBlockIndex* pindex, const BlockValidationResponse& validation_response) = 0;
+    virtual void ProcessMempoolValidationResponse(CConnman* connman, CNode* pfrom, const CTransactionRef& transaction, const TransactionSubmissionResponse& response) = 0;
 
 protected:
     /**
@@ -758,6 +762,9 @@ private:
     std::shared_ptr<const CBlock> m_block_validating;
     const CBlockIndex* m_block_validating_index;
 
+    std::future<TransactionSubmissionResponse> m_transaction_submission_response;
+    CTransactionRef m_transaction_validating;
+
 public:
 
     NodeId GetId() const {
@@ -873,11 +880,12 @@ public:
     bool IsAwaitingInternalRequest();
 
     //! If a result from an asynchronous internal request is ready, process the results
-    bool ProcessInternalRequestResults(NetEventsInterface*);
+    bool ProcessInternalRequestResults(CConnman*, NetEventsInterface*);
 
     //! Mark this node as waiting for an asynchronous internal request to complete
     //! before any further processing of this node may occurb
     void SetPendingInternalRequest(const std::shared_ptr<const CBlock> block, std::future<BlockValidationResponse>&& pending_response, const CBlockIndex* pindex = nullptr);
+    void SetPendingInternalRequest(const CTransactionRef tx, std::future<TransactionSubmissionResponse>&& pending_resposne);
 };
 
 

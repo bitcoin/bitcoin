@@ -10,11 +10,19 @@
 #include <txmempool.h>
 
 class MempoolLayer;
+extern std::unique_ptr<MempoolLayer> g_mempool_layer;
 
 struct TransactionSubmissionResponse {
+    //! was the transaction accepted
     const bool accepted;
+
+    //! if rejected, was it rejected because it was missing inputs
     const bool missing_inputs;
+
+    //! if accepted, a list of transactions evicted
     const std::list<CTransactionRef> removed_transactions;
+
+    //! validation state, contains reject reason
     CValidationState status;
 };
 
@@ -67,7 +75,7 @@ public:
         const bool test_only,
         std::function<void()> on_ready = []() {});
 
-    //! Submit a transaction for asynchronous validation
+    //! Submit a transaction for synchronous validation
     TransactionSubmissionResponse Validate(
         const CTransactionRef& transaction,
         const bool bypass_limits,

@@ -10,6 +10,7 @@
 #include <crypto/sha256.h>
 #include <validation.h>
 #include <miner.h>
+#include <mempool_layer.h>
 #include <net_processing.h>
 #include <pow.h>
 #include <ui_interface.h>
@@ -105,7 +106,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     g_validation_layer.reset(new ValidationLayer(Params()));
     g_validation_layer->Start();
 
-    peerLogic.reset(new PeerLogicValidation(connman, *g_validation_layer, scheduler));
+    peerLogic.reset(new PeerLogicValidation(connman, *g_validation_layer, *g_mempool_layer, scheduler));
 }
 
 TestingSetup::~TestingSetup()
