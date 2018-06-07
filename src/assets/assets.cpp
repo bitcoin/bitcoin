@@ -610,7 +610,7 @@ bool CAssetsCache::UndoAssetCoin(const Coin& coin, const COutPoint& out)
     } else if (IsScriptOwnerAsset(coin.out.scriptPubKey)) {
         std::string ownerName;
         if (!OwnerAssetFromScript(coin.out.scriptPubKey, ownerName, strAddress))
-            return error("%s : Failed to get owner asset from script while trying to unso asset spend. OutPoint : %s", __func__, out.ToString());
+            return error("%s : Failed to get owner asset from script while trying to undo asset spend. OutPoint : %s", __func__, out.ToString());
         assetName = ownerName;
         nAmount = OWNER_ASSET_AMOUNT;
     }
