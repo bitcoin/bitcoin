@@ -59,6 +59,18 @@ static void SetupCliArgs()
     gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
 }
 
+/** libevent event log callback */
+static void libevent_log_cb(int severity, const char *msg)
+{
+#ifndef EVENT_LOG_ERR // EVENT_LOG_ERR was added in 2.0.19; but before then _EVENT_LOG_ERR existed.
+# define EVENT_LOG_ERR _EVENT_LOG_ERR
+#endif
+    // Ignore everything other than errors
+    if (severity >= EVENT_LOG_ERR) {
+        throw std::runtime_error(strprintf("libevent error: %s", msg));
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Start
@@ -524,6 +536,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Error: Initializing networking failed\n");
         return EXIT_FAILURE;
     }
+    event_set_log_callback(&libevent_log_cb);
 
     try {
         int ret = AppInitRPC(argc, argv);
