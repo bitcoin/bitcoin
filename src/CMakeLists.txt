@@ -154,7 +154,10 @@ add_library(crown_server
   script/sigcache.cpp 
   timedata.cpp 
   txdb.cpp 
-  txmempool.cpp 
+  txmempool.cpp
+  dbdetails.cpp
+  dbdetails.h
+  dbmanager.h
 )
 
 target_include_directories(crown_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/helpers/memenv)
