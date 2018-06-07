@@ -7,6 +7,7 @@
 
 #include <amount.h>
 #include <string>
+#include <unordered_map>
 #include "serialize.h"
 
 #define MAX_UNIT 8
@@ -103,6 +104,42 @@ public:
     void ConstructTransaction(CScript& script) const;
 };
 
+class CReissueAsset {
+public:
+    std::string strName;
+    CAmount nAmount;
+    int8_t nReissuable;
+    std::string strIPFSHash;
+
+    CReissueAsset()
+    {
+        SetNull();
+    }
+
+    void SetNull()
+    {
+        nAmount = 0;
+        strName = "";
+        nReissuable = true;
+        strIPFSHash = "";
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(strName);
+        READWRITE(nAmount);
+        READWRITE(nReissuable);
+        READWRITE(strIPFSHash);
+    }
+
+    CReissueAsset(const std::string& strAssetName, const CAmount& nAmount, const int& nReissuable, const std::string& strIPFSHash);
+    bool IsValid(std::string& strError, CAssetsCache& assetCache) const;
+    void ConstructTransaction(CScript& script) const;
+    bool IsNull() const;
+};
+
 
 /** THESE ARE ONLY TO BE USED WHEN ADDING THINGS TO THE CACHE DURING CONNECT AND DISCONNECT BLOCK */
 struct CAssetCacheNewAsset
@@ -119,6 +156,25 @@ struct CAssetCacheNewAsset
     bool operator<(const CAssetCacheNewAsset& rhs) const {
         return asset.strName < rhs.asset.strName;
     }
+};
+
+struct CAssetCacheReissueAsset
+{
+    CReissueAsset reissue;
+    std::string address;
+    COutPoint out;
+
+    CAssetCacheReissueAsset(const CReissueAsset& reissue, const std::string& address, const COutPoint& out)
+    {
+        this->reissue = reissue;
+        this->address = address;
+        this->out = out;
+    }
+
+    bool operator<(const CAssetCacheReissueAsset& rhs) const {
+        return out < rhs.out;
+    }
+
 };
 
 struct CAssetCacheNewTransfer

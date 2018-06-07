@@ -27,6 +27,7 @@ RAVEN_TESTS =\
   test/assets/asset_tests.cpp \
   test/assets/asset_tx_tests.cpp \
   test/assets/cache_tests.cpp \
+  test/assets/asset_reissue_tests.cpp \
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
   test/addrman_tests.cpp \

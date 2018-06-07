@@ -326,6 +326,7 @@ public:
 
     /** RVN START */
     bool IsNewAsset() const;
+    bool IsReissueAsset() const;
     /** RVN END */
 
     /**

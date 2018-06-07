@@ -93,7 +93,7 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
 }
 
-void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check, CAssetsCache* assetsCache) {
+void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check, CAssetsCache* assetsCache, std::pair<std::string, std::string>* undoIPFSHash) {
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
 
@@ -130,6 +130,33 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
             if (!assetsCache->AddPossibleOutPoint(possibleMine))
                 error("%s: Failed to add an asset I own to my Unspent Asset Cache. Asset Name : %s",
                       __func__, asset.strName);
+        } else if (tx.IsReissueAsset()) {
+            CReissueAsset reissue;
+            std::string strAddress;
+            ReissueAssetFromTransaction(tx, reissue, strAddress);
+
+            // Get the asset before we change it
+            CNewAsset asset;
+            if(!assetsCache->GetAssetIfExists(reissue.strName, asset))
+                error("%s: Failed to get the original asset that is getting reissued. Asset Name : %s",
+                      __func__, reissue.strName);
+
+            int reissueIndex = tx.vout.size() - 1;
+
+            if (!assetsCache->AddReissueAsset(reissue, strAddress, COutPoint(txid, reissueIndex)))
+                error("%s: Failed to reissue an asset. Asset Name : %s", __func__, reissue.strName);
+
+            // Set the old IPFSHash for the blockundo
+            if (reissue.strIPFSHash != "") {
+                auto pair = std::make_pair(reissue.strName, asset.strIPFSHash);
+                undoIPFSHash->first = reissue.strName; // Asset Name
+                undoIPFSHash->second = asset.strIPFSHash; // Old Assets IPFSHash
+            }
+
+            CAssetCachePossibleMine possibleMine(reissue.strName, COutPoint(tx.GetHash(), reissueIndex), tx.vout[reissueIndex]);
+            if (!assetsCache->AddPossibleOutPoint(possibleMine))
+                error("%s: Failed to add an reissued asset I own to my Unspent Asset Cache. Asset Name : %s",
+                      __func__, reissue.strName);
         }
     }
     /** RVN END */

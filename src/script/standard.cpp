@@ -36,6 +36,7 @@ const char* GetTxnOutputType(txnouttype t)
     /** RVN START */
     case TX_NEW_ASSET: return "new_asset";
     case TX_TRANSFER_ASSET: return "transfer_asset";
+    case TX_REISSUE_ASSET: return "reissue_asset";
     /** RVN END */
     }
     return nullptr;
@@ -85,6 +86,13 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
 
     if (scriptPubKey.IsOwnerAsset()) {
         typeRet = TX_NEW_ASSET;
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+        vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
+
+    if (scriptPubKey.IsReissueAsset()) {
+        typeRet = TX_REISSUE_ASSET;
         std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
         vSolutionsRet.push_back(hashBytes);
         return true;
@@ -250,13 +258,12 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         unk.length = vSolutions[1].size();
         addressRet = unk;
         return true;
-    } else if (whichType == TX_NEW_ASSET) {
-        addressRet = CKeyID(uint160(vSolutions[0]));
-        return true;
-    } else if (whichType == TX_TRANSFER_ASSET) {
+    /** RVN START */
+    } else if (whichType == TX_NEW_ASSET || TX_REISSUE_ASSET || TX_TRANSFER_ASSET) {
         addressRet = CKeyID(uint160(vSolutions[0]));
         return true;
     }
+     /** RVN END */
     // Multisig txns have more than one address...
     return false;
 }

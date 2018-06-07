@@ -268,6 +268,18 @@ bool AssetFromTransaction(const CTransaction& tx, CNewAsset& asset, std::string&
     return AssetFromScript(scriptPubKey, asset, strAddress);
 }
 
+bool ReissueAssetFromTransaction(const CTransaction& tx, CReissueAsset& reissue, std::string& strAddress)
+{
+    // Check to see if the transaction is a reissue tx
+    if (!tx.IsReissueAsset())
+        return false;
+
+    // Get the scriptPubKey from the last tx in vout
+    CScript scriptPubKey = tx.vout[tx.vout.size() - 1].scriptPubKey;
+
+    return ReissueAssetFromScript(scriptPubKey, reissue, strAddress);
+}
+
 bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, const std::string& address, std::string& errorMsg)
 {
     // TODO when ready to ship. Put the owner validation code in own method if needed
@@ -382,9 +394,33 @@ bool OwnerAssetFromScript(const CScript& scriptPubKey, std::string& assetName, s
     return true;
 }
 
+bool ReissueAssetFromScript(const CScript& scriptPubKey, CReissueAsset& reissue, std::string& strAddress)
+{
+    if (!IsScriptReissueAsset(scriptPubKey))
+        return false;
+
+    CTxDestination destination;
+    ExtractDestination(scriptPubKey, destination);
+
+    strAddress = EncodeDestination(destination);
+
+    std::vector<unsigned char> vchTransferAsset;
+    vchTransferAsset.insert(vchTransferAsset.end(), scriptPubKey.begin() + 31, scriptPubKey.end());
+    CDataStream ssReissue(vchTransferAsset, SER_NETWORK, PROTOCOL_VERSION);
+
+    try {
+        ssReissue >> reissue;
+    } catch(std::exception& e) {
+        std::cout << "Failed to get the reissue asset from the stream: " << e.what() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 bool CTransaction::IsNewAsset() const
 {
-    // Issuing a new Asset must contain at least 3 CTxOut ( 500 Raven Burn, Any Number of other Outputs ..., Issue Asset Tx, Asset Metadata)
+    // Reissuing an Asset must contain at least 3 CTxOut( Raven Burn Tx, Any Number of other Outputs ..., Owner Asset Change Tx, Reissue Tx)
     if (vout.size() < 3)
         return false;
 
@@ -392,6 +428,7 @@ bool CTransaction::IsNewAsset() const
     if (!CheckIssueDataTx(vout[vout.size() - 1]))
         return false;
 
+    // Check to make sure the owner asset is created
     if (!CheckOwnerDataTx(vout[vout.size() - 2]))
         return false;
 
@@ -403,13 +440,43 @@ bool CTransaction::IsNewAsset() const
     return false;
 }
 
+bool CTransaction::IsReissueAsset() const
+{
+    // Reissuing an Asset must contain at least 3 CTxOut ( Raven Burn Tx, Any Number of other Outputs ..., Reissue Asset Tx, Owner Asset Change Tx)
+    if (vout.size() < 3)
+        return false;
+
+    // Check for the reissue asset data CTxOut. This will always be the last output in the transaction
+    if (!CheckReissueDataTx(vout[vout.size() - 1]))
+        return false;
+
+    // Check that there is an asset transfer, this will be the owner asset change
+    bool ownerFound = false;
+    for (auto out : vout)
+        if (CheckTransferOwnerTx(out)) {
+            ownerFound = true;
+            break;
+        }
+
+    if (!ownerFound)
+        return false;
+
+    // Check for the Burn CTxOut in one of the vouts ( This is needed because the change CTxOut is placed in a random position in the CWalletTx
+    for (auto out : vout)
+        if (CheckReissueBurnTx(out))
+            return true;
+
+    return false;
+}
+
 CAssetTransfer::CAssetTransfer(const std::string& strAssetName, const CAmount& nAmount)
 {
     this->strName = strAssetName;
     this->nAmount = nAmount;
 }
 
-bool CAssetTransfer::IsValid(std::string& strError) const {
+bool CAssetTransfer::IsValid(std::string& strError) const
+{
     strError = "";
 
     if (!IsAssetNameValid(std::string(strName)))
@@ -434,6 +501,76 @@ void CAssetTransfer::ConstructTransaction(CScript& script) const
 
     vchMessage.insert(vchMessage.end(), ssTransfer.begin(), ssTransfer.end());
     script << OP_RVN_ASSET << vchMessage << OP_DROP;
+}
+
+CReissueAsset::CReissueAsset(const std::string &strAssetName, const CAmount &nAmount, const int &nReissuable,
+                             const std::string &strIPFSHash)
+{
+
+    this->strName = strAssetName;
+    this->strIPFSHash = strIPFSHash;
+    this->nReissuable = int8_t(nReissuable);
+    this->nAmount = nAmount;
+}
+
+bool CReissueAsset::IsValid(std::string &strError, CAssetsCache& assetCache) const
+{
+    strError = "";
+
+    CNewAsset asset;
+    if (!assetCache.GetAssetIfExists(this->strName, asset)) {
+        strError = std::string("Unable to reissue asset: asset_name '") + strName + std::string("' doesn't exsist in the database");
+        return false;
+    }
+
+    if (!asset.nReissuable) {
+        // Check to make sure the asset can be reissued
+        strError = "Unable to reissue asset: reissuable is set to false";
+        return false;
+    }
+
+    if (asset.nAmount + this->nAmount > MAX_MONEY) {
+        strError = std::string("Unable to reissue asset: asset_name '") + strName +
+                   std::string("' the amount trying to reissue is to large");
+        return false;
+    }
+
+    if (nAmount % int64_t(pow(10, (MAX_UNIT - asset.units))) != 0) {
+        strError = "Unable to reissue asset: amount must be divisable by the smaller unit assigned to the asset";
+        return false;
+    }
+
+    if (strIPFSHash != "" && strIPFSHash.size() != 40) {
+        strError = "Unable to reissue asset: new ipfs_hash must be 40 bytes.";
+        return false;
+    }
+
+    if (nAmount <= 0) {
+        strError = "Unable to reissue asset: amount must be 1 or larger";
+        return false;
+    }
+
+    return true;
+}
+
+void CReissueAsset::ConstructTransaction(CScript& script) const
+{
+    CDataStream ssReissue(SER_NETWORK, PROTOCOL_VERSION);
+    ssReissue << *this;
+
+    std::vector<unsigned char> vchMessage;
+    vchMessage.push_back(RVN_R); // r
+    vchMessage.push_back(RVN_V); // v
+    vchMessage.push_back(RVN_N); // n
+    vchMessage.push_back(RVN_R); // r
+
+    vchMessage.insert(vchMessage.end(), ssReissue.begin(), ssReissue.end());
+    script << OP_RVN_ASSET << vchMessage << OP_DROP;
+}
+
+bool CReissueAsset::IsNull() const
+{
+    return strName == "" || nAmount == 0;
 }
 
 bool CAssetsCache::GetAssetsOutPoints(const std::string& strName, std::set<COutPoint>& outpoints)
@@ -512,6 +649,10 @@ bool CAssetsCache::TrySpendCoin(const COutPoint& out, const CTxOut& txOut)
             } else if (txOut.scriptPubKey.IsOwnerAsset()) {
                 if (!OwnerAssetFromScript(txOut.scriptPubKey, assetName, address))
                     return error("%s : ERROR Failed to get owner asset from the OutPoint: %s", __func__, out.ToString());
+            } else if (txOut.scriptPubKey.IsReissueAsset()) {
+                CReissueAsset reissue;
+                if (ReissueAssetFromScript(txOut.scriptPubKey, reissue, address))
+                    assetName = reissue.strName;
             }
 
             // If we got the address and the assetName, proceed to remove it from the database, and in memory objects
@@ -566,6 +707,11 @@ bool CAssetsCache::AddToMyUpspentOutPoints(const std::string& strName, const COu
 bool CAssetsCache::ContainsAsset(const CNewAsset& asset)
 {
     return CheckIfAssetExists(asset.strName);
+}
+
+bool CAssetsCache::ContainsAsset(const std::string& assetName)
+{
+    return CheckIfAssetExists(assetName);
 }
 
 bool CAssetsCache::AddPossibleOutPoint(const CAssetCachePossibleMine& possibleMine)
@@ -690,8 +836,12 @@ bool CAssetsCache::RemoveNewAsset(const CNewAsset& asset, const std::string addr
     if (!CheckIfAssetExists(asset.strName))
         return error("%s : Tried removing an asset that didn't exist. Asset Name : %s", __func__, asset.strName);
 
+    // Remove the new asset from my unspent outpoints
     if (mapMyUnspentAssets.count(asset.strName)) {
         mapMyUnspentAssets.erase(asset.strName);
+
+        // Add the asset name to the set, so I know which asset outpoint changes to write to database
+        setChangeOwnedOutPoints.insert(asset.strName);
     }
 
     if (mapAssetsAddresses.count(asset.strName))
@@ -738,6 +888,116 @@ bool CAssetsCache::AddNewAsset(const CNewAsset& asset, const std::string address
         setNewAssetsToRemove.erase(newAsset);
 
     setNewAssetsToAdd.insert(newAsset);
+
+    return true;
+}
+
+//! Changes Memory Only
+bool CAssetsCache::AddReissueAsset(const CReissueAsset& reissue, const std::string address, const COutPoint& out)
+{
+    auto pair = std::make_pair(reissue.strName, address);
+
+    CNewAsset assetData;
+    if (!GetAssetIfExists(reissue.strName, assetData))
+        return error("%s: Tried reissuing an asset, but that asset didn't exist: %s", __func__, reissue.strName);
+
+    // Insert the asset into the assets address map
+    if (mapAssetsAddresses.count(reissue.strName)) {
+        if (!mapAssetsAddresses[reissue.strName].count(address))
+            mapAssetsAddresses[reissue.strName].insert(address);
+    } else {
+        std::set<std::string> setAddresses;
+        setAddresses.insert(address);
+        mapAssetsAddresses.insert(std::make_pair(reissue.strName, setAddresses));
+    }
+
+    // Add the reissued amount to the address amount map
+    if (mapAssetsAddressAmount.count(pair))
+        mapAssetsAddressAmount[pair] += reissue.nAmount;
+    else
+        mapAssetsAddressAmount[pair] = reissue.nAmount;
+
+    // Insert the reissue information into the reissue map
+    if (!mapReissuedAssetData.count(reissue.strName)) {
+        assetData.nAmount += reissue.nAmount;
+        assetData.nReissuable = reissue.nReissuable;
+        if (reissue.strIPFSHash != "") {
+            assetData.nHasIPFS = 1;
+            assetData.strIPFSHash = reissue.strIPFSHash;
+        }
+        mapReissuedAssetData.insert(make_pair(reissue.strName, assetData));
+    } else {
+        mapReissuedAssetData.at(reissue.strName).nAmount += reissue.nAmount;
+        mapReissuedAssetData.at(reissue.strName).nReissuable = reissue.nReissuable;
+        if (reissue.strIPFSHash != "") {
+            mapReissuedAssetData.at(reissue.strName).nHasIPFS = 1;
+            mapReissuedAssetData.at(reissue.strName).strIPFSHash = reissue.strIPFSHash;
+        }
+    }
+
+    CAssetCacheReissueAsset reissueAsset(reissue, address, out);
+
+    if (setNewReissueToRemove.count(reissueAsset))
+        setNewReissueToRemove.erase(reissueAsset);
+
+    setNewReissueToAdd.insert(reissueAsset);
+
+    return true;
+}
+
+//! Changes Memory Only
+bool CAssetsCache::RemoveReissueAsset(const CReissueAsset& reissue, const std::string address, const COutPoint& out, const std::vector<std::pair<std::string, std::string> >& vUndoIPFS)
+{
+    auto pair = std::make_pair(reissue.strName, address);
+
+    CNewAsset assetData;
+    if (!GetAssetIfExists(reissue.strName, assetData))
+        return error("%s: Tried undoing reissue of an asset, but that asset didn't exist: %s", __func__, reissue.strName);
+
+    // Remove the reissued asset outpoint if it belongs to my unspent assets
+    if (mapMyUnspentAssets.count(reissue.strName)) {
+        mapMyUnspentAssets.at(reissue.strName).erase(out);
+
+        // Add the asset name to the set, so I know which asset outpoint changes to write to database
+        setChangeOwnedOutPoints.insert(reissue.strName);
+    }
+
+    // Undo the amount that was added
+    if (mapAssetsAddressAmount.count(pair)) {
+        mapAssetsAddressAmount[pair] -= reissue.nAmount;
+
+        if (mapAssetsAddressAmount[pair] < 0)
+            return error("%s : Tried undoing reissue of an asset, but the assets amount went negative: %s", __func__, reissue.strName);
+    }
+
+    // If the undid amount is now 0. Remove the address from the set of addresses
+    if (mapAssetsAddresses.count(reissue.strName) && mapAssetsAddressAmount[pair] == 0) {
+        mapAssetsAddresses.at(reissue.strName).erase(address);
+    }
+
+    // Change the asset data by undoing what was reissued
+    assetData.nAmount -= reissue.nAmount;
+    assetData.nReissuable = 1;
+
+    // Find the ipfs hash in the undoblock data and restore the ipfs hash to its previous hash
+    for (auto undoIPFS : vUndoIPFS) {
+        if (undoIPFS.first == reissue.strName) {
+            assetData.strIPFSHash = undoIPFS.second;
+
+            if (assetData.strIPFSHash == "")
+                assetData.nHasIPFS = 0;
+            break;
+        }
+    }
+
+    mapReissuedAssetData[assetData.strName] = assetData;
+
+    CAssetCacheReissueAsset reissueAsset(reissue, address, out);
+
+    if (setNewReissueToAdd.count(reissueAsset))
+        setNewReissueToAdd.erase(reissueAsset);
+
+    setNewReissueToRemove.insert(reissueAsset);
 
     return true;
 }
@@ -939,6 +1199,56 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
                 }
             }
 
+            for (auto newReissue : setNewReissueToAdd) {
+                auto reissue_name = newReissue.reissue.strName;
+
+                if (mapReissuedAssetData.count(reissue_name)) {
+                    if(!passetsdb->WriteAssetData(mapReissuedAssetData.at(reissue_name))) {
+                        dirty = true;
+                        message = "_Failed Writing reissue asset data to database";
+                    }
+
+                    if (dirty) {
+                        return error("%s : %s", __func__, message);
+                    }
+
+                    passetsCache->Erase(reissue_name);
+                }
+            }
+
+            for (auto undoReissue : setNewReissueToRemove) {
+                auto reissue_name = undoReissue.reissue.strName;
+
+                if (mapReissuedAssetData.count(reissue_name)) {
+                    if(!passetsdb->WriteAssetData(mapReissuedAssetData.at(reissue_name))) {
+                        dirty = true;
+                        message = "_Failed Writing undo reissue asset data to database";
+                    }
+
+                    auto pair = make_pair(undoReissue.reissue.strName, undoReissue.address);
+                    if (mapAssetsAddressAmount.count(pair)) {
+                        if (mapAssetsAddressAmount.at(pair) == 0) {
+                            if (!passetsdb->EraseAssetAddressQuantity(reissue_name, undoReissue.address)) {
+                                dirty = true;
+                                message = "_Failed Erasing Address Balance from database";
+                            }
+                        } else {
+                            if (!passetsdb->WriteAssetAddressQuantity(reissue_name, undoReissue.address, mapAssetsAddressAmount.at(pair))) {
+                                dirty = true;
+                                message = "_Failed Writing the undo of reissue of asset from database";
+                            }
+                        }
+                    }
+
+                    if (dirty) {
+                        return error("%s : %s", __func__, message);
+                    }
+
+                    passetsCache->Erase(reissue_name);
+                }
+            }
+
+
             // Undo the asset spends by updating there balance in the database
             for (auto undoSpend : vUndoAssetAmount) {
                 auto pair = std::make_pair(undoSpend.assetName, undoSpend.address);
@@ -1029,7 +1339,7 @@ bool IsAssetUnitsValid(const CAmount& units)
 bool CheckIssueBurnTx(const CTxOut& txOut)
 {
     // Check the first transaction is the 500 Burn amount to the burn address
-    if (txOut.nValue != Params().IssueAssetBurnAmount())
+    if (txOut.nValue != GetIssueAssetBurnAmount())
         return false;
 
     // Extract the destination
@@ -1048,6 +1358,28 @@ bool CheckIssueBurnTx(const CTxOut& txOut)
     return true;
 }
 
+bool CheckReissueBurnTx(const CTxOut& txOut)
+{
+    // Check the first transaction and verify that the correct RVN Amount
+    if (txOut.nValue != GetReissueAssetBurnAmount())
+        return false;
+
+    // Extract the destination
+    CTxDestination destination;
+    if (!ExtractDestination(txOut.scriptPubKey, destination))
+        return false;
+
+    // Verify destination is valid
+    if (!IsValidDestination(destination))
+        return false;
+
+    // Check destination address is the correct burn address
+    if (EncodeDestination(destination) != Params().ReissueAssetBurnAddress())
+        return false;
+
+    return true;
+}
+
 bool CheckIssueDataTx(const CTxOut& txOut)
 {
     // Verify 'rvnq' is in the transaction
@@ -1056,12 +1388,28 @@ bool CheckIssueDataTx(const CTxOut& txOut)
     return IsScriptNewAsset(scriptPubKey);
 }
 
+bool CheckReissueDataTx(const CTxOut& txOut)
+{
+    // Verify 'rvnr' is in the transaction
+    CScript scriptPubKey = txOut.scriptPubKey;
+
+    return IsScriptReissueAsset(scriptPubKey);
+}
+
 bool CheckOwnerDataTx(const CTxOut& txOut)
 {
     // Verify 'rvnq' is in the transaction
     CScript scriptPubKey = txOut.scriptPubKey;
 
     return IsScriptOwnerAsset(scriptPubKey);
+}
+
+bool CheckTransferOwnerTx(const CTxOut& txOut)
+{
+    // Verify 'rvnq' is in the transaction
+    CScript scriptPubKey = txOut.scriptPubKey;
+
+    return IsScriptTransferAsset(scriptPubKey);
 }
 
 bool IsScriptNewAsset(const CScript& scriptPubKey)
@@ -1079,6 +1427,17 @@ bool IsScriptOwnerAsset(const CScript& scriptPubKey)
 {
     if (scriptPubKey.size() > 30) {
         if (scriptPubKey[25] == OP_RVN_ASSET && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_O) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool IsScriptReissueAsset(const CScript& scriptPubKey)
+{
+    if (scriptPubKey.size() > 39) {
+        if (scriptPubKey[25] == OP_RVN_ASSET && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_R) {
             return true;
         }
     }
@@ -1171,6 +1530,12 @@ bool CAssetsCache::CheckIfAssetExists(const std::string& name)
 
 bool CAssetsCache::GetAssetIfExists(const std::string& name, CNewAsset& asset)
 {
+    // Check the map that contains the reissued asset data. If it is in this map, it hasn't been saved to disk yet
+    if (mapReissuedAssetData.count(name)) {
+        asset = mapReissuedAssetData.at(name);
+        return true;
+    }
+
     // Create objects that will be used to check the dirty cache
     CNewAsset tempAsset;
     tempAsset.strName = name;
@@ -1236,6 +1601,23 @@ bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount)
             return false;
         strName = name;
         nAmount = OWNER_ASSET_AMOUNT;
+        return true;
+    } else if (coin.out.scriptPubKey.IsReissueAsset()) {
+        CReissueAsset reissue;
+        std::string address;
+        if (!ReissueAssetFromScript(coin.out.scriptPubKey, reissue, address))
+            return false;
+        strName = reissue.strName;
+        nAmount = reissue.nAmount;
+        return true;
+    }
+
+    return false;
+}
+
+bool CheckAssetOwner(const std::string& assetName)
+{
+    if (passets->mapMyUnspentAssets.count(assetName + OWNER)) {
         return true;
     }
 

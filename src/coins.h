@@ -79,7 +79,7 @@ public:
     }
 
     bool IsAsset() const {
-        return out.scriptPubKey.IsTransferAsset() || out.scriptPubKey.IsNewAsset() || out.scriptPubKey.IsOwnerAsset();
+        return out.scriptPubKey.IsTransferAsset() || out.scriptPubKey.IsNewAsset() || out.scriptPubKey.IsOwnerAsset() || out.scriptPubKey.IsReissueAsset();
     }
 
     size_t DynamicMemoryUsage() const {
@@ -309,7 +309,7 @@ private:
 // an overwrite.
 // TODO: pass in a boolean to limit these possible overwrites to known
 // (pre-BIP34) cases.
-void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool check = false, CAssetsCache* assetsCache = nullptr);
+void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool check = false, CAssetsCache* assetsCache = nullptr, std::pair<std::string, std::string>* undoIPFSHash = nullptr);
 
 //! Utility function to find any unspent output with a given txid.
 // This function can be quite expensive because in the event of a transaction
