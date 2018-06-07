@@ -568,6 +568,7 @@ SIGHASH_ALL = 1
 SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
 SIGHASH_ANYONECANPAY = 0x80
+SIGHASH_MASK = 0x1f
 
 def FindAndDelete(script, sig):
     """Consensus critical, see FindAndDelete() in Satoshi codebase"""
@@ -603,14 +604,14 @@ def SignatureHash(script, txTo, inIdx, hashtype):
         txin.scriptSig = b''
     txtmp.vin[inIdx].scriptSig = FindAndDelete(script, CScript([OP_CODESEPARATOR]))
 
-    if (hashtype & 0x1f) == SIGHASH_NONE:
+    if (hashtype & SIGHASH_MASK) == SIGHASH_NONE:
         txtmp.vout = []
 
         for i in range(len(txtmp.vin)):
             if i != inIdx:
                 txtmp.vin[i].nSequence = 0
 
-    elif (hashtype & 0x1f) == SIGHASH_SINGLE:
+    elif (hashtype & SIGHASH_MASK) == SIGHASH_SINGLE:
         outIdx = inIdx
         if outIdx >= len(txtmp.vout):
             return (HASH_ONE, "outIdx %d out of range (%d)" % (outIdx, len(txtmp.vout)))
@@ -653,18 +654,18 @@ def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
             serialize_prevouts += i.prevout.serialize()
         hashPrevouts = uint256_from_str(hash256(serialize_prevouts))
 
-    if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
+    if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & SIGHASH_MASK) != SIGHASH_SINGLE and (hashtype & SIGHASH_MASK) != SIGHASH_NONE):
         serialize_sequence = bytes()
         for i in txTo.vin:
             serialize_sequence += struct.pack("<I", i.nSequence)
         hashSequence = uint256_from_str(hash256(serialize_sequence))
 
-    if ((hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
+    if ((hashtype & SIGHASH_MASK) != SIGHASH_SINGLE and (hashtype & SIGHASH_MASK) != SIGHASH_NONE):
         serialize_outputs = bytes()
         for o in txTo.vout:
             serialize_outputs += o.serialize()
         hashOutputs = uint256_from_str(hash256(serialize_outputs))
-    elif ((hashtype & 0x1f) == SIGHASH_SINGLE and inIdx < len(txTo.vout)):
+    elif ((hashtype & SIGHASH_MASK) == SIGHASH_SINGLE and inIdx < len(txTo.vout)):
         serialize_outputs = txTo.vout[inIdx].serialize()
         hashOutputs = uint256_from_str(hash256(serialize_outputs))
 

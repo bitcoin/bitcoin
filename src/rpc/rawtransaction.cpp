@@ -856,7 +856,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
         }
     }
 
-    bool fHashSingle = ((nHashType & 0x1f) == SIGHASH_SINGLE);
+    bool fHashSingle = ((nHashType & SIGHASH_MASK) == SIGHASH_SINGLE);
 
     // Script verification errors
     UniValue vErrors(UniValue::VARR);

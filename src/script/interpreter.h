@@ -25,6 +25,7 @@ enum
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
     SIGHASH_ANYONECANPAY = 0x80,
+    SIGHASH_MASK = 0x1f, // not an actual type, but a mask to distinguish ALL/NONE/SINGLE
 };
 
 /** Script verification flags.

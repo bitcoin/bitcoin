@@ -43,7 +43,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
     txTmp.vin[nIn].scriptSig = scriptCode;
 
     // Blank out some of the outputs
-    if ((nHashType & 0x1f) == SIGHASH_NONE)
+    if ((nHashType & SIGHASH_MASK) == SIGHASH_NONE)
     {
         // Wildcard payee
         txTmp.vout.clear();
@@ -53,7 +53,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
             if (i != nIn)
                 txTmp.vin[i].nSequence = 0;
     }
-    else if ((nHashType & 0x1f) == SIGHASH_SINGLE)
+    else if ((nHashType & SIGHASH_MASK) == SIGHASH_SINGLE)
     {
         // Only lock-in the txout payee at same index as txin
         unsigned int nOut = nIn;
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
     for (int i=0; i<nRandomTests; i++) {
         int nHashType = InsecureRand32();
         CMutableTransaction txTo;
-        RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE);
+        RandomTransaction(txTo, (nHashType & SIGHASH_MASK) == SIGHASH_SINGLE);
         CScript scriptCode;
         RandomScript(scriptCode);
         int nIn = InsecureRandRange(txTo.vin.size());
