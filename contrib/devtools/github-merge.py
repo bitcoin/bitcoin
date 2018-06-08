@@ -293,7 +293,7 @@ def main():
             refs1,
             refs2])
     except subprocess.CalledProcessError:
-        print("ERROR: Cannot find pull request #%s or branch %s on %s using." % (pull,branch,host_repo), file=stderr)
+        print("ERROR: Cannot find pull request #%s or branch %s on %s using refs '%s' '%s'." % (pull,branch,host_repo,refs1,refs2), file=stderr)
         sys.exit(3)
 
     try:
@@ -310,7 +310,7 @@ def main():
         except subprocess.CalledProcessError:
             print("ERROR: Cannot find merge of pull request #%s on %s." % (pull,host_repo), file=stderr)
             sys.exit(3)
-    # gitlab does not (by default at least) create the /merge refs for pulls, so this is normal, ignore
+    # gitlab does not (by default at least) create the /merge refs for pulls, so skip this test
 
     subprocess.check_call([GIT,'checkout','-q',base_branch])
     subprocess.call([GIT,'branch','-q','-D',local_merge_branch], stderr=devnull)
