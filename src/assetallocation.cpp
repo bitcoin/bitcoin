@@ -97,7 +97,7 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
 			if (isMine && fAssetAllocationIndex) {
 				int nHeight = assetallocation.nHeight;
-				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(vchSender)+"-"+ stringFromVch(vchReceiver);
+				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAsset)+"-"+stringFromVch(vchSender)+"-"+ stringFromVch(vchReceiver);
 				{
 					LOCK2(mempool.cs, cs_assetallocationindex);
 					// we want to the height from mempool if it exists or use the one stored in assetallocation
@@ -1206,7 +1206,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 
 
 }
-bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
 	string strTxid = "";
 	string strSender = "";
 	string strReceiver = "";
@@ -1217,6 +1217,11 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 		const UniValue &txid = find_value(optionsObj, "txid");
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
+			bParseKey = true;
+		}
+		const UniValue &asset = find_value(optionsObj, "asset");
+		if (asset.isStr()) {
+			strAsset = asset.get_str();
 			bParseKey = true;
 		}
 		const UniValue &sender = find_value(optionsObj, "sender");
@@ -1236,7 +1241,7 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 	int index = 0;
 	UniValue assetValue;
 	vector<string> contents;
-	contents.reserve(4);
+	contents.reserve(5);
 	for (auto&indexObj : boost::adaptors::reverse(AssetAllocationIndex)) {
 		if (nStartBlock > 0 && indexObj.first < nStartBlock)
 			continue;
@@ -1245,9 +1250,11 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 				boost::algorithm::split(contents, indexItem.first, boost::is_any_of("-"));
 				if (!strTxid.empty() && strTxid != contents[0])
 					continue;
-				if (!strSender.empty() && strSender != contents[1])
+				if (!strAsset.empty() && strAsset != contents[1])
 					continue;
-				if (!strReceiver.empty() && strReceiver != contents[2])
+				if (!strSender.empty() && strSender != contents[2])
+					continue;
+				if (!strReceiver.empty() && strReceiver != contents[3])
 					continue;
 			}
 			index++;
@@ -1262,6 +1269,91 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocations(const int count, const
 	}
 	return true;
 }
+
+bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+	string strTxid = "";
+	vector<unsigned char> vchSender, vchReceiver, vchAsset;
+	int nStartBlock = 0;
+	if (!oOptions.isNull()) {
+		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
+		const UniValue &txid = find_value(optionsObj, "txid");
+		if (txid.isStr()) {
+			strTxid = txid.get_str();
+		}
+		vchAsset = vchFromValue(find_value(optionsObj, "asset"));
+		vchSender = vchFromValue(find_value(optionsObj, "sender"));
+		vchReceiver = vchFromValue(find_value(optionsObj, "receiver"));
+
+		const UniValue &startblock = find_value(optionsObj, "startblock");
+		if (startblock.isNum())
+			nStartBlock = startblock.get_int();
+	}
+
+
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	CAssetAllocation txPos;
+	pair<string, vector<unsigned char> > key;
+	bool bGetInputs = true;
+	CAsset theAsset;
+	UniValue oAssetAllocation;
+	int index = 0;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			if (pcursor->GetKey(key) && key.first == "assetallocationi") {
+				pcursor->GetValue(txPos);
+				if (!GetAsset(txPos.vchAsset, theAsset))
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (nStartBlock > 0 && txPos.nHeight < nStartBlock)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!strTxid.empty() && strTxid != txPos.txHash.GetHex())
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchAsset.empty() && vchAsset != txPos.vchAsset)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchSender.empty() && vchSender != theAsset.vchAlias)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchReceiver.empty() && vchReceiver != txPos.vchAlias)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!BuildAssetAllocationJson(txPos, theAsset, bGetInputs, oAssetAllocation)) 
+				{
+					pcursor->Next();
+					continue;
+				}
+				index++;
+				if (from > 0 && index <= from) {
+					continue;
+				}
+				oRes.push_back(oAssetAllocation);
+				if (index >= count + from)
+					break;
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
+}
 UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 < params.size())
@@ -1272,12 +1364,13 @@ UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 			"[options]        (array, optional) A json object with options to filter results\n"
 			"    {\n"
 			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
+			"	   \"asset\":guid				(string) Asset GUID to filter.\n"
 			"      \"sender\":sender alias		(string) Sender alias name to filter.\n"
 			"      \"receiver\":receiver alias   (string) Receiver alias name to filter.\n"
 			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have entered your mempool.\n"
 			"    }\n"
 			+ HelpExampleCli("listassetallocationtransactions", "0 10")
-			+ HelpExampleCli("listassetallocationtransactions", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"sender\":\"alias1\",\"receiver\":\"''\",\"startblock\":0}}")
+			+ HelpExampleCli("listassetallocationtransactions", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"asset\":\"32bff1fa844c124\",\"sender\":\"alias1\",\"receiver\":\"''\",\"startblock\":0}}")
 		);
 	UniValue options;
 	int count = 10;
@@ -1290,8 +1383,41 @@ UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 		options = params[2];
 
 	UniValue oRes(UniValue::VARR);
-	if (!passetallocationtransactionsdb->ScanAssetAllocations(count, from, options, oRes))
+	if (!passetallocationtransactionsdb->ScanAssetAllocationIndex(count, from, options, oRes))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Scan failed"));
+	return oRes;
+}
+UniValue scanassetallocations(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 3 < params.size())
+		throw runtime_error("scanassetallocations [count] [from] [options]\n"
+			"scan through all asset allocations.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
+			"[options]        (array, optional) A json object with options to filter results\n"
+			"    {\n"
+			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
+			"	   \"asset\":guid				(string) Asset GUID to filter.\n"
+			"      \"sender\":sender alias		(string) Sender alias name to filter.\n"
+			"      \"receiver\":receiver alias   (string) Receiver alias name to filter.\n"
+			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"    }\n"
+			+ HelpExampleCli("scanassetallocations", "0 10")
+			+ HelpExampleCli("scanassetallocations", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"asset\":\"32bff1fa844c124\",\"sender\":\"alias1\",\"receiver\":\"''\",\"startblock\":0}}")
+		);
+	UniValue options;
+	int count = 10;
+	int from = 0;
+	if (params.size() > 0)
+		count = params[0].get_int();
+	if (params.size() > 1)
+		from = params[1].get_int();
+	if (params.size() > 2)
+		options = params[2];
+
+	UniValue oRes(UniValue::VARR);
+	if (!passetallocationdb->ScanAssetAllocations(count, from, options, oRes))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
 	return oRes;
 }
 

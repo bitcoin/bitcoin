@@ -201,6 +201,7 @@ public:
 	void WriteEscrowFeedbackIndex(const COffer& offer, const CEscrow& escrow);
 	void WriteEscrowBidIndex(const COffer& offer, const CEscrow& escrow, const std::string& status);
 	void RefundEscrowBidIndex(const std::vector<unsigned char>& vchEscrow, const std::string& status);
+	bool ScanEscrows(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 };
 
 bool GetEscrow(const std::vector<unsigned char> &vchEscrow, CEscrow& txPos);
