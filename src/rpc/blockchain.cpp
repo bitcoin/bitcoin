@@ -514,7 +514,7 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 hash = ParseHash(request.params[0], "parameter 1");
 
     LOCK(mempool.cs);
 
@@ -578,7 +578,7 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 hash = ParseHash(request.params[0], "parameter 1");
 
     LOCK(mempool.cs);
 
@@ -630,7 +630,7 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
         );
     }
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 hash = ParseHash(request.params[0], "parameter 1");
 
     LOCK(mempool.cs);
 

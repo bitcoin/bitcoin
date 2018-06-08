@@ -591,7 +591,10 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             if (!prevOut.checkObject(types))
                 throw std::runtime_error("prevtxs internal object typecheck fail");
 
-            uint256 txid = ParseHashStr(prevOut["txid"].get_str(), "txid");
+            uint256 txid;
+            if (!ParseHashStr(prevOut["txid"].get_str(), txid)) {
+                throw std::runtime_error("txid must be a 64-character hexadecimal string (not '" + prevOut["txid"].get_str() + "')");
+            }
 
             int nOut = atoi(prevOut["vout"].getValStr());
             if (nOut < 0)

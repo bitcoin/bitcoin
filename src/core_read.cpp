@@ -160,14 +160,14 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
     return true;
 }
 
-uint256 ParseHashStr(const std::string& strHex, const std::string& strName)
+bool ParseHashStr(const std::string& strHex, uint256& hash_out)
 {
-    if (!IsHex(strHex)) // Note: IsHex("") is false
-        throw std::runtime_error(strName + " must be hexadecimal string (not '" + strHex + "')");
+    if (!IsHex(strHex) || (strHex.size() != 64)) { // Note: IsHex("") is false
+        return false;
+    }
 
-    uint256 result;
-    result.SetHex(strHex);
-    return result;
+    hash_out.SetHex(strHex);
+    return true;
 }
 
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName)

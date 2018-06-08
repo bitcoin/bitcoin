@@ -105,15 +105,6 @@ static std::string AvailableDataFormatsString()
     return formats;
 }
 
-static bool ParseHashStr(const std::string& strReq, uint256& v)
-{
-    if (!IsHex(strReq) || (strReq.size() != 64))
-        return false;
-
-    v.SetHex(strReq);
-    return true;
-}
-
 static bool CheckWarmup(HTTPRequest* req)
 {
     std::string statusmessage;

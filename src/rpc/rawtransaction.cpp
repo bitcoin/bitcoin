@@ -144,7 +144,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
         );
 
     bool in_active_chain = true;
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 hash = ParseHash(request.params[0], "parameter 1");
     CBlockIndex* blockindex = nullptr;
 
     if (hash == Params().GenesisBlock().hashMerkleRoot) {
@@ -161,7 +161,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     if (!request.params[2].isNull()) {
         LOCK(cs_main);
 
-        uint256 blockhash = ParseHashV(request.params[2], "parameter 3");
+        uint256 blockhash = ParseHash(request.params[2], "parameter 3");
         blockindex = LookupBlockIndex(blockhash);
         if (!blockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
