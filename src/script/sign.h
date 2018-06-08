@@ -21,10 +21,12 @@ class SigningProvider
 {
 public:
     virtual ~SigningProvider() {}
-    virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const =0;
-    virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const =0;
-    virtual bool GetKey(const CKeyID &address, CKey& key) const =0;
+    virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
+    virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
+    virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
 };
+
+extern const SigningProvider& DUMMY_SIGNING_PROVIDER;
 
 /** Interface for signature creators. */
 class BaseSignatureCreator {

@@ -650,8 +650,6 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         if (!fHashSingle || (i < mergedTx.vout.size()))
             ProduceSignature(keystore, MutableTransactionSignatureCreator(&mergedTx, i, amount, nHashType), prevPubKey, sigdata);
 
-        // ... and merge in other signatures:
-        sigdata = CombineSignatures(prevPubKey, MutableTransactionSignatureChecker(&mergedTx, i, amount), sigdata, DataFromTransaction(txv, i, coin.out));
         UpdateInput(txin, sigdata);
     }
 
