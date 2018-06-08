@@ -2784,7 +2784,7 @@ bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOpt
 
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
-	CAsset txPos;
+	CAliasIndex txPos;
 	pair<string, vector<unsigned char> > key;
 	UniValue oAlias;
 	int index = 0;
