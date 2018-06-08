@@ -68,7 +68,7 @@ if BUILD_XPCHAIND
   bin_PROGRAMS += xpchaind
 endif
 
-if BUILD_BITCOIN_UTILS
+if BUILD_XPCHAIN_UTILS
   bin_PROGRAMS += xpchain-cli xpchain-tx
 endif
 

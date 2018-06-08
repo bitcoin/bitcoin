@@ -2,7 +2,7 @@ OpenBSD build guide
 ======================
 (updated for OpenBSD 6.2)
 
-This guide describes how to build bitcoind and command-line utilities on OpenBSD.
+This guide describes how to build xpchaind and command-line utilities on OpenBSD.
 
 OpenBSD is most commonly used as a server OS, so this guide does not contain instructions for building the GUI.
 
@@ -18,7 +18,7 @@ pkg_add automake # (select highest version, e.g. 1.15)
 pkg_add python # (select highest version, e.g. 3.6)
 pkg_add boost
 
-git clone https://github.com/bitcoin/bitcoin.git
+git clone https://github.com/xpchain/xpchain.git
 ```
 
 See [dependencies.md](dependencies.md) for a complete overview.
@@ -49,7 +49,7 @@ from the root of the repository. Then set `BDB_PREFIX` for the next section:
 export BDB_PREFIX="$PWD/db4"
 ```
 
-### Building Bitcoin Core
+### Building XPChain Core
 
 **Important**: use `gmake`, not `make`. The non-GNU `make` will exit with a horrible error.
 
@@ -97,4 +97,3 @@ If your user is in the `staff` group the limit can be raised with:
 The change will only affect the current shell and processes spawned by it. To
 make the change system-wide, change `datasize-cur` and `datasize-max` in
 `/etc/login.conf`, and reboot.
-

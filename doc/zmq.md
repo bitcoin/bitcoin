@@ -5,7 +5,7 @@ connections, inter-process communication, and shared-memory,
 providing various message-oriented semantics such as publish/subscribe,
 request/reply, and push/pull.
 
-The Bitcoin Core daemon can be configured to act as a trusted "border
+The XPChain Core daemon can be configured to act as a trusted "border
 router", implementing the bitcoin wire protocol and relay, making
 consensus decisions, maintaining the local blockchain database,
 broadcasting locally generated transactions into the network, and
@@ -33,7 +33,7 @@ buffering or reassembly.
 
 ## Prerequisites
 
-The ZeroMQ feature in Bitcoin Core requires ZeroMQ API version 4.x or
+The ZeroMQ feature in XPChain Core requires ZeroMQ API version 4.x or
 newer. Typically, it is packaged by distributions as something like
 *libzmq3-dev*. The C++ wrapper for ZeroMQ is *not* needed.
 
@@ -102,5 +102,5 @@ retrieve the chain from the last known block to the new tip.
 
 There are several possibilities that ZMQ notification can get lost
 during transmission depending on the communication type your are
-using. Bitcoind appends an up-counting sequence number to each
+using. XPChaind appends an up-counting sequence number to each
 notification which allows listeners to detect lost notifications.
