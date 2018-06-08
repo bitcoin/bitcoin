@@ -494,4 +494,10 @@ bool DumpMempool();
 /** Load the mempool from disk. */
 bool LoadMempool();
 
+//! Check whether the block associated with this index entry is pruned or not.
+inline bool IsBlockPruned(const CBlockIndex* pblockindex)
+{
+    return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
+}
+
 #endif // BITCOIN_VALIDATION_H

@@ -899,7 +899,7 @@ UniValue getblockheaders(const JSONRPCRequest& request)
 static CBlock GetBlockChecked(const CBlockIndex* pblockindex)
 {
     CBlock block;
-    if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0) {
+    if (IsBlockPruned(pblockindex)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
     }
 
