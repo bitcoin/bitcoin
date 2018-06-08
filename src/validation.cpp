@@ -597,6 +597,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 	// but during runtime fLoaded should be true so it should check UTXO in correct state
 	if (!fLoaded)
 		return true;
+	static int64_t nFlushIndexBlocks = 0;
 	std::string statusRpc = "";
 	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(&statusRpc)))
 		return true;
@@ -613,7 +614,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
 		{
-			bool bDestCheckFailed = false;
 			if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 			{
 				if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
@@ -750,6 +750,9 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 				}
 			}
 		}
+		nFlushIndexBlocks++;
+		if ((nFlushIndexBlocks % 200) == 0 && !FlushSyscoinDBs())
+			return state.DoS(0, false, REJECT_INVALID, "Failed to flush syscoin databases");
 	}
 
 
@@ -2329,7 +2332,12 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     AssertLockHeld(cs_main);
 
     int64_t nTimeStart = GetTimeMicros();
-
+    const int stopatblocknumber = GetArg("-stopatblock", 0);
+    if (stopatblocknumber > 0) {
+        if (stopatblocknumber < pindex->nHeight) {
+            return false;
+        }
+    }
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
@@ -2778,6 +2786,9 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode, int n
         // Flush the chainstate (which may refer to block index entries).
         if (!pcoinsTip->Flush())
             return AbortNode(state, "Failed to write to coin database");
+		// SYSCOIN
+		if (!FlushSyscoinDBs())
+			return AbortNode(state, "Failed to flush syscoin databases");
         nLastFlush = nNow;
     }
     if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000)) {
@@ -2942,6 +2953,10 @@ struct ConnectTrace {
  */
 bool static ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace)
 {
+    const int stopatblocknumber = GetArg("-stopatblock", 0);
+    if (stopatblocknumber > 0 && pindexNew->nHeight >= stopatblocknumber) {
+        return false;
+    }
     assert(pindexNew->pprev == chainActive.Tip());
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();

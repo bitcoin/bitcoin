@@ -44,6 +44,7 @@ CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CAssetDB *passetdb = NULL;
 CAssetAllocationDB *passetallocationdb = NULL;
+CAssetAllocationTransactionsDB *passetallocationtransactionsdb = NULL;
 typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
 typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
 mapAliasRegistrationsType mapAliasRegistrations;
@@ -777,6 +778,80 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
     }
 	return true;
 }
+bool FlushSyscoinDBs() {
+	{
+		LOCK(cs_alias);
+		if (paliasdb != NULL)
+		{
+			if (!paliasdb->Flush()) {
+				LogPrintf("Failed to write to alias database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_offer);
+		if (pofferdb != NULL)
+		{
+			if (!pofferdb->Flush()) {
+				LogPrintf("Failed to write to offer database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_cert);
+		if (pcertdb != NULL)
+		{
+			if (!pcertdb->Flush()) {
+				LogPrintf("Failed to write to cert database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_escrow);
+		if (pescrowdb != NULL)
+		{
+			if (!pescrowdb->Flush()) {
+				LogPrintf("Failed to write to escrow database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_asset);
+		if (passetdb != NULL)
+		{
+			if (!passetdb->Flush()) {
+				LogPrintf("Failed to write to asset database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_assetallocation);
+		if (passetallocationdb != NULL)
+		{
+			if (!passetallocationdb->Flush()) {
+				LogPrintf("Failed to write to asset allocation database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_assetallocationindex);
+		if (passetallocationtransactionsdb != NULL)
+		{
+			passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(AssetAllocationIndex);
+			if (!passetallocationtransactionsdb->Flush()) {
+				LogPrintf("Failed to write to asset allocation transactions database!");
+				return false;
+			}
+		}
+	}
+	return true;
+}
 void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 {
 	if(pofferdb != NULL)
@@ -787,48 +862,18 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		pcertdb->CleanupDatabase(numServicesCleaned);
 	if (paliasdb != NULL) 
 		paliasdb->CleanupDatabase(numServicesCleaned);
-	
-	if(paliasdb != NULL)
-	{
-		if (!paliasdb->Flush())
-			LogPrintf("Failed to write to alias database!");
-	}
-	if(pofferdb != NULL)
-	{
-		if (!pofferdb->Flush())
-			LogPrintf("Failed to write to offer database!");
-	}
-	if(pcertdb != NULL)
-	{
-		if (!pcertdb->Flush())
-			LogPrintf("Failed to write to cert database!");
-	}
-	if(pescrowdb != NULL)
-	{
-		if (!pescrowdb->Flush())
-			LogPrintf("Failed to write to escrow database!");
-	}
-	if (passetdb != NULL)
-	{
-		if (!passetdb->Flush())
-			LogPrintf("Failed to write to asset database!");
-	}
-	if (passetallocationdb != NULL)
-	{
-		if (!passetallocationdb->Flush())
-			LogPrintf("Failed to write to asset allocation database!");
-	}
+	FlushSyscoinDBs();
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
 	CAliasIndex& txPos) {
-	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos))
+	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos)) {
 		return false;
+	}
 	
 	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
 		txPos.SetNull();
 		return false;
-	}
-	
+	}	
 	return true;
 }
 bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey) {
@@ -1056,21 +1101,25 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 }
 
 void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
-	CSyscoinAddress address(EncodeBase58(alias.vchAddress));
-	oName.push_back(Pair("address", address.ToString()));
-	oName.push_back(Pair("expires_on", alias.nExpireTime));
-	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
-	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliasrecord");
+	if (IsArgSet("-zmqpubaliasrecord")) {
+		UniValue oName(UniValue::VOBJ);
+		oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
+		CSyscoinAddress address(EncodeBase58(alias.vchAddress));
+		oName.push_back(Pair("address", address.ToString()));
+		oName.push_back(Pair("expires_on", alias.nExpireTime));
+		oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
+		oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliasrecord");
+	}
 	WriteAliasIndexHistory(alias, op);
 }
 void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	BuildAliasIndexerHistoryJson(alias, oName);
-	oName.push_back(Pair("op", aliasFromOp(op)));
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliashistory");
+	if (IsArgSet("-zmqpubaliashistory")) {
+		UniValue oName(UniValue::VOBJ);
+		BuildAliasIndexerHistoryJson(alias, oName);
+		oName.push_back(Pair("op", aliasFromOp(op)));
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliashistory");
+	}
 }
 bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const unsigned int& nHeight, const string &type, const string &guid, UniValue& oName)
 {
@@ -1091,9 +1140,11 @@ bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, co
 	return true;
 }
 void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const unsigned int& nHeight, const string &type, const string &guid) {
-	UniValue oName(UniValue::VOBJ);
-	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
+	if (IsArgSet("-zmqpubaliastxhistory")) {
+		UniValue oName(UniValue::VOBJ);
+		BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
+	}
 }
 UniValue SyscoinListReceived(bool includeempty=true)
 {
@@ -1987,7 +2038,41 @@ UniValue prunesyscoinservices(const JSONRPCRequest& request)
 	CleanupSyscoinServiceDatabases(servicesCleaned);
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("services_cleaned", servicesCleaned));
+	if (fDebug)
+		LogPrintf("prunesyscoinservices # cleaned: %d\n", servicesCleaned);
 	return res;
+}
+UniValue aliasbalancemulti(const JSONRPCRequest& request)
+{
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() < 1 || params.size() > 2)
+		throw runtime_error(
+			"aliasbalancemulti { \"aliases\" : [\"aliasname1\",\"aliasname2\",...] } instantsend\n"
+			"\nReturns an array of balances based on an array of aliases passed in, internally calls aliasbalance for each alias.\n"
+			"\nArguments:\n"
+			"1. \"aliases\"  (array, required) The syscoin aliases to find balances for. Must be an array.\n"
+			"2. \"instantsend\"  (boolean, optional) Check for balance available to instant send. Default is false.\n"
+		);
+	UniValue resArray(UniValue::VARR);
+	UniValue aliases = find_value(params[0].get_obj(), "aliases").get_array();
+	bool fUseInstantSend = false;
+	if (params.size() > 1)
+		fUseInstantSend = params[1].get_bool();
+	for (unsigned int idx = 0; idx < aliases.size(); idx++) {
+		const UniValue& alias = aliases[idx];
+		if (alias.isStr()) {
+			string aliasStr = alias.get_str();
+			JSONRPCRequest request;
+			UniValue requestArray(UniValue::VARR);
+			requestArray.push_back(aliasStr);
+			requestArray.push_back(fUseInstantSend);
+			request.params = requestArray;
+			UniValue resBalance = aliasbalance(request);
+			resBalance.push_back(Pair("alias", aliasStr));
+			resArray.push_back(resBalance);
+		}
+	}
+	return resArray;
 }
 UniValue aliasbalance(const JSONRPCRequest& request)
 {
@@ -2515,135 +2600,149 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 }
 string GetSyscoinTransactionDescription(const CTransaction& tx, const int op, string& responseEnglish, const char &type, string& responseGUID)
 {
+	if (tx.IsNull()) {
+		return "Null Tx";
+	}
 	string strResponse = "";
-	if (op == OP_ALIAS_ACTIVATE) {
-		strResponse = _("Alias Activated");
-		responseEnglish = "Alias Activated";
-	}
-	else if (op == OP_ALIAS_UPDATE) {
-		strResponse = _("Alias Updated");
-		responseEnglish = "Alias Updated";
-	}
-	else if (op == OP_OFFER_ACTIVATE) {
-		strResponse = _("Offer Activated");
-		responseEnglish = "Offer Activated";
-	}
-	else if (op == OP_OFFER_UPDATE) {
-		strResponse = _("Offer Updated");
-		responseEnglish = "Offer Updated";
-	}
-	else if (op == OP_CERT_ACTIVATE) {
-		strResponse = _("Certificate Activated");
-		responseEnglish = "Certificate Activated";
-	}
-	else if (op == OP_CERT_UPDATE) {
-		strResponse = _("Certificate Updated");
-		responseEnglish = "Certificate Updated";
-	}
-	else if (op == OP_CERT_TRANSFER) {
-		strResponse = _("Certificate Transferred");
-		responseEnglish = "Certificate Transferred";
-	}
-	else if (op == OP_ASSET_ACTIVATE) {
-		strResponse = _("Asset Activated");
-		responseEnglish = "Asset Activated";
-	}
-	else if (op == OP_ASSET_UPDATE) {
-		strResponse = _("Asset Updated");
-		responseEnglish = "Asset Updated";
-	}
-	else if (op == OP_ASSET_TRANSFER) {
-		strResponse = _("Asset Transferred");
-		responseEnglish = "Asset Transferred";
-	}
-	else if (op == OP_ASSET_SEND) {
-		strResponse = _("Asset Sent");
-		responseEnglish = "Asset Sent";
-	}
-	else if (op == OP_ASSET_ALLOCATION_SEND) {
-		strResponse = _("Asset Allocation Sent");
-		responseEnglish = "Asset Allocation Sent";
-	}
-	else if (op == OP_ASSET_COLLECT_INTEREST) {
-		strResponse = _("Asset Collect Interest");
-		responseEnglish = "Asset Collect Interest";
-	}
-	else if (op == OP_ESCROW_ACTIVATE) {
-		strResponse = _("Escrow Activated");
-		responseEnglish = "Escrow Activated";
-	}
-	else if (op == OP_ESCROW_ACKNOWLEDGE) {
-		strResponse = _("Escrow Acknowledged");
-		responseEnglish = "Escrow Acknowledged";
-	}
-	else if (op == OP_ESCROW_RELEASE) {
-		strResponse = _("Escrow Released");
-		responseEnglish = "Escrow Released";
-	}
-	else if (op == OP_ESCROW_RELEASE_COMPLETE) {
-		strResponse = _("Escrow Release Complete");
-		responseEnglish = "Escrow Release Complete";
-	}
-	else if (op == OP_ESCROW_FEEDBACK) {
-		strResponse = _("Escrow Feedback");
-		responseEnglish = "Escrow Feedback";
-	}
-	else if (op == OP_ESCROW_BID) {
-		strResponse = _("Escrow Bid");
-		responseEnglish = "Escrow Bid";
-	}
-	else if (op == OP_ESCROW_ADD_SHIPPING) {
-		strResponse = _("Escrow Add Shipping");
-		responseEnglish = "Escrow Add Shipping";
-	}
-	else if (op == OP_ESCROW_REFUND) {
-		strResponse = _("Escrow Refunded");
-		responseEnglish = "Escrow Refunded";
-	}
-	else if (op == OP_ESCROW_REFUND_COMPLETE) {
-		strResponse = _("Escrow Refund Complete");
-		responseEnglish = "Escrow Refund Complete";
-	}
-	if (tx.IsNull())
-		return "";
 	if (type == ALIAS) {
+		// message from op code
+		if (op == OP_ALIAS_ACTIVATE) {
+			strResponse = _("Alias Activated");
+			responseEnglish = "Alias Activated";
+		} else
+		if (op == OP_ALIAS_UPDATE) {
+			strResponse = _("Alias Updated");
+			responseEnglish = "Alias Updated";
+		}
+
 		CAliasIndex alias(tx);
 		if (!alias.IsNull()) {
 			responseGUID = stringFromVch(alias.vchAlias);
 		}
-	}
-	else if (type == OFFER) {
+	} else 
+	if (type == OFFER) {
+		// message from op code
+		if (op == OP_OFFER_ACTIVATE) {
+			strResponse = _("Offer Activated");
+			responseEnglish = "Offer Activated";
+		} else
+		if (op == OP_OFFER_UPDATE) {
+			strResponse = _("Offer Updated");
+			responseEnglish = "Offer Updated";
+		}
+
 		COffer offer(tx);
 		if (!offer.IsNull()) {
 			responseGUID = stringFromVch(offer.vchOffer);
 		}		
-	}
-	else if (type == CERT) {
+	} else 
+	if (type == CERT) {
+		// message from op code
+		if (op == OP_CERT_ACTIVATE) {
+			strResponse = _("Certificate Activated");
+			responseEnglish = "Certificate Activated";
+		} else
+		if (op == OP_CERT_UPDATE) {
+			strResponse = _("Certificate Updated");
+			responseEnglish = "Certificate Updated";
+		} else
+		if (op == OP_CERT_TRANSFER) {
+			strResponse = _("Certificate Transferred");
+			responseEnglish = "Certificate Transferred";
+		}
 		CCert cert(tx);
 		if (!cert.IsNull()) {
 			responseGUID = stringFromVch(cert.vchCert);
 		}	
-	}
-	else if (type == ASSET) {
+	} else
+	if (type == ASSET) {
+		// message from op code
+		if (op == OP_ASSET_ACTIVATE) {
+			strResponse = _("Asset Activated");
+			responseEnglish = "Asset Activated";
+		} else
+		if (op == OP_ASSET_UPDATE) {
+			strResponse = _("Asset Updated");
+			responseEnglish = "Asset Updated";
+		} else 
+		if (op == OP_ASSET_TRANSFER) {
+			strResponse = _("Asset Transferred");
+			responseEnglish = "Asset Transferred";
+		} else
+		if (op == OP_ASSET_SEND) {
+			strResponse = _("Asset Sent");
+			responseEnglish = "Asset Sent";
+		}
+
 		CAsset asset(tx);
 		if (!asset.IsNull()) {
 			responseGUID = stringFromVch(asset.vchAsset);
 		}		
-	}
-	else if (type == ASSETALLOCATION) {
+	} else 
+	if (type == ASSETALLOCATION) {
+		// message from op code
+		if (op == OP_ASSET_ALLOCATION_SEND) {
+			strResponse = _("Asset Allocation Sent");
+			responseEnglish = "Asset Allocation Sent";
+		} else
+		if (op == OP_ASSET_COLLECT_INTEREST) {
+			strResponse = _("Asset Interest Collected");
+			responseEnglish = "Asset Interest Collected";
+		}
+
 		CAssetAllocation assetallocation(tx);
 		if (!assetallocation.IsNull()) {
 			responseGUID = stringFromVch(assetallocation.vchAsset);
 		}
-	}
-	else if (type == ESCROW) {
+	} else
+	if (type == ESCROW) {
+		// message from op code
+		if (op == OP_ESCROW_ACTIVATE) {
+			strResponse = _("Escrow Activated");
+			responseEnglish = "Escrow Activated";
+		} else
+		if (op == OP_ESCROW_ACKNOWLEDGE) {
+			strResponse = _("Escrow Acknowledged");
+			responseEnglish = "Escrow Acknowledged";
+		} else
+		if (op == OP_ESCROW_RELEASE) {
+			strResponse = _("Escrow Released");
+			responseEnglish = "Escrow Released";
+		} else
+		if (op == OP_ESCROW_RELEASE_COMPLETE) {
+			strResponse = _("Escrow Release Complete");
+			responseEnglish = "Escrow Release Complete";
+		} else
+		if (op == OP_ESCROW_FEEDBACK) {
+			strResponse = _("Escrow Feedback");
+			responseEnglish = "Escrow Feedback";
+		} else
+		if (op == OP_ESCROW_BID) {
+			strResponse = _("Escrow Bid");
+			responseEnglish = "Escrow Bid";
+		} else
+		if (op == OP_ESCROW_ADD_SHIPPING) {
+			strResponse = _("Escrow Add Shipping");
+			responseEnglish = "Escrow Add Shipping";
+		} else
+		if (op == OP_ESCROW_REFUND) {
+			strResponse = _("Escrow Refunded");
+			responseEnglish = "Escrow Refunded";
+		} else
+		if (op == OP_ESCROW_REFUND_COMPLETE) {
+			strResponse = _("Escrow Refund Complete");
+			responseEnglish = "Escrow Refund Complete";
+		}
+		
 		CEscrow escrow(tx);
 		if (!escrow.IsNull()) {
 			responseGUID = stringFromVch(escrow.vchEscrow);
 		}
-	}
-	else{
-		return "";
+	} 
+	else {
+		strResponse = _("Unknown Op Type");
+		responseEnglish = "Unknown Op Type";
+		return strResponse + " " + string(1, type);
 	}
 	return strResponse + " " + responseGUID;
 }

@@ -99,7 +99,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
 		boost::filesystem::remove(boost::filesystem::system_complete(dataDir + "/wallet.dat"));
 	}
     boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -unittest -datadir=") + dataDir;
+	string nodePath = fpath.string() + string(" -unittest -assetallocationindex -datadir=") + dataDir;
 	if(regTest)
 		nodePath += string(" -regtest -addressindex");
 	if(!extraArgs.empty())
@@ -1281,8 +1281,18 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	if(!usezdag)
+	if (usezdag) {
+		MilliSleep(100);
+	}
+	else {
 		GenerateBlocks(1, node);
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetallocationtransactions"));
+		BOOST_CHECK(r.isArray());
+		UniValue assetTxArray = r.get_array();
+		UniValue firstAssetTx = assetTxArray[0].get_obj();
+		BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid);
+		BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), true);
+	}
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + name + " " + fromalias + " false"));
 	balance = find_value(r.get_obj(), "balance");
 	if(newfromamount > 0)

@@ -278,6 +278,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "aliasupdate",       &aliasupdate,       false ,  {}},
 	{ "wallet", "aliasinfo",         &aliasinfo,         false ,  {}},
 	{ "wallet", "aliasbalance",      &aliasbalance,         false ,  {}},
+	{ "wallet", "aliasbalancemulti",      &aliasbalancemulti,         false ,{} },
 	{ "wallet", "aliaspay",       &aliaspay,       false ,  {}},
 	{ "wallet", "aliasaddscript",        &aliasaddscript,       false ,  {}},
 	{ "wallet", "aliasupdatewhitelist",        &aliasupdatewhitelist,       false ,  {}},
@@ -322,6 +323,8 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "assetallocationcollectinterest",          &assetallocationcollectinterest,      false ,  {}},
 	{ "wallet", "assetallocationinfo",          &assetallocationinfo,      false ,  {}},
 	{ "wallet", "assetallocationsenderstatus",          &assetallocationsenderstatus,      false ,  {}},
+	{ "wallet", "listassetallocationtransactions",          &listassetallocationtransactions,      false ,{} },
+	{ "wallet", "tpstestinfo",          &tpstestinfo,      false ,{} },
     /* Overall control/query calls */
     { "control",            "help",                   &help,                   true,  {"command"}  },
     { "control",            "stop",                   &stop,                   true,  {}  },

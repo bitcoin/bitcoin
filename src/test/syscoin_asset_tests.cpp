@@ -300,6 +300,146 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid1);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "USD");
 }
+/*BOOST_AUTO_TEST_CASE(generate_asset_throughput)
+ {
+	UniValue r;
+	printf("Running generate_asset_throughput...\n");
+	GenerateBlocks(5, "node1");
+	GenerateBlocks(5, "node3");
+	map<string, string> assetMap;
+	map<string, string> assetAliasMap;
+	AliasNew("node1", "fundingtps", "data");
+	AliasNew("node3", "fundingtps3", "data");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingtps 200000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingtps3 200000"), runtime_error);
+	GenerateBlocks(5, "node1");
+	GenerateBlocks(5, "node3");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingtps"));
+	string strAddress = find_value(r.get_obj(), "address").get_str();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingtps3"));
+	string strAddress3 = find_value(r.get_obj(), "address").get_str();
+	// create 1000 aliases and assets for each asset	
+	printf("creating sender 1000 aliases/asset...\n");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
+	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64();
+	mediantime += ONE_YEAR_IN_SECONDS;
+	string mediantimestr = boost::lexical_cast<string>(mediantime);
+	for (int i = 0; i < 1000; i++) {
+		string aliasname = "jagthroughput" + boost::lexical_cast<string>(i);
+		string aliasnameto = "jagthroughputto" + boost::lexical_cast<string>(i);
+		
+		// registration	
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' 3 " + mediantimestr + " '' '' '' ''"));
+		UniValue varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray[0].get_str() + " " + "\"{\\\"addresses\\\":[\\\"" + strAddress + "\\\"]}\""));
+		varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+		// activation	
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' 3 " + mediantimestr + " '' '' '' ''"));
+		UniValue varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray1[0].get_str() + " " + "\"{\\\"addresses\\\":[\\\"" + strAddress + "\\\"]}\""));
+		varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray1[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+		
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew tpstest " + aliasname + " '' " + " assets " + " 8 false 1 10 0 false ''"));
+		UniValue arr = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+		string hex_str = find_value(r.get_obj(), "hex").get_str();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+		
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+		string guid = arr[1].get_str();
+		
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + aliasname + " " + "\"[{\\\"aliasto\\\":\\\"" + aliasname + "\\\",\\\"amount\\\":1}]\" '' ''"));
+		arr = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+		hex_str = find_value(r.get_obj(), "hex").get_str();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+		
+		assetMap[guid] = aliasnameto;
+		assetAliasMap[guid] = aliasname;
+		if (i % 100 == 0)
+			 printf("%.2f percentage done\n", 100.0f / (1000.0f / (i + 1)));
+		
+	}
+	printf("creating receiver 1000 aliases/asset...\n");
+	int count = 0;
+	for (auto& assetTuple : assetMap) {
+		count++;
+		string aliasname = assetTuple.second;
+		
+		// registration	
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasname + " '' 3 " + mediantimestr + " '' '' '' ''"));
+		UniValue varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray[0].get_str() + " " + "\"{\\\"addresses\\\":[\\\"" + strAddress3 + "\\\"]}\""));
+		varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate 1"));
+		// activation	
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasnew " + aliasname + " '' 3 " + mediantimestr + " '' '' '' ''"));
+		UniValue varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscointxfund " + varray1[0].get_str() + " " + "\"{\\\"addresses\\\":[\\\"" + strAddress3 + "\\\"]}\""));
+		varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray1[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "generate 1"));
+		if (count % 100 == 0)
+			 printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
+	}
+	GenerateBlocks(10);
+	printf("Creating assetsend transactions to node3 alias...\n");
+	vector<string> assetSendTxVec;
+	count = 0;
+	for (auto& assetTuple : assetMap) {
+		count++;
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\" '' ''"));
+		UniValue arr = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+		string hex_str = find_value(r.get_obj(), "hex").get_str();
+		
+		assetSendTxVec.push_back(hex_str);
+		if (count % 100 == 0)
+			 printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
+		
+	}
+	printf("Sending assetsend transactions to network...\n");
+	map<string, int64_t> sendTimes;
+	count = 0;
+	for (auto& hex_str : assetSendTxVec) {
+		count++;
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+		string txid = find_value(r.get_obj(), "txid").get_str();
+		sendTimes[txid] = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+		if (count % 100 == 0)
+			 printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
+		
+	}
+	printf("Gathering results...\n");
+	float totalTime = 0;
+	// wait 10 seconds	
+	MilliSleep(10000);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "tpstestinfo"));
+	UniValue tpsresponse = r.get_array();
+	for (int i = 0; i < tpsresponse.size(); i++) {
+		UniValue responesObj = tpsresponse[i].get_obj();
+		string txid = find_value(responesObj, "txid").get_str();
+		int64_t timeRecv = find_value(responesObj, "time").get_int64();
+		if (sendTimes.find(txid) == sendTimes.end()) {
+			printf("Cannot find received txid from the sender list! skipping...\n");
+			continue;
+			
+		}
+		totalTime += timeRecv - sendTimes[txid];
+	}
+	totalTime /= tpsresponse.size();
+	printf("totalTime %.2f, num responses %d\n", totalTime, tpsresponse.size());
+}*/
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
 	GenerateBlocks(5);
@@ -354,6 +494,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	AliasNew("node1", "jagassetcollectionreceiver", "data");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
 	string guid = AssetNew("node1", "cad", "jagassetcollection", "data", "8", "false", "10000", "-1", "0.05");
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagassetcollection"));
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasinfo jagassetcollection"));
+	BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasinfo jagassetcollection"));
 	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionreceiver\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
 	UniValue balance = find_value(r.get_obj(), "balance");

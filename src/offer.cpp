@@ -26,7 +26,6 @@
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/tokenizer.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <chrono>
 
@@ -323,7 +322,7 @@ bool RevertOffer(const std::vector<unsigned char>& vchOffer, const int op, const
 		}
 	}
 	// write the state back to previous state
-	else if (!pofferdb->WriteOffer(dbOffer, op, INT64_MAX, false))
+	else if (!pofferdb->WriteOffer(dbOffer, op, INT64_MAX, false, false))
 	{
 		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to offer DB");
 		return error(errorMessage.c_str());
@@ -1161,23 +1160,21 @@ UniValue offerupdate(const JSONRPCRequest& request) {
 }
 
 void COfferDB::WriteOfferIndex(const COffer& offer, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	if (BuildOfferIndexerJson(offer, oName)) {
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerrecord");
+	if (IsArgSet("-zmqpubofferrecord")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildOfferIndexerJson(offer, oName)) {
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerrecord");
+		}
 	}
 	WriteOfferIndexHistory(offer, op);
 }
 void COfferDB::WriteOfferIndexHistory(const COffer& offer, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	string serviceFromOp = "";
-	if (IsEscrowOp(op))
-		serviceFromOp = escrowFromOp(op);
-	else if (IsOfferOp(op))
-		serviceFromOp = offerFromOp(op);
-
-	if (BuildOfferIndexerHistoryJson(offer, oName)) {
-		oName.push_back(Pair("op", serviceFromOp));
-		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerhistory");
+	if (IsArgSet("-zmqpubofferhistory")) {
+		UniValue oName(UniValue::VOBJ);
+		if (BuildOfferIndexerHistoryJson(offer, oName)) {
+			oName.push_back(Pair("op", offerFromOp(op)));
+			GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "offerhistory");
+		}
 	}
 }
 UniValue offerinfo(const JSONRPCRequest& request) {

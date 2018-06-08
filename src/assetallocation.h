@@ -76,12 +76,17 @@ typedef std::pair<std::vector<unsigned char>, std::vector<CRange> > InputRanges;
 typedef std::vector<InputRanges> RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
+typedef std::map<std::string, std::string> AssetAllocationIndexItem;
+typedef std::map<int, AssetAllocationIndexItem> AssetAllocationIndexItemMap;
+extern AssetAllocationIndexItemMap AssetAllocationIndex;
 static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 static const int MAX_MEMO_LENGTH = 128;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
 static const int ONE_HOUR_IN_BLOCKS = 60;
 static const int ONE_MONTH_IN_BLOCKS = 43800;
 static sorted_vector<CAssetAllocationTuple> assetAllocationConflicts;
+static CCriticalSection cs_assetallocation;
+static CCriticalSection cs_assetallocationindex;
 enum {
 	ZDAG_NOT_FOUND = -1,
 	ZDAG_STATUS_OK = 0,
@@ -165,40 +170,52 @@ public:
 
 class CAssetAllocationDB : public CDBWrapper {
 public:
-	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
+	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe, false, true) {}
 
-    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAsset& asset, const int64_t& arrivalTime, const bool& fJustCheck) {
+    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAmount& nSenderBalance, const CAmount& nAmount, const CAsset& asset, const int64_t& arrivalTime, const std::vector<unsigned char>& vchSender, const std::vector<unsigned char>& vchReceiver, const bool& fJustCheck) {
 		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
-		bool writeState = Write(make_pair(std::string("assetallocationi"), allocationTuple), assetallocation);
-		if (!fJustCheck)
-			writeState = writeState && Write(make_pair(std::string("assetallocationp"), allocationTuple), assetallocation);
-		else if (fJustCheck) {
-			if (arrivalTime < INT64_MAX) {
-				ArrivalTimesMap arrivalTimes;
-				ReadISArrivalTimes(allocationTuple, arrivalTimes);
-				arrivalTimes[assetallocation.txHash] = arrivalTime;
-				writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
+		bool writeState = false;
+		{
+			LOCK(cs_assetallocation);
+			writeState = Write(make_pair(std::string("assetallocationi"), allocationTuple), assetallocation);
+			if (!fJustCheck)
+				writeState = writeState && Write(make_pair(std::string("assetallocationp"), allocationTuple), assetallocation);
+			else if (fJustCheck) {
+				if (arrivalTime < INT64_MAX) {
+					ArrivalTimesMap arrivalTimes;
+					ReadISArrivalTimes(allocationTuple, arrivalTimes);
+					arrivalTimes[assetallocation.txHash] = arrivalTime;
+					writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
+				}
 			}
 		}
-		WriteAssetAllocationIndex(assetallocation, asset);
+		if(writeState && !vchReceiver.empty())
+			WriteAssetAllocationIndex(assetallocation, asset, nSenderBalance, nAmount, vchSender, vchReceiver);
         return writeState;
     }
 	bool EraseAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup = false) {
+		LOCK(cs_assetallocation);
 		bool eraseState = Erase(make_pair(std::string("assetallocationi"), assetAllocationTuple));
-		Erase(make_pair(std::string("assetp"), assetAllocationTuple));
-		EraseISArrivalTimes(assetAllocationTuple);
+		if (eraseState) {
+			Erase(make_pair(std::string("assetp"), assetAllocationTuple));
+			EraseISArrivalTimes(assetAllocationTuple);
+		}
 		return eraseState;
 	}
     bool ReadAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, CAssetAllocation& assetallocation) {
+		LOCK(cs_assetallocation);
         return Read(make_pair(std::string("assetallocationi"), assetAllocationTuple), assetallocation);
     }
 	bool ReadLastAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, CAssetAllocation& assetallocation) {
+		LOCK(cs_assetallocation);
 		return Read(make_pair(std::string("assetallocationp"), assetAllocationTuple), assetallocation);
 	}
 	bool ReadISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple, ArrivalTimesMap& arrivalTimes) {
+		LOCK(cs_assetallocation);
 		return Read(make_pair(std::string("assetallocationa"), assetAllocationTuple), arrivalTimes);
 	}
 	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
+		LOCK(cs_assetallocation);
 		ArrivalTimesMap arrivalTimes;
 		ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
 		ArrivalTimesMap::const_iterator it = arrivalTimes.find(txid);
@@ -210,14 +227,31 @@ public:
 			return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
+		LOCK(cs_assetallocation);
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
-	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset);
+	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const CAsset& asset, const CAmount& nSenderBalance, const CAmount& nAmount, const std::vector<unsigned char>& vchSender, const std::vector<unsigned char>& vchReceiver);
+	bool ScanAssetAllocations(const int count, const int from, UniValue& oRes);
+};
+class CAssetAllocationTransactionsDB : public CDBWrapper {
+public:
+	CAssetAllocationTransactionsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationtransactions", nCacheSize, fMemory, fWipe, false, true) {
+		ReadAssetAllocationWalletIndex(AssetAllocationIndex);
+	}
 
+	bool WriteAssetAllocationWalletIndex(const AssetAllocationIndexItemMap &valueMap) {
+		LOCK(cs_assetallocationindex);
+		return Write(std::string("assetallocationtxi"), valueMap, true);
+	}
+	bool ReadAssetAllocationWalletIndex(AssetAllocationIndexItemMap &valueMap) {
+		LOCK(cs_assetallocationindex);
+		return Read(std::string("assetallocationtxi"), valueMap);
+	}
+	bool ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 };
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool bSanityCheck = false);
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& asset, const bool bGetInputs, UniValue& oName);
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oName);
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nSenderBalance, const CAmount& nAmount, const std::vector<unsigned char>& strSender, const std::vector<unsigned char>& strReceiver, bool &isMine, UniValue& oAssetAllocation);
 bool AccumulateInterestSinceLastClaim(CAssetAllocation & assetAllocation, const int& nHeight);
 #endif // ASSETALLOCATION_H

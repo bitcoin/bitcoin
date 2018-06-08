@@ -184,6 +184,7 @@ extern UniValue syscointxfund(const JSONRPCRequest& request);
 extern UniValue aliasupdate(const JSONRPCRequest& request);
 extern UniValue aliasinfo(const JSONRPCRequest& request);
 extern UniValue aliasbalance(const JSONRPCRequest& request);
+extern UniValue aliasbalancemulti(const JSONRPCRequest& request);
 extern UniValue prunesyscoinservices(const JSONRPCRequest& request);
 extern UniValue aliaspay(const JSONRPCRequest& request);
 extern UniValue aliasaddscript(const JSONRPCRequest& request);
@@ -226,6 +227,8 @@ extern UniValue assetallocationsend(const JSONRPCRequest& request);
 extern UniValue assetallocationcollectinterest(const JSONRPCRequest& request);
 extern UniValue assetallocationinfo(const JSONRPCRequest& request);
 extern UniValue assetallocationsenderstatus(const JSONRPCRequest& request);
+extern UniValue listassetallocationtransactions(const JSONRPCRequest& request);
+extern UniValue tpstestinfo(const JSONRPCRequest& request);
 /**
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
