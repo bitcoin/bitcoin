@@ -1134,8 +1134,6 @@ bool AppInitParameterInteraction()
     if (gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
 
-    g_enable_bip61 = gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61);
-
     if (gArgs.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
         return InitError("rpcserialversion must be non-negative.");
 

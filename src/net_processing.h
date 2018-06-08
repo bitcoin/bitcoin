@@ -37,8 +37,6 @@ static constexpr int64_t MINIMUM_CONNECT_TIME = 30;
 
 /** Default for BIP61 (sending reject messages) */
 static constexpr bool DEFAULT_ENABLE_BIP61 = true;
-/** Enable BIP61 (sending reject messages) */
-extern bool g_enable_bip61;
 
 class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
 private:

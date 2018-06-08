@@ -37,7 +37,6 @@
 #endif
 
 std::atomic<int64_t> nTimeBestReceived(0); // Used only to inform the wallet of when we last received a block
-bool g_enable_bip61 = DEFAULT_ENABLE_BIP61;
 
 struct IteratorComparator
 {
@@ -74,6 +73,9 @@ static const int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
 
 // Internal stuff
 namespace {
+    /** Enable BIP61 (sending reject messages) */
+    bool g_enable_bip61 = DEFAULT_ENABLE_BIP61;
+
     /** Number of nodes with fSyncStarted. */
     int nSyncStarted = 0;
 
@@ -811,6 +813,8 @@ static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Para
 }
 
 PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, CScheduler &scheduler) : connman(connmanIn), m_stale_tip_check_time(0) {
+    g_enable_bip61 = gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61);
+
     // Initialize global variables that cannot be constructed at startup.
     recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
 
@@ -867,7 +871,7 @@ static uint256 most_recent_block_hash;
 static bool fWitnessesPresentInMostRecentCompactBlock;
 
 /**
- * Maintain state about the best-seen block and fast-announce a compact block 
+ * Maintain state about the best-seen block and fast-announce a compact block
  * to compatible peers.
  */
 void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) {
@@ -912,7 +916,7 @@ void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std:
 }
 
 /**
- * Update our best height and announce any block hashes which weren't previously 
+ * Update our best height and announce any block hashes which weren't previously
  * in chainActive to our peers.
  */
 void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
@@ -948,7 +952,7 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
 }
 
 /**
- * Handle invalid block rejection and consequent peer banning, maintain which 
+ * Handle invalid block rejection and consequent peer banning, maintain which
  * peers announce compact blocks.
  */
 void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationState& state) {
