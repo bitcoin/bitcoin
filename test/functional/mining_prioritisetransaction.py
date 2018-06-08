@@ -24,7 +24,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction, '', 0, 0, 0)
 
         # Test `prioritisetransaction` invalid `txid`
-        assert_raises_rpc_error(-1, "txid must be hexadecimal string", self.nodes[0].prioritisetransaction, txid='foo', fee_delta=0)
+        assert_raises_rpc_error(-1, "txid must be hexadecimal string (not 'foo')", self.nodes[0].prioritisetransaction, txid='foo', fee_delta=0)
 
         # Test `prioritisetransaction` invalid `dummy`
         txid = '1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000'

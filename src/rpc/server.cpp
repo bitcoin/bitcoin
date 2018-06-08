@@ -5,6 +5,7 @@
 
 #include <rpc/server.h>
 
+#include <core_io.h>
 #include <fs.h>
 #include <init.h>
 #include <key_io.h>
@@ -115,7 +116,7 @@ CAmount AmountFromValue(const UniValue& value)
     return amount;
 }
 
-uint256 ParseHashV(const UniValue& v, std::string strName)
+uint256 ParseHash(const UniValue& v, std::string strName)
 {
     std::string strHex;
     if (v.isStr())
@@ -125,13 +126,16 @@ uint256 ParseHashV(const UniValue& v, std::string strName)
     if (64 != strHex.length())
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d)", strName, 64, strHex.length()));
     uint256 result;
-    result.SetHex(strHex);
+    if (!ParseHashStr(strHex, result)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" invalid");
+    }
     return result;
 }
 uint256 ParseHashO(const UniValue& o, std::string strKey)
 {
-    return ParseHashV(find_value(o, strKey), strKey);
+    return ParseHash(find_value(o, strKey), strKey);
 }
+
 std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName)
 {
     std::string strHex;

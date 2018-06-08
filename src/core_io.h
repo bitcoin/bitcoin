@@ -22,8 +22,7 @@ CScript ParseScript(const std::string& s);
 std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
 bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
 bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
-uint256 ParseHashUV(const UniValue& v, const std::string& strName);
-uint256 ParseHashStr(const std::string&, const std::string& strName);
+bool ParseHashStr(const std::string&, uint256& hash_out);
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
 
 // core_write.cpp

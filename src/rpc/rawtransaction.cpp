@@ -144,7 +144,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
         );
 
     bool in_active_chain = true;
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 hash = ParseHash(request.params[0], "parameter 1");
     CBlockIndex* blockindex = nullptr;
 
     if (hash == Params().GenesisBlock().hashMerkleRoot) {
@@ -161,7 +161,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     if (!request.params[2].isNull()) {
         LOCK(cs_main);
 
-        uint256 blockhash = ParseHashV(request.params[2], "parameter 3");
+        uint256 blockhash = ParseHash(request.params[2], "parameter 3");
         blockindex = LookupBlockIndex(blockhash);
         if (!blockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
@@ -229,9 +229,7 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
     UniValue txids = request.params[0].get_array();
     for (unsigned int idx = 0; idx < txids.size(); idx++) {
         const UniValue& txid = txids[idx];
-        if (txid.get_str().length() != 64 || !IsHex(txid.get_str()))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid txid ")+txid.get_str());
-        uint256 hash(uint256S(txid.get_str()));
+        uint256 hash(ParseHash(txid, "txid"));
         if (setTxids.count(hash))
             throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated txid: ")+txid.get_str());
        setTxids.insert(hash);
