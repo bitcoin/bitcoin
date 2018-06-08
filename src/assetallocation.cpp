@@ -1239,6 +1239,7 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 		if (startblock.isNum())
 			nStartBlock = startblock.get_int();
 	}
+	LOCK(cs_assetallocationindex);
 	int index = 0;
 	UniValue assetValue;
 	vector<string> contents;
@@ -1290,7 +1291,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 			nStartBlock = startblock.get_int();
 	}
 
-
+	LOCK(cs_assetallocation);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAssetAllocation txPos;
