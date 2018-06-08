@@ -2417,7 +2417,6 @@ bool CEscrowDB::ScanEscrows(const int count, const int from, const UniValue& oOp
 	pcursor->SeekToFirst();
 	CEscrow txPos;
 	pair<string, vector<unsigned char> > key;
-	UniValue oEscrow(UniValue::VOBJ);
 	int index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
@@ -2454,6 +2453,7 @@ bool CEscrowDB::ScanEscrows(const int count, const int from, const UniValue& oOp
 					pcursor->Next();
 					continue;
 				}
+				UniValue oEscrow(UniValue::VOBJ);
 				if (!BuildEscrowJson(txPos, oEscrow))
 				{
 					pcursor->Next();
