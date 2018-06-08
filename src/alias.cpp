@@ -2781,7 +2781,7 @@ bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOpt
 			nStartBlock = startblock.get_int();
 	}
 
-
+	LOCK(cs_alias);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAliasIndex txPos;

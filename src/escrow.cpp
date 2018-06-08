@@ -2412,7 +2412,7 @@ bool CEscrowDB::ScanEscrows(const int count, const int from, const UniValue& oOp
 			nStartBlock = startblock.get_int();
 	}
 
-
+	LOCK(cs_escrow);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CEscrow txPos;
