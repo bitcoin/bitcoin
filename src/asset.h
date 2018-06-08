@@ -39,7 +39,7 @@ static const CAmount MAX_INPUTRANGE_ASSET = 10000000;
 */
 static const CAmount MAX_ASSET = 1000000000000000000LL - 1LL;
 inline bool AssetRange(const CAmount& nValue, bool bUseInputRange) { return (nValue > 0 && nValue <= (bUseInputRange? MAX_INPUTRANGE_ASSET: MAX_ASSET)); }
-
+static CCriticalSection cs_asset;
 class CAsset {
 public:
 	std::vector<unsigned char> vchAsset;
@@ -134,15 +134,21 @@ public:
     CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
 
     bool WriteAsset(const CAsset& asset, const int &op) {
-		bool writeState = Write(make_pair(std::string("asseti"), asset.vchAsset), asset);
-		WriteAssetIndex(asset, op);
+		bool writeState = false;
+		{
+			LOCK(cs_asset);
+			writeState = Write(make_pair(std::string("asseti"), asset.vchAsset), asset);
+		}
+		if(writeState)
+			WriteAssetIndex(asset, op);
         return writeState;
     }
 	bool EraseAsset(const std::vector<unsigned char>& vchAsset, bool cleanup = false) {
-		bool eraseState = Erase(make_pair(std::string("asseti"), vchAsset));
-		return eraseState;
+		LOCK(cs_asset);
+		return Erase(make_pair(std::string("asseti"), vchAsset));
 	}
     bool ReadAsset(const std::vector<unsigned char>& vchAsset, CAsset& asset) {
+		LOCK(cs_asset);
         return Read(make_pair(std::string("asseti"), vchAsset), asset);
     }
 	void WriteAssetIndex(const CAsset& asset, const int &op);

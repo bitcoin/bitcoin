@@ -72,32 +72,57 @@ public:
             }
     }
 };
+static void SetMaxOpenFiles(leveldb::Options *options) {
+	// On most platforms the default setting of max_open_files (which is 1000)
+	// is optimal. On Windows using a large file count is OK because the handles
+	// do not interfere with select() loops. On 64-bit Unix hosts this value is
+	// also OK, because up to that amount LevelDB will use an mmap
+	// implementation that does not use extra file descriptors (the fds are
+	// closed after being mmaped).
+	//
+	// Increasing the value beyond the default is dangerous because LevelDB will
+	// fall back to a non-mmap implementation when the file count is too large.
+	// On 32-bit Unix host we should decrease the value because the handles use
+	// up real fds, and we want to avoid fd exhaustion issues.
+	//
+	// See PR #12495 for further discussion.
 
-static leveldb::Options GetOptions(size_t nCacheSize)
+	int default_open_files = options->max_open_files;
+#ifndef WIN32
+	if (sizeof(void*) < 8) {
+		options->max_open_files = 64;
+	}
+#endif
+	LogPrintf("LevelDB using max_open_files=%d (default=%d)\n",
+		options->max_open_files, default_open_files);
+}
+
+static leveldb::Options GetOptions(size_t nCacheSize, bool bSyscoin)
 {
     leveldb::Options options;
     options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
     options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
-    options.compression = leveldb::kNoCompression;
-    options.max_open_files = 64;
+	if(!bSyscoin)
+		options.compression = leveldb::kNoCompression;
     options.info_log = new CSyscoinLevelDBLogger();
     if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
         // LevelDB versions before 1.16 consider short writes to be corruption. Only trigger error
         // on corruption in later versions.
         options.paranoid_checks = true;
     }
+	SetMaxOpenFiles(&options);
     return options;
 }
 
-CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
+CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate, bool bSyscoin)
 {
     penv = NULL;
     readoptions.verify_checksums = true;
     iteroptions.verify_checksums = true;
     iteroptions.fill_cache = false;
     syncoptions.sync = true;
-    options = GetOptions(nCacheSize);
+    options = GetOptions(nCacheSize, bSyscoin);
     options.create_if_missing = true;
     if (fMemory) {
         penv = leveldb::NewMemEnv(leveldb::Env::Default());
@@ -193,7 +218,6 @@ CDBIterator::~CDBIterator() { delete piter; }
 bool CDBIterator::Valid() { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
 void CDBIterator::Next() { piter->Next(); }
-
 namespace dbwrapper_private {
 
 void HandleError(const leveldb::Status& status)

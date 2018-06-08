@@ -274,53 +274,47 @@ void PrepareShutdown()
         fFeeEstimatesInitialized = false;
     }
 
-    {
-        LOCK(cs_main);
-        if (pcoinsTip != NULL) {
-            FlushStateToDisk();
-        }
-		// SYSCOIN
-		if (paliasdb != NULL)
-		{
-			if (!paliasdb->Flush())
-				LogPrintf("Failed to write to alias database!");
-			delete paliasdb;
-			paliasdb = NULL;
-		}
-		if (pofferdb != NULL)
-		{
-			if (!pofferdb->Flush())
-				LogPrintf("Failed to write to offer database!");
-			delete pofferdb;
-			pofferdb = NULL;
-		}
-		if (pcertdb != NULL)
-		{
-			if (!pcertdb->Flush())
-				LogPrintf("Failed to write to cert database!");
-			delete pcertdb;
-			pcertdb = NULL;
-		}
-		if (passetdb != NULL)
-		{
-			if (!passetdb->Flush())
-				LogPrintf("Failed to write to asset database!");
-			delete passetdb;
-			passetdb = NULL;
-		}
-		if (passetallocationdb != NULL)
-		{
-			if (!passetallocationdb->Flush())
-				LogPrintf("Failed to write to asset allocation database!");
-			delete passetallocationdb;
-			passetallocationdb = NULL;
-		}
-		if (pescrowdb != NULL)
-		{
-			if (!pescrowdb->Flush())
-				LogPrintf("Failed to write to escrow database!");
-			delete pescrowdb;
-			pescrowdb = NULL;
+	// SYSCOIN
+	FlushSyscoinDBs();
+	if (paliasdb != NULL)
+	{
+		delete paliasdb;
+		paliasdb = NULL;
+	}
+	if (pofferdb != NULL)
+	{
+		delete pofferdb;
+		pofferdb = NULL;
+	}
+	if (pcertdb != NULL)
+	{
+		delete pcertdb;
+		pcertdb = NULL;
+	}
+	if (passetdb != NULL)
+	{
+		delete passetdb;
+		passetdb = NULL;
+	}
+	if (passetallocationdb != NULL)
+	{
+		delete passetallocationdb;
+		passetallocationdb = NULL;
+	}
+	if (passetallocationtransactionsdb != NULL)
+	{
+		delete passetallocationtransactionsdb;
+		passetallocationtransactionsdb = NULL;
+	}
+	if (pescrowdb != NULL)
+	{
+		delete pescrowdb;
+		pescrowdb = NULL;
+	}
+	{
+		LOCK(cs_main);
+		if (pcoinsTip != NULL) {
+			FlushStateToDisk();
 		}
         delete pcoinsTip;
         pcoinsTip = NULL;
@@ -528,7 +522,7 @@ std::string HelpMessage(HelpMessageMode mode)
     if (mode == HMM_SYSCOIN_QT)
         strUsage += HelpMessageOpt("-windowtitle=<name>", _("Wallet window title"));
 #endif
-
+	strUsage += HelpMessageOpt("-stopatblock", strprintf(_("For Airdrops it is useful to stop your blockchain from processing at a certain block. Set this block as required by your airdrop schedule. 0 means it is disabled (default: 0)")));
 #if ENABLE_ZMQ
 	strUsage += HelpMessageGroup(_("ZeroMQ notification options:"));
 	strUsage += HelpMessageOpt("-zmqpubhashblock=<address>", _("Enable publish hash block in <address>"));
@@ -825,7 +819,8 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;
-    if (!ActivateBestChain(state, chainparams)) {
+    const int stopatblocknumber = GetArg("-stopatblock", 0);
+    if (!ActivateBestChain(state, chainparams) && stopatblocknumber == 0) {
         LogPrintf("Failed to connect best block");
         StartShutdown();
     }
@@ -1193,7 +1188,7 @@ bool AppInitParameterInteraction()
     if (nScriptCheckThreads <= 0)
         nScriptCheckThreads += GetNumCores();
     if (nScriptCheckThreads <= 1)
-        nScriptCheckThreads = 1;
+        nScriptCheckThreads = 0;
     else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
 
@@ -1407,7 +1402,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 	InitScriptExecutionCache();
     LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
     if (nScriptCheckThreads) {
-        for (int i=0; i<nScriptCheckThreads; i++)
+        for (int i=0; i<nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
 
@@ -1683,18 +1678,20 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 				delete pcertdb;
 				delete passetdb;
 				delete passetallocationdb;
+				delete passetallocationtransactionsdb;
 				delete pescrowdb;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex || fReindexChainState);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
-				paliasdb = new CAliasDB(nCoinCacheUsage * 20, false, fReindex);
-				pofferdb = new COfferDB(nCoinCacheUsage * 2, false, fReindex);
-				pcertdb = new CCertDB(nCoinCacheUsage * 2, false, fReindex);
-				passetdb = new CAssetDB(nCoinCacheUsage * 2, false, fReindex);
-				passetallocationdb = new CAssetAllocationDB(nCoinCacheUsage * 2, false, fReindex);
-				pescrowdb = new CEscrowDB(nCoinCacheUsage * 2, false, fReindex);
+				paliasdb = new CAliasDB(nCoinCacheUsage, false, fReindex);
+				pofferdb = new COfferDB(nCoinCacheUsage, false, fReindex);
+				pcertdb = new CCertDB(nCoinCacheUsage, false, fReindex);
+				passetdb = new CAssetDB(nCoinCacheUsage, false, fReindex);
+				passetallocationdb = new CAssetAllocationDB(nCoinCacheUsage, false, fReindex);
+				passetallocationtransactionsdb = new CAssetAllocationTransactionsDB(0, false, fReindex);
+				pescrowdb = new CEscrowDB(nCoinCacheUsage, false, fReindex);
 
                 if (fReindex) {
                     pblocktree->WriteReindexing(true);
@@ -1874,6 +1871,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 11a: setup PrivateSend
     fMasternodeMode = GetBoolArg("-masternode", false);
 	fUnitTest = GetBoolArg("-unittest", false);
+	fAssetAllocationIndex = GetBoolArg("-assetallocationindex", false);
     // TODO: masternode should have no wallet
 
     //lite mode disables all Syscoin-specific functionality

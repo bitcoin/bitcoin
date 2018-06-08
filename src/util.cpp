@@ -112,6 +112,7 @@ namespace boost {
 //Syscoin only features
 bool fMasternodeMode = false;
 bool fUnitTest = false;
+bool fAssetAllocationIndex = false;
 bool fLiteMode = false;
 /**
     nWalletBackups:
