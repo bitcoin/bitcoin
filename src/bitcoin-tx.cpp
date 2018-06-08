@@ -591,7 +591,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             if (!prevOut.checkObject(types))
                 throw std::runtime_error("prevtxs internal object typecheck fail");
 
-            uint256 txid = ParseHashUV(prevOut["txid"], "txid");
+            uint256 txid = ParseHashStr(prevOut["txid"].get_str(), "txid");
 
             int nOut = atoi(prevOut["vout"].getValStr());
             if (nOut < 0)
