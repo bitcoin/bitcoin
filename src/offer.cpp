@@ -1481,7 +1481,7 @@ bool COfferDB::ScanOffers(const int count, const int from, const UniValue& oOpti
 	pcursor->SeekToFirst();
 	COffer txPos;
 	pair<string, vector<unsigned char> > key;
-	UniValue oOffer;
+	UniValue oOffer(UniValue::VOBJ);
 	int index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();

@@ -892,7 +892,7 @@ bool CCertDB::ScanCerts(const int count, const int from, const UniValue& oOption
 	pcursor->SeekToFirst();
 	CCert txPos;
 	pair<string, vector<unsigned char> > key;
-	UniValue oCert;
+	UniValue oCert(UniValue::VOBJ);
 	int index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
