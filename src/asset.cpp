@@ -1284,7 +1284,7 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 	CAsset txPos;
 	pair<string, vector<unsigned char> > key;
 	bool bGetInputs = true;
-	UniValue oAsset;
+	UniValue oAsset(UniValue::VOBJ);
 	int index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
