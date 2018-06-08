@@ -53,12 +53,18 @@ public:
 /** A signature creator that just produces 72-byte empty signatures. */
 extern const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR;
 
+typedef std::pair<CPubKey, std::vector<unsigned char>> SigPair;
+
 struct SignatureData {
-    CScript scriptSig;
-    CScriptWitness scriptWitness;
+    bool complete = false; // Stores whether the scriptSig and scriptWitness are complete
+    CScript scriptSig; // The scriptSig of an input. Contains complete signatures or the traditional partial signatures format
+    CScriptWitness scriptWitness; // The scriptWitness of an input. Contains complete signatures or the traditional partial signatures format
+    std::map<CKeyID, SigPair> signatures; // BIP 174 style partial signatures for the input. May contain complete signatures
+    std::map<CScriptID, CScript> scripts; // BIP 174 style scripts for the input
 
     SignatureData() {}
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
+    void MergeSignatureData(SignatureData sigdata);
 };
 
 /** Produce a script signature using a generic signature creator. */
@@ -72,7 +78,7 @@ bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, 
 SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignatureChecker& checker, const SignatureData& scriptSig1, const SignatureData& scriptSig2);
 
 /** Extract signature data from a transaction, and insert it. */
-SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn);
+SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);
 void UpdateInput(CTxIn& input, const SignatureData& data);
 
 /* Check whether we know how to sign for an output like this, assuming we
@@ -80,5 +86,16 @@ void UpdateInput(CTxIn& input, const SignatureData& data);
  * provider is used to look up public keys and redeemscripts by hash.
  * Solvability is unrelated to whether we consider this output to be ours. */
 bool IsSolvable(const SigningProvider& provider, const CScript& script);
+
+class SignatureExtractorChecker : public BaseSignatureChecker
+{
+private:
+    SignatureData* sigdata;
+    BaseSignatureChecker* checker;
+
+public:
+    SignatureExtractorChecker(SignatureData* sigdata, BaseSignatureChecker* checker) : sigdata(sigdata), checker(checker) {}
+    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
+};
 
 #endif // BITCOIN_SCRIPT_SIGN_H
