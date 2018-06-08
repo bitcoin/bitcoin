@@ -1210,6 +1210,7 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 	string strTxid = "";
 	string strSender = "";
 	string strReceiver = "";
+	string strAsset = "";
 	bool bParseKey = false;
 	int nStartBlock = 0;
 	if (!oOptions.isNull()) {
