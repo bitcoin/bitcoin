@@ -62,14 +62,6 @@
         <translation>स्वीकृती पत्ते</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>पैसे पाठविण्यासाठीचे हे तुमचे बिटकॉईन पत्त्ते आहेत. नाणी पाठविण्यापूर्वी नेहमी रक्कम आणि प्राप्त होणारा पत्ता तपासून पहा.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>पैसे प्राप्त करण्यासाठीचे हे तुमचे बिटकॉईन पत्त्ते आहेत. प्रत्येक व्यवहारासाठी एक नवा स्वीकृती पत्ता वापरण्याची शिफारस सहसा केली जाते.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;पत्ता कॉपी करा</translation>
     </message>
@@ -202,6 +194,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     </context>
 </TS>

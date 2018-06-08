@@ -214,6 +214,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     </context>
 </TS>

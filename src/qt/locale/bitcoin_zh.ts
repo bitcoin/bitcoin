@@ -134,10 +134,6 @@
         <source>Pay only the required fee of %1</source>
         <translation>仅支付全额的%1</translation>
     </message>
-    <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>警告：比特币地址无效</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsEntry</name>
@@ -198,7 +194,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     <message>
         <source>Transaction too large for fee policy</source>
         <translation>根据费率标准，本次转账超额</translation>

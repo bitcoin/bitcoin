@@ -62,12 +62,12 @@
         <translation>アドレス受信</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>支払送信するためのビットコインアドレスです。コインを送付する前に、いつも残高と受信アドレスの確認をしてください。</translation>
+        <source>These are your XPChain addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>支払送信するためのエクスペリエンスチェーンアドレスです。コインを送付する前に、いつも残高と受信アドレスの確認をしてください。</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>支払の受信をするためのビットコインアドレスです。それぞれの処理に新規に受信アドレスを使用することを推奨します。</translation>
+        <source>These are your XPChain addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>支払の受信をするためのエクスペリエンスチェーンアドレスです。それぞれの処理に新規に受信アドレスを使用することを推奨します。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -168,8 +168,8 @@
         <translation>財布の暗号化を確認します</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>注意: 財布の暗号化やパスフレーズを忘れた場合、 &lt;b&gt;あなたのビットコインはすべて失われます。&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR XPCHAINS&lt;/b&gt;!</source>
+        <translation>注意: 財布の暗号化やパスフレーズを忘れた場合、 &lt;b&gt;あなたのエクスペリエンスチェーンはすべて失われます。&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -180,8 +180,8 @@
         <translation>暗号化された財布</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>暗号化処理を終了させるために、すぐに%1を閉じるでしょう。あなたのコンピュータに感染したマルウェアによって、盗まれたビットコインは暗号化をしていても完全に守ることができないことを覚えておいてください。</translation>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your xpchains from being stolen by malware infecting your computer.</source>
+        <translation>暗号化処理を終了させるために、すぐに%1を閉じるでしょう。あなたのコンピュータに感染したマルウェアによって、盗まれたエクスペリエンスチェーンは暗号化をしていても完全に守ることができないことを覚えておいてください。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -338,8 +338,8 @@
         <translation>ディスクのブロックの再インデックス中...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>ビットコインアドレスにコインを送信</translation>
+        <source>Send coins to a XPChain address</source>
+        <translation>エクスペリエンスチェーンアドレスにコインを送信</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -362,8 +362,8 @@
         <translation>&amp;メッセージの確認...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>ビットコイン</translation>
+        <source>XPChain</source>
+        <translation>エクスペリエンスチェーン</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -390,12 +390,12 @@
         <translation>財布に属するプライベートキーの暗号化</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>所有者であることを証明するためにビットコインアドレスのメッセージにサイン</translation>
+        <source>Sign messages with your XPChain addresses to prove you own them</source>
+        <translation>所有者であることを証明するためにエクスペリエンスチェーンアドレスのメッセージにサイン</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>署名された特定のビットコインアドレスを確認するために、メッセージを確認</translation>
+        <source>Verify messages to ensure they were signed with specified XPChain addresses</source>
+        <translation>署名された特定のエクスペリエンスチェーンアドレスを確認するために、メッセージを確認</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -414,8 +414,8 @@
         <translation>ツールバータブ</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>支払の要求 (QRコードとビットコインのURIを作成)</translation>
+        <source>Request payments (generates QR codes and xpchain: URIs)</source>
+        <translation>支払の要求 (QRコードとエクスペリエンスチェーンのURIを作成)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -426,8 +426,8 @@
         <translation>受信に使用したアドレスとラベルの一覧を表示</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>ビットコインのURIまたは支払要求を開く</translation>
+        <source>Open a xpchain: URI or payment request</source>
+        <translation>エクスペリエンスチェーンのURIまたは支払要求を開く</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -470,8 +470,8 @@
         <translation>更新日</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>ビットコインのコマンドラインオプションとして可能なリストの取得の%1ヘルプメッセージを表示</translation>
+        <source>Show the %1 help message to get a list with possible XPChain command-line options</source>
+        <translation>エクスペリエンスチェーンのコマンドラインオプションとして可能なリストの取得の%1ヘルプメッセージを表示</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -540,8 +540,8 @@
         <translation>財布は &lt;b&gt;暗号化され&lt;/b&gt; そして現在 &lt;b&gt;ロックされています&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>致命的なエラーが発生しました。ビットコインは安全に終了することができません。</translation>
+        <source>A fatal error occurred. XPChain can no longer continue safely and will quit.</source>
+        <translation>致命的なエラーが発生しました。エクスペリエンスチェーンは安全に終了することができません。</translation>
     </message>
 </context>
 <context>
@@ -734,8 +734,8 @@
         <translation>送信アドレスの編集</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>入寮されたアドレス "%1" は正当なビットコインアドレスではありません。</translation>
+        <source>The entered address "%1" is not a valid XPChain address.</source>
+        <translation>入寮されたアドレス "%1" は正当なエクスペリエンスチェーンアドレスではありません。</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -866,12 +866,12 @@
         <translation>フォーム</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>最近のトランザクションが表示できない可能性があります。従って、ウォレットの残高が正しくない可能性があります。この情報はビットコインネットワークに接続し、同期処理を完了させると正しくなります。詳細は以下になります。</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the xpchain network, as detailed below.</source>
+        <translation>最近のトランザクションが表示できない可能性があります。従って、ウォレットの残高が正しくない可能性があります。この情報はエクスペリエンスチェーンネットワークに接続し、同期処理を完了させると正しくなります。詳細は以下になります。</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>使用したビットコインで、未処理となっているものは、ネットワークによって受領されません。</translation>
+        <source>Attempting to spend xpchains that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>使用したエクスペリエンスチェーンで、未処理となっているものは、ネットワークによって受領されません。</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1028,16 +1028,16 @@
         <translation>&amp;認証されていない変更の支払い</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>自動絵的にルータのビットコインのクライアントポートが開きます。この機能はルータがUPnPをサポートし、有効であるときに動作します。</translation>
+        <source>Automatically open the XPChain client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>自動絵的にルータのエクスペリエンスチェーンのクライアントポートが開きます。この機能はルータがUPnPをサポートし、有効であるときに動作します。</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>&amp;UPnPを使用してポート配置します。</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>SOCKS5プロキシを使用してビットコインネットワークへ接続</translation>
+        <source>Connect to the XPChain network through a SOCKS5 proxy.</source>
+        <translation>SOCKS5プロキシを使用してエクスペリエンスチェーンネットワークへ接続</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1072,8 +1072,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Tor秘匿ネットワークのための区切られたSOCKS5を経由して、ビットコインネットワークに接続</translation>
+        <source>Connect to the XPChain network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Tor秘匿ネットワークのための区切られたSOCKS5を経由して、エクスペリエンスチェーンネットワークに接続</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
@@ -1171,8 +1171,8 @@
         <translation>フォーム</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>表示されている情報は、期限切れの可能性があります。ウォレットは自動的にビットコインネットワークへの接続が確立した後に同期化されます。しかし、処理はまだ、完了していません。</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the XPChain network after a connection is established, but this process has not completed yet.</source>
+        <translation>表示されている情報は、期限切れの可能性があります。ウォレットは自動的にエクスペリエンスチェーンネットワークへの接続が確立した後に同期化されます。しかし、処理はまだ、完了していません。</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1246,8 +1246,8 @@
         <translation>支払い要求エラー</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>ビットコインを開始できません: click-to-pay handler</translation>
+        <source>Cannot start xpchain: click-to-pay handler</source>
+        <translation>エクスペリエンスチェーンを開始できません: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1262,8 +1262,8 @@
         <translation>無効な支払アドレス %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>URLはパースできませんでした! 原因はビットコインアドレスが無効であるか、URIパラメータの形式が間違っている可能性があります。</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid XPChain address or malformed URI parameters.</source>
+        <translation>URLはパースできませんでした! 原因はエクスペリエンスチェーンアドレスが無効であるか、URIパラメータの形式が間違っている可能性があります。</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1356,8 +1356,8 @@
         <translation>残高</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>ビットコインアドレスの入力 (例 %1)</translation>
+        <source>Enter a XPChain address (e.g. %1)</source>
+        <translation>エクスペリエンスチェーンアドレスの入力 (例 %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1744,8 +1744,8 @@
         <translation>&amp;再度存在している受信アドレスを死闘する(非推奨)</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation>支払要求に添付されたオプションメッセージは、要求を開いたときに表示されます。メモ: メッセージは、ビットコインネットワーク上で支払と一緒に送信されません。</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the XPChain network.</source>
+        <translation>支払要求に添付されたオプションメッセージは、要求を開いたときに表示されます。メモ: メッセージは、エクスペリエンスチェーンネットワーク上で支払と一緒に送信されません。</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -1973,8 +1973,8 @@
         <translation>隠す</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>最小の料金のみ支払いは、ブロック内の処理容量よりも小さい場合に限り、問題ありません。しかし、ネットワークの処理できる量よりも、ビットコイン処理のほうが需要があり、最終的にその確認処理が実行されないことに注意する必要があります。</translation>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for xpchain transactions than the network can process.</source>
+        <translation>最小の料金のみ支払いは、ブロック内の処理容量よりも小さい場合に限り、問題ありません。しかし、ネットワークの処理できる量よりも、エクスペリエンスチェーン処理のほうが需要があり、最終的にその確認処理が実行されないことに注意する必要があります。</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -2121,8 +2121,8 @@
         <translation>%1の必須料金のみ支払う</translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>注意: 無効なビットコインアドレス</translation>
+        <source>Warning: Invalid XPChain address</source>
+        <translation>注意: 無効なエクスペリエンスチェーンアドレス</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2164,8 +2164,8 @@
         <translation>これは通常の支払です。</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation>支払に送信するビットコインアドレス</translation>
+        <source>The XPChain address to send the payment to</source>
+        <translation>支払に送信するエクスペリエンスチェーンアドレス</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2184,7 +2184,7 @@
         <translation>入力の削除</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less xpchains than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>料金は送信料金から控除されます。受信者は入力された料金よりも低い金額を受け取ります。複数の受信者を選択した場合、この料金は同額に分けられます。</translation>
     </message>
     <message>
@@ -2208,8 +2208,8 @@
         <translation>使用されたアドレス一覧のために、このアドレスのラベルを入力します。</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>参考資料に保存された処理のビットコインURIは、メッセージに添付されます。メモ: このメッセージはビットコイン上で送信されません。</translation>
+        <source>A message that was attached to the xpchain: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the XPChain network.</source>
+        <translation>参考資料に保存された処理のエクスペリエンスチェーンURIは、メッセージに添付されます。メモ: このメッセージはエクスペリエンスチェーン上で送信されません。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2253,12 +2253,12 @@
         <translation>&amp;署名メッセージ</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>送信されたビットコインを受信できることを証明するために、アドレスのメッセージや同意事項に署名できます。フィッシング攻撃が署名を利用する可能性があるので、署名が曖昧やランダムでないことに注意してください。詳細な明細のみに署名されます。</translation>
+        <source>You can sign messages/agreements with your addresses to prove you can receive xpchains sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>送信されたエクスペリエンスチェーンを受信できることを証明するために、アドレスのメッセージや同意事項に署名できます。フィッシング攻撃が署名を利用する可能性があるので、署名が曖昧やランダムでないことに注意してください。詳細な明細のみに署名されます。</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation>メッセージ署名するためのビットコインアドレス</translation>
+        <source>The XPChain address to sign the message with</source>
+        <translation>メッセージ署名するためのエクスペリエンスチェーンアドレス</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2289,8 +2289,8 @@
         <translation>システムのクリップボードへ現在の署名をコピー</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>ビットコインアドレスを証明するために、メッセージに署名</translation>
+        <source>Sign the message to prove you own this XPChain address</source>
+        <translation>エクスペリエンスチェーンアドレスを証明するために、メッセージに署名</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2313,12 +2313,12 @@
         <translation>以下のメッセージを確認して、受信者のアドレス、メッセージ（タブやすスペースなどを正確にこぴーしてください）、署名を入力してください。中間の攻撃者からのアタックを避けるために、署名されていないメッセージを読まないように注意してください。署名はアドレスと受信を証明することはできますが、送信者の処理を証明できないことに注意してください。</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation>メッセージのビットコインアドレスはサインされています</translation>
+        <source>The XPChain address the message was signed with</source>
+        <translation>メッセージのエクスペリエンスチェーンアドレスはサインされています</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>特定のビットコインアドレスと署名されているメッセージであることを確認してください。</translation>
+        <source>Verify the message to ensure it was signed with the specified XPChain address</source>
+        <translation>特定のエクスペリエンスチェーンアドレスと署名されているメッセージであることを確認してください。</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2628,7 +2628,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     <message>
         <source>Information</source>
         <translation>情報</translation>

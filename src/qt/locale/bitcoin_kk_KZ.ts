@@ -70,10 +70,6 @@
         <translation>Құпия сөзді өзгерту</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Биткоин</translation>
-    </message>
-    <message>
         <source>Wallet</source>
         <translation>Әмиян</translation>
     </message>
@@ -168,10 +164,6 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Биткоин</translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>қате</translation>
@@ -306,7 +298,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     <message>
         <source>Information</source>
         <translation>Информация</translation>

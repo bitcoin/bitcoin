@@ -90,8 +90,8 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>ផ្ញើកាក់ទៅកាន់ អាសយដ្ឋាន Bitcoin មួយ</translation>
+        <source>Send coins to a XPChain address</source>
+        <translation>ផ្ញើកាក់ទៅកាន់ អាសយដ្ឋាន XPChain មួយ</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -210,6 +210,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     </context>
 </TS>

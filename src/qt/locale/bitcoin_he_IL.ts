@@ -61,15 +61,7 @@
         <source>Receiving addresses</source>
         <translation>מקבל כתובות</translation>
     </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>אלו הן כתובות הביטקוין שלך לשליחת תשלומים. תמיד בדוק את כתובת הארנק המקבל לפני שליחת מטבעות</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>אלו הן כתובות הביטקוין שלך לקבלת תשלומים. מומלץ להשתמש בכתובת חדשה בכל העברת מטבעות</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>AddressTableModel</name>
     </context>
@@ -81,10 +73,6 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
-    </message>
     <message>
         <source>Wallet</source>
         <translation>ארנק</translation>
@@ -112,11 +100,7 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>ModalOverlay</name>
     </context>
@@ -226,6 +210,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     </context>
 </TS>

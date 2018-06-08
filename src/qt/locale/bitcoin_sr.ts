@@ -1231,7 +1231,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     <message>
         <source>Options:</source>
         <translation>Opcije</translation>

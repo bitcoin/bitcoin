@@ -54,14 +54,6 @@
         <translation>అందుకునే చిరునామాలు</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>ఇవి మీరు పంపే చెల్లింపుల బిట్‌కాయిన్ చిరునామాలు. నాణేలు పంపే ముందు ప్రతిసారి అందుకునే చిరునామా మరియు చెల్లింపు మొత్తం సరిచూసుకోండి.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>ఇవి మీరు అందుకునే చెల్లింపుల బిట్‌కాయిన్ చిరునామాలు. ప్రతీ లావాదేవీకి క్రొత్త అందుకునే చిరునామా వాడటం మంచిది.</translation>
-    </message>
-    <message>
         <source>&amp;Edit</source>
         <translation>సవరించు</translation>
     </message>
@@ -112,10 +104,6 @@
         <translation>వాలెట్ అన్లాక్</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>హెచ్చరిక: మీ జోలెని సంకేతపరిచి మీ సంకేతపదము కోల్పోతే, &lt;b&gt;మీ బిట్‌కాయిన్లు అన్నీ కోల్పోతారు&lt;/b&gt;</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>మీరు ఖచ్చితంగా మీ జోలెని సంకేతపరచాలని కోరుకుంటున్నారా?</translation>
     </message>
@@ -136,10 +124,6 @@
     <message>
         <source>E&amp;xit</source>
         <translation>నిష్క్రమించు</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>బిట్కోయిన్</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -196,10 +180,6 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>బిట్కోయిన్</translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>లోపం</translation>
@@ -386,11 +366,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>బిట్కోయిన్ కోర్</translation>
-    </message>
+    <name>xpchain-core</name>
     <message>
         <source>Information</source>
         <translation>వర్తమానము</translation>

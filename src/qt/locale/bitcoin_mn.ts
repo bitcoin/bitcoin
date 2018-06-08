@@ -126,10 +126,6 @@
         <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Биткойн</translation>
-    </message>
-    <message>
         <source>Wallet</source>
         <translation>Түрүйвч</translation>
     </message>
@@ -232,10 +228,6 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Биткойн</translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>Алдаа</translation>
@@ -558,7 +550,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     <message>
         <source>Options:</source>
         <translation>Сонголтууд:</translation>

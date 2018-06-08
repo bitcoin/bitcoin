@@ -138,16 +138,8 @@
         <translation>Повторно индексирање на блокови од дискот...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Испрати биткоини на Биткоин адреса</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Потврди порака...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Биткоин</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -298,10 +290,6 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Биткоин</translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>Грешка</translation>
@@ -584,14 +572,10 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     <message>
         <source>Options:</source>
         <translation>Опции:</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Биткоин Core</translation>
     </message>
     <message>
         <source>Warning</source>

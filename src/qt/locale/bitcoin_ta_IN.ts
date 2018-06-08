@@ -186,7 +186,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>xpchain-core</name>
     <message>
         <source>Insufficient funds</source>
         <translation>போதுமான பணம் இல்லை</translation>
