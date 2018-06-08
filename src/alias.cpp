@@ -2786,7 +2786,6 @@ bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOpt
 	pcursor->SeekToFirst();
 	CAliasIndex txPos;
 	pair<string, vector<unsigned char> > key;
-	UniValue oAlias(UniValue::VOBJ);
 	int index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
@@ -2808,6 +2807,7 @@ bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOpt
 					pcursor->Next();
 					continue;
 				}
+				UniValue oAlias(UniValue::VOBJ);
 				if (!BuildAliasJson(txPos, oAlias))
 				{
 					pcursor->Next();

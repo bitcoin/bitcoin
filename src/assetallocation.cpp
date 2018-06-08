@@ -1297,7 +1297,6 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 	pair<string, vector<unsigned char> > key;
 	bool bGetInputs = true;
 	CAsset theAsset;
-	UniValue oAssetAllocation(UniValue::VOBJ);
 	int index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
@@ -1334,6 +1333,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 					pcursor->Next();
 					continue;
 				}
+				UniValue oAssetAllocation(UniValue::VOBJ);
 				if (!BuildAssetAllocationJson(txPos, theAsset, bGetInputs, oAssetAllocation)) 
 				{
 					pcursor->Next();
