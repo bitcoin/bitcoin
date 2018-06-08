@@ -1088,7 +1088,7 @@ bool BitcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
 void BitcoinGUI::setHDStatus(int hdEnabled)
 {
     labelWalletHDStatusIcon->setPixmap(platformStyle->SingleColorIcon(hdEnabled ? ":/icons/hd_enabled" : ":/icons/hd_disabled").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelWalletHDStatusIcon->setToolTip(hdEnabled ? tr("HD key generation is <b>enabled</b>") : tr("HD key generation is <b>disabled</b>"));
+    labelWalletHDStatusIcon->setToolTip(hdEnabled ? tr("HD key generation is %1enabled%2").arg("<b>", "</b>") : tr("HD key generation is %1disabled%2").arg("<b>", "</b>"));
 
     // eventually disable the QLabel to set its opacity to 50% 
     labelWalletHDStatusIcon->setEnabled(hdEnabled);
@@ -1107,7 +1107,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
     case WalletModel::Unlocked:
         labelWalletEncryptionIcon->show();
         labelWalletEncryptionIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
+        labelWalletEncryptionIcon->setToolTip(tr("Wallet is %1encrypted%2 and currently %1unlocked%2").arg("<b>", "</b>"));
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
@@ -1115,7 +1115,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
     case WalletModel::Locked:
         labelWalletEncryptionIcon->show();
         labelWalletEncryptionIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/lock_closed").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>locked</b>"));
+        labelWalletEncryptionIcon->setToolTip(tr("Wallet is %1encrypted%2 and currently %1locked%2").arg("<b>", "</b>"));
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
@@ -1147,7 +1147,7 @@ void BitcoinGUI::updateProxyIcon()
         if (labelProxyIcon->pixmap() == 0) {
             QString ip_port_q = QString::fromStdString(ip_port);
             labelProxyIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/proxy").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-            labelProxyIcon->setToolTip(tr("Proxy is <b>enabled</b>: %1").arg(ip_port_q));
+            labelProxyIcon->setToolTip(tr("Proxy is %1enabled%2: ").arg("<b>", "</b>") + ip_port_q);
         } else {
             labelProxyIcon->show();
         }
