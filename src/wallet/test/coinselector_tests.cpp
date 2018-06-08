@@ -4,7 +4,6 @@
 
 #include <wallet/wallet.h>
 #include <wallet/coinselection.h>
-#include <wallet/coincontrol.h>
 #include <amount.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -28,7 +27,7 @@ std::vector<std::unique_ptr<CWalletTx>> wtxn;
 typedef std::set<CInputCoin> CoinSet;
 
 static std::vector<COutput> vCoins;
-static CWallet testWallet("dummy", WalletDatabase::CreateDummy());
+static const CWallet testWallet("dummy", WalletDatabase::CreateDummy());
 static CAmount balance = 0;
 
 CoinEligibilityFilter filter_standard(1, 6, 0);
@@ -73,7 +72,6 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
     }
     COutput output(wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
-    testWallet.AddToWallet(*wtx.get());
     wtxn.emplace_back(std::move(wtx));
 }
 
@@ -240,18 +238,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     add_coin(1);
     vCoins.at(0).nInputBytes = 40; // Make sure that it has a negative effective value. The next check should assert if this somehow got through. Otherwise it will fail
     BOOST_CHECK(!testWallet.SelectCoinsMinConf( 1 * CENT, filter_standard, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params_bnb, bnb_used));
-
-    // Make sure that we aren't using BnB when there are preset inputs
-    empty_wallet();
-    add_coin(5 * CENT);
-    add_coin(3 * CENT);
-    add_coin(2 * CENT);
-    CCoinControl coin_control;
-    coin_control.fAllowOtherInputs = true;
-    coin_control.Select(COutPoint(vCoins.at(0).tx->GetHash(), vCoins.at(0).i));
-    BOOST_CHECK(testWallet.SelectCoins(vCoins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb, bnb_used));
-    BOOST_CHECK(!bnb_used);
-    BOOST_CHECK(!coin_selection_params_bnb.use_bnb);
 }
 
 BOOST_AUTO_TEST_CASE(knapsack_solver_test)
