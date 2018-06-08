@@ -1534,7 +1534,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	}
 	const CAmount &nChange = nCurrentAmount - nDesiredAmount - nFees;
 	if (nChange < 0)
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5502 - " + _("Insufficient funds inside the alias for this transaction"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5502 - " + _("Insufficient funds"));
 	// if addresses were passed in, send change back to the last address as policy
 	if (params.size() > 1) {
 		UniValue addressValues = find_value(addresses, "addresses");
