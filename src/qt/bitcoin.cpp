@@ -37,6 +37,13 @@
 #include <validation.h>
 
 #include <memory>
+#include <stdint.h>
+
+#ifndef WIN32
+#include <sys/stat.h>
+#endif
+
+#include <boost/thread.hpp>
 
 #include <QApplication>
 #include <QDebug>
@@ -483,6 +490,13 @@ int GuiMain(int argc, char* argv[])
         help.showOrPrint();
         return EXIT_SUCCESS;
     }
+
+#ifndef WIN32
+    // set umask before any filesystem writes occur
+    if (!gArgs.GetBoolArg("-sysperms", false)) {
+        umask(077);
+    }
+#endif
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory

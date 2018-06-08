@@ -25,6 +25,10 @@
 
 #include <functional>
 
+#ifndef WIN32
+#include <sys/stat.h>
+#endif
+
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = urlDecode;
 
@@ -78,7 +82,16 @@ static bool AppInit(int argc, char* argv[])
         return true;
     }
 
+
     util::Ref context{node};
+
+#ifndef WIN32
+    // set umask before any filesystem writes occur
+    if (!gArgs.GetBoolArg("-sysperms", false)) {
+        umask(077);
+    }
+#endif
+
     try
     {
         if (!CheckDataDirOption()) {

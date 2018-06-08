@@ -935,10 +935,6 @@ bool AppInitBasicSetup()
     }
 
 #ifndef WIN32
-    if (!gArgs.GetBoolArg("-sysperms", false)) {
-        umask(077);
-    }
-
     // Clean shutdown on SIGTERM
     registerSignalHandler(SIGTERM, HandleSIGTERM);
     registerSignalHandler(SIGINT, HandleSIGTERM);
