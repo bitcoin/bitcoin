@@ -114,5 +114,5 @@ test/cache/*
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libxpchainconsensus.pc
 contrib/devtools/split-debug.sh
