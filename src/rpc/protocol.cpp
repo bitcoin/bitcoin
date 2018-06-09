@@ -89,7 +89,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     fs::path filepath_tmp = GetAuthCookieFile(true);
     file.open(filepath_tmp.string().c_str());
     if (!file.is_open()) {
-        LogPrintf("Unable to open cookie authentication file %s for writing\n", filepath_tmp.string());
+        LogPrintf("Unable to open cookie authentication file %s for writing\n", filepath_tmp.u8string());
         return false;
     }
     file << cookie;
@@ -97,10 +97,10 @@ bool GenerateAuthCookie(std::string *cookie_out)
 
     fs::path filepath = GetAuthCookieFile(false);
     if (!RenameOver(filepath_tmp, filepath)) {
-        LogPrintf("Unable to rename cookie authentication file %s to %s\n", filepath_tmp.string(), filepath.string());
+        LogPrintf("Unable to rename cookie authentication file %s to %s\n", filepath_tmp.u8string(), filepath.u8string());
         return false;
     }
-    LogPrintf("Generated RPC authentication cookie %s\n", filepath.string());
+    LogPrintf("Generated RPC authentication cookie %s\n", filepath.u8string());
 
     if (cookie_out)
         *cookie_out = cookie;
@@ -112,7 +112,7 @@ bool GetAuthCookie(std::string *cookie_out)
     std::ifstream file;
     std::string cookie;
     fs::path filepath = GetAuthCookieFile();
-    file.open(filepath.string().c_str());
+    file.open(filepath.u8string().c_str());
     if (!file.is_open())
         return false;
     std::getline(file, cookie);

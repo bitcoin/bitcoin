@@ -180,15 +180,15 @@ bool WalletInit::Verify() const
     if (gArgs.IsArgSet("-walletdir")) {
         fs::path wallet_dir = gArgs.GetArg("-walletdir", "");
         if (!fs::exists(wallet_dir)) {
-            return InitError(strprintf(_("Specified -walletdir \"%s\" does not exist"), wallet_dir.string()));
+            return InitError(strprintf(_("Specified -walletdir \"%s\" does not exist"), wallet_dir.u8string()));
         } else if (!fs::is_directory(wallet_dir)) {
-            return InitError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), wallet_dir.string()));
+            return InitError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), wallet_dir.u8string()));
         } else if (!wallet_dir.is_absolute()) {
-            return InitError(strprintf(_("Specified -walletdir \"%s\" is a relative path"), wallet_dir.string()));
+            return InitError(strprintf(_("Specified -walletdir \"%s\" is a relative path"), wallet_dir.u8string()));
         }
     }
 
-    LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
+    LogPrintf("Using wallet directory %s\n", GetWalletDir().u8string());
 
     uiInterface.InitMessage(_("Verifying wallet(s)..."));
 

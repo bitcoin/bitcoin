@@ -54,7 +54,7 @@ int wmain(int argc, wchar_t* argv[])
     ClearDatadirCache();
     fs::path pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
     fs::create_directories(pathTemp);
-    gArgs.ForceSetArg("-datadir", pathTemp.string());
+    gArgs.ForceSetArg("-datadir", pathTemp.u8string());
 
     bool fInvalid = false;
 
