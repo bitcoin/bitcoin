@@ -27,6 +27,12 @@ MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
     QObject::connect(ui->btnCancel2, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
     QObject::connect(ui->btnCancel3, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
 
+#if QT_VERSION >= 0x040700
+    ui->edtPath->setPlaceholderText(tr("Path to derive account from, if not using default. Appended to coin path. (optional)"));
+    ui->tbxMnemonic->setPlaceholderText(tr("Enter your BIP39 compliant Recovery Phrase/Mnemonic."));
+    ui->edtPassword->setPlaceholderText(tr("Enter a passphrase to protect your Recovery Phrase. (optional)"));
+#endif
+
     if (!wm->wallet().isDefaultAccountSet())
     {
         ui->lblHelp->setText(

@@ -91,7 +91,7 @@ after_script:
 after_success:
     - COMMIT=$(echo $TRAVIS_COMMIT | head -c 7)
     - tar -cjf particl_$COMMIT.tar.bz2 -C $OUTDIR/bin/ .
-    - if [ -f particl_$COMMIT.tar.bz2 ]; then travis_retry curl --max-time 60 --upload particl_$COMMIT.tar.bz2 http://t.particl.io/particl_$COMMIT.tar.bz2; fi
+    - if [ -f particl_$COMMIT.tar.bz2 ]; then travis_retry curl --max-time 60 --upload particl_$COMMIT.tar.bz2 https://transfer.sh/particl_$COMMIT.tar.bz2; fi
 
 jobs:
   include:
