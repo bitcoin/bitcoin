@@ -397,7 +397,7 @@
          <item row="0" column="1">
           <widget class="QLineEdit" name="edtPath">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Path to derive account from, if not using default. Appended to coin path.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>Path to derive account from, if not using default.</string>
            </property>
           </widget>
          </item>

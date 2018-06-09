@@ -235,10 +235,10 @@ private Q_SLOTS:
 
     /** Show open dialog */
     void openClicked();
-    
+
     /** Manage lock state */
     void toggleLockState();
-    
+
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();
@@ -252,7 +252,7 @@ private Q_SLOTS:
     void showHelpMessageClicked();
     /** Show mnemonic dialog */
     void showMnemonicClicked();
-    
+
 #ifndef Q_OS_MAC
     /** Handle tray icon clicked */
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
@@ -268,7 +268,7 @@ private Q_SLOTS:
 
     /** Show progress dialog e.g. for verifychain */
     void showProgress(const QString &title, int nProgress);
-    
+
     /** When hideTrayIcon setting is changed in OptionsModel hide or show the icon accordingly. */
     void setTrayIconVisible(bool);
 

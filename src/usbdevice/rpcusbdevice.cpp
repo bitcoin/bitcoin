@@ -29,20 +29,6 @@
 
 #include <memory>
 
-
-static std::string GetDefaultPath()
-{
-    // Return path of default account: 44'/44'/0'
-    std::vector<uint32_t> vPath;
-    vPath.push_back(WithHardenedBit(44)); // purpose
-    vPath.push_back(WithHardenedBit(Params().BIP44ID())); // coin
-    vPath.push_back(WithHardenedBit(0)); // account
-    std::string rv;
-    if (0 == PathToString(vPath, rv, 'h'))
-        return rv;
-    return "";
-};
-
 static std::vector<uint32_t> GetPath(std::vector<uint32_t> &vPath, const UniValue &path, const UniValue &defaultpath)
 {
     // Pass empty string as defaultpath to drop defaultpath and use path as full path
@@ -61,7 +47,7 @@ static std::vector<uint32_t> GetPath(std::vector<uint32_t> &vPath, const UniValu
 
     if (defaultpath.isNull())
     {
-        sPath = GetDefaultPath() + "/" + sPath;
+        sPath = GetDefaultAccountPath() + "/" + sPath;
     } else
     if (path.isNum())
     {
@@ -166,7 +152,7 @@ static UniValue getdevicepublickey(const JSONRPCRequest &request)
             "\nArguments:\n"
             "1. \"path\"              (string, required) The path to derive the key from.\n"
             "                           The full path is \"accountpath\"/\"path\".\n"
-            "2. \"accountpath\"       (string, optional) Account path, set to empty string to ignore (default=\""+GetDefaultPath()+"\").\n"
+            "2. \"accountpath\"       (string, optional) Account path, set to empty string to ignore (default=\""+GetDefaultAccountPath()+"\").\n"
             "\nResult\n"
             "{\n"
             "  \"publickey\"        (string) The derived public key at \"path\".\n"
@@ -210,7 +196,7 @@ static UniValue getdevicexpub(const JSONRPCRequest &request)
             "\nArguments:\n"
             "1. \"path\"              (string, required) The path to derive the key from.\n"
             "                           The full path is \"accountpath\"/\"path\".\n"
-            "2. \"accountpath\"       (string, optional) Account path, set to empty string to ignore (default=\""+GetDefaultPath()+"\").\n"
+            "2. \"accountpath\"       (string, optional) Account path, set to empty string to ignore (default=\""+GetDefaultAccountPath()+"\").\n"
             "\nResult\n"
             "\"address\"              (string) The particl extended public key\n"
             "\nExamples\n"
@@ -241,7 +227,7 @@ static UniValue devicesignmessage(const JSONRPCRequest &request)
             "1. \"path\"            (string, required) The path to the key to sign with.\n"
             "                           The full path is \"accountpath\"/\"path\".\n"
             "2. \"message\"         (string, required) The message to create a signature for.\n"
-            "3. \"accountpath\"     (string, optional) Account path, set to empty string to ignore (default=\""+GetDefaultPath()+"\").\n"
+            "3. \"accountpath\"     (string, optional) Account path, set to empty string to ignore (default=\""+GetDefaultAccountPath()+"\").\n"
             "\nResult\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
             "\nExamples\n"
@@ -308,7 +294,7 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
             "       \"ALL|ANYONECANPAY\"\n"
             "       \"NONE|ANYONECANPAY\"\n"
             "       \"SINGLE|ANYONECANPAY\"\n"
-            "5. \"accountpath\"     (string, optional) Account path, set to empty string to ignore (default=\""+GetDefaultPath()+"\").\n"
+            "5. \"accountpath\"     (string, optional) Account path, set to empty string to ignore (default=\""+GetDefaultAccountPath()+"\").\n"
             "\nResult\n"
             "{\n"
             "  \"hex\" : \"value\",           (string) The hex-encoded raw transaction with signature(s)\n"
@@ -576,10 +562,10 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
             + HelpRequiringPassphrase(pwallet) +
             "\nArguments:\n"
             "1. \"label\"             (string, optional) A label for the account.\n"
-            "2. \"path\"              (string, optional) The path to derive the key from (default=\""+GetDefaultPath()+"\").\n"
+            "2. \"path\"              (string, optional) The path to derive the key from (default=\""+GetDefaultAccountPath()+"\").\n"
             "                           The full path is \"accountpath\"/\"path\".\n"
             "3. makedefault           (bool, optional) Make the new account the default account for the wallet (default=true).\n"
-            "4. scan_chain_from       (int, optional) Timestamp, scan the chain for incoming txns only on blocks after time (default=0).\n"
+            "4. scan_chain_from       (int, optional) Timestamp, scan the chain for incoming txns only on blocks after time, negative number to skip (default=0).\n"
             "5. initstealthchain      (bool, optional) Prepare the account to generate stealthaddresses (default=true).\n"
             "                           The hardware device will need to sign a fake transaction to use as the seed for the scan chain.\n"
             "\nResult\n"
@@ -607,12 +593,13 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
         sLabel = request.params[0].get_str();
 
     std::vector<uint32_t> vPath;
-    if (request.params[1].isStr())
+    if (request.params[1].isStr() && request.params[1].get_str().size())
     {
-        GetPath(vPath, request.params[1], NullUniValue);
+        UniValue emptyStr(UniValue::VSTR);
+        GetPath(vPath, request.params[1], emptyStr);
     } else
     {
-        std::string sPath = GetDefaultPath();
+        std::string sPath = GetDefaultAccountPath();
         int rv;
         if ((rv = ExtractExtKeyPath(sPath, vPath)) != 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Bad path: %s.", ExtKeyGetString(rv)));
@@ -703,12 +690,16 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
                 sea->FreeChains();
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "GetFullChainPath failed.");
             };
+
             vSigPath.push_back(0);
+            pwallet->NotifyWaitingForDevice(false);
             if (0 != pDevice->SignMessage(vSigPath, msg, vchSig, sError))
             {
                 sea->FreeChains();
+                pwallet->NotifyWaitingForDevice(true);
                 throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Could not generate scan chain seed from signed message %s.", sError));
             };
+            pwallet->NotifyWaitingForDevice(true);
             vchSig.insert(vchSig.end(), sekExternal->kp.pubkey.begin(), sekExternal->kp.pubkey.end());
 
             CExtKey evStealthScan;
@@ -789,9 +780,12 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
         };
     } // pwallet->cs_wallet
 
-    pwallet->RescanFromTime(nScanFrom, reserver, true /* update */);
-    pwallet->MarkDirty();
-    pwallet->ReacceptWalletTransactions();
+    if (nScanFrom >= 0)
+    {
+        pwallet->RescanFromTime(nScanFrom, reserver, true /* update */);
+        pwallet->MarkDirty();
+        pwallet->ReacceptWalletTransactions();
+    };
 
     std::string sPath;
     if (0 != PathToString(vPath, sPath))

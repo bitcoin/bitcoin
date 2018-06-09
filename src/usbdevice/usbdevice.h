@@ -161,7 +161,5 @@ public:
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char> &vchSig, const CKeyID &keyid, const CScript &scriptCode, SigVersion sigversion) const override;
 };
 
-
-
 #endif // PARTICL_USBDEVICE_USBDEVICE_H
 

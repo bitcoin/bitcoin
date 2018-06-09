@@ -111,7 +111,7 @@ void WalletModel::waitingForDevice(bool fComplete)
         mbDevice.show();
     } else
     {
-         if (mbDevice.isVisible())
+        if (mbDevice.isVisible())
             mbDevice.hide();
     };
 };

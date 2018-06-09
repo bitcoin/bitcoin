@@ -14,6 +14,7 @@
 #include <util.h>
 #include <univalue.h>
 #include <key/mnemonic.h>
+#include <key/extkey.h>
 
 #include <QDebug>
 
@@ -28,7 +29,7 @@ MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
     QObject::connect(ui->btnCancel3, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
 
 #if QT_VERSION >= 0x040700
-    ui->edtPath->setPlaceholderText(tr("Path to derive account from, if not using default. Appended to coin path. (optional)"));
+    ui->edtPath->setPlaceholderText(tr("Path to derive account from, if not using default. (optional, default=%1)").arg(QString::fromStdString(GetDefaultAccountPath())));
     ui->tbxMnemonic->setPlaceholderText(tr("Enter your BIP39 compliant Recovery Phrase/Mnemonic."));
     ui->edtPassword->setPlaceholderText(tr("Enter a passphrase to protect your Recovery Phrase. (optional)"));
 #endif
@@ -107,8 +108,8 @@ void MnemonicDialog::on_btnImportFromHwd_clicked()
     QString sCommand = "initaccountfromdevice \"From Hardware Device\"";
 
     QString sPath = ui->edtPath->text();
-    if (!sPath.isEmpty())
-        sCommand += " \"" + sPath + "\"";
+    sCommand += " \"" + sPath + "\" true -1";
+
 
     UniValue rv;
     if (!walletModel->tryCallRpc(sCommand, rv, true))
@@ -116,7 +117,12 @@ void MnemonicDialog::on_btnImportFromHwd_clicked()
         ui->tbxHwdOut->appendPlainText(QString::fromStdString(rv.write(1)));
     } else
     {
+        sCommand = "devicegetnewstealthaddress \"default stealth\"";
+        walletModel->tryCallRpc(sCommand, rv);
         close();
+
+        sCommand = "rescanblockchain 0";
+        walletModel->tryCallRpc(sCommand, rv);
     };
 
     return;
