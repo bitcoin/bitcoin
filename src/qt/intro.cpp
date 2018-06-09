@@ -235,7 +235,7 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
      * (to be consistent with bitcoind behavior)
      */
     if(dataDir != getDefaultDataDirectory()) {
-        node.softSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
+        node.softSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).u8string()); // use OS locale for path setting
     }
     return true;
 }

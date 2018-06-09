@@ -70,7 +70,7 @@ fs::path BasicTestingSetup::SetDataDir(const std::string& name)
 {
     fs::path ret = m_path_root / name;
     fs::create_directories(ret);
-    gArgs.ForceSetArg("-datadir", ret.string());
+    gArgs.ForceSetArg("-datadir", ret.u8string());
     return ret;
 }
 
