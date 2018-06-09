@@ -30,8 +30,10 @@ MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
 
 #if QT_VERSION >= 0x040700
     ui->edtPath->setPlaceholderText(tr("Path to derive account from, if not using default. (optional, default=%1)").arg(QString::fromStdString(GetDefaultAccountPath())));
-    ui->tbxMnemonic->setPlaceholderText(tr("Enter your BIP39 compliant Recovery Phrase/Mnemonic."));
     ui->edtPassword->setPlaceholderText(tr("Enter a passphrase to protect your Recovery Phrase. (optional)"));
+#if QT_VERSION >= 0x050200
+    ui->tbxMnemonic->setPlaceholderText(tr("Enter your BIP39 compliant Recovery Phrase/Mnemonic."));
+#endif
 #endif
 
     if (!wm->wallet().isDefaultAccountSet())
