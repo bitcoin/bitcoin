@@ -330,6 +330,12 @@ class WalletParticlTest(ParticlTestFramework):
         assert(ro[2]['path'] == 'm/0h')
         assert(ro[2]['id'] == 'aigXuhTg7sDkGhKhQhnP8aWcymma6ENGZE')
 
+        # Change account label
+        assert(nodes[2].extkey('account')['label'] == 'Default Account')
+        nodes[2].extkey('options', 'aigXuhTg7sDkGhKhQhnP8aWcymma6ENGZE', 'label', 'New label')
+        assert(nodes[2].extkey('account')['label'] == 'New label')
+
+
         for i in range(0, 5):
             addr = nodes[2].getnewaddress()
             ro = nodes[2].getaddressinfo(addr)
@@ -629,8 +635,6 @@ class WalletParticlTest(ParticlTestFramework):
         assert(len(unspentCheck) == len(unspent))
 
 
-
-
-
 if __name__ == '__main__':
     WalletParticlTest().main()
+

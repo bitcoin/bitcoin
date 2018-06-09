@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>785</width>
-    <height>331</height>
+    <height>278</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="tabImport">
       <attribute name="title">
        <string>Import</string>
       </attribute>
@@ -46,7 +46,7 @@
          <item row="0" column="0">
           <widget class="QLabel" name="passwordLabel">
            <property name="text">
-            <string>Recovery Passphrase</string>
+            <string>Recovery Passphrase </string>
            </property>
           </widget>
          </item>
@@ -153,7 +153,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_2">
+     <widget class="QWidget" name="tabCreate">
       <attribute name="title">
        <string>Create</string>
       </attribute>
@@ -182,8 +182,14 @@
         <layout class="QFormLayout" name="formLayout">
          <item row="0" column="0">
           <widget class="QLabel" name="label">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="text">
-            <string>Bytes of Entropy</string>
+            <string>Bytes of Entropy </string>
            </property>
           </widget>
          </item>
@@ -318,15 +324,110 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabHardware">
+      <attribute name="title">
+       <string>Hardware Device</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="1" column="0">
+        <widget class="QPlainTextEdit" name="tbxHwdOut">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QPushButton" name="btnImportFromHwd">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Import</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnCancel3">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Cancel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <layout class="QFormLayout" name="formLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="lblPath">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Path</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="edtPath"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Notes  </string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Confirm on device if prompted and wait for chain rescan to complete.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="hwdLabel">
+         <property name="text">
+          <string>Import account from hardware device</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item row="0" column="0">
     <widget class="QLabel" name="lblHelp">
      <property name="enabled">
       <bool>true</bool>
-     </property>
-     <property name="locale">
-      <locale language="English" country="UnitedKingdom"/>
      </property>
      <property name="text">
       <string/>

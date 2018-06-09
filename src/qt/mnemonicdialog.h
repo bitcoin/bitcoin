@@ -26,9 +26,9 @@ protected Q_SLOTS:
 
 private Q_SLOTS:
     void on_btnCancel_clicked();
-    void on_btnCancel2_clicked();
     void on_btnImport_clicked();
     void on_btnGenerate_clicked();
+    void on_btnImportFromHwd_clicked();
 
 private:
     Ui::MnemonicDialog *ui;

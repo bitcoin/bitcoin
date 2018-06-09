@@ -219,7 +219,7 @@ public:
 
     AddressTableModel* getAddressTableModel() const { return addressTableModel; }
 
-    bool tryCallRpc(const QString &sCommand, UniValue &rv) const;
+    bool tryCallRpc(const QString &sCommand, UniValue &rv, bool returnError=false) const;
     void warningBox(QString heading, QString msg) const;
 
 private:

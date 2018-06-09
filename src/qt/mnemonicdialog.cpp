@@ -24,32 +24,36 @@ MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
 {
     ui->setupUi(this);
 
+    QObject::connect(ui->btnCancel2, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
+    QObject::connect(ui->btnCancel3, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
+
     if (!wm->wallet().isDefaultAccountSet())
+    {
         ui->lblHelp->setText(
             "This wallet has no HD account loaded.\n"
             "An account must first be loaded in order to generate receiving addresses.\n"
             "Importing a recovery phrase will load a new master key and account.\n"
             "You can generate a new recovery phrase from the 'Create' page below.\n");
-    else
+    } else
+    {
         ui->lblHelp->setText(
             "This wallet already has an HD account loaded.\n"
             "By importing another recovery phrase a new account will be created and set as the default.\n"
             "The wallet will receive on addresses from the new and existing account/s.\n"
             "New addresses will be generated from the new account.\n");
+    };
 
     ui->cbxLanguage->clear();
     for (int l = 1; l < WLL_MAX; ++l)
         ui->cbxLanguage->addItem(mnLanguagesDesc[l], QString(mnLanguagesTag[l]));
+
+    return;
 };
 
 void MnemonicDialog::on_btnCancel_clicked()
 {
     close();
-};
-
-void MnemonicDialog::on_btnCancel2_clicked()
-{
-    close();
+    return;
 };
 
 void MnemonicDialog::on_btnImport_clicked()
@@ -72,6 +76,8 @@ void MnemonicDialog::on_btnImport_clicked()
                 walletModel->warningBox(tr("Import"), QString::fromStdString(rv["warnings"][i].get_str()));
         };
     };
+
+    return;
 };
 
 void MnemonicDialog::on_btnGenerate_clicked()
@@ -86,4 +92,26 @@ void MnemonicDialog::on_btnGenerate_clicked()
     {
         ui->tbxMnemonicOut->setText(QString::fromStdString(rv["mnemonic"].get_str()));
     };
+
+    return;
+};
+
+void MnemonicDialog::on_btnImportFromHwd_clicked()
+{
+    QString sCommand = "initaccountfromdevice \"From Hardware Device\"";
+
+    QString sPath = ui->edtPath->text();
+    if (!sPath.isEmpty())
+        sCommand += " \"" + sPath + "\"";
+
+    UniValue rv;
+    if (!walletModel->tryCallRpc(sCommand, rv, true))
+    {
+        ui->tbxHwdOut->appendPlainText(QString::fromStdString(rv.write(1)));
+    } else
+    {
+        close();
+    };
+
+    return;
 };
