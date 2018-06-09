@@ -84,6 +84,8 @@ const int64_t nStartupTime = GetTime();
 const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
 const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
 
+fs::detail::utf8_codecvt_facet g_utf8;
+
 ArgsManager gArgs;
 
 CTranslationInterface translationInterface;
