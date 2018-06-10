@@ -16,6 +16,11 @@ namespace sha256_sse4
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 }
+
+namespace sha256_sse41
+{
+void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
+}
 #endif
 #endif
 
