@@ -30,7 +30,7 @@
 #include <QDebug>
 #include <QSet>
 #include <QTimer>
-
+#include <QApplication>
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(0),
@@ -51,12 +51,12 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
     pollTimer->start(MODEL_UPDATE_DELAY);
 
-
-
     connect(getOptionsModel(), SIGNAL(setReserveBalance(CAmount)), this, SLOT(setReserveBalance(CAmount)));
     connect(this, SIGNAL(notifyReservedBalanceChanged(CAmount)), getOptionsModel(), SLOT(updateReservedBalance(CAmount)));
 
     subscribeToCoreSignals();
+
+    mbDevice.setText("Waiting for device.");
 }
 
 WalletModel::~WalletModel()
@@ -103,11 +103,15 @@ void WalletModel::setReserveBalance(CAmount nReserveBalanceNew)
     m_wallet->setReserveBalance(nReserveBalanceNew);
 };
 
+void WalletModel::updateReservedBalanceChanged(CAmount nValue)
+{
+    Q_EMIT notifyReservedBalanceChanged(nValue);
+};
+
 void WalletModel::waitingForDevice(bool fComplete)
 {
     if (!fComplete)
     {
-        mbDevice.setText("Waiting for device.");
         mbDevice.show();
     } else
     {
@@ -116,9 +120,10 @@ void WalletModel::waitingForDevice(bool fComplete)
     };
 };
 
-void WalletModel::updateReservedBalanceChanged(CAmount nValue)
+void WalletModel::startRescan()
 {
-    Q_EMIT notifyReservedBalanceChanged(nValue);
+    std::thread t(CallRPCVoid, "rescanblockchain 0", m_wallet->getWalletName());
+    t.detach();
 };
 
 void WalletModel::checkBalanceChanged(const interfaces::WalletBalances& new_balances)

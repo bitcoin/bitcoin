@@ -28,6 +28,8 @@ MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
     QObject::connect(ui->btnCancel2, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
     QObject::connect(ui->btnCancel3, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
 
+    QObject::connect(this, SIGNAL(startRescan()), walletModel, SLOT(startRescan()), Qt::QueuedConnection);
+
 #if QT_VERSION >= 0x040700
     ui->edtPath->setPlaceholderText(tr("Path to derive account from, if not using default. (optional, default=%1)").arg(QString::fromStdString(GetDefaultAccountPath())));
     ui->edtPassword->setPlaceholderText(tr("Enter a passphrase to protect your Recovery Phrase. (optional)"));
@@ -72,8 +74,7 @@ void MnemonicDialog::on_btnImport_clicked()
     sCommand += " \"" + ui->tbxMnemonic->toPlainText() + "\"";
 
     QString sPassword = ui->edtPassword->text();
-    if (!sPassword.isEmpty())
-        sCommand += " \"" + sPassword + "\"";
+    sCommand += " \"" + sPassword + "\" false \"Master Key\" \"Default Account\" -1";
 
     UniValue rv;
     if (walletModel->tryCallRpc(sCommand, rv))
@@ -84,6 +85,7 @@ void MnemonicDialog::on_btnImport_clicked()
             for (size_t i = 0; i < rv["warnings"].size(); ++i)
                 walletModel->warningBox(tr("Import"), QString::fromStdString(rv["warnings"][i].get_str()));
         };
+        startRescan();
     };
 
     return;
@@ -112,19 +114,26 @@ void MnemonicDialog::on_btnImportFromHwd_clicked()
     QString sPath = ui->edtPath->text();
     sCommand += " \"" + sPath + "\" true -1";
 
-
     UniValue rv;
     if (!walletModel->tryCallRpc(sCommand, rv, true))
     {
-        ui->tbxHwdOut->appendPlainText(QString::fromStdString(rv.write(1)));
+        QString sError;
+        if (rv["Error"].isStr())
+            sError = QString::fromStdString(rv["Error"].get_str());
+        else
+            sError = QString::fromStdString(rv.write(1));
+
+        ui->tbxHwdOut->appendPlainText(sError);
+        if (sError == "No device found."
+            || sError.indexOf("6982") > -1)
+            ui->tbxHwdOut->appendPlainText("Open particl app on device before importing.");
     } else
     {
         sCommand = "devicegetnewstealthaddress \"default stealth\"";
         walletModel->tryCallRpc(sCommand, rv);
         close();
 
-        sCommand = "rescanblockchain 0";
-        walletModel->tryCallRpc(sCommand, rv);
+        startRescan();
     };
 
     return;

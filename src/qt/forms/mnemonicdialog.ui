@@ -411,7 +411,7 @@
          <item row="1" column="1">
           <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>Confirm on device if prompted and wait for chain rescan to complete.</string>
+            <string>Open particl app before importing, confirm on device if prompted and wait for chain rescan to complete.</string>
            </property>
           </widget>
          </item>

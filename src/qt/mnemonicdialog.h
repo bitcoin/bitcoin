@@ -24,6 +24,10 @@ public:
 
 protected Q_SLOTS:
 
+Q_SIGNALS:
+    // Rescan blockchain for transactions
+    void startRescan();
+
 private Q_SLOTS:
     void on_btnCancel_clicked();
     void on_btnImport_clicked();

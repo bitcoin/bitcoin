@@ -1655,9 +1655,12 @@ static UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesi
         };
     } // cs_wallet
 
-    pwallet->RescanFromTime(nScanFrom, reserver, true);
-    pwallet->MarkDirty();
-    pwallet->ReacceptWalletTransactions();
+    if (nScanFrom >= 0)
+    {
+        pwallet->RescanFromTime(nScanFrom, reserver, true);
+        pwallet->MarkDirty();
+        pwallet->ReacceptWalletTransactions();
+    };
 
     UniValue warnings(UniValue::VARR);
     // Check for coldstaking outputs without coldstakingaddress set
@@ -1710,7 +1713,7 @@ static UniValue extkeyimportmaster(const JSONRPCRequest &request)
         "3. save_bip44_root:        (bool, optional) Save bip44 root key to wallet - default false.\n"
         "4. \"master_label\":         (string, optional) Label for master key - default 'Master Key'.\n"
         "5. \"account_label\":        (string, optional) Label for account - default 'Default Account'.\n"
-        "6. scan_chain_from:        (int, optional) Scan for transactions in blocks after timestamp - default 1.\n"
+        "6. scan_chain_from:        (int, optional) Scan for transactions in blocks after timestamp, negative number to skip (default=0).\n"
         "\nExamples:\n"
         + HelpExampleCli("extkeyimportmaster", "-stdin -stdin false \"label_master\" \"label_account\"")
         + HelpExampleCli("extkeyimportmaster", "\"word1 ... word24\" \"passphrase\" false \"label_master\" \"label_account\"")
@@ -1741,7 +1744,7 @@ static UniValue extkeygenesisimport(const JSONRPCRequest &request)
         "3. save_bip44_root:        (bool, optional) Save bip44 root key to wallet - default false.\n"
         "4. \"master_label\":         (string, optional) Label for master key - default 'Master Key'.\n"
         "5. \"account_label\":        (string, optional) Label for account - default 'Default Account'.\n"
-        "6. scan_chain_from:        (int, optional) Scan for transactions in blocks after timestamp - default 1.\n"
+        "6. scan_chain_from:        (int, optional) Scan for transactions in blocks after timestamp, negative number to skip (default=0).\n"
         "\nExamples:\n"
         + HelpExampleCli("extkeygenesisimport", "-stdin -stdin false \"label_master\" \"label_account\"")
         + HelpExampleCli("extkeygenesisimport", "\"word1 ... word24\" \"passphrase\" false \"label_master\" \"label_account\"")

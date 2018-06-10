@@ -11,6 +11,29 @@
 
 #include <support/events.h>
 
+void CallRPCVoid(std::string args, std::string wallet)
+{
+    CallRPC(args, wallet);
+    return;
+};
+
+void CallRPCVoidRv(std::string args, std::string wallet, bool *passed, UniValue *rv)
+{
+    try
+    {
+        *rv = CallRPC(args, wallet);
+        *passed = true;
+    } catch (UniValue& objError)
+    {
+        *passed = false;
+    } catch (const std::exception& e)
+    {
+        *passed = false;
+        *rv = UniValue(UniValue::VOBJ);
+        rv->pushKV("Error", e.what());
+    };
+    return;
+};
 
 UniValue CallRPC(std::string args, std::string wallet)
 {

@@ -301,12 +301,14 @@ public Q_SLOTS:
     // Reserved balance changed
     void setReserveBalance(CAmount nReserveBalanceNew);
 
-    // Waiting for hardware device
-    void waitingForDevice(bool fCompleted);
-
     // Reserved balance in wallet changed
     void updateReservedBalanceChanged(CAmount nValue);
 
+    // Waiting for hardware device
+    void waitingForDevice(bool fCompleted);
+
+    // Rescan blockchain for transactions
+    void startRescan();
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H

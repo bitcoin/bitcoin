@@ -692,14 +692,14 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
             };
 
             vSigPath.push_back(0);
-            pwallet->NotifyWaitingForDevice(false);
+            //pwallet->NotifyWaitingForDevice(false);
             if (0 != pDevice->SignMessage(vSigPath, msg, vchSig, sError))
             {
                 sea->FreeChains();
-                pwallet->NotifyWaitingForDevice(true);
+                //pwallet->NotifyWaitingForDevice(true);
                 throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Could not generate scan chain seed from signed message %s.", sError));
             };
-            pwallet->NotifyWaitingForDevice(true);
+            //pwallet->NotifyWaitingForDevice(true);
             vchSig.insert(vchSig.end(), sekExternal->kp.pubkey.begin(), sekExternal->kp.pubkey.end());
 
             CExtKey evStealthScan;
