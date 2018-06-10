@@ -30,6 +30,11 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 #endif
 #endif
 
+namespace sha256_sse41
+{
+void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
+}
+
 namespace sha256d64_sse41
 {
 void Transform_4way(unsigned char* out, const unsigned char* in);
