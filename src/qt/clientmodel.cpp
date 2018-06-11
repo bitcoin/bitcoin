@@ -248,7 +248,8 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
 
 static void NotifyWaitingForDevice(ClientModel *clientmodel, bool fCompleted)
 {
-    Q_EMIT clientmodel->waitingForDevice(fCompleted);
+    QMetaObject::invokeMethod(clientmodel, "waitingForDevice", Qt::AutoConnection,
+                              Q_ARG(bool, fCompleted));
 }
 
 void ClientModel::subscribeToCoreSignals()

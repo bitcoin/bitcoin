@@ -29,9 +29,7 @@ LIBPARTICL_COMMON=libparticl_common.a
 LIBPARTICL_CONSENSUS=libparticl_consensus.a
 LIBPARTICL_CLI=libparticl_cli.a
 LIBPARTICL_UTIL=libparticl_util.a
-LIBPARTICL_CRYPTO=crypto/libparticl_crypto.a
-LIBPARTICL_CRYPTO_SSE41=crypto/libparticl_crypto_sse41.a
-LIBPARTICL_CRYPTO_AVX2=crypto/libparticl_crypto_avx2.a
+LIBPARTICL_CRYPTO_BASE=crypto/libparticl_crypto_base.a
 LIBPARTICLQT=qt/libparticlqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBPARTICL_SMSG=libparticl_smsg.a
@@ -49,6 +47,16 @@ if ENABLE_USBDEVICE
 LIBPARTICL_USBDEVICE=libparticl_usbdevice.a
 endif
 
+LIBPARTICL_CRYPTO= $(LIBPARTICL_CRYPTO_BASE)
+if ENABLE_SSE41
+LIBPARTICL_CRYPTO_SSE41 = crypto/libparticl_crypto_sse41.a
+LIBPARTICL_CRYPTO += $(LIBPARTICL_CRYPTO_SSE41)
+endif
+if ENABLE_AVX2
+LIBPARTICL_CRYPTO_AVX2 = crypto/libparticl_crypto_avx2.a
+LIBPARTICL_CRYPTO += $(LIBPARTICL_CRYPTO_AVX2)
+endif
+
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
@@ -56,8 +64,6 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES += \
   $(LIBPARTICL_CRYPTO) \
-  $(LIBPARTICL_CRYPTO_SSE41) \
-  $(LIBPARTICL_CRYPTO_AVX2) \
   $(LIBPARTICL_UTIL) \
   $(LIBPARTICL_COMMON) \
   $(LIBPARTICL_CONSENSUS) \
@@ -343,9 +349,9 @@ libparticl_wallet_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libparticl_crypto_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libparticl_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libparticl_crypto_a_SOURCES = \
+crypto_libparticl_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libparticl_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libparticl_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
   crypto/chacha20.h \
@@ -365,23 +371,19 @@ crypto_libparticl_crypto_a_SOURCES = \
   crypto/sha512.h
 
 if USE_ASM
-crypto_libparticl_crypto_a_SOURCES += crypto/sha256_sse4.cpp
+crypto_libparticl_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
 endif
 
 crypto_libparticl_crypto_sse41_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libparticl_crypto_sse41_a_CPPFLAGS = $(AM_CPPFLAGS)
-if ENABLE_SSE41
 crypto_libparticl_crypto_sse41_a_CXXFLAGS += $(SSE41_CXXFLAGS)
 crypto_libparticl_crypto_sse41_a_CPPFLAGS += -DENABLE_SSE41
-endif
 crypto_libparticl_crypto_sse41_a_SOURCES = crypto/sha256_sse41.cpp
 
 crypto_libparticl_crypto_avx2_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libparticl_crypto_avx2_a_CPPFLAGS = $(AM_CPPFLAGS)
-if ENABLE_AVX2
 crypto_libparticl_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
 crypto_libparticl_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
-endif
 crypto_libparticl_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
@@ -532,8 +534,6 @@ particld_LDADD = \
   $(LIBPARTICL_ZMQ) \
   $(LIBPARTICL_CONSENSUS) \
   $(LIBPARTICL_CRYPTO) \
-  $(LIBPARTICL_CRYPTO_SSE41) \
-  $(LIBPARTICL_CRYPTO_AVX2) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
@@ -558,9 +558,7 @@ particl_cli_LDADD = \
   $(LIBPARTICL_CLI) \
   $(LIBUNIVALUE) \
   $(LIBPARTICL_UTIL) \
-  $(LIBPARTICL_CRYPTO) \
-  $(LIBPARTICL_CRYPTO_SSE41) \
-  $(LIBPARTICL_CRYPTO_AVX2)
+  $(LIBPARTICL_CRYPTO)
 
 particl_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
@@ -581,8 +579,6 @@ particl_tx_LDADD = \
   $(LIBPARTICL_UTIL) \
   $(LIBPARTICL_CONSENSUS) \
   $(LIBPARTICL_CRYPTO) \
-  $(LIBPARTICL_CRYPTO_SSE41) \
-  $(LIBPARTICL_CRYPTO_AVX2) \
   $(LIBSECP256K1)
 
 particl_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
@@ -591,7 +587,7 @@ particl_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/particlconsensus.h
-libparticlconsensus_la_SOURCES = $(crypto_libparticl_crypto_a_SOURCES) $(libparticl_consensus_a_SOURCES)
+libparticlconsensus_la_SOURCES = $(crypto_libparticl_crypto_base_a_SOURCES) $(libparticl_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libparticlconsensus_la_SOURCES += compat/glibc_compat.cpp
