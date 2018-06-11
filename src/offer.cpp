@@ -1191,7 +1191,7 @@ UniValue offerinfo(const JSONRPCRequest& request) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from offer DB"));
 
 	if(!BuildOfferJson(txPos, oOffer))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1593 - " + _("Could not find this offer"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 5537 - " + _("Could not find this offer"));
 
 	return oOffer;
 
@@ -1458,4 +1458,112 @@ float COffer::GetPrice(const int commission) const {
 	if (comm != 0)
 		price += price*((float)comm / 100.0f);
 	return price;
+}
+bool COfferDB::ScanOffers(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+	string strTxid = "";
+	vector<unsigned char> vchOffer, vchAlias;
+	int nStartBlock = 0;
+	if (!oOptions.isNull()) {
+		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
+		const UniValue &txid = find_value(optionsObj, "txid");
+		if (txid.isStr()) {
+			strTxid = txid.get_str();
+		}
+		const UniValue &offerObj = find_value(optionsObj, "offer");
+		if (offerObj.isStr())
+			vchOffer = vchFromValue(offerObj);
+
+		const UniValue &aliasObj = find_value(optionsObj, "alias");
+		if (aliasObj.isStr())
+			vchAlias = vchFromValue(aliasObj);
+
+		const UniValue &startblock = find_value(optionsObj, "startblock");
+		if (startblock.isNum())
+			nStartBlock = startblock.get_int();
+	}
+
+	LOCK(cs_offer);
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	COffer txPos;
+	pair<string, vector<unsigned char> > key;
+	int index = 0;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			if (pcursor->GetKey(key) && key.first == "offeri") {
+				pcursor->GetValue(txPos);
+				if (nStartBlock > 0 && txPos.nHeight < nStartBlock)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!strTxid.empty() && strTxid != txPos.txHash.GetHex())
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchOffer.empty() && vchOffer != txPos.vchOffer)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchAlias.empty() && vchAlias != txPos.vchAlias)
+				{
+					pcursor->Next();
+					continue;
+				}
+				UniValue oOffer(UniValue::VOBJ);
+				if (!BuildOfferJson(txPos, oOffer))
+				{
+					pcursor->Next();
+					continue;
+				}
+				index++;
+				if (from > 0 && index <= from) {
+					continue;
+				}
+				oRes.push_back(oOffer);
+				if (index >= count + from)
+					break;
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
+}
+UniValue scanoffers(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 3 < params.size())
+		throw runtime_error("scanoffers [count] [from] [options]\n"
+			"scan through all offers.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
+			"[options]        (array, optional) A json object with options to filter results\n"
+			"    {\n"
+			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
+			"	   \"offer\":guid				(string) Offer GUID to filter.\n"
+			"      \"alias\":alias				(string) Alias name to filter.\n"
+			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"    }\n"
+			+ HelpExampleCli("scanoffers", "0 10")
+			+ HelpExampleCli("scanoffers", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"offer\":\"32bff1fa844c124\",\"alias\":\"''\",\"startblock\":0}}")
+		);
+	UniValue options;
+	int count = 10;
+	int from = 0;
+	if (params.size() > 0)
+		count = params[0].get_int();
+	if (params.size() > 1)
+		from = params[1].get_int();
+	if (params.size() > 2)
+		options = params[2];
+
+	UniValue oRes(UniValue::VARR);
+	if (!pofferdb->ScanOffers(count, from, options, oRes))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 5538 - " + _("Scan failed"));
+	return oRes;
 }
