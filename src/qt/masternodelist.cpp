@@ -630,7 +630,7 @@ void MasternodeList::VoteMany(std::string strCommand)
             tr("Voting Details"),
             tr(
                 "Sorry, your vote has not been added to the proposal. "
-                "The proposal voting is currently disabled as we're too close to the proposal payment"
+                "The proposal voting is currently disabled as we're too close to the proposal payment."
             )
         );
         return;
