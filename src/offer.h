@@ -268,6 +268,7 @@ public:
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteOfferIndex(const COffer& offer, const int &op);
 	void WriteOfferIndexHistory(const COffer& offer, const int &op);
+	bool ScanOffers(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 
 };
 bool GetOffer(const std::vector<unsigned char> &vchOffer, COffer& txPos);

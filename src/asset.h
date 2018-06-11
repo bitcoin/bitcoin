@@ -153,6 +153,7 @@ public:
     }
 	void WriteAssetIndex(const CAsset& asset, const int &op);
 	void WriteAssetIndexHistory(const CAsset& asset, const int &op);
+	bool ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 
 };
 bool GetAsset(const std::vector<unsigned char> &vchAsset,CAsset& txPos);

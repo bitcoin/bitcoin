@@ -282,6 +282,7 @@ public:
 	void WriteAliasIndex(const CAliasIndex& alias, const int &op);
 	void WriteAliasIndexHistory(const CAliasIndex& alias, const int &op);
 	void WriteAliasIndexTxHistory(const std::string &user1, const std::string &user2, const std::string &user3, const uint256 &txHash, const unsigned int& nHeight, const std::string &type, const std::string &guid);
+	bool ScanAliases(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 };
 
 class COfferDB;

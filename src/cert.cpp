@@ -869,12 +869,115 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 
 	if(cert.nAccessFlags != dbCert.nAccessFlags)
 		entry.push_back(Pair("access_flags", cert.nAccessFlags));
-
-
-
-
 }
+bool CCertDB::ScanCerts(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+	string strTxid = "";
+	vector<unsigned char> vchCert, vchAlias;
+	int nStartBlock = 0;
+	if (!oOptions.isNull()) {
+		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
+		const UniValue &txid = find_value(optionsObj, "txid");
+		if (txid.isStr()) {
+			strTxid = txid.get_str();
+		}
+		const UniValue &certObj = find_value(optionsObj, "cert");
+		if (certObj.isStr())
+			vchCert = vchFromValue(certObj);
 
+		const UniValue &aliasObj = find_value(optionsObj, "alias");
+		if (aliasObj.isStr())
+			vchAlias = vchFromValue(aliasObj);
+
+		const UniValue &startblock = find_value(optionsObj, "startblock");
+		if (startblock.isNum())
+			nStartBlock = startblock.get_int();
+	}
+
+	LOCK(cs_cert);
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	CCert txPos;
+	pair<string, vector<unsigned char> > key;
+	int index = 0;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			if (pcursor->GetKey(key) && key.first == "certi") {
+				pcursor->GetValue(txPos);
+				if (nStartBlock > 0 && txPos.nHeight < nStartBlock)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!strTxid.empty() && strTxid != txPos.txHash.GetHex())
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchCert.empty() && vchCert != txPos.vchCert)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchAlias.empty() && vchAlias != txPos.vchAlias)
+				{
+					pcursor->Next();
+					continue;
+				}
+				UniValue oCert(UniValue::VOBJ);
+				if (!BuildCertJson(txPos, oCert))
+				{
+					pcursor->Next();
+					continue;
+				}
+				index++;
+				if (from > 0 && index <= from) {
+					continue;
+				}
+				oRes.push_back(oCert);
+				if (index >= count + from)
+					break;
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
+}
+UniValue scancerts(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 3 < params.size())
+		throw runtime_error("scancerts [count] [from] [options]\n"
+			"scan through all certificates.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
+			"[options]        (array, optional) A json object with options to filter results\n"
+			"    {\n"
+			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
+			"	   \"cert\":guid				(string) Certificate GUID to filter.\n"
+			"      \"alias\":alias				(string) Alias name to filter.\n"
+			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"    }\n"
+			+ HelpExampleCli("scancerts", "0 10")
+			+ HelpExampleCli("scancerts", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"cert\":\"32bff1fa844c124\",\"alias\":\"''\",\"startblock\":0}}")
+		);
+	UniValue options;
+	int count = 10;
+	int from = 0;
+	if (params.size() > 0)
+		count = params[0].get_int();
+	if (params.size() > 1)
+		from = params[1].get_int();
+	if (params.size() > 2)
+		options = params[2];
+
+	UniValue oRes(UniValue::VARR);
+	if (!pcertdb->ScanCerts(count, from, options, oRes))
+		throw runtime_error("SYSCOIN_CERT_RPC_ERROR: ERRCODE: 3508 - " + _("Scan failed"));
+	return oRes;
+}
 
 
 

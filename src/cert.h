@@ -152,6 +152,7 @@ public:
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteCertIndex(const CCert& cert, const int &op);
 	void WriteCertIndexHistory(const CCert& cert, const int &op);
+	bool ScanCerts(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 
 };
 bool GetCert(const std::vector<unsigned char> &vchCert,CCert& txPos);

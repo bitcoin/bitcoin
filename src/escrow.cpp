@@ -2393,3 +2393,131 @@ void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, con
 	if(!escrow.feedback.IsNull())
 		entry.push_back(Pair("feedback",_("Escrow feedback was given")));
 }
+bool CEscrowDB::ScanEscrows(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+	string strTxid = "";
+	vector<unsigned char> vchEscrow, vchBuyerAlias, vchSellerAlias, vchArbiterAlias;
+	int nStartBlock = 0;
+	if (!oOptions.isNull()) {
+		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
+		const UniValue &txid = find_value(optionsObj, "txid");
+		if (txid.isStr()) {
+			strTxid = txid.get_str();
+		}
+		const UniValue &escrowObj = find_value(optionsObj, "escrow");
+		if (escrowObj.isStr())
+			vchEscrow = vchFromValue(escrowObj);
+
+		const UniValue &aliasBuyerObj = find_value(optionsObj, "buyeralias");
+		if (aliasBuyerObj.isStr())
+			vchBuyerAlias = vchFromValue(aliasBuyerObj);
+
+		const UniValue &aliasSellerObj = find_value(optionsObj, "selleralias");
+		if (aliasSellerObj.isStr())
+			vchSellerAlias = vchFromValue(aliasSellerObj);
+
+		const UniValue &aliasArbiterObj = find_value(optionsObj, "arbiteralias");
+		if (aliasArbiterObj.isStr())
+			vchArbiterAlias = vchFromValue(aliasArbiterObj);
+
+		const UniValue &startblock = find_value(optionsObj, "startblock");
+		if (startblock.isNum())
+			nStartBlock = startblock.get_int();
+	}
+
+	LOCK(cs_escrow);
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	CEscrow txPos;
+	pair<string, vector<unsigned char> > key;
+	int index = 0;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			if (pcursor->GetKey(key) && key.first == "escrowi") {
+				pcursor->GetValue(txPos);
+				if (nStartBlock > 0 && txPos.nHeight < nStartBlock)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!strTxid.empty() && strTxid != txPos.txHash.GetHex())
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchEscrow.empty() && vchEscrow != txPos.vchEscrow)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchBuyerAlias.empty() && vchBuyerAlias != txPos.vchBuyerAlias)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchSellerAlias.empty() && vchSellerAlias != txPos.vchSellerAlias)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchArbiterAlias.empty() && vchArbiterAlias != txPos.vchArbiterAlias)
+				{
+					pcursor->Next();
+					continue;
+				}
+				UniValue oEscrow(UniValue::VOBJ);
+				if (!BuildEscrowJson(txPos, oEscrow))
+				{
+					pcursor->Next();
+					continue;
+				}
+				index++;
+				if (from > 0 && index <= from) {
+					continue;
+				}
+				oRes.push_back(oEscrow);
+				if (index >= count + from)
+					break;
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
+}
+UniValue scanescrows(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 3 < params.size())
+		throw runtime_error("scanescrows [count] [from] [options]\n"
+			"scan through all escrows.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
+			"[options]        (array, optional) A json object with options to filter results\n"
+			"    {\n"
+			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
+			"	   \"escrow\":guid				(string) Escrow GUID to filter.\n"
+			"      \"buyeralias\":alias			(string) Buyer Alias name to filter.\n"
+			"      \"selleralias\":alias		(string) Seller Alias name to filter.\n"
+			"      \"arbiteralias\":alias		(string) Arbiter Alias name to filter.\n"
+			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"    }\n"
+			+ HelpExampleCli("scancerts", "0 10")
+			+ HelpExampleCli("scancerts", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"escrow\":\"32bff1fa844c124\",\"buyeralias\":\"''\",\"selleralias\":\"tomjerry\",\"arbiteralias\":\"''\",\"startblock\":0}}")
+		);
+	UniValue options;
+	int count = 10;
+	int from = 0;
+	if (params.size() > 0)
+		count = params[0].get_int();
+	if (params.size() > 1)
+		from = params[1].get_int();
+	if (params.size() > 2)
+		options = params[2];
+
+	UniValue oRes(UniValue::VARR);
+	if (!pescrowdb->ScanEscrows(count, from, options, oRes))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4539 - " + _("Scan failed"));
+	return oRes;
+}
