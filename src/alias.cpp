@@ -2184,6 +2184,7 @@ bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName)
 		}
 	}
 	oName.push_back(Pair("time", nTime));
+	oName.push_back(Pair("height", (int)alias.nHeight));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
 	oName.push_back(Pair("accepttransferflags", (int)alias.nAcceptTransferFlags));
 	expired_time = alias.nExpireTime;
@@ -2208,6 +2209,7 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 		}
 	}
 	oName.push_back(Pair("time", nTime));
+	oName.push_back(Pair("height", (int)alias.nHeight));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
 	oName.push_back(Pair("accepttransferflags", (int)alias.nAcceptTransferFlags));
 	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
