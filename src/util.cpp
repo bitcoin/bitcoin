@@ -15,6 +15,8 @@
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
 #include <pthread_np.h>
+#elif defined(WIN32)
+#include <shellapi.h>
 #endif
 
 #ifndef WIN32
@@ -412,14 +414,23 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
 {
     m_network = network;
 }
-
+#ifndef WIN32
 bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
+#else
+bool ArgsManager::ParseParameters(int argc, const wchar_t* const argv[], std::string& error)
+#endif
 {
     LOCK(cs_args);
     m_override_args.clear();
 
     for (int i = 1; i < argc; i++) {
+#ifndef WIN32
         std::string key(argv[i]);
+#else
+        std::string key;
+        std::wstring wkey(argv[i]);
+        key = WideToUtf8(wkey);
+#endif
         std::string val;
         size_t is_index = key.find('=');
         if (is_index != std::string::npos) {

@@ -114,14 +114,17 @@ void runCommand(const std::string& strCommand);
  */
 fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
 
+#ifndef WIN32
 inline bool IsSwitchChar(char c)
 {
-#ifdef WIN32
-    return c == '-' || c == '/';
-#else
     return c == '-';
-#endif
 }
+#else
+inline bool IsSwitchChar(wchar_t c)
+{
+    return c == L'-' || c == L'/';
+}
+#endif
 
 enum class OptionsCategory {
     OPTIONS,
@@ -172,7 +175,11 @@ public:
      */
     void SelectConfigNetwork(const std::string& network);
 
+#ifndef WIN32
     bool ParseParameters(int argc, const char* const argv[], std::string& error);
+#else
+    bool ParseParameters(int argc, const wchar_t* const argv[], std::string& error);
+#endif
     bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     /**

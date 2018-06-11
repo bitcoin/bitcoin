@@ -26,3 +26,11 @@ bool ShutdownRequested()
 {
   return false;
 }
+
+#ifdef WIN32
+int main(int argc, char** argv);
+int wmain(int argc, wchar_t** argv)
+{
+    main(argc, __argv);
+}
+#endif

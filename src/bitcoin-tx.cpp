@@ -74,7 +74,11 @@ static void SetupBitcoinTxArgs()
 // This function returns either one of EXIT_ codes when it's expected to stop the process or
 // CONTINUE_EXECUTION when it's expected to continue further.
 //
+#ifndef WIN32
 static int AppInitRawTx(int argc, char* argv[])
+#else
+static int AppInitRawTx(int argc, wchar_t* argv[])
+#endif
 {
     //
     // Parameters
@@ -768,7 +772,11 @@ static std::string readStdin()
     return ret;
 }
 
+#ifndef WIN32
 static int CommandLineRawTx(int argc, char* argv[])
+#else
+static int CommandLineRawTx(int argc, wchar_t* argv[])
+#endif
 {
     std::string strPrint;
     int nRet = 0;
@@ -789,7 +797,11 @@ static int CommandLineRawTx(int argc, char* argv[])
                 throw std::runtime_error("too few parameters");
 
             // param: hex-encoded bitcoin transaction
+#ifndef WIN32
             std::string strHexTx(argv[1]);
+#else
+            std::string strHexTx(WideToUtf8(argv[1]));
+#endif
             if (strHexTx == "-")                 // "-" implies standard input
                 strHexTx = readStdin();
 
@@ -801,7 +813,11 @@ static int CommandLineRawTx(int argc, char* argv[])
             startArg = 1;
 
         for (int i = startArg; i < argc; i++) {
+#ifndef WIN32
             std::string arg = argv[i];
+#else
+            std::string arg = WideToUtf8(argv[i]);
+#endif
             std::string key, value;
             size_t eqpos = arg.find('=');
             if (eqpos == std::string::npos)
@@ -835,7 +851,11 @@ static int CommandLineRawTx(int argc, char* argv[])
     return nRet;
 }
 
+#ifndef WIN32
 int main(int argc, char* argv[])
+#else
+int wmain(int argc, wchar_t* argv[])
+#endif
 {
     SetupEnvironment();
 

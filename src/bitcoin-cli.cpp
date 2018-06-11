@@ -24,6 +24,10 @@
 
 #include <univalue.h>
 
+#ifdef WIN32
+#include <shellapi.h>
+#endif
+
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const bool DEFAULT_NAMED=false;
@@ -92,7 +96,11 @@ public:
 // This function returns either one of EXIT_ codes when it's expected to stop the process or
 // CONTINUE_EXECUTION when it's expected to continue further.
 //
+#ifndef WIN32
 static int AppInitRPC(int argc, char* argv[])
+#else
+static int AppInitRPC(int argc, wchar_t* argv[])
+#endif
 {
     //
     // Parameters
@@ -405,7 +413,11 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
     return reply;
 }
 
+#ifndef WIN32
 static int CommandLineRPC(int argc, char *argv[])
+#else
+static int CommandLineRPC(int argc, wchar_t* argv[])
+#endif
 {
     std::string strPrint;
     int nRet = 0;
@@ -422,7 +434,15 @@ static int CommandLineRPC(int argc, char *argv[])
             }
             gArgs.ForceSetArg("-rpcpassword", rpcPass);
         }
+#ifndef WIN32
         std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
+#else
+        std::vector<std::wstring> wargs = std::vector<std::wstring>(&argv[1], &argv[argc]);
+        std::vector<std::string> args;
+        for (std::wstring& warg : wargs) {
+            args.push_back(WideToUtf8(warg));
+        }
+#endif
         if (gArgs.GetBoolArg("-stdin", false)) {
             // Read one arg per line from stdin and append
             std::string line;
@@ -511,8 +531,11 @@ static int CommandLineRPC(int argc, char *argv[])
     }
     return nRet;
 }
-
+#ifndef WIN32
 int main(int argc, char* argv[])
+#else
+int wmain(int argc, wchar_t* argv[])
+#endif
 {
     SetupEnvironment();
     if (!SetupNetworking()) {
