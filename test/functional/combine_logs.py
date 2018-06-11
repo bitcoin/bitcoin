@@ -63,7 +63,7 @@ def get_log_events(source, logfile):
     Log events may be split over multiple lines. We use the timestamp
     regex match as the marker for a new log event."""
     try:
-        with open(logfile, 'r') as infile:
+        with open(logfile, 'r', encoding='utf-8') as infile:
             event = ''
             timestamp = ''
             for line in infile:
