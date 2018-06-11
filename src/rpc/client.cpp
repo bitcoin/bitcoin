@@ -62,7 +62,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listreceivedbylabel", 1, "addlocked" },
     { "listreceivedbylabel", 2, "include_empty" },
     { "listreceivedbylabel", 3, "include_watchonly" },
-    { "getlabeladdress", 1, "force" },
     { "getbalance", 1, "minconf" },
     { "getbalance", 2, "addlocked" },
     { "getbalance", 3, "include_watchonly" },

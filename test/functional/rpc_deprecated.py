@@ -40,7 +40,6 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         #
         # The following 'label' RPC methods are usable both with and without the
         # -deprecatedrpc=accounts switch enabled.
-        # - getlabeladdress
         # - getaddressesbylabel
         # - getreceivedbylabel
         # - listlabels
@@ -67,10 +66,6 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         self.log.info("- getaccountaddress")
         assert_raises_rpc_error(-32, "getaccountaddress is deprecated", self.nodes[0].getaccountaddress, "label0")
         self.nodes[1].getaccountaddress("label1")
-
-        self.log.info("- getlabeladdress")
-        self.nodes[0].getlabeladdress("label0")
-        self.nodes[1].getlabeladdress("label1")
 
         self.log.info("- getaddressesbyaccount")
         assert_raises_rpc_error(-32, "getaddressesbyaccount is deprecated", self.nodes[0].getaddressesbyaccount, "label0")
