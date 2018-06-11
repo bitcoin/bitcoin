@@ -498,6 +498,7 @@ public:
 
     const setEntries & GetMemPoolParents(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     const setEntries & GetMemPoolChildren(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
@@ -619,8 +620,11 @@ public:
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
     int Expire(int64_t time);
 
-    /** Returns false if the transaction is in the mempool and not within the chain limit specified. */
-    bool TransactionWithinChainLimit(const uint256& txid, size_t chainLimit) const;
+    /**
+     * Calculate the ancestor and descendant count for the given transaction.
+     * The counts include the transaction itself.
+     */
+    void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const;
 
     unsigned long size()
     {
