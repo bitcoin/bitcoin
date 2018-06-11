@@ -16,7 +16,7 @@ namespace
         return mn;
     }
 
-    void FillBlock(CBlockIndex& block, /*const*/ CBlockIndex* prevBlock, const uint256& hash)
+    void FillBlock(CBlockIndex& block, CBlockIndex* prevBlock, const uint256& hash)
     {
         if (prevBlock)
         {
@@ -37,7 +37,7 @@ namespace
         hash = ArithToUint256(height);
     }
 
-    void FillBlock(CBlockIndex& block, uint256& hash, /*const*/ CBlockIndex* prevBlock, size_t height)
+    void FillBlock(CBlockIndex& block, uint256& hash, CBlockIndex* prevBlock, size_t height)
     {
         FillHash(hash, height);
         FillBlock(block, height ? prevBlock : NULL, hash);
@@ -49,30 +49,16 @@ namespace
 
     struct CalculateScoreFixture
     {
-        const CMasternode mn1;
-        const CMasternode mn2;
-        const CMasternode mn3;
-        const CMasternode mn4;
-        const CMasternode mn5;
-
+        const CMasternode mn;
         std::vector<uint256> hashes;
         std::vector<CBlockIndex> blocks;
-        std::vector<CMasternode> masternodes;
 
         CalculateScoreFixture()
-            : mn1(CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN))))
-            , mn2(CreateMasternode(CTxIn(COutPoint(ArithToUint256(2), 1 * COIN))))
-            , mn3(CreateMasternode(CTxIn(COutPoint(ArithToUint256(3), 1 * COIN))))
-            , mn4(CreateMasternode(CTxIn(COutPoint(ArithToUint256(4), 1 * COIN))))
-            , mn5(CreateMasternode(CTxIn(COutPoint(ArithToUint256(5), 1 * COIN))))
+            : mn(CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN))))
             , hashes(1000)
             , blocks(1000)
         {
-            masternodes.push_back(mn1);
-            masternodes.push_back(mn2);
-            masternodes.push_back(mn3);
-            masternodes.push_back(mn4);
-            masternodes.push_back(mn5);
+            BuildChain();
         }
 
         void BuildChain()
@@ -85,6 +71,10 @@ namespace
             chainActive.SetTip(&blocks.back());
         }
 
+        ~CalculateScoreFixture()
+        {
+            chainActive = CChain();
+        }
     };
 }
 
@@ -92,18 +82,17 @@ BOOST_FIXTURE_TEST_SUITE(CalculateScore, CalculateScoreFixture)
 
     BOOST_AUTO_TEST_CASE(NullTip)
     {
-        BOOST_CHECK(mn1.CalculateScore(1) == arith_uint256());
+        chainActive = CChain();
+        BOOST_CHECK(mn.CalculateScore(1) == arith_uint256());
     }
 
     BOOST_AUTO_TEST_CASE(NotExistingBlock)
     {
-        BuildChain();
-        BOOST_CHECK(mn1.CalculateScore(1001) == arith_uint256());
+        BOOST_CHECK(mn.CalculateScore(1001) == arith_uint256());
     }
 
     BOOST_AUTO_TEST_CASE(ScoreChanges)
     {
-        BuildChain();
         CMasternode mn = CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN)));
         int64_t score = mn.CalculateScore(100).GetCompact(false);
 
@@ -118,13 +107,18 @@ BOOST_FIXTURE_TEST_SUITE(CalculateScore, CalculateScoreFixture)
 
     BOOST_AUTO_TEST_CASE(DistributionCheck)
     {
+        std::vector<CMasternode> masternodes;
+        masternodes.push_back(CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN))));
+        masternodes.push_back(CreateMasternode(CTxIn(COutPoint(ArithToUint256(2), 1 * COIN))));
+        masternodes.push_back(CreateMasternode(CTxIn(COutPoint(ArithToUint256(3), 1 * COIN))));
+        masternodes.push_back(CreateMasternode(CTxIn(COutPoint(ArithToUint256(4), 1 * COIN))));
+        masternodes.push_back(CreateMasternode(CTxIn(COutPoint(ArithToUint256(5), 1 * COIN))));
+
         // Find winner masternode for all 1000 blocks and
         // make sure all masternodes have the same probability to win
-        BuildChain();
-
         std::vector<pair<int64_t, CTxIn> > vecMasternodeScores;
         std::map<int, int> winningCount;
-        for (int i = 1; i < 1001; ++i)
+        for (int i = 0; i <= chainActive.Height(); ++i)
         {
             int64_t score = 0;
             int index = 0;
@@ -141,11 +135,12 @@ BOOST_FIXTURE_TEST_SUITE(CalculateScore, CalculateScoreFixture)
         }
 
         std::map<int, int>::iterator it = winningCount.begin();
+        const int averageWinCount = chainActive.Height() / masternodes.size();
         for (; it != winningCount.end(); ++it)
         {
             // +- 15%
-            BOOST_CHECK(it->second < 200 + 30);
-            BOOST_CHECK(it->second > 200 - 30);
+            BOOST_CHECK(it->second < averageWinCount + 0.15 * averageWinCount);
+            BOOST_CHECK(it->second > averageWinCount - 0.15 * averageWinCount);
         }
     }
 
