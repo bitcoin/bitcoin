@@ -449,6 +449,7 @@ enable_sse42=no
 enable_sse41=no
 enable_avx2=no
 enable_x86_shani=no
+enable_power8=no
 
 dnl Check for optional instruction set support. Enabling these does _not_ imply that all code will
 dnl be compiled with them, rather that specific objects/libs may use them after checking for runtime
@@ -459,6 +460,7 @@ AX_CHECK_COMPILE_FLAG([-msse4.2], [SSE42_CXXFLAGS="-msse4.2"], [], [$CXXFLAG_WER
 AX_CHECK_COMPILE_FLAG([-msse4.1], [SSE41_CXXFLAGS="-msse4.1"], [], [$CXXFLAG_WERROR])
 AX_CHECK_COMPILE_FLAG([-mavx -mavx2], [AVX2_CXXFLAGS="-mavx -mavx2"], [], [$CXXFLAG_WERROR])
 AX_CHECK_COMPILE_FLAG([-msse4 -msha], [X86_SHANI_CXXFLAGS="-msse4 -msha"], [], [$CXXFLAG_WERROR])
+AX_CHECK_COMPILE_FLAG([-mpower8-vector], [POWER8_CXXFLAGS="-mpower8-vector"], [], [$CXXFLAG_WERROR])
 
 enable_clmul=
 AX_CHECK_COMPILE_FLAG([-mpclmul], [enable_clmul=yes], [], [$CXXFLAG_WERROR], [AC_LANG_PROGRAM([
@@ -585,6 +587,22 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
   ]])],
  [ AC_MSG_RESULT([yes]); enable_arm_shani=yes; AC_DEFINE([ENABLE_ARM_SHANI], [1], [Define this symbol to build code that uses ARMv8 SHA-NI intrinsics]) ],
  [ AC_MSG_RESULT([no])]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
+
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$TEMP_CXXFLAGS $POWER8_CXXFLAGS"
+AC_MSG_CHECKING(for POWER8 compiler support)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <altivec.h>
+    #include <stdint.h>
+  ]], [[
+    unsigned char src[16];
+    __builtin_crypto_vshasigmaw((__vector uint32_t)vec_vsx_ld(0, src), 1, 0xf);
+    return 0;
+  ]])],
+  [ AC_MSG_RESULT(yes); enable_power8=yes; AC_DEFINE(ENABLE_POWER8, 1, [Define if compiler supports POWER8 instructions.]) ],
+  [ AC_MSG_RESULT(no) ]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
 
@@ -1791,6 +1809,7 @@ AM_CONDITIONAL([ENABLE_AVX2], [test "$enable_avx2" = "yes"])
 AM_CONDITIONAL([ENABLE_X86_SHANI], [test "$enable_x86_shani" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_CRC], [test "$enable_arm_crc" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_SHANI], [test "$enable_arm_shani" = "yes"])
+AM_CONDITIONAL([ENABLE_POWER8], [test "$enable_power8" = "yes"])
 AM_CONDITIONAL([WORDS_BIGENDIAN], [test "$ac_cv_c_bigendian" = "yes"])
 AM_CONDITIONAL([USE_NATPMP], [test "$use_natpmp" = "yes"])
 AM_CONDITIONAL([USE_UPNP], [test "$use_upnp" = "yes"])
@@ -1852,6 +1871,7 @@ AC_SUBST(AVX2_CXXFLAGS)
 AC_SUBST(X86_SHANI_CXXFLAGS)
 AC_SUBST(ARM_CRC_CXXFLAGS)
 AC_SUBST(ARM_SHANI_CXXFLAGS)
+AC_SUBST(POWER8_CXXFLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(USE_SQLITE)
 AC_SUBST(USE_BDB)

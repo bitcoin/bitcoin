@@ -66,6 +66,10 @@ if ENABLE_ARM_SHANI
 LIBBITCOIN_CRYPTO_ARM_SHANI = crypto/libbitcoin_crypto_arm_shani.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_SHANI)
 endif
+if ENABLE_POWER8
+LIBBITCOIN_CRYPTO_POWER8 = crypto/libbitcoin_crypto_power8.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_POWER8)
+endif
 noinst_LTLIBRARIES += $(LIBBITCOIN_CRYPTO)
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
@@ -624,6 +628,12 @@ crypto_libbitcoin_crypto_arm_shani_la_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
 crypto_libbitcoin_crypto_arm_shani_la_CPPFLAGS += -DENABLE_ARM_SHANI
 crypto_libbitcoin_crypto_arm_shani_la_SOURCES = crypto/sha256_arm_shani.cpp
 #
+
+crypto_libbitcoin_crypto_power8_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libbitcoin_crypto_power8_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_power8_a_CXXFLAGS += $(POWER8_CXXFLAGS)
+crypto_libbitcoin_crypto_power8_a_CPPFLAGS += -DENABLE_POWER8
+crypto_libbitcoin_crypto_power8_a_SOURCES = crypto/sha256_power8.cpp
 
 # consensus #
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
