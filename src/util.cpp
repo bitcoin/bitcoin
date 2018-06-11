@@ -585,6 +585,13 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, const
     assert(ret.second); // Make sure an insertion actually happened
 }
 
+void ArgsManager::AddHiddenArgs(const std::vector<std::string>& names)
+{
+    for (const std::string& name : names) {
+        AddArg(name, "", false, OptionsCategory::HIDDEN);
+    }
+}
+
 std::string ArgsManager::GetHelpMessage()
 {
     const bool show_debug = gArgs.GetBoolArg("-help-debug", false);

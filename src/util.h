@@ -264,6 +264,11 @@ public:
     void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
 
     /**
+     * Add many hidden arguments
+     */
+    void AddHiddenArgs(const std::vector<std::string>& args);
+
+    /**
      * Clear available arguments
      */
     void ClearArgs() { m_available_args.clear(); }
