@@ -9,11 +9,7 @@
 #ifdef ENABLE_SHANI
 
 #include <stdint.h>
-#if defined(_MSC_VER)
 #include <immintrin.h>
-#elif defined(__GNUC__)
-#include <x86intrin.h>
-#endif
 
 #include <crypto/common.h>
 
