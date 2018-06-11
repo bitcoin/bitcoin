@@ -1279,8 +1279,6 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 		if (aliasObj.isStr())
 			vchAlias = vchFromValue(aliasObj);
 
-		vchAsset = vchFromValue(find_value(optionsObj, "asset"));
-		vchAlias = vchFromValue(find_value(optionsObj, "alias"));
 		const UniValue &startblock = find_value(optionsObj, "startblock");
 		if (startblock.isNum())
 			nStartBlock = startblock.get_int();

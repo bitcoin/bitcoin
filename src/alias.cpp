@@ -2775,13 +2775,6 @@ bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOpt
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		const UniValue &assetObj = find_value(optionsObj, "asset");
-		if (assetObj.isStr())
-			vchAsset = vchFromValue(assetObj);
-
-		const UniValue &senderObj = find_value(optionsObj, "sender");
-		if (senderObj.isStr())
-			vchSender = vchFromValue(senderObj);
 
 		const UniValue &aliasObj = find_value(optionsObj, "alias");
 		if (aliasObj.isStr())
