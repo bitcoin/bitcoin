@@ -57,6 +57,10 @@ if ENABLE_SHANI
 LIBBITCOIN_CRYPTO_SHANI = crypto/libbitcoin_crypto_shani.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SHANI)
 endif
+if ENABLE_POWER8
+LIBBITCOIN_CRYPTO_POWER8 = crypto/libbitcoin_crypto_power8.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_POWER8)
+endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
@@ -414,6 +418,12 @@ crypto_libbitcoin_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
 crypto_libbitcoin_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
 crypto_libbitcoin_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
 crypto_libbitcoin_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
+
+crypto_libbitcoin_crypto_power8_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libbitcoin_crypto_power8_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_power8_a_CXXFLAGS += $(POWER8_CXXFLAGS)
+crypto_libbitcoin_crypto_power8_a_CPPFLAGS += -DENABLE_POWER8
+crypto_libbitcoin_crypto_power8_a_SOURCES = crypto/sha256_power8.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
