@@ -880,8 +880,14 @@ bool CCertDB::ScanCerts(const int count, const int from, const UniValue& oOption
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		vchCert = vchFromValue(find_value(optionsObj, "cert"));
-		vchAlias = vchFromValue(find_value(optionsObj, "alias"));
+		const UniValue &certObj = find_value(optionsObj, "cert");
+		if (certObj.isStr())
+			vchCert = vchFromValue(certObj);
+
+		const UniValue &aliasObj = find_value(optionsObj, "alias");
+		if (aliasObj.isStr())
+			vchAlias = vchFromValue(aliasObj);
+
 		const UniValue &startblock = find_value(optionsObj, "startblock");
 		if (startblock.isNum())
 			nStartBlock = startblock.get_int();

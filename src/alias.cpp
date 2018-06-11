@@ -2775,7 +2775,18 @@ bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOpt
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		vchAlias = vchFromValue(find_value(optionsObj, "alias"));
+		const UniValue &assetObj = find_value(optionsObj, "asset");
+		if (assetObj.isStr())
+			vchAsset = vchFromValue(assetObj);
+
+		const UniValue &senderObj = find_value(optionsObj, "sender");
+		if (senderObj.isStr())
+			vchSender = vchFromValue(senderObj);
+
+		const UniValue &aliasObj = find_value(optionsObj, "alias");
+		if (aliasObj.isStr())
+			vchAlias = vchFromValue(aliasObj);
+
 		const UniValue &startblock = find_value(optionsObj, "startblock");
 		if (startblock.isNum())
 			nStartBlock = startblock.get_int();
