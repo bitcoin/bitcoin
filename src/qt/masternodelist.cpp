@@ -60,7 +60,7 @@ MasternodeList::MasternodeList(const PlatformStyle *platformStyle, QWidget *pare
 
     ui->tableWidgetMyMasternodes->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    QAction *startAliasAction = new QAction(tr("Start alias"), this);
+    QAction *startAliasAction = new QAction(tr("Initialize Masternode"), this);
     contextMenu = new QMenu();
     contextMenu->addAction(startAliasAction);
     connect(ui->tableWidgetMyMasternodes, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
@@ -105,7 +105,7 @@ void MasternodeList::showContextMenu(const QPoint &point)
 void MasternodeList::StartAlias(std::string strAlias)
 {
     std::string strStatusHtml;
-    strStatusHtml += "<center>Alias: " + strAlias;
+    strStatusHtml += "<center>Name: " + strAlias;
 
     for (const auto& mne : masternodeConfig.getEntries()) {
         if(mne.getAlias() == strAlias) {
@@ -490,7 +490,7 @@ void MasternodeList::ShowQRCode(std::string strAlias) {
 
     // Create dialog text as HTML
     QString strHTML = "<html><font face='verdana, arial, helvetica, sans-serif'>";
-    strHTML += "<b>" + tr("Alias") +            ": </b>" + GUIUtil::HtmlEscape(strAlias) + "<br>";
+    strHTML += "<b>" + tr("Name") +            ": </b>" + GUIUtil::HtmlEscape(strAlias) + "<br>";
     strHTML += "<b>" + tr("Private Key") +      ": </b>" + GUIUtil::HtmlEscape(strMNPrivKey) + "<br>";
     strHTML += "<b>" + tr("Collateral") +       ": </b>" + GUIUtil::HtmlEscape(strCollateral) + "<br>";
     strHTML += "<b>" + tr("IP") +               ": </b>" + GUIUtil::HtmlEscape(strIP) + "<br>";
