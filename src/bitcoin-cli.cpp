@@ -422,6 +422,11 @@ static int CommandLineRPC(int argc, char *argv[])
             gArgs.ForceSetArg("-rpcpassword", rpcPass);
         }
         std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
+#ifdef WIN32
+        for (auto it = args.begin(); it != args.end(); it++) {
+            *it = LocalToUtf8(*it);
+        }
+#endif
         if (gArgs.GetBoolArg("-stdin", false)) {
             // Read one arg per line from stdin and append
             std::string line;

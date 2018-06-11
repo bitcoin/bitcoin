@@ -12,6 +12,10 @@
 #include <errno.h>
 #include <limits>
 
+#ifdef WIN32
+#include <stringapiset.h>
+#endif
+
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 static const std::string SAFE_CHARS[] =
@@ -544,3 +548,36 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
     return true;
 }
 
+#ifdef WIN32
+std::string LocalToUtf8(const std::string& local_string)
+{
+    if (local_string.size() == 0) return local_string;
+    int size = MultiByteToWideChar(CP_ACP, 0, local_string.c_str(), local_string.size(), nullptr, 0);
+    assert(size);
+    std::wstring wide_string(size, L'\0');
+    size = MultiByteToWideChar(CP_ACP, 0, local_string.c_str(), local_string.size(), &wide_string[0], size);
+    assert(size == wide_string.size());
+    size = WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), wide_string.size(), nullptr, 0, nullptr, nullptr);
+    assert(size);
+    std::string utf8_string(size, '\0');
+    size = WideCharToMultiByte(CP_UTF8, 0, wide_string.c_str(), wide_string.size(), &utf8_string[0], size, nullptr, nullptr);
+    assert(size == utf8_string.size());
+    return utf8_string;
+}
+
+std::string Utf8ToLocal(const std::string& utf8_string)
+{
+    if (utf8_string.size() == 0) return utf8_string;
+    int size = MultiByteToWideChar(CP_UTF8, 0, utf8_string.c_str(), utf8_string.size(), nullptr, 0);
+    assert(size);
+    std::wstring wide_string(size, L'\0');
+    size = MultiByteToWideChar(CP_UTF8, 0, utf8_string.c_str(), utf8_string.size(), &wide_string[0], size);
+    assert(size == wide_string.size());
+    size = WideCharToMultiByte(CP_ACP, 0, wide_string.c_str(), wide_string.size(), nullptr, 0, nullptr, nullptr);
+    assert(size);
+    std::string local_string(size, '\0');
+    size = WideCharToMultiByte(CP_ACP, 0, wide_string.c_str(), wide_string.size(), &local_string[0], size, nullptr, nullptr);
+    assert(size == local_string.size());
+    return local_string;
+}
+#endif

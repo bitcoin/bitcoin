@@ -1,0 +1,23 @@
+diff --git a/libs/filesystem/src/windows_file_codecvt.cpp b/libs/filesystem/src/windows_file_codecvt.cpp
+index 6b8e745..8f19f61 100644
+--- a/libs/filesystem/src/windows_file_codecvt.cpp
++++ b/libs/filesystem/src/windows_file_codecvt.cpp
+@@ -36,7 +36,7 @@
+     const char* from, const char* from_end, const char*& from_next,
+     wchar_t* to, wchar_t* to_end, wchar_t*& to_next) const
+   {
+-    UINT codepage = AreFileApisANSI() ? CP_ACP : CP_OEMCP;
++    UINT codepage = CP_UTF8;
+
+     int count;
+     if ((count = ::MultiByteToWideChar(codepage, MB_PRECOMPOSED, from,
+@@ -56,7 +56,7 @@
+     const wchar_t* from, const wchar_t* from_end, const wchar_t*  & from_next,
+     char* to, char* to_end, char* & to_next) const
+   {
+-    UINT codepage = AreFileApisANSI() ? CP_ACP : CP_OEMCP;
++    UINT codepage = CP_UTF8;
+
+     int count;
+     if ((count = ::WideCharToMultiByte(codepage, WC_NO_BEST_FIT_CHARS, from,
+

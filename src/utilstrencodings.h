@@ -173,4 +173,11 @@ bool ConvertBits(const O& outfn, I it, I end) {
     return true;
 }
 
+#ifdef WIN32
+std::string LocalToUtf8(const std::string& local_string);
+std::string Utf8ToLocal(const std::string& utf8_string);
+#else
+#define LocalToUtf8(x) (x)
+#define Utf8ToLocal(x) (x)
+#endif
 #endif // BITCOIN_UTILSTRENCODINGS_H
