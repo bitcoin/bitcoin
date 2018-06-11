@@ -190,11 +190,19 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
 // Warning: ipcSendCommandLine() is called early in init,
 // so don't use "Q_EMIT message()", but "QMessageBox::"!
 //
+#ifndef WIN32
 void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* argv[])
+#else
+void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, wchar_t* argv[])
+#endif
 {
     for (int i = 1; i < argc; i++)
     {
+#ifndef WIN32
         QString arg(argv[i]);
+#else
+        QString arg = QString::fromStdWString(argv[i]);
+#endif
         if (arg.startsWith("-"))
             continue;
 

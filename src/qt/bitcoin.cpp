@@ -32,6 +32,7 @@
 #include <ui_interface.h>
 #include <uint256.h>
 #include <util.h>
+#include <utilstrencodings.h>
 #include <warnings.h>
 
 #include <walletinitinterface.h>
@@ -51,6 +52,10 @@
 #include <QTimer>
 #include <QTranslator>
 #include <QSslConfiguration>
+
+#ifdef WIN32
+#include <shellapi.h>
+#endif
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -555,6 +560,9 @@ static void SetupUIArgs()
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
+#ifdef WIN32
+    wchar_t ** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+#endif
     SetupEnvironment();
 
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
@@ -599,7 +607,11 @@ int main(int argc, char *argv[])
     node->setupServerArgs();
     SetupUIArgs();
     std::string error;
+#ifndef WIN32
     if (!node->parseParameters(argc, argv, error)) {
+#else
+    if (!node->parseParameters(argc, wargv, error)) {
+#endif
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
             QObject::tr("Error parsing command line arguments: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
@@ -663,7 +675,11 @@ int main(int argc, char *argv[])
     }
 #ifdef ENABLE_WALLET
     // Parse URIs on command line -- this can affect Params()
+#ifndef WIN32
     PaymentServer::ipcParseCommandLine(*node, argc, argv);
+#else
+    PaymentServer::ipcParseCommandLine(*node, argc, wargv);
+#endif
 #endif
 
     QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));

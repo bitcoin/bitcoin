@@ -27,6 +27,10 @@
 
 #include <boost/algorithm/string.hpp>
 
+#ifdef WIN32
+#include <shellapi.h>
+#endif
+
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
 static const int CONTINUE_EXECUTION=-1;
@@ -74,7 +78,11 @@ static void SetupBitcoinTxArgs()
 // This function returns either one of EXIT_ codes when it's expected to stop the process or
 // CONTINUE_EXECUTION when it's expected to continue further.
 //
+#ifndef WIN32
 static int AppInitRawTx(int argc, char* argv[])
+#else
+static int AppInitRawTx(int argc, wchar_t* argv[])
+#endif
 {
     //
     // Parameters
@@ -768,7 +776,11 @@ static std::string readStdin()
     return ret;
 }
 
+#ifndef WIN32
 static int CommandLineRawTx(int argc, char* argv[])
+#else
+static int CommandLineRawTx(int argc, wchar_t* argv[])
+#endif
 {
     std::string strPrint;
     int nRet = 0;
@@ -789,7 +801,11 @@ static int CommandLineRawTx(int argc, char* argv[])
                 throw std::runtime_error("too few parameters");
 
             // param: hex-encoded bitcoin transaction
+#ifndef WIN32
             std::string strHexTx(argv[1]);
+#else
+            std::string strHexTx(WideToUtf8(argv[1]));
+#endif
             if (strHexTx == "-")                 // "-" implies standard input
                 strHexTx = readStdin();
 
@@ -801,7 +817,11 @@ static int CommandLineRawTx(int argc, char* argv[])
             startArg = 1;
 
         for (int i = startArg; i < argc; i++) {
+#ifndef WIN32
             std::string arg = argv[i];
+#else
+            std::string arg = WideToUtf8(argv[i]);
+#endif
             std::string key, value;
             size_t eqpos = arg.find('=');
             if (eqpos == std::string::npos)
@@ -837,10 +857,17 @@ static int CommandLineRawTx(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+#ifdef WIN32
+    wchar_t ** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+#endif
     SetupEnvironment();
 
     try {
+#ifndef WIN32
         int ret = AppInitRawTx(argc, argv);
+#else
+        int ret = AppInitRawTx(argc, wargv);
+#endif
         if (ret != CONTINUE_EXECUTION)
             return ret;
     }
@@ -854,7 +881,11 @@ int main(int argc, char* argv[])
 
     int ret = EXIT_FAILURE;
     try {
+#ifndef WIN32
         ret = CommandLineRawTx(argc, argv);
+#else
+        ret = CommandLineRawTx(argc, wargv);
+#endif
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "CommandLineRawTx()");
