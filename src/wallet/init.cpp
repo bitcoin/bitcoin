@@ -178,7 +178,7 @@ bool WalletInit::Verify() const
     }
 
     if (gArgs.IsArgSet("-walletdir")) {
-        fs::path wallet_dir = gArgs.GetArg("-walletdir", "");
+        fs::path wallet_dir = fs::u8path(gArgs.GetArg("-walletdir", ""));
         if (!fs::exists(wallet_dir)) {
             return InitError(strprintf(_("Specified -walletdir \"%s\" does not exist"), wallet_dir.u8string()));
         } else if (!fs::is_directory(wallet_dir)) {
@@ -228,7 +228,7 @@ bool WalletInit::Open() const
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()));
+        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(fs::u8path(walletFile), GetWalletDir()));
         if (!pwallet) {
             return false;
         }

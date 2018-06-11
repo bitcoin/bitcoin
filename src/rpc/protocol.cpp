@@ -72,7 +72,7 @@ static fs::path GetAuthCookieFile(bool temp=false)
     if (temp) {
         arg += ".tmp";
     }
-    return AbsPathForConfigVal(fs::path(arg));
+    return AbsPathForConfigVal(fs::u8path(arg));
 }
 
 bool GenerateAuthCookie(std::string *cookie_out)

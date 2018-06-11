@@ -726,9 +726,9 @@ fs::path GetDefaultDataDir()
     fs::path pathRet;
     char* pszHome = getenv("HOME");
     if (pszHome == nullptr || strlen(pszHome) == 0)
-        pathRet = fs::path("/");
+        pathRet = fs::u8path("/");
     else
-        pathRet = fs::path(pszHome);
+        pathRet = fs::u8path(pszHome);
 #ifdef MAC_OSX
     // Mac
     return pathRet / "Library/Application Support/Bitcoin";
@@ -758,7 +758,7 @@ const fs::path &GetBlocksDir(bool fNetSpecific)
         return path;
 
     if (gArgs.IsArgSet("-blocksdir")) {
-        path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
+        path = fs::system_complete(fs::u8path(gArgs.GetArg("-blocksdir", "")));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -787,7 +787,7 @@ const fs::path &GetDataDir(bool fNetSpecific)
         return path;
 
     if (gArgs.IsArgSet("-datadir")) {
-        path = fs::system_complete(gArgs.GetArg("-datadir", ""));
+        path = fs::system_complete(fs::u8path(gArgs.GetArg("-datadir", "")));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -818,7 +818,7 @@ void ClearDatadirCache()
 
 fs::path GetConfigFile(const std::string& confPath)
 {
-    return AbsPathForConfigVal(fs::path(confPath), false);
+    return AbsPathForConfigVal(fs::u8path(confPath), false);
 }
 
 static std::string TrimString(const std::string& str, const std::string& pattern)
@@ -970,7 +970,7 @@ std::string ArgsManager::GetChainName() const
 #ifndef WIN32
 fs::path GetPidFile()
 {
-    return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
+    return AbsPathForConfigVal(fs::u8path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
 }
 
 void CreatePidFile(const fs::path &path, pid_t pid)
@@ -1133,11 +1133,11 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 
     if(SHGetSpecialFolderPathA(nullptr, pszPath, nFolder, fCreate))
     {
-        return fs::path(pszPath);
+        return fs::u8path(pszPath);
     }
 
     LogPrintf("SHGetSpecialFolderPathA() failed, could not obtain requested path.\n");
-    return fs::path("");
+    return fs::u8path("");
 }
 #endif
 
