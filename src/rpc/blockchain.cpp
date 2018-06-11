@@ -1244,7 +1244,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     if (fPruneMode) {
         CBlockIndex* block = chainActive.Tip();
         assert(block);
-        while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+        while (block->pprev && !IsBlockPruned(block->pprev)) {
             block = block->pprev;
         }
 

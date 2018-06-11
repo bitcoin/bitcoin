@@ -3891,7 +3891,7 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
         LOCK(cs_main);
         CBlockIndex *block = pindexStop ? pindexStop : pChainTip;
         while (block && block->nHeight >= pindexStart->nHeight) {
-            if (!(block->nStatus & BLOCK_HAVE_DATA)) {
+            if (IsBlockPruned(block)) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.");
             }
             block = block->pprev;
