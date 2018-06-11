@@ -137,6 +137,28 @@ void OptionsModel::Init(bool resetSettings)
     // by command-line and show this in the UI.
 
     // Main
+    if (!settings.contains("bPrune"))
+        settings.setValue("bPrune", false);
+    if (!settings.contains("nPruneSize"))
+        settings.setValue("nPruneSize", 2);
+    // Convert prune size to MB:
+    const uint64_t nPruneSizeMB = settings.value("nPruneSize").toInt() * 1000;
+    if (!m_node.softSetArg("-prune", settings.value("bPrune").toBool() ? std::to_string(nPruneSizeMB) : "0")) {
+        addOverriddenOption("-prune");
+    }
+
+    // If GUI is setting prune, then we also must set disablegovernance and  txindex
+    if (settings.value("bPrune").toBool()) {
+        if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
+            LogPrintf("%s: parameter interaction: -prune=true -> setting -disablegovernance=true\n", __func__);
+            addOverriddenOption("-disablegovernance");
+        }
+        if (gArgs.SoftSetBoolArg("-txindex", false)) {
+            LogPrintf("%s: parameter interaction: -prune=true -> setting -txindex=false\n", __func__);
+            addOverriddenOption("-txindex");
+        }
+    }
+
     if (!settings.contains("nDatabaseCache"))
         settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
     if (!m_node.softSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
@@ -379,6 +401,10 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case CoinControlFeatures:
             return fCoinControlFeatures;
 #endif // ENABLE_WALLET
+        case Prune:
+            return settings.value("bPrune");
+        case PruneSize:
+            return settings.value("nPruneSize");
         case DatabaseCache:
             return settings.value("nDatabaseCache");
         case ThreadsScriptVerif:
@@ -587,6 +613,18 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
             Q_EMIT coinControlFeaturesChanged(fCoinControlFeatures);
+            break;
+        case Prune:
+            if (settings.value("bPrune") != value) {
+                settings.setValue("bPrune", value);
+                setRestartRequired(true);
+            }
+            break;
+        case PruneSize:
+            if (settings.value("nPruneSize") != value) {
+                settings.setValue("nPruneSize", value);
+                setRestartRequired(true);
+            }
             break;
 #endif // ENABLE_WALLET
         case DatabaseCache:
