@@ -1128,6 +1128,7 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("sender_balance", ValueFromAssetAmount(nSenderBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("receiver", stringFromVch(vchReceiver)));
 	oAssetAllocation.push_back(Pair("receiver_balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
+	oAssetAllocation.push_back(Pair("memo", stringFromVch(assetallocation.vchMemo)));
 	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
 	if (fAssetAllocationIndex) {
 		string strCat = "";
