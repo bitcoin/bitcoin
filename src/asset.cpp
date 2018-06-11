@@ -1271,6 +1271,14 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
+		const UniValue &assetObj = find_value(optionsObj, "asset");
+		if (assetObj.isStr())
+			vchAsset = vchFromValue(assetObj);
+
+		const UniValue &aliasObj = find_value(optionsObj, "alias");
+		if (aliasObj.isStr())
+			vchAlias = vchFromValue(aliasObj);
+
 		vchAsset = vchFromValue(find_value(optionsObj, "asset"));
 		vchAlias = vchFromValue(find_value(optionsObj, "alias"));
 		const UniValue &startblock = find_value(optionsObj, "startblock");

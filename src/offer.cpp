@@ -1469,8 +1469,14 @@ bool COfferDB::ScanOffers(const int count, const int from, const UniValue& oOpti
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		vchOffer = vchFromValue(find_value(optionsObj, "offer"));
-		vchAlias = vchFromValue(find_value(optionsObj, "alias"));
+		const UniValue &offerObj = find_value(optionsObj, "offer");
+		if (offerObj.isStr())
+			vchOffer = vchFromValue(offerObj);
+
+		const UniValue &aliasObj = find_value(optionsObj, "alias");
+		if (aliasObj.isStr())
+			vchAlias = vchFromValue(aliasObj);
+
 		const UniValue &startblock = find_value(optionsObj, "startblock");
 		if (startblock.isNum())
 			nStartBlock = startblock.get_int();

@@ -2403,10 +2403,22 @@ bool CEscrowDB::ScanEscrows(const int count, const int from, const UniValue& oOp
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		vchEscrow = vchFromValue(find_value(optionsObj, "escrow"));
-		vchBuyerAlias = vchFromValue(find_value(optionsObj, "buyeralias"));
-		vchSellerAlias = vchFromValue(find_value(optionsObj, "selleralias"));
-		vchArbiterAlias = vchFromValue(find_value(optionsObj, "arbiteralias"));
+		const UniValue &escrowObj = find_value(optionsObj, "escrow");
+		if (escrowObj.isStr())
+			vchEscrow = vchFromValue(escrowObj);
+
+		const UniValue &aliasBuyerObj = find_value(optionsObj, "buyeralias");
+		if (aliasBuyerObj.isStr())
+			vchBuyerAlias = vchFromValue(aliasBuyerObj);
+
+		const UniValue &aliasSellerObj = find_value(optionsObj, "selleralias");
+		if (aliasSellerObj.isStr())
+			vchSellerAlias = vchFromValue(aliasSellerObj);
+
+		const UniValue &aliasArbiterObj = find_value(optionsObj, "arbiteralias");
+		if (aliasArbiterObj.isStr())
+			vchArbiterAlias = vchFromValue(aliasArbiterObj);
+
 		const UniValue &startblock = find_value(optionsObj, "startblock");
 		if (startblock.isNum())
 			nStartBlock = startblock.get_int();

@@ -1283,9 +1283,17 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		vchAsset = vchFromValue(find_value(optionsObj, "asset"));
-		vchSender = vchFromValue(find_value(optionsObj, "sender"));
-		vchReceiver = vchFromValue(find_value(optionsObj, "receiver"));
+		const UniValue &assetObj = find_value(optionsObj, "asset");
+		if(assetObj.isStr())
+			vchAsset = vchFromValue(assetObj);
+
+		const UniValue &senderObj = find_value(optionsObj, "sender");
+		if (senderObj.isStr())
+			vchSender = vchFromValue(senderObj);
+	
+		const UniValue &receiverObj = find_value(optionsObj, "receiver");
+		if (receiverObj.isStr())
+			vchReceiver = vchFromValue(receiverObj);
 
 		const UniValue &startblock = find_value(optionsObj, "startblock");
 		if (startblock.isNum())
