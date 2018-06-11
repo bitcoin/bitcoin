@@ -47,6 +47,30 @@ if os.name == 'posix': # if posix, assume we can use basic terminal escapes
     ATTR_PR = '\033[1;36m'
     COMMIT_FORMAT = '%C(bold blue)%h%Creset %s %C(cyan)(%an)%Creset%C(green)%d%Creset'
 
+api_mode_supported = ['github','gitlab'] # first element [0] is the default API mode
+
+def api_mode_print_help():
+    '''
+    Examples of using supported git-server APIs
+    '''
+    delim="--------------"
+    print("", file=stderr)
+    print(delim, file=stderr)
+    print("Example configuration", file=stderr)
+    print(delim, file=stderr)
+    print("To use github, usually you should configure:", file=stderr)
+    print("git config githubmerge.apimode github   # default, but better set it to clear --global", file=stderr)
+    print("git config githubmerge.repository bitcoin/bitcoin     # <owner>/<repo> ", file=stderr)
+    print("git config githubmerge.host git@github.com  # default, but better set it to clear --global", file=stderr)
+    print("", file=stderr)
+    print("To use gitlab (works with own gitlab server too), usually you should configure:", file=stderr)
+    print("git config githubmerge.apimode gitlab", file=stderr)
+    print("git config githubmerge.repository bitcoin/bitcoin     # <owner>/<repo>, or e.g. some_ns/you/bitcoin ", file=stderr)
+    print("git config githubmerge.host git@gitlab.com", file=stderr)
+    print("git config githubmerge.gitlabbaseurl https://gitlab.com/", file=stderr)
+    print(delim, file=stderr)
+
+
 def git_config_get(option, default=None):
     '''
     Get named configuration option from git repository.
@@ -173,6 +197,7 @@ def print_merge_details(pull, title, branch, base_branch, head_branch):
     subprocess.check_call([GIT,'log','--graph','--topo-order','--pretty=format:'+COMMIT_FORMAT,base_branch+'..'+head_branch])
 
 def parse_arguments():
+    api_info = 'default: ' + api_mode_supported[0] + ', possible values: ' + ','.join(api_mode_supported)
     epilog = '''
         In addition, you can set the following git configuration variables:
         githubmerge.repository (mandatory),
@@ -180,12 +205,13 @@ def parse_arguments():
         githubmerge.host (default: git@github.com),
         githubmerge.branch (no default),
         githubmerge.testcmd (default: none),
-        githubmerge.gitlabbaseurl (default: none, you can put here own server, or: https://gitlab.com/).
+        githubmerge.gitlabbaseurl (default: none, put here sting like 'https://gitlab.com/', or word 'none' to disable it).
+        githubmerge.apimode (''' + api_info + ''')
     '''
     parser = argparse.ArgumentParser(description='Utility to merge, sign and push github pull requests',
             epilog=epilog)
     parser.add_argument('pull', metavar='PULL', type=int, nargs=1,
-        help='Pull request ID to merge')
+        help='Pull request (merge-request) ID to merge')
     parser.add_argument('branch', metavar='BRANCH', type=str, nargs='?',
         default=None, help='Branch to merge against (default: githubmerge.branch setting, or base branch for pull, or \'master\')')
     parser.add_argument('--debug', dest='enable_debug', action='store_true', help='Use this to enable debug (disabled by default)')
@@ -203,25 +229,40 @@ def main():
     signingkey = git_config_get('user.signingkey')
 
     baseurl_gitlab = git_config_get('githubmerge.gitlabbaseurl')
+    if baseurl_gitlab == 'none':
+        baseurl_gitlab = None
 
     if repo is None:
         print("ERROR: No repository configured. Use this command to set:", file=stderr)
         print("git config githubmerge.repository <owner>/<repo>", file=stderr)
-        print("if you want to use gitlab instead github, then in addition also set URL (of github.com or own server) with command:", file=stderr)
-        print("git config githubmerge.gitlabbaseurl https://gitlab.com/", file=stderr)
+        print("if you want to use gitlab instead github, then run this script again after setting option:", file=stderr)
+        print("git config githubmerge.apimode gitlab", file=stderr)
+        api_mode_print_help()
         sys.exit(1)
+
     if signingkey is None:
         print("ERROR: No GPG signing key set. Set one using:",file=stderr)
         print("git config --global user.signingkey <key>",file=stderr)
         sys.exit(1)
 
-    api_mode='github'
-    if baseurl_gitlab is not None:
-        api_mode='gitlab'
+    api_mode = git_config_get('githubmerge.apimode','github')
+    if api_mode not in api_mode_supported:
+        print("Unknown API mode was configured (%s)" % api_mode, file=stderr)
+        api_mode_print_help()
+        sys.exit(1)
+
+    if (baseurl_gitlab is not None) and (api_mode == 'github') :
+        print("You configured use of github protocol, but you also configured a gitlab url. Unset that url, or set it to 'none', or change api mode, for example:", file=stderr)
+        print("git config githubmerge.gitlabbaseurl none", file=stderr)
+        api_mode_print_help()
+        sys.exit(1)
 
     if (api_mode == 'gitlab') and (host == host_default_github) :
-        print("You configured to use gitlab protocol (not github), so you must also configure option githubmerge.host with the ssh login of your own gitlab or of the default gitlab, for example with following command:", file=stderr)
-        print("git config --global githubmerge.host git@gitlab.com")
+        print("You configured use of gitlab protocol (instead github), so you must also configure option githubmerge.host", file=stderr)
+        print("to provide the ssh login of your own gitlab (or of the default gitlab)", file=stderr)
+        print("for example with following command:", file=stderr)
+        print("git config githubmerge.host git@gitlab.com", file=stderr)
+        api_mode_print_help()
         sys.exit(1)
 
     host_repo = host+":"+repo # shortcut for push/pull target
@@ -234,7 +275,7 @@ def main():
 
     pull = str(args.pull[0])
 
-    # Receive pull information from github
+    # Receive pull information from github/gitlab server
     if api_mode == 'github':
         info = retrieve_pr_info_github(repo,pull,args.enable_debug)
     elif api_mode == 'gitlab':
