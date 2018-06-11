@@ -29,6 +29,8 @@
 /* Copyright year */
 #define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
 
+#cmakedefine ENABLE_POWER8 1
+
 /* Define this symbol to build code that uses ARMv8 SHA-NI intrinsics */
 #cmakedefine ENABLE_ARM_SHANI 1
 
