@@ -446,12 +446,20 @@ void CPrivateSendServer::ChargeFees(CConnman* connman)
         LogPrintf("CPrivateSendServer::ChargeFees -- found uncooperative node (didn't %s transaction), charging fees: %s\n",
                 (nState == POOL_STATE_SIGNING) ? "sign" : "send", vecOffendersCollaterals[0]->ToString());
 
-        if (connman) {
-            CInv inv(MSG_DSTX, vecOffendersCollaterals[0]->GetHash());
-            connman->ForEachNode([&inv](CNode* pnode)
-            {
-                pnode->PushInventory(inv);
-            });
+        LOCK(cs_main);
+
+        CValidationState state;
+        if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], nullptr, nullptr, false, maxTxFee)) {
+            // should never really happen
+            LogPrintf("CPrivateSendServer::ChargeFees -- ERROR: AcceptToMemoryPool failed!\n");
+        } else {
+            if (connman) {
+                CInv inv(MSG_TX, vecOffendersCollaterals[0]->GetHash());
+                connman->ForEachNode([&inv](CNode* pnode)
+                {
+                    pnode->PushInventory(inv);
+                });
+            }
         }
     }
 }
@@ -472,15 +480,24 @@ void CPrivateSendServer::ChargeRandomFees(CConnman* connman)
 {
     if(!fMasternodeMode) return;
 
+    LOCK(cs_main);
+
     for (const auto& txCollateral : vecSessionCollaterals) {
         if(GetRandInt(100) > 10) return;
         LogPrintf("CPrivateSendServer::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral->GetHash().ToString());
-        if (connman) {
-            CInv inv(MSG_DSTX, txCollateral->GetHash());
-            connman->ForEachNode([&inv](CNode* pnode)
-            {
-                pnode->PushInventory(inv);
-            });
+
+        CValidationState state;
+        if(!AcceptToMemoryPool(mempool, state, txCollateral, nullptr, nullptr, false, maxTxFee)) {
+            // should never really happen
+            LogPrintf("CPrivateSendServer::ChargeRandomFees -- ERROR: AcceptToMemoryPool failed!\n");
+        } else {
+            if (connman) {
+                CInv inv(MSG_TX, txCollateral->GetHash());
+                connman->ForEachNode([&inv](CNode* pnode)
+                {
+                    pnode->PushInventory(inv);
+                });
+            }
         }
     }
 }
