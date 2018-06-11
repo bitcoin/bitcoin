@@ -433,7 +433,15 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
         LogPrintf("CPrivateSendServer::ChargeFees -- found uncooperative node (didn't %s transaction), charging fees: %s\n",
                 (nState == POOL_STATE_SIGNING) ? "sign" : "send", vecOffendersCollaterals[0]->ToString());
 
-        connman.RelayTransaction(*vecOffendersCollaterals[0]);
+        LOCK(cs_main);
+
+        CValidationState state;
+        if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], false, NULL, NULL, false, maxTxFee)) {
+            // should never really happen
+            LogPrintf("CPrivateSendServer::ChargeFees -- ERROR: AcceptToMemoryPool failed!\n");
+        } else {
+            connman.RelayTransaction(*vecOffendersCollaterals[0]);
+        }
     }
 }
 
@@ -453,10 +461,19 @@ void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 {
     if(!fMasternodeMode) return;
 
+    LOCK(cs_main);
+
     for (const auto& txCollateral : vecSessionCollaterals) {
         if(GetRandInt(100) > 10) return;
         LogPrintf("CPrivateSendServer::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral->ToString());
-        connman.RelayTransaction(*txCollateral);
+
+        CValidationState state;
+        if(!AcceptToMemoryPool(mempool, state, txCollateral, false, NULL, NULL, false, maxTxFee)) {
+            // should never really happen
+            LogPrintf("CPrivateSendServer::ChargeRandomFees -- ERROR: AcceptToMemoryPool failed!\n");
+        } else {
+            connman.RelayTransaction(*txCollateral);
+        }
     }
 }
 
