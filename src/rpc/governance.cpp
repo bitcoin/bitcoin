@@ -37,7 +37,7 @@ UniValue gobject(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
          strCommand != "prepare" &&
 #endif // ENABLE_WALLET
-         strCommand != "vote-many" && strCommand != "vote-conf" && strCommand != "vote-alias" && strCommand != "submit" && strCommand != "count" &&
+         strCommand != "vote-many" && strCommand != "vote-conf" && strCommand != "vote-name" && strCommand != "submit" && strCommand != "count" &&
          strCommand != "deserialize" && strCommand != "get" && strCommand != "getvotes" && strCommand != "getcurrentvotes" && strCommand != "list" && strCommand != "diff" &&
          strCommand != "check" ))
         throw std::runtime_error(
@@ -56,7 +56,7 @@ UniValue gobject(const JSONRPCRequest& request)
                 "  getcurrentvotes    - Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
                 "  list               - List governance objects (can be filtered by signal and/or object type)\n"
                 "  diff               - List differences since last diff\n"
-                "  vote-alias         - Vote on a governance object by masternode alias (using masternode.conf setup)\n"
+                "  vote-name         - Vote on a governance object by masternode name (using masternode.conf setup)\n"
                 "  vote-conf          - Vote on a governance object by masternode configured in syscoin.conf\n"
                 "  vote-many          - Vote on a governance object by all masternodes (using masternode.conf setup)\n"
                 );
@@ -504,10 +504,10 @@ UniValue gobject(const JSONRPCRequest& request)
 
 
     // MASTERNODES CAN VOTE ON GOVERNANCE OBJECTS ON THE NETWORK FOR VARIOUS SIGNALS AND OUTCOMES
-    if(strCommand == "vote-alias")
+    if(strCommand == "vote-name")
     {
         if(request.params.size() != 5)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-alias <governance-hash> [funding|valid|delete] [yes|no|abstain] <alias-name>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-name <governance-hash> [funding|valid|delete] [yes|no|abstain] <masternode-name>'");
 
         uint256 hash;
         std::string strVote;

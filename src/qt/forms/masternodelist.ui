@@ -101,7 +101,7 @@
              </attribute>
              <column>
               <property name="text">
-               <string>Alias</string>
+               <string>Name</string>
               </property>
              </column>
              <column>
@@ -144,7 +144,7 @@
              <item>
               <widget class="QPushButton" name="startButton">
                <property name="text">
-                <string>S&amp;tart alias</string>
+                <string>I&amp;nitialize masternode</string>
                </property>
               </widget>
              </item>
