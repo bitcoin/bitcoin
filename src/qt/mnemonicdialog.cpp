@@ -8,6 +8,7 @@
 #include <qt/guiutil.h>
 
 #include <qt/walletmodel.h>
+
 #include <interfaces/wallet.h>
 
 #include <rpc/rpcutil.h>
@@ -18,11 +19,26 @@
 
 #include <QDebug>
 
+void RPCExecutor2::request(const QString &command, const QString &walletID)
+{
+    bool passed = false;
+    UniValue rv;
+    CallRPCVoidRv(command.toStdString(), walletID.toStdString(), &passed, &rv);
+
+    QString sError;
+    if (rv["Error"].isStr())
+        sError = QString::fromStdString(rv["Error"].get_str());
+    else
+        sError = QString::fromStdString(rv.write(1));
+
+    Q_EMIT reply(passed, sError);   // Can't pass back a UniValue or signal won't get detected ?
+};
 
 MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
     QDialog(parent), walletModel(wm),
     ui(new Ui::MnemonicDialog)
 {
+    setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
     ui->setupUi(this);
 
     QObject::connect(ui->btnCancel2, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
@@ -59,6 +75,15 @@ MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
         ui->cbxLanguage->addItem(mnLanguagesDesc[l], QString(mnLanguagesTag[l]));
 
     return;
+};
+
+MnemonicDialog::~MnemonicDialog()
+{
+    if (m_thread)
+    {
+        Q_EMIT stopExecutor();
+        m_thread->wait();
+    };
 };
 
 void MnemonicDialog::on_btnCancel_clicked()
@@ -109,27 +134,51 @@ void MnemonicDialog::on_btnGenerate_clicked()
 
 void MnemonicDialog::on_btnImportFromHwd_clicked()
 {
+    if (m_thread)
+        return;
     QString sCommand = "initaccountfromdevice \"From Hardware Device\"";
 
     QString sPath = ui->edtPath->text();
     sCommand += " \"" + sPath + "\" true -1";
 
-    UniValue rv;
-    if (!walletModel->tryCallRpc(sCommand, rv, true))
-    {
-        QString sError;
-        if (rv["Error"].isStr())
-            sError = QString::fromStdString(rv["Error"].get_str());
-        else
-            sError = QString::fromStdString(rv.write(1));
+    ui->tbxHwdOut->appendPlainText("Waiting for device.");
+    setEnabled(false);
 
+    m_thread = new QThread;
+    RPCExecutor2 *executor = new RPCExecutor2();
+    executor->moveToThread(m_thread);
+
+    connect(executor, SIGNAL(reply(bool,QString)), this, SLOT(hwImportComplete(bool,QString)));         // Replies from executor object must go to this object
+    connect(this, SIGNAL(cmdRequest(QString, QString)), executor, SLOT(request(QString, QString)));     // Requests from this object must go to executor
+
+    connect(this, SIGNAL(stopExecutor()), m_thread, SLOT(quit()));                                      // - quit the Qt event loop in the execution thread
+    connect(m_thread, SIGNAL(finished()), executor, SLOT(deleteLater()), Qt::DirectConnection);         // - queue executor for deletion (in execution thread)
+    m_thread->start();
+
+    Q_EMIT cmdRequest(sCommand, walletModel->getWalletName());
+
+    return;
+};
+
+void MnemonicDialog::hwImportComplete(bool passed, QString reply)
+{
+    setEnabled(true);
+
+    Q_EMIT stopExecutor();
+    m_thread->wait();
+    m_thread = nullptr;
+
+    if (!passed)
+    {
+        QString sError = reply;
         ui->tbxHwdOut->appendPlainText(sError);
         if (sError == "No device found."
             || sError.indexOf("6982") > -1)
             ui->tbxHwdOut->appendPlainText("Open particl app on device before importing.");
     } else
     {
-        sCommand = "devicegetnewstealthaddress \"default stealth\"";
+        UniValue rv;
+        QString sCommand = "devicegetnewstealthaddress \"default stealth\"";
         walletModel->tryCallRpc(sCommand, rv);
         close();
 

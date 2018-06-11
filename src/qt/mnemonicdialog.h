@@ -6,6 +6,16 @@
 #define PARTICL_QT_MNEMONICDIALOG_H
 
 #include <QDialog>
+#include <QThread>
+
+class RPCExecutor2 : public QObject
+{
+    Q_OBJECT
+public Q_SLOTS:
+    void request(const QString &command, const QString &walletID);
+Q_SIGNALS:
+    void reply(bool category, const QString &reply);
+};
 
 class WalletModel;
 
@@ -19,14 +29,22 @@ class MnemonicDialog : public QDialog
 private:
     WalletModel *walletModel;
 
+    QThread *m_thread = nullptr;
+
 public:
     explicit MnemonicDialog(QWidget *parent, WalletModel *wm);
+    ~MnemonicDialog();
 
-protected Q_SLOTS:
+public Q_SLOTS:
+    void hwImportComplete(bool passed, QString reply);
 
 Q_SIGNALS:
     // Rescan blockchain for transactions
     void startRescan();
+
+    // For RPC command executor
+    void stopExecutor();
+    void cmdRequest(const QString &command, const QString &walletID);
 
 private Q_SLOTS:
     void on_btnCancel_clicked();
