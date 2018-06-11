@@ -53,7 +53,8 @@ UniValue privatesend(const JSONRPCRequest& request)
     if(request.params[0].get_str() == "start") {
         {
             LOCK(pwalletMain->cs_wallet);
-            EnsureWalletIsUnlocked();
+            if (pwalletMain->IsLocked(true))
+                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
         }
 
         privateSendClient.fEnablePrivateSend = true;
