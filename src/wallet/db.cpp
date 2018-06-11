@@ -104,7 +104,7 @@ void BerkeleyEnvironment::Close()
     if (ret != 0)
         LogPrintf("BerkeleyEnvironment::Close: Error %d closing database environment: %s\n", ret, DbEnv::strerror(ret));
     if (!fMockDb)
-        DbEnv((u_int32_t)0).remove(strPath.c_str(), 0);
+        DbEnv((u_int32_t)0).remove(fs::u8path(strPath).string().c_str(), 0);
 }
 
 void BerkeleyEnvironment::Reset()
@@ -131,7 +131,7 @@ bool BerkeleyEnvironment::Open(bool retry)
 
     boost::this_thread::interruption_point();
 
-    fs::path pathIn = strPath;
+    fs::path pathIn = fs::u8path(strPath);
     TryCreateDirectories(pathIn);
     if (!LockDirectory(pathIn, ".walletlock")) {
         LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.\n", strPath);
@@ -157,7 +157,7 @@ bool BerkeleyEnvironment::Open(bool retry)
     dbenv->set_flags(DB_AUTO_COMMIT, 1);
     dbenv->set_flags(DB_TXN_WRITE_NOSYNC, 1);
     dbenv->log_set_config(DB_LOG_AUTO_REMOVE, 1);
-    int ret = dbenv->open(strPath.c_str(),
+    int ret = dbenv->open(fs::u8path(strPath).string().c_str(),
                          DB_CREATE |
                              DB_INIT_LOCK |
                              DB_INIT_LOG |
@@ -236,14 +236,14 @@ BerkeleyEnvironment::VerifyResult BerkeleyEnvironment::Verify(const std::string&
     assert(mapFileUseCount.count(strFile) == 0);
 
     Db db(dbenv.get(), 0);
-    int result = db.verify(strFile.c_str(), nullptr, nullptr, 0);
+    int result = db.verify(fs::u8path(strFile).string().c_str(), nullptr, nullptr, 0);
     if (result == 0)
         return VerifyResult::VERIFY_OK;
     else if (recoverFunc == nullptr)
         return VerifyResult::RECOVER_FAIL;
 
     // Try to recover:
-    bool fRecovered = (*recoverFunc)(fs::path(strPath) / strFile, out_backup_filename);
+    bool fRecovered = (*recoverFunc)(fs::u8path(strPath) / fs::u8path(strFile), out_backup_filename);
     return (fRecovered ? VerifyResult::RECOVER_OK : VerifyResult::RECOVER_FAIL);
 }
 
@@ -262,8 +262,8 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
     int64_t now = GetTime();
     newFilename = strprintf("%s.%d.bak", filename, now);
 
-    int result = env->dbenv->dbrename(nullptr, filename.c_str(), nullptr,
-                                       newFilename.c_str(), DB_AUTO_COMMIT);
+    int result = env->dbenv->dbrename(nullptr, fs::u8path(filename).string().c_str(), nullptr,
+                                       fs::u8path(newFilename).string().c_str(), DB_AUTO_COMMIT);
     if (result == 0)
         LogPrintf("Renamed %s to %s\n", filename, newFilename);
     else
@@ -283,7 +283,7 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
 
     std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
     int ret = pdbCopy->open(nullptr,               // Txn pointer
-                            filename.c_str(),   // Filename
+                            fs::u8path(filename).string().c_str(),   // Filename
                             "main",             // Logical db name
                             DB_BTREE,           // Database type
                             DB_CREATE,          // Flags
@@ -346,7 +346,7 @@ bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::string& w
     BerkeleyEnvironment* env = GetWalletEnv(file_path, walletFile);
     fs::path walletDir = env->Directory();
 
-    if (fs::exists(walletDir / walletFile))
+    if (fs::exists(walletDir / fs::u8path(walletFile)))
     {
         std::string backup_filename;
         BerkeleyEnvironment::VerifyResult r = env->Verify(walletFile, recoverFunc, backup_filename);
@@ -385,7 +385,7 @@ bool BerkeleyEnvironment::Salvage(const std::string& strFile, bool fAggressive, 
     std::stringstream strDump;
 
     Db db(dbenv.get(), 0);
-    int result = db.verify(strFile.c_str(), nullptr, &strDump, flags);
+    int result = db.verify(fs::u8path(strFile).string().c_str(), nullptr, &strDump, flags);
     if (result == DB_VERIFY_BAD) {
         LogPrintf("BerkeleyEnvironment::Salvage: Database salvage found errors, all data may not be recoverable.\n");
         if (!fAggressive) {
@@ -439,7 +439,7 @@ void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile)
     dbenv->txn_checkpoint(0, 0, 0);
     if (fMockDb)
         return;
-    dbenv->lsn_reset(strFile.c_str(), 0);
+    dbenv->lsn_reset(fs::u8path(strFile).string().c_str(), 0);
 }
 
 
@@ -478,8 +478,8 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
             }
 
             ret = pdb_temp->open(nullptr,                             // Txn pointer
-                            fMockDb ? nullptr : strFilename.c_str(),  // Filename
-                            fMockDb ? strFilename.c_str() : "main",   // Logical db name
+                            fMockDb ? nullptr : fs::u8path(strFilename).string().c_str(),  // Filename
+                            fMockDb ? fs::u8path(strFilename).string().c_str() : "main",   // Logical db name
                             DB_BTREE,                                 // Database type
                             nFlags,                                   // Flags
                             0);
@@ -596,7 +596,7 @@ bool BerkeleyBatch::Rewrite(BerkeleyDatabase& database, const char* pszSkip)
                     std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
 
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
-                                            strFileRes.c_str(), // Filename
+                                            fs::u8path(strFileRes).string().c_str(), // Filename
                                             "main",             // Logical db name
                                             DB_BTREE,           // Database type
                                             DB_CREATE,          // Flags
@@ -645,10 +645,10 @@ bool BerkeleyBatch::Rewrite(BerkeleyDatabase& database, const char* pszSkip)
                 }
                 if (fSuccess) {
                     Db dbA(env->dbenv.get(), 0);
-                    if (dbA.remove(strFile.c_str(), nullptr, 0))
+                    if (dbA.remove(fs::u8path(strFile).string().c_str(), nullptr, 0))
                         fSuccess = false;
                     Db dbB(env->dbenv.get(), 0);
-                    if (dbB.rename(strFileRes.c_str(), nullptr, strFile.c_str(), 0))
+                    if (dbB.rename(fs::u8path(strFileRes).string().c_str(), nullptr, fs::u8path(strFile).string().c_str(), 0))
                         fSuccess = false;
                 }
                 if (!fSuccess)
@@ -682,7 +682,7 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
                 dbenv->txn_checkpoint(0, 0, 0);
                 LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: %s detach\n", strFile);
                 if (!fMockDb)
-                    dbenv->lsn_reset(strFile.c_str(), 0);
+                    dbenv->lsn_reset(fs::u8path(strFile).string().c_str(), 0);
                 LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: %s closed\n", strFile);
                 mapFileUseCount.erase(mi++);
             } else
@@ -695,7 +695,7 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
                 dbenv->log_archive(&listp, DB_ARCH_REMOVE);
                 Close();
                 if (!fMockDb) {
-                    fs::remove_all(fs::path(strPath) / "database");
+                    fs::remove_all(fs::u8path(strPath) / "database");
                 }
                 g_dbenvs.erase(strPath);
             }
@@ -768,10 +768,10 @@ bool BerkeleyDatabase::Backup(const std::string& strDest)
                 env->mapFileUseCount.erase(strFile);
 
                 // Copy wallet file
-                fs::path pathSrc = GetWalletDir() / strFile;
-                fs::path pathDest(strDest);
+                fs::path pathSrc = GetWalletDir() / fs::u8path(strFile);
+                fs::path pathDest = fs::u8path(strDest);
                 if (fs::is_directory(pathDest))
-                    pathDest /= strFile;
+                    pathDest /= fs::u8path(strFile);
 
                 try {
                     if (fs::equivalent(pathSrc, pathDest)) {

@@ -3962,11 +3962,11 @@ bool CWallet::Verify(std::string wallet_file, bool salvage_wallet, std::string& 
     // 3. Path to a symlink to a directory.
     // 4. For backwards compatibility, the name of a data file in -walletdir.
     LOCK(cs_wallets);
-    fs::path wallet_path = fs::absolute(wallet_file, GetWalletDir());
+    fs::path wallet_path = fs::absolute(fs::u8path(wallet_file), GetWalletDir());
     fs::file_type path_type = fs::symlink_status(wallet_path).type();
     if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
           (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
-          (path_type == fs::regular_file && fs::path(wallet_file).filename() == wallet_file))) {
+          (path_type == fs::regular_file && fs::u8path(wallet_file).filename() == wallet_file))) {
         error_string = strprintf(
               "Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
               "database/log.?????????? files can be stored, a location where such a directory could be created, "
@@ -3977,7 +3977,7 @@ bool CWallet::Verify(std::string wallet_file, bool salvage_wallet, std::string& 
 
     // Make sure that the wallet path doesn't clash with an existing wallet path
     for (auto wallet : GetWallets()) {
-        if (fs::absolute(wallet->GetName(), GetWalletDir()) == wallet_path) {
+        if (fs::absolute(fs::u8path(wallet->GetName()), GetWalletDir()) == wallet_path) {
             error_string = strprintf("Error loading wallet %s. Duplicate -wallet filename specified.", wallet_file);
             return false;
         }

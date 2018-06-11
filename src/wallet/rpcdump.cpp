@@ -719,7 +719,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    boost::filesystem::path filepath = request.params[0].get_str();
+    boost::filesystem::path filepath = fs::u8path(request.params[0].get_str());
     filepath = boost::filesystem::absolute(filepath);
 
     /* Prevent arbitrary files from being overwritten. There have been reports
