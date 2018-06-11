@@ -94,6 +94,8 @@ private:
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
+    std::unique_ptr<interfaces::Handler> m_handler_notify_waiting_for_device;
+
 Q_SIGNALS:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
@@ -107,6 +109,9 @@ Q_SIGNALS:
 
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
+
+    // Waiting for hardware device
+    void waitingForDevice(bool fCompleted);
 
 public Q_SLOTS:
     void updateTimer();

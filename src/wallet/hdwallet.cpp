@@ -3884,13 +3884,13 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 if (0 != pDevice->Open())
                     return errorN(1, sError, __func__, _("Failed to open dongle").c_str());
 
-                NotifyWaitingForDevice(false);
+                uiInterface.NotifyWaitingForDevice(false);
 
                 pDevice->PrepareTransaction(&txNew, view);
                 if (!pDevice->sError.empty())
                 {
                     pDevice->Close();
-                    NotifyWaitingForDevice(true);
+                    uiInterface.NotifyWaitingForDevice(true);
                     return errorN(1, sError, __func__, _("PrepareTransaction for device failed: %s").c_str(), pDevice->sError);
                 };
 
@@ -3915,7 +3915,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     if (!pDevice->sError.empty())
                     {
                         pDevice->Close();
-                        NotifyWaitingForDevice(true);
+                        uiInterface.NotifyWaitingForDevice(true);
                         return errorN(1, sError, __func__, _("ProduceSignature from device failed: %s").c_str(), pDevice->sError);
                     };
                     UpdateInput(txNew.vin[nIn], sigdata);
@@ -3938,7 +3938,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 pDevice->Close();
                 //return errorN(1, sError, __func__, "Need key from hardware: TODO"); // []
 
-                NotifyWaitingForDevice(true);
+                uiInterface.NotifyWaitingForDevice(true);
             };
 #endif
         };

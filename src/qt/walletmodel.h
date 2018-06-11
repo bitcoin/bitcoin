@@ -231,7 +231,6 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_watch_only_changed;
     interfaces::Node& m_node;
 
-    std::unique_ptr<interfaces::Handler> m_handler_waiting_for_device;
     std::unique_ptr<interfaces::Handler> m_handler_reserved_balance_changed;
 
     bool fHaveWatchOnly;
@@ -256,8 +255,6 @@ private:
     void unsubscribeFromCoreSignals();
 
     void checkBalanceChanged(const interfaces::WalletBalances& new_balances);
-
-    QMessageBox mbDevice;
 
 Q_SIGNALS:
     // Signal that balance in wallet changed
@@ -303,9 +300,6 @@ public Q_SLOTS:
 
     // Reserved balance in wallet changed
     void updateReservedBalanceChanged(CAmount nValue);
-
-    // Waiting for hardware device
-    void waitingForDevice(bool fCompleted);
 
     // Rescan blockchain for transactions
     void startRescan();

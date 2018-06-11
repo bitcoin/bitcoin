@@ -55,8 +55,6 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     connect(this, SIGNAL(notifyReservedBalanceChanged(CAmount)), getOptionsModel(), SLOT(updateReservedBalance(CAmount)));
 
     subscribeToCoreSignals();
-
-    mbDevice.setText("Waiting for device.");
 }
 
 WalletModel::~WalletModel()
@@ -106,18 +104,6 @@ void WalletModel::setReserveBalance(CAmount nReserveBalanceNew)
 void WalletModel::updateReservedBalanceChanged(CAmount nValue)
 {
     Q_EMIT notifyReservedBalanceChanged(nValue);
-};
-
-void WalletModel::waitingForDevice(bool fComplete)
-{
-    if (!fComplete)
-    {
-        mbDevice.show();
-    } else
-    {
-        if (mbDevice.isVisible())
-            mbDevice.hide();
-    };
 };
 
 void WalletModel::startRescan()
@@ -458,12 +444,6 @@ static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly
                               Q_ARG(bool, fHaveWatchonly));
 }
 
-static void NotifyWaitingForDevice(WalletModel *walletmodel, bool fCompleted)
-{
-    QMetaObject::invokeMethod(walletmodel, "waitingForDevice", Qt::QueuedConnection,
-                              Q_ARG(bool, fCompleted));
-}
-
 static void NotifyReservedBalanceChanged(WalletModel *walletmodel, CAmount nValue)
 {
     QMetaObject::invokeMethod(walletmodel, "updateReservedBalanceChanged", Qt::QueuedConnection,
@@ -481,7 +461,6 @@ void WalletModel::subscribeToCoreSignals()
     m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(boost::bind(NotifyWatchonlyChanged, this, _1));
 
     if (m_wallet->IsParticlWallet()) {
-        m_handler_waiting_for_device = m_wallet->handleWaitingForDevice(boost::bind(NotifyWaitingForDevice, this, _1));
         m_handler_reserved_balance_changed = m_wallet->handleReservedBalanceChanged(boost::bind(NotifyReservedBalanceChanged, this, _1));
     }
 }
@@ -496,7 +475,6 @@ void WalletModel::unsubscribeFromCoreSignals()
     m_handler_watch_only_changed->disconnect();
 
     if (m_wallet->IsParticlWallet()) {
-        m_handler_waiting_for_device->disconnect();
         m_handler_reserved_balance_changed->disconnect();
     }
 }

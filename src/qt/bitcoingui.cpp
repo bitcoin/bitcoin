@@ -515,6 +515,8 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         // Receive and report messages from client model
         connect(_clientModel, SIGNAL(message(QString,QString,unsigned int)), this, SLOT(message(QString,QString,unsigned int)));
 
+        connect(_clientModel, SIGNAL(waitingForDevice(bool)), this, SLOT(waitingForDevice(bool)));
+
         // Show progress dialog
         connect(_clientModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
 
@@ -1012,6 +1014,25 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
     else
         notificator->notify(static_cast<Notificator::Class>(nNotifyIcon), strTitle, message);
 }
+
+// Waiting for hardware device
+void BitcoinGUI::waitingForDevice(bool fCompleted)
+{
+    if (!fCompleted)
+    {
+        mbDevice.setText("Waiting for device.");
+        mbDevice.setWindowFlags(mbDevice.windowFlags() | Qt::WindowStaysOnTopHint);
+        mbDevice.show();
+        mbDevice.raise();
+        mbDevice.activateWindow();
+        MilliSleep(100);
+        qApp->processEvents();
+    } else
+    {
+        if (mbDevice.isVisible())
+            mbDevice.hide();
+    };
+};
 
 void BitcoinGUI::changeEvent(QEvent *e)
 {

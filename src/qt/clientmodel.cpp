@@ -246,6 +246,11 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     }
 }
 
+static void NotifyWaitingForDevice(ClientModel *clientmodel, bool fCompleted)
+{
+    Q_EMIT clientmodel->waitingForDevice(fCompleted);
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
@@ -256,6 +261,8 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_banned_list_changed = m_node.handleBannedListChanged(boost::bind(BannedListChanged, this));
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, false));
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, true));
+
+    m_handler_notify_waiting_for_device = m_node.handleNotifyWaitingForDevice(boost::bind(NotifyWaitingForDevice, this, _1));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -268,6 +275,8 @@ void ClientModel::unsubscribeFromCoreSignals()
     m_handler_banned_list_changed->disconnect();
     m_handler_notify_block_tip->disconnect();
     m_handler_notify_header_tip->disconnect();
+
+    m_handler_notify_waiting_for_device->disconnect();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const

@@ -273,9 +273,6 @@ public:
     using WatchOnlyChangedFn = std::function<void(bool have_watch_only)>;
     virtual std::unique_ptr<Handler> handleWatchOnlyChanged(WatchOnlyChangedFn fn) = 0;
 
-    using WaitingForDeviceFn = std::function<void(bool waiting_for_device)>;
-    virtual std::unique_ptr<Handler> handleWaitingForDevice(WaitingForDeviceFn fn) = 0;
-
     using ReservedBalanceChangedFn = std::function<void(CAmount value)>;
     virtual std::unique_ptr<Handler> handleReservedBalanceChanged(ReservedBalanceChangedFn fn) = 0;
 

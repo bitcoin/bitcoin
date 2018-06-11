@@ -729,8 +729,6 @@ public:
     bool CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHeight, int64_t nFees, CMutableTransaction &txNew, CKey &key);
     bool SignBlock(CBlockTemplate *pblocktemplate, int nHeight, int64_t nSearchTime);
 
-    boost::signals2::signal<void (bool fCompleted)> NotifyWaitingForDevice;
-
     boost::signals2::signal<void (CAmount nReservedBalance)> NotifyReservedBalanceChanged;
 
     int64_t nLastCoinStakeSearchTime = 0;
