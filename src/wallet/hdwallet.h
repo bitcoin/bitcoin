@@ -701,7 +701,7 @@ public:
     std::map<CTxDestination, std::vector<COutput>> ListCoins() const override;
     std::map<CTxDestination, std::vector<COutputR>> ListCoins(OutputTypes nType) const;
 
-    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutputR> vCoins, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet) const;
+    bool SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutputR> vCoins, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const override;
 
