@@ -146,7 +146,7 @@ def file_has_without_c_style_copyright_for_holder(contents, holder_name):
 ################################################################################
 
 def read_file(filename):
-    return open(os.path.abspath(filename), 'r').read()
+    return open(os.path.abspath(filename), 'r', encoding="utf8").read()
 
 def gather_file_info(filename):
     info = {}
@@ -325,13 +325,13 @@ def get_most_recent_git_change_year(filename):
 ################################################################################
 
 def read_file_lines(filename):
-    f = open(os.path.abspath(filename), 'r')
+    f = open(os.path.abspath(filename), 'r', encoding="utf8")
     file_lines = f.readlines()
     f.close()
     return file_lines
 
 def write_file_lines(filename, file_lines):
-    f = open(os.path.abspath(filename), 'w')
+    f = open(os.path.abspath(filename), 'w', encoding="utf8")
     f.write(''.join(file_lines))
     f.close()
 
