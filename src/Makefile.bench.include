@@ -19,7 +19,7 @@ bench_bench_particl_SOURCES = \
   bench/mlsag.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
-  bench/Examples.cpp \
+  bench/examples.cpp \
   bench/rollingbloom.cpp \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \

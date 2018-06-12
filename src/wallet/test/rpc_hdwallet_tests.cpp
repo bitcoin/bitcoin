@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     script = CScript(vScript.begin(), vScript.end());
 
     txnouttype whichType;
-    BOOST_CHECK(IsStandard(script, whichType, true));
+    BOOST_CHECK(IsStandard(script, whichType));
 
     opcodetype opcode;
     valtype vchPushValue;
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     vScript = ParseHex(rv["hex"].get_str());
     script = CScript(vScript.begin(), vScript.end());
 
-    BOOST_CHECK(IsStandard(script, whichType, true));
+    BOOST_CHECK(IsStandard(script, whichType));
 
     pc = script.begin();
     BOOST_REQUIRE(script.GetOp(pc, opcode, vchPushValue));

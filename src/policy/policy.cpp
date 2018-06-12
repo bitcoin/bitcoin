@@ -96,7 +96,7 @@ bool IsDust(const CTxOutBase *txout, const CFeeRate& dustRelayFee)
     return false;
 };
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool witnessEnabled)
+bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
@@ -109,7 +109,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
             if (!SplitConditionalCoinstakeScript(scriptPubKey, scriptA, scriptB))
                 return false;
 
-            return IsStandard(scriptA, whichType, witnessEnabled) && IsStandard(scriptB, whichType, witnessEnabled);
+            return IsStandard(scriptA, whichType) && IsStandard(scriptB, whichType);
         };
     };
 
@@ -130,13 +130,10 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
                (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes))
           return false;
 
-    else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH))
-        return false;
-
     return whichType != TX_NONSTANDARD && whichType != TX_WITNESS_UNKNOWN;
 }
 
-bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnessEnabled)
+bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
     if (!tx.IsParticlVersion() && (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1)) {
         reason = "version";
@@ -176,7 +173,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
     txnouttype whichType;
 
     for (const CTxOut& txout : tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, whichType, witnessEnabled)) {
+        if (!::IsStandard(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
             return false;
         }
@@ -198,7 +195,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
         if (!p->IsType(OUTPUT_STANDARD) && !p->IsType(OUTPUT_CT))
             continue;
 
-        if (!::IsStandard(*p->GetPScriptPubKey(), whichType, witnessEnabled)) {
+        if (!::IsStandard(*p->GetPScriptPubKey(), whichType)) {
             reason = "scriptpubkey";
             return false;
         }
@@ -262,7 +259,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             const CScript& prevScript = prev.scriptPubKey;
 
             //if (!Solver(prevScript, whichType, vSolutions))
-            if (!::IsStandard(prevScript, whichType, true))
+            if (!::IsStandard(prevScript, whichType))
                 return false;
 
             if (whichType == TX_SCRIPTHASH)

@@ -4759,7 +4759,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
                 CScript script(vScript.begin(), vScript.end());
 
                 txnouttype whichType;
-                if (IsStandard(script, whichType, true))
+                if (IsStandard(script, whichType))
                 {
                     coincontrol.scriptChange = script;
                     fHaveScript = true;

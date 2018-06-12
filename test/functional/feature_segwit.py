@@ -42,9 +42,9 @@ class SegWitTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
-        self.extra_args = [["-walletprematurewitness", "-rpcserialversion=0", "-vbparams=segwit:0:999999999999", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"],
-                           ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1", "-vbparams=segwit:0:999999999999", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"],
-                           ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-vbparams=segwit:0:999999999999", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"]]
+        self.extra_args = [["-rpcserialversion=0", "-vbparams=segwit:0:999999999999", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"],
+                           ["-blockversion=4", "-promiscuousmempoolflags=517", "-rpcserialversion=1", "-vbparams=segwit:0:999999999999", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"],
+                           ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-vbparams=segwit:0:999999999999", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"]]
 
     def setup_network(self):
         super().setup_network()
@@ -129,21 +129,6 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].generate(260) #block 423
         sync_blocks(self.nodes)
 
-        self.log.info("Verify default node can't accept any witness format txs before fork")
-        # unsigned, no scriptsig
-        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", wit_ids[NODE_0][WIT_V0][0], False)
-        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", wit_ids[NODE_0][WIT_V1][0], False)
-        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V0][0], False)
-        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V1][0], False)
-        # unsigned with redeem script
-        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V0][0], False, witness_script(False, self.pubkey[0]))
-        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V1][0], False, witness_script(True, self.pubkey[0]))
-        # signed
-        self.fail_accept(self.nodes[0], "no-witness-yet", wit_ids[NODE_0][WIT_V0][0], True)
-        self.fail_accept(self.nodes[0], "no-witness-yet", wit_ids[NODE_0][WIT_V1][0], True)
-        self.fail_accept(self.nodes[0], "no-witness-yet", p2sh_ids[NODE_0][WIT_V0][0], True)
-        self.fail_accept(self.nodes[0], "no-witness-yet", p2sh_ids[NODE_0][WIT_V1][0], True)
-
         self.log.info("Verify witness txs are skipped for mining before the fork")
         self.skip_mine(self.nodes[2], wit_ids[NODE_2][WIT_V0][0], True) #block 424
         self.skip_mine(self.nodes[2], wit_ids[NODE_2][WIT_V1][0], True) #block 425
@@ -163,6 +148,16 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
         segwit_tx_list = self.nodes[2].getblock(block[0])["tx"]
         assert_equal(len(segwit_tx_list), 5)
+
+        self.log.info("Verify default node can't accept txs with missing witness")
+        # unsigned, no scriptsig
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", wit_ids[NODE_0][WIT_V0][0], False)
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", wit_ids[NODE_0][WIT_V1][0], False)
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V0][0], False)
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V1][0], False)
+        # unsigned with redeem script
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V0][0], False, witness_script(False, self.pubkey[0]))
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V1][0], False, witness_script(True, self.pubkey[0]))
 
         self.log.info("Verify block and transaction serialization rpcs return differing serializations depending on rpc serialization flag")
         assert(self.nodes[2].getblock(block[0], False) !=  self.nodes[0].getblock(block[0], False))

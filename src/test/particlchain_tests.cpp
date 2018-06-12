@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
 
     txnouttype whichType;
     // IsStandard should fail until chain time is >= OpIsCoinstakeTime
-    BOOST_CHECK(!IsStandard(script, whichType, true));
+    BOOST_CHECK(!IsStandard(script, whichType));
 
 
     BOOST_CHECK(IsMine(keystoreB, script));
