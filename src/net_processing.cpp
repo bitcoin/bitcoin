@@ -1039,8 +1039,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
 static void RelayTransaction(const CTransaction& tx, CConnman* connman)
 {
-    int nInv = static_cast<bool>(CPrivateSend::GetDSTX(tx.GetHash()) ? MSG_DSTX : MSG_TX);
-    CInv inv(nInv, tx.GetHash());
+    CInv inv(static_cast<bool>(CPrivateSend::GetDSTX(tx.GetHash())) ? MSG_DSTX : MSG_TX, tx.GetHash());
     connman->ForEachNode([&inv](CNode* pnode)
     {
         pnode->PushInventory(inv);
