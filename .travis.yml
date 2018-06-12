@@ -170,7 +170,7 @@ before_script:
     - if [ "$TRAVIS_REPO_SLUG" != "dashpay/dash" -o "$TRAVIS_BRANCH" != "develop" -o "$TRAVIS_PULL_REQUEST" != "false" ]; then export DOCKER_BUILD="false"; echo DOCKER_BUILD=$DOCKER_BUILD; fi
     # TODO: Check keys and signed commits
     #- if [ "$TRAVIS_REPO_SLUG" = "dashpay/dash" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then while read LINE; do travis_retry gpg --keyserver hkp://subset.pool.sks-keyservers.net --recv-keys $LINE; done < contrib/verify-commits/trusted-keys; fi
-    #- if [ "$TRAVIS_REPO_SLUG" = "dashpay/dash" -a "$TRAVIS_EVENT_TYPE" = "cron" ]; then travis_wait 30 contrib/verify-commits/verify-commits.sh; fi
+    #- if [ "$TRAVIS_REPO_SLUG" = "dashpay/dash" -a "$TRAVIS_EVENT_TYPE" = "cron" ]; then travis_wait 30 contrib/verify-commits/verify-commits.py; fi
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
