@@ -7,14 +7,20 @@
 
 #include <QDialog>
 #include <QThread>
+#include <univalue.h>
 
-class RPCExecutor2 : public QObject
+class RPCThread : public QThread
 {
     Q_OBJECT
-public Q_SLOTS:
-    void request(const QString &command, const QString &walletID);
+public:
+    RPCThread(const QString &command, const QString &walletID, UniValue *rv)
+        : QThread(), m_command(command), m_wallet(walletID), m_rv(rv) {};
+    void run() override;
+    QString m_command;
+    QString m_wallet;
+    UniValue *m_rv;
 Q_SIGNALS:
-    void reply(bool category, const QString &reply);
+    void complete(bool passed);
 };
 
 class WalletModel;
@@ -29,22 +35,19 @@ class MnemonicDialog : public QDialog
 private:
     WalletModel *walletModel;
 
-    QThread *m_thread = nullptr;
+    RPCThread *m_thread = nullptr;
+    UniValue m_rv;
 
 public:
     explicit MnemonicDialog(QWidget *parent, WalletModel *wm);
     ~MnemonicDialog();
 
 public Q_SLOTS:
-    void hwImportComplete(bool passed, QString reply);
+    void hwImportComplete(bool passed);
 
 Q_SIGNALS:
     // Rescan blockchain for transactions
     void startRescan();
-
-    // For RPC command executor
-    void stopExecutor();
-    void cmdRequest(const QString &command, const QString &walletID);
 
 private Q_SLOTS:
     void on_btnCancel_clicked();

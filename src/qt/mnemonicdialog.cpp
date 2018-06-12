@@ -13,26 +13,17 @@
 
 #include <rpc/rpcutil.h>
 #include <util.h>
-#include <univalue.h>
 #include <key/mnemonic.h>
 #include <key/extkey.h>
 
 #include <QDebug>
 
-void RPCExecutor2::request(const QString &command, const QString &walletID)
+void RPCThread::run()
 {
     bool passed = false;
-    UniValue rv;
-    CallRPCVoidRv(command.toStdString(), walletID.toStdString(), &passed, &rv);
-
-    QString sError;
-    if (rv["Error"].isStr())
-        sError = QString::fromStdString(rv["Error"].get_str());
-    else
-        sError = QString::fromStdString(rv.write(1));
-
-    Q_EMIT reply(passed, sError);   // Can't pass back a UniValue or signal won't get detected ?
-};
+    CallRPCVoidRv(m_command.toStdString(), m_wallet.toStdString(), &passed, m_rv);
+    Q_EMIT complete(passed);   // Can't pass back a UniValue or signal won't get detected ?
+}
 
 MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
     QDialog(parent), walletModel(wm),
@@ -81,8 +72,8 @@ MnemonicDialog::~MnemonicDialog()
 {
     if (m_thread)
     {
-        Q_EMIT stopExecutor();
         m_thread->wait();
+        delete m_thread;
     };
 };
 
@@ -135,7 +126,10 @@ void MnemonicDialog::on_btnGenerate_clicked()
 void MnemonicDialog::on_btnImportFromHwd_clicked()
 {
     if (m_thread)
+    {
+        qWarning() << "MnemonicDialog hwd thread exists.";
         return;
+    };
     QString sCommand = "initaccountfromdevice \"From Hardware Device\"";
 
     QString sPath = ui->edtPath->text();
@@ -144,33 +138,30 @@ void MnemonicDialog::on_btnImportFromHwd_clicked()
     ui->tbxHwdOut->appendPlainText("Waiting for device.");
     setEnabled(false);
 
-    m_thread = new QThread;
-    RPCExecutor2 *executor = new RPCExecutor2();
-    executor->moveToThread(m_thread);
-
-    connect(executor, SIGNAL(reply(bool,QString)), this, SLOT(hwImportComplete(bool,QString)));         // Replies from executor object must go to this object
-    connect(this, SIGNAL(cmdRequest(QString, QString)), executor, SLOT(request(QString, QString)));     // Requests from this object must go to executor
-
-    connect(this, SIGNAL(stopExecutor()), m_thread, SLOT(quit()));                                      // - quit the Qt event loop in the execution thread
-    connect(m_thread, SIGNAL(finished()), executor, SLOT(deleteLater()), Qt::DirectConnection);         // - queue executor for deletion (in execution thread)
+    m_thread = new RPCThread(sCommand, walletModel->getWalletName(), &m_rv);
+    connect(m_thread, SIGNAL(complete(bool)), this, SLOT(hwImportComplete(bool)));
+    m_thread->setObjectName("particl-hwImport");
     m_thread->start();
-
-    Q_EMIT cmdRequest(sCommand, walletModel->getWalletName());
 
     return;
 };
 
-void MnemonicDialog::hwImportComplete(bool passed, QString reply)
+void MnemonicDialog::hwImportComplete(bool passed)
 {
     setEnabled(true);
 
-    Q_EMIT stopExecutor();
     m_thread->wait();
+    delete m_thread;
     m_thread = nullptr;
 
     if (!passed)
     {
-        QString sError = reply;
+        QString sError;
+        if (m_rv["Error"].isStr())
+            sError = QString::fromStdString(m_rv["Error"].get_str());
+        else
+            sError = QString::fromStdString(m_rv.write(1));
+
         ui->tbxHwdOut->appendPlainText(sError);
         if (sError == "No device found."
             || sError.indexOf("6982") > -1)
