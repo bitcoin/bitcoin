@@ -103,8 +103,8 @@ class WalletTest (BitcoinTestFramework):
             txns_to_send.append(self.nodes[0].signrawtransaction(raw_tx))
 
         # Have node 1 (miner) send the transactions
-        self.nodes[1].sendrawtransaction(txns_to_send[0]["hex"], True)
-        self.nodes[1].sendrawtransaction(txns_to_send[1]["hex"], True)
+        self.nodes[1].sendrawtransaction(txns_to_send[0]["hex"], True, False, True)
+        self.nodes[1].sendrawtransaction(txns_to_send[1]["hex"], True, False, True)
 
         # Have node1 mine a block to confirm transactions:
         self.nodes[1].generate(1)
