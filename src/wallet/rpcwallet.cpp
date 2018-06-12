@@ -40,12 +40,21 @@
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
-std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
+bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
         // wallet endpoint was used
-        std::string requestedWallet = urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size()));
-        std::shared_ptr<CWallet> pwallet = GetWallet(requestedWallet);
+        wallet_name = urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size()));
+        return true;
+    }
+    return false;
+}
+
+std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
+{
+    std::string wallet_name;
+    if (GetWalletNameFromJSONRPCRequest(request, wallet_name)) {
+        std::shared_ptr<CWallet> pwallet = GetWallet(wallet_name);
         if (!pwallet) throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
         return pwallet;
     }
