@@ -114,3 +114,26 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/round7.json
 
 EXTRA_DIST=$(TEST_FILES) $(GEN_SRCS)
+
+DISTCLEANFILES = \
+    aclocal.m4 \
+    build-aux/compile \
+    build-aux/config.guess \
+    build-aux/config.sub \
+    build-aux/depcomp \
+    build-aux/install-sh \
+    build-aux/ltmain.sh \
+    build-aux/m4/libtool.m4 \
+    build-aux/m4/lt~obsolete.m4 \
+    build-aux/m4/ltoptions.m4 \
+    build-aux/m4/ltsugar.m4 \
+    build-aux/m4/ltversion.m4 \
+    build-aux/missing \
+    build-aux/test-driver \
+    configure \
+    Makefile.in \
+    univalue-config.h.in \
+    univalue-config.h.in~
+
+clean-local:
+	rm -rf autom4te.cache

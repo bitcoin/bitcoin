@@ -166,6 +166,26 @@ src/ecmult_static_context.h: $(gen_context_BIN)
 CLEANFILES = $(gen_context_BIN) src/ecmult_static_context.h $(JAVAROOT)/$(JAVAORG)/*.class .stamp-java
 endif
 
+DISTCLEANFILES = \
+    aclocal.m4 \
+    build-aux/compile \
+    build-aux/config.guess \
+    build-aux/config.sub \
+    build-aux/depcomp \
+    build-aux/install-sh \
+    build-aux/ltmain.sh \
+    build-aux/m4/libtool.m4 \
+    build-aux/m4/lt~obsolete.m4 \
+    build-aux/m4/ltoptions.m4 \
+    build-aux/m4/ltsugar.m4 \
+    build-aux/m4/ltversion.m4 \
+    build-aux/missing \
+    build-aux/test-driver \
+    configure \
+    Makefile.in \
+    src/libsecp256k1-config.h.in \
+    src/libsecp256k1-config.h.in~
+
 EXTRA_DIST = autogen.sh src/gen_context.c src/basic-config.h $(JAVA_FILES)
 
 if ENABLE_MODULE_ECDH
@@ -175,3 +195,6 @@ endif
 if ENABLE_MODULE_RECOVERY
 include src/modules/recovery/Makefile.am.include
 endif
+
+clean-local:
+	rm -rf autom4te.cache
