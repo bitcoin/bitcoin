@@ -2754,7 +2754,7 @@ bool IsOutpointMature(const COutPoint& outpoint, bool fUseInstantSend)
 	GetUTXOCoin(outpoint, coin);
 	if (coin.IsSpent())
 		return false;
-	int numConfirmationsNeeded = 1;
+	int numConfirmationsNeeded = 0;
 	if (coin.IsCoinBase())
 		numConfirmationsNeeded = COINBASE_MATURITY;
 	if (fUseInstantSend)
