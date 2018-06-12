@@ -76,11 +76,11 @@ def main():
     # get directory of this program and read data files
     dirname = os.path.dirname(os.path.abspath(__file__))
     print("Using verify-commits data from " + dirname)
-    verified_root = open(dirname + "/trusted-git-root", "r").read().splitlines()[0]
-    verified_sha512_root = open(dirname + "/trusted-sha512-root-commit", "r").read().splitlines()[0]
-    revsig_allowed = open(dirname + "/allow-revsig-commits", "r").read().splitlines()
-    unclean_merge_allowed = open(dirname + "/allow-unclean-merge-commits", "r").read().splitlines()
-    incorrect_sha512_allowed = open(dirname + "/allow-incorrect-sha512-commits", "r").read().splitlines()
+    verified_root = open(dirname + "/trusted-git-root", "r", encoding="utf8").read().splitlines()[0]
+    verified_sha512_root = open(dirname + "/trusted-sha512-root-commit", "r", encoding="utf8").read().splitlines()[0]
+    revsig_allowed = open(dirname + "/allow-revsig-commits", "r", encoding="utf-8").read().splitlines()
+    unclean_merge_allowed = open(dirname + "/allow-unclean-merge-commits", "r", encoding="utf-8").read().splitlines()
+    incorrect_sha512_allowed = open(dirname + "/allow-incorrect-sha512-commits", "r", encoding="utf-8").read().splitlines()
 
     # Set commit and branch and set variables
     current_commit = args.commit
