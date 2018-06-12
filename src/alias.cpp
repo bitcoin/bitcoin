@@ -1604,12 +1604,12 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	if (find_first(strName, "."))
 	{
 		if (!regex_search(strName, nameparts, domainwithtldregex) || string(nameparts[0]) != strName)
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters"));
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters"));
 	}
 	else
 	{
 		if (!regex_search(strName, nameparts, domainwithouttldregex) || string(nameparts[0]) != strName)
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes"));
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes"));
 	}
 
 
@@ -1638,7 +1638,14 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	strEncryptionPublicKey = params[6].get_str();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[7]);
-
+	if (!fUnitTest) {
+		
+		if (strEncryptionPrivateKey.empty() || strEncryptionPublicKey.empty())
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("Encryption keys cannot be empty"));
+		CPubKey vchPubKey(ParseHex(strEncryptionPublicKey));
+		if(!vchPubKey.IsFullyValid())
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("Public encryption key is invalid"));
+	}
 	CMutableTransaction tx;
 	tx.nVersion = SYSCOIN_TX_VERSION;
 	tx.vin.clear();
