@@ -70,7 +70,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.block_submit(self.nodes[0], test1txs, True)
 
         print ("Test 2: Non-NULLDUMMY base multisig transaction should not be accepted to mempool before activation")
-        test2tx = self.create_transaction(self.nodes[0], txid2, self.ms_address, 48)
+        test2tx = self.create_transaction(self.nodes[0], txid2, self.ms_address, 47)
         trueDummy(test2tx)
         txid4 = self.tx_submit(self.nodes[0], test2tx, NULLDUMMY_ERROR)
 
@@ -78,7 +78,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.block_submit(self.nodes[0], [test2tx], True)
 
         print ("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
-        test4tx = self.create_transaction(self.nodes[0], txid4, self.address, 47)
+        test4tx = self.create_transaction(self.nodes[0], txid4, self.address, 46)
         test6txs=[CTransaction(test4tx)]
         trueDummy(test4tx)
         self.tx_submit(self.nodes[0], test4tx, NULLDUMMY_ERROR)
