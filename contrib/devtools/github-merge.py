@@ -205,7 +205,7 @@ def parse_arguments():
         githubmerge.host (default: git@github.com),
         githubmerge.branch (no default),
         githubmerge.testcmd (default: none),
-        githubmerge.gitlabbaseurl (default: none, put here sting like 'https://gitlab.com/', or word 'none' to disable it).
+        githubmerge.gitlabbaseurl (default: none, put here string like 'https://gitlab.com/', or word 'none' to disable it).
         githubmerge.apimode (''' + api_info + ''')
     '''
     parser = argparse.ArgumentParser(description='Utility to merge, sign and push github pull requests',
