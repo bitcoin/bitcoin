@@ -8,15 +8,23 @@
 (How one can reproduce the issue, step by step.)
 
 
-### What is the expected correct behavior?
+### Expected behavior
 
 (What is supposed to happen.)
 
 
-### What is the current bug behavior?
+### Problematic behavior
 
 (What actually happens.)
 
+
+### Crown-core environment info
+
+(The OS version, like Ubuntu 16.04.)
+
+### Crown-core application info
+
+(The wallet version, like v0.12.4.1; link to the pipeline/build if possible.)
 
 ### Relevant logs and/or screenshots
 
