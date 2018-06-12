@@ -21,7 +21,7 @@ bench_bench_dash_SOURCES = \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/ecdsa.cpp \
-  bench/Examples.cpp \
+  bench/examples.cpp \
   bench/rollingbloom.cpp \
   bench/chacha20.cpp \
   bench/chacha_poly_aead.cpp \

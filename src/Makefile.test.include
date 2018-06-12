@@ -51,7 +51,7 @@ BITCOIN_TESTS =\
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
   test/cuckoocache_tests.cpp \
-  test/DoS_tests.cpp \
+  test/denialofservice_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/getarg_tests.cpp \
@@ -80,7 +80,7 @@ BITCOIN_TESTS =\
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
-  test/script_P2SH_tests.cpp \
+  test/script_p2sh_tests.cpp \
   test/script_P2PK_tests.cpp \
   test/script_P2PKH_tests.cpp \
   test/script_tests.cpp \

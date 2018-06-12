@@ -45,7 +45,7 @@ static NodeId id = 0;
 
 void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds);
 
-BOOST_FIXTURE_TEST_SUITE(DoS_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 
 // Test eviction of an outbound peer whose chain never advances
 // Mock a node connection, and use mocktime to simulate a peer
