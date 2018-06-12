@@ -18,7 +18,7 @@ class TestRPCAuth(unittest.TestCase):
         config_path = os.path.abspath(
             os.path.join(os.sep, os.path.abspath(os.path.dirname(__file__)),
             "../config.ini"))
-        with open(config_path) as config_file:
+        with open(config_path, encoding="utf8") as config_file:
             config.read_file(config_file)
         sys.path.insert(0, os.path.dirname(config['environment']['RPCAUTH']))
         self.rpcauth = importlib.import_module('rpcauth')
