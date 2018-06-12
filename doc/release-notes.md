@@ -126,14 +126,15 @@ RPC changes
 -----------
 
 There are a few changes in existing RPC interfaces in this release:
-- `gobject count`, `masternode count` and `masternode list` will now by default return JSON formatted output.
-If you rely on the old output format, you can still specify an additional parameter for backwards compatibility (`all` for `count` and `status` for `list`).
-- `masternodelist` has a few new modes: `daemon`, `json`, `sentinel`
-- `debug` rpc now requires categories to be separated via `+`, not `,` like before (e.g. `dash+net`)
-- `getchaintips` now shows the block fork occurred in `forkpoint` field
-- `getrawmempool`'s has InstantSend-related info (`instantsend` and `instantlock`)
-- `getgovernanceinfo` has new field `sentinelpingmaxseconds`
-- `getwalletinfo` now shows PrivateSend balance in `privatesend_balance` field
+- `gobject count`, `masternode count` and `masternode list` will now by default return JSON formatted output;
+If you rely on the old output format, you can still specify an additional parameter for backwards compatibility (`all` for `count` and `status` for `list`);
+- `masternodelist` has a few new modes: `daemon`, `json`, `sentinel`;
+- `debug` rpc now requires categories to be separated via `+`, not `,` like before (e.g. `dash+net`);
+- `getchaintips` now shows the block fork occurred in `forkpoint` field;
+- `getrawmempool`'s has InstantSend-related info (`instantsend` and `instantlock`);
+- `getgovernanceinfo` has new field `sentinelpingmaxseconds`;
+- `getwalletinfo` now shows PrivateSend balance in `privatesend_balance` field;
+- `sendrawtransaction` no longer bypasses transaction policy limits by default.
 
 There is also a new RPC command `listaddressbalances`.
 
@@ -209,6 +210,8 @@ A lot of refactoring, code cleanups and other small fixes were done in this rele
 See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...dashpay:v0.12.3) below.
 
 ### Governance:
+- [`6c79c348e`](https://github.com/dashpay/dash/commit/6c79c348e) Drop "MAY, 2018" clause for proposal validation on mainnet (#2101)
+- [`6079b860e`](https://github.com/dashpay/dash/commit/6079b860e) Drop trigger objects when triggers are deleted or failed to be created (#2098)
 - [`2583e1963`](https://github.com/dashpay/dash/commit/2583e1963) Test: Add few valid/invalid proposals (internationalization) (#2044)
 - [`25eb6d7b3`](https://github.com/dashpay/dash/commit/25eb6d7b3) clean up governance vote code (#2042)
 - [`a0874b72a`](https://github.com/dashpay/dash/commit/a0874b72a) Validate data size for proposals only (#2004)
@@ -227,6 +230,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`8a387ee09`](https://github.com/dashpay/dash/commit/8a387ee09) Drop SPORK_13_OLD_SUPERBLOCK_FLAG and check superblock start hash (#1872)
 
 ### InstantSend:
+- [`8c2d16f5f`](https://github.com/dashpay/dash/commit/8c2d16f5f) Limit IS quorums by updated MNs only (#2107)
 - [`ef85d5144`](https://github.com/dashpay/dash/commit/ef85d5144) Comment updates - InstantSend (#2062)
 - [`c0a109998`](https://github.com/dashpay/dash/commit/c0a109998) Fix instantsend in testnet and regtest (#2016)
 - [`2f1661678`](https://github.com/dashpay/dash/commit/2f1661678) Locked txes should not expire until mined and have sufficient confirmations (#2011)
@@ -236,6 +240,9 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`2c04504f1`](https://github.com/dashpay/dash/commit/2c04504f1) Refactor IS votes processing (#1951)
 
 ### PrivateSend:
+- [`8e129877a`](https://github.com/dashpay/dash/commit/8e129877a) Partially revert 1922 (#2108)
+- [`fcac40ab4`](https://github.com/dashpay/dash/commit/fcac40ab4) RPC: fix wallet lock check in `privatesend start` (#2102)
+- [`dbbedc031`](https://github.com/dashpay/dash/commit/dbbedc031) Fix JoinExistingQueue bug (#2100)
 - [`7ac4b972a`](https://github.com/dashpay/dash/commit/7ac4b972a) Require all participants to submit equal number of inputs (#2075)
 - [`d1bf615f3`](https://github.com/dashpay/dash/commit/d1bf615f3) No POOL_STATE_ERROR or POOL_STATE_SUCCESS on masternodes (#2009)
 - [`d03adb7c3`](https://github.com/dashpay/dash/commit/d03adb7c3) Check if in masternode mode first and only then do the job (or not) (#2008)
@@ -284,6 +291,8 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`79183f630`](https://github.com/dashpay/dash/commit/79183f630) Add tests for GetBlockSubsidy algorithm (#2022)
 
 ### Wallet:
+- [`0a71c693e`](https://github.com/dashpay/dash/commit/0a71c693e) Remove explicit wallet lock in MasternodeList::StartAll() (#2106)
+- [`0de79d70b`](https://github.com/dashpay/dash/commit/0de79d70b) Do not create oversized transactions (bad-txns-oversize) (#2103)
 - [`0260821f8`](https://github.com/dashpay/dash/commit/0260821f8) fix SelectCoinsByDenominations (#2074)
 - [`b7bd96e2b`](https://github.com/dashpay/dash/commit/b7bd96e2b) Clarify the warning displayed when encrypting HD wallet (#2002)
 - [`4930bb9f5`](https://github.com/dashpay/dash/commit/4930bb9f5) Don't hold cs_storage in CKeyHolderStorage while calling functions which might lock cs_wallet (#2000)
@@ -321,6 +330,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`e30009c31`](https://github.com/dashpay/dash/commit/e30009c31) Fix qt and fontconfig depends #1884
 
 ### Docs:
+- [`ca2eae6e6`](https://github.com/dashpay/dash/commit/ca2eae6e6) 12.3 release notes draft (#2045)
 - [`faeb4480a`](https://github.com/dashpay/dash/commit/faeb4480a) Update manpages with ./contrib/devtools/gen-manpages.sh (#2088)
 - [`4148b8200`](https://github.com/dashpay/dash/commit/4148b8200) Release notes cleanup (#2034)
 - [`d2c46a6a3`](https://github.com/dashpay/dash/commit/d2c46a6a3) Update protocol-documentation.md (#1964)
@@ -331,6 +341,12 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`3dc62106b`](https://github.com/dashpay/dash/commit/3dc62106b) [Docs] Doxygen config update (#1796)
 
 ### Other fixes and improvements:
+- [`806d7f049`](https://github.com/dashpay/dash/commit/806d7f049) Fix rpc tests broken by 2110 (#2118)
+- [`836e10471`](https://github.com/dashpay/dash/commit/836e10471) Bump proto to 70210 (#2109)
+- [`8d8fdb433`](https://github.com/dashpay/dash/commit/8d8fdb433) sendrawtransaction no longer bypasses transaction policy limits by default (#2110)
+- [`23ba94b37`](https://github.com/dashpay/dash/commit/23ba94b37) Bump remaining min protocols (#2097)
+- [`9299a84b1`](https://github.com/dashpay/dash/commit/9299a84b1) Bump few consts (#2096)
+- [`7b43720f0`](https://github.com/dashpay/dash/commit/7b43720f0) Fix copying of final binaries into dashcore-binaries (#2090)
 - [`cc593615e`](https://github.com/dashpay/dash/commit/cc593615e) Bump copyright year to 2018 (#2087)
 - [`2129ee4d8`](https://github.com/dashpay/dash/commit/2129ee4d8) Add docker support when doing Gitian builds (#2084)
 - [`6a1456ef4`](https://github.com/dashpay/dash/commit/6a1456ef4) Update gitian key for codablock (#2085)
@@ -415,6 +431,7 @@ Thanks to everyone who directly contributed to this release:
 - Kamil Woźniak
 - Nathan Marley
 - Oleg Girko
+- Semen Martynov
 - Spencer Lievens
 - thephez
 - UdjinM6
