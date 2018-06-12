@@ -10,19 +10,12 @@
 #include <atomic>
 
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
-#if defined(USE_ASM)
 #include <cpuid.h>
-namespace sha256_sse4
-{
-void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
-}
 
 namespace sha256_sse41
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 }
-#endif
-#endif
 
 namespace sha256d64_sse41
 {
@@ -43,6 +36,8 @@ namespace sha256_shani
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 }
+
+#endif
 
 // Internal implementation code.
 namespace
