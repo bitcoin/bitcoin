@@ -872,13 +872,18 @@ public:
     void PushInventory(const CInv& inv)
     {
         LOCK(cs_inventory);
-        if ((inv.type == MSG_TX) || (inv.type == MSG_DSTX)) {
+        if (inv.type == MSG_TX) {
             if (!filterInventoryKnown.contains(inv.hash)) {
+                LogPrint(BCLog::NET, "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
                 setInventoryTxToSend.insert(inv.hash);
+            } else {
+                LogPrint(BCLog::NET, "PushInventory --  filtered inv: %s peer=%d\n", inv.ToString(), id);
             }
         } else if (inv.type == MSG_BLOCK) {
+            LogPrint(BCLog::NET, "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
             vInventoryBlockToSend.push_back(inv.hash);
         } else {
+            LogPrint(BCLog::NET, "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
             vInventoryOtherToSend.push_back(inv);
         }
     }

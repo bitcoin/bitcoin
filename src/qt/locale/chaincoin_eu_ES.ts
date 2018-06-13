@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="eu_ES" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Helbideak jasotzen</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Hauek dira zuk dirua jaso dezaketen Bitcoin helbideak. Egiaztatu beti diru-kopurua eta dirua jasoko duen helbidea zuzen egon daitezen, txanponak bidali baino lehen.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Hauek dira zure dirua jasotzeko Bitcoin helbideak. Gomendagarria da, operazio bakoitza helbide berri batekin egitea.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -160,10 +150,6 @@
     <message>
         <source>Confirm wallet encryption</source>
         <translation>Diruorroaren enkriptazioa berretsi</translation>
-    </message>
-    <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Abisua: Diruzorroa enkriptatzen baduzu eta zure pasahitza galtzen baduzu, &lt;b&gt;BITCOIN GUZTIAK GALDUKO DITUZU&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -297,6 +283,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
@@ -322,6 +311,9 @@
         <source>(no label)</source>
         <translation>(izendapenik ez)</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -376,6 +368,9 @@
     <name>Intro</name>
     </context>
 <context>
+    <name>MasternodeList</name>
+    </context>
+<context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
@@ -418,6 +413,12 @@
 </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -587,7 +588,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     </context>
@@ -636,7 +637,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Panel honek transakzien deskribapen xehea azaltzen du</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -646,10 +647,6 @@
     <message>
         <source>Type</source>
         <translation>Mota</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Izendapen</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -820,18 +817,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Aukerak:</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Birbilatzen...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Zamaketa amaitua</translation>
-    </message>
+    <name>chaincoin-core</name>
     </context>
 </TS>

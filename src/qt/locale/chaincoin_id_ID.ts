@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="id_ID" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Alamat-alamat penerima</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Ini adalah alamat- alamat Bitcoin Anda untuk mengirimkan pembayaran. Selalu periksa jumlah dan alamat penerima sebelum mengirimkan koin.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Ini adalah alamat- alamat Bitcoin Anda untuk menerima pembayaran. Dianjurkan untuk menggunakan alamat penerima yang baru setiap melakukan transaksi.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -170,20 +160,12 @@
         <translation>Konfirmasi pengenkripsian dompet</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Peringatan: Jika Anda enkripsi dompet Anda dan lupa kata sandi anda, Anda akan &lt;b&gt;KEHILANGAN SEMUA BITCOIN ANDA&lt;/b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Apakah Anda yakin ingin enkripsi dompet Anda?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>Dompet terenkripsi</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 sekarang akan ditutup untuk menyelesaikan proses enkripsi. Ingatlah bahwa mengenkripsi dompet Anda tidak dapat sepenuhnya melindungi komputer Anda dari pencurian malware yang menginfeksi komputer Anda.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -272,10 +254,6 @@
         <translation>Keluar dari aplikasi</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;Tentang%1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>Tampilkan informasi perihal %1</translation>
     </message>
@@ -316,10 +294,6 @@
         <translation>&amp;Alamat-alamat untuk menerima...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Buka &amp;URI</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>Klik untuk menonaktifkan aktivitas jaringan.</translation>
     </message>
@@ -340,10 +314,6 @@
         <translation>Mengindex ulang blok di dalam disk...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Kirim koin ke alamat Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Cadangkan dompet ke lokasi lain</translation>
     </message>
@@ -352,20 +322,12 @@
         <translation>Ubah kata kunci yang digunakan untuk enkripsi dompet</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Jendela Debug</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Buka konsol debug dan diagnosa</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verifikasi pesan...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -392,14 +354,6 @@
         <translation>Enkripsi private key yang dimiliki dompet Anda</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Tanda tangani sebuah pesan menggunakan alamat Bitcoin Anda untuk membuktikan bahwa Anda adalah pemilik alamat tersebut</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifikasi pesan untuk memastikan bahwa pesan tersebut ditanda tangani oleh suatu alamat Bitcoin tertentu</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Berkas</translation>
     </message>
@@ -416,10 +370,6 @@
         <translation>Baris tab</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Permintaan pembayaran (membuat kode QR dan bitcoin: URIs)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Tampilkan daftar alamat dan label yang terkirim</translation>
     </message>
@@ -428,16 +378,8 @@
         <translation>Tampilkan daftar alamat dan label yang diterima</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Buka URI bitcoin: atau permintaan pembayaran</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;pilihan Command-line</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n koneksi aktif ke jaringan Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -478,10 +420,6 @@
     <message>
         <source>Up to date</source>
         <translation>Terbaru</translation>
-    </message>
-    <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Tampilkan %1 pesan bantuan untuk mendapatkan daftar opsi baris perintah Bitcoin yang memungkinkan</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -549,11 +487,10 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Dompet saat ini &lt;b&gt;terenkripsi&lt;/b&gt; dan &lt;b&gt;terkunci&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Terjadi Kesalahan Fatal. Bitcoin Tidak Dapat Melanjutkan Dengan Aman Dan Akan Keluar</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ClientModel</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -685,13 +622,12 @@
         <translation>Tidak</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Dapat bervariasi +/- %1 satoshi per input.</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(tidak ada label)</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -730,10 +666,6 @@
     <message>
         <source>Edit sending address</source>
         <translation>Ubah alamat pengirim</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Alamat yang dimasukkan "%1" bukanlah alamat Bitcoin yang valid.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -782,10 +714,6 @@
         <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>About %1</source>
-        <translation>Tentang %1</translation>
-    </message>
-    <message>
         <source>Command-line options</source>
         <translation>Pilihan Command-line</translation>
     </message>
@@ -825,7 +753,7 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>Hapus semua pengaturan pada GUI.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -849,10 +777,6 @@
         <translation>Gunakan direktori pilihan Anda:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>Kesalahan: Direktori data "%1" tidak dapat dibuat.</translation>
     </message>
@@ -869,6 +793,9 @@
         <translation><numerusform>(dari %n GB yang dibutuhkan)</numerusform></translation>
     </message>
 </context>
+<context>
+    <name>MasternodeList</name>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -930,10 +857,6 @@
         <translation>Minimalisasi aplikasi ketika jendela ditutup. Ketika pilihan ini dipilih, aplikasi akan menutup seluruhnya jika anda memilih Keluar di menu yang tersedia.</translation>
     </message>
     <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>URL pihak ketika (misalnya sebuah block explorer) yang mumcul dalam tab transaksi sebagai konteks menu. %s dalam URL diganti dengan kode transaksi. URL dipisahkan dengan tanda vertikal |.</translation>
-    </message>
-    <message>
         <source>Active command-line options that override above options:</source>
         <translation>Pilihan command-line yang aktif menimpa diatas opsi: </translation>
     </message>
@@ -966,24 +889,12 @@
         <translation>Perbolehkan fitur &amp;pengaturan koin</translation>
     </message>
     <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Jika Anda menonaktifkan perubahan saldo untuk transaksi yang belum dikonfirmasi, perubahan dari transaksi tidak dapat dilakukan sampai transaksi memiliki setidaknya satu konfirmasi. Hal ini juga mempengaruhi bagaimana saldo Anda dihitung.</translation>
-    </message>
-    <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Perubahan saldo untuk transaksi yang belum dikonfirmasi</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Otomatis membuka port client Bitcoin di router. Hanya berjalan apabila router anda mendukung UPnP dan di-enable.</translation>
-    </message>
-    <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Petakan port dengan &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Hubungkan ke jaringan Bitcoin melalui SOCKS5 proxy.</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1093,10 +1004,6 @@
         <translation>Formulir</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Informasi terlampir mungkin sudah kedaluwarsa. Dompet Anda secara otomatis mensinkronisasi dengan jaringan Bitcoin ketika sebuah hubungan terbentuk, namun proses ini belum selesai.</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>Tersedia:</translation>
     </message>
@@ -1154,10 +1061,6 @@
         <translation>Nilai</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Masukkan alamat Bitcoin (contoh %1)</translation>
-    </message>
-    <message>
         <source>%1 h</source>
         <translation>%1 Jam</translation>
     </message>
@@ -1198,6 +1101,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -1213,10 +1122,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Informasi</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Jendela debug</translation>
     </message>
     <message>
         <source>General</source>
@@ -1497,10 +1402,6 @@
         <translation>Biaya Transaksi:</translation>
     </message>
     <message>
-        <source>Recommended:</source>
-        <translation>Disarankan</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Kirim ke beberapa penerima sekaligus</translation>
     </message>
@@ -1669,10 +1570,6 @@
         <translation>Salin tanda tangan terpilih ke sistem klipboard</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Tandai pesan untuk menyetujui kamu pemiliki alamat Bitcoin ini</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>Tandakan &amp;Pesan</translation>
     </message>
@@ -1703,7 +1600,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -1724,13 +1621,9 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Jendela ini menampilkan deskripsi rinci dari transaksi tersebut</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
-    </message>
     <message>
         <source>(no label)</source>
         <translation>(tidak ada label)</translation>
@@ -1784,194 +1677,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Pilihan:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Tentukan direktori data</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Hubungkan ke node untuk menerima alamat peer, dan putuskan</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Tentukan alamat publik Anda sendiri</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Menerima perintah baris perintah dan JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Berjalan dibelakang sebagai daemin dan menerima perintah</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Jalankan perintah ketika perubahan transaksi dompet (%s di cmd digantikan oleh TxID)</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Terima hubungan dari luar (standar: 1 kalau -proxy atau -connect tidak dipilih)</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Pilihan pembuatan blok:</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Pilih koneksi:</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>Menemukan database blok yang rusak </translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>Jangan memuat dompet dan menonaktifkan panggilan dompet RPC</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>Apakah Anda ingin coba membangun kembali database blok sekarang?</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>Kesalahan menginisialisasi database blok</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>Kesalahan menginisialisasi dompet pada database%s!</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>Gagal memuat database blok</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>Menemukan masalah membukakan database blok</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Gagal: Hard disk hampir terisi!</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>mengimpor...</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Tidak bisa cari blok pertama, atau blok pertama salah. Salah direktori untuk jaringan?</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>Deskripsi berkas tidak tersedia dengan cukup.</translation>
-    </message>
-    <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>Tentukan arsip dompet (dalam direktori data)</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Blok-blok sedang diverifikasi...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Opsi dompet:</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>Hubungkan melalui proxy SOCKS5</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informasi</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>Opsi server RPC:</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Kirim info jejak/debug ke konsol bukan berkas debug.log</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Mengecilkan berkas debug.log saat klien berjalan  (Standar: 1 jika tidak -debug)</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>Tandatangani transaksi tergagal</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>Nilai transaksi terlalu kecil</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Transaksi terlalu besar</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Nama pengguna untuk hubungan JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Peringatan</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Setiap transaksi dalam dompet sedang di-'Zap'...</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Kata sandi untuk hubungan JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Menjalankan perintah ketika perubahan blok terbaik (%s dalam cmd digantikan oleh hash blok)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Izinkan peninjauan DNS untuk -addnote, -seednode dan -connect</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Jaringan tidak diketahui yang ditentukan dalam -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Saldo tidak mencukupi</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Memuat indeks blok...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Memuat dompet...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Tidak dapat menurunkan versi dompet</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Memindai ulang...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Memuat selesai</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Gagal</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

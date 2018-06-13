@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="af" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Ontvanger adresse</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Hierdie is die adresse vanwaar u Bitcoin betalings stuur. U moet altyd die bedrag en die adres van die ontvanger nagaan voordat u enige munte stuur.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Hierdie is die adresse waar u Bitcoins sal ontvang. Ons beveel aan dat u 'n nuwe adres kies vir elke transaksie</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -174,10 +164,6 @@
         <translation>Bevestig dat die beursie gekodifiseer is</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Waarskuwing: Indien u die beursie kodifiseer en u vergeet u wagwoord &lt;b&gt;VERLOOR U AL U BITCOINS&lt;/b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Is u seker dat u die beursie wil kodifiseer?</translation>
     </message>
@@ -272,10 +258,6 @@
         <translation>Stop en verlaat die applikasie</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;Oor %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>Wys inligting oor %1</translation>
     </message>
@@ -316,10 +298,6 @@
         <translation>&amp;Ontvanger adresse</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Oop &amp; URI...</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>Kliek om netwerkaktiwiteit af te skakel.</translation>
     </message>
@@ -336,10 +314,6 @@
         <translation>Besig met herindeksering van blokke op hardeskyf...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Stuur munte na 'n Bitcoin adres</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Maak 'n rugsteun-kopié van beursie na 'n ander stoorplek</translation>
     </message>
@@ -348,20 +322,12 @@
         <translation>Verander die wagwoord wat ek vir kodifikasie van my beursie gebruik</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Ontfout venster</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Maak ontfouting en diagnostiese konsole oop</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verifieer boodskap...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -388,14 +354,6 @@
         <translation>Kodifiseer die private sleutes wat aan jou beursie gekoppel is.</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Onderteken boodskappe met u Bitcoin adresse om u eienaarskap te bewys</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifieër boodskappe om seker te maak dat dit met die gespesifiseerde Bitcoin adresse</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Leër</translation>
     </message>
@@ -412,20 +370,12 @@
         <translation>Orebalk</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Versoek betalings (genereer QR-kodes en bitcoin: URI's)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Vertoon die lys van gebruikte versendingsadresse en etikette</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Vertoon die lys van gebruikte ontvangers-adresse en etikette</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Skep 'n bitcoin: URI of betalingsversoek</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -517,11 +467,10 @@
         <source>Incoming transaction</source>
         <translation>Inkomende transaksie</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>'N fatale fout het voorgekom. Bitcoin kan nie meer veilig voortgaan nie en sal nou toemaak.</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ClientModel</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -657,10 +606,6 @@
         <translation>Hierdie etiket raak rooi as enige ontvanger 'n bedrag kleiner as die huidige stof drempel ontvang.</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Kan verskil met +/- %1 satoshi(s) per invoer.</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(geen etiket)</translation>
     </message>
@@ -673,6 +618,9 @@
         <translation>(verander)</translation>
     </message>
 </context>
+<context>
+    <name>DarksendConfig</name>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -710,10 +658,6 @@
     <message>
         <source>Edit sending address</source>
         <translation>Wysig stuur adres</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Die ingevoerde adres "%1" is nie 'n geldige Bitcoin adres nie.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -762,10 +706,6 @@
         <translation>(%1-stukkie)</translation>
     </message>
     <message>
-        <source>About %1</source>
-        <translation>Ongeveer %1</translation>
-    </message>
-    <message>
         <source>Command-line options</source>
         <translation>Opdrag lyn opsies</translation>
     </message>
@@ -805,7 +745,7 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>Alle instellings wat in die grafiese gebruikerkoppelvlak gewysig is, terugstel</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -825,14 +765,6 @@
         <translation>Gebruik 'n persoonlike data gids:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>The wallet will also be stored in this directory.</source>
-        <translation>Die beursie sal ook in hierdie gids gestoor word.</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>Fout: Gespesifiseerde dataleêr "%1" kon nie geskep word nie.</translation>
     </message>
@@ -840,6 +772,9 @@
         <source>Error</source>
         <translation>Fout</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -916,14 +851,6 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Hoof</translation>
-    </message>
-    <message>
-        <source>Automatically start %1 after logging in to the system.</source>
-        <translation>Begin %1 outomaties nadat jy aangemeld is by die stelsel.</translation>
-    </message>
-    <message>
-        <source>&amp;Start %1 on system login</source>
-        <translation>&amp;Begin %1 op stelsel aanmelding</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1190,10 +1117,6 @@
         <translation>Bedrag</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Voer in 'n Bitcoin adres (bv. %1)</translation>
-    </message>
-    <message>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
@@ -1248,7 +1171,13 @@
         <source>Error: %1</source>
         <translation>Fout: %1</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
 <context>
     <name>QRImageWidget</name>
     </context>
@@ -1500,10 +1429,6 @@
         <translation>(geen boodskap)</translation>
     </message>
     <message>
-        <source>(no amount requested)</source>
-        <translation>(geen bedrag versoek)</translation>
-    </message>
-    <message>
         <source>Requested</source>
         <translation>Versoekte</translation>
     </message>
@@ -1569,14 +1494,6 @@
     <message>
         <source>Hide</source>
         <translation>Versteek</translation>
-    </message>
-    <message>
-        <source>Recommended:</source>
-        <translation>Aanbeveel:</translation>
-    </message>
-    <message>
-        <source>Custom:</source>
-        <translation>Aangepaste:</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
@@ -1802,10 +1719,6 @@
         <translation>Tipe</translation>
     </message>
     <message>
-        <source>Label</source>
-        <translation>Merk</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation>Gemyn</translation>
     </message>
@@ -1914,182 +1827,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Opsies:</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Kern</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Konneksie opsies:</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation>Fout met laai %s</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>Besig met invoer...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Beursie opsies:</translation>
-    </message>
-    <message>
-        <source>(default: %u)</source>
-        <translation>(standaard: %u)</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Inligting</translation>
-    </message>
-    <message>
-        <source>Node relay options:</source>
-        <translation>Node aflos opsies:</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>RPC bediener opsies:</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>Teken van transaksie het misluk</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation>Dié is eksperimentele sagteware.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>Transaksie bedrag te klein</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Transaksie te groot</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)...</source>
-        <translation>Besig met verifieer van beursie(s)...</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Waarskuwing</translation>
-    </message>
-    <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>Moenie transaksies vir langer as &lt;n&gt; ure in die geheuepoel hou nie (verstek: %u)</translation>
-    </message>
-    <message>
-        <source>%s is set very high!</source>
-        <translation>%s is baie hoog gestel!</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(standaard: %s)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Luister vir JSON-RPC konneksies op &lt;port&gt; (verstek: %u of testnet: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Luister vir konneksies op &lt;port&gt; (verstek: %u of testnet: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
-        <translation>Handhaaf hoogstens &lt;n&gt; verbindings na portuurs (verstek: %u)</translation>
-    </message>
-    <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>Maak dat die beursie transaksies uitsaai</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Maksimum per-konneksie ontvang buffer, &lt;n&gt;*1000 grepe (verstek: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Maksimum per-konneksie stuur buffer, &lt;n&gt;*1000 grepe (verstek: %u)</translation>
-    </message>
-    <message>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>Voeg ontfout-uitset met tydstempel by (verstek: %u)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>Spesifiseer konfigurasie lêer (verstek: %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>Spesifiseer konneksie timeout in millisekondes (minimum: 1, verstek: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>Spesifiseer pid lêer (verstek: %s)</translation>
-    </message>
-    <message>
-        <source>Starting network threads...</source>
-        <translation>Begin tans netwerkdrade...</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>Dit is die minimum transaksie fooi wat u betaal op elke transaksie.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Dit is die transaksie fooi wat u sal betaal as u 'n transaksie stuur.</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>Drumpel vir die ontkoppel van misdadige portuurs (verstek: %u)</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation>Transaksies bedrae moet nie negatief wees nie</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation>Transaksie se mempool ketting is te lank</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation>Transaksie moet ten minste een ontvanger hê</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Onbekend netwerk gespesifiseer in -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Onvoldoende fondse</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Blokindeks word gelaai...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Beursie word gelaai...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Kan nie beursie afgradeer nie</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Word herskandeer...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Klaar gelaai</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Fout</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

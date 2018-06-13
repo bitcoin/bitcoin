@@ -1039,7 +1039,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
 static void RelayTransaction(const CTransaction& tx, CConnman* connman)
 {
-    CInv inv(MSG_TX, tx.GetHash());
+    CInv inv(static_cast<bool>(CPrivateSend::GetDSTX(tx.GetHash())) ? MSG_DSTX : MSG_TX, tx.GetHash());
     connman->ForEachNode([&inv](CNode* pnode)
     {
         pnode->PushInventory(inv);
@@ -2231,13 +2231,19 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
         const CTransaction& tx = *ptx;
 
-        CInv inv(nInvType, tx.GetHash());
+        uint256 hashTx = tx.GetHash();
+        CInv inv(nInvType, hashTx);
+
+        // If we are the masternode creating the final DSTX, we will have the inv but not added it to the mempool. If we want to mine it,
+        // we still need to add it
+        bool fHaveMempool = mempool.exists(hashTx);
+        bool fHaveDSTX = static_cast<bool>(CPrivateSend::GetDSTX(hashTx));
+
         pfrom->AddInventoryKnown(inv);
 
         // Process custom logic, no matter if tx will be accepted to mempool later or not
         if (strCommand == NetMsgType::DSTX) {
-            uint256 hashTx = tx.GetHash();
-            if(CPrivateSend::GetDSTX(hashTx)) {
+            if(fHaveDSTX && fHaveMempool) {
                 LogPrint(BCLog::PRIVSEND, "DSTX -- Already have %s, skipping...\n", hashTx.ToString());
                 return true; // not an error
             }
@@ -2276,13 +2282,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         std::list<CTransactionRef> lRemovedTxn;
 
-        if (!AlreadyHave(inv) &&
-                AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+        if ((!AlreadyHave(inv) || (fHaveDSTX && !fHaveMempool)) &&
+                AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, strCommand == NetMsgType::DSTX ? true : false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             // Process custom txes, this changes AlreadyHave to "true"
             if (strCommand == NetMsgType::DSTX) {
                 LogPrintf("DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
                         tx.GetHash().ToString(), pfrom->GetId());
-                CPrivateSend::AddDSTX(dstx);
+                if (!fHaveDSTX) CPrivateSend::AddDSTX(dstx);
             }
 
             mempool.check(pcoinsTip.get());
@@ -2322,7 +2328,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
                     if (setMisbehaving.count(fromPeer))
                         continue;
-                    if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, &fMissingInputs2, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+                    if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, &fMissingInputs2, &lRemovedTxn, strCommand == NetMsgType::DSTX ? true : false /* bypass_limits */, 0 /* nAbsurdFee */)) {
                         LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
                         RelayTransaction(orphanTx, connman);
                         for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {

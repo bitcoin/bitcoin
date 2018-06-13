@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="kk_KZ" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -72,10 +70,6 @@
         <translation>Құпия сөзді өзгерту</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Биткоин</translation>
-    </message>
-    <message>
         <source>Wallet</source>
         <translation>Әмиян</translation>
     </message>
@@ -117,6 +111,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
@@ -152,6 +149,9 @@
     </message>
     </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>&amp;Label</source>
@@ -171,13 +171,12 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
-        <translation>Биткоин</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>қате</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -218,6 +217,12 @@
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -308,26 +313,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Information</source>
-        <translation>Информация</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>Транзакция өте кішкентай</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Транзакция өте үлкен</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Ескерту</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>қате</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

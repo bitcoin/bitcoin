@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="he" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>כתובות לקבלה</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>אלו הן כתובות הביטקוין שלך לשליחת תשלומים. חשוב לבדוק את הסכום ואת הכתובת המקבלת לפני שליחת מטבעות.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>אלו הן כתובות הביטקוין שלך לקבלת תשלומים. מומלץ להשתמש בכתובת חדשה לכל העברה.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -170,20 +160,12 @@
         <translation>אימות הצפנת הארנק</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>אזהרה: איבוד מילת הצופן לאחר הצפנת הארנק עשויה לגרום לכך &lt;b&gt;שכל הביטקוינים שלך יאבדו&lt;/b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>להצפין את הארנק?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>הארנק מוצפן</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 ייסגר כעת כדי לסיים את תהליך ההצפנה. נא לשים לב כי הצפנת הארנק שלך לא יכול להגן על הביטקוינים שלך מפני גניבה או נוזקה שתוקפת את מחשבך.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -272,10 +254,6 @@
         <translation>יציאה מהתכנית</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>על &amp;אודות %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>הצגת מידע על %1</translation>
     </message>
@@ -316,10 +294,6 @@
         <translation>כתובות ה&amp;קבלה…</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>פתיחת &amp;כתובת משאב…</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>יש ללחוץ כדי לנטרל פעילות רשת.</translation>
     </message>
@@ -340,10 +314,6 @@
         <translation>המקטעים נוספים למפתח בכונן…</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>שליחת מטבעות לכתובת ביטקוין</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>גיבוי הארנק למיקום אחר</translation>
     </message>
@@ -352,20 +322,12 @@
         <translation>החלפת מילת הצופן להצפנת הארנק</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>חלון &amp;ניפוי</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>פתיחת לוח הבקרה לאבחון ולניפוי</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;אימות הודעה…</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -392,14 +354,6 @@
         <translation>הצפנת המפתחות הפרטיים ששייכים לארנק שלך</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>חתום על הודעות עם כתובות הביטקוין שלך כדי להוכיח שהן בבעלותך</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>אמת הודעות כדי להבטיח שהן נחתמו עם כתובת ביטקוין מסוימות</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;קובץ</translation>
     </message>
@@ -416,10 +370,6 @@
         <translation>סרגל כלים לשוניות</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>בקשת תשלומים (יצירה של קודים מסוג QR וסכימות כתובות משאב של :bitcoin)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>הצג את רשימת הכתובות לשליחה שהיו בשימוש לרבות התוויות</translation>
     </message>
@@ -428,16 +378,8 @@
         <translation>הצגת רשימת הכתובות והתוויות הנמצאות בשימוש</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>פתיחת ביטקוין: כתובת משאב או בקשת תשלום</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>אפשרויות &amp;שורת הפקודה</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>חיבור אחד פעיל לרשת ביטקוין</numerusform><numerusform>%n חיבורים פעילים לרשת ביטקוין</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -474,10 +416,6 @@
     <message>
         <source>Up to date</source>
         <translation>עדכני</translation>
-    </message>
-    <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>יש להציג את הודעת העזרה של %1 כדי להציג רשימה עם אפשרויות שורת פקודה לביטקוין</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -545,11 +483,10 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; ו&lt;b&gt;נעול&lt;/b&gt; כרגע</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>אירעה שגיאה חמורה. אין אפשרות להשתמש עוד בביטקוין באופן מאובטח והיישום ייסגר.</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ClientModel</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -685,10 +622,6 @@
         <translation>תווית זו הופכת לאדומה אם מישהו מהנמענים מקבל סכום נמוך יותר מסף האבק הנוכחי.</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>יכול להשתנות במגמה של +/- %1 סנטושי לקלט.</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(ללא תווית)</translation>
     </message>
@@ -701,6 +634,9 @@
         <translation>(עודף)</translation>
     </message>
 </context>
+<context>
+    <name>DarksendConfig</name>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -738,10 +674,6 @@
     <message>
         <source>Edit sending address</source>
         <translation>עריכת כתובת השליחה</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>הכתובת שהוקלדה „%1” היא אינה כתובת ביטקוין תקנית.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -790,10 +722,6 @@
         <translation>(%1-סיביות)</translation>
     </message>
     <message>
-        <source>About %1</source>
-        <translation>על אודות %1</translation>
-    </message>
-    <message>
         <source>Command-line options</source>
         <translation>אפשרויות שורת פקודה</translation>
     </message>
@@ -833,7 +761,7 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>איפוס כל שינויי הגדרות התצוגה</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -869,26 +797,6 @@
         <translation>שימוש בתיקיית נתונים מותאמת אישית:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
-    </message>
-    <message>
-        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation>מידע בנפח של לפחות %1 ג׳יגה-בייט יאוחסן בתיקייה זו, והוא יגדל עם הזמן.</translation>
-    </message>
-    <message>
-        <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation>מידע בנפח של כ-%1 ג׳יגה-בייט יאוחסן בתיקייה זו.</translation>
-    </message>
-    <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation>%1 תוריד ותאחסן עותק של שרשרת הבלוקים של ביטקוין.</translation>
-    </message>
-    <message>
-        <source>The wallet will also be stored in this directory.</source>
-        <translation>הארנק גם מאוחסן בתיקייה הזו.</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>שגיאה: לא ניתן ליצור את תיקיית הנתונים שצוינה „%1“.</translation>
     </message>
@@ -898,26 +806,21 @@
     </message>
     <message numerus="yes">
         <source>%n GB of free space available</source>
-        <translation><numerusform>ג״ב של מקום פנוי זמין</numerusform><numerusform>%n ג״ב של מקום פנוי זמינים</numerusform></translation>
+        <translation><numerusform>ג״ב של מקום פנוי זמין</numerusform><numerusform>%n ג״ב של מקום פנוי זמינים</numerusform><numerusform>%n ג״ב של מקום פנוי זמינים</numerusform><numerusform>%n ג״ב של מקום פנוי זמינים</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
-        <translation><numerusform>(מתוך %n ג״ב נדרשים)</numerusform><numerusform>(מתוך %n ג״ב נדרשים)</numerusform></translation>
+        <translation><numerusform>(מתוך %n ג״ב נדרשים)</numerusform><numerusform>(מתוך %n ג״ב נדרשים)</numerusform><numerusform>(מתוך %n ג״ב נדרשים)</numerusform><numerusform>(מתוך %n ג״ב נדרשים)</numerusform></translation>
     </message>
 </context>
+<context>
+    <name>MasternodeList</name>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
         <translation>טופס</translation>
-    </message>
-    <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>ייתכן שהעברות שבוצעו לאחרונה לא יופיעו עדיין, ולכן המאזן בארנק שלך יהיה שגוי. המידע הנכון יוצג במלואו כאשר הארנק שלך יסיים להסתנכרן עם רשת הביטקוין, כמפורט למטה.</translation>
-    </message>
-    <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>הרשת תסרב לקבל הוצאת ביטקוינים במידה והם כבר נמצאים בהעברות אשר לא מוצגות עדיין.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -990,14 +893,6 @@
         <translation>&amp;ראשי</translation>
     </message>
     <message>
-        <source>Automatically start %1 after logging in to the system.</source>
-        <translation>להפעיל את %1 אוטומטית לאחר הכניסה למערכת.</translation>
-    </message>
-    <message>
-        <source>&amp;Start %1 on system login</source>
-        <translation>ה&amp;פעלת %1 עם הכניסה למערכת</translation>
-    </message>
-    <message>
         <source>Size of &amp;database cache</source>
         <translation>גודל מ&amp;טמון מסד הנתונים</translation>
     </message>
@@ -1016,10 +911,6 @@
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>מזער ואל תצא מהאפליקציה עם סגירת החלון. כאשר אפשרות זו דלוקה, האפליקציה תיסגר רק בבחירת ״יציאה״ בתפריט.</translation>
-    </message>
-    <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>כתובות צד־שלישי (כגון: סייר מקטעים) שמופיעים בלשונית ההעברות בתור פריטים בתפריט ההקשר. %s בכתובת מוחלף בגיבוב ההעברה. מספר כתובות יופרדו בפס אנכי |.</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1062,24 +953,12 @@
         <translation>הפעלת תכונות &amp;בקרת מטבעות</translation>
     </message>
     <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>אם אפשרות ההשקעה של עודף בלתי מאושר תנוטרל, לא ניתן יהיה להשתמש בעודף מההעברה עד שלהעברה יהיה לפחות אישור אחד. פעולה זו גם משפיעה על חישוב המאזן שלך.</translation>
-    </message>
-    <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>עודף &amp;בלתי מאושר מההשקעה</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>פתיחת הפתחה של ביטקוין בנתב באופן אוטומטי. עובד רק אם UPnP מופעל ונתמך בנתב.</translation>
-    </message>
-    <message>
         <source>Map port using &amp;UPnP</source>
         <translation>מיפוי פתחה באמצעות UPnP</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>התחבר לרשת הביטקוין דרך פרוקסי SOCKS5.</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1132,10 +1011,6 @@
     <message>
         <source>User Interface &amp;language:</source>
         <translation>&amp;שפת מנשק המשתמש:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation>ניתן להגדיר כאן את שפת מנשק המשתמש. הגדרה זו תיכנס לתוקף לאחר הפעלה של %1 מחדש.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1209,10 +1084,6 @@
         <translation>טופס</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>המידע המוצג עשוי להיות מיושן. הארנק שלך מסתנכרן באופן אוטומטי עם רשת הביטקוין לאחר יצירת החיבור, אך התהליך טרם הסתיים.</translation>
-    </message>
-    <message>
         <source>Watch-only:</source>
         <translation>צפייה בלבד:</translation>
     </message>
@@ -1276,16 +1147,12 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>המאזן הכולל הנוכחי בכתובות לצפייה בלבד</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
         <translation>שגיאת בקשת תשלום</translation>
-    </message>
-    <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>לא ניתן להפעיל את המקשר bitcoin: click-to-pay</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1294,10 +1161,6 @@
     <message>
         <source>Invalid payment address %1</source>
         <translation>כתובת תשלום שגויה %1</translation>
-    </message>
-    <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>לא ניתן לנתח את כתובת המשאב! מצב זה יכול לקרות עקב כתובת ביטקוין שגויה או פרמטרים שגויים בכתובת המשאב.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1394,10 +1257,6 @@
         <translation>כמות</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>נא להזין כתובת ביטקוין (למשל: %1)</translation>
-    </message>
-    <message>
         <source>%1 d</source>
         <translation>%1 ימים</translation>
     </message>
@@ -1427,23 +1286,23 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation><numerusform>שנייה אחת</numerusform><numerusform>%n שניות</numerusform></translation>
+        <translation><numerusform>שנייה אחת</numerusform><numerusform>%n שניות</numerusform><numerusform>%n שניות</numerusform><numerusform>%n שניות</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation><numerusform>דקה אחת</numerusform><numerusform>%n דקות</numerusform></translation>
+        <translation><numerusform>דקה אחת</numerusform><numerusform>%n דקות</numerusform><numerusform>%n דקות</numerusform><numerusform>%n דקות</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
-        <translation><numerusform>שעה אחת</numerusform><numerusform>%n שעות</numerusform></translation>
+        <translation><numerusform>שעה אחת</numerusform><numerusform>%n שעות</numerusform><numerusform>%n שעות</numerusform><numerusform>%n שעות</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation><numerusform>יום אחד</numerusform><numerusform>%n ימים</numerusform></translation>
+        <translation><numerusform>יום אחד</numerusform><numerusform>%n ימים</numerusform><numerusform>%n ימים</numerusform><numerusform>%n ימים</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
-        <translation><numerusform>שבוע אחד</numerusform><numerusform>%n שבועות</numerusform></translation>
+        <translation><numerusform>שבוע אחד</numerusform><numerusform>%n שבועות</numerusform><numerusform>%n שבועות</numerusform><numerusform>%n שבועות</numerusform></translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -1451,7 +1310,7 @@
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation><numerusform>שנה אחת</numerusform><numerusform>%n שנים</numerusform></translation>
+        <translation><numerusform>שנה אחת</numerusform><numerusform>%n שנים</numerusform><numerusform>%n שנים</numerusform><numerusform>%n שנים</numerusform></translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -1492,7 +1351,13 @@
         <source>Error: %1</source>
         <translation>שגיאה: %1</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1525,10 +1390,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>מי&amp;דע</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>חלון ניפוי</translation>
     </message>
     <message>
         <source>General</source>
@@ -1932,10 +1793,6 @@
         <translation>(אין הודעה)</translation>
     </message>
     <message>
-        <source>(no amount requested)</source>
-        <translation>(לא התבקש סכום)</translation>
-    </message>
-    <message>
         <source>Requested</source>
         <translation>בקשה</translation>
     </message>
@@ -2017,14 +1874,6 @@
     <message>
         <source>Hide</source>
         <translation>הסתר</translation>
-    </message>
-    <message>
-        <source>Recommended:</source>
-        <translation>מומלץ:</translation>
-    </message>
-    <message>
-        <source>Custom:</source>
-        <translation>מותאם אישית:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2143,10 +1992,6 @@
         <translation>תשלום של העמלה הנדרשת בלבד על סך %1</translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>אזהרה: כתובת ביטקיון שגויה</translation>
-    </message>
-    <message>
         <source>Warning: Unknown change address</source>
         <translation>אזהרה: כתובת החלפה בלתי ידועה</translation>
     </message>
@@ -2186,10 +2031,6 @@
         <translation>זהו תשלום רגיל.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation>כתובת הביטקוין של המוטב</translation>
-    </message>
-    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -2204,10 +2045,6 @@
     <message>
         <source>Remove this entry</source>
         <translation>הסרת רשומה זו</translation>
-    </message>
-    <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>העמלה תנוכה מהסכום שנשלח. הנמען יקבל פחות ביטקוינים ממה שהזנת בשדה הסכום. אם נבחרו מספר נמענים, העמלה תחולק באופן שווה.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2228,10 +2065,6 @@
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>יש להזין תווית עבור כתובת זו כדי להוסיף אותה לרשימת הכתובות בשימוש</translation>
-    </message>
-    <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>הודעה שצורפה לביטקוין: כתובת שתאוחסן בהעברה לצורך מעקב מצדך. לתשומת לבך: הודעה זו לא תישלח ברשת הביטקוין.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2256,10 +2089,6 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>%1 is shutting down...</source>
-        <translation>%1 בתהליך כיבוי...</translation>
-    </message>
-    <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>אין לכבות את המחשב עד שחלון זה נעלם.</translation>
     </message>
@@ -2273,14 +2102,6 @@
     <message>
         <source>&amp;Sign Message</source>
         <translation>חתימה על הו&amp;דעה</translation>
-    </message>
-    <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>באפשרותך לחתום על הודעות/הסכמים באמצעות הכתובות שלך, כדי להוכיח שאתה יכול לקבל את הביטקוינים הנשלחים אליהן. היזהר לא לחתום על תוכן עמום או אקראי, מכיוון שתקיפות פישינג עשויות לנסות לגנוב את הזהות שלך. חתום רק על הצהרות מפורטות שאתה מסכים להן.</translation>
-    </message>
-    <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation>כתובת הביטקוין אתה לחתום אתה את ההודעה</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2311,10 +2132,6 @@
         <translation>העתקת החתימה הנוכחית ללוח הגזירים</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>ניתן לחתום על ההודעה כדי להוכיח שכתובת הביטקוין הזו בבעלותך.</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>&amp;חתימה על הודעה</translation>
     </message>
@@ -2329,14 +2146,6 @@
     <message>
         <source>&amp;Verify Message</source>
         <translation>&amp;אימות הודעה</translation>
-    </message>
-    <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation>כתובת הביטקוין שאתה נחתמה ההודעה</translation>
-    </message>
-    <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>ניתן לאמת את ההודעה כדי להבטיח שהיא נחתמה עם כתובת הביטקוין הנתונה</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2405,7 +2214,7 @@
         <source>[testnet]</source>
         <translation>[רשת-בדיקה]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -2516,10 +2325,6 @@
         <translation>גודל ההעברה הכללי</translation>
     </message>
     <message>
-        <source>Output index</source>
-        <translation>מפתח פלט</translation>
-    </message>
-    <message>
         <source>Merchant</source>
         <translation>סוחר</translation>
     </message>
@@ -2554,10 +2359,6 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>חלונית זו מציגה תיאור מפורט של ההעברה</translation>
     </message>
-    <message>
-        <source>Details for %1</source>
-        <translation>פרטים עבור %1</translation>
-    </message>
 </context>
 <context>
     <name>TransactionTableModel</name>
@@ -2569,13 +2370,9 @@
         <source>Type</source>
         <translation>סוג</translation>
     </message>
-    <message>
-        <source>Label</source>
-        <translation>תוית</translation>
-    </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>פתוחה למשך בלוק אחד נוסף</numerusform><numerusform>פתוחה למשך %n בלוקים נוספים</numerusform></translation>
+        <translation><numerusform>פתוחה למשך בלוק אחד נוסף</numerusform><numerusform>פתוחה למשך %n בלוקים נוספים</numerusform><numerusform>פתוחה למשך %n בלוקים נוספים</numerusform><numerusform>פתוחה למשך %n בלוקים נוספים</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2894,418 +2691,6 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>אפשרויות:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>ציון תיקיית נתונים</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>יש להתחבר למפרק כדי לדלות כתובות עמיתים ואז להתנתק</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>נא לציין את הכתובת הפומבית שלך</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>קבלת פקודות משורת הפקודה ומ־JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>שגיאה: סניה קלמה קריטית פנימית קרטה, פנה ל debug.log לפרטים</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>ריצה כסוכן ברקע וקבלת פקודות</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>ליבת ביטקוין</translation>
-    </message>
-    <message>
-        <source>The %s developers</source>
-        <translation>ה %s מפתחים</translation>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>להתאגד לכתובת נתונה להאזין לה תמיד. יש להשתמש בצורה ‎[host]:port עבור IPv6.</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>מחיקת כל העברות הארנק ולשחזר רק את החלקים המסוימים בשרשרת המקטעים באמצעות ‎-rescan עם ההפעלה</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>ביצוע פקודה כאשר העברה בארנק משתנה (%s ב־cmd יוחלף ב־TxID)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>שימוש ב־UPnP כדי למפות את הפתחה להאזנה (בררת מחדל: 1 בעת האזנה ובלי ‎-proxy)</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>אזהרה: נראה כי הרשת אינה מסכימה באופן מלא! חלק מהכורים חווים תקלות.</translation>
-    </message>
-    <message>
-        <source>-maxmempool must be at least %d MB</source>
-        <translation>‎-maxmempool חייב להיות לפחות %d מ״ב</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;קטגוריה&gt; יכולה להיות:</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>קבלת חיבורים מבחוץ (בררת מחדל: 1 ללא ‎-proxy או ‎-connect)</translation>
-    </message>
-    <message>
-        <source>Append comment to the user agent string</source>
-        <translation>הוספת הערה למחרוזת סוכן המשתמש</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>אפשרויות יצירת מקטע:</translation>
-    </message>
-    <message>
-        <source>Chain selection options:</source>
-        <translation>אפשרויות בחירת שרשרת:</translation>
-    </message>
-    <message>
-        <source>Change index out of range</source>
-        <translation>אינדקס העודף מחוץ לתחום</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>הגדרות חיבור:</translation>
-    </message>
-    <message>
-        <source>Copyright (C) %i-%i</source>
-        <translation>כל הזכויות שמורות (C) %i-‏%i</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>התגלה מסד נתוני מקטעים לא תקין</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>אפשרויות ניפוי/בדיקה:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>לא לטעון את הארנק ולנטרל קריאות RPC</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>האם לבנות מחדש את מסד נתוני המקטעים?</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>שגיאה באתחול מסד נתוני המקטעים</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>שגיאה באתחול סביבת מסד נתוני הארנקים %s!</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation>שגיאה בטעינת %s</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>שגיאה בטעינת מסד נתוני המקטעים</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>שגיאה בטעינת מסד נתוני המקטעים</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>שגיאה: מעט מקום פנוי בכונן!</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>האזנה נכשלה בכל פורט. השתמש ב- -listen=0 אם ברצונך בכך.</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>מתבצע יבוא…</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>מקטע הפתיח הוא שגוי או לא נמצא. תיקיית נתונים שגויה עבור הרשת?</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation>סכום שגוי עבור ‎-%s=&lt;amount&gt;:‏ '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation>סכום שגוי עבור ‎-fallbackfee=&lt;amount&gt;:‏ '%s'</translation>
-    </message>
-    <message>
-        <source>Loading banlist...</source>
-        <translation>טוען רשימת חסומים...</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>אין מספיק מידע על הקובץ</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>תמיד להתחבר למפרקים ברשת &lt;net&gt;‏ (ipv4,‏ ipv6 או onion)</translation>
-    </message>
-    <message>
-        <source>Print this help message and exit</source>
-        <translation>להדפיס הודעת עזרה זו ולצאת</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>הדפס גירסא וצא</translation>
-    </message>
-    <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>הגדרת גודל מטמון מסדי הנתונים במגה בתים (%d עד %d, בררת מחדל: %d)</translation>
-    </message>
-    <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>ציון קובץ ארנק (בתוך תיקיית הנתונים)</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>המקטעים מאומתים…</translation>
-    </message>
-    <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>אפשרות דיבוג/בדיקת ארנק:</translation>
-    </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation>יש לכתוב את הארנק מחדש: יש להפעיל את %s כדי להמשיך</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>אפשרויות הארנק:</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>הרץ פקודה כאשר ההתראה הרלוונטית מתקבלת או כשאנחנו עדים לפיצול ארוך מאוד (%s בשורת הפקודה יוחלף ע"י ההודעה)</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>סכום העברה נמוך מדי לשליחה אחרי גביית העמלה</translation>
-    </message>
-    <message>
-        <source>(default: %u)</source>
-        <translation>(בררת מחדל: %u)</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>התחברות דרך מתווך SOCKS5</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>מידע</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation>כמות לא תקינה עבור ‎-paytxfee=&lt;amount&gt;‎:‏ '%s' (חייבת להיות לפחות %s)</translation>
-    </message>
-    <message>
-        <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation>מסכת הרשת שצוינה עם ‎-whitelist שגויה: '%s'</translation>
-    </message>
-    <message>
-        <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation>עליך לציין פתחה עם ‎-whitebind:‏ '%s'</translation>
-    </message>
-    <message>
-        <source>Node relay options:</source>
-        <translation>אפשרויות ממסר מפרק:</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>הגדרות שרת RPC</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>שלח מידע דיבאג ועקבה לקונסולה במקום לקובץ debug.log</translation>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>הצגת כל אפשרויות הניפוי (שימוש: ‎--help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>כיווץ הקובץ debug.log בהפעלת הלקוח (בררת מחדל: 1 ללא ‎-debug)</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>החתימה על ההעברה נכשלה</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation>סכום ההעברה נמוך מכדי לשלם את העמלה</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation>זוהי תכנית נסיונית.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>סכום ההעברה קטן מדי</translation>
-    </message>
-    <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>ההעברה גבוהה מדי עבור מדיניות העמלות</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>סכום ההעברה גדול מדי</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation>לא ניתן להתאגד עם הפתחה %s במחשב זה (פעולת האיגוד החזירה את השגיאה %s)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>עדכן ארק לפורמט העדכני בהפעלה</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>שם משתמש לחיבורי JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>אזהרה</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>ססמה לחיבורי JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>יש לבצע פקודה זו כשהמקטע הטוב ביותר משתנה (%s בפקודה יוחלף בגיבוב המקטע)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>הפעלת בדיקת DNS עבור ‎-addnode,‏ ‎-seednode ו־‎-connect</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>המשתנה ‎-socks נמצא אך אין בו תמיכה עוד. הגדרת גרסת SOCKS אינה אפשרית עוד, קיימת תמיכה רק ב־SOCKS5.</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(ברירת מחדל: %s)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>תמיד לתשאל את כתובת העמיתים באמצעות חיפוש DNS (בררת מחדל: %u)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>כמה מקטעים לבדוק עם ההפעלה (בררת מחדל: %u,‏ 0 = הכול)</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>לכלול את כתובת ה־IP בפלט ניפוי השגיאות (בררת מחדל: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>האזנה לחיבורי JSON-RPC דרך &lt;port&gt; (בררת מחדל: %u או ברשת הבדיקה: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>האזנה לחיבורים על גבי &lt;port&gt; (בררת מחדל: %u או לרשת הבדיקה: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
-        <translation>לשמור על &lt;n&gt; חיבורים לעמיתים לכל היותר (בררת מחדל: %u)</translation>
-    </message>
-    <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>להגדיר את הארנק להפצת העברות</translation>
-    </message>
-    <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>הגדרת גודל מאגר המפתחות לכדי &lt;n&gt; (בררת מחדל: %u)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight (default: %d)</source>
-        <translation>הגדרת משקל מרבי למקטע BIP141 (בררת מחדל: %d)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>הגדרת קובץ תצורה (בררת מחדל: %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>ציון תפוגת זמן ההמתנה לחיבור במילישניות (מינימום: 1, בררת מחדל: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>ציון קובץ pid (בררת מחדל: %s)</translation>
-    </message>
-    <message>
-        <source>Starting network threads...</source>
-        <translation>תהליכי הרשת מופעלים…</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>זו עמלת ההעברה המזערית שתיגבה מכל העברה שלך.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>זו עמלת ההעברה שתיגבה ממך במידה של שליחת העברה.</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>סף לניתוק עמיתים סוררים (בררת מחדל: %u)</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation>סכומי ההעברה לא יכולים להיות שליליים</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation>להעברה חייב להיות לפחות נמען אחד</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>רשת לא ידועה צוינה דרך ‎-onlynet:‏ '%s'</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>אין מספיק כספים</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>מפתח המקטעים נטען…</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>הארנק בטעינה…</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>לא ניתן להחזיר את גרסת הארנק</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>סריקה מחדש…</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>טעינה הושלמה</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>שגיאה</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

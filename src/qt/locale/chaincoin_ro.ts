@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="ro" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Adresele de primire</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Acestea sunt adresele tale Bitcoin pentru trimiterea plății. Verifică mereu suma și adresa de primire înainte de trimiterea monedelor.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Acestea sunt adresele tale Bitcoin pentru primirea plăților. Este recomandată folosirea de noi adrese de primire pentru fiecare tranzacție.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -164,10 +154,6 @@
     <message>
         <source>Confirm wallet encryption</source>
         <translation>Confirmă criptarea portofelului</translation>
-    </message>
-    <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Atenție: Dacă îți criptezi portofelul și uiți parola, îți vei &lt;b&gt; PIERDE TOȚI BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -280,16 +266,8 @@
         <translation>&amp;Primește adresele...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Deschide &amp;URI...</translation>
-    </message>
-    <message>
         <source>Click to enable network activity again.</source>
         <translation>Click pentru a permite, din nou, activitate rețelei.</translation>
-    </message>
-    <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Trimite monedele către o adresă Bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -300,20 +278,12 @@
         <translation>Schimbă parola folosită pentru criptarea portofelului</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Fereastra pentru depanare</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Pornește consola pentru depanare si diagnoză</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verifică mesajul...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -340,14 +310,6 @@
         <translation>Criptează cheile private care aparțin portofelului tău.</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Semnează mesajele cu adresa ta de Bitcoin pentru a face dovada că îți aparțin.</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifică mesajele cu scopul de a asigura faptul că au fost semnate cu adresa de Bitcoin specificată.</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Fișier</translation>
     </message>
@@ -360,20 +322,12 @@
         <translation>&amp;Ajutor</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Cerere plată (generează coduri QR și bitcoin: URIs)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Afișează lista adreselor de livrare utilizate și etichetele.</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Afișează lista adreselor de primire utilizate și etichetele.</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Deschide un bitcoin: URI sau cerere de plată</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -443,6 +397,9 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portofelul este &lt;b&gt;criptat&lt;/b&gt; și în prezent &lt;b&gt;blocat&lt;/b&gt;</translation>
     </message>
+    </context>
+<context>
+    <name>ClientModel</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -536,6 +493,9 @@
     </message>
     </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -599,7 +559,7 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>Resetează toate setările modificate în Interfața Grafică.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -615,18 +575,6 @@
         <translation>Alege un folder/director personalizat</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation>Cel puțin %1 GB va fi stocat în acest folder și va crește în timp.</translation>
-    </message>
-    <message>
-        <source>The wallet will also be stored in this directory.</source>
-        <translation>Portofelul va fi, de asemenea, stocat în acest folder/director.</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>Eroare: Folderul specificat "%1" nu poate fi creat.</translation>
     </message>
@@ -640,14 +588,13 @@
     </message>
     </context>
 <context>
+    <name>MasternodeList</name>
+    </context>
+<context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
         <translation>formular</translation>
-    </message>
-    <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>Posibil ca tranzacțiile recente să nu fie vizibile, încă, astfel bilanțul portofelului tău poate fi incorect. Aceste informații vor fi corecte o dată ce portofelul tău a încheiat sincronizarea cu rețeaua bitcoin, conform descrierii de mai jos.</translation>
     </message>
     <message>
         <source>Unknown...</source>
@@ -840,6 +787,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     <message>
         <source>Save QR Code</source>
@@ -859,10 +812,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Informații</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Fereastra pentru depanare</translation>
     </message>
     <message>
         <source>General</source>
@@ -1076,10 +1025,6 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Label</source>
-        <translation>Etichetă</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(fără etichetă)</translation>
     </message>
@@ -1136,34 +1081,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>Upgrading UTXO database</source>
-        <translation>Actualizarea bazei de date UTXO</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informație</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Atenționare</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Portofelul se încarcă...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Rescanare...</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Eroare</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

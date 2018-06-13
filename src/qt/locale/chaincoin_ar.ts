@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="ar" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>عناوين الاستقبال</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>هذه هي عناوين Bitcion التابعة لك من أجل إرسال الدفعات. تحقق دائما من المبلغ و عنوان المرسل المستقبل قبل إرسال العملات</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>هذه هي عناوين Bitcion التابعة لك من أجل إستقبال الدفعات. ينصح استخدام عنوان جديد من أجل كل صفقة</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -174,10 +164,6 @@
         <translation>تأكيد تشفير المحفظة</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>تحذير: إذا قمت بتشفير محفظتك وفقدت كلمة المرور الخاص بك, ستفقد كل عملات BITCOINS الخاصة بك.</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>هل أنت متأكد من رغبتك في تشفير محفظتك ؟</translation>
     </message>
@@ -272,10 +258,6 @@
         <translation>الخروج من التطبيق</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>حوالي %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>أظهر المعلومات حولة %1</translation>
     </message>
@@ -316,10 +298,6 @@
         <translation>&amp;عناوين الاستقبال...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>افتح &amp;URI...</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>اضغط لإلغاء تفعيل الشبكه</translation>
     </message>
@@ -336,10 +314,6 @@
         <translation>إعادة الفهرسة الكتل على القرص ...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>ارسل عملات الى عنوان بيتكوين</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>احفظ نسخة احتياطية للمحفظة في مكان آخر</translation>
     </message>
@@ -348,20 +322,12 @@
         <translation>تغيير كلمة المرور المستخدمة لتشفير المحفظة</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;نافذة المعالجة</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>إفتح وحدة التصحيح و التشخيص</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;التحقق من الرسالة...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>بتكوين</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -388,14 +354,6 @@
         <translation>تشفير المفتاح الخاص بمحفظتك</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>وقَع الرسائل بواسطة ال: Bitcoin الخاص بك لإثبات امتلاكك لهم</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>تحقق من الرسائل للتأكد من أنَها وُقعت برسائل Bitcoin محدَدة</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;ملف</translation>
     </message>
@@ -412,20 +370,12 @@
         <translation>شريط أدوات علامات التبويب</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>أطلب دفعات (يولد كودات الرمز المربع وبيت كوين: العناوين المعطاة)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>عرض قائمة عناوين الإرسال المستخدمة والملصقات</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>عرض قائمة عناوين الإستقبال المستخدمة والملصقات</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>فتح URI : Bitcoin أو طلب دفع</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -466,10 +416,6 @@
     <message>
         <source>Up to date</source>
         <translation>محدث</translation>
-    </message>
-    <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>بين اشارة المساعدة %1 للحصول على قائمة من خيارات اوامر البت كوين المحتملة </translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -531,11 +477,10 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>المحفظة &lt;b&gt;مشفرة&lt;/b&gt; و &lt;b&gt;مقفلة&lt;/b&gt; حاليا</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>خطأ فادح حدث . لا يمكن اتمام بيتكوين بامان سيتم الخروج</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ClientModel</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -660,6 +605,9 @@
     </message>
 </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -696,10 +644,6 @@
     <message>
         <source>Edit sending address</source>
         <translation>تعديل عنوان الارسال</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>العنوان المدخل "%1" ليس عنوان بيت كوين صحيح.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -744,10 +688,6 @@
         <translation>النسخة</translation>
     </message>
     <message>
-        <source>About %1</source>
-        <translation>حوالي %1</translation>
-    </message>
-    <message>
         <source>Command-line options</source>
         <translation>خيارات سطر الأوامر</translation>
     </message>
@@ -787,7 +727,7 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>اعد تعديل جميع النظم المتغيرة في GUI</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -811,10 +751,6 @@
         <translation>استخدام دليل بيانات مخصص:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>بتكوين</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>خطأ: لا يمكن تكوين دليل بيانات مخصص ل %1</translation>
     </message>
@@ -822,6 +758,9 @@
         <source>Error</source>
         <translation>خطأ</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -1080,6 +1019,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
@@ -1111,10 +1056,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>المعلومات</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>نافذة المعالجة</translation>
     </message>
     <message>
         <source>General</source>
@@ -1512,10 +1453,6 @@
         <translation>هذا دفع اعتيادي</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation>عنوان البت كوين المرسل اليه الدفع</translation>
-    </message>
-    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -1589,10 +1526,6 @@
         <translation>التوقيع</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>وقع الرسالة لتثبت انك تمتلك عنوان البت كوين هذا</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>توقيع $الرسالة</translation>
     </message>
@@ -1659,7 +1592,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     </context>
@@ -1776,7 +1709,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>يبين هذا الجزء وصفا مفصلا لهده المعاملة</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -1786,10 +1719,6 @@
     <message>
         <source>Type</source>
         <translation>النوع</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>وصف</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2032,126 +1961,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>خيارات: </translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>حدد مجلد المعلومات</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>جوهر بيتكوين</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>قبول الاتصالات من خارج</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>خيارات الاتصال:</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>تحذير: مساحة القرص منخفضة</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>فشل في الاستماع على أي منفذ. استخدام الاستماع = 0 إذا كنت تريد هذا.</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>استيراد...</translation>
-    </message>
-    <message>
-        <source>Loading P2P addresses...</source>
-        <translation>تحميل عناوين P2P...</translation>
-    </message>
-    <message>
-        <source>Use the test chain</source>
-        <translation>إستخدم السلسلة التجريبية</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>التحقق من الكتل...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>خيارات المحفظة :</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>معلومات</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>فشل توقيع المعاملة</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation>قيمة المعاملة صغيرة جدا لدفع الأجر</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation>هذا برنامج تجريبي.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>قيمة العملية صغيره جدا</translation>
-    </message>
-    <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>قيمة المعاملة كبيرة جدا لسياسة الأجر</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>المعاملة كبيرة جدا</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)...</source>
-        <translation>التحقق من المحفظة (المحافظ)...</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>تحذير</translation>
-    </message>
-    <message>
-        <source>%s is set very high!</source>
-        <translation>%s عالٍ جداً</translation>
-    </message>
-    <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>إنتاج معاملات بث المحفظة</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>اموال غير كافية</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>تحميل مؤشر الكتلة</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>تحميل المحفظه</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>لا يمكن تخفيض قيمة المحفظة</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>إعادة مسح</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>انتهاء التحميل</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>خطأ</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

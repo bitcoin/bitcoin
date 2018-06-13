@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="id" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -58,14 +56,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Alamat menerima</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Ini adalah alamat Bitcoin anda untuk mengirim pembayaran. Selalu periksa jumlah dan alamat penerima sebelum mengirim koin</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Ini adalah alamat Bitcoin anda untuk menerima pembayaran. Disarankan untuk menggunakan alamat penerimaan baru untuk setiap transaksi</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -162,10 +152,6 @@
         <translation>Konfirmasi proses enkripsi wallet</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Peringatan:  Jika anda mengenkripsi wallet anda dan lupa/hilang passphrase anda, anda akan ‭&lt;b&gt; KEHILANGAN SEMUA BITCOIN ANDA &lt;/b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Apa anda yakin ingin mengenkripsi wallet anda?</translation>
     </message>
@@ -236,10 +222,6 @@
         <translation>Tutup aplikasi</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;Tentang %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>Tunjukan informasi tentang %1</translation>
     </message>
@@ -292,10 +274,6 @@
         <translation>Klik untuk mengaktifkan kembali network</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Kirim koin ke alamat Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Backup wallet ke lokasi lain</translation>
     </message>
@@ -304,20 +282,12 @@
         <translation>Ganti passphrase yang digunakan untuk enkripsi wallet</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Debug window</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Buka debugging dan diagnostic console</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verifikasi pesan...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -344,14 +314,6 @@
         <translation>Enkripsi private keys wallet anda</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Tambahkan pesan di alamat Bitcoin untuk membuktikan bahwa anda pemiliknya</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifikasi pesan untuk memastikan bahwa telah ditanda tangani dengan alamat Bitcoin tertentu</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
@@ -373,11 +335,17 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>(no label)</source>
         <translation>(tanpa label)</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -390,10 +358,9 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -418,6 +385,12 @@
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -484,10 +457,6 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Label</source>
-        <translation>Label</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(tanpa label)</translation>
     </message>
@@ -528,6 +497,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>chaincoin-core</name>
     </context>
 </TS>

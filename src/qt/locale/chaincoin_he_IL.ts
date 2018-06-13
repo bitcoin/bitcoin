@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="he_IL" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -63,14 +61,6 @@
         <source>Receiving addresses</source>
         <translation>מקבל כתובות</translation>
     </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>אלו הן כתובות הביטקוין שלך לשליחת תשלומים. תמיד בדוק את כתובת הארנק המקבל לפני שליחת מטבעות</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>אלו הן כתובות הביטקוין שלך לקבלת תשלומים. מומלץ להשתמש בכתובת חדשה בכל העברת מטבעות</translation>
-    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -84,13 +74,12 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
-    </message>
-    <message>
         <source>Wallet</source>
         <translation>ארנק</translation>
     </message>
+    </context>
+<context>
+    <name>ClientModel</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -104,6 +93,9 @@
     </message>
     </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     </context>
 <context>
@@ -114,10 +106,9 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>ביטקוין</translation>
-    </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -142,6 +133,12 @@
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -228,6 +225,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>chaincoin-core</name>
     </context>
 </TS>

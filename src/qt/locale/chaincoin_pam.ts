@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="pam" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -124,10 +122,6 @@
         <translation>Address king pamag-Tanggap</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Magpadalang barya king Bitcoin address</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>I-backup ing wallet king aliwang lugal</translation>
     </message>
@@ -136,20 +130,12 @@
         <translation>Alilan ya ing passphrase a gagamitan para king wallet encryption</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>I-&amp;Debug ing awang</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Ibuklat ing debugging at diagnostic console</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Beripikan ing message...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -229,6 +215,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
@@ -246,6 +235,9 @@
         <source>Confirmed</source>
         <translation>Me-kumpirma</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -291,13 +283,12 @@
         <translation>Malaus ka</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Mali</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -326,10 +317,6 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Network</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Ibuklat yang antimanu ing Bitcoin client port king router. Gagana yamu ini istung ing router mu susuporta yang UPnP at magsilbi ya.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -407,10 +394,6 @@
         <translation>Form</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Ing makaltong impormasion mapalyaring luma ne. Ing kekang wallet otomatiku yang mag-synchronize keng Bitcoin network istung mekakonekta ne king network, oneng ing prosesung ini ali ya pa kumpletu.</translation>
-    </message>
-    <message>
         <source>Your current spendable balance</source>
         <translation>Ing kekang kasalungsungan balanse a malyari mung gastusan</translation>
     </message>
@@ -460,6 +443,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -475,10 +464,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Impormasion</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>I-Debug ing awang</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -661,10 +646,6 @@
         <translation>Kopyan ing kasalungsungan pirma king system clipboard</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Pirman ing mensayi ban patune na keka ya ining Bitcoin address</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>Pirman ing &amp;Mensayi</translation>
     </message>
@@ -681,10 +662,6 @@
         <translation>&amp;Beripikan ing Mensayi</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Beripikan ing mensayi ban asiguradu a me pirma ya ini gamit ing mepiling Bitcoin address</translation>
-    </message>
-    <message>
         <source>Verify &amp;Message</source>
         <translation>Beripikan ing &amp;Mensayi</translation>
     </message>
@@ -699,7 +676,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     </context>
@@ -712,7 +689,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ining pane a ini magpakit yang detalyadung description ning transaksion</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     </context>
@@ -732,130 +709,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Pipamilian:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Pilinan ing data directory</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Kumunekta king note ban ayakua mula reng peer address, at mako king panga konekta</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Sabyan me ing kekang pampublikong address</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Tumanggap command line at JSON-RPC commands</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Gumana king gulut bilang daemon at tumanggap commands</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Kapilubluban ning Bitcoin</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Tumanggap koneksion menibat king kilwal (default: 1 if no -proxy or -connect)</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Pipamilian king pamag-gawang block:</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>Mekapansin lang me-corrupt a block database</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>Buri meng buuan pasibayu ing block database ngene?</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>Kamalian king pamag-initialize king block na ning database</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>Kamalian king pamag buklat king block database</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Kamalian: Mababa ne ing espasyu king disk!</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>&amp;Impormasion</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Magpadalang trace/debug info okeng console kesa keng debug.log file</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Maragul yang masiadu ing transaksion</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Username para king JSON-RPC koneksion</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Kapabaluan</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Password para king JSON-RPC koneksion</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>I-execute ing command istung mialilan ya ing best block (%s in cmd is replaced by block hash)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Payagan ing pamaglawe DNS para king -addnode, -seednode and -connect</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>E kilalang network ing mepili king -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Kulang a pondo</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Lo-load dane ing block index...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Lo-load dane ing wallet...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Ali ya magsilbing i-downgrade ing wallet</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>I-scan deng pasibayu...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Yari ne ing pamag-load</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Mali</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

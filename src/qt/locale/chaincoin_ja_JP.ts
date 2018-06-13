@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="ja_JP" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>アドレス受信</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>支払送信するためのビットコインアドレスです。コインを送付する前に、いつも残高と受信アドレスの確認をしてください。</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>支払の受信をするためのビットコインアドレスです。それぞれの処理に新規に受信アドレスを使用することを推奨します。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -170,20 +160,12 @@
         <translation>財布の暗号化を確認します</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>注意: 財布の暗号化やパスフレーズを忘れた場合、 &lt;b&gt;あなたのビットコインはすべて失われます。&lt;/b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>財布を暗号化してもよろしいですか？</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>暗号化された財布</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>暗号化処理を終了させるために、すぐに%1を閉じるでしょう。あなたのコンピュータに感染したマルウェアによって、盗まれたビットコインは暗号化をしていても完全に守ることができないことを覚えておいてください。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -272,10 +254,6 @@
         <translation>アプリケーションを終了</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;%1について</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>%1についての情報を見る</translation>
     </message>
@@ -316,10 +294,6 @@
         <translation>&amp;アドレスの受信...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>オープン&amp;URI...</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>ネットワーク処理を無効にするためにクリックする</translation>
     </message>
@@ -340,10 +314,6 @@
         <translation>ディスクのブロックの再インデックス中...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>ビットコインアドレスにコインを送信</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>他の場所に財布をバックアップ</translation>
     </message>
@@ -352,20 +322,12 @@
         <translation>財布の暗号化に使用するパスフレーズを変更</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;デバッグ用ウィンドウ</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>デバッグと診断のコンソールを開く</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;メッセージの確認...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>ビットコイン</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -392,14 +354,6 @@
         <translation>財布に属するプライベートキーの暗号化</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>所有者であることを証明するためにビットコインアドレスのメッセージにサイン</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>署名された特定のビットコインアドレスを確認するために、メッセージを確認</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;ファイル</translation>
     </message>
@@ -416,20 +370,12 @@
         <translation>ツールバータブ</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>支払の要求 (QRコードとビットコインのURIを作成)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>送信に使用したアドレスとラベルの一覧を表示</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>受信に使用したアドレスとラベルの一覧を表示</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>ビットコインのURIまたは支払要求を開く</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -470,10 +416,6 @@
     <message>
         <source>Up to date</source>
         <translation>更新日</translation>
-    </message>
-    <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>ビットコインのコマンドラインオプションとして可能なリストの取得の%1ヘルプメッセージを表示</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -541,11 +483,10 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>財布は &lt;b&gt;暗号化され&lt;/b&gt; そして現在 &lt;b&gt;ロックされています&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>致命的なエラーが発生しました。ビットコインは安全に終了することができません。</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ClientModel</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -681,10 +622,6 @@
         <translation>受信したレシピが現在のダスト閾値よりも残高が少ない場合、ラベルは赤になります。</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>入力ごとにsatoshiの+/- %1に変更できます。</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(ラベルなし)</translation>
     </message>
@@ -697,6 +634,9 @@
         <translation>(変更)</translation>
     </message>
 </context>
+<context>
+    <name>DarksendConfig</name>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -734,10 +674,6 @@
     <message>
         <source>Edit sending address</source>
         <translation>送信アドレスの編集</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>入寮されたアドレス "%1" は正当なビットコインアドレスではありません。</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -786,10 +722,6 @@
         <translation>(%1-ビット)</translation>
     </message>
     <message>
-        <source>About %1</source>
-        <translation>%1について</translation>
-    </message>
-    <message>
         <source>Command-line options</source>
         <translation>コマンドラインオプション</translation>
     </message>
@@ -829,7 +761,7 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>GUIのすべての設定をリセット</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -862,18 +794,13 @@
     </message>
     </context>
 <context>
+    <name>MasternodeList</name>
+    </context>
+<context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
         <translation>フォーム</translation>
-    </message>
-    <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>最近のトランザクションが表示できない可能性があります。従って、ウォレットの残高が正しくない可能性があります。この情報はビットコインネットワークに接続し、同期処理を完了させると正しくなります。詳細は以下になります。</translation>
-    </message>
-    <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>使用したビットコインで、未処理となっているものは、ネットワークによって受領されません。</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -946,14 +873,6 @@
         <translation>&amp;メイン</translation>
     </message>
     <message>
-        <source>Automatically start %1 after logging in to the system.</source>
-        <translation>システムログイン時に%1を自動的に開始</translation>
-    </message>
-    <message>
-        <source>&amp;Start %1 on system login</source>
-        <translation>&amp;システムログインで%1を開始</translation>
-    </message>
-    <message>
         <source>Size of &amp;database cache</source>
         <translation>&amp;データベース喝取のサイズ</translation>
     </message>
@@ -966,28 +885,12 @@
         <translation>&amp;認証スレッドスクリプトの数</translation>
     </message>
     <message>
-        <source>Accept connections from outside</source>
-        <translation>外部からの接続承認</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>内部接続の許可</translation>
-    </message>
-    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>IP プロキシのアドレス (例 IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>ウィンドウが閉じられた時、アプリケーションを終了せずに最小化します。オプションボタンが有効な時は、アプリケーションはメニューの終了が選択されら時のみ、終了します。</translation>
-    </message>
-    <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>サードパーティのURL(例 a block explorer)はコンテキストメニューアイテムの処理タブに表示されます。YRLの%sは処理ハッシュによって置き換えられます。複数URLは水平バー | によって区切られます。</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>サードパティ処理URL</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1022,24 +925,12 @@
         <translation>コインと制御機能の有効化</translation>
     </message>
     <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>認証されていない変更の支出を無効化した場合、その変更を含む処理はすべての認証が完了するまで、使用することはできません。また、これは残高の計算にも影響します。</translation>
-    </message>
-    <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;認証されていない変更の支払い</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>自動絵的にルータのビットコインのクライアントポートが開きます。この機能はルータがUPnPをサポートし、有効であるときに動作します。</translation>
-    </message>
-    <message>
         <source>Map port using &amp;UPnP</source>
         <translation>&amp;UPnPを使用してポート配置します。</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>SOCKS5プロキシを使用してビットコインネットワークへ接続</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1074,24 +965,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Tor秘匿ネットワークのための区切られたSOCKS5を経由して、ビットコインネットワークに接続</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Tor匿名サービスを経由して到達ピアへ、区切られたSOCKS5 プロキシを使用:</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>&amp;画面</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>&amp;システムトレイのアイコンを非表示.</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>トレイアイコンを非表示</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1112,10 +987,6 @@
     <message>
         <source>User Interface &amp;language:</source>
         <translation>ユーザインターフェース &amp;言語:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation>ユーザインタフェースの言語はここで設定されます。設定は%1を再起動後、有効になります。</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1171,10 +1042,6 @@
     <message>
         <source>Form</source>
         <translation>フォーム</translation>
-    </message>
-    <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>表示されている情報は、期限切れの可能性があります。ウォレットは自動的にビットコインネットワークへの接続が確立した後に同期化されます。しかし、処理はまだ、完了していません。</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1240,16 +1107,12 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>読み取り専用アドレス内の現在の合計残高</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
         <translation>支払い要求エラー</translation>
-    </message>
-    <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>ビットコインを開始できません: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1262,10 +1125,6 @@
     <message>
         <source>Invalid payment address %1</source>
         <translation>無効な支払アドレス %1</translation>
-    </message>
-    <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>URLはパースできませんでした! 原因はビットコインアドレスが無効であるか、URIパラメータの形式が間違っている可能性があります。</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1350,16 +1209,12 @@
         <source>Ping</source>
         <translation>Ping</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>残高</translation>
-    </message>
-    <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>ビットコインアドレスの入力 (例 %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1397,7 +1252,7 @@
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 は安全に終了できませんでした...</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QObject::QObject</name>
     <message>
@@ -1412,7 +1267,13 @@
         <source>Error: %1</source>
         <translation>エラー: %1</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1445,10 +1306,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;情報</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>デバッグ画面</translation>
     </message>
     <message>
         <source>General</source>
@@ -1545,10 +1402,6 @@
     <message>
         <source>User Agent</source>
         <translation>ユーザエージェント</translation>
-    </message>
-    <message>
-        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>現在のデータ辞書から%1デバッグログファイルを開きます。ログファイルが大きいため、数秒かかります。</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -1667,28 +1520,8 @@
         <translation>%1 RPCコンソールへようこそ</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>&lt;b&gt;help&lt;/b&gt; と入力すると有効なコマンドが表示されます。</translation>
-    </message>
-    <message>
         <source>Network activity disabled</source>
         <translation>無効化されたネットワーク利用</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 バイト</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 キロバイト</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 メガバイト</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 Gギガバイト</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -1736,14 +1569,6 @@
     <message>
         <source>&amp;Message:</source>
         <translation>&amp;メッセージ:</translation>
-    </message>
-    <message>
-        <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation>前回使用された受信アドレスを再利用します。再度アドレスを使用することは、セキュリティとプライバシーの問題になります。再度支払要求を事前に再生成しない限り、これを使用しないようにしてください。</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>&amp;再度存在している受信アドレスを死闘する(非推奨)</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
@@ -1888,10 +1713,6 @@
         <translation>(メッセージなし)</translation>
     </message>
     <message>
-        <source>(no amount requested)</source>
-        <translation>(料金要求なし)</translation>
-    </message>
-    <message>
         <source>Requested</source>
         <translation>要求済み</translation>
     </message>
@@ -1967,28 +1788,12 @@
         <translation>キロバイトごと</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>カスタム料金が1000 satoshiで処理が250バイトのみの場合、料金はキロバイトあたりは250 satoshiのみとなり、最新の合計は1000 satoshiまで支払います。処理が1キロバイトよりも大きい場合、キロバイトごとに支払いが行われます。</translation>
-    </message>
-    <message>
         <source>Hide</source>
         <translation>隠す</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>最小の料金のみ支払いは、ブロック内の処理容量よりも小さい場合に限り、問題ありません。しかし、ネットワークの処理できる量よりも、ビットコイン処理のほうが需要があり、最終的にその確認処理が実行されないことに注意する必要があります。</translation>
-    </message>
-    <message>
         <source>(read the tooltip)</source>
         <translation>(ツールチップを読む)</translation>
-    </message>
-    <message>
-        <source>Recommended:</source>
-        <translation>推奨:</translation>
-    </message>
-    <message>
-        <source>Custom:</source>
-        <translation>カスタム:</translation>
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
@@ -2009,10 +1814,6 @@
     <message>
         <source>Dust:</source>
         <translation>ごみ:</translation>
-    </message>
-    <message>
-        <source>Confirmation time target:</source>
-        <translation>目標時間の確認:</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2123,10 +1924,6 @@
         <translation>%1の必須料金のみ支払う</translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>注意: 無効なビットコインアドレス</translation>
-    </message>
-    <message>
         <source>Warning: Unknown change address</source>
         <translation>注意: 未知の変更アドレス</translation>
     </message>
@@ -2166,10 +1963,6 @@
         <translation>これは通常の支払です。</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation>支払に送信するビットコインアドレス</translation>
-    </message>
-    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -2184,10 +1977,6 @@
     <message>
         <source>Remove this entry</source>
         <translation>入力の削除</translation>
-    </message>
-    <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>料金は送信料金から控除されます。受信者は入力された料金よりも低い金額を受け取ります。複数の受信者を選択した場合、この料金は同額に分けられます。</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2208,10 +1997,6 @@
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>使用されたアドレス一覧のために、このアドレスのラベルを入力します。</translation>
-    </message>
-    <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>参考資料に保存された処理のビットコインURIは、メッセージに添付されます。メモ: このメッセージはビットコイン上で送信されません。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2236,10 +2021,6 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>%1 is shutting down...</source>
-        <translation>%1は停止中です...</translation>
-    </message>
-    <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>この画面が消えるまで、コンピュータを停止しないでください。</translation>
     </message>
@@ -2253,14 +2034,6 @@
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;署名メッセージ</translation>
-    </message>
-    <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>送信されたビットコインを受信できることを証明するために、アドレスのメッセージや同意事項に署名できます。フィッシング攻撃が署名を利用する可能性があるので、署名が曖昧やランダムでないことに注意してください。詳細な明細のみに署名されます。</translation>
-    </message>
-    <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation>メッセージ署名するためのビットコインアドレス</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2291,10 +2064,6 @@
         <translation>システムのクリップボードへ現在の署名をコピー</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>ビットコインアドレスを証明するために、メッセージに署名</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>署名&amp;メッセージ</translation>
     </message>
@@ -2313,14 +2082,6 @@
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
         <translation>以下のメッセージを確認して、受信者のアドレス、メッセージ（タブやすスペースなどを正確にこぴーしてください）、署名を入力してください。中間の攻撃者からのアタックを避けるために、署名されていないメッセージを読まないように注意してください。署名はアドレスと受信を証明することはできますが、送信者の処理を証明できないことに注意してください。</translation>
-    </message>
-    <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation>メッセージのビットコインアドレスはサインされています</translation>
-    </message>
-    <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>特定のビットコインアドレスと署名されているメッセージであることを確認してください。</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2389,7 +2150,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -2524,10 +2285,6 @@
         <translation>処理合計サイズ</translation>
     </message>
     <message>
-        <source>Output index</source>
-        <translation>出力インデックス</translation>
-    </message>
-    <message>
         <source>Merchant</source>
         <translation>商人</translation>
     </message>
@@ -2544,10 +2301,6 @@
     <message>
         <source>Date</source>
         <translation>日付</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>ラベル</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2617,7 +2370,7 @@
         <source>Send Coins</source>
         <translation>コイン送付</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2630,18 +2383,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Information</source>
-        <translation>情報</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>警告</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>エラー</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

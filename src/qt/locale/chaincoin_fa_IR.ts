@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="fa_IR" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>آدرس‌های گیرنده</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>اینها آدرس‌های شما برای ارسال وجوه هستند. همیشه قبل از ارسال، مقدار و آدرس گیرنده را بررسی کنید.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>اینها آدرس‌های بیتکوین شما برای دریافت وجوه هستند. توصیه می‌شود برای هر دریافت از یک آدرس جدید استفاده کنید.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -170,20 +160,12 @@
         <translation>تایید رمزگذاری کیف پول</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>اخطار: اگر کیف‌پول خود را رمزگذاری کرده و رمز خود را فراموش کنید، شما &lt;b&gt;تمام بیت‌کوین‌های خود را از دست خواهید داد&lt;/b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>آیا از رمزگذاری کیف‌پول خود اطمینان دارید؟</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>کیف پول رمزگذاری شده است</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 برای اتمام فرایند رمزگذاری بسته خواهد شد. به خاطر داشته باشید که رمزگذاری WALLET شما،  کامپیوتر شما را از آلودگی به بدافزارها مصون نمی دارد.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -264,10 +246,6 @@
         <translation>از "درخواست نامه"/ application خارج شو</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;درباره %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>نمایش اطلاعات درباره %1</translation>
     </message>
@@ -328,10 +306,6 @@
         <translation>فهرست‌بندی نمایه بلاک‌ها…</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>ارسال کوین به آدرس بیت کوین</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>گرفتن نسخه پیشتیبان در آدرسی دیگر</translation>
     </message>
@@ -340,16 +314,8 @@
         <translation>رمز عبور مربوط به رمزگذاریِ کیف پول  را تغییر دهید</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>پنجره دیباگ</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>تایید پیام</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>بیت کوین</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -372,14 +338,6 @@
         <translation>رمزنگاری کلیدهای شخصی متعلق به کیف‌پول</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>پیام‌ها را با آدرس بیت‌کوین خود امضا کنید تا مالکیت آن‌ها را اثبات کنید</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>پیام‌ها را تائید کنید تا از امضاشدن آن‌ها با آدرس بیت‌کوین مطمئن شوید</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>فایل</translation>
     </message>
@@ -396,24 +354,12 @@
         <translation>نوار ابزار</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>درخواست پرداخت (ساخت کد QR و بیت‌کوین: URIs)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>نمایش لیست آدرس‌ها و لیبل‌های ارسالی استفاده شده</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>نمایش لیست آدرس‌ها و لیبل‌های دریافتی استفاده شده</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>بازکردن بیت‌کوین: آدرس یا درخواست پرداخت</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n ارتباط فعال به شبکه بیت‌کوین</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -425,7 +371,7 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>%n بلاک از تاریخچه تراکنش، پردازش شد.</numerusform></translation>
+        <translation><numerusform>%n بلاک از تاریخچه تراکنش، پردازش شد.</numerusform><numerusform>%n بلاک از تاریخچه تراکنش، پردازش شد.</numerusform></translation>
     </message>
     <message>
         <source>Error</source>
@@ -455,6 +401,9 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>wallet رمزگذاری شد و در حال حاضر قفل است</translation>
     </message>
+    </context>
+<context>
+    <name>ClientModel</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -544,6 +493,9 @@
     </message>
     </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -599,13 +551,12 @@
         <translation>خوش آمدید</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>بیت کوین</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>خطا</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -687,10 +638,6 @@
         <translation>فرم</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>اطلاعات نمایش داده شده ممکن است روزآمد نباشد. wallet شما به صورت خودکار بعد از برقراری اتصال با شبکه bitcoin به روز می شود اما این فرایند هنوز تکمیل نشده است.</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>در دسترس:</translation>
     </message>
@@ -730,6 +677,12 @@
 </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -963,7 +916,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     </context>
@@ -996,13 +949,9 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>این بخش جزئیات تراکنش را نشان می دهد</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>برچسب</translation>
-    </message>
     <message>
         <source>Unconfirmed</source>
         <translation>تایید نشده</translation>
@@ -1080,86 +1029,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>انتخابها:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>دایرکتوری داده را مشخص کن</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>command line  و JSON-RPC commands را قبول کنید</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>به عنوان daemon بک گراند را اجرا کنید و دستورات را قبول نمایید</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>مبلغ تراکنش کمتر از آن است که پس از کسر هزینه  تراکنش قابل ارسال باشد</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>گزینه های سرویس دهنده RPC:</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>ارسال اطلاعات پیگیری/خطایابی به کنسول به جای ارسال به فایل debug.log</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>شناسه کاربری برای ارتباطاتِ JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>رمز برای ارتباطاتِ JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>دستور را وقتی بهترین بلاک تغییر کرد اجرا کن (%s در دستور توسط block hash جایگزین شده است)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>تنظیم تعداد ریسمان ها برای سرویس دهی فراخوانی های RPC (پیش فرض: %d)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>فایل تنظیمات را مشخص کنید (پیش فرض: %s)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>فایل pid را مشخص کنید (پیش فرض: %s)</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>وجوه ناکافی</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>لود شدن نمایه بلاکها..</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>wallet در حال لود شدن است...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>قابلیت برگشت به نسخه قبلی برای wallet امکان پذیر نیست</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>اسکنِ دوباره...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>اتمام لود شدن</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>خطا</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

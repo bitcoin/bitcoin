@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="es_CO" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -63,14 +61,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>Receiving addresses</source>
         <translation>Recibiendo dirección</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estas son sus direcciones de Bitcoin para enviar pagos. Siempre verifique el monto y la dirección de recepción antes de enviar monedas.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Estas son sus direcciones de Bitcoin para recibir pagos. Se recomienda utilizar una nueva dirección de recepción para cada transacción.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -169,10 +159,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>Confirm wallet encryption</source>
         <translation>Confirmar el cifrado de la billetera</translation>
-    </message>
-    <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Advertencia: si encriptas tu billetera y pierdes tu contraseña &lt;b&gt; PIERDES TODOS TUS BITCOINS &lt;/b&gt; !</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -301,10 +287,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>&amp;Recibiendo Direcciones...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Abrir &amp;URL...</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>Haga clic para deshabilitar la actividad de la red.</translation>
     </message>
@@ -321,10 +303,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Reindexando bloques en el disco ...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Enviando monedas a una dirección de Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Monedero de respaldo a otra ubicación</translation>
     </message>
@@ -333,20 +311,12 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Cambiar la contraseña usando la encriptación de la billetera</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Ventana desarrollador</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Abrir consola de diagnóstico y desarrollo</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verificar Mensaje...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -373,14 +343,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Encripta las claves privadas que pertenecen a tu billetera</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Firme mensajes con sus direcciones de Bitcoin para demostrar que los posee</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifique los mensajes para asegurarse de que fueron firmados con las direcciones de Bitcoin especificadas</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Archivo</translation>
     </message>
@@ -397,20 +359,12 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Barra de herramientas de pestañas</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Solicitar pagos (genera códigos QR y bitcoin: URIs)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Mostrar la lista de direcciones y etiquetas de envío usadas</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Mostrar la lista de direcciones y etiquetas de recepción usadas</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Abra un bitcoin: URI o solicitud de pago</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -476,11 +430,10 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>La billetera está &lt;b&gt; encriptada &lt;/ b&gt; y actualmente está &lt;b&gt; bloqueada &lt;/ b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Se produjo un error fatal. Bitcoin ya no puede continuar de manera segura y no continuará</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ClientModel</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -605,6 +558,9 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
 </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -681,10 +637,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>About %1</source>
-        <translation>Alrededor de %1</translation>
-    </message>
-    <message>
         <source>Command-line options</source>
         <translation>Opciones de línea de comando</translation>
     </message>
@@ -716,7 +668,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <source>Reset all settings changed in the GUI</source>
         <translation>Restablecer todas las configuraciones modificadas en la GUI</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -740,31 +692,18 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Use un directorio de datos personalizado:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>The wallet will also be stored in this directory.</source>
-        <translation>La billetera también se almacenará en este directorio.</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Error</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
         <translation>Formar</translation>
-    </message>
-    <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>Es posible que las transacciones recientes aún no estén visibles y, por lo tanto, el saldo de su billetera podría ser incorrecto. Esta información será correcta una vez que su billetera haya terminado de sincronizarse con la red bitcoin, como se detalla a continuación.</translation>
-    </message>
-    <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>La red no aceptará intentar gastar bitcoins que se vean afectados por transacciones aún no mostradas</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -905,16 +844,8 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Habilite las funciones de moneda y control</translation>
     </message>
     <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Si deshabilita el gasto de un cambio no confirmado, el cambio de una transacción no se puede usar hasta que esa transacción tenga al menos una confirmación. Esto también afecta cómo se calcula su saldo.</translation>
-    </message>
-    <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp; Gastar cambio no confirmado</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abra automáticamente el puerto cliente de Bitcoin en el enrutador. Esto solo funciona cuando su enrutador admite UPnP y está habilitado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -927,10 +858,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>Allow incomin&amp;g connections</source>
         <translation>Permitir conexiones entrantes</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Conéctese a la red de Bitcoin a través de un proxy SOCKS5.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -963,10 +890,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Conéctese a la red de Bitcoin a través de un proxy SOCKS5 separado para los servicios Tor ocultos.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1068,10 +991,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Configurar</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>La información mostrada puede estar desactualizada. Su billetera se sincroniza automáticamente con la red de Bitcoin después de establecer una conexión, pero este proceso aún no se ha completado.</translation>
-    </message>
-    <message>
         <source>Watch-only:</source>
         <translation>Ver-solo:</translation>
     </message>
@@ -1131,7 +1050,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <source>Current total balance in watch-only addresses</source>
         <translation>Saldo total actual en direcciones de solo reloj</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1139,16 +1058,8 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Error de solicitud de pago</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>No se puede iniciar Bitcoin: controlador de clic para pagar</translation>
-    </message>
-    <message>
         <source>URI handling</source>
         <translation>Manejo de URI</translation>
-    </message>
-    <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>¡URI no puede ser analizado! Esto puede deberse a una dirección de Bitcoin no válida o a parámetros de URI mal formados.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1307,7 +1218,13 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <source>Error: %1</source>
         <translation>Error: %1</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1340,10 +1257,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>&amp;Information</source>
         <translation>Información</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Ventana de depuración</translation>
     </message>
     <message>
         <source>General</source>
@@ -1838,10 +1751,6 @@ Tarifa de copia</translation>
         <translation>Fecha</translation>
     </message>
     <message>
-        <source>Label</source>
-        <translation>Etiqueta</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(no etiqueta)</translation>
     </message>
@@ -1907,38 +1816,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Información</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Peligro.</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Fondos Insuficientes</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Cargando billetera...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Reescaneando</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Listo Cargando</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Error</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

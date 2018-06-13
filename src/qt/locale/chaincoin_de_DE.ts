@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="de_DE" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Empfangsadressen</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dies sind Ihre Bitcoin-Adressen zum Senden von Zahlungen. Überprüfen Sie immer die Menge und die Empfangsadresse, bevor Sie Bitcoins senden.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Dies sind Ihre Bitcoin-Adressen für den Empfang von Zahlungen. Es wird empfohlen, für jede Transaktion eine neue Empfangsadresse zu verwenden.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -166,10 +156,6 @@
         <translation>Brieftaschenverschlüsselung bestätigen</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Achtung: Wenn Sie Ihre Wallet verschlüsseln und das Passwort verlieren, gehen &lt;b&gt;alle Ihre Bitcoins verloren&lt;/b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Möchten Sie Ihre Wallet wirklich verschlüsseln?</translation>
     </message>
@@ -260,10 +246,6 @@
         <translation>Programm beenden</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;Über %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>Zeige Informationen zu %1</translation>
     </message>
@@ -304,10 +286,6 @@
         <translation>&amp;Adressen empfangen...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Öffne &amp;URI...</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>Klicken Sie, um die Netzwerkaktivität zu deaktivieren.</translation>
     </message>
@@ -328,10 +306,6 @@
         <translation>Reindexiere Blöcke auf dem Datenträger...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Coins an eine Bitcoin-Adresse senden</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Wallet an einen anderen Ort sichern</translation>
     </message>
@@ -340,20 +314,12 @@
         <translation>Ändern Sie das Passwort, das für die Wallet-Verschlüsselung verwendet wird</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Debug Fenster</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Die Debugging- und Diagnosekonsole öffnen</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>Nachricht &amp;bestätigen</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -378,14 +344,6 @@
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Verschlüssele die Private Keys, die zu deiner Brieftasche gehören</translation>
-    </message>
-    <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Nachrichten mit Ihrer Bitcoin-Adresse signieren, um zu beweisen, dass sie Ihnen gehören</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Überprüfen Sie Nachrichten, um sicherzustellen, dass sie mit den angegebenen Bitcoin-Adressen signiert wurden</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -465,11 +423,10 @@
         <source>Incoming transaction</source>
         <translation>Überweisung empfangen</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Ein schwerwiegender Fehler ist aufgetreten. Bitcoin kann nicht mehr sicher fortfahren und beendet sich.</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ClientModel</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -546,6 +503,9 @@
     </message>
     </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -597,13 +557,12 @@
         <translation>Willkommen</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Fehler</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -650,16 +609,18 @@
         <translation>Betrag</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Bitcoin Adresse eingeben (z.B. %1)</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -790,10 +751,6 @@
         <translation>Datum</translation>
     </message>
     <message>
-        <source>Label</source>
-        <translation>Etikett</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(kein Etikett)</translation>
     </message>
@@ -870,62 +827,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Optionen:</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Information</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Achtung</translation>
-    </message>
-    <message>
-        <source>Starting network threads...</source>
-        <translation>Starte Netzwerk-Threads...</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>Das ist die Mindestgebühr für jede Transaktion</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Das ist die Gebühr für die Überweisung</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation>Überweisungsbetrag kann nicht negativ sein</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation>Überweisung muss mindestens einen Empfänger haben </translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Ungenügendes Guthaben</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Block Verzeichnis laden...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Brieftasche laden...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Neuscannen...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Laden abgeschlossen</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Fehler</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

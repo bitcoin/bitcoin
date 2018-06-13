@@ -497,7 +497,7 @@ bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransacti
     CWallet * const pwallet = GetWalletForPSRequest();
 
     finalMutableTransaction = finalTransactionNew;
-    LogPrintf("CPrivateSendClient::SignFinalTransaction -- finalMutableTransaction=%s", finalMutableTransaction.GetHash().ToString());
+    LogPrintf("CPrivateSendClient::SignFinalTransaction -- finalMutableTransaction=%s\n", finalMutableTransaction.GetHash().ToString());
 
     std::vector<CTxIn> sigs;
 
@@ -570,7 +570,7 @@ bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransacti
     }
 
     // push all of our signatures to the Masternode
-    LogPrintf("CPrivateSendClient::SignFinalTransaction -- pushing sigs to the masternode, finalMutableTransaction=%s", finalMutableTransaction.GetHash().ToString());
+    LogPrintf("CPrivateSendClient::SignFinalTransaction -- pushing sigs to the masternode, finalMutableTransaction=%s\n", finalMutableTransaction.GetHash().ToString());
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     connman->PushMessage(pnode, msgMaker.Make(NetMsgType::DSSIGNFINALTX, sigs));
     SetState(POOL_STATE_SIGNING);
@@ -875,8 +875,8 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
         CAmount nValueInTmp = 0;
         std::vector<CTxDSIn> vecTxDSInTmp;
         std::vector<COutput> vCoinsTmp;
-        int nMinAmount = vecStandardDenoms[vecBits.front()];
-        int nMaxAmount = nBalanceNeedsAnonymized;
+        CAmount nMinAmount = vecStandardDenoms[vecBits.front()];
+        CAmount nMaxAmount = nBalanceNeedsAnonymized;
 
         if (dsq.nInputCount != 0) {
             nMinAmount = nMaxAmount = dsq.nInputCount * vecStandardDenoms[vecBits.front()];

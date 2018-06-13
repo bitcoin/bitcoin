@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="hi_IN" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -46,10 +44,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>पतों को प्राप्त कर रहा है</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>ये भुगतान भेजने के लिए ये आपके बिटकॉइन पते हैं। हमेशा सिक्के भेजने से पहले राशि और प्राप्तकर्ता पते की जांच करें।</translation>
     </message>
     </context>
 <context>
@@ -117,10 +111,6 @@
         <translation>पहचान शब्द/अक्षर जो वॉलेट एनक्रिपशन के लिए इस्तेमाल किया है उसे बदलिए!</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>बीटकोइन</translation>
-    </message>
-    <message>
         <source>Wallet</source>
         <translation>वॉलेट</translation>
     </message>
@@ -178,6 +168,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
@@ -195,6 +188,9 @@
         <source>Confirmed</source>
         <translation>पक्का</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -228,13 +224,12 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
-        <translation>बीटकोइन</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>भूल</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -300,6 +295,12 @@
 </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -422,7 +423,7 @@
         <source>[testnet]</source>
         <translation>[टेस्टनेट]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     </context>
@@ -435,7 +436,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation> ये खिड़की आपको लेन-देन का विस्तृत विवरण देगी !</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     </context>
@@ -459,50 +460,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>विकल्प:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>डेटा डायरेक्टरी बताएं </translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>बैकग्राउंड में डेमॉन बन कर रन करे तथा कमांड्स स्वीकार करें </translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>ब्लॉक्स जाँचे जा रहा है...</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>जानकारी</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>चेतावनी</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>ब्लॉक इंडेक्स आ रहा है...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>वॉलेट आ रहा है...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>रि-स्केनी-इंग...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>लोड हो गया|</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>भूल</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

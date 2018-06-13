@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="fa" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>آدرس های گیرنده</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>اینها آدرس های شما برای فرستادن پرداخت هاست. همیشه قبل از فرستادن سکه ها مقدار و آدرس دریافت کننده را چک کنید.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>این ها آدرس های بیت کوین شما برای دریافت پرداخت ها می باشد. توصیه میشود برای هر تراکنش از یک آدرس دریافت جدید استفاده کنید.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -244,10 +234,6 @@
         <translation>خروج از برنامه</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;حدود%1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>نمایش اطلاعات دربارهٔ %1</translation>
     </message>
@@ -288,10 +274,6 @@
         <translation>&amp;در حال دریافت آدرس ها...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>باز کردن &amp;آدرس</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>برای غیر فعال کردن فعالیت شبکه کلیک کنید.</translation>
     </message>
@@ -308,10 +290,6 @@
         <translation>بازنشانی بلوک‌ها روی دیسک...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>ارسال وجه به نشانی بیت‌کوین</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>تهیهٔ پشتیبان از کیف پول در یک مکان دیگر</translation>
     </message>
@@ -320,20 +298,12 @@
         <translation>تغییر گذرواژهٔ مورد استفاده در رمزنگاری کیف پول</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>پنجرهٔ ا&amp;شکال‌زدایی</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>باز کردن کنسول خطایابی و اشکال‌زدایی</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>با&amp;زبینی پیام...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>بیت‌کوین</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -360,14 +330,6 @@
         <translation>رمزنگاری کلیدهای خصوصی متعلق به کیف پول شما</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>برای اثبات اینکه پیام‌ها به شما تعلق دارند، آن‌ها را با نشانی بیت‌کوین خود امضا کنید</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>برای حصول اطمینان از اینکه پیام با نشانی بیت‌کوین مشخص شده امضا است یا خیر، پیام را شناسایی کنید</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;فایل</translation>
     </message>
@@ -384,10 +346,6 @@
         <translation>نوارابزار برگه‌ها</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>درخواست پرداخت ( تولید کد کیوار و ادرس بیت کوین)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>نمایش لیست آدرس های ارسال و لیبل ها</translation>
     </message>
@@ -396,16 +354,8 @@
         <translation>نمایش لیست آدرس های دریافت و لیبل ها</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>بازکردن یک بیت کوین: آدرس یا درخواست پرداخت</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>گزینه‌های خط‌فرمان</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n ارتباط فعال با شبکهٔ بیت‌کوین</numerusform></translation>
     </message>
     <message>
         <source>Processing blocks on disk...</source>
@@ -413,7 +363,7 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>پردازش %n  بلاک از تاریخچه ی تراکنش ها </numerusform></translation>
+        <translation><numerusform>پردازش %n  بلاک از تاریخچه ی تراکنش ها </numerusform><numerusform>پردازش %n  بلاک از تاریخچه ی تراکنش ها </numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -493,6 +443,9 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>کیف پول &lt;b&gt;رمزنگاری شده&lt;/b&gt; است و هم‌اکنون &lt;b&gt;قفل&lt;/b&gt; است</translation>
     </message>
+    </context>
+<context>
+    <name>ClientModel</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -622,6 +575,9 @@
     </message>
 </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -650,10 +606,6 @@
     <message>
         <source>Edit sending address</source>
         <translation>ویرایش آدرس قرستنده</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>نشانی وارد شده "%1" یک نشانی معتبر بیت‌کوین نیست.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -696,10 +648,6 @@
     <message>
         <source>(%1-bit)</source>
         <translation>(%1-بیت)</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation>درباره %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -753,17 +701,16 @@
         <translation>استفاده از یک مسیر سفارشی:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>بیت‌کوین</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>خطا</translation>
     </message>
     <message numerus="yes">
         <source>%n GB of free space available</source>
-        <translation><numerusform>%n گیگابایت فضا موجود است</numerusform></translation>
+        <translation><numerusform>%n گیگابایت فضا موجود است</numerusform><numerusform>%n گیگابایت فضا موجود است</numerusform></translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -830,10 +777,6 @@
         <translation>&amp;عمومی</translation>
     </message>
     <message>
-        <source>Automatically start %1 after logging in to the system.</source>
-        <translation>اجرای خودکار %1 بعد زمان ورود به سیستم.</translation>
-    </message>
-    <message>
         <source>MB</source>
         <translation>مگابایت</translation>
     </message>
@@ -856,10 +799,6 @@
     <message>
         <source>Expert</source>
         <translation>استخراج</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>باز کردن خودکار درگاه شبکهٔ بیت‌کوین روی روترها. تنها زمانی کار می‌کند که روتر از پروتکل UPnP پشتیبانی کند و این پروتکل فعال باشد.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -961,10 +900,6 @@
         <translation>فرم</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>اطلاعات نمایش‌داده شده ممکن است قدیمی باشند. بعد از این که یک اتصال با شبکه برقرار شد، کیف پول شما به‌صورت خودکار با شبکهٔ بیت‌کوین همگام‌سازی می‌شود. اما این روند هنوز کامل نشده است.</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>در دسترس:</translation>
     </message>
@@ -1034,10 +969,6 @@
         <translation>مبلغ</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>یک آدرس بیت‌کوین وارد کنید (مثلاً %1)</translation>
-    </message>
-    <message>
         <source>%1 d</source>
         <translation>%1 روز</translation>
     </message>
@@ -1094,6 +1025,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -1109,10 +1046,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;اطلاعات</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>پنجرهٔ اشکالزدایی</translation>
     </message>
     <message>
         <source>General</source>
@@ -1395,14 +1328,6 @@
         <translation>پنهان کردن</translation>
     </message>
     <message>
-        <source>Recommended:</source>
-        <translation>توصیه شده:</translation>
-    </message>
-    <message>
-        <source>Custom:</source>
-        <translation>سفارشی:</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>ارسال به چند دریافت‌کنندهٔ به‌طور همزمان</translation>
     </message>
@@ -1478,10 +1403,6 @@
         <translation>این یک پرداخت عادی است</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation>نشانی بیت‌کوین برای ارسال پرداخت به آن</translation>
-    </message>
-    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -1515,10 +1436,6 @@
     </context>
 <context>
     <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down...</source>
-        <translation>%1 در حال خاموش شدن است...</translation>
-    </message>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -1529,10 +1446,6 @@
     <message>
         <source>&amp;Sign Message</source>
         <translation>ا&amp;مضای پیام</translation>
-    </message>
-    <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation>نشانی بیت‌کوین برای امضاء پیغام با آن</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -1563,10 +1476,6 @@
         <translation>امضای فعلی را به حافظهٔ سیستم کپی کن</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>برای اثبات تعلق این نشانی به شما، پیام را امضا کنید</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>ا&amp;مضای پیام</translation>
     </message>
@@ -1583,14 +1492,6 @@
         <translation>&amp;شناسایی پیام</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation>نشانی بیت‌کوین که پیغام با آن امضاء شده</translation>
-    </message>
-    <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>برای حصول اطمینان از اینکه پیام با نشانی بیت‌کوین مشخص شده امضا است یا خیر، پیام را شناسایی کنید</translation>
-    </message>
-    <message>
         <source>Verify &amp;Message</source>
         <translation>&amp;شناسایی پیام</translation>
     </message>
@@ -1605,7 +1506,7 @@
         <source>[testnet]</source>
         <translation>آزمایش شبکه</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -1622,13 +1523,9 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>این پانل شامل توصیف کاملی از جزئیات تراکنش است</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>برچسب</translation>
-    </message>
     <message>
         <source>(no label)</source>
         <translation>(بدون برچسب)</translation>
@@ -1682,198 +1579,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>گزینه‌ها:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>مشخص کردن دایرکتوری داده‌ها</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>اتصال به یک گره برای دریافت آدرس‌های همتا و قطع اتصال پس از اتمام عملیات</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>آدرس عمومی خود را مشخص کنید</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>پذیرش دستورات خط فرمان و دستورات JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>اجرا در پشت زمینه به‌صورت یک سرویس و پذیرش دستورات</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation> هسته Bitcoin </translation>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>مقید به نشانی داده شده باشید و همیشه از آن پیروی کنید. از نشانه گذاری استاندار IPv6 به صورت Host]:Port] استفاده کنید.</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>هنگامی که یک تراکنش در کیف پولی رخ می دهد، دستور را اجرا کن(%s در دستورات بوسیله ی TxID جایگزین می شود)</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>پذیرش اتصالات از بیرون (پیش فرض:1 بدون پراکسی یا اتصال)</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>بستن گزینه ایجاد</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>گزینه‌های اتصال:</translation>
-    </message>
-    <message>
-        <source>Copyright (C) %i-%i</source>
-        <translation>حق تألیف (C) %i-%i</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>یک پایگاه داده ی بلوک خراب یافت شد</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>آیا مایلید که اکنون پایگاه داده ی بلوک را بازسازی کنید؟</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>خطا در آماده سازی پایگاه داده ی بلوک</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation>خطا در بارگیری %s</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>خطا در بارگذاری پایگاه داده ها</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>خطا در بازگشایی پایگاه داده ی بلوک</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>خطا: فضای دیسک کم است!</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>شنیدن هر گونه درگاه انجام پذیر نیست. ازlisten=0  برای اینکار استفاده کیند.</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>در حال پیاده‌سازی...</translation>
-    </message>
-    <message>
-        <source>Loading banlist...</source>
-        <translation>بارگذاری لیست‌سیاه...</translation>
-    </message>
-    <message>
-        <source>Print this help message and exit</source>
-        <translation>چاپ ایت پیام کمک و خروج</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>چاپ نسخه و خروج</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>در حال بازبینی بلوک‌ها...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>گزینه‌های کیف پول:</translation>
-    </message>
-    <message>
-        <source>(default: %u)</source>
-        <translation>(پیش‌فرض %u)</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>اطلاعات</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>اطلاعات ردگیری/اشکال‌زدایی را به جای فایل لاگ اشکال‌زدایی به کنسول بفرستید</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>فایل debug.log  را در startup مشتری کوچک کن (پیش فرض:1 اگر اشکال زدایی روی نداد)</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>مقدار تراکنش بسیار کم است</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>تراکنش بسیار بزرگ است</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>JSON-RPC شناسه برای ارتباطات</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>هشدار</translation>
-    </message>
-    <message>
-        <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation>هشدار: قوانین جدید ناشناخته‌ای فعال شده‌اند (نسخه‌بیت %i)</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>JSON-RPC عبارت عبور برای ارتباطات</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>زمانی که بهترین بلاک تغییر کرد، دستور را اجرا کن (%s در cmd با block hash جایگزین شده است)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>به DNS اجازه بده تا برای addnode ، seednode و اتصال جستجو کند</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(پیش‌فرض %s)</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>شبکه مشخص شده غیرقابل شناسایی در onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>بود جه نا کافی </translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>بار گیری شاخص بلوک</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>بار گیری والت</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>امکان تنزل نسخه در wallet وجود ندارد</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>اسکان مجدد</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>بار گیری انجام شده است</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>خطا</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

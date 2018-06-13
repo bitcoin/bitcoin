@@ -7,3 +7,4 @@ minimum_perc = 0
 source_file = src/qt/locale/chaincoin_en.ts
 source_lang = en
 type = QT
+

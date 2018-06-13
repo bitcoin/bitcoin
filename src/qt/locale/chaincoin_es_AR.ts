@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="es_AR" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,11 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Dirección destino</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estas son tus direcciones Bitcoin para enviar pagos. Chequea siempre el monto y la dirección destino antes de mandar monedas.
-</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -143,11 +136,17 @@
     <name>BitcoinGUI</name>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>(no label)</source>
         <translation>(No etiqueta)</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -160,6 +159,9 @@
     </context>
 <context>
     <name>Intro</name>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -184,6 +186,12 @@
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -251,10 +259,6 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Label</source>
-        <translation>Etiqueta</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(No etiqueta)</translation>
     </message>
@@ -288,6 +292,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>chaincoin-core</name>
     </context>
 </TS>

@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="bg_BG" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Адрес за получаване</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Тези са вашите Биткойн адреси за изпращане на монети. Винаги проверявайте количеството и получаващия адрес преди изпращане. </translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Това са вашите Биткойн адреси за получаване на монети. Препоръчително е да ползвате нов адрес на всяка транзакция.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -228,10 +218,6 @@
         <translation>Излез от приложението</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>За %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>Покажи информация за %1</translation>
     </message>
@@ -270,10 +256,6 @@
     <message>
         <source>&amp;Receiving addresses...</source>
         <translation>Адреси за получаване...</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Отвори URI</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -333,6 +315,9 @@
         <source>Incoming transaction</source>
         <translation>Входяща транзакция</translation>
     </message>
+    </context>
+<context>
+    <name>ClientModel</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -438,6 +423,9 @@
     </message>
     </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -488,6 +476,9 @@
         <source>Error</source>
         <translation>грешка</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -622,6 +613,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -629,10 +626,6 @@
     <message>
         <source>Client version</source>
         <translation>Клиентска версия</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Прозорец за отстраняване на грешки</translation>
     </message>
     <message>
         <source>General</source>
@@ -822,10 +815,6 @@
         <translation>Дата</translation>
     </message>
     <message>
-        <source>Label</source>
-        <translation>Етикет</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(без етикет)</translation>
     </message>
@@ -894,22 +883,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Биткойн ядро</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Информация</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Внимание</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>грешка</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

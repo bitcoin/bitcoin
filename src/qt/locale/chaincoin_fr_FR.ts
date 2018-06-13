@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="fr_FR" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Adresses de réception</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Ceci sont vos addresses Bitcoin pour envoyer vos paiements. Il faut toujours verifier les montants et l'addresse de reception avant de valider la transaction.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Ceci sont vos addresses Bitcoin pour recevoir vos paiements. Il est recommandé d'utiliser une nouvelle adresse de recepetion pour chaque transaction</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -174,20 +164,12 @@
         <translation>Confirmer le chiffrement du porte-monnaie</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Attention : Si vous chiffrez votre portefeuille et que vous perdez votre mot de passe vous &lt;b&gt; PERDREZ TOUS VOS BITCOINS&lt;/b&gt; !</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Êtes-vous sûr de de vouloir crypter votre portefeuille ? </translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>Portefeuille chiffré</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 va à présent se fermer pour terminer la procédure de cryptage. N'oubliez pas que le chiffrement de votre porte-monnaie ne peut pas fournir une protection totale contre le vol par des logiciels malveillants qui infecteraient votre ordinateur.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -276,10 +258,6 @@
         <translation>Quitter l'application</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;À propos de %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>Afficher les informations sur %1</translation>
     </message>
@@ -320,10 +298,6 @@
         <translation>&amp;Adresses de réception</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Ouvrir &amp;URI</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>Cliquez pour désactiver l'activité du réseau.</translation>
     </message>
@@ -344,10 +318,6 @@
         <translation>Réindexer les blocs sur le disque...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Envoyer des pièces à une adresse Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Sauvegarder le porte-monnaie à un autre emplacement</translation>
     </message>
@@ -356,20 +326,12 @@
         <translation>Modifier la phrase de passe utilisée pour le cryptage du porte-monnaie</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Fenêtre de débogage</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Ouvrir la console de débogage et de diagnostic</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Vérification du message</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -396,14 +358,6 @@
         <translation>Crypter les clé privées qui appartiennent votre portefeuille</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Signer vos messages avec vos adresses Bitcoin pour prouver que vous les détenez</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Vérifier les messages pour s'assurer qu'ils soient signés avec les adresses Bitcoin spécifiées</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Fichier</translation>
     </message>
@@ -420,10 +374,6 @@
         <translation>Barre d'outils des onglets</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Demander des paiements (générer QR codes et bitcoin: URIs)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Montrer la liste des adresses d'envois utilisées et les étiquettes</translation>
     </message>
@@ -432,16 +382,8 @@
         <translation>Afficher la liste des labels et adresses de réception utilisées</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Ouvrir un bitcoin: URI ou demande de paiement</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Options de ligne de commande</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n connexion active avec le réseau Bitcoin</numerusform><numerusform>%n connexions actives avec le réseau Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -478,10 +420,6 @@
     <message>
         <source>Up to date</source>
         <translation>À jour</translation>
-    </message>
-    <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Afficher le %1 message d'aide pour récupérer une liste des options de ligne de commande Bitcoin</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -549,11 +487,10 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Le porte-monnaie est &lt;b&gt;chiffré&lt;/b&gt; et est actuellement &lt;b&gt;verrouillé&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Une erreur fatale a eu lieu. Bitcoin ne peut plus continuer en toute sécurité et va s'éteindre</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ClientModel</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -689,10 +626,6 @@
         <translation>Cette étiquette devient rouge si un bénéficiaire reçoit une somme plus basse que la limite actuelle de poussière.</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Peut varier de +/- %1 satoshi(s) par entrée.</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(aucune étiquette)</translation>
     </message>
@@ -705,6 +638,9 @@
         <translation>(changement)</translation>
     </message>
 </context>
+<context>
+    <name>DarksendConfig</name>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -742,10 +678,6 @@
     <message>
         <source>Edit sending address</source>
         <translation>Éditer l'adresse d'envoi</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>L'adresse entrée "%1" n'est pas une adresse Bitcoin valide.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -792,10 +724,6 @@
     <message>
         <source>(%1-bit)</source>
         <translation>(%1-bit)</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation>A propos %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -845,10 +773,6 @@
         <translation>Utiliser votre propre répertoire</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>Erreur: Le répertoire de données "%1" n'a pas pu être créé. </translation>
     </message>
@@ -856,6 +780,9 @@
         <source>Error</source>
         <translation>Erreur</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -928,10 +855,6 @@
     <message>
         <source>Expert</source>
         <translation>Expert</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Ouvrir le port du client Bitcoin automatiquement sur le routeur. Cela ne fonctionne que si votre routeur supporte l'UPnP et si la fonctionnalité est activée.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1130,10 +1053,6 @@
         <translation>Montant</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Entrer une adresse Bitcoin (e.g. %1)</translation>
-    </message>
-    <message>
         <source>%1 d</source>
         <translation>%1 j</translation>
     </message>
@@ -1190,6 +1109,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
@@ -1221,10 +1146,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Information</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Fenêtre de débogage </translation>
     </message>
     <message>
         <source>General</source>
@@ -1591,10 +1512,6 @@
         <translation>Cacher</translation>
     </message>
     <message>
-        <source>Recommended:</source>
-        <translation>Recommandé: </translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Envoyer des pièces à plusieurs destinataires à la fois</translation>
     </message>
@@ -1693,10 +1610,6 @@
     <message>
         <source>Pay only the required fee of %1</source>
         <translation>Payer seulement les frais obligatoire de %1</translation>
-    </message>
-    <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Attention: Adresse Bitcoin Invalide</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1849,7 +1762,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -1994,7 +1907,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ce panneau affiche une description détaillée de la transaction</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2004,10 +1917,6 @@
     <message>
         <source>Type</source>
         <translation>Type</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Étiquette</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2258,163 +2167,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Options :</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Spécifier le répertoire de données</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Spécifier votre adresse publique </translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Accepter les commandes de JSON-RPC et de la ligne de commande</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Fonctionner en arrière-plan en tant que démon et accepter les commandes</translation>
-    </message>
-    <message>
-        <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation>Impossible de démarrer le serveur HTTP. Voir le journal de débogage pour plus de détails.</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; peut être:</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Options de création de bloc:</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Options de connexion:</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>Options de débogage/test </translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>
-Importation ...</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Vérifications des blocs...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Options du portefeuille:</translation>
-    </message>
-    <message>
-        <source>(default: %u)</source>
-        <translation>(défaut: %u)</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>Connecté au travers du proxy SOCKS5</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Information</translation>
-    </message>
-    <message>
-        <source>Invalid -onion address or hostname: '%s'</source>
-        <translation>Adresse ou nom d'hôte -onion invalide: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation>Adresse -proxy invalide: '%s'</translation>
-    </message>
-    <message>
-        <source>Node relay options:</source>
-        <translation>Options du relais de nœud: </translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>Options de serveur RPC:</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Envoyer les informations de débogage/trace à la console au lieu du fichier debug.log</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>Transaction signée échouée</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation>C'est un logiciel expérimental.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>Montant de la transaction trop bas</translation>
-    </message>
-    <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Montant de la transaction trop élevé pour la politique de frais</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Transaction trop grande</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Nom d'utilisateur pour les connexions JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Attention</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Mot de passe pour les connexions JSON-RPC</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(défaut: %s)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>Spécifier le pid du fichier (défaut: %s)</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Fonds insuffisants</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Chargement de l'index des blocs...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Chargement du porte-monnaie...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Vous ne pouvez pas rétrograder votre portefeuille</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Nouvelle analyse...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Chargement terminé</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Erreur</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>
