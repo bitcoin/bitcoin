@@ -8,6 +8,7 @@
 # Guard against accidental introduction of new Boost dependencies.
 # Check includes: Check for duplicate includes. Enforce bracket syntax includes.
 
+export LC_ALL=C
 IGNORE_REGEXP="/(leveldb|secp256k1|univalue)/"
 
 filter_suffix() {
