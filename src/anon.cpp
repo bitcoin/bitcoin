@@ -52,7 +52,6 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
         if (!txin.IsAnonInput())
             return state.DoS(100, false, REJECT_MALFORMED, "bad-anon-input");
 
-
         uint32_t nInputs, nRingSize;
         txin.GetAnonInfo(nInputs, nRingSize);
 
@@ -61,7 +60,6 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
 
         if (nRingSize < MIN_RINGSIZE || nRingSize > MAX_RINGSIZE)
             return state.DoS(100, false, REJECT_INVALID, "bad-anon-ringsize");
-
 
         uint256 txhash = tx.GetHash();
 
@@ -193,7 +191,6 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
             (const secp256k1_pedersen_commitment* const*)vpOutCommits.data(), vpOutCommits.size())))
             return state.DoS(100, error("%s: verify-commit-tally-failed %d", __func__, rv), REJECT_INVALID, "verify-commit-tally-failed");
     };
-
 
     return true;
 };
@@ -370,5 +367,6 @@ bool RewindToCheckpoint(int nCheckPointHeight, int &nBlocks, std::string &sError
         pblocktree->EraseRCTOutputLink(ao.pubkey);
         nRemoveOutput++;
     };
+
     return true;
 };
