@@ -70,19 +70,7 @@ tuned to conserve memory with additional CXXFLAGS:
 
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils python3
-
-Options when installing required Boost library files:
-
-1. On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
-individual boost development packages, so the following can be used to only
-install necessary parts of boost:
-
-        sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
-
-2. If that doesn't work, you can install all boost development packages with:
-
-        sudo apt-get install libboost-all-dev
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils python3 libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
 
 BerkeleyDB is required for the wallet.
 
