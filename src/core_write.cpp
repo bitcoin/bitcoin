@@ -286,13 +286,22 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         UniValue in(UniValue::VOBJ);
         if (tx.IsCoinBase())
             in.pushKV("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
-        else {
+          {
+            if (txin.IsAnonInput())
+            {
+                in.push_back(Pair("type", "anon"));
+                uint32_t nSigInputs, nSigRingSize;
+                txin.GetAnonInfo(nSigInputs, nSigRingSize);
+                in.push_back(Pair("num_inputs", (int)nSigInputs));
+                in.push_back(Pair("ring_size", (int)nSigRingSize));
+            } else{
             in.pushKV("txid", txin.prevout.hash.GetHex());
             in.pushKV("vout", (int64_t)txin.prevout.n);
             UniValue o(UniValue::VOBJ);
             o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
             o.pushKV("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
             in.pushKV("scriptSig", o);
+            }
             if (!tx.vin[i].scriptWitness.IsNull()) {
                 UniValue txinwitness(UniValue::VARR);
                 for (const auto& item : tx.vin[i].scriptWitness.stack) {
