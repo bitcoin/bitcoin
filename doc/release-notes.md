@@ -1,6 +1,6 @@
-Bitcoin Core version 0.16.x is now available from:
+Bitcoin Core version 0.16.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.16.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-0.16.1/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
@@ -53,11 +53,11 @@ Miner block size removed
 ------------------------
 
 The `-blockmaxsize` option for miners to limit their blocks' sizes was
-deprecated in V0.15.1, and has now been removed. Miners should use the
+deprecated in version 0.15.1, and has now been removed. Miners should use the
 `-blockmaxweight` option if they want to limit the weight of their blocks'
 weights.
 
-0.16.x change log
+0.16.1 change log
 ------------------
 
 ### Policy
