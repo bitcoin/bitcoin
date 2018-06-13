@@ -45,6 +45,6 @@ static const int NOBLKS_VERSION_END = 60006;
 
 #define DISPLAY_VERSION_MAJOR       0
 #define DISPLAY_VERSION_MINOR       0
-#define DISPLAY_VERSION_REVISION    8
+#define DISPLAY_VERSION_REVISION    9
 
 #endif
