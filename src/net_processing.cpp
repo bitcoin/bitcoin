@@ -3224,7 +3224,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
     const Consensus::Params& consensusParams = Params().GetConsensus();
     {
         // Don't send anything until the version handshake is complete
-        if (!pto->fSuccessfullyConnected || pto->fDisconnect)
+        if (!pto->FullyConnected())
             return true;
 
         // If we get here, the outgoing message serialization version is set and can't change.
