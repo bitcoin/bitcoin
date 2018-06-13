@@ -521,9 +521,6 @@ CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
 
-DISTCLEANFILES = config/bitcoin-config.h.in config/bitcoin-config.h.in~ Makefile.in
-DISTCLEANFILES += test/*.cpp.log wallet/test/*.cpp.log
-
 EXTRA_DIST = $(CTAES_DIST)
 
 
@@ -540,6 +537,9 @@ clean-local:
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
+
+distclean-local:
+	-rm -rf config/bitcoin-config.h.in config/bitcoin-config.h.in~ Makefile.in test/*.cpp.log wallet/test/*.cpp.log
 
 .rc.o:
 	@test -f $(WINDRES)
