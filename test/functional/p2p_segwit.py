@@ -241,7 +241,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_non_witness_transaction()
         self.test_unnecessary_witness_before_segwit_activation()
         self.test_v0_outputs_arent_spendable()
-        self.test_block_relay(segwit_activated=False)
+        self.test_block_relay()
 
         # Advance to segwit being 'started'
         self.advance_to_segwit_started()
@@ -256,8 +256,8 @@ class SegWitTest(BitcoinTestFramework):
         # Retest unnecessary witnesses
         self.test_unnecessary_witness_before_segwit_activation()
         self.test_witness_tx_relay_before_segwit_activation()
-        self.test_block_relay(segwit_activated=False)
-        self.test_standardness_v0(segwit_activated=False)
+        self.test_block_relay()
+        self.test_standardness_v0()
 
         sync_blocks(self.nodes)
 
@@ -267,7 +267,7 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Test P2SH witness handling again
-        self.test_p2sh_witness(segwit_activated=True)
+        self.test_p2sh_witness()
         self.test_witness_commitments()
         self.test_block_malleability()
         self.test_witness_block_size()
@@ -276,9 +276,9 @@ class SegWitTest(BitcoinTestFramework):
         self.test_max_witness_push_length()
         self.test_max_witness_program_length()
         self.test_witness_input_length()
-        self.test_block_relay(segwit_activated=True)
+        self.test_block_relay()
         self.test_tx_relay_after_segwit_activation()
-        self.test_standardness_v0(segwit_activated=True)
+        self.test_standardness_v0()
         self.test_segwit_versions()
         self.test_premature_coinbase_witness_spend()
         self.test_uncompressed_pubkey()
@@ -286,7 +286,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_non_standard_witness_blinding()
         self.test_non_standard_witness()
         sync_blocks(self.nodes)
-        self.test_upgrade_after_activation(node_id=2)
+        self.test_upgrade_after_activation()
         self.test_witness_sigops()
 
     # Individual tests
@@ -375,7 +375,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
     @subtest
-    def test_block_relay(self, segwit_activated):
+    def test_block_relay(self):
         """Test that block requests to NODE_WITNESS peer are with MSG_WITNESS_FLAG.
 
         This is true regardless of segwit activation.
@@ -409,7 +409,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Check that we can getdata for witness blocks or regular blocks,
         # and the right thing happens.
-        if not segwit_activated:
+        if self.segwit_status != 'active':
             # Before activation, we should be able to request old blocks with
             # or without witness, and they should be the same.
             chain_height = self.nodes[0].getblockcount()
@@ -662,7 +662,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.append(UTXO(tx_hash, 0, tx_value))
 
     @subtest
-    def test_standardness_v0(self, segwit_activated):
+    def test_standardness_v0(self):
         """Test V0 txout standardness.
 
         V0 segwit outputs and inputs are always standard.
@@ -721,7 +721,7 @@ class SegWitTest(BitcoinTestFramework):
         tx3.wit.vtxinwit.append(CTxInWitness())
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
         tx3.rehash()
-        if not segwit_activated:
+        if self.segwit_status != 'active':
             # Just check mempool acceptance, but don't add the transaction to the mempool, since witness is disallowed
             # in blocks and the tx is impossible to mine right now.
             assert_equal(self.nodes[0].testmempoolaccept([bytes_to_hex_str(tx3.serialize_with_witness())]), [{'txid': tx3.hash, 'allowed': True}])
@@ -753,7 +753,7 @@ class SegWitTest(BitcoinTestFramework):
         self.segwit_status = 'active'
 
     @subtest
-    def test_p2sh_witness(self, segwit_activated):
+    def test_p2sh_witness(self):
         """Test P2SH wrapped witness programs."""
 
         # Prepare the p2sh-wrapped witness output
@@ -774,7 +774,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx, with_witness=False, accepted=True)
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
-        test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True, with_witness=segwit_activated)
+        test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True, with_witness=True)
         sync_blocks(self.nodes)
 
         # Now test attempts to spend the output.
@@ -803,7 +803,7 @@ class SegWitTest(BitcoinTestFramework):
         spend_tx.wit.vtxinwit[0].scriptWitness.stack = [b'a', witness_program]
 
         # Verify mempool acceptance
-        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, spend_tx, with_witness=True, accepted=segwit_activated)
+        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, spend_tx, with_witness=True, accepted=True)
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [spend_tx])
 
@@ -811,10 +811,7 @@ class SegWitTest(BitcoinTestFramework):
         # This no longer works before activation, because SCRIPT_VERIFY_WITNESS
         # is always set.
         # TODO: rewrite this test to make clear that it only works after activation.
-        if segwit_activated:
-            test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True)
-        else:
-            test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True, with_witness=False)
+        test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True)
 
         # Update self.utxo
         self.utxo.pop(0)
@@ -1964,30 +1961,28 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
 
     @subtest
-    def test_upgrade_after_activation(self, node_id):
+    def test_upgrade_after_activation(self):
         """Test the behavior of starting up a segwit-aware node after the softfork has activated."""
-
-        assert(node_id != 0)  # node0 is assumed to be a segwit-active bitcoind
 
         # Make sure the nodes are all up
         sync_blocks(self.nodes)
 
         # Restart with the new binary
-        self.stop_node(node_id)
-        self.start_node(node_id, extra_args=["-vbparams=segwit:0:999999999999"])
-        connect_nodes(self.nodes[0], node_id)
+        self.stop_node(2)
+        self.start_node(2, extra_args=["-vbparams=segwit:0:999999999999"])
+        connect_nodes(self.nodes[0], 2)
 
         sync_blocks(self.nodes)
 
         # Make sure that this peer thinks segwit has activated.
-        assert(get_bip9_status(self.nodes[node_id], 'segwit')['status'] == "active")
+        assert(get_bip9_status(self.nodes[2], 'segwit')['status'] == "active")
 
         # Make sure this peer's blocks match those of node0.
-        height = self.nodes[node_id].getblockcount()
+        height = self.nodes[2].getblockcount()
         while height >= 0:
-            block_hash = self.nodes[node_id].getblockhash(height)
+            block_hash = self.nodes[2].getblockhash(height)
             assert_equal(block_hash, self.nodes[0].getblockhash(height))
-            assert_equal(self.nodes[0].getblock(block_hash), self.nodes[node_id].getblock(block_hash))
+            assert_equal(self.nodes[0].getblock(block_hash), self.nodes[2].getblock(block_hash))
             height -= 1
 
     @subtest
