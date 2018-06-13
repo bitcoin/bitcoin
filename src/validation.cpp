@@ -3721,6 +3721,9 @@ static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfte
 
     unsigned int nLastBlockWeCanPrune = chainActive.Tip()->nHeight - MIN_BLOCKS_TO_KEEP;
     uint64_t nCurrentUsage = CalculateCurrentUsage();
+    // Worst case remaining block space:
+    uint64_t nRemainingBlockSpace = (pindexBestHeader->nHeight - chainActive.Tip()->nHeight) * (uint64_t)MAX_BLOCK_SERIALIZED_SIZE;
+
     // We don't check to prune until after we've allocated new space for files
     // So we should leave a buffer under our target to account for another allocation
     // before the next pruning.
@@ -3729,13 +3732,30 @@ static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfte
     int count=0;
 
     if (nCurrentUsage + nBuffer >= nPruneTarget) {
+        if (IsInitialBlockDownload()) {
+            LogPrintf("Prune: worst case remaining block space=%d MB\n", nRemainingBlockSpace / (uint64_t)1024 / (uint64_t)1024);
+        }
         for (int fileNumber = 0; fileNumber < nLastBlockFile; fileNumber++) {
             nBytesToPrune = vinfoBlockFile[fileNumber].nSize + vinfoBlockFile[fileNumber].nUndoSize;
 
             if (vinfoBlockFile[fileNumber].nSize == 0)
                 continue;
 
-            if (nCurrentUsage + nBuffer < nPruneTarget)  // are we below our target?
+            // On a prune event, the chainstate DB is flushed. To avoid excessive
+            // prune events negating the benefit of high dbcache values, we should
+            // not prune too rapidly.
+            // During IDB use the worst case size of the remaining blocks, but
+            // prune no further than the minimum prune size of 550 MB.
+            uint64_t nPruneAdjustedTarget = nPruneTarget;
+            if (IsInitialBlockDownload()) {
+                if (nRemainingBlockSpace > nPruneTarget - MIN_DISK_SPACE_FOR_BLOCK_FILES) {
+                    nPruneAdjustedTarget = MIN_DISK_SPACE_FOR_BLOCK_FILES;
+                } else {
+                    nPruneAdjustedTarget = nPruneTarget - nRemainingBlockSpace;
+                }
+            }
+
+            if (nCurrentUsage + nBuffer < nPruneAdjustedTarget)  // are we below our target?
                 break;
 
             // don't prune files that could have a block within MIN_BLOCKS_TO_KEEP of the main chain's tip but keep scanning

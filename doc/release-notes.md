@@ -142,6 +142,17 @@ Python Support
 
 Support for Python 2 has been discontinued for all test files and tools.
 
+Performance
+-----------
+
+### More aggressive pruning during IBD
+
+Initial Blockchain Download (IBD) became rather slow on pruned nodes once
+the maximum size was reached. Bitcoin Core now prunes to make enough room for
+the worst case size of remaining blocks. This may result in fewer blocks being
+stored immediately after the initial synchronization than permitted by `prune=`,
+but never less than 550 MB.
+
 Credits
 =======
 
