@@ -20,6 +20,7 @@
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
+#include <util/threadnames.h>
 #include <tinyformat.h>
 #include <util/memory.h>
 #include <util/time.h>
@@ -371,15 +372,12 @@ std::string HelpMessageOpt(const std::string& option, const std::string& message
  */
 int GetNumCores();
 
-void RenameThread(const char* name);
-
 /**
  * .. and a wrapper that just calls func once
  */
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("syscoin-%s", name);
-    RenameThread(s.c_str());
+    util::ThreadRename(name);
     try
     {
         LogPrintf("%s thread start\n", name);

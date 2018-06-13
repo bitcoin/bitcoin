@@ -19,6 +19,7 @@
 #include <util/system.h>
 #include <httpserver.h>
 #include <httprpc.h>
+#include <util/threadnames.h>
 #include <util/strencodings.h>
 #include <walletinitinterface.h>
 
@@ -64,6 +65,8 @@ static bool AppInit(int argc, char* argv[])
     interfaces.chain = interfaces::MakeChain();
 
     bool fRet = false;
+
+    util::ThreadRename("init");
 
     //
     // Parameters

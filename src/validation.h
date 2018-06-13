@@ -276,7 +276,7 @@ bool LoadChainTip(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_m
 /** Unload database information */
 void UnloadBlockIndex();
 /** Run an instance of the script checking thread */
-void ThreadScriptCheck();
+void ThreadScriptCheck(int worker_num);
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
 bool IsInitialBlockDownload();
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
