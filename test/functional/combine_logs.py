@@ -91,8 +91,8 @@ def print_logs(log_events, color=False, html=False):
         colors = defaultdict(lambda: '')
         if color:
             colors["test"] = "\033[0;36m"   # CYAN
-            colors["node0"] = "\033[0;34m"  # BLUE
-            colors["node1"] = "\033[0;32m"  # GREEN
+            colors["node1"] = "\033[0;34m"  # BLUE
+            colors["node0"] = "\033[0;32m"  # GREEN
             colors["node2"] = "\033[0;31m"  # RED
             colors["node3"] = "\033[0;33m"  # YELLOW
             colors["reset"] = "\033[0m"     # Reset font color

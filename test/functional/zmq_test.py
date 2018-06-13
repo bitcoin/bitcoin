@@ -12,6 +12,7 @@ from test_framework.test_framework import RavenTestFramework, SkipTest
 from test_framework.util import (assert_equal,
                                  bytes_to_hex_str,
                                  hash256,
+                                 hash_block,
                                 )
 
 class ZMQSubscriber:
@@ -94,7 +95,8 @@ class ZMQTest (RavenTestFramework):
 
             # Should receive the coinbase raw transaction.
             hex = self.rawtx.receive()
-            assert_equal(hash256(hex), txid)
+            assert_equal(bytes_to_hex_str(hash256(hex)),
+                         self.nodes[1].getrawtransaction(bytes_to_hex_str(txid), True)["hash"])
 
             # Should receive the generated block hash.
             hash = bytes_to_hex_str(self.hashblock.receive())
@@ -104,7 +106,7 @@ class ZMQTest (RavenTestFramework):
 
             # Should receive the generated raw block.
             block = self.rawblock.receive()
-            assert_equal(genhashes[x], bytes_to_hex_str(hash256(block[:80])))
+            assert_equal(genhashes[x], hash_block(bytes_to_hex_str(block[:80])))
 
         self.log.info("Wait for tx from second node")
         payment_txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.0)

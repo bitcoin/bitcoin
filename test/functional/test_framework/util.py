@@ -14,6 +14,7 @@ import logging
 import os
 import random
 import re
+import subprocess
 from subprocess import CalledProcessError
 import time
 
@@ -191,6 +192,12 @@ def hash256(byte_str):
     sha256d = hashlib.sha256()
     sha256d.update(sha256.digest())
     return sha256d.digest()[::-1]
+
+x16r_hash_cmd = os.path.dirname(os.path.realpath(__file__)) + "/../../../src/test/test_raven_hash"
+def hash_block(hex_str):
+    cmd = [x16r_hash_cmd, hex_str]
+    hash = subprocess.run(cmd, stdout=subprocess.PIPE, check=True).stdout.decode('ascii')
+    return hash
 
 def hex_str_to_bytes(hex_str):
     return unhexlify(hex_str.encode('ascii'))
