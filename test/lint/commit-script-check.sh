@@ -11,6 +11,7 @@
 # The resulting script should exactly transform the previous commit into the current
 # one. Any remaining diff signals an error.
 
+export LC_ALL=C
 if test "x$1" = "x"; then
     echo "Usage: $0 <commit>..."
     exit 1

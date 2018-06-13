@@ -12,7 +12,7 @@
 # There are some instances of LogPrintf() in comments. Those can be
 # ignored
 
-
+export LC_ALL=C
 UNTERMINATED_LOGS=$(git grep --extended-regexp "LogPrintf?\(" -- "*.cpp" | \
     grep -v '\\n"' | \
     grep -v "/\* Continued \*/" | \
