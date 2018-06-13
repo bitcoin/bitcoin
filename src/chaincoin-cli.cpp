@@ -106,11 +106,11 @@ static int AppInitRPC(int argc, char* argv[])
     if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
         std::string strUsage = strprintf("%s RPC client version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
         if (!gArgs.IsArgSet("-version")) {
-            strUsage += "\n" + "Usage:" + "\n" +
-                  "  chaincoin-cli [options] <command> [params]  " + "Send command to Chaincoin Core" + "\n" +
-                  "  chaincoin-cli [options] -named <command> [name=value] ... " + strprintf("Send command to %s (with named arguments)", _(PACKAGE_NAME)) + "\n" +
-                  "  chaincoin-cli [options] help                " + "List commands" + "\n" +
-                  "  chaincoin-cli [options] help <command>      " + "Get help for a command" + "\n";
+            strUsage += "\nUsage:\n"
+                  "  chaincoin-cli [options] <command> [params]  " + strprintf("Send command to %s", PACKAGE_NAME) + "\n" +
+                  "  chaincoin-cli [options] -named <command> [name=value] ... " + strprintf("Send command to %s (with named arguments)", PACKAGE_NAME) + "\n" +
+                  "  chaincoin-cli [options] help                List commands\n" +
+                  "  chaincoin-cli [options] help <command>      Get help for a command\n";
 
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
