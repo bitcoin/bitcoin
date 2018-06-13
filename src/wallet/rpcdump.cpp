@@ -17,6 +17,7 @@
 
 #include <wallet/rpcwallet.h>
 
+#include <algorithm>
 #include <fstream>
 #include <stdint.h>
 
@@ -95,21 +96,22 @@ UniValue importprivkey(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
         throw std::runtime_error(
-            "importprivkey \"privkey\" ( \"label\" ) ( rescan )\n"
+            "importprivkey \"privkey\" ( \"label\" ) ( rescan ) ( timestamp )\n"
             "\nAdds a private key (as returned by dumpprivkey) to your wallet. Requires a new wallet backup.\n"
             "Hint: use importmulti to import more than one private key.\n"
             "\nArguments:\n"
             "1. \"privkey\"          (string, required) The private key (see dumpprivkey)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
+            "4. timestamp            (numeric, optional, default=0) If set, rescan will be limited to a time period from a specified absolute timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "\nNote: This call can take minutes to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported key exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
             "\nExamples:\n"
             "\nDump a private key\n"
             + HelpExampleCli("dumpprivkey", "\"myaddress\"") +
-            "\nImport the private key with rescan\n"
+            "\nImport the private key with full rescan\n"
             + HelpExampleCli("importprivkey", "\"mykey\"") +
             "\nImport using a label and without rescan\n"
             + HelpExampleCli("importprivkey", "\"mykey\" \"testing\" false") +
@@ -122,6 +124,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
     WalletRescanReserver reserver(pwallet);
     bool fRescan = true;
+    int64_t nRescanFromTimestamp = TIMESTAMP_MIN;
     {
         LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -135,6 +138,9 @@ UniValue importprivkey(const JSONRPCRequest& request)
         // Whether to perform rescan after import
         if (!request.params[2].isNull())
             fRescan = request.params[2].get_bool();
+
+        if (!request.params[3].isNull())
+            nRescanFromTimestamp = request.params[3].get_int64();
 
         if (fRescan && fPruneMode)
             throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
@@ -161,9 +167,9 @@ UniValue importprivkey(const JSONRPCRequest& request)
                 return NullUniValue;
             }
 
-            // whenever a key is imported, we need to scan the whole chain
-            pwallet->UpdateTimeFirstKey(1);
-            pwallet->mapKeyMetadata[vchAddress].nCreateTime = 1;
+            // whenever a key is imported, we may need to scan the whole chain
+            pwallet->UpdateTimeFirstKey(std::max<int64_t>(1, nRescanFromTimestamp));
+            pwallet->mapKeyMetadata[vchAddress].nCreateTime = std::max<int64_t>(1, nRescanFromTimestamp);
 
             if (!pwallet->AddKeyPubKey(key, pubkey)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
@@ -172,11 +178,11 @@ UniValue importprivkey(const JSONRPCRequest& request)
         }
     }
     if (fRescan) {
-        int64_t scanned_time = pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
+        int64_t scanned_time = pwallet->RescanFromTime(nRescanFromTimestamp, reserver, true /* update */);
         if (pwallet->IsAbortingRescan()) {
             throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
         }
-        if (scanned_time > TIMESTAMP_MIN) {
+        if (scanned_time > nRescanFromTimestamp) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Rescan was unable to fully rescan the blockchain. Some transactions may be missing.");
         }
     }
@@ -254,22 +260,23 @@ UniValue importaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 5)
         throw std::runtime_error(
-            "importaddress \"address\" ( \"label\" rescan p2sh )\n"
+            "importaddress \"address\" ( \"label\" rescan p2sh timestamp )\n"
             "\nAdds a script (in hex) or address that can be watched as if it were in your wallet but cannot be used to spend. Requires a new wallet backup.\n"
             "\nArguments:\n"
             "1. \"script\"           (string, required) The hex-encoded script (or address)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "4. p2sh                 (boolean, optional, default=false) Add the P2SH version of the script as well\n"
+            "5. timestamp            (numeric, optional, default=0) If set, rescan will be limited to a time period from a specified absolute timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "\nNote: This call can take minutes to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported address exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
             "If you have the full public key, you should call importpubkey instead of this.\n"
             "\nNote: If you import a non-standard raw script in hex form, outputs sending to it will be treated\n"
             "as change, and not show up in many RPCs.\n"
             "\nExamples:\n"
-            "\nImport a script with rescan\n"
+            "\nImport a script with full rescan\n"
             + HelpExampleCli("importaddress", "\"myscript\"") +
             "\nImport using a label without rescan\n"
             + HelpExampleCli("importaddress", "\"myscript\" \"testing\" false") +
@@ -300,6 +307,10 @@ UniValue importaddress(const JSONRPCRequest& request)
     if (!request.params[3].isNull())
         fP2SH = request.params[3].get_bool();
 
+    int64_t nRescanFromTimestamp = TIMESTAMP_MIN;
+    if (!request.params[4].isNull())
+        nRescanFromTimestamp = request.params[4].get_int64();
+
     {
         LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -318,11 +329,11 @@ UniValue importaddress(const JSONRPCRequest& request)
     }
     if (fRescan)
     {
-        int64_t scanned_time = pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
+        int64_t scanned_time = pwallet->RescanFromTime(nRescanFromTimestamp, reserver, true /* update */);
         if (pwallet->IsAbortingRescan()) {
             throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
         }
-        if (scanned_time > TIMESTAMP_MIN) {
+        if (scanned_time > nRescanFromTimestamp) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Rescan was unable to fully rescan the blockchain. Some transactions may be missing.");
         }
         pwallet->ReacceptWalletTransactions();
@@ -443,16 +454,17 @@ UniValue importpubkey(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
         throw std::runtime_error(
-            "importpubkey \"pubkey\" ( \"label\" rescan )\n"
+            "importpubkey \"pubkey\" ( \"label\" rescan timestamp )\n"
             "\nAdds a public key (in hex) that can be watched as if it were in your wallet but cannot be used to spend. Requires a new wallet backup.\n"
             "\nArguments:\n"
             "1. \"pubkey\"           (string, required) The hex-encoded public key\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
+            "4. timestamp            (numeric, optional, default=0) If set, rescan will be limited to a time period from a specified absolute timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "\nNote: This call can take minutes to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported pubkey exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
             "\nExamples:\n"
-            "\nImport a public key with rescan\n"
+            "\nImport a public key with full rescan\n"
             + HelpExampleCli("importpubkey", "\"mypubkey\"") +
             "\nImport using a label without rescan\n"
             + HelpExampleCli("importpubkey", "\"mypubkey\" \"testing\" false") +
@@ -469,6 +481,10 @@ UniValue importpubkey(const JSONRPCRequest& request)
     bool fRescan = true;
     if (!request.params[2].isNull())
         fRescan = request.params[2].get_bool();
+
+    int64_t nRescanFromTimestamp = TIMESTAMP_MIN;
+    if (!request.params[3].isNull())
+        nRescanFromTimestamp = request.params[3].get_int64();
 
     if (fRescan && fPruneMode)
         throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
@@ -496,11 +512,11 @@ UniValue importpubkey(const JSONRPCRequest& request)
     }
     if (fRescan)
     {
-        int64_t scanned_time = pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
+        int64_t scanned_time = pwallet->RescanFromTime(nRescanFromTimestamp, reserver, true /* update */);
         if (pwallet->IsAbortingRescan()) {
             throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
         }
-        if (scanned_time > TIMESTAMP_MIN) {
+        if (scanned_time > nRescanFromTimestamp) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Rescan was unable to fully rescan the blockchain. Some transactions may be missing.");
         }
         pwallet->ReacceptWalletTransactions();
