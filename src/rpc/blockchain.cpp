@@ -2024,6 +2024,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
         throw std::runtime_error(
             "scantxoutset <action> ( <scanobjects> )\n"
             "\nScans the unspent transaction output set for possible entries that matches common scripts of given public keys.\n"
+            "Using addresses as scanobjects will _not_ detect unspent P2PK txouts\n"
             "\nArguments:\n"
             "1. \"action\"                       (string, required) The action to execute\n"
             "                                      \"start\" for starting a scan\n"
