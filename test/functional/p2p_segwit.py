@@ -236,7 +236,7 @@ class SegWitTest(BitcoinTestFramework):
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []
 
-        self.log.info("Starting tests before segwit lock in:")
+        self.segwit_status = 'defined'
 
         self.test_non_witness_transaction()
         self.test_unnecessary_witness_before_segwit_activation()
@@ -251,7 +251,6 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # At lockin, nothing should change.
-        self.log.info("Testing behavior post lockin, pre-activation")
         self.advance_to_segwit_lockin()
 
         # Retest unnecessary witnesses
@@ -263,7 +262,6 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Now activate segwit
-        self.log.info("Testing behavior after segwit activation")
         self.advance_to_segwit_active()
 
         sync_blocks(self.nodes)
@@ -296,10 +294,14 @@ class SegWitTest(BitcoinTestFramework):
     def subtest(func):  # noqa: N805
         """Wraps the subtests for logging and state assertions."""
         def func_wrapper(self, *args, **kwargs):
-            self.log.info("Subtest: {}".format(func.__name__))
+            self.log.info("Subtest: {} (Segwit status = {})".format(func.__name__, self.segwit_status))
+            # Assert segwit status is as expected
+            assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], self.segwit_status)
             func(self, *args, **kwargs)
             # Each subtest should leave some utxos for the next subtest
             assert self.utxo
+            # Assert segwit status is as expected at end of subtest
+            assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], self.segwit_status)
 
         return func_wrapper
 
@@ -337,8 +339,6 @@ class SegWitTest(BitcoinTestFramework):
     @subtest
     def test_unnecessary_witness_before_segwit_activation(self):
         """Verify that blocks with witnesses are rejected before activation."""
-
-        assert(get_bip9_status(self.nodes[0], 'segwit')['status'] != 'active')
 
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
@@ -551,11 +551,10 @@ class SegWitTest(BitcoinTestFramework):
         height = self.nodes[0].getblockcount()
         # Will need to rewrite the tests here if we are past the first period
         assert(height < VB_PERIOD - 1)
-        # Genesis block is 'defined'.
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'defined')
         # Advance to end of period, status should now be 'started'
         self.nodes[0].generate(VB_PERIOD - height - 1)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
+        self.segwit_status = 'started'
 
     @subtest
     def test_getblocktemplate_before_lockin(self):
@@ -611,7 +610,6 @@ class SegWitTest(BitcoinTestFramework):
         # signalling blocks, rather than just at the right period boundary.
 
         height = self.nodes[0].getblockcount()
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         # Advance to end of period, and verify lock-in happens at the end
         self.nodes[0].generate(VB_PERIOD - 1)
         height = self.nodes[0].getblockcount()
@@ -619,6 +617,7 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         self.nodes[0].generate(1)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
+        self.segwit_status = 'locked_in'
 
     @subtest
     def test_witness_tx_relay_before_segwit_activation(self):
@@ -746,12 +745,12 @@ class SegWitTest(BitcoinTestFramework):
         # TODO: we could verify that activation only happens at the right threshold
         # of signalling blocks, rather than just at the right period boundary.
 
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         height = self.nodes[0].getblockcount()
         self.nodes[0].generate(VB_PERIOD - (height % VB_PERIOD) - 2)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         self.nodes[0].generate(1)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'active')
+        self.segwit_status = 'active'
 
     @subtest
     def test_p2sh_witness(self, segwit_activated):
