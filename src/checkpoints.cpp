@@ -26,12 +26,13 @@ namespace Checkpoints
     //
     static MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
-        ( 0,      std::make_pair(hashGenesisBlock, 1478980800) )
-		( 420,    std::make_pair(uint256("0x00000bc4728eba8caf6ac81c81ce2a95ea69e81fde5e75dbc260690caa6d99af"), 1479273521) )
-		( 4200,   std::make_pair(uint256("0x000000022c3ed3e7c12741177b3ff82d0b0186511a5e864859f8e0d799e61ad5"), 1481725697) )
+        ( 0,       std::make_pair(hashGenesisBlock, 1478980800) )
+		( 420,     std::make_pair(uint256("0x00000bc4728eba8caf6ac81c81ce2a95ea69e81fde5e75dbc260690caa6d99af"), 1479273521) )
+		( 4200,    std::make_pair(uint256("0x000000022c3ed3e7c12741177b3ff82d0b0186511a5e864859f8e0d799e61ad5"), 1481725697) )
 		( 21000,   std::make_pair(uint256("0x00000009204e1118bfca2a5306c50b070445dc9be370ced87bee522a58b269ad"), 1492742717) )
 		( 42000,   std::make_pair(uint256("0x00000004ce60e9b8481570804e09ffc06277befa867db5dca85ef8018a5a2fd7"), 1504231286) )
 		( 70000,   std::make_pair(uint256("0x0000000000dbf72bace0b3197aea91f6f65b9cd61577ed894603a8d4e1a615c0"), 1520846671) )
+		( 84000,   std::make_pair(uint256("0x00000000000558f3e12ca83e6ef05cca372d29db0dd7243f6253334e0b984784"), 1528854255) )
     ;
 
     static ListBannedBlocks listBanned =
