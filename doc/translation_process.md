@@ -71,7 +71,7 @@ Syncing with Transifex
 
 We are using https://transifex.com as a frontend for translating the client.
 
-OLD URL: https://www.transifex.com/projects/p/crown/ (currently 404)
+URL: https://www.transifex.com/crowncoin/crowncoin/
 
 The "Transifex client" (see: http://support.transifex.com/customer/portal/topics/440187-transifex-client/articles)
 is used to sync new translations from Transifex. The configuration for this client (`.tx/config`)
