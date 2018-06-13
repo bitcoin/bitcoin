@@ -3135,12 +3135,13 @@ static UniValue loadwallet(const JSONRPCRequest& request)
 
 static UniValue createwallet(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1) {
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
         throw std::runtime_error(
-            "createwallet \"wallet_name\"\n"
+            "createwallet \"wallet_name\" ( disable_private_keys )\n"
             "\nCreates and loads a new wallet.\n"
             "\nArguments:\n"
-            "1. \"wallet_name\"    (string, required) The name for the new wallet. If this is a path, the wallet will be created at the path location.\n"
+            "1. \"wallet_name\"          (string, required) The name for the new wallet. If this is a path, the wallet will be created at the path location.\n"
+            "2. disable_private_keys   (boolean, optional, default: false) Disable the possibility of private keys (only watchonlys are possible in this mode).\n"
             "\nResult:\n"
             "{\n"
             "  \"name\" :    <wallet_name>,        (string) The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path.\n"
@@ -3155,6 +3156,11 @@ static UniValue createwallet(const JSONRPCRequest& request)
     std::string error;
     std::string warning;
 
+    bool disable_privatekeys = false;
+    if (!request.params[1].isNull()) {
+        disable_privatekeys = request.params[1].get_bool();
+    }
+
     fs::path wallet_path = fs::absolute(wallet_name, GetWalletDir());
     if (fs::symlink_status(wallet_path).type() != fs::file_not_found) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet " + wallet_name + " already exists.");
@@ -3165,7 +3171,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet file verification failed: " + error);
     }
 
-    std::shared_ptr<CWallet> const wallet = CWallet::CreateWalletFromFile(wallet_name, fs::absolute(wallet_name, GetWalletDir()));
+    std::shared_ptr<CWallet> const wallet = CWallet::CreateWalletFromFile(wallet_name, fs::absolute(wallet_name, GetWalletDir()), (disable_privatekeys ? (uint64_t)WALLET_FLAG_DISABLE_PRIVATE_KEYS : 0));
     if (!wallet) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet creation failed.");
     }
@@ -4430,7 +4436,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "addwitnessaddress",                &addwitnessaddress,             {"address","p2sh"} },
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
     { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
-    { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name"} },
+    { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name", "disable_private_keys"} },
     { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
