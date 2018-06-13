@@ -22,12 +22,13 @@
 #include "assetdb.h"
 #include "assettypes.h"
 
-static const auto MAX_NAME_LENGTH = 31;
+// excluding owner tag ('!')
+static const auto MAX_NAME_LENGTH = 30;
 
 // min lengths are expressed by quantifiers
 static const std::regex ROOT_NAME_CHARACTERS("^[A-Z0-9._]{3,}$");
 static const std::regex SUB_NAME_CHARACTERS("^[A-Z0-9._]+$");
-static const std::regex UNIQUE_TAG_CHARACTERS("^[A-Za-z0-9!@$%&*()[\\]{}<>\\-_.;?\\\\:]+$");
+static const std::regex UNIQUE_TAG_CHARACTERS("^[A-Za-z0-9@$%&*()[\\]{}<>\\-_.;?\\\\:]+$");
 static const std::regex CHANNEL_TAG_CHARACTERS("^[A-Z0-9._]+$");
 
 static const std::regex DOUBLE_PUNCTUATION("^.*[._]{2,}.*$");
@@ -40,6 +41,7 @@ static const std::string CHANNEL_TAG_DELIMITER = "~";
 
 static const std::regex UNIQUE_INDICATOR("^[^#]+#[^#]+$");
 static const std::regex CHANNEL_INDICATOR("^[^~]+~[^~]+$");
+static const std::regex OWNER_INDICATOR("^[^!]+!$");
 
 bool IsRootNameValid(const std::string& name)
 {
@@ -90,10 +92,10 @@ bool IsNameValidBeforeTag(const std::string& name)
 
 bool IsAssetNameValid(const std::string& name)
 {
-    if (name.size() > MAX_NAME_LENGTH) return false;
 
     if (std::regex_match(name, UNIQUE_INDICATOR))
     {
+        if (name.size() > MAX_NAME_LENGTH) return false;
         std::vector<std::string> parts;
         boost::split(parts, name, boost::is_any_of(UNIQUE_TAG_DELIMITER));
         return IsNameValidBeforeTag(parts.front())
@@ -101,23 +103,27 @@ bool IsAssetNameValid(const std::string& name)
     }
     else if (std::regex_match(name, CHANNEL_INDICATOR))
     {
+        if (name.size() > MAX_NAME_LENGTH) return false;
         std::vector<std::string> parts;
         boost::split(parts, name, boost::is_any_of(CHANNEL_TAG_DELIMITER));
         return IsNameValidBeforeTag(parts.front())
             && IsChannelTagValid(parts.back());
     }
+    else if (std::regex_match(name, OWNER_INDICATOR))
+    {
+        if (name.size() > MAX_NAME_LENGTH + 1) return false;
+        return IsNameValidBeforeTag(name.substr(0, name.size() - 1));
+    }
     else
     {
+        if (name.size() > MAX_NAME_LENGTH) return false;
         return IsNameValidBeforeTag(name);
     }
 }
 
 bool IsAssetNameAnOwner(const std::string& name)
 {
-    if (name.size() == 0 || name.size() > MAX_NAME_LENGTH)
-        return false;
-
-    return name[name.size() - 1] == '!';
+    return IsAssetNameValid(name) && std::regex_match(name, OWNER_INDICATOR);
 }
 
 bool CNewAsset::IsNull() const
