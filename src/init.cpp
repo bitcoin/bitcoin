@@ -1813,7 +1813,7 @@ bool AppInitMain()
     int nMaxRounds = MAX_PRIVATESEND_ROUNDS;
     if(privateSendClient.nLiquidityProvider) {
         // special case for liquidity providers only, normal clients should use default value
-        privateSendClient.SetMinBlocksToWait(privateSendClient.nLiquidityProvider * 15);
+        privateSendClient.SetMinBlocksToWait(privateSendClient.nLiquidityProvider);
         nMaxRounds = std::numeric_limits<int>::max();
     }
 
