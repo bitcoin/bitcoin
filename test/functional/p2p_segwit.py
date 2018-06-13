@@ -292,15 +292,24 @@ class SegWitTest(BitcoinTestFramework):
 
     # Individual tests
 
+    def subtest(func):  # noqa: N805
+        """Wraps the subtests for logging and state assertions."""
+        def func_wrapper(self, *args, **kwargs):
+            self.log.info("Subtest: {}".format(func.__name__))
+            func(self, *args, **kwargs)
+
+        return func_wrapper
+
     def test_witness_services(self):
         self.log.info("Verifying NODE_WITNESS service bit")
         assert((self.test_node.nServices & NODE_WITNESS) != 0)
 
+    @subtest
     def test_non_witness_transaction(self):
         """See if sending a regular transaction works, and create a utxo to use in later tests."""
         # Mine a block with an anyone-can-spend coinbase,
         # let it mature, then try to spend it.
-        self.log.info("Testing non-witness transaction")
+
         block = self.build_next_block(version=1)
         block.solve()
         self.test_node.send_message(msg_block(block))
@@ -326,9 +335,10 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.append(UTXO(tx.sha256, 0, 49 * 100000000))
         self.nodes[0].generate(1)
 
+    @subtest
     def test_unnecessary_witness_before_segwit_activation(self):
         """Verify that blocks with witnesses are rejected before activation."""
-        self.log.info("Testing behavior of unnecessary witnesses")
+
         # For now, rely on earlier tests to have created at least one utxo for
         # us to use
         assert(len(self.utxo) > 0)
@@ -368,12 +378,12 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
+    @subtest
     def test_block_relay(self, segwit_activated):
         """Test that block requests to NODE_WITNESS peer are with MSG_WITNESS_FLAG.
 
         This is true regardless of segwit activation.
         Also test that we don't ask for blocks from unupgraded peers."""
-        self.log.info("Testing block relay")
 
         blocktype = 2 | MSG_WITNESS_FLAG
 
@@ -464,6 +474,7 @@ class SegWitTest(BitcoinTestFramework):
             self.old_node.announce_tx_and_wait_for_getdata(block4.vtx[0])
             assert(block4.sha256 not in self.old_node.getdataset)
 
+    @subtest
     def test_v0_outputs_arent_spendable(self):
         """Test that v0 outputs aren't spendable before segwit activation.
 
@@ -474,8 +485,6 @@ class SegWitTest(BitcoinTestFramework):
         Consequently, version 0 witness outputs are never spendable without
         witness, and so can't be spent before segwit activation (the point at which
         blocks are permitted to contain witnesses)."""
-
-        self.log.info("Testing that v0 witness program outputs aren't spendable before activation")
 
         assert len(self.utxo), "self.utxo is empty"
 
@@ -542,6 +551,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(txid, 2, value))
 
+    @subtest
     def advance_to_segwit_started(self):
         """Mine enough blocks for segwit's vb state to be 'started'."""
         height = self.nodes[0].getblockcount()
@@ -553,8 +563,8 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].generate(VB_PERIOD - height - 1)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
 
+    @subtest
     def test_getblocktemplate_before_lockin(self):
-        self.log.info("Testing getblocktemplate setting of segwit versionbit (before lockin)")
         # Node0 is segwit aware, node2 is not.
         for node in [self.nodes[0], self.nodes[2]]:
             gbt_results = node.getblocktemplate()
@@ -600,6 +610,7 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(0)
         self.nodes[2].setmocktime(0)
 
+    @subtest
     def advance_to_segwit_lockin(self):
         """Mine enough blocks to lock in segwit, but don't activate."""
         # TODO: we could verify that lockin only happens at the right threshold of
@@ -615,8 +626,9 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
 
+    @subtest
     def test_witness_tx_relay_before_segwit_activation(self):
-        self.log.info("Testing relay of witness transactions")
+
         # Generate a transaction that doesn't require a witness, but send it
         # with a witness.  Should be rejected for premature-witness, but should
         # not be added to recently rejected list.
@@ -657,13 +669,13 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx_hash, 0, tx_value))
 
+    @subtest
     def test_standardness_v0(self, segwit_activated):
         """Test V0 txout standardness.
 
         V0 segwit outputs and inputs are always standard.
         V0 segwit inputs may only be mined after activation, but not before."""
 
-        self.log.info("Testing standardness of v0 outputs (%s activation)" % ("after" if segwit_activated else "before"))
         assert(len(self.utxo))
 
         witness_program = CScript([OP_TRUE])
@@ -737,6 +749,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
 
+    @subtest
     def advance_to_segwit_active(self):
         """Mine enough blocks to activate segwit."""
         # TODO: we could verify that activation only happens at the right threshold
@@ -749,9 +762,9 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'active')
 
+    @subtest
     def test_p2sh_witness(self, segwit_activated):
         """Test P2SH wrapped witness programs."""
-        self.log.info("Testing P2SH witness transactions")
 
         assert(len(self.utxo))
 
@@ -819,12 +832,11 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(spend_tx.sha256, 0, spend_tx.vout[0].nValue))
 
+    @subtest
     def test_witness_commitments(self):
         """Test witness commitments.
 
         This test can only be run after segwit has activated."""
-
-        self.log.info("Testing witness commitments")
 
         # First try a correct witness commitment.
         block = self.build_next_block()
@@ -911,8 +923,8 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
 
+    @subtest
     def test_block_malleability(self):
-        self.log.info("Testing witness block malleability")
 
         # Make sure that a block that has too big a virtual size
         # because of a too-large coinbase witness is not permanently
@@ -951,8 +963,8 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(0)]
         test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True)
 
+    @subtest
     def test_witness_block_size(self):
-        self.log.info("Testing witness block size limit")
         # TODO: Test that non-witness carrying blocks can't exceed 1MB
         # Skipping this test for now; this is covered in p2p-fullblocktest.py
 
@@ -1029,6 +1041,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue))
 
+    @subtest
     def test_submit_block(self):
         """Test that submitblock adds the nonce automatically when possible."""
         block = self.build_next_block()
@@ -1064,9 +1077,9 @@ class SegWitTest(BitcoinTestFramework):
         # Tip should not advance!
         assert(self.nodes[0].getbestblockhash() != block_2.hash)
 
+    @subtest
     def test_extra_witness_data(self):
         """Test extra witness data in a transaction."""
-        self.log.info("Testing extra witness data in tx")
 
         assert(len(self.utxo) > 0)
 
@@ -1139,9 +1152,10 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
+    @subtest
     def test_max_witness_push_length(self):
         """Test that witness stack can only allow up to 520 byte pushes."""
-        self.log.info("Testing maximum witness push size")
+
         MAX_SCRIPT_ELEMENT_SIZE = 520
         assert(len(self.utxo))
 
@@ -1178,9 +1192,10 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop()
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
+    @subtest
     def test_max_witness_program_length(self):
         """Test that witness outputs greater than 10kB can't be spent."""
-        self.log.info("Testing maximum witness program length")
+
         assert(len(self.utxo))
         MAX_PROGRAM_LENGTH = 10000
 
@@ -1226,9 +1241,10 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop()
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
+    @subtest
     def test_witness_input_length(self):
         """Test that vin length must match vtxinwit length."""
-        self.log.info("Testing witness input length")
+
         assert(len(self.utxo))
 
         witness_program = CScript([OP_DROP, OP_TRUE])
@@ -1309,6 +1325,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop()
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
+    @subtest
     def test_tx_relay_after_segwit_activation(self):
         """Test transaction relay after segwit activation.
 
@@ -1317,7 +1334,6 @@ class SegWitTest(BitcoinTestFramework):
         - accepts transactions with valid witnesses
         and that witness transactions are relayed to non-upgraded peers."""
 
-        self.log.info("Testing relay of witness transactions")
         # Generate a transaction that doesn't require a witness, but send it
         # with a witness.  Should be rejected because we can't use a witness
         # when spending a non-witness output.
@@ -1403,13 +1419,13 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
 
+    @subtest
     def test_segwit_versions(self):
         """Test validity of future segwit version transactions.
 
         Future segwit version transactions are non-standard, but valid in blocks.
         Can run this before and after segwit activation."""
 
-        self.log.info("Testing standardness/consensus for segwit versions (0-16)")
         assert(len(self.utxo))
         num_tests = 17  # will test OP_0, OP1, ..., OP_16
         if (len(self.utxo) < num_tests):
@@ -1491,8 +1507,9 @@ class SegWitTest(BitcoinTestFramework):
         # Add utxo to our list
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
 
+    @subtest
     def test_premature_coinbase_witness_spend(self):
-        self.log.info("Testing premature coinbase witness spend")
+
         block = self.build_next_block()
         # Change the output of the block to be a witness output.
         witness_program = CScript([OP_TRUE])
@@ -1525,13 +1542,13 @@ class SegWitTest(BitcoinTestFramework):
         test_witness_block(self.nodes[0].rpc, self.test_node, block2, accepted=True)
         sync_blocks(self.nodes)
 
+    @subtest
     def test_uncompressed_pubkey(self):
         """Test uncompressed pubkey validity in segwit transactions.
 
         Uncompressed pubkeys are no longer supported in default relay policy,
         but (for now) are still valid in blocks."""
 
-        self.log.info("Testing uncompressed pubkeys")
         # Segwit transactions using uncompressed pubkeys are not accepted
         # under default policy, but should still pass consensus.
         key = CECKey()
@@ -1632,8 +1649,9 @@ class SegWitTest(BitcoinTestFramework):
         test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True)
         self.utxo.append(UTXO(tx5.sha256, 0, tx5.vout[0].nValue))
 
+    @subtest
     def test_signature_version_1(self):
-        self.log.info("Testing segwit signature hash version 1")
+
         key = CECKey()
         key.set_secretbytes(b"9")
         pubkey = CPubKey(key.get_pubkey())
@@ -1814,8 +1832,9 @@ class SegWitTest(BitcoinTestFramework):
         for i in range(len(tx.vout)):
             self.utxo.append(UTXO(tx.sha256, i, tx.vout[i].nValue))
 
+    @subtest
     def test_non_standard_witness_blinding(self):
-        self.log.info("Testing behavior of unnecessary witnesses in transactions does not blind the node for the transaction")
+        """Test behavior of unnecessary witnesses in transactions does not blind the node for the transaction"""
         assert (len(self.utxo) > 0)
 
         # Create a p2sh output -- this is so we can pass the standardness
@@ -1868,8 +1887,9 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
 
+    @subtest
     def test_non_standard_witness(self):
-        self.log.info("Testing detection of non-standard P2WSH witness")
+        """Test detection of non-standard P2WSH witness"""
         pad = chr(1).encode('latin-1')
 
         # Create scripts for tests
@@ -1968,9 +1988,9 @@ class SegWitTest(BitcoinTestFramework):
 
         self.utxo.pop(0)
 
+    @subtest
     def test_upgrade_after_activation(self, node_id):
         """Test the behavior of starting up a segwit-aware node after the softfork has activated."""
-        self.log.info("Testing software upgrade after softfork activation")
 
         assert(node_id != 0)  # node0 is assumed to be a segwit-active bitcoind
 
@@ -1995,9 +2015,9 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(self.nodes[0].getblock(block_hash), self.nodes[node_id].getblock(block_hash))
             height -= 1
 
+    @subtest
     def test_witness_sigops(self):
         """Test sigop counting is correct inside witnesses."""
-        self.log.info("Testing sigops limit")
 
         assert(len(self.utxo))
 
