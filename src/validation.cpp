@@ -4000,7 +4000,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             reportDone = percentageDone/10;
         }
         uiInterface.ShowProgress(_("Verifying blocks..."), percentageDone, false);
-        if (pindex->nHeight < chainActive.Height()-nCheckDepth)
+        if (pindex->nHeight <= chainActive.Height()-nCheckDepth)
             break;
         if (fPruneMode && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
             // If pruning, only go back as far as we have data.
