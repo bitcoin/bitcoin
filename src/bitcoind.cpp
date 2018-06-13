@@ -18,6 +18,7 @@
 #include <util.h>
 #include <httpserver.h>
 #include <httprpc.h>
+#include <threadutil.h>
 #include <utilstrencodings.h>
 #include <walletinitinterface.h>
 
@@ -57,6 +58,8 @@ static void WaitForShutdown()
 static bool AppInit(int argc, char* argv[])
 {
     bool fRet = false;
+
+    thread_util::Rename("init");
 
     //
     // Parameters
