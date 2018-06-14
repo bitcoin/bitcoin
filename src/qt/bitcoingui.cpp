@@ -30,7 +30,7 @@
 #include <qt/macdockiconhandler.h>
 #endif
 
-#include <init.h>
+#include <chainparams.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <ui_interface.h>
