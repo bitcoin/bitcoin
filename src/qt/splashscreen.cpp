@@ -11,7 +11,6 @@
 #include <qt/networkstyle.h>
 
 #include <clientversion.h>
-#include <init.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
