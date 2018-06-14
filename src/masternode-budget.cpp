@@ -1536,16 +1536,38 @@ CFinalizedBudget::CFinalizedBudget()
     voteSubmittedTime = boost::none;
 }
 
-CFinalizedBudget::CFinalizedBudget(std::string strBudgetName, int nBlockStart, std::vector<CTxBudgetPayment> vecBudgetPayments, uint256 nFeeTXHash)
+CFinalizedBudget::CFinalizedBudget(std::string budgetName, int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, uint256 nFeeTXHash)
     : fAutoChecked(false)
     , vecBudgetPayments(vecBudgetPayments)
-    , strBudgetName(strBudgetName)
+    , strBudgetName(budgetName)
     , nBlockStart(nBlockStart)
     , nFeeTXHash(nFeeTXHash)
     , fValid(true)
     , nTime(0)
 {
     boost::sort(this->vecBudgetPayments, ComparePayments);
+}
+
+CFinalizedBudget::CFinalizedBudget(std::string budgetName, int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const CKey& keyMasternode)
+    : fAutoChecked(false)
+    , vecBudgetPayments(vecBudgetPayments)
+    , strBudgetName(budgetName)
+    , nBlockStart(nBlockStart)
+    , masternodeSubmittedId(masternodeId)
+    , fValid(true)
+    , nTime(0)
+{
+    boost::sort(this->vecBudgetPayments, ComparePayments);
+
+    CHashWriter stream(SER_GETHASH, 0);
+    stream << this->nBlockStart;
+    for (size_t i = 0; i < this->vecBudgetPayments.size(); ++i)
+    {
+        stream << this->vecBudgetPayments[i];
+    }
+
+    if (!keyMasternode.SignCompact(stream.GetHash(), signature))
+        throw std::runtime_error("Cannot sign finalized budget: ");
 }
 
 CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
@@ -1774,19 +1796,34 @@ bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral) con
     if((int)vecBudgetPayments.size() > 100) {strError = "Invalid budget payments count (too many)"; return false;}
     if(strBudgetName == "") {strError = "Invalid Budget Name"; return false;}
     if(nBlockStart == 0) {strError = "Invalid BlockStart == 0"; return false;}
-    if(nFeeTXHash.IsNull()) {strError = "Invalid FeeTx.IsNull()"; return false;}
 
     //can only pay out 10% of the possible coins (min value of coins)
     if(GetTotalPayout() > budget.GetTotalBudget(nBlockStart)) {strError = "Invalid Payout (more than max)"; return false;}
 
     std::string strError2 = "";
-    if(fCheckCollateral){
+    if(fCheckCollateral && !nFeeTXHash.IsNull()){
         if (nTime == 0)
             LogPrintf("CFinalizedBudget::IsValid - ERROR: nTime == 0 is unexpected\n");
         int nConf = 0;
         int64_t nTime;
         if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError2, nTime, nConf)){
             {strError = "Invalid Collateral : " + strError2; return false;}
+        }
+    }
+
+    if (nFeeTXHash.IsNull())
+    {
+        const CMasternode* producer = mnodeman.Find(masternodeSubmittedId);
+        if (producer == NULL)
+        {
+            strError = "Cannot find masternode : " + masternodeSubmittedId.ToString();
+            return false;
+        }
+
+        if (!VerifySignature(producer->pubkey2))
+        {
+            strError = "Masternode signature is not valid : " + GetHash().ToString();
+            return false;
         }
     }
 
@@ -1804,6 +1841,22 @@ bool CFinalizedBudget::IsValid(bool fCheckCollateral) const
 {
     std::string dummy;
     return IsValid(dummy, fCheckCollateral);
+}
+
+bool CFinalizedBudget::VerifySignature(const CPubKey& pubKey) const
+{
+    CHashWriter stream(SER_GETHASH, 0);
+    stream << this->nBlockStart;
+    for (size_t i = 0; i < this->vecBudgetPayments.size(); ++i)
+    {
+        stream << this->vecBudgetPayments[i];
+    }
+
+    CPubKey result;
+    if (!result.RecoverCompact(stream.GetHash(), signature))
+        return false;
+
+    return result.GetID() == pubKey.GetID();
 }
 
 void CFinalizedBudget::ResetAutoChecked()
@@ -1928,10 +1981,16 @@ CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast()
 {
 }
 
-CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecBudgetPaymentsIn, uint256 nFeeTXHashIn)
-    : CFinalizedBudget(strBudgetNameIn, nBlockStartIn, vecBudgetPaymentsIn, nFeeTXHashIn)
+CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(std::string strBudgetName, int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, uint256 nFeeTXHash)
+    : CFinalizedBudget(strBudgetName, nBlockStart, vecBudgetPayments, nFeeTXHash)
 {
-    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
+    assert(boost::is_sorted(this->vecBudgetPayments, ComparePayments));
+}
+
+CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(std::string strBudgetName, int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const CKey& keyMasternode)
+    : CFinalizedBudget(strBudgetName, nBlockStart, vecBudgetPayments, masternodeId, keyMasternode)
+{
+    assert(boost::is_sorted(this->vecBudgetPayments, ComparePayments));
 }
 
 void CFinalizedBudgetBroadcast::Relay()
