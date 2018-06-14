@@ -62,6 +62,14 @@
         <translation>Địa chỉ đang nhận</translation>
     </message>
     <message>
+        <source>These are your Chaincoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Đây là những địa chỉ Chaincoin đang thực hiện thanh toán. Luôn kiểm tra số lượng và địa chỉ nhận trước khi gửi coins.</translation>
+    </message>
+    <message>
+        <source>These are your Chaincoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Đây là địa chỉ Chaincoin của bạn để nhận thanh toán. Khuyến cáo nên sử dụng địa chỉ mới cho mỗi giao dịch.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copy Địa Chỉ</translation>
     </message>
@@ -85,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>Xuất Thất Bại</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Đã xảy ra lỗi khi cố gắng lưu danh sách địa chỉ vào %1. Vui lòng thử lại.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -118,6 +130,18 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Lặp lại cụm mật khẩu mới</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>Hiển thị mật khẩu</translation>
+    </message>
+    <message>
+        <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
+        <translation>Phục vụ để vô hiệu hóa các gửi tiền tầm thường khi tài khoản OS bị xâm nhập. Không cung cấp bảo mật thực sự.</translation>
+    </message>
+    <message>
+        <source>Only for mixing via PrivateSend</source>
+        <translation>Chỉ để trộn qua PrivateSend</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
@@ -158,6 +182,10 @@
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Bạn có chắc bạn muốn mã hóa ví của mình?</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR CHC&lt;/b&gt;!</source>
+        <translation>Cảnh báo: Nếu bạn mã hóa ví và mất cụm mật khẩu, bạn sẽ &lt;b&gt;MẤT TẤT CẢ Chaincoin&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -234,12 +262,28 @@
         <translation>Hiển thị tổng quan ví</translation>
     </message>
     <message>
+        <source>Send coins to a Chaincoin address</source>
+        <translation>Gửi coin đến một địa chỉ Chaincoin</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and chaincoin: URIs)</source>
+        <translation>Yêu cầu thanh toán (tạo QR code và chaincoin: URIs)</translation>
+    </message>
+    <message>
         <source>&amp;Transactions</source>
         <translation>&amp;Các Giao Dịch</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
         <translation>Trình duyệt lịch sử giao dịch</translation>
+    </message>
+    <message>
+        <source>&amp;Masternodes</source>
+        <translation>&amp;Masternodes</translation>
+    </message>
+    <message>
+        <source>Browse masternodes</source>
+        <translation>Duyệt qua Masternodes</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -280,6 +324,66 @@
     <message>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Thay Đổi Cụm Mật Khẩu...</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Chaincoin addresses to prove you own them</source>
+        <translation>Đăng ký lời nhắn với địa chỉ Chaincoin của bạn để chứng minh quyền sở hữu chúng</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Chaincoin addresses</source>
+        <translation>Xác minh lời nhắn để chắc chắn đã được đăng ký với địa chỉ Chaincoin xác định</translation>
+    </message>
+    <message>
+        <source>&amp;Information</source>
+        <translation>&amp;Thông tin</translation>
+    </message>
+    <message>
+        <source>Show diagnostic information</source>
+        <translation>Hiển thị thông tin chẩn đoán</translation>
+    </message>
+    <message>
+        <source>&amp;Debug console</source>
+        <translation>&amp;Bảng điều khiển gỡ lỗi</translation>
+    </message>
+    <message>
+        <source>&amp;Network Monitor</source>
+        <translation>&amp;Giám sát mạng</translation>
+    </message>
+    <message>
+        <source>Show network monitor</source>
+        <translation>Hiển thị màn hình giám sát mạng</translation>
+    </message>
+    <message>
+        <source>&amp;Peers list</source>
+        <translation>&amp;Danh sách đồng nghiệp</translation>
+    </message>
+    <message>
+        <source>Show peers info</source>
+        <translation>Hiển thị thông tin đồng nghiệp</translation>
+    </message>
+    <message>
+        <source>Open Wallet &amp;Configuration File</source>
+        <translation>Mở Ví và File cấu hình</translation>
+    </message>
+    <message>
+        <source>Open configuration file</source>
+        <translation>Mở File cấu hình</translation>
+    </message>
+    <message>
+        <source>Open &amp;Masternode Configuration File</source>
+        <translation>Mở  File cấu hình &amp;Masternode</translation>
+    </message>
+    <message>
+        <source>Open Masternode configuration file</source>
+        <translation>Mở  File cấu hình Masternode</translation>
+    </message>
+    <message>
+        <source>Show Automatic &amp;Backups</source>
+        <translation>Hiển thị  &amp;Sao lưu Tự động</translation>
+    </message>
+    <message>
+        <source>Show automatically created wallet backups</source>
+        <translation>Hiển thị sao lưu ví được tạo tự động</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
@@ -336,6 +440,10 @@
     <message>
         <source>&amp;Receive</source>
         <translation>&amp;Nhận</translation>
+    </message>
+    <message>
+        <source>&amp;About Chaincoin Core</source>
+        <translation>&amp;Tài liệu về Chaincoin Core</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -406,6 +514,30 @@
         <translation>Lỗi</translation>
     </message>
     <message>
+        <source>Open $URI...</source>
+        <translation>Mở &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Open a chaincoin: URI or payment request</source>
+        <translation>Mở một Chaincoin: URI hoặc yêu cầu thanh toán</translation>
+    </message>
+    <message>
+        <source>Show the Chaincoin Core help message to get a list with possible Chaincoin Core command-line options</source>
+        <translation>Hiển thị tin nhắn hỗ trợ của Chaincoin để nhận được danh sách lệnh của Chaincoin.</translation>
+    </message>
+    <message>
+        <source>&amp;PrivateSend information</source>
+        <translation>&amp;Thông tin gửi tiền riêng tư (PrivateSend)</translation>
+    </message>
+    <message>
+        <source>Show the PrivateSend basic information</source>
+        <translation>Hiển thị thông tin gửi tiền riêng tư</translation>
+    </message>
+    <message>
+        <source>&amp;Tools</source>
+        <translation>&amp;Dụng cụ</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>Cảnh báo</translation>
     </message>
@@ -422,12 +554,28 @@
         <translation>%1 khách</translation>
     </message>
     <message>
+        <source>The configuration file could not be opened.</source>
+        <translation>Không thẻ mở tệp cấu hình.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Chaincoin network</source>
+        <translation><numerusform>%n kết nối đến mạng Chaincoin</numerusform></translation>
+    </message>
+    <message>
         <source>Connecting to peers...</source>
         <translation>Đang kết nối đến peers...</translation>
     </message>
     <message>
         <source>Catching up...</source>
         <translation>Đang bắt kịp...</translation>
+    </message>
+    <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Đồng bộ hóa dữ liệu bổ sung: %p%</translation>
+    </message>
+    <message>
+        <source>Chaincoin Core</source>
+        <translation>Chaincoin</translation>
     </message>
     <message>
         <source>Date: %1
@@ -480,10 +628,18 @@
         <translation>Ví thì &lt;b&gt;encrypted&lt;/b&gt; và hiện tại &lt;b&gt;unlocked&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Ví thì &lt;b&gt;encrypted&lt;/b&gt; và hiện tại &lt;b&gt;locked&lt;/b&gt;</translation>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
+        <translation>Ví thì &lt;b&gt;được mã hóa&lt;/b&gt; và hiện tại &lt;b&gt;đã mở khóa&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Ví thì &lt;b&gt;được mã hóa&lt;/b&gt; và hiện tại &lt;b&gt;bị khóa&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Chaincoin can no longer continue safely and will quit.</source>
+        <translation>Một lỗi nghiêm trọng vừa xảy ra. Chaincoin có thể không còn tiếp tục an toàn và sẽ bị bỏ.</translation>
+    </message>
+</context>
 <context>
     <name>ClientModel</name>
     </context>
@@ -526,12 +682,20 @@
         <translation>(không)chọn tất cả</translation>
     </message>
     <message>
+        <source>toggle lock state</source>
+        <translation>chuyển đổi trạng thái khóa</translation>
+    </message>
+    <message>
         <source>Tree mode</source>
-        <translation>Tree mode</translation>
+        <translation>Chế độ cây</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation>List mode</translation>
+        <translation>Chế độ danh sách</translation>
+    </message>
+    <message>
+        <source>(1 locked)</source>
+        <translation>(1 đã khóa)</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -544,6 +708,10 @@
     <message>
         <source>Received with address</source>
         <translation>Đã nhận với địa chỉ</translation>
+    </message>
+    <message>
+        <source>PS Rounds</source>
+        <translation>PS vòng</translation>
     </message>
     <message>
         <source>Date</source>
@@ -606,6 +774,14 @@
         <translation>Sao chép thay đổi</translation>
     </message>
     <message>
+        <source>Please switch to "List mode" to use this function.</source>
+        <translation>Vui lòng chuyển sang "Chế độ danh sách" để sử dụng chức năng này.</translation>
+    </message>
+    <message>
+        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again.</source>
+        <translation>Đã chọn đầu vào không được ẩn danh. &lt;b&gt;PrivateSend sẽ bị vô hiệu hóa.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Nếu bạn vẫn muốn sử dụng PrivateSend, vui lòng bỏ chọn tất cả các đầu vào không được xác thực trước và sau đó chọn lại hộp kiểm Riêng tư (Privatesend).</translation>
+    </message>
+    <message>
         <source>(%1 locked)</source>
         <translation>(%1 đã khóa)</translation>
     </message>
@@ -622,6 +798,10 @@
         <translation>Label này chuyển sang đỏ nếu bất cứ giao dịch nhận nào có số lượng nhỏ hơn ngưỡng dust.</translation>
     </message>
     <message>
+        <source>Can vary +/- %1 chuff(s) per input.</source>
+        <translation>Có thể thay đổi +/-%1 chuff trên input.</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(không nhãn)</translation>
     </message>
@@ -636,28 +816,82 @@
 </context>
 <context>
     <name>DarksendConfig</name>
+    <message>
+        <source>Configure PrivateSend</source>
+        <translation>Cấu Hình PrivateSend (gửi tiền ẩn danh)</translation>
+    </message>
+    <message>
+        <source>Basic Privacy</source>
+        <translation>Bảo mật cơ bản</translation>
+    </message>
+    <message>
+        <source>High Privacy</source>
+        <translation>Bảo mật cao</translation>
+    </message>
+    <message>
+        <source>Maximum Privacy</source>
+        <translation>Bảo mật cao nhất</translation>
+    </message>
+    <message>
+        <source>Please select a privacy level.</source>
+        <translation>Vui lòng chọn mức độ bảo mật.</translation>
+    </message>
+    <message>
+        <source>Use 2 separate masternodes to mix funds up to 1000 CHC</source>
+        <translation>Sử dụng 2 masternode riêng để trộn tiền lên tới 1000 CHC</translation>
+    </message>
+    <message>
+        <source>Use 8 separate masternodes to mix funds up to 1000 CHC</source>
+        <translation>Sử dụng 8 masternode riêng để trộn tiền lên tới 1000 CHC</translation>
+    </message>
+    <message>
+        <source>Use 16 separate masternodes</source>
+        <translation>Sử dụng 16 masternode riêng biệt</translation>
+    </message>
+    <message>
+        <source>This option is the quickest and will cost about ~0.025 CHC to anonymize 1000 CHC</source>
+        <translation>
+Tùy chọn này là nhanh nhất và sẽ tốn khoảng ~ 0,025 CHC để ẩn danh 1000 CHC</translation>
+    </message>
+    <message>
+        <source>This option is moderately fast and will cost about 0.05 CHC to anonymize 1000 CHC</source>
+        <translation>
+Tùy chọn này khá nhanh và tốn khoảng 0,05 CHC để ẩn danh 1000 CHC</translation>
+    </message>
+    <message>
+        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
+        <translation>Đây là tùy chọn chậm nhất và an toàn nhất. Sử dụng ẩn danh tối đa sẽ mất phí</translation>
+    </message>
+    <message>
+        <source>0.1 CHC per 1000 CHC you anonymize.</source>
+        <translation>0,1 CHC trên 1000 CHC bạn ẩn danh.</translation>
+    </message>
+    <message>
+        <source>PrivateSend Configuration</source>
+        <translation>Cấu hình gửi tiền riêng tư</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Edit Address</translation>
+        <translation>sửa địa chỉ</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>Nhãn dữ liệu</translation>
+        <translation>&amp;Nhãn</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>Label liên kết với list address ban đầu này</translation>
+        <translation>Nhãn được liên kết với mục nhập danh sách địa chỉ này</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Label liên kết với list address ban đầu này. Điều này chỉ được điều chỉnh cho địa chỉ gửi.</translation>
+        <translation>Địa chỉ được liên kết với mục nhập danh sách địa chỉ này. Điều này chỉ có thể được sửa đổi để gửi địa chỉ.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>Địa chỉ</translation>
+        <translation>&amp;Địa chỉ</translation>
     </message>
     <message>
         <source>New receiving address</source>
@@ -674,6 +908,10 @@
     <message>
         <source>Edit sending address</source>
         <translation>Edit address đang gửi</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is not a valid Chaincoin address.</source>
+        <translation>Địa chỉ được nhập "%1" không phải là địa chỉ Chaincoin hợp lệ.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -718,20 +956,28 @@
         <translation>phiên bản</translation>
     </message>
     <message>
+        <source>Chaincoin Core</source>
+        <translation>Chaincoin</translation>
+    </message>
+    <message>
         <source>(%1-bit)</source>
         <translation>(%1-bit)</translation>
     </message>
     <message>
+        <source>About Chaincoin Core</source>
+        <translation>Tài liệu về Chaincoin Core</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
-        <translation>Command-line options</translation>
+        <translation>Tùy chọn dòng lệnh</translation>
     </message>
     <message>
         <source>Usage:</source>
-        <translation>Usage:</translation>
+        <translation>sử dụng:</translation>
     </message>
     <message>
         <source>command-line options</source>
-        <translation>command-line options</translation>
+        <translation>Tùy chọn dòng lệnh</translation>
     </message>
     <message>
         <source>UI Options:</source>
@@ -761,16 +1007,20 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>Reset tất cả cài đặt thay đổi trong GUI</translation>
     </message>
+    <message>
+        <source>PrivateSend information</source>
+        <translation>Thông tin gửi tiền riêng tư (PrivateSend)</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
-        <translation>Welcome</translation>
+        <translation>Chào Mừng</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
-        <translation>Welcome to %1.</translation>
+        <translation>Chào Mừng đến %1.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
@@ -797,6 +1047,10 @@
         <translation>Sử dụng custom danh mục data:</translation>
     </message>
     <message>
+        <source>Chaincoin</source>
+        <translation>Chaincoin</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>Error: Danh mục data xác định "%1" không thể được tạo.</translation>
     </message>
@@ -815,12 +1069,176 @@
 </context>
 <context>
     <name>MasternodeList</name>
-    </context>
+    <message>
+        <source>Form</source>
+        <translation>hình thức</translation>
+    </message>
+    <message>
+        <source>My Masternodes</source>
+        <translation>Masternode của tôi</translation>
+    </message>
+    <message>
+        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
+        <translation>Lưu ý: Trạng thái của các masternode của bạn trong ví cục bộ có thể hơi không chính xác. &lt;br /&gt;Luôn đợi ví để đồng bộ hóa dữ liệu bổ sung và sau đó kiểm tra lại từ node khác &lt;br /&gt;nếu mà masternode của bạn sẽ chạy nhưng bạn vẫn không thấy "ENABLED" trong trường "Trạng thái".</translation>
+    </message>
+    <message>
+        <source>Alias</source>
+        <translation>bí danh</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Địa chỉ</translation>
+    </message>
+    <message>
+        <source>Protocol</source>
+        <translation>Giao thức</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Trạng thái</translation>
+    </message>
+    <message>
+        <source>Active</source>
+        <translation>Hoạt động</translation>
+    </message>
+    <message>
+        <source>Last Seen</source>
+        <translation>Nhìn thấy lần cuối</translation>
+    </message>
+    <message>
+        <source>Payee</source>
+        <translation>Người nhận tiền</translation>
+    </message>
+    <message>
+        <source>S&amp;tart alias</source>
+        <translation>Bắt đầu bí danh</translation>
+    </message>
+    <message>
+        <source>Start &amp;all</source>
+        <translation>Bắt đầu tất cả</translation>
+    </message>
+    <message>
+        <source>Start &amp;MISSING</source>
+        <translation>Bắt đầu thiếu</translation>
+    </message>
+    <message>
+        <source>&amp;Update status</source>
+        <translation>&amp;Cập nhật trạng thái</translation>
+    </message>
+    <message>
+        <source>Show additional Masternode information</source>
+        <translation>Hiển thị thêm thông tin về Masternode</translation>
+    </message>
+    <message>
+        <source>Show Details</source>
+        <translation>Hiển thị chi tiết</translation>
+    </message>
+    <message>
+        <source>Status will be updated automatically in (sec):</source>
+        <translation>Trạng thái sẽ được cập nhật tự động trong (giây):</translation>
+    </message>
+    <message>
+        <source>0</source>
+        <translation>0</translation>
+    </message>
+    <message>
+        <source>All Masternodes</source>
+        <translation>Tất Cả Masternode</translation>
+    </message>
+    <message>
+        <source>Filter List:</source>
+        <translation>Danh sách bộ lọc:</translation>
+    </message>
+    <message>
+        <source>Filter masternode list</source>
+        <translation>Danh sách masternode lọc</translation>
+    </message>
+    <message>
+        <source>Node Count:</source>
+        <translation>Số Node:</translation>
+    </message>
+    <message>
+        <source>Start alias</source>
+        <translation>Bắt đầu bí danh</translation>
+    </message>
+    <message>
+        <source>Confirm masternode start</source>
+        <translation>Xác nhận bắt đầu masternode</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to start masternode %1?</source>
+        <translation>Bạn có chắc chắn muốn bắt đầu masternode %1 không?</translation>
+    </message>
+    <message>
+        <source>Confirm all masternodes start</source>
+        <translation>Xác nhận bắt đầu masternode</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to start ALL masternodes?</source>
+        <translation>Bạn có chắc chắn muốn bắt đầu tất cả masternode không?</translation>
+    </message>
+    <message>
+        <source>Command is not available right now</source>
+        <translation>Lệnh hiện không khả dụng</translation>
+    </message>
+    <message>
+        <source>You can't use this command until masternode list is synced</source>
+        <translation>Bạn không thể sử dụng lệnh này cho đến khi danh sách masternode được đồng bộ hóa</translation>
+    </message>
+    <message>
+        <source>Confirm missing masternodes start</source>
+        <translation>Xác nhận bắt đầu masternode bị thiếu</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to start MISSING masternodes?</source>
+        <translation>Bạn có chắc chắn muốn bắt đầu masternodes bị THIẾU không?</translation>
+    </message>
+    <message>
+        <source>Additional information for Masternode </source>
+        <translation>Thông tin bổ sung cho Masternode</translation>
+    </message>
+    <message>
+        <source>Masternode Private Key</source>
+        <translation>Mật mã của Masternode</translation>
+    </message>
+    <message>
+        <source>Private Key</source>
+        <translation>Mật mã</translation>
+    </message>
+    <message>
+        <source>Collateral</source>
+        <translation>Tài sản thế chấp</translation>
+    </message>
+    <message>
+        <source>IP</source>
+        <translation>IP</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Phiên bản</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Không biết</translation>
+    </message>
+    <message>
+        <source>Sentinel</source>
+        <translation>Sentinel</translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
-        <translation>Form</translation>
+        <translation>hình thức</translation>
+    </message>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Chaincoin network, as detailed below.</source>
+        <translation>Giao dịch gần đây có thể chưa được hiển thị, và vì vậy số dư wallet của bạn có thể không dúng. Thông tin này sẽ được làm đúng khi wallet hoàn thành đồng bộ với mạng Chaincoin, như chi tiết bên dưới.</translation>
+    </message>
+    <message>
+        <source>Attempting to spend Chaincoin that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Cố gắng xài các Chaincoin bị ảnh hưởng bởi các giao dịch chưa được hiển thị sẽ không được chấp nhận bởi mạng.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -828,7 +1246,7 @@
     </message>
     <message>
         <source>Unknown...</source>
-        <translation>Unknown...</translation>
+        <translation>Không biết...</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -837,6 +1255,10 @@
     <message>
         <source>Progress</source>
         <translation>Tiến độ</translation>
+    </message>
+    <message>
+        <source>~</source>
+        <translation>~</translation>
     </message>
     <message>
         <source>Progress increase per hour</source>
@@ -905,12 +1327,88 @@
         <translation>Number of script &amp;verification threads</translation>
     </message>
     <message>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
+        <translation>Hiển thị tab bổ sung liệt kê tất cả các masternode của bạn trong tab phụ đầu tiên &lt;br/&gt;và tất cả các masternode trên mạng trong tab phụ thứ hai.</translation>
+    </message>
+    <message>
+        <source>Show Masternodes Tab</source>
+        <translation>Hiển thị tab Masternodes</translation>
+    </message>
+    <message>
+        <source>Show additional information and buttons for PrivateSend on overview screen.</source>
+        <translation>Hiển thị thêm thông tin và các nút cho PrivateSend trên màn hình tổng quan.</translation>
+    </message>
+    <message>
+        <source>Enable advanced PrivateSend interface</source>
+        <translation>Bật giao diện PrivateSend nâng cao</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
+        <translation>Hiển thị hộp thoại cảnh báo khi PrivateSend phát hiện thấy chiếc ví có số lượng khóa rất thấp.</translation>
+    </message>
+    <message>
+        <source>Warn if PrivateSend is running out of keys</source>
+        <translation>Cảnh báo nếu PrivateSend đang hết khóa</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>Cho dù sử dụng chế độ PrivateSend thử nghiệm với nhiều phiên trộn cho mỗi khối. &lt;br/&gt;Lưu ý: Bạn phải sử dụng tính năng này một cách cẩn thận. &lt;br/&gt;Đảm bảo bạn luôn có bản sao lưu ví tiền (tự động) gần đây ở một nơi an toàn!</translation>
+    </message>
+    <message>
+        <source>Enable PrivateSend &amp;multi-session</source>
+        <translation>Bật PrivateSend &amp; nhiều phiên</translation>
+    </message>
+    <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
+        <translation>Nếu bạn vô hiệu hóa chi tiêu của thay đổi chưa được xác nhận, không thể sử dụng thay đổi từ giao dịch&lt;br/&gt; cho đến khi giao dịch đó có ít nhất một xác nhận. &lt;br/&gt;Điều này cũng ảnh hưởng đến cách tính số dư của bạn.</translation>
+    </message>
+    <message>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Cài đặt này xác định số lượng masternode riêng lẻ mà đầu vào sẽ được ẩn danh thông qua. &lt;br/&gt;Nhiều vòng ẩn danh cung cấp mức độ riêng tư cao hơn, nhưng cũng chi phí nhiều hơn về phí.</translation>
+    </message>
+    <message>
+        <source>PrivateSend rounds to use</source>
+        <translation>Vòng PrivateSend  để sử dụng</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
+        <translation>Số tiền này đóng vai trò như một ngưỡng để tắt PrivateSend khi nó đạt đến.</translation>
+    </message>
+    <message>
+        <source>Amount of Chaincoin to keep anonymized</source>
+        <translation>Số lượng của Chaincoin để giữ vô danh</translation>
+    </message>
+    <message>
+        <source>Automatically open the Chaincoin Core client port on the router. This only works when your router  UPnP and it is enabled.</source>
+        <translation>Tự động mở cổng khách hàng của Chaincoin Core trên router. Điều này chỉ hoạt động khi router UPnP của bạn và nó được kích hoạt.</translation>
+    </message>
+    <message>
+        <source>Connect to the Chaincoin network through a SOCKS5 proxy.</source>
+        <translation>Kết nối đến Chaincoin network qua một SOCKS5 proxy.</translation>
+    </message>
+    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation>Địa chỉ IP  của proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
         <translation>Hiển thị nếu cung cấp default SOCKS5 proxy is used to reach peers via this network type.</translation>
+    </message>
+    <message>
+        <source>Connect to the Chaincoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Kết nối đến Chaincoin network qua một nhánh rời SOCKS5 proxy của Tor hidden services.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Sử dụng SOCKS&amp;5 proxy riêng biệt để tiếp cận các đồng nghiệp thông qua dịch vụ ẩn của Tor:</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Ẩn biểu tượng khỏi khay hệ thống.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Ẩn Biểu tượng trên khay</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -941,6 +1439,14 @@
         <translation>&amp;Network</translation>
     </message>
     <message>
+        <source>Automatically start Chaincoin Core after logging in to the system.</source>
+        <translation>Tự động khởi động Chaincoin Core sau khi đăng nhập vào hệ thống.</translation>
+    </message>
+    <message>
+        <source>&amp;Start Chaincoin Core on system login</source>
+        <translation>&amp;Bắt đầu Chaincoin Core về đăng nhập hệ thống</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = auto, &lt;0 = leave that many cores free)</translation>
     </message>
@@ -963,6 +1469,14 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Map port using &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>Chấp nhận các kết nối từ bên ngoài.</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Cho phép kết nối đến</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1031,6 +1545,32 @@
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>Cho hiển thị tính năng coin control hoặc không.</translation>
+    </message>
+    <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting Chaincoin Core.</source>
+        <translation>Giao diện ngôn ngữ người dùng có thể được thiết lập tại đây. Tùy chọn này sẽ có hiệu lực sau khi khởi động lại Chaincoin Core.</translation>
+    </message>
+    <message>
+        <source>Language missing or translation incomplete? Help contributing translations here:
+https://www.transifex.com/projects/p/chaincoin/</source>
+        <translation>Thiếu ngôn ngữ hoặc bản dịch chưa hoàn chỉnh? Giúp đóng góp bản dịch tại đây:
+https://www.transifex.com/projects/p/chaincoin/</translation>
+    </message>
+    <message>
+        <source>User Interface Theme:</source>
+        <translation>Giao diện người dùng Chủ đề:</translation>
+    </message>
+    <message>
+        <source>Decimal digits</source>
+        <translation>Chữ số thập phân</translation>
+    </message>
+    <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>Bên thứ ba URLs (e.g. a block explorer) xuất hiện trong thẻ giao dịch như context menu items. &lt;br/&gt;%s in the URL thì được thay thế bởi transaction hash. Nhiều URL được phân tách bằng thanh dọc |.</translation>
+    </message>
+    <message>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>&amp;URL giao dịch của bên thứ ba</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1124,6 +1664,10 @@
         <translation>Số dư</translation>
     </message>
     <message>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Chaincoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Thông tin được hiển thị có thể đã lỗi thời. Cái wallet tự động đồng bộ với Chaincoin network sau một connection được thiết lập, nhưng quá trình này vẫn chưa completed yet.</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>Tổng cộng:</translation>
     </message>
@@ -1138,6 +1682,74 @@
     <message>
         <source>Spendable:</source>
         <translation>Có thể sử dụng</translation>
+    </message>
+    <message>
+        <source>Status:</source>
+        <translation>Trạng thái:</translation>
+    </message>
+    <message>
+        <source>Enabled/Disabled</source>
+        <translation>Đã bật / Tắt</translation>
+    </message>
+    <message>
+        <source>Completion:</source>
+        <translation>Hoàn thành:</translation>
+    </message>
+    <message>
+        <source>PrivateSend Balance:</source>
+        <translation>Tiền còn lại trong PrivateSend:</translation>
+    </message>
+    <message>
+        <source>Amount and Rounds:</source>
+        <translation>Số tiền và các vòng:</translation>
+    </message>
+    <message>
+        <source>0 CHC / 0 Rounds</source>
+        <translation>0 CHC / 0 Vòng</translation>
+    </message>
+    <message>
+        <source>Submitted Denom:</source>
+        <translation>Mệnh giá đã gửi:</translation>
+    </message>
+    <message>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Các mệnh giá bạn đã gửi cho hỗn hợp Masternode. &lt;br&gt;Để trộn, những người dùng khác phải gửi cùng một mệnh giá.</translation>
+    </message>
+    <message>
+        <source>n/a</source>
+        <translation>không tồn tại</translation>
+    </message>
+    <message>
+        <source>(Last Message)</source>
+        <translation>(Tin nhắn cuối)</translation>
+    </message>
+    <message>
+        <source>Start/Stop Mixing</source>
+        <translation>Bắt đầu / Dừng trộn</translation>
+    </message>
+    <message>
+        <source>Try to manually submit a PrivateSend request.</source>
+        <translation>Cố gắng yêu cầu PrivateSend theo cách thủ công.</translation>
+    </message>
+    <message>
+        <source>Try Mix</source>
+        <translation>Thử trộn</translation>
+    </message>
+    <message>
+        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
+        <translation>Đặt lại trạng thái hiện tại của PrivateSend (có thể ngắt PrivateSend nếu nó đang trong quá trình trộn, có thể khiến bạn mất tiền!)</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Cài lại</translation>
+    </message>
+    <message>
+        <source>Information about PrivateSend and Mixing</source>
+        <translation>Thông tin về PrivateSend và trộn</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>Thông tin</translation>
     </message>
     <message>
         <source>Recent transactions</source>
@@ -1155,24 +1767,158 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Tổng số dư hiện tại trong watch-only addresses</translation>
     </message>
-    </context>
+    <message>
+        <source>out of sync</source>
+        <translation>Không đồng bộ</translation>
+    </message>
+    <message>
+        <source>Automatic backups are disabled, no mixing available!</source>
+        <translation>Tự động sao lưu bị vô hiệu hóa, không có sẵn trộn!</translation>
+    </message>
+    <message>
+        <source>Start Mixing</source>
+        <translation>Bắt đầu trộn</translation>
+    </message>
+    <message>
+        <source>Stop Mixing</source>
+        <translation>Dừng trộn</translation>
+    </message>
+    <message>
+        <source>No inputs detected</source>
+        <translation>Không phát hiện đầu vào nào</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n Rounds</source>
+        <translation><numerusform>%n Vòng</numerusform></translation>
+    </message>
+    <message>
+        <source>Found enough compatible inputs to anonymize %1</source>
+        <translation>Tìm thấy đủ đầu vào tương thích để ẩn danh %1</translation>
+    </message>
+    <message>
+        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
+        <translation>Không đủ đầu vào tương thích để ẩn danh &lt;span style='color:red;'&gt;%1&lt;/span&gt;, &lt;br&gt; sẽ ẩn danh &lt;span style='color:red;'&gt;%2 &lt;/span&gt; thay thế</translation>
+    </message>
+    <message>
+        <source>Overall progress</source>
+        <translation>Tiến độ tổng thể</translation>
+    </message>
+    <message>
+        <source>Denominated</source>
+        <translation>Được chỉ định</translation>
+    </message>
+    <message>
+        <source>Mixed</source>
+        <translation>Đã trộn</translation>
+    </message>
+    <message>
+        <source>Anonymized</source>
+        <translation>Ẩn danh</translation>
+    </message>
+    <message numerus="yes">
+        <source>Denominated inputs have %5 of %n rounds on average</source>
+        <translation><numerusform>Các đầu vào có mệnh giá có %5 của %n vòng trung bình</numerusform></translation>
+    </message>
+    <message>
+        <source>keys left: %1</source>
+        <translation>phím còn lại: %1</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation>Đã  Tắt</translation>
+    </message>
+    <message>
+        <source>Very low number of keys left since last automatic backup!</source>
+        <translation>Số lượng khóa còn lại rất thấp kể từ lần sao lưu tự động cuối cùng!</translation>
+    </message>
+    <message>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>Chúng tôi sắp tạo một bản sao lưu tự động mới cho bạn, tuy nhiên &lt;span style='color:red;'&gt; bạn nên luôn đảm bảo rằng bạn đã lưu các bản sao lưu ở một số nơi an toàn &lt;/span&gt;!</translation>
+    </message>
+    <message>
+        <source>Note: You turn this message off in options.</source>
+        <translation>Lưu ý: Bạn tắt tin nhắn này trong các tùy chọn.</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation>PrivateSend</translation>
+    </message>
+    <message>
+        <source>WARNING! Something went wrong on automatic backup</source>
+        <translation>CẢNH BÁO! Đã xảy ra lỗi khi sao lưu tự động</translation>
+    </message>
+    <message>
+        <source>ERROR! Failed to create automatic backup</source>
+        <translation>LỖI! Không thể tạo sao lưu tự động</translation>
+    </message>
+    <message>
+        <source>Mixing is disabled, please close your wallet and fix the issue!</source>
+        <translation>Tính năng trộn bị tắt, vui lòng đóng ví của bạn và khắc phục vấn đề!</translation>
+    </message>
+    <message>
+        <source>Enabled</source>
+        <translation>Đã bật </translation>
+    </message>
+    <message>
+        <source>see debug.log for details.</source>
+        <translation>xem debug.log để biết chi tiết.</translation>
+    </message>
+    <message>
+        <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
+        <translation>CẢNH BÁO! Không thể bổ sung keypool, vui lòng mở khóa ví của bạn để làm như vậy.</translation>
+    </message>
+    <message>
+        <source>Last PrivateSend message:
+</source>
+        <translation>Tin nhắn PrivateSend cuối cùng:
+</translation>
+    </message>
+    <message>
+        <source>N/A</source>
+        <translation>Không tồn tại</translation>
+    </message>
+    <message>
+        <source>PrivateSend was successfully reset.</source>
+        <translation>PrivateSend đã được đặt lại thành công.</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>Nếu bạn không muốn thấy phí / giao dịch PrivateSend nội bộ, hãy chọn "Phổ biến nhất" làm Loại trên tab "Giao dịch".</translation>
+    </message>
+    <message>
+        <source>PrivateSend requires at least %1 to use.</source>
+        <translation>PrivateSend yêu cầu ít nhất %1 để sử dụng.</translation>
+    </message>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
+        <translation>Wallet bị khóa và người dùng từ chối mở khóa. Vô hiệu hóa PrivateSend.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
-        <translation>Payment request error</translation>
+        <translation>Lỗi yêu cầu thanh toán</translation>
     </message>
     <message>
         <source>URI handling</source>
-        <translation>URI handling</translation>
+        <translation>Xử lý URI</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation>Payment request dẫn đến URL thì invalid: %1</translation>
+        <translation>URL tìm nạp yêu cầu thanh toán không hợp lệ: %1</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
-        <translation>Invalid payment address %1</translation>
+        <translation>Địa chỉ thanh toán không hợp lệ %1</translation>
+    </message>
+    <message>
+        <source>Cannot start chaincoin: click-to-pay handler</source>
+        <translation>Không thể bắt đầu chaincoin: trình xử lý nhấp để thanh toán</translation>
+    </message>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Chaincoin address or malformed URI parameters.</source>
+        <translation>URI không thể phân tích cú pháp! Đây có thể gây nên bởi invalid Chaincoin address hoặc URI không đúng định dạng tham số.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1273,6 +2019,10 @@
         <translation>Số lượng</translation>
     </message>
     <message>
+        <source>Enter a Chaincoin address (e.g. %1)</source>
+        <translation>Nhập một Chaincoin address (e.g. %1)</translation>
+    </message>
+    <message>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
@@ -1367,13 +2117,49 @@
         <source>Error: %1</source>
         <translation>Error: %1</translation>
     </message>
-    </context>
+    <message>
+        <source>Error reading masternode configuration file: %1</source>
+        <translation>Lỗi khi đọc tệp cấu hình masternode: %1</translation>
+    </message>
+</context>
 <context>
     <name>QRDialog</name>
-    </context>
+    <message>
+        <source>QR-Code Title</source>
+        <translation>Tiêu đề mã QR</translation>
+    </message>
+    <message>
+        <source>QR Code</source>
+        <translation>Mã QR</translation>
+    </message>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;Lưu ảnh...</translation>
+    </message>
+    <message>
+        <source>Error creating QR Code.</source>
+        <translation>Lỗi khi tạo Mã QR.</translation>
+    </message>
+</context>
 <context>
     <name>QRGeneralImageWidget</name>
-    </context>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;Lưu ảnh...</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Image</source>
+        <translation>&amp;Sao chép ảnh</translation>
+    </message>
+    <message>
+        <source>Save QR Code</source>
+        <translation>Lưu QR Code</translation>
+    </message>
+    <message>
+        <source>PNG Image (*.png)</source>
+        <translation>PNG Image (*.png)</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1397,7 +2183,7 @@
     <name>RPCConsole</name>
     <message>
         <source>N/A</source>
-        <translation>N/A</translation>
+        <translation>Không tồn tại</translation>
     </message>
     <message>
         <source>Client version</source>
@@ -1452,8 +2238,20 @@
         <translation>Số giao dịch hiện tại</translation>
     </message>
     <message>
+        <source>Tools window</source>
+        <translation>Cửa sổ công cụ</translation>
+    </message>
+    <message>
         <source>Memory usage</source>
         <translation>Bộ nhớ usage</translation>
+    </message>
+    <message>
+        <source>Open the Chaincoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Mở tệp nhật ký gỡ lỗi Corecoin Core từ thư mục dữ liệu hiện tại. Quá trình này có thể mất vài giây cho các tệp nhật ký lớn.</translation>
+    </message>
+    <message>
+        <source>Number of Masternodes</source>
+        <translation>Con số Masternode</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
@@ -1628,6 +2426,14 @@
         <translation>Use up and down arrows to navigate history, and %1 to clear screen.</translation>
     </message>
     <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Nhập %1 để biết tổng quan về các lệnh có sẵn.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>Để biết thêm thông tin về cách sử dụng loại bảng điều khiển này %1.</translation>
+    </message>
+    <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
         <translation>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</translation>
     </message>
@@ -1713,6 +2519,14 @@
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Request payment</translation>
+    </message>
+    <message>
+        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
+        <translation>Địa chỉ Bech32 (BIP-173) rẻ hơn để chi tiêu và cung cấp sự bảo vệ tốt hơn chống lại lỗi chính tả. Khi bỏ chọn một địa chỉ SegWit P2SH được bao bọc sẽ được tạo, tương thích với các ví cũ hơn.</translation>
+    </message>
+    <message>
+        <source>Generate Bech32 address</source>
+        <translation>Tạo địa chỉ Bech32</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -1932,8 +2746,40 @@
         <translation>Rác:</translation>
     </message>
     <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>Với Thay thế theo lệ phí (BIP-125), bạn có thể tăng phí giao dịch sau khi được gửi. Nếu không có điều này, một khoản phí cao hơn có thể được đề nghị để bù đắp cho rủi ro chậm trễ giao dịch tăng lên.</translation>
+    </message>
+    <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until your have validated the complete chain.</source>
+        <translation>Sử dụng fallbackfee có thể dẫn đến hết quả đang gửi một transaction mà nó sẽ mất hàng giờ hoặc ngày (hoặc chẳng bao giờ) được confirm. Suy nghĩ chọn fee của bạn bình thường hoặc chờ cho đến khi validated hoàn thành chain.</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 chuffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 chuffs in fee,&lt;br /&gt;while "at least" pays 1000 chuffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Nếu phí tùy chỉnh được đặt thành 1000 chuff và giao dịch chỉ là 250 byte, thì "mỗi kilobyte" chỉ trả 250 chuff phí, &lt;br /&gt;trong khi "ít nhất" trả 1000 chuffs. Đối với các giao dịch lớn hơn một kilobyte cả thanh toán bằng kilobyte.</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for chaincoin transactions than the network can process.</source>
+        <translation>Chỉ cần trả tiền lệ phí tối thiểu là miễn là có khối lượng giao dịch ít hơn không gian trong các khối. &lt;br /&gt;Nhưng hãy lưu ý rằng điều này có thể kết thúc trong một giao dịch không bao giờ xác nhận khi có nhu cầu nhiều hơn cho các giao dịch chaincoin so với mạng có thể xử lý.</translation>
+    </message>
+    <message>
+        <source>&amp;Recommended:</source>
+        <translation>&amp;Khuyên dùng:</translation>
+    </message>
+    <message>
+        <source>&amp;Custom:</source>
+        <translation>&amp;Tập quán:</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>Thời gian xác nhận:</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
-        <translation>Clear &amp;All</translation>
+        <translation>Làm sạch tất cả</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation>PrivateSend</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -1980,6 +2826,22 @@
         <translation>%1 (%2 blocks)</translation>
     </message>
     <message>
+        <source>using</source>
+        <translation>Đang dùng</translation>
+    </message>
+    <message>
+        <source>anonymous funds</source>
+        <translation>quỹ ẩn danh</translation>
+    </message>
+    <message>
+        <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
+        <translation>(privatesend yêu cầu số tiền này được làm tròn lên đến %1 gần nhất).</translation>
+    </message>
+    <message>
+        <source>any available funds (not anonymous)</source>
+        <translation>mọi khoản tiền khả dụng (không ẩn danh)</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 đến%2</translation>
     </message>
@@ -1998,6 +2860,14 @@
     <message>
         <source>or</source>
         <translation>hoặc</translation>
+    </message>
+    <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>Bạn có thể tăng phí sau (tín hiệu Thay thế-By-Phí, BIP-125).</translation>
+    </message>
+    <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Không báo hiệu Thay thế-by-phí, BIP-125.</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2048,6 +2918,10 @@
         <translation><numerusform>Dự kiến bắt đầu xác nhận trong vòng %n blocks.</numerusform></translation>
     </message>
     <message>
+        <source>Warning: Invalid Chaincoin address</source>
+        <translation>Cảnh báo: Địa chỉ Chaincoin không hợp lệ</translation>
+    </message>
+    <message>
         <source>Warning: Unknown change address</source>
         <translation>Warning: Không biết change address</translation>
     </message>
@@ -2073,6 +2947,10 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Pay &amp;To:</translation>
+    </message>
+    <message>
+        <source>The Chaincoin address to send the payment to</source>
+        <translation>Địa chỉ Chaincoin để gửi thanh toán đến</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -2103,12 +2981,24 @@
         <translation>Xóa bỏ entry này</translation>
     </message>
     <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Chaincoin than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Lệ phí sẽ được khấu trừ từ số tiền được gửi. Người nhận sẽ nhận được số lượng Chaincoin thấp hơn số tiền bạn nhập vào trường số tiền. Nếu nhiều người nhận được chọn, lệ phí sẽ được chia đều.</translation>
+    </message>
+    <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>S&amp;ubtract fee từ amount</translation>
     </message>
     <message>
+        <source>Use available balance</source>
+        <translation>Sử dụng số dư khả dụng</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>Tin nhắn:</translation>
+    </message>
+    <message>
+        <source>A message that was attached to the chaincoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Chaincoin network.</source>
+        <translation>Một thông điệp được gắn với chaincoin: URI sẽ được lưu trữ cùng với giao dịch để bạn tham khảo. Lưu ý: Thông báo này sẽ không được gửi qua mạng Chaincoin.</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -2145,6 +3035,10 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
+        <source>Chaincoin Core is shutting down...</source>
+        <translation>Chaincoin Core đang tắt ...</translation>
+    </message>
+    <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Đừng tắt máy tính đến khi cửa sổ này đóng.</translation>
     </message>
@@ -2158,6 +3052,14 @@
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Sign Tin nhắn</translation>
+    </message>
+    <message>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Chaincoin sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>Bạn có thể ký/đồng ý với địa chỉ chứng minh bạn có thể receive Chaincoin đã gửi đến chúng. Cẩn thận không ký bất cứ không rõ hay random, như các cuộc tấn công lừa đảo có thể cố lừa bạn ký tên vào danh tính của bạn.. Chỉ ký các bản tuyên bố hoàn chỉnh mà bạn đồng ý.</translation>
+    </message>
+    <message>
+        <source>The Chaincoin address to sign the message with</source>
+        <translation>Địa chỉ Chaincoin để ký thông báo</translation>
     </message>
     <message>
         <source>Choose previously used address</source>

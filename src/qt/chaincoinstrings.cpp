@@ -222,17 +222,14 @@ QT_TRANSLATE_NOOP("chaincoin-core", ""
 "This is the transaction fee you may pay when fee estimates are not available."),
 QT_TRANSLATE_NOOP("chaincoin-core", ""
 "This product includes software developed by the OpenSSL Project for use in "
-"the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software "
-"written by Eric Young and UPnP software written by Thomas Bernard."),
+"the OpenSSL Toolkit %s and cryptographic software written by Eric Young and "
+"UPnP software written by Thomas Bernard."),
 QT_TRANSLATE_NOOP("chaincoin-core", ""
 "Total length of network version string (%i) exceeds maximum length (%i). "
 "Reduce the number or size of uacomments."),
 QT_TRANSLATE_NOOP("chaincoin-core", ""
 "Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = "
 "no limit (default: %d)"),
-QT_TRANSLATE_NOOP("chaincoin-core", ""
-"Unable to bind to %s on this computer. Chaincoin Core is probably already "
-"running."),
 QT_TRANSLATE_NOOP("chaincoin-core", ""
 "Unable to locate enough PrivateSend denominated funds for this transaction."),
 QT_TRANSLATE_NOOP("chaincoin-core", ""
@@ -404,7 +401,7 @@ QT_TRANSLATE_NOOP("chaincoin-core", "Incompatible mode."),
 QT_TRANSLATE_NOOP("chaincoin-core", "Incompatible version."),
 QT_TRANSLATE_NOOP("chaincoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
 QT_TRANSLATE_NOOP("chaincoin-core", "Information"),
-QT_TRANSLATE_NOOP("chaincoin-core", "Initialization sanity check failed. Chaincoin Core is shutting down."),
+QT_TRANSLATE_NOOP("chaincoin-core", "Initialization sanity check failed. %s is shutting down."),
 QT_TRANSLATE_NOOP("chaincoin-core", "Input is not valid."),
 QT_TRANSLATE_NOOP("chaincoin-core", "Insufficient funds."),
 QT_TRANSLATE_NOOP("chaincoin-core", "Invalid -onion address or hostname: '%s'"),
@@ -542,6 +539,7 @@ QT_TRANSLATE_NOOP("chaincoin-core", "Transaction too large for fee policy"),
 QT_TRANSLATE_NOOP("chaincoin-core", "Transaction too large"),
 QT_TRANSLATE_NOOP("chaincoin-core", "Trying to connect..."),
 QT_TRANSLATE_NOOP("chaincoin-core", "Unable to bind to %s on this computer (bind returned error %s)"),
+QT_TRANSLATE_NOOP("chaincoin-core", "Unable to bind to %s on this computer. %s is probably already running."),
 QT_TRANSLATE_NOOP("chaincoin-core", "Unable to generate initial keys"),
 QT_TRANSLATE_NOOP("chaincoin-core", "Unable to start HTTP server. See debug log for details."),
 QT_TRANSLATE_NOOP("chaincoin-core", "Unknown address type '%s'"),

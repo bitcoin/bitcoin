@@ -418,7 +418,7 @@
                </font>
               </property>
               <property name="text">
-               <string>PrivateSend (BETA!)</string>
+               <string>PrivateSend</string>
               </property>
              </widget>
             </item>
