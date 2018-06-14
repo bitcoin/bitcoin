@@ -1026,7 +1026,8 @@ UniValue omni_getcrowdsale(const UniValue& params, bool fHelp)
             "  \"deadline\" : nnnnnnnnnn,              (number) the deadline of the crowdsale as Unix timestamp\n"
             "  \"amountraised\" : \"n.nnnnnnnn\",        (string) the amount of tokens invested by participants\n"
             "  \"tokensissued\" : \"n.nnnnnnnn\",        (string) the total number of tokens issued via the crowdsale\n"
-            "  \"addedissuertokens\" : \"n.nnnnnnnn\",   (string) the amount of tokens granted to the issuer as bonus\n"
+            "  \"issuerbonustokens\" : \"n.nnnnnnnn\",   (string) the amount of tokens granted to the issuer as bonus\n"
+            "  \"addedissuertokens\" : \"n.nnnnnnnn\",   (string) the amount of issuer bonus tokens not yet emitted\n"
             "  \"closedearly\" : true|false,           (boolean) whether the crowdsale ended early (if not active)\n"
             "  \"maxtokens\" : true|false,             (boolean) whether the crowdsale ended early due to reaching the limit of max. issuable tokens (if not active)\n"
             "  \"endedtime\" : nnnnnnnnnn,             (number) the time when the crowdsale ended (if closed early)\n"
@@ -1101,6 +1102,7 @@ UniValue omni_getcrowdsale(const UniValue& params, bool fHelp)
 
     // note the database is already deserialized here and there is minimal performance penalty to iterate recipients to calculate amountRaised
     int64_t amountRaised = 0;
+    int64_t amountIssuerTokens = 0;
     uint16_t propertyIdType = isPropertyDivisible(propertyId) ? MSC_PROPERTY_TYPE_DIVISIBLE : MSC_PROPERTY_TYPE_INDIVISIBLE;
     uint16_t desiredIdType = isPropertyDivisible(sp.property_desired) ? MSC_PROPERTY_TYPE_DIVISIBLE : MSC_PROPERTY_TYPE_INDIVISIBLE;
     std::map<std::string, UniValue> sortMap;
@@ -1108,6 +1110,7 @@ UniValue omni_getcrowdsale(const UniValue& params, bool fHelp)
         UniValue participanttx(UniValue::VOBJ);
         std::string txid = it->first.GetHex();
         amountRaised += it->second.at(0);
+        amountIssuerTokens += it->second.at(3);
         participanttx.push_back(Pair("txid", txid));
         participanttx.push_back(Pair("amountsent", FormatByType(it->second.at(0), desiredIdType)));
         participanttx.push_back(Pair("participanttokens", FormatByType(it->second.at(2), propertyIdType)));
@@ -1128,7 +1131,8 @@ UniValue omni_getcrowdsale(const UniValue& params, bool fHelp)
     response.push_back(Pair("deadline", sp.deadline));
     response.push_back(Pair("amountraised", FormatMP(sp.property_desired, amountRaised)));
     response.push_back(Pair("tokensissued", FormatMP(propertyId, tokensIssued)));
-    response.push_back(Pair("addedissuertokens", FormatMP(propertyId, sp.missedTokens)));
+    response.push_back(Pair("issuerbonustokens", FormatMP(propertyId, amountIssuerTokens)));
+    response.push_back(Pair("addedissuertokens", FormatMP(propertyId, sp.missedTokens)));    
 
     // TODO: return fields every time?
     if (!active) response.push_back(Pair("closedearly", sp.close_early));
