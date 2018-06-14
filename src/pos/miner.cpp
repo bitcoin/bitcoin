@@ -356,6 +356,12 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<std::shared_ptr<CWallet>> &v
         {
             auto pwallet = GetParticlWallet(vpwallets[i].get());
 
+            if (!pwallet->fStakingEnabled)
+            {
+                pwallet->nIsStaking = CHDWallet::NOT_STAKING_DISABLED;
+                continue;
+            };
+
             if (nSearchTime <= pwallet->nLastCoinStakeSearchTime)
             {
                 nWaitFor = std::min(nWaitFor, (size_t)nMinerSleep);

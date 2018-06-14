@@ -28,6 +28,7 @@
 #include <anon.h>
 #include <txdb.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <wallet/fees.h>
 #include <walletinitinterface.h>
 #include <wallet/walletutil.h>
@@ -282,6 +283,8 @@ bool CHDWallet::ProcessStakingSettings(std::string &sError)
 {
     LogPrint(BCLog::HDWALLET, "ProcessStakingSettings\n");
 
+    // Set defaults
+    fStakingEnabled = true;
     nStakeCombineThreshold = 1000 * COIN;
     nStakeSplitThreshold = 2000 * COIN;
     nMaxStakeCombine = 3;
@@ -290,11 +293,19 @@ bool CHDWallet::ProcessStakingSettings(std::string &sError)
     UniValue json;
     if (GetSetting("stakingoptions", json))
     {
+        if (!json["enabled"].isNull())
+        {
+            try { fStakingEnabled = GetBool(json["enabled"]);
+            } catch (std::exception &e) {
+                sError = "Setting \"enabled\" failed.";
+            };
+        };
+
         if (!json["stakecombinethreshold"].isNull())
         {
             try { nStakeCombineThreshold = AmountFromValue(json["stakecombinethreshold"]);
             } catch (std::exception &e) {
-                sError = "stakecombinethreshold not amount.";
+                sError = "\"stakecombinethreshold\" not amount.";
             };
         };
 
@@ -302,7 +313,7 @@ bool CHDWallet::ProcessStakingSettings(std::string &sError)
         {
             try { nStakeSplitThreshold = AmountFromValue(json["stakesplitthreshold"]);
             } catch (std::exception &e) {
-                sError = "stakesplitthreshold not amount.";
+                sError = "\"stakesplitthreshold\" not amount.";
             };
         };
 
@@ -310,7 +321,7 @@ bool CHDWallet::ProcessStakingSettings(std::string &sError)
         {
             try { nWalletDevFundCedePercent = json["foundationdonationpercent"].get_int();
             } catch (std::exception &e) {
-                sError = "foundationdonationpercent not integer.";
+                sError = "\"foundationdonationpercent\" not integer.";
             };
         };
 
@@ -318,31 +329,31 @@ bool CHDWallet::ProcessStakingSettings(std::string &sError)
         {
             try { rewardAddress = CBitcoinAddress(json["rewardaddress"].get_str());
             } catch (std::exception &e) {
-                sError = "Setting rewardaddress failed.";
+                sError = "Setting \"rewardaddress\" failed.";
             };
         };
     };
 
     if (nStakeCombineThreshold < 100 * COIN || nStakeCombineThreshold > 5000 * COIN)
     {
-        sError = "stakecombinethreshold must be >= 100 and <= 5000.";
+        sError = "\"stakecombinethreshold\" must be >= 100 and <= 5000.";
         nStakeCombineThreshold = 1000 * COIN;
     };
 
     if (nStakeSplitThreshold < nStakeCombineThreshold * 2 || nStakeSplitThreshold > 10000 * COIN)
     {
-        sError = "stakesplitthreshold must be >= 2x stakecombinethreshold and <= 10000.";
+        sError = "\"stakesplitthreshold\" must be >= 2x \"stakecombinethreshold\" and <= 10000.";
         nStakeSplitThreshold = nStakeCombineThreshold * 2;
     };
 
     if (nWalletDevFundCedePercent < 0)
     {
-        LogPrintf("%s: Warning foundationdonationpercent out of range %d, clamped to %d\n", nWalletDevFundCedePercent, 0);
+        LogPrintf("%s: Warning \"foundationdonationpercent\" out of range %d, clamped to %d\n", nWalletDevFundCedePercent, 0);
         nWalletDevFundCedePercent = 0;
     } else
     if (nWalletDevFundCedePercent > 100)
     {
-        LogPrintf("%s: Warning foundationdonationpercent out of range %d, clamped to %d\n", nWalletDevFundCedePercent, 100);
+        LogPrintf("%s: \"Warning foundationdonationpercent\" out of range %d, clamped to %d\n", nWalletDevFundCedePercent, 100);
         nWalletDevFundCedePercent = 100;
     };
 

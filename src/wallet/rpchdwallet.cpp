@@ -3924,7 +3924,7 @@ static UniValue getstakinginfo(const JSONRPCRequest &request)
     bool fStaking = nWeight && fIsStaking;
     uint64_t nExpectedTime = fStaking ? (Params().GetTargetSpacing() * nNetworkWeight / nWeight) : 0;
 
-    obj.pushKV("enabled", gArgs.GetBoolArg("-staking", true));
+    obj.pushKV("enabled", gArgs.GetBoolArg("-staking", true)); // enabled on node, vs enabled on wallet
     obj.pushKV("staking", fStaking && pwallet->nIsStaking == CHDWallet::IS_STAKING);
     switch (pwallet->nIsStaking)
     {
@@ -3939,6 +3939,9 @@ static UniValue getstakinginfo(const JSONRPCRequest &request)
             break;
         case CHDWallet::NOT_STAKING_LIMITED:
             obj.pushKV("cause", "limited");
+            break;
+        case CHDWallet::NOT_STAKING_DISABLED:
+            obj.pushKV("cause", "disabled");
             break;
         default:
             break;
@@ -5716,22 +5719,28 @@ static UniValue walletsettings(const JSONRPCRequest &request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "walletsettings \"setting\" json\n"
+            "walletsettings \"setting\" {...}\n"
             "\nManage wallet settings.\n"
             + HelpRequiringPassphrase(pwallet) +
-            "\nchangeaddress {\"address_standard\":,\"coldstakingaddress\":}.\n"
-            "   - \"address_standard\": Change address for standard inputs.\n"
-            "   - \"coldstakingaddress\": Cold staking address for standard inputs.\n"
-            "\nstakingoptions {\"stakecombinethreshold\":str,\"stakesplitthreshold\":str,\"foundationdonationpercent\":int,\"rewardaddress\":str}.\n"
-            "   - \"stakecombinethreshold\": Join outputs below this value.\n"
-            "   - \"stakesplitthreshold\": Split outputs above this value.\n"
-            "   - \"foundationdonationpercent\": Set the percentage of each block reward to donate to the foundation.\n"
-            "   - \"rewardaddress\": An address which the user portion of the block reward gets sent to.\n"
-            "\nstakelimit {\"height\":int}.\n"
-            "   Don't stake above height, used in functional testing.\n"
-            "\nUse an empty json object to clear the setting."
-            "\nstakelimit {}.\n"
-
+            "\nArguments:\n"
+            "1. \"setting\"                    (string, required) Settings group to modify.\n"
+            "2. \"value\"                      (json, optional) Settings.\n"
+            "\"changeaddress\" {\n"
+            "  \"address_standard\"          (string, optional, default=none) Change address for standard inputs.\n"
+            "  \"coldstakingaddress\"        (string, optional, default=none) Cold staking address for standard inputs.\n"
+            "}\n"
+            "\"stakingoptions\" {\n"
+            "  \"enabled\"                   (bool, optional, default=true) Toggle staking enabled on this wallet.\n"
+            "  \"stakecombinethreshold\"     (amount, optional, default=1000) Join outputs below this value.\n"
+            "  \"stakesplitthreshold\"       (amount, optional, default=2000) Split outputs above this value.\n"
+            "  \"foundationdonationpercent\" (int, optional, default=0) Set the percentage of each block reward to donate to the foundation.\n"
+            "  \"rewardaddress\"             (string, optional, default=none) An address which the user portion of the block reward gets sent to.\n"
+            "}\n"
+            "\"stakelimit\" {\n"
+            "  \"height\"                    (int, optional, default=0) Prevent staking above chain height, used in functional testing.\n"
+            "}\n"
+            "Omit the json object to print the settings group.\n"
+            "Pass an empty json object to clear the settings group.\n"
             "\nExamples\n"
             "Set coldstaking changeaddress extended public key:\n"
             + HelpExampleCli("walletsettings", "changeaddress \"{\\\"coldstakingaddress\\\":\\\"extpubkey\\\"}\"") + "\n"
@@ -5859,9 +5868,11 @@ static UniValue walletsettings(const JSONRPCRequest &request)
 
             UniValue jsonOld;
             bool fHaveOldSetting = pwallet->GetSetting(sSetting, jsonOld);
-
             for (const auto &sKey : vKeys)
             {
+                if (sKey == "enabled")
+                {
+                } else
                 if (sKey == "stakecombinethreshold")
                 {
                     CAmount test = AmountFromValue(json["stakecombinethreshold"]);

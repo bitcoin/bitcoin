@@ -736,7 +736,6 @@ public:
     int64_t nReserveBalance;
     size_t nStakeThread = 9999999; // unset
     mutable int deepestTxnDepth = 0; // for stake mining
-    int nStakeLimitHeight = 0; // for regtest, don't stake above nStakeLimitHeight
 
     enum eStakingState {
         NOT_STAKING = 0,
@@ -745,6 +744,7 @@ public:
         NOT_STAKING_DEPTH = -2,
         NOT_STAKING_LOCKED = -3,
         NOT_STAKING_LIMITED = -4,
+        NOT_STAKING_DISABLED = -5,
     } nIsStaking = NOT_STAKING;
 
     std::set<CStealthAddress> stealthAddresses;
@@ -758,16 +758,18 @@ public:
 
     MapRecords_t mapRecords;
     RtxOrdered_t rtxOrdered;
-    mutable MapRecords_t mapTempRecords; // hack for sending unmined inputs through fundrawtransactionfrom
+    mutable MapRecords_t mapTempRecords; // Hack for sending unmined inputs through fundrawtransactionfrom
 
     std::vector<CVoteToken> vVoteTokens;
 
     // Staking Settings
+    bool fStakingEnabled;
     CAmount nStakeCombineThreshold;
     CAmount nStakeSplitThreshold;
     size_t nMaxStakeCombine = 3;
     int nWalletDevFundCedePercent;
     CBitcoinAddress rewardAddress;
+    int nStakeLimitHeight = 0; // for regtest, don't stake above nStakeLimitHeight
 
 
     bool fUnlockForStakingOnly = false; // Use coldstaking instead
