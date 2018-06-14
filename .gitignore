@@ -121,11 +121,8 @@ qa/pull-tester/tests_config.py
 qa/pull-tester/cache/*
 qa/pull-tester/test.*/*
 qa/tmp
-<<<<<<< HEAD
-=======
 cache/
 share/BitcoindComparisonTool.jar
->>>>>>> 0.13
 
 !src/leveldb*/Makefile
 
