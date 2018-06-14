@@ -57,34 +57,9 @@ When new plurals are added to the source file, it's important to do the followin
 
 ##### Creating the pull-request
 
-The updated source file should be merged to github and Transifex will pick it
-up from there (this can take several hours). Afterwards the new strings show up as "Remaining"
-in Transifex and can be translated.
+The updated source file should be merged to github.
 
 Commands to create the pull-request:
 
     git add src/qt/crownstrings.cpp src/qt/locale/crown_en.ts
     git commit
-
-Syncing with Transifex
-----------------------
-
-We are using https://transifex.com as a frontend for translating the client.
-
-URL: https://www.transifex.com/crowncoin/crowncoin/
-
-The "Transifex client" (see: http://support.transifex.com/customer/portal/topics/440187-transifex-client/articles)
-is used to sync new translations from Transifex. The configuration for this client (`.tx/config`)
-is part of the repository.
-
-Do not directly download translations one by one from the Transifex website, as we do a few
-postprocessing steps before committing the translations.
-
-### Fetching new translations
-
-1. `python contrib/devtools/update-translations.py`
-2. update `src/qt/crown.qrc` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(crown_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'`
-3. update `src/Makefile.qt.include` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(crown_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'`
-4. `git add` new translations from `src/qt/locale/`
