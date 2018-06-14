@@ -44,6 +44,7 @@ CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CAssetDB *passetdb = NULL;
 CAssetAllocationDB *passetallocationdb = NULL;
+CAssetAllocationTransactionsDB *passetallocationtransactionsdb = NULL;
 typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
 typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
 mapAliasRegistrationsType mapAliasRegistrations;
@@ -215,7 +216,7 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
 }
 
 
-bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
+bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
@@ -276,8 +277,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
 			int pop;
-			if (!GetUTXOCoin(tx.vin[i].prevout, prevCoins))
+			prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
+			if (prevCoins.IsSpent()) {
 				continue;
+			}
+	
 			// ensure inputs are unspent when doing consensus check to add to block
 			if(!DecodeAliasScript(prevCoins.out.scriptPubKey, pop, vvch))
 			{
@@ -295,11 +299,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				vector<vector<unsigned char> > vvch;
 				int pop;
-				Coin prevCoins;
-				if (!GetUTXOCoin(tx.vin[i].prevout, prevCoins))
+				const Coin& prevCoinsW = inputs.AccessCoin(tx.vin[i].prevout);
+				if (prevCoinsW.IsSpent()) {
 					continue;
+				}
 				// ensure inputs are unspent when doing consensus check to add to block
-				if (!DecodeAliasScript(prevCoins.out.scriptPubKey, pop, vvch))
+				if (!DecodeAliasScript(prevCoinsW.out.scriptPubKey, pop, vvch))
 				{
 					continue;
 				}
@@ -773,6 +778,80 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
     }
 	return true;
 }
+bool FlushSyscoinDBs() {
+	{
+		LOCK(cs_alias);
+		if (paliasdb != NULL)
+		{
+			if (!paliasdb->Flush()) {
+				LogPrintf("Failed to write to alias database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_offer);
+		if (pofferdb != NULL)
+		{
+			if (!pofferdb->Flush()) {
+				LogPrintf("Failed to write to offer database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_cert);
+		if (pcertdb != NULL)
+		{
+			if (!pcertdb->Flush()) {
+				LogPrintf("Failed to write to cert database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_escrow);
+		if (pescrowdb != NULL)
+		{
+			if (!pescrowdb->Flush()) {
+				LogPrintf("Failed to write to escrow database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_asset);
+		if (passetdb != NULL)
+		{
+			if (!passetdb->Flush()) {
+				LogPrintf("Failed to write to asset database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_assetallocation);
+		if (passetallocationdb != NULL)
+		{
+			if (!passetallocationdb->Flush()) {
+				LogPrintf("Failed to write to asset allocation database!");
+				return false;
+			}
+		}
+	}
+	{
+		LOCK(cs_assetallocationindex);
+		if (passetallocationtransactionsdb != NULL)
+		{
+			passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(AssetAllocationIndex);
+			if (!passetallocationtransactionsdb->Flush()) {
+				LogPrintf("Failed to write to asset allocation transactions database!");
+				return false;
+			}
+		}
+	}
+	return true;
+}
 void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 {
 	if(pofferdb != NULL)
@@ -783,48 +862,18 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		pcertdb->CleanupDatabase(numServicesCleaned);
 	if (paliasdb != NULL) 
 		paliasdb->CleanupDatabase(numServicesCleaned);
-	
-	if(paliasdb != NULL)
-	{
-		if (!paliasdb->Flush())
-			LogPrintf("Failed to write to alias database!");
-	}
-	if(pofferdb != NULL)
-	{
-		if (!pofferdb->Flush())
-			LogPrintf("Failed to write to offer database!");
-	}
-	if(pcertdb != NULL)
-	{
-		if (!pcertdb->Flush())
-			LogPrintf("Failed to write to cert database!");
-	}
-	if(pescrowdb != NULL)
-	{
-		if (!pescrowdb->Flush())
-			LogPrintf("Failed to write to escrow database!");
-	}
-	if (passetdb != NULL)
-	{
-		if (!passetdb->Flush())
-			LogPrintf("Failed to write to asset database!");
-	}
-	if (passetallocationdb != NULL)
-	{
-		if (!passetallocationdb->Flush())
-			LogPrintf("Failed to write to asset allocation database!");
-	}
+	FlushSyscoinDBs();
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
 	CAliasIndex& txPos) {
-	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos))
+	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos)) {
 		return false;
+	}
 	
 	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
 		txPos.SetNull();
 		return false;
-	}
-	
+	}	
 	return true;
 }
 bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey) {
@@ -929,12 +978,13 @@ bool DecodeAliasTx(const CTransaction& tx, int& op,
 
 	return found;
 }
-bool FindAliasInTx(const CTransaction& tx, vector<vector<unsigned char> >& vvch) {
+bool FindAliasInTx(const CCoinsViewCache &inputs, const CTransaction& tx, vector<vector<unsigned char> >& vvch) {
 	int op;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		Coin prevCoins;
-		if (!GetUTXOCoin(tx.vin[i].prevout, prevCoins))
+		const Coin& prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
+		if (prevCoins.IsSpent()) {
 			continue;
+		}
 		// ensure inputs are unspent when doing consensus check to add to block
 		if (DecodeAliasScript(prevCoins.out.scriptPubKey, op, vvch)) {
 			return true;
@@ -1051,21 +1101,25 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 }
 
 void CAliasDB::WriteAliasIndex(const CAliasIndex& alias, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
-	CSyscoinAddress address(EncodeBase58(alias.vchAddress));
-	oName.push_back(Pair("address", address.ToString()));
-	oName.push_back(Pair("expires_on", alias.nExpireTime));
-	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
-	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliasrecord");
+	if (IsArgSet("-zmqpubaliasrecord")) {
+		UniValue oName(UniValue::VOBJ);
+		oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
+		CSyscoinAddress address(EncodeBase58(alias.vchAddress));
+		oName.push_back(Pair("address", address.ToString()));
+		oName.push_back(Pair("expires_on", alias.nExpireTime));
+		oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
+		oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliasrecord");
+	}
 	WriteAliasIndexHistory(alias, op);
 }
 void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
-	UniValue oName(UniValue::VOBJ);
-	BuildAliasIndexerHistoryJson(alias, oName);
-	oName.push_back(Pair("op", aliasFromOp(op)));
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliashistory");
+	if (IsArgSet("-zmqpubaliashistory")) {
+		UniValue oName(UniValue::VOBJ);
+		BuildAliasIndexerHistoryJson(alias, oName);
+		oName.push_back(Pair("op", aliasFromOp(op)));
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliashistory");
+	}
 }
 bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const unsigned int& nHeight, const string &type, const string &guid, UniValue& oName)
 {
@@ -1086,9 +1140,11 @@ bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, co
 	return true;
 }
 void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const unsigned int& nHeight, const string &type, const string &guid) {
-	UniValue oName(UniValue::VOBJ);
-	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
-	GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
+	if (IsArgSet("-zmqpubaliastxhistory")) {
+		UniValue oName(UniValue::VOBJ);
+		BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
+		GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "aliastxhistory");
+	}
 }
 UniValue SyscoinListReceived(bool includeempty=true)
 {
@@ -1096,6 +1152,8 @@ UniValue SyscoinListReceived(bool includeempty=true)
 		return NullUniValue;
 	map<string, int> mapAddress;
 	UniValue ret(UniValue::VARR);
+	std::set<CKeyID> setKeyPool;
+	pwalletMain->GetAllReserveKeys(setKeyPool);
 	BOOST_FOREACH(const PAIRTYPE(CSyscoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
 	{
 		const CSyscoinAddress& address = item.first;
@@ -1128,6 +1186,12 @@ UniValue SyscoinListReceived(bool includeempty=true)
 			obj.push_back(Pair("balance", ValueFromAmount(nBalance)));
 			obj.push_back(Pair("label", strAccount));
 			obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+			CKeyID keyid;
+			if (address.GetKeyID(keyid) && !pwalletMain->mapAddressBook.count(keyid) && !setKeyPool.count(keyid)) {
+				obj.push_back(Pair("change", true));
+			}
+			else
+				obj.push_back(Pair("change", false));
 			ret.push_back(obj);
 		}
 		mapAddress[strAddress] = 1;
@@ -1169,6 +1233,12 @@ UniValue SyscoinListReceived(bool includeempty=true)
 			obj.push_back(Pair("balance", ValueFromAmount(nBalance)));
 			obj.push_back(Pair("label", ""));
 			obj.push_back(Pair("alias", stringFromVch(vchMyAlias)));
+			CKeyID keyid;
+			if (sysAddress.GetKeyID(keyid) && !pwalletMain->mapAddressBook.count(keyid) && !setKeyPool.count(keyid)) {
+				obj.push_back(Pair("change", true));
+			}
+			else
+				obj.push_back(Pair("change", false));
 			ret.push_back(obj);
 		}
 		mapAddress[strAddress] = 1;
@@ -1339,18 +1409,18 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 		throw runtime_error(_("InstantSend doesn't support sending values that high yet. Transactions are currently limited to 100000 SYS."));
 	}
 	CAmount nCurrentAmount = 0;
-	{
-		LOCK(cs_main);
-		CCoinsViewCache view(pcoinsTip);
-		// get value of inputs
-		nCurrentAmount = view.GetValueIn(txIn_t);
-	}
+	
+	LOCK(cs_main);
+	CCoinsViewCache view(pcoinsTip);
+	// get value of inputs
+	nCurrentAmount = view.GetValueIn(txIn_t);
+	
 	int op, aliasOp;
 	vector<vector<unsigned char> > vvch;
 	vector<vector<unsigned char> > vvchAlias;
 	if (tx.nVersion == SYSCOIN_TX_VERSION && !DecodeAliasTx(tx, op, vvchAlias))
 	{
-		FindAliasInTx(tx, vvchAlias);
+		FindAliasInTx(view, tx, vvchAlias);
 		// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 		op = OP_ALIAS_UPDATE;
 
@@ -1464,7 +1534,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	}
 	const CAmount &nChange = nCurrentAmount - nDesiredAmount - nFees;
 	if (nChange < 0)
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5502 - " + _("Insufficient funds inside the alias for this transaction"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5502 - " + _("Insufficient funds"));
 	// if addresses were passed in, send change back to the last address as policy
 	if (params.size() > 1) {
 		UniValue addressValues = find_value(addresses, "addresses");
@@ -1489,9 +1559,9 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION) {
 		// call this twice, with fJustCheck and !fJustCheck both with bSanity enabled so it doesn't actually write out to the databases just does the checks
-		if (!CheckSyscoinInputs(tx, state, true, 0, CBlock(), true))
+		if (!CheckSyscoinInputs(tx, state, view, true, 0, CBlock(), true))
 			throw runtime_error(FormatStateMessage(state));
-		if (!CheckSyscoinInputs(tx, state, false, 0, CBlock(), true))
+		if (!CheckSyscoinInputs(tx, state, view, false, 0, CBlock(), true))
 			throw runtime_error(FormatStateMessage(state));
 	}
 	// pass back new raw transaction
@@ -1534,12 +1604,12 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	if (find_first(strName, "."))
 	{
 		if (!regex_search(strName, nameparts, domainwithtldregex) || string(nameparts[0]) != strName)
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters"));
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters"));
 	}
 	else
 	{
 		if (!regex_search(strName, nameparts, domainwithouttldregex) || string(nameparts[0]) != strName)
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes"));
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes"));
 	}
 
 
@@ -1568,7 +1638,14 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	strEncryptionPublicKey = params[6].get_str();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[7]);
-
+	if (!fUnitTest) {
+		
+		if (strEncryptionPrivateKey.empty() || strEncryptionPublicKey.empty())
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("Encryption keys cannot be empty"));
+		CPubKey vchPubKey(ParseHex(strEncryptionPublicKey));
+		if(!vchPubKey.IsFullyValid())
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("Public encryption key is invalid"));
+	}
 	CMutableTransaction tx;
 	tx.nVersion = SYSCOIN_TX_VERSION;
 	tx.vin.clear();
@@ -1968,7 +2045,41 @@ UniValue prunesyscoinservices(const JSONRPCRequest& request)
 	CleanupSyscoinServiceDatabases(servicesCleaned);
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("services_cleaned", servicesCleaned));
+	if (fDebug)
+		LogPrintf("prunesyscoinservices # cleaned: %d\n", servicesCleaned);
 	return res;
+}
+UniValue aliasbalancemulti(const JSONRPCRequest& request)
+{
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() < 1 || params.size() > 2)
+		throw runtime_error(
+			"aliasbalancemulti { \"aliases\" : [\"aliasname1\",\"aliasname2\",...] } instantsend\n"
+			"\nReturns an array of balances based on an array of aliases passed in, internally calls aliasbalance for each alias.\n"
+			"\nArguments:\n"
+			"1. \"aliases\"  (array, required) The syscoin aliases to find balances for. Must be an array.\n"
+			"2. \"instantsend\"  (boolean, optional) Check for balance available to instant send. Default is false.\n"
+		);
+	UniValue resArray(UniValue::VARR);
+	UniValue aliases = find_value(params[0].get_obj(), "aliases").get_array();
+	bool fUseInstantSend = false;
+	if (params.size() > 1)
+		fUseInstantSend = params[1].get_bool();
+	for (unsigned int idx = 0; idx < aliases.size(); idx++) {
+		const UniValue& alias = aliases[idx];
+		if (alias.isStr()) {
+			string aliasStr = alias.get_str();
+			JSONRPCRequest request;
+			UniValue requestArray(UniValue::VARR);
+			requestArray.push_back(aliasStr);
+			requestArray.push_back(fUseInstantSend);
+			request.params = requestArray;
+			UniValue resBalance = aliasbalance(request);
+			resBalance.push_back(Pair("alias", aliasStr));
+			resArray.push_back(resBalance);
+		}
+	}
+	return resArray;
 }
 UniValue aliasbalance(const JSONRPCRequest& request)
 {
@@ -1993,7 +2104,7 @@ UniValue aliasbalance(const JSONRPCRequest& request)
 		res.push_back(Pair("balance", ValueFromAmount(nAmount)));
 		return  res;
 	}
-
+	LOCK(cs_main);
 	const string &strAddressFrom = EncodeBase58(theAlias.vchAddress);
 	UniValue paramsUTXO(UniValue::VARR);
 	UniValue param(UniValue::VOBJ);
@@ -2080,6 +2191,7 @@ bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName)
 		}
 	}
 	oName.push_back(Pair("time", nTime));
+	oName.push_back(Pair("height", (int)alias.nHeight));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
 	oName.push_back(Pair("accepttransferflags", (int)alias.nAcceptTransferFlags));
 	expired_time = alias.nExpireTime;
@@ -2104,6 +2216,7 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 		}
 	}
 	oName.push_back(Pair("time", nTime));
+	oName.push_back(Pair("height", (int)alias.nHeight));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
 	oName.push_back(Pair("accepttransferflags", (int)alias.nAcceptTransferFlags));
 	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
@@ -2496,135 +2609,149 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 }
 string GetSyscoinTransactionDescription(const CTransaction& tx, const int op, string& responseEnglish, const char &type, string& responseGUID)
 {
+	if (tx.IsNull()) {
+		return "Null Tx";
+	}
 	string strResponse = "";
-	if (op == OP_ALIAS_ACTIVATE) {
-		strResponse = _("Alias Activated");
-		responseEnglish = "Alias Activated";
-	}
-	else if (op == OP_ALIAS_UPDATE) {
-		strResponse = _("Alias Updated");
-		responseEnglish = "Alias Updated";
-	}
-	else if (op == OP_OFFER_ACTIVATE) {
-		strResponse = _("Offer Activated");
-		responseEnglish = "Offer Activated";
-	}
-	else if (op == OP_OFFER_UPDATE) {
-		strResponse = _("Offer Updated");
-		responseEnglish = "Offer Updated";
-	}
-	else if (op == OP_CERT_ACTIVATE) {
-		strResponse = _("Certificate Activated");
-		responseEnglish = "Certificate Activated";
-	}
-	else if (op == OP_CERT_UPDATE) {
-		strResponse = _("Certificate Updated");
-		responseEnglish = "Certificate Updated";
-	}
-	else if (op == OP_CERT_TRANSFER) {
-		strResponse = _("Certificate Transferred");
-		responseEnglish = "Certificate Transferred";
-	}
-	else if (op == OP_ASSET_ACTIVATE) {
-		strResponse = _("Asset Activated");
-		responseEnglish = "Asset Activated";
-	}
-	else if (op == OP_ASSET_UPDATE) {
-		strResponse = _("Asset Updated");
-		responseEnglish = "Asset Updated";
-	}
-	else if (op == OP_ASSET_TRANSFER) {
-		strResponse = _("Asset Transferred");
-		responseEnglish = "Asset Transferred";
-	}
-	else if (op == OP_ASSET_SEND) {
-		strResponse = _("Asset Sent");
-		responseEnglish = "Asset Sent";
-	}
-	else if (op == OP_ASSET_ALLOCATION_SEND) {
-		strResponse = _("Asset Allocation Sent");
-		responseEnglish = "Asset Allocation Sent";
-	}
-	else if (op == OP_ASSET_COLLECT_INTEREST) {
-		strResponse = _("Asset Collect Interest");
-		responseEnglish = "Asset Collect Interest";
-	}
-	else if (op == OP_ESCROW_ACTIVATE) {
-		strResponse = _("Escrow Activated");
-		responseEnglish = "Escrow Activated";
-	}
-	else if (op == OP_ESCROW_ACKNOWLEDGE) {
-		strResponse = _("Escrow Acknowledged");
-		responseEnglish = "Escrow Acknowledged";
-	}
-	else if (op == OP_ESCROW_RELEASE) {
-		strResponse = _("Escrow Released");
-		responseEnglish = "Escrow Released";
-	}
-	else if (op == OP_ESCROW_RELEASE_COMPLETE) {
-		strResponse = _("Escrow Release Complete");
-		responseEnglish = "Escrow Release Complete";
-	}
-	else if (op == OP_ESCROW_FEEDBACK) {
-		strResponse = _("Escrow Feedback");
-		responseEnglish = "Escrow Feedback";
-	}
-	else if (op == OP_ESCROW_BID) {
-		strResponse = _("Escrow Bid");
-		responseEnglish = "Escrow Bid";
-	}
-	else if (op == OP_ESCROW_ADD_SHIPPING) {
-		strResponse = _("Escrow Add Shipping");
-		responseEnglish = "Escrow Add Shipping";
-	}
-	else if (op == OP_ESCROW_REFUND) {
-		strResponse = _("Escrow Refunded");
-		responseEnglish = "Escrow Refunded";
-	}
-	else if (op == OP_ESCROW_REFUND_COMPLETE) {
-		strResponse = _("Escrow Refund Complete");
-		responseEnglish = "Escrow Refund Complete";
-	}
-	if (tx.IsNull())
-		return "";
 	if (type == ALIAS) {
+		// message from op code
+		if (op == OP_ALIAS_ACTIVATE) {
+			strResponse = _("Alias Activated");
+			responseEnglish = "Alias Activated";
+		} else
+		if (op == OP_ALIAS_UPDATE) {
+			strResponse = _("Alias Updated");
+			responseEnglish = "Alias Updated";
+		}
+
 		CAliasIndex alias(tx);
 		if (!alias.IsNull()) {
 			responseGUID = stringFromVch(alias.vchAlias);
 		}
-	}
-	else if (type == OFFER) {
+	} else 
+	if (type == OFFER) {
+		// message from op code
+		if (op == OP_OFFER_ACTIVATE) {
+			strResponse = _("Offer Activated");
+			responseEnglish = "Offer Activated";
+		} else
+		if (op == OP_OFFER_UPDATE) {
+			strResponse = _("Offer Updated");
+			responseEnglish = "Offer Updated";
+		}
+
 		COffer offer(tx);
 		if (!offer.IsNull()) {
 			responseGUID = stringFromVch(offer.vchOffer);
 		}		
-	}
-	else if (type == CERT) {
+	} else 
+	if (type == CERT) {
+		// message from op code
+		if (op == OP_CERT_ACTIVATE) {
+			strResponse = _("Certificate Activated");
+			responseEnglish = "Certificate Activated";
+		} else
+		if (op == OP_CERT_UPDATE) {
+			strResponse = _("Certificate Updated");
+			responseEnglish = "Certificate Updated";
+		} else
+		if (op == OP_CERT_TRANSFER) {
+			strResponse = _("Certificate Transferred");
+			responseEnglish = "Certificate Transferred";
+		}
 		CCert cert(tx);
 		if (!cert.IsNull()) {
 			responseGUID = stringFromVch(cert.vchCert);
 		}	
-	}
-	else if (type == ASSET) {
+	} else
+	if (type == ASSET) {
+		// message from op code
+		if (op == OP_ASSET_ACTIVATE) {
+			strResponse = _("Asset Activated");
+			responseEnglish = "Asset Activated";
+		} else
+		if (op == OP_ASSET_UPDATE) {
+			strResponse = _("Asset Updated");
+			responseEnglish = "Asset Updated";
+		} else 
+		if (op == OP_ASSET_TRANSFER) {
+			strResponse = _("Asset Transferred");
+			responseEnglish = "Asset Transferred";
+		} else
+		if (op == OP_ASSET_SEND) {
+			strResponse = _("Asset Sent");
+			responseEnglish = "Asset Sent";
+		}
+
 		CAsset asset(tx);
 		if (!asset.IsNull()) {
 			responseGUID = stringFromVch(asset.vchAsset);
 		}		
-	}
-	else if (type == ASSETALLOCATION) {
+	} else 
+	if (type == ASSETALLOCATION) {
+		// message from op code
+		if (op == OP_ASSET_ALLOCATION_SEND) {
+			strResponse = _("Asset Allocation Sent");
+			responseEnglish = "Asset Allocation Sent";
+		} else
+		if (op == OP_ASSET_COLLECT_INTEREST) {
+			strResponse = _("Asset Interest Collected");
+			responseEnglish = "Asset Interest Collected";
+		}
+
 		CAssetAllocation assetallocation(tx);
 		if (!assetallocation.IsNull()) {
 			responseGUID = stringFromVch(assetallocation.vchAsset);
 		}
-	}
-	else if (type == ESCROW) {
+	} else
+	if (type == ESCROW) {
+		// message from op code
+		if (op == OP_ESCROW_ACTIVATE) {
+			strResponse = _("Escrow Activated");
+			responseEnglish = "Escrow Activated";
+		} else
+		if (op == OP_ESCROW_ACKNOWLEDGE) {
+			strResponse = _("Escrow Acknowledged");
+			responseEnglish = "Escrow Acknowledged";
+		} else
+		if (op == OP_ESCROW_RELEASE) {
+			strResponse = _("Escrow Released");
+			responseEnglish = "Escrow Released";
+		} else
+		if (op == OP_ESCROW_RELEASE_COMPLETE) {
+			strResponse = _("Escrow Release Complete");
+			responseEnglish = "Escrow Release Complete";
+		} else
+		if (op == OP_ESCROW_FEEDBACK) {
+			strResponse = _("Escrow Feedback");
+			responseEnglish = "Escrow Feedback";
+		} else
+		if (op == OP_ESCROW_BID) {
+			strResponse = _("Escrow Bid");
+			responseEnglish = "Escrow Bid";
+		} else
+		if (op == OP_ESCROW_ADD_SHIPPING) {
+			strResponse = _("Escrow Add Shipping");
+			responseEnglish = "Escrow Add Shipping";
+		} else
+		if (op == OP_ESCROW_REFUND) {
+			strResponse = _("Escrow Refunded");
+			responseEnglish = "Escrow Refunded";
+		} else
+		if (op == OP_ESCROW_REFUND_COMPLETE) {
+			strResponse = _("Escrow Refund Complete");
+			responseEnglish = "Escrow Refund Complete";
+		}
+		
 		CEscrow escrow(tx);
 		if (!escrow.IsNull()) {
 			responseGUID = stringFromVch(escrow.vchEscrow);
 		}
-	}
-	else{
-		return "";
+	} 
+	else {
+		strResponse = _("Unknown Op Type");
+		responseEnglish = "Unknown Op Type";
+		return strResponse + " " + string(1, type);
 	}
 	return strResponse + " " + responseGUID;
 }
@@ -2634,7 +2761,7 @@ bool IsOutpointMature(const COutPoint& outpoint, bool fUseInstantSend)
 	GetUTXOCoin(outpoint, coin);
 	if (coin.IsSpent())
 		return false;
-	int numConfirmationsNeeded = 1;
+	int numConfirmationsNeeded = 0;
 	if (coin.IsCoinBase())
 		numConfirmationsNeeded = COINBASE_MATURITY;
 	if (fUseInstantSend)
@@ -2646,4 +2773,103 @@ bool IsOutpointMature(const COutPoint& outpoint, bool fUseInstantSend)
 	// don't have chainActive or coin height is neg 1 or less
 	return false;
 
+}
+bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+	string strTxid = "";
+	vector<unsigned char> vchAlias;
+	int nStartBlock = 0;
+	if (!oOptions.isNull()) {
+		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
+		const UniValue &txid = find_value(optionsObj, "txid");
+		if (txid.isStr()) {
+			strTxid = txid.get_str();
+		}
+
+		const UniValue &aliasObj = find_value(optionsObj, "alias");
+		if (aliasObj.isStr())
+			vchAlias = vchFromValue(aliasObj);
+
+		const UniValue &startblock = find_value(optionsObj, "startblock");
+		if (startblock.isNum())
+			nStartBlock = startblock.get_int();
+	}
+
+	LOCK(cs_alias);
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	CAliasIndex txPos;
+	pair<string, vector<unsigned char> > key;
+	int index = 0;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			if (pcursor->GetKey(key) && key.first == "namei") {
+				pcursor->GetValue(txPos);
+				if (nStartBlock > 0 && txPos.nHeight < nStartBlock)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!strTxid.empty() && strTxid != txPos.txHash.GetHex())
+				{
+					pcursor->Next();
+					continue;
+				}
+				if (!vchAlias.empty() && vchAlias != txPos.vchAlias)
+				{
+					pcursor->Next();
+					continue;
+				}
+				UniValue oAlias(UniValue::VOBJ);
+				if (!BuildAliasJson(txPos, oAlias))
+				{
+					pcursor->Next();
+					continue;
+				}
+				index++;
+				if (from > 0 && index <= from) {
+					continue;
+				}
+				oRes.push_back(oAlias);
+				if (index >= count + from)
+					break;
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
+}
+UniValue scanaliases(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 3 < params.size())
+		throw runtime_error("scanaliases [count] [from] [options]\n"
+			"scan through all aliases.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
+			"[options]        (array, optional) A json object with options to filter results\n"
+			"    {\n"
+			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
+			"      \"alias\":alias				(string) Alias name to filter.\n"
+			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"    }\n"
+			+ HelpExampleCli("scanaliases", "0 10")
+			+ HelpExampleCli("scanaliases", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"alias\":\"''\",\"startblock\":0}}")
+		);
+	UniValue options;
+	int count = 10;
+	int from = 0;
+	if (params.size() > 0)
+		count = params[0].get_int();
+	if (params.size() > 1)
+		from = params[1].get_int();
+	if (params.size() > 2)
+		options = params[2];
+
+	UniValue oRes(UniValue::VARR);
+	if (!paliasdb->ScanAliases(count, from, options, oRes))
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5522 - " + _("Scan failed"));
+	return oRes;
 }

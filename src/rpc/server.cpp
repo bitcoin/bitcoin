@@ -278,11 +278,13 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "aliasupdate",       &aliasupdate,       false ,  {}},
 	{ "wallet", "aliasinfo",         &aliasinfo,         false ,  {}},
 	{ "wallet", "aliasbalance",      &aliasbalance,         false ,  {}},
+	{ "wallet", "aliasbalancemulti",      &aliasbalancemulti,         false ,{} },
 	{ "wallet", "aliaspay",       &aliaspay,       false ,  {}},
 	{ "wallet", "aliasaddscript",        &aliasaddscript,       false ,  {}},
 	{ "wallet", "aliasupdatewhitelist",        &aliasupdatewhitelist,       false ,  {}},
 	{ "wallet", "aliasclearwhitelist",        &aliasclearwhitelist,       false ,  {}},
 	{ "wallet", "aliaswhitelist",        &aliaswhitelist,       false ,  {}},
+	{ "wallet", "scanaliases",        &scanaliases,       false ,{} },
 	{ "wallet", "syscoinsendrawtransaction",		 &syscoinsendrawtransaction,	false ,  {}},
 	{ "wallet", "syscoindecoderawtransaction",		 &syscoindecoderawtransaction,	false ,  {}},
 	{ "wallet", "syscoinlistreceivedbyaddress",		 &syscoinlistreceivedbyaddress,	false ,  {}},
@@ -293,12 +295,14 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "offerupdate",          &offerupdate,          false ,  {}},
 	{ "wallet", "offerlink",		    &offerlink,            false ,  {}},
 	{ "wallet", "offerinfo",            &offerinfo,            false ,  {}},
+	{ "wallet", "scanoffers",            &scanoffers,            false ,{} },
 
 	// use the blockchain as a certificate issuance platform
 	{ "wallet", "certnew",         &certnew,     false ,  {}},
 	{ "wallet", "certupdate",      &certupdate,  false ,  {}},
 	{ "wallet", "certtransfer",          &certtransfer,      false ,  {}},
 	{ "wallet", "certinfo",              &certinfo,          false ,  {}},
+	{ "wallet", "scancerts",              &scancerts,          false ,{} },
 
 	// use the blockchain for escrow linked to offers
 	{ "wallet", "escrownew",         &escrownew,     false ,  {}},
@@ -311,6 +315,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "escrowinfo",              &escrowinfo,          false ,  {}},
 	{ "wallet", "escrowfeedback",      &escrowfeedback,  false ,  {}},
 	{ "wallet", "escrowacknowledge",      &escrowacknowledge,  false ,  {}},
+	{ "wallet", "scanescrows",      &scanescrows,  false ,{} },
 
 	// assets using the blockchain, coins/points/service backed tokens
 	{ "wallet", "assetnew",         &assetnew,     false ,  {}},
@@ -318,10 +323,14 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "assettransfer",      &assettransfer,  false ,  {}},
 	{ "wallet", "assetsend",      &assetsend,  false ,  {}},
 	{ "wallet", "assetinfo",      &assetinfo,  false ,  {}},
+	{ "wallet", "scanassets",      &scanassets,  false ,{} },
 	{ "wallet", "assetallocationsend",          &assetallocationsend,      false ,  {}},
 	{ "wallet", "assetallocationcollectinterest",          &assetallocationcollectinterest,      false ,  {}},
 	{ "wallet", "assetallocationinfo",          &assetallocationinfo,      false ,  {}},
 	{ "wallet", "assetallocationsenderstatus",          &assetallocationsenderstatus,      false ,  {}},
+	{ "wallet", "listassetallocationtransactions",          &listassetallocationtransactions,      false ,{} },
+	{ "wallet", "scanassetallocations",          &scanassetallocations,      false ,{} },
+	{ "wallet", "tpstestinfo",          &tpstestinfo,      false ,{} },
     /* Overall control/query calls */
     { "control",            "help",                   &help,                   true,  {"command"}  },
     { "control",            "stop",                   &stop,                   true,  {}  },
