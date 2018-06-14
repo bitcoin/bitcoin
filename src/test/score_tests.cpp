@@ -94,13 +94,13 @@ BOOST_FIXTURE_TEST_SUITE(CalculateScore, CalculateScoreFixture)
     BOOST_AUTO_TEST_CASE(ScoreChanges)
     {
         CMasternode mn = CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN)));
-        int64_t score = mn.CalculateScore(100).GetCompact(false);
+        arith_uint256 score = mn.CalculateScore(100);
 
         // Change masternode vin
         mn.vin = CTxIn(COutPoint(ArithToUint256(2), 1 * COIN));
 
         // Calculate new score
-        int64_t newScore = mn.CalculateScore(100).GetCompact(false);
+        arith_uint256 newScore = mn.CalculateScore(100);
 
         BOOST_CHECK(score != newScore);
     }
@@ -120,11 +120,11 @@ BOOST_FIXTURE_TEST_SUITE(CalculateScore, CalculateScoreFixture)
         std::map<int, int> winningCount;
         for (int i = 0; i <= chainActive.Height(); ++i)
         {
-            int64_t score = 0;
+            arith_uint256 score = 0;
             int index = 0;
             for (size_t j = 0; j < masternodes.size(); ++j)
             {
-                int s = masternodes[j].CalculateScore(i).GetCompact(false);
+                arith_uint256 s = masternodes[j].CalculateScore(i);
                 if (s > score)
                 {
                     score = s;
