@@ -56,27 +56,58 @@ class State
 public:
     std::string m_name;
     uint64_t m_num_iters_left;
-    const uint64_t m_num_iters;
+    uint64_t m_num_iters;
+    double m_scaling;
     const uint64_t m_num_evals;
     std::vector<double> m_elapsed_results;
     time_point m_start_time;
 
     bool UpdateTimer(time_point finish_time);
 
-    State(std::string name, uint64_t num_evals, double num_iters, Printer& printer) : m_name(name), m_num_iters_left(0), m_num_iters(num_iters), m_num_evals(num_evals)
+    State(std::string name, uint64_t num_evals, double num_iters, double scaling, Printer& printer) : m_name(name), m_num_iters_left(num_iters), m_num_iters(num_iters), m_scaling(scaling), m_num_evals(num_evals)
     {
+    }
+    
+    inline bool IsNewEval()
+    {
+        return m_num_iters_left == m_num_iters;
+    }
+    
+    inline void ResetTimer()
+    {
+        m_start_time = clock::now();
     }
 
     inline bool KeepRunning()
-    {
+    {        
+        // Start clock on first iteration of first eval, subsequent clock resets
+        // are handled in UpdateTimer.
+        if (m_num_iters_left == m_num_iters) {
+            m_start_time = clock::now();
+        }
+        
         if (m_num_iters_left--) {
             return true;
         }
-
+        
         bool result = UpdateTimer(clock::now());
         // measure again so runtime of UpdateTimer is not included
         m_start_time = clock::now();
+                
         return result;
+    }
+    
+    inline bool IsLastIteration()
+    {
+        if (m_num_iters_left == 0) {
+            // Measure time before cleaup
+            bool lastEval = !UpdateTimer(clock::now());
+            if (!lastEval) {
+                m_num_iters_left = m_num_iters;
+            }
+            return true;
+        };
+        return false;
     }
 };
 

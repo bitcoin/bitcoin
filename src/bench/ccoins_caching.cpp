@@ -6,82 +6,216 @@
 #include <coins.h>
 #include <policy/policy.h>
 #include <wallet/crypter.h>
+#include <validation.h>
+#include <util.h>
+#include <txdb.h>
+#include <chainparams.h>
+#include <validationinterface.h>
+
+#include <random.h>
+
 
 #include <vector>
 
-// FIXME: Dedup with SetupDummyInputs in test/transaction_tests.cpp.
-//
-// Helper: create two dummy transactions, each with
-// two outputs.  The first has 11 and 50 CENT outputs
-// paid to a TX_PUBKEY, the second 21 and 22 CENT outputs
-// paid to a TX_PUBKEYHASH.
-//
-static std::vector<CMutableTransaction>
-SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
+const uint64_t N_CACHE_SCALE = 1; // 40 MB (bench needs ~3x dbcache size RAM)
+                                  // FIXME: make this a parameter
+const uint64_t N_DEFAULT_CACHE_ENTRIES = 200 * 1000;
+
+// FIXME: dedup from src/test/test_bitcoin.h
+FastRandomContext insecure_rand_ctx;
+uint64_t InsecureRandRange(uint64_t range) { return insecure_rand_ctx.randrange(range); }
+
+static std::vector<CKey> SetupDummyKeys(CBasicKeyStore& keystoreRet, int n_keys)
 {
-    std::vector<CMutableTransaction> dummyTransactions;
-    dummyTransactions.resize(2);
+    std::vector<CKey> keys;
+    keys.resize(n_keys);
 
     // Add some keys to the keystore:
-    CKey key[4];
-    for (int i = 0; i < 4; i++) {
-        key[i].MakeNewKey(i % 2);
-        keystoreRet.AddKey(key[i]);
+    for (int i = 0; i < n_keys; i++) {
+        keys[i].MakeNewKey(true);
+        keystoreRet.AddKey(keys[i]);
     }
-
-    // Create some dummy input transactions
-    dummyTransactions[0].vout.resize(2);
-    dummyTransactions[0].vout[0].nValue = 11 * CENT;
-    dummyTransactions[0].vout[0].scriptPubKey << ToByteVector(key[0].GetPubKey()) << OP_CHECKSIG;
-    dummyTransactions[0].vout[1].nValue = 50 * CENT;
-    dummyTransactions[0].vout[1].scriptPubKey << ToByteVector(key[1].GetPubKey()) << OP_CHECKSIG;
-    AddCoins(coinsRet, dummyTransactions[0], 0);
-
-    dummyTransactions[1].vout.resize(2);
-    dummyTransactions[1].vout[0].nValue = 21 * CENT;
-    dummyTransactions[1].vout[0].scriptPubKey = GetScriptForDestination(key[2].GetPubKey().GetID());
-    dummyTransactions[1].vout[1].nValue = 22 * CENT;
-    dummyTransactions[1].vout[1].scriptPubKey = GetScriptForDestination(key[3].GetPubKey().GetID());
-    AddCoins(coinsRet, dummyTransactions[1], 0);
-
-    return dummyTransactions;
+    
+    return keys;
 }
 
-// Microbenchmark for simple accesses to a CCoinsViewCache database. Note from
-// laanwj, "replicating the actual usage patterns of the client is hard though,
-// many times micro-benchmarks of the database showed completely different
-// characteristics than e.g. reindex timings. But that's not a requirement of
-// every benchmark."
-// (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
-static void CCoinsCaching(benchmark::State& state)
+static std::vector<CTransaction> SetupDummyTransactions(std::vector<CKey> keys, int n_transactions)
+{    
+    std::vector<CTransaction> transactions;
+    
+    FastRandomContext rng(true);
+    
+    // Create dummy transactions
+    for (int i = 0; i < n_transactions; i++) {
+        CMutableTransaction tx;
+        tx.vin.resize(1);
+        tx.vout.resize(1);
+
+        // Random input to prevent duplicate CCoinsView(Cache) entries:        
+        tx.vin[0].scriptSig << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4); 
+        tx.vin[0].prevout.hash = rng.rand256();
+        tx.vin[0].prevout.n = 0;
+        
+        tx.vout[0].nValue = 10 * CENT;
+        tx.vout[0].scriptPubKey << ToByteVector(keys[(i + 0) % keys.size()].GetPubKey()) << OP_CHECKSIG;     
+
+        transactions.push_back(tx);
+    }
+    
+    return transactions;
+}
+
+static std::vector<COutPoint>
+SetupDummyCoins(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsViewCache, int n_coins, int n_keys)
 {
+    std::vector<COutPoint> outpoints;
+    outpoints.resize(n_coins);
+    
+    const std::vector<CKey> keys = SetupDummyKeys(keystoreRet, n_keys);
+    
+    const std::vector<CTransaction> transactions = SetupDummyTransactions(keys, n_coins);
+        
+    for (const CTransaction tx : transactions) {
+        AddCoins(coinsViewCache, tx, 0);
+        outpoints.push_back(COutPoint(tx.GetHash(), 0));
+    }
+    
+    return outpoints;
+}
+
+// Add coins to cache that doesn't exist on disk.
+static void CCoinsViewCacheAddCoinFresh(benchmark::State& state)
+{
+    int n_keys = 1000;
+    int n_txs = N_DEFAULT_CACHE_ENTRIES * N_CACHE_SCALE;
+    
+    // Ignore scaling parameter.
+    state.m_scaling = 1;
+    state.m_num_iters = n_txs;
+    state.m_num_iters_left = n_txs;
+
+    CBasicKeyStore keystore;
+    
+    const std::vector<CKey> keys = SetupDummyKeys(keystore, n_keys);
+    
+    const std::vector<CTransaction> transactions = SetupDummyTransactions(keys, n_txs);
+
+    while (state.IsNewEval()) {
+        CCoinsView coinsView;
+        CCoinsViewCache coinsViewCache(&coinsView);
+        
+        int i = 0;
+        
+        state.ResetTimer();
+                
+        // Benchmark:
+        while (state.KeepRunning()) {
+            AddCoins(coinsViewCache, transactions[i], 0);
+            
+            if (state.IsLastIteration()) {
+                // fprintf(stderr, "Cached coins: %u\n", coinsViewCache.GetCacheSize());
+                // fprintf(stderr, "Cache size: %zu MiB\n", coinsViewCache.DynamicMemoryUsage() / 1024 / 1024);
+                break;
+            }
+            
+            i++;
+        }
+    }
+}
+
+// Flush cache
+static void CCoinsViewCacheFlush(benchmark::State& state)
+{
+    int n_keys = 1000;
+    int n_txs = N_DEFAULT_CACHE_ENTRIES * N_CACHE_SCALE;
+    
+    // Ignore scaling parameter.
+    state.m_scaling = 1;
+    state.m_num_iters = n_txs;
+    state.m_num_iters_left = n_txs;
+
+    CBasicKeyStore keystore;
+    
+    const std::vector<CKey> keys = SetupDummyKeys(keystore, n_keys);
+    
+    const std::vector<CTransaction> transactions = SetupDummyTransactions(keys, n_txs);
+    
+
+    while (state.IsNewEval()) {
+        // TODO: dedup from test suite
+        SelectParams(CBaseChainParams::REGTEST);
+        // const CChainParams& chainparams = Params();
+        ClearDatadirCache();
+        fs::path pathTemp = fs::temp_directory_path() / "bench_bitcoin" / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30)));
+        fs::create_directories(pathTemp);
+        gArgs.ForceSetArg("-datadir", pathTemp.string());
+        // fprintf(stderr, "Path: %s\n", pathTemp.string().c_str());
+
+        int64_t nCoinDBCache = 50 * N_CACHE_SCALE;
+        pcoinsdbview.reset(new CCoinsViewDB(nCoinDBCache, false, true));
+        pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
+
+        CCoinsViewCache coinsViewCache(pcoinsdbview.get());
+        FastRandomContext rng(true);
+        coinsViewCache.SetBestBlock(rng.rand256());
+                
+        // Add coins to cache:
+        for (const CTransaction tx : transactions) {
+            AddCoins(coinsViewCache, tx, 0);
+        }
+                
+        state.ResetTimer();
+                
+        // Benchmark:
+        while (state.KeepRunning()) {
+            // Flush only in the last iteration so we get the average time per transaction
+            // for the flush.
+            
+            if (state.m_num_iters_left == 0) {
+                // fprintf(stderr, "Cached coins: %u\n", coinsViewCache.GetCacheSize());
+                // fprintf(stderr, "Cache size: %zu MiB\n", coinsViewCache.DynamicMemoryUsage() / 1024 / 1024);
+                coinsViewCache.Flush();
+                // fprintf(stderr, "Cache size: %zu MiB\n", coinsViewCache.DynamicMemoryUsage() / 1024 / 1024);
+            }
+            
+            if (state.IsLastIteration()) break;         
+        }
+        
+        // Clean up:
+        pcoinsTip.reset();
+        pcoinsdbview.reset();
+        fs::remove_all(pathTemp);
+    }
+}
+
+
+// Read coin from cache
+static void CCoinsViewCacheAccess(benchmark::State& state)
+{
+    int n_keys = 1000;
+    uint64_t n_txs = N_DEFAULT_CACHE_ENTRIES * N_CACHE_SCALE;
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
-    std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
+    std::vector<COutPoint> outpoints = SetupDummyCoins(keystore, coins, n_txs, n_keys);
 
-    CMutableTransaction t1;
-    t1.vin.resize(3);
-    t1.vin[0].prevout.hash = dummyTransactions[0].GetHash();
-    t1.vin[0].prevout.n = 1;
-    t1.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
-    t1.vin[1].prevout.hash = dummyTransactions[1].GetHash();
-    t1.vin[1].prevout.n = 0;
-    t1.vin[1].scriptSig << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4);
-    t1.vin[2].prevout.hash = dummyTransactions[1].GetHash();
-    t1.vin[2].prevout.n = 1;
-    t1.vin[2].scriptSig << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4);
-    t1.vout.resize(2);
-    t1.vout[0].nValue = 90 * CENT;
-    t1.vout[0].scriptPubKey << OP_1;
+    FastRandomContext rng(true);
+    std::vector <uint64_t> sequence;
+    sequence.resize(state.m_num_iters * state.m_num_evals);
+    for (uint64_t i = 0; i < state.m_num_iters * state.m_num_evals; i++) {
+        sequence[i] = rng.rand64() % outpoints.size();
+    }
 
-    // Benchmark.
+    // Benchmark:
+    uint64_t i = 0;
     while (state.KeepRunning()) {
-        bool success = AreInputsStandard(t1, coins);
-        assert(success);
-        CAmount value = coins.GetValueIn(t1);
-        assert(value == (50 + 21 + 22) * CENT);
+        coins.AccessCoin(outpoints[sequence[i]]);
+        i++;
     }
 }
 
-BENCHMARK(CCoinsCaching, 170 * 1000);
+BENCHMARK(CCoinsViewCacheAccess, 3500 * 1000);
+
+// These ignore -scaling param:
+BENCHMARK(CCoinsViewCacheAddCoinFresh, N_DEFAULT_CACHE_ENTRIES * N_CACHE_SCALE);
+BENCHMARK(CCoinsViewCacheFlush, N_DEFAULT_CACHE_ENTRIES * N_CACHE_SCALE);

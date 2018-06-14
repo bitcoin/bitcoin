@@ -116,7 +116,7 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
         if (0 == num_iters) {
             num_iters = 1;
         }
-        State state(p.first, num_evals, num_iters, printer);
+        State state(p.first, num_evals, num_iters, scaling, printer);
         if (!is_list_only) {
             p.second.func(state);
         }
