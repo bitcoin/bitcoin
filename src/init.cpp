@@ -88,7 +88,7 @@ std::unique_ptr<PeerLogicValidation> peerLogic;
 class DummyWalletInit : public WalletInitInterface {
 public:
 
-    void AddWalletOptions() const override {}
+    void AddWalletOptions() const override;
     bool ParameterInteraction() const override {return true;}
     void RegisterRPC(CRPCTable &) const override {}
     bool Verify() const override {return true;}
@@ -98,6 +98,15 @@ public:
     void Stop() const override {}
     void Close() const override {}
 };
+
+void DummyWalletInit::AddWalletOptions() const
+{
+    std::vector<std::string> opts = {"-addresstype", "-changetype", "-disablewallet", "-discardfee=<amt>", "-fallbackfee=<amt>",
+        "-keypool=<n>", "-mintxfee=<amt>", "-paytxfee=<amt>", "-rescan", "-salvagewallet", "-spendzeroconfchange",  "-txconfirmtarget=<n>",
+        "-upgradewallet", "-wallet=<path>", "-walletbroadcast", "-walletdir=<dir>", "-walletnotify=<cmd>", "-walletrbf", "-zapwallettxes=<mode>",
+        "-dblogsize=<n>", "-flushwallet", "-privdb", "-walletrejectlongchains"};
+    gArgs.AddHiddenArgs(opts);
+}
 
 const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 #endif
@@ -368,6 +377,12 @@ void SetupServerArgs()
     const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
     const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET);
 
+    // Hidden Options
+    std::vector<std::string> hidden_args = {"-rpcssl", "-benchmark", "-h", "-help", "-socks", "-tor", "-debugnet", "-whitelistalwaysrelay",
+        "-prematurewitness", "-walletprematurewitness", "-promiscuousmempoolflags", "-blockminsize", "-dbcrashratio", "-forcecompactdb", "-usehd",
+        // GUI args. These will be overwritten by SetupUIArgs for the GUI
+        "-allowselfsignedrootcertificates", "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-rootcertificates=<file>", "-splash", "-uiplatform"};
+
     // Set all of the args and their help
     // When adding new options to the categories, please keep and ensure alphabetical ordering.
     gArgs.AddArg("-?", "Print this help message and exit", false, OptionsCategory::OPTIONS);
@@ -395,6 +410,8 @@ void SetupServerArgs()
     gArgs.AddArg("-persistmempool", strprintf("Whether to save the mempool on shutdown and load on restart (default: %u)", DEFAULT_PERSIST_MEMPOOL), false, OptionsCategory::OPTIONS);
 #ifndef WIN32
     gArgs.AddArg("-pid=<file>", strprintf("Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)", BITCOIN_PID_FILENAME), false, OptionsCategory::OPTIONS);
+#else
+    hidden_args.emplace_back("-pid");
 #endif
     gArgs.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
@@ -404,6 +421,8 @@ void SetupServerArgs()
     gArgs.AddArg("-skiprangeproofverify", "Skip verifying rangeproofs when reindexing or importing.", false, OptionsCategory::OPTIONS);
 #ifndef WIN32
     gArgs.AddArg("-sysperms", "Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)", false, OptionsCategory::OPTIONS);
+#else
+    hidden_args.emplace_back("-sysperms");
 #endif
     gArgs.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), false, OptionsCategory::OPTIONS);
 
@@ -451,6 +470,8 @@ void SetupServerArgs()
 #else
     gArgs.AddArg("-upnp", strprintf("Use UPnP to map the listening port (default: %u)", 0), false, OptionsCategory::CONNECTION);
 #endif
+#else
+    hidden_args.emplace_back("-upnp");
 #endif
     gArgs.AddArg("-whitebind=<addr>", "Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-whitelist=<IP address or network>", "Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times."
@@ -471,11 +492,23 @@ void SetupServerArgs()
     gArgs.AddArg("-zmqpubhashtx=<address>", "Enable publish hash transaction in <address>", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubrawblock=<address>", "Enable publish raw block in <address>", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubrawtx=<address>", "Enable publish raw transaction in <address>", false, OptionsCategory::ZMQ);
+
     gArgs.AddArg("-zmqpubhashwtx=<address>", "Enable publish hash transaction received by wallets in <address>", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubsmsg=<address>", "Enable publish secure message in <address>", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-serverkeyzmq=<secret_key>", "Base64 encoded string of the z85 encoded secret key for CurveZMQ.", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-newserverkeypairzmq", "Generate new key pair for CurveZMQ, print and exit.", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-whitelistzmq=<IP address or network>", "Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.", false, OptionsCategory::ZMQ);
+#else
+    hidden_args.emplace_back("-zmqpubhashblock=<address>");
+    hidden_args.emplace_back("-zmqpubhashtx=<address>");
+    hidden_args.emplace_back("-zmqpubrawblock=<address>");
+    hidden_args.emplace_back("-zmqpubrawtx=<address>");
+
+    hidden_args.emplace_back("-zmqpubhashwtx=<address>");
+    hidden_args.emplace_back("-zmqpubsmsg=<address>");
+    hidden_args.emplace_back("-serverkeyzmq=<secret_key>");
+    hidden_args.emplace_back("-newserverkeypairzmq");
+    hidden_args.emplace_back("-whitelistzmq=<IP address or network>");
 #endif
 
     gArgs.AddArg("-checkblocks=<n>", strprintf("How many blocks to check at startup (default: %u, 0 = all)", DEFAULT_CHECKBLOCKS), true, OptionsCategory::DEBUG_TEST);
@@ -547,24 +580,16 @@ void SetupServerArgs()
     gArgs.AddArg("-displaylocaltime", "Display human readable time strings in local timezone (default: false)", false, OptionsCategory::RPC);
     gArgs.AddArg("-displayutctime", "Display human readable time strings in UTC (default: false)", false, OptionsCategory::RPC);
 
-    // Hidden options
-    gArgs.AddArg("-rpcssl", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-benchmark", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-h", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-socks", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-tor", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-debugnet", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-whitelistalwaysrelay", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-prematurewitness", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-walletprematurewitness", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-promiscuousmempoolflags", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-blockminsize", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-dbcrashratio", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-forcecompactdb", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-usehd", "", false, OptionsCategory::HIDDEN);
+#if HAVE_DECL_DAEMON
+    gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", false, OptionsCategory::OPTIONS);
+#else
+    hidden_args.emplace_back("-daemon");
+#endif
 
-    gArgs.AddArg("-legacymode", "", false, OptionsCategory::HIDDEN);
+    hidden_args.emplace_back("-legacymode");
+
+    // Add the hidden options
+    gArgs.AddHiddenArgs(hidden_args);
 }
 
 std::string LicenseInfo()

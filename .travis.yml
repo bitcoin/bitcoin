@@ -45,7 +45,7 @@ env:
 # x86_64 Linux, No wallet
     - HOST=x86_64-unknown-linux-gnu PACKAGES="python3" DEP_OPTS="NO_USB=1 NO_WALLET=1" RUN_UNIT_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports --disable-bench" UNIT_TESTS_TIMEOUT=1200
 # Cross-Mac
-    - HOST=x86_64-apple-darwin11 PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git" RUN_TESTS=false BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror --enable-usbdevice" OSX_SDK=10.11 GOAL="deploy"
+    - HOST=x86_64-apple-darwin11 PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git" RUN_TESTS=false BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror --enable-usbdevice" OSX_SDK=10.11 GOAL="all deploy"
 
 before_install:
     - export START_TIME=`date +%s`
