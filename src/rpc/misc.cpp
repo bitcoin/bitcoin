@@ -7,7 +7,6 @@
 #include <clientversion.h>
 #include <core_io.h>
 #include <crypto/ripemd160.h>
-#include <init.h>
 #include <key_io.h>
 #include <validation.h>
 #include <httpserver.h>
