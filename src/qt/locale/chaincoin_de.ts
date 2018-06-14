@@ -136,6 +136,14 @@
         <translation>Zeige das Passwort</translation>
     </message>
     <message>
+        <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
+        <translation>Dient dazu das banale sendmoney auszuschalten, wenn der OS Account kompromittiert wurde. Bietet keine richtige Sicherheit.</translation>
+    </message>
+    <message>
+        <source>Only for mixing via PrivateSend</source>
+        <translation>Nur zum mixen mit PrivateSend</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Geben Sie die neue Passphrase für die Brieftasche ein.&lt;br&gt;Bitte benutzen Sie eine Passphrase bestehend aus &lt;b&gt;zehn oder mehr zufälligen Zeichen&lt;/b&gt; oder &lt;b&gt;acht oder mehr Wörtern&lt;/b&gt;.</translation>
     </message>
@@ -330,6 +338,10 @@
         <translation>Hinweis</translation>
     </message>
     <message>
+        <source>Show diagnostic information</source>
+        <translation>Zeige diagnostische Information</translation>
+    </message>
+    <message>
         <source>&amp;Debug console</source>
         <translation>&amp;Debugfenster</translation>
     </message>
@@ -356,6 +368,22 @@
     <message>
         <source>Open configuration file</source>
         <translation>Konfigurationsdatei öffnen</translation>
+    </message>
+    <message>
+        <source>Open &amp;Masternode Configuration File</source>
+        <translation>Öffne &amp;Masternode Konfigurationsdatei </translation>
+    </message>
+    <message>
+        <source>Open Masternode configuration file</source>
+        <translation>Öffne Masternode Konfigurationsdatei</translation>
+    </message>
+    <message>
+        <source>Show Automatic &amp;Backups</source>
+        <translation>Zeige automatische &amp;Backups</translation>
+    </message>
+    <message>
+        <source>Show automatically created wallet backups</source>
+        <translation>Zeige automatisch erstellte wallet backups</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
@@ -486,6 +514,30 @@
         <translation>Fehler</translation>
     </message>
     <message>
+        <source>Open $URI...</source>
+        <translation>Öffne $URL...</translation>
+    </message>
+    <message>
+        <source>Open a chaincoin: URI or payment request</source>
+        <translation>Öffnet eine chaincoin: URL oder Zahlungsbitte</translation>
+    </message>
+    <message>
+        <source>Show the Chaincoin Core help message to get a list with possible Chaincoin Core command-line options</source>
+        <translation>Zeigt die Chaincoin Core Hilfemeldung, um eine Liste mit möglichen Chaincoin Core Befehlszeilen Optionen zu erhalten</translation>
+    </message>
+    <message>
+        <source>&amp;PrivateSend information</source>
+        <translation>&amp;PrivateSend Information</translation>
+    </message>
+    <message>
+        <source>Show the PrivateSend basic information</source>
+        <translation>Zeigt die PrivateSend Basisinformation</translation>
+    </message>
+    <message>
+        <source>&amp;Tools</source>
+        <translation>&amp; Werkzeuge</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>Warnung</translation>
     </message>
@@ -502,12 +554,24 @@
         <translation>%1 Client</translation>
     </message>
     <message>
+        <source>The configuration file could not be opened.</source>
+        <translation>Die Konfigurationsdatei konnte nicht geöffnet werden</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Chaincoin network</source>
+        <translation><numerusform>%n aktive Verbindungen zum Chaincoin-Netzwerk</numerusform><numerusform>%n aktive Verbindung(en) zum Chaincoin-Netzwerk</numerusform></translation>
+    </message>
+    <message>
         <source>Connecting to peers...</source>
         <translation>Verbinde mit Netzwerk...</translation>
     </message>
     <message>
         <source>Catching up...</source>
         <translation>Hole auf...</translation>
+    </message>
+    <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Synchronisiere zusätzliche Datei: %p%</translation>
     </message>
     <message>
         <source>Chaincoin Core</source>
@@ -564,13 +628,25 @@
         <translation>Wallet ist &lt;b&gt;verschlüsselt&lt;/b&gt; und aktuell &lt;b&gt;entsperrt&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
+        <translation>Wallet ist &lt;b&gt;verschlüsselt&lt;/b&gt; und aktuell nur zum mixen&lt;b&gt;entsperrt&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Wallet ist &lt;b&gt;verschlüsselt&lt;/b&gt; und aktuell &lt;b&gt;gesperrt&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Chaincoin can no longer continue safely and will quit.</source>
+        <translation>Ein schwerer Fehler ist aufgetreten. Chaincoin kann nicht stabil weiter ausgeführt werden und wird beendet.</translation>
+    </message>
+</context>
 <context>
     <name>ClientModel</name>
-    </context>
+    <message>
+        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
+        <translation>Total: %1 (PS Kompatibel: %2 / Aktiviert: %3)</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -610,12 +686,20 @@
         <translation>Alles (de)selektieren</translation>
     </message>
     <message>
+        <source>toggle lock state</source>
+        <translation>Sperrstatus Umschalten</translation>
+    </message>
+    <message>
         <source>Tree mode</source>
         <translation>Baumansicht</translation>
     </message>
     <message>
         <source>List mode</source>
         <translation>Listenansicht</translation>
+    </message>
+    <message>
+        <source>(1 locked)</source>
+        <translation>(1 gesperrt)</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -694,6 +778,14 @@
         <translation>Wechselgeld kopieren</translation>
     </message>
     <message>
+        <source>Please switch to "List mode" to use this function.</source>
+        <translation>Bitte wechsel zum "Listen Modus" um diese Funktion zu benutzen.</translation>
+    </message>
+    <message>
+        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again.</source>
+        <translation>Nicht anonymisierter Eingang gewählt. &lt;b&gt;PrivateSend wird deaktiviert.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Wenn du weiterhin PrivateSend verwenden möchtest, deaktiviere bitte alle nicht anonymen Eingänge und klicke die PrivateSend Checkbox wieder an.</translation>
+    </message>
+    <message>
         <source>(%1 locked)</source>
         <translation>(%1 gesperrt)</translation>
     </message>
@@ -710,6 +802,10 @@
         <translation>Diese Bezeichnung wird rot, wenn irgendein Empfänger einen Betrag kleiner als die derzeitige "Staubgrenze" erhält.</translation>
     </message>
     <message>
+        <source>Can vary +/- %1 chuff(s) per input.</source>
+        <translation>Kann um +/- %1 chuff(s) pro Eingabe variieren.</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(keine Bezeichnung)</translation>
     </message>
@@ -724,7 +820,71 @@
 </context>
 <context>
     <name>DarksendConfig</name>
-    </context>
+    <message>
+        <source>Configure PrivateSend</source>
+        <translation>Bearbeite PrivateSend</translation>
+    </message>
+    <message>
+        <source>Basic Privacy</source>
+        <translation>Einfache Privatsphäre</translation>
+    </message>
+    <message>
+        <source>High Privacy</source>
+        <translation>Hohe Privatsphäre</translation>
+    </message>
+    <message>
+        <source>Maximum Privacy</source>
+        <translation>Maximale Privatsphäre</translation>
+    </message>
+    <message>
+        <source>Please select a privacy level.</source>
+        <translation>Bitte wähle ein Privatsphären Level aus.</translation>
+    </message>
+    <message>
+        <source>Use 2 separate masternodes to mix funds up to 1000 CHC</source>
+        <translation>Benutze 2 unterschiedliche Masternodes um Gelder bis zu 1000 CHC zu mixen</translation>
+    </message>
+    <message>
+        <source>Use 8 separate masternodes to mix funds up to 1000 CHC</source>
+        <translation>Benutze 8 unterschiedliche Masternodes um Gelder bis zu 1000 CHC zu mixen</translation>
+    </message>
+    <message>
+        <source>Use 16 separate masternodes</source>
+        <translation>Benutze 16 unterschiedliche Matsernodes</translation>
+    </message>
+    <message>
+        <source>This option is the quickest and will cost about ~0.025 CHC to anonymize 1000 CHC</source>
+        <translation>Diese Option ist die schnellste und wird um die ~0.025 CHC kosten, um 1000 CHC zu anonymisieren</translation>
+    </message>
+    <message>
+        <source>This option is moderately fast and will cost about 0.05 CHC to anonymize 1000 CHC</source>
+        <translation>Diese Option ist relativ schnell und wird um die 0.05 CHC kosten, um 1000 CHC zu anonymisieren</translation>
+    </message>
+    <message>
+        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
+        <translation>Dies ist die schnellste und sicherste Option. Maximale Anonymität ist mit Kosten verbunden</translation>
+    </message>
+    <message>
+        <source>0.1 CHC per 1000 CHC you anonymize.</source>
+        <translation>0.1 CHC pro 1000 CHC zu anonymisieren. </translation>
+    </message>
+    <message>
+        <source>PrivateSend Configuration</source>
+        <translation>PrivateSend Konfiguration</translation>
+    </message>
+    <message>
+        <source>PrivateSend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Chaincoin's configuration screen.</source>
+        <translation>PrivateSend wurde erfolgreich auf einfach gestellt (%1 und 2 Runden). Du kannst dies jederzeit ändern, indem du Chaincoins Konfigurations Bildschirm aufrufst.</translation>
+    </message>
+    <message>
+        <source>PrivateSend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Chaincoin's configuration screen.</source>
+        <translation>PrivateSend wurde erfolgreich auf hoch gestellt (%1 und 8 Runden). Du kannst dies jederzeit ändern, indem du Chaincoins Konfigurations Bildschirm aufrufst.</translation>
+    </message>
+    <message>
+        <source>PrivateSend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Chaincoin's configuration screen.</source>
+        <translation>PrivateSend wurde erfolgreich auf maximum gestellt (%1 und 16 Runden). Du kannst dies jederzeit ändern, indem du Chaincoins Konfigurations Bildschirm aufrufst.</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -762,6 +922,10 @@
     <message>
         <source>Edit sending address</source>
         <translation>Zahlungsadresse bearbeiten</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is not a valid Chaincoin address.</source>
+        <translation>Die eingegebene Adresse "%1" ist keine gültige Chaincoin Adresse.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -806,8 +970,16 @@
         <translation>Version</translation>
     </message>
     <message>
+        <source>Chaincoin Core</source>
+        <translation>Chaincoin Core</translation>
+    </message>
+    <message>
         <source>(%1-bit)</source>
         <translation>(%1-Bit)</translation>
+    </message>
+    <message>
+        <source>About Chaincoin Core</source>
+        <translation>Über Chaincoin Core</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -849,7 +1021,15 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>Setze alle Einstellungen zurück, die über die grafische Oberfläche geändert wurden.</translation>
     </message>
-    </context>
+    <message>
+        <source>PrivateSend information</source>
+        <translation>PrivateSend Information</translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Chaincoin in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times..&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 CHC, 0.1 CHC, 1 CHC and 10 CHC -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more info see &lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </source>
+        <translation>&lt;h3&gt;PrivateSend Grundlagen&lt;/h3&gt; PrivateSend gibt dir wahre finanzielle Privatsphäre indem es die Herkünfte deiner Gelder verschleiert. Alle Chaincoin in deiner Wallet beinhalten unterschiedliche "Inputs", welche du dir als separate Coins vorstellen kannst. &lt;br&gt;PrivateSend benutzt einen innovativen Prozess um deine Inputs, mit den Inputs von zwei anderen Personen zu mixen, ohne das deine Coins je deine Wallet verlassen. Du behältst jederzeit die komplette Kontrolle über dein Geld..&lt;hr&gt;&lt;b&gt;Der PrivateSend Prozess funktioniert so:&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;PrivateSend beginnt, indem es deine Transaktionen stückelt. Diese Stückelungen sind 0.01 CHC, 0.1 CHC, 1 CHC und 10 CHC - so ähnlich wie das Papiergeld, welches wir jeden Tag benutzen. &lt;/li&gt;&lt;li&gt;Deine Wallet sendet dann eine Bitte an speziell konfigurierte Software-Nodes im Netzwerk, die sogenannten "Masternodes". Diese Masternodes sind dann informiert, dass du an einem mixen mit einer bestimmten Stückelung interessiert bist. Keine identifizierbaren Informationen werden an die Masternodes gesendet, so dass sie nie wissen, wer "du" bist. &lt;/li&gt;&lt;li&gt;Wenn nun zwei Personen bekannt geben, dass sie die gleiche Stückelung mixen wollen, beginnt der Vorgang. Die Inputs werden nun vom Masternode gemixt und er sagt den Wallets der drei Benutzer, den nun transformierten Input an sich selbst zu zahlen. Deine Wallet zahlt diese Stückelung nun direkt an sich selbst, jedoch an unterschiedliche Adressen (sogenannte Wechselgeld-Adressen).&lt;/li&gt;&lt;li&gt;Um nun deine Gelder vollständig zu verschleiern, muss deine Wallet diesen Prozess häufiger mit jeder Stückelung durchführen. Jedes Durchführen dieses Vorganges wird als "Runde" bezeichnet. Jede Runde durch PrivateSend macht es exponentiell schwieriger herauszufinden, woher die Gelder ihren Ursprung haben. &lt;/li&gt;&lt;li&gt; Dieser mix-Prozess passiert im Hintergrund ohne nötiges Eingreifen von dir. Wenn du eine Transaktion durchführen möchtest, sind deine Gelder schon anonymisiert. Kein zusätzliches Warten wird benötigt.&lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;WICHTIG:&lt;/b&gt; Deine Wallet beinhaltet nur 1000 von diesen "Wechselgeld-Adressen". Jedes Mal wenn ein mixen stattfindet, werden bis zu 9 dieser Adressen benutzt. Dies bedeutet, dass diese 1000 Adressen für maximal 100 mix-Vorgänge halten. Wenn 900 von denen gebraucht wurden, muss deine Wallet mehr Adressen erstellen. Dies kann jedoch nur geschehen, wenn du automatische Backups eingeschaltet hast.&lt;br&gt;Somit werden Benutzer, die Backups deaktiviert haben auch PrivateSend deaktiviert haben. &lt;hr&gt;Für mehr Informationen:&lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -885,6 +1065,10 @@
         <translation>Ein benutzerdefiniertes Datenverzeichnis verwenden:</translation>
     </message>
     <message>
+        <source>Chaincoin</source>
+        <translation>Chaincoin</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>Fehler: Angegebenes Datenverzeichnis "%1" kann nicht angelegt werden.</translation>
     </message>
@@ -903,12 +1087,176 @@
 </context>
 <context>
     <name>MasternodeList</name>
-    </context>
+    <message>
+        <source>Form</source>
+        <translation>Formular</translation>
+    </message>
+    <message>
+        <source>My Masternodes</source>
+        <translation>Meine Masternodes</translation>
+    </message>
+    <message>
+        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
+        <translation>Merke: Der Status von deinem Masternode in deiner lokalen Wallet kann womöglich leicht falsch sein. &lt;br /&gt;Warte immer auf deine Wallet um zusätzliche Daten zu synchronisieren und von einem Node doppelt zu prüfen&lt;br /&gt;wenn der Masternode läuft und du noch immer nicht "AKTIVIERT" im "Status" Feld siehst.</translation>
+    </message>
+    <message>
+        <source>Alias</source>
+        <translation>Alias</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adresse</translation>
+    </message>
+    <message>
+        <source>Protocol</source>
+        <translation>Protokoll</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>Active</source>
+        <translation>Aktiv</translation>
+    </message>
+    <message>
+        <source>Last Seen</source>
+        <translation>Zuletzt Gesehen</translation>
+    </message>
+    <message>
+        <source>Payee</source>
+        <translation>Zahlungsempfänger</translation>
+    </message>
+    <message>
+        <source>S&amp;tart alias</source>
+        <translation>S&amp;tart alias</translation>
+    </message>
+    <message>
+        <source>Start &amp;all</source>
+        <translation>Starte &amp;alle</translation>
+    </message>
+    <message>
+        <source>Start &amp;MISSING</source>
+        <translation>Starte &amp;FEHLENDE</translation>
+    </message>
+    <message>
+        <source>&amp;Update status</source>
+        <translation>&amp;Update Status</translation>
+    </message>
+    <message>
+        <source>Show additional Masternode information</source>
+        <translation>Zeige zusätzliche Masternode Informationen</translation>
+    </message>
+    <message>
+        <source>Show Details</source>
+        <translation>Zeige Details</translation>
+    </message>
+    <message>
+        <source>Status will be updated automatically in (sec):</source>
+        <translation>Status wird automatisch in Sekunden upgedatet: </translation>
+    </message>
+    <message>
+        <source>0</source>
+        <translation>0</translation>
+    </message>
+    <message>
+        <source>All Masternodes</source>
+        <translation>Alle Masternodes</translation>
+    </message>
+    <message>
+        <source>Filter List:</source>
+        <translation>Filter Liste:</translation>
+    </message>
+    <message>
+        <source>Filter masternode list</source>
+        <translation>Filter Masternode Liste</translation>
+    </message>
+    <message>
+        <source>Node Count:</source>
+        <translation>Node Anzahl:</translation>
+    </message>
+    <message>
+        <source>Start alias</source>
+        <translation>Starte alias</translation>
+    </message>
+    <message>
+        <source>Confirm masternode start</source>
+        <translation>Bestätige Masternode Start</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to start masternode %1?</source>
+        <translation>Bist du sicher, dass du Masternode %1 starten möchtest?</translation>
+    </message>
+    <message>
+        <source>Confirm all masternodes start</source>
+        <translation>Bestätige den Start aller Masternodes</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to start ALL masternodes?</source>
+        <translation>Bist du sicher, dass du ALLE Masternodes starten möchtest?</translation>
+    </message>
+    <message>
+        <source>Command is not available right now</source>
+        <translation>Befehl ist gerade nicht verfügbar</translation>
+    </message>
+    <message>
+        <source>You can't use this command until masternode list is synced</source>
+        <translation>Du kannst diesen Befehl nicht ausführen, bis die Masternode Liste nicht synchronisiert ist</translation>
+    </message>
+    <message>
+        <source>Confirm missing masternodes start</source>
+        <translation>Bestätige fehlende Masternodes zu starten</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to start MISSING masternodes?</source>
+        <translation>Bist du sicher, dass du FEHLENDE Masternodes starten möchtest?</translation>
+    </message>
+    <message>
+        <source>Additional information for Masternode </source>
+        <translation>Zusätzliche Informationen zum Masternode</translation>
+    </message>
+    <message>
+        <source>Masternode Private Key</source>
+        <translation>Masternode Private Key</translation>
+    </message>
+    <message>
+        <source>Private Key</source>
+        <translation>Private Key</translation>
+    </message>
+    <message>
+        <source>Collateral</source>
+        <translation>Pfand</translation>
+    </message>
+    <message>
+        <source>IP</source>
+        <translation>IP</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Version</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Unbekannt</translation>
+    </message>
+    <message>
+        <source>Sentinel</source>
+        <translation>Wächter</translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
         <translation>Formular</translation>
+    </message>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Chaincoin network, as detailed below.</source>
+        <translation>Neueste Transaktionen werden eventuell noch nicht angezeigt, daher könnte Ihr Kontostand veraltet sein. Er wird korrigiert, sobald Ihr Wallet die Synchronisation mit dem Chaincoin-Netzwerk erfolgreich abgeschlossen hat. Details dazu finden sich weiter unten.</translation>
+    </message>
+    <message>
+        <source>Attempting to spend Chaincoin that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Versuche, Chaincoin aus noch nicht angezeigten Transaktionen auszugeben, werden vom Netzwerk nicht akzeptiert.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -925,6 +1273,10 @@
     <message>
         <source>Progress</source>
         <translation>Fortschritt</translation>
+    </message>
+    <message>
+        <source>~</source>
+        <translation>~</translation>
     </message>
     <message>
         <source>Progress increase per hour</source>
@@ -993,6 +1345,58 @@
         <translation>Anzahl an Skript-&amp;Verifizierungs-Threads</translation>
     </message>
     <message>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
+        <translation>Zeige zusätzliche Tabs. All deine Masternodes sind in dem ersten unter-Tab gelistet&lt;br/&gt;und alle anderen Masternodes im Netzwerk sind in dem zweiten unter-Tab</translation>
+    </message>
+    <message>
+        <source>Show Masternodes Tab</source>
+        <translation>Zeige den Masternodes Tab</translation>
+    </message>
+    <message>
+        <source>Show additional information and buttons for PrivateSend on overview screen.</source>
+        <translation>Zeige zusätzliche Informationen und Buttons für PrivateSend am Übersichts- Fenster</translation>
+    </message>
+    <message>
+        <source>Enable advanced PrivateSend interface</source>
+        <translation>Aktiviere das erweiterte PrivateSend Interface</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
+        <translation>Zeige ein Warndialog wenn PrivateSend erkennt, dass die Wallet sehr wenig Schlüssel verbleibend hat.</translation>
+    </message>
+    <message>
+        <source>Warn if PrivateSend is running out of keys</source>
+        <translation>Warne wenn PrivateSend die Schlüssel ausgehen</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>Ob der experimentelle PrivateSend Modus mit mehren mix Sitzungen pro Block genutzt werden soll.&lt;br/&gt;Merke: Du musst diese Funktion vorsichtig nutzen.&lt;br/&gt;Vergewissere dich, dass du immer das letzte Wallet (Auto)Backup an einen sicheren Ort hast!</translation>
+    </message>
+    <message>
+        <source>Enable PrivateSend &amp;multi-session</source>
+        <translation>Aktiviere PrivateSend &amp;multi-Sitzung</translation>
+    </message>
+    <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
+        <translation>Wenn Sie das Ausgeben von unbestätigtem Wechselgeld deaktivieren, kann das Wechselgeld einer Transaktion&lt;br/&gt; nicht verwendet werden, bis es mindestens eine Bestätigung erhalten hat.&lt;br/&gt;Dies wirkt sich auf die Berechnung des Kontostands aus.</translation>
+    </message>
+    <message>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Diese Einstellung leg fest wie häufig individuelle Masternodes genutzt werden um den Input zu anonymisieren.&lt;br/&gt;Mehrere anonymisierte Runden geben einen höheren Grad an Privatsphäre, kosten jedoch mehr Gebühren.</translation>
+    </message>
+    <message>
+        <source>PrivateSend rounds to use</source>
+        <translation>PrivateSend Runden genutzt</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
+        <translation>Dieser Betrag dient als Schwelle um PrivateSend zu deaktivieren sobald er erreicht wurde.</translation>
+    </message>
+    <message>
+        <source>Amount of Chaincoin to keep anonymized</source>
+        <translation>Anzahl der Chaincoin die anonym gehalten werden sollen</translation>
+    </message>
+    <message>
         <source>Automatically open the Chaincoin Core client port on the router. This only works when your router  UPnP and it is enabled.</source>
         <translation>Automatisch den Chaincoin-Clientport auf dem Router öffnen. Dies funktioniert nur, wenn Ihr Router UPnP unterstützt und dies aktiviert ist.</translation>
     </message>
@@ -1033,6 +1437,10 @@
         <translation>Aktive Kommandozeilenoptionen, die obige Konfiguration überschreiben:</translation>
     </message>
     <message>
+        <source>Open the %1 configuration file from the working directory.</source>
+        <translation>Öffne die %1 Konfigurationsdatei von dem Arbeitsverzeichnis.</translation>
+    </message>
+    <message>
         <source>Open Configuration File</source>
         <translation>Konfigurationsdatei öffnen</translation>
     </message>
@@ -1047,6 +1455,14 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Netzwerk</translation>
+    </message>
+    <message>
+        <source>Automatically start Chaincoin Core after logging in to the system.</source>
+        <translation>Starte Chaincoin Core automatisch nach der Anmeldung am System.</translation>
+    </message>
+    <message>
+        <source>&amp;Start Chaincoin Core on system login</source>
+        <translation>&amp;Starte Chaincoin Core bei Systemanmeldung</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1149,6 +1565,28 @@
         <translation>Legt fest, ob die "Coin Control"-Funktionen angezeigt werden.</translation>
     </message>
     <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting Chaincoin Core.</source>
+        <translation>Die Benutzeroberflächensprache kann hier festgelegt werden. Diese Einstellung wird nach einem Neustart von Chaincoin Core wirksam werden.</translation>
+    </message>
+    <message>
+        <source>Language missing or translation incomplete? Help contributing translations here:
+https://www.transifex.com/projects/p/chaincoin/</source>
+        <translation>Sprache fehlend oder Übersetzung unvollständig? Helfe beim Übersetzten hier:
+https://www.transifex.com/projects/p/chaincoin/</translation>
+    </message>
+    <message>
+        <source>User Interface Theme:</source>
+        <translation>Benutzeroberflächen Design: </translation>
+    </message>
+    <message>
+        <source>Decimal digits</source>
+        <translation>Dezimalstellen</translation>
+    </message>
+    <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>Externe URLs (z.B. ein Block-Explorer), die im Kontextmenü des Transaktionsverlaufs eingefügt werden. In der URL wird &lt;br/&gt;%s durch den Transaktionshash ersetzt. Bei Angabe mehrerer URLs müssen diese durch "|" voneinander getrennt werden.</translation>
+    </message>
+    <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>&amp;Externe Transaktions-URLs</translation>
     </message>
@@ -1244,6 +1682,10 @@
         <translation>Kontostände</translation>
     </message>
     <message>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Chaincoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Die angezeigten Informationen sind möglicherweise nicht mehr aktuell. Ihre Wallet wird automatisch synchronisiert, nachdem eine Verbindung zum Chaincoin Netzwerk hergestellt wurde. Dieser Prozess ist jedoch derzeit noch nicht abgeschlossen.</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>Gesamtbetrag:</translation>
     </message>
@@ -1272,6 +1714,62 @@
         <translation>Vollständig:</translation>
     </message>
     <message>
+        <source>PrivateSend Balance:</source>
+        <translation>PrivateSend Guthaben:</translation>
+    </message>
+    <message>
+        <source>Amount and Rounds:</source>
+        <translation>Betrag und Runden:</translation>
+    </message>
+    <message>
+        <source>0 CHC / 0 Rounds</source>
+        <translation>0 CHC / 0 Runden</translation>
+    </message>
+    <message>
+        <source>Submitted Denom:</source>
+        <translation>Übermittelte Stückelung:</translation>
+    </message>
+    <message>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Die Stückelungen die du an dem Masternode gesendet hast.&lt;br&gt;Zum Senden müssen andere Benutzer die genau gleiche Stückelung gesendet haben.</translation>
+    </message>
+    <message>
+        <source>n/a</source>
+        <translation>k.A.</translation>
+    </message>
+    <message>
+        <source>(Last Message)</source>
+        <translation>(Letzte Nachricht)</translation>
+    </message>
+    <message>
+        <source>Start/Stop Mixing</source>
+        <translation>Starte/Stoppe Mixen</translation>
+    </message>
+    <message>
+        <source>Try to manually submit a PrivateSend request.</source>
+        <translation>Versuche manuell eine PrivateSend Forderung zu senden.</translation>
+    </message>
+    <message>
+        <source>Try Mix</source>
+        <translation>Versuche Mixen</translation>
+    </message>
+    <message>
+        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
+        <translation>Setzte den momentanen PrivateSend Status zurück (kann PrivateSend unterbrechen wenn dieser am mixen ist, dies kann dich Geld kosten!)</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Zurücksetzen</translation>
+    </message>
+    <message>
+        <source>Information about PrivateSend and Mixing</source>
+        <translation>Informationen über PrivateSend und Mixen</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>Info</translation>
+    </message>
+    <message>
         <source>Recent transactions</source>
         <translation>Letzte Transaktionen</translation>
     </message>
@@ -1288,12 +1786,126 @@
         <translation>Aktueller Gesamtbetrag in beobachteten Adressen aus obigen Kategorien</translation>
     </message>
     <message>
+        <source>out of sync</source>
+        <translation>Nicht synchronisiert</translation>
+    </message>
+    <message>
+        <source>Automatic backups are disabled, no mixing available!</source>
+        <translation>Automatische Backups sind deaktiviert, mixen ist nicht verfügbar!</translation>
+    </message>
+    <message>
+        <source>Start Mixing</source>
+        <translation>Starte Mixen</translation>
+    </message>
+    <message>
+        <source>Stop Mixing</source>
+        <translation>Stoppe Mixen</translation>
+    </message>
+    <message>
+        <source>No inputs detected</source>
+        <translation>Keine Inputs erkannt</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n Rounds</source>
+        <translation><numerusform>%n Runden</numerusform><numerusform>%n Runden</numerusform></translation>
+    </message>
+    <message>
+        <source>Found enough compatible inputs to anonymize %1</source>
+        <translation>Genug kompatible Inputs gefunden um %1 zu anonymisieren </translation>
+    </message>
+    <message>
+        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
+        <translation>Nicht genug kompatible Inputs um &lt;span style='color:red;'&gt;%1&lt;/span&gt;zu anonymisieren, &lt;br&gt;werde &lt;span style='color:red;'&gt;%2&lt;/span&gt; anstelle anonymisieren </translation>
+    </message>
+    <message>
+        <source>Overall progress</source>
+        <translation>Gesamter Fortschritt</translation>
+    </message>
+    <message>
+        <source>Denominated</source>
+        <translation>Bezeichnet</translation>
+    </message>
+    <message>
+        <source>Mixed</source>
+        <translation>Gemixt</translation>
+    </message>
+    <message>
+        <source>Anonymized</source>
+        <translation>Anonymisiert</translation>
+    </message>
+    <message numerus="yes">
+        <source>Denominated inputs have %5 of %n rounds on average</source>
+        <translation><numerusform>Bezeichnete Inputs haben durchschnittlich %5 von %n Runden</numerusform><numerusform>Bezeichnete Inputs haben durchschnittlich %5 von %n Runden</numerusform></translation>
+    </message>
+    <message>
+        <source>keys left: %1</source>
+        <translation>Schlüssel verbleibend: %1</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation>Deaktiviert</translation>
+    </message>
+    <message>
+        <source>Very low number of keys left since last automatic backup!</source>
+        <translation>Sehr wenig Schlüssel sind nach dem letzten automatischen Backup verfügbar!</translation>
+    </message>
+    <message>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>Wir sind dabei ein automatisches Backup für dich einzurichten, jedoch &lt;span style='color:red;'&gt;solltest du dich immer versichern, dass du Backups an sicheren Orten besitzt&lt;/span&gt;!</translation>
+    </message>
+    <message>
+        <source>Note: You turn this message off in options.</source>
+        <translation>Merke: Du kann diese Nachricht in den Optionen ausschalten.</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation>PrivateSend</translation>
+    </message>
+    <message>
+        <source>WARNING! Something went wrong on automatic backup</source>
+        <translation>WARNUNG! Beim automatischen Backup lief was falsch</translation>
+    </message>
+    <message>
+        <source>ERROR! Failed to create automatic backup</source>
+        <translation>FEHLER! Automatisches Backup konnte nicht erstellt werden</translation>
+    </message>
+    <message>
+        <source>Mixing is disabled, please close your wallet and fix the issue!</source>
+        <translation>Mixing ist deaktiviert, bitte schließe deine Wallet und behebe den Fehler!</translation>
+    </message>
+    <message>
         <source>Enabled</source>
         <translation>Aktiv</translation>
     </message>
     <message>
+        <source>see debug.log for details.</source>
+        <translation>Siehe debug.log für Details.</translation>
+    </message>
+    <message>
+        <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
+        <translation>WARNUNG! Fehlschlag beim nachfüllen des Schlüsselpools, bitte entsperre dafür deine Wallet.</translation>
+    </message>
+    <message>
+        <source>Last PrivateSend message:
+</source>
+        <translation>Letzte PrivateSend Nachricht:
+</translation>
+    </message>
+    <message>
         <source>N/A</source>
         <translation>k.A.</translation>
+    </message>
+    <message>
+        <source>PrivateSend was successfully reset.</source>
+        <translation>PrivateSend wurde erfolgreich zurückgesetzt.</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>Wenn du keine internen PrivateSend Gebühren/Transaktionen sehen möchte, wähle "Meist Häufig" als Typ bei dem "Transaktionen" Tab.</translation>
+    </message>
+    <message>
+        <source>PrivateSend requires at least %1 to use.</source>
+        <translation>PrivateSend benötigt mindestens %1 zur Benutzung.</translation>
     </message>
     </context>
 <context>
@@ -3013,6 +3625,10 @@
 <context>
     <name>chaincoin-core</name>
     <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Fehler beim lesen von %s! Alle Schlüssel korrekt gelesen, aber die Transaktionsdaten oder die Adressbucheinträge fehlen vielleicht oder sind inkorrekt.</translation>
+    </message>
+    <message>
         <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
         <translation>Unterstütze Blöcke und Transaktionen mit  Bloomfiltern zu filtern (default: %u)</translation>
     </message>
@@ -3071,6 +3687,14 @@
     <message>
         <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
         <translation>Benutzername und gehashtes Passwort für JSON-RPC Verbindungen. Das Feld &lt;userpw&gt; kommt im Format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Ein kanonisches Pythonskript ist in share/rpcuser inbegriffen. Der client benutzt wie gehabt, die rpcuser/rpcpassword Parameter. Diese Option kann mehrere Male spezifiziert werden</translation>
+    </message>
+    <message>
+        <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
+        <translation>WARNUNG! Fehlschlag beim nachfüllen des Schlüsselpools, bitte entsperre dafür deine Wallet.</translation>
+    </message>
+    <message>
+        <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
+        <translation>Wallet ist gesperrt, kann den Schlüsselpool nicht entsperren! Automatische Backups und mixen sind deaktiviert, bitte entsperre deine Wallet um den Schlüsselpool nachzufüllen.</translation>
     </message>
     <message>
         <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
