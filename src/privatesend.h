@@ -19,7 +19,7 @@ class CConnman;
 // timeouts
 static const int PRIVATESEND_AUTO_TIMEOUT_MIN       = 10;
 static const int PRIVATESEND_AUTO_TIMEOUT_MAX       = 30;
-static const int PRIVATESEND_QUEUE_TIMEOUT          = 300;
+static const int PRIVATESEND_QUEUE_TIMEOUT          = 120;
 static const int PRIVATESEND_SIGNING_TIMEOUT        = 30;
 
 //! minimum peer version accepted by mixing pool

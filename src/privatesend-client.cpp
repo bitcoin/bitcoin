@@ -356,9 +356,10 @@ void CPrivateSendClient::CheckTimeout()
             break;
     }
 
-    int nLagTime = 10; // give the server a few extra seconds before resetting.
+    int nLagTime = PRIVATESEND_QUEUE_TIMEOUT / 10; // give the server a few extra seconds before resetting.
+    int nShortenTime = nLiquidityProvider ? PRIVATESEND_QUEUE_TIMEOUT / 3 : 0;
     int nTimeout = (nState == POOL_STATE_SIGNING) ? PRIVATESEND_SIGNING_TIMEOUT : PRIVATESEND_QUEUE_TIMEOUT;
-    bool fTimeout = GetTime() - nTimeLastSuccessfulStep >= nTimeout + nLagTime;
+    bool fTimeout = GetTime() - nTimeLastSuccessfulStep >= (nTimeout + nLagTime - nShortenTime);
 
     if(nState != POOL_STATE_IDLE && fTimeout) {
         LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::CheckTimeout -- %s timed out (%ds) -- resetting\n",
