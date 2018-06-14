@@ -1,13 +1,13 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/dobbscoin
+src/dobbscoind
+src/dobbscoin-cli
+src/dobbscoin-tx
+src/test/test_dobbscoin
+src/test/test_dobbscoin_fuzzy
+src/qt/test/test_dobbscoin-qt
 
 # autoreconf
 Makefile.in
@@ -80,17 +80,17 @@ src/qt/bitcoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+dobbscoin-qt
+dobbscoin-Qt.app
+Dobbscoin-Qt.app
 background.tiff*
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+dobbscoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
-
 # Mac specific
 .DS_Store
 build
@@ -99,7 +99,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_dobbscoin.coverage/
 total.coverage/
 coverage_percent.txt
 
