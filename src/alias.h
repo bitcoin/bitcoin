@@ -16,6 +16,7 @@ class CTransaction;
 class CTxOut;
 class COutPoint;
 class CSyscoinAddress;
+class CCoinsViewCache;
 struct CRecipient;
 
 static const unsigned int MAX_GUID_LENGTH = 20;
@@ -25,6 +26,7 @@ static const unsigned int MAX_SYMBOL_LENGTH = 8;
 static const unsigned int MIN_SYMBOL_LENGTH = 1;
 static const unsigned int MAX_ENCRYPTED_GUID_LENGTH = MAX_NAME_LENGTH;
 static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
+static CCriticalSection cs_alias;
 enum {
 	ALIAS=0,
 	OFFER, 
@@ -242,34 +244,45 @@ public:
 	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const int &op) {
 		if(address.empty())
 			return false;	
-		bool writeState = Write(make_pair(std::string("namei"), alias.vchAlias), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
-		WriteAliasIndex(alias, op);
+		bool writeState = false;
+		{
+			LOCK(cs_alias);
+			writeState = Write(make_pair(std::string("namei"), alias.vchAlias), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
+		}
+		if(writeState)
+			WriteAliasIndex(alias, op);
 		return writeState;
 	}
 
 	bool EraseAlias(const std::vector<unsigned char>& vchAlias, bool cleanup = false) {
-		bool eraseState = Erase(make_pair(std::string("namei"), vchAlias));
-		return eraseState;
+		LOCK(cs_alias);
+		return Erase(make_pair(std::string("namei"), vchAlias));
 	}
 	bool ReadAlias(const std::vector<unsigned char>& vchAlias, CAliasIndex& alias) {
+		LOCK(cs_alias);
 		return Read(make_pair(std::string("namei"), vchAlias), alias);
 	}
 	bool ReadAddress(const std::vector<unsigned char>& address, std::vector<unsigned char>& name) {
+		LOCK(cs_alias);
 		return Read(make_pair(std::string("namea"), address), name);
 	}
 	bool ReadAliasUnprunable(const std::vector<unsigned char>& alias, CAliasUnprunable& aliasUnprunable) {
+		LOCK(cs_alias);
 		return Read(make_pair(std::string("nameu"), alias), aliasUnprunable);
 	}
 	bool EraseAddress(const std::vector<unsigned char>& address) {
+		LOCK(cs_alias);
 	    return Erase(make_pair(std::string("namea"), address));
 	}
 	bool ExistsAddress(const std::vector<unsigned char>& address) {
+		LOCK(cs_alias);
 	    return Exists(make_pair(std::string("namea"), address));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteAliasIndex(const CAliasIndex& alias, const int &op);
 	void WriteAliasIndexHistory(const CAliasIndex& alias, const int &op);
 	void WriteAliasIndexTxHistory(const std::string &user1, const std::string &user2, const std::string &user3, const uint256 &txHash, const unsigned int& nHeight, const std::string &type, const std::string &guid);
+	bool ScanAliases(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 };
 
 class COfferDB;
@@ -277,12 +290,14 @@ class CCertDB;
 class CEscrowDB;
 class CAssetDB;
 class CAssetAllocationDB;
+class CAssetAllocationTransactionsDB;
 extern CAliasDB *paliasdb;
 extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
 extern CEscrowDB *pescrowdb;
 extern CAssetDB *passetdb;
 extern CAssetAllocationDB *passetallocationdb;
+extern CAssetAllocationTransactionsDB *passetallocationtransactionsdb;
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);
@@ -290,7 +305,7 @@ std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
 const int SYSCOIN_TX_VERSION = 0x7400;
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
-bool CheckAliasInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage,bool bSanityCheck=false);
+bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage,bool bSanityCheck=false);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
@@ -305,7 +320,7 @@ bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, std::vector<std::vec
 bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char &type);
 bool DecodeAliasScript(const CScript& script, int& op,
 		std::vector<std::vector<unsigned char> > &vvch);
-bool FindAliasInTx(const CTransaction& tx, std::vector<std::vector<unsigned char> >& vvch);
+bool FindAliasInTx(const CCoinsViewCache &inputs, const CTransaction& tx, std::vector<std::vector<unsigned char> >& vvch);
 unsigned int aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outPoint);
 bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey);
 bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, std::vector<unsigned char> &vchPubKey);
@@ -332,4 +347,5 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName);
 bool DoesAliasExist(const std::string &strAddress);
 bool IsOutpointMature(const COutPoint& outpoint, bool fUseInstantSend = false);
 UniValue syscointxfund_helper(const std::vector<unsigned char> &vchAlias, const std::vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, std::vector<CRecipient> &vecSend);
+bool FlushSyscoinDBs();
 #endif // ALIAS_H

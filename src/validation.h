@@ -336,11 +336,11 @@ typedef int64_t NodeId;
  * plTxnReplaced will be appended to with all transactions replaced from mempool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
 	bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced = NULL, bool fOverrideMempoolLimit = false,
-	const CAmount nAbsurdFee = 0, bool fDryRun = false);
+	const CAmount nAbsurdFee = 0, bool fDryRun = false, bool bMultiThreaded = false);
 /** (try to) add transaction to memory pool with a specified acceptance time **/
 bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
                         bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced = NULL,
-                        bool fOverrideMempoolLimit=false, const CAmount nAbsurdFee=0, bool fDryRun=false);
+                        bool fOverrideMempoolLimit=false, const CAmount nAbsurdFee=0, bool fDryRun=false, bool bMultiThreaded = false);
 // SYSCOIN
 inline CBlockIndex* LookupBlockIndex(const uint256& hash)
 {
@@ -348,7 +348,7 @@ inline CBlockIndex* LookupBlockIndex(const uint256& hash)
 	BlockMap::const_iterator it = mapBlockIndex.find(hash);
 	return it == mapBlockIndex.end() ? nullptr : it->second;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, CValidationState &state, bool fJustCheck, int nHeight, const CBlock& block, bool bSanity = false);
+bool CheckSyscoinInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock& block, bool bSanity = false);
 bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
 int GetUTXOHeight(const COutPoint& outpoint);
 int GetUTXOConfirmations(const COutPoint& outpoint);
@@ -385,7 +385,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * instead of being performed inline.
  */
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
-                 unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks = NULL);
+                 unsigned int flags, bool cacheStore, bool cacheFullScriptStore, std::vector<CScriptCheck> *pvChecks = NULL, uint256* hashCacheEntry=NULL, bool *isCached = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);

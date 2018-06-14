@@ -129,7 +129,7 @@ UniValue masternode(const JSONRPCRequest& request)
     if (request.fHelp  ||
         (
 #ifdef ENABLE_WALLET
-            strCommand != "start-alias" && strCommand != "start-all" && strCommand != "start-missing" &&
+            strCommand != "initialize" && strCommand != "start-all" && strCommand != "start-missing" &&
          strCommand != "start-disabled" && strCommand != "outputs" &&
 #endif // ENABLE_WALLET
          strCommand != "list" && strCommand != "list-conf" && strCommand != "count" &&
@@ -146,7 +146,7 @@ UniValue masternode(const JSONRPCRequest& request)
                 "  genkey       - Generate new masternodeprivkey\n"
 #ifdef ENABLE_WALLET
                 "  outputs      - Print masternode compatible outputs\n"
-                "  start-alias  - Start single remote masternode by assigned alias configured in masternode.conf\n"
+                "  initialize  - Start single remote masternode by assigned name configured in masternode.conf\n"
                 "  start-<mode> - Start remote masternodes configured in masternode.conf (<mode>: 'all', 'missing', 'disabled')\n"
 #endif // ENABLE_WALLET
                 "  status       - Print masternode status information\n"
@@ -258,13 +258,13 @@ UniValue masternode(const JSONRPCRequest& request)
     }
 
 #ifdef ENABLE_WALLET
-    if (strCommand == "start-alias")
+    if (strCommand == "initialize")
     {
         if (!EnsureWalletIsAvailable(request.fHelp))
             return NullUniValue;
 
         if (request.params.size() < 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify an alias");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify a name");
 
         {
             LOCK(pwalletMain->cs_wallet);
@@ -276,7 +276,7 @@ UniValue masternode(const JSONRPCRequest& request)
         bool fFound = false;
 
         UniValue statusObj(UniValue::VOBJ);
-        statusObj.push_back(Pair("alias", strAlias));
+        statusObj.push_back(Pair("name", strAlias));
 
         for (const auto& mne : masternodeConfig.getEntries()) {
             if(mne.getAlias() == strAlias) {
@@ -303,7 +303,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
         if(!fFound) {
             statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "Could not find alias in config. Verify with list-conf."));
+            statusObj.push_back(Pair("errorMessage", "Could not find name in config. Verify with list-conf."));
         }
 
         return statusObj;
@@ -349,7 +349,7 @@ UniValue masternode(const JSONRPCRequest& request)
             }
 
             UniValue statusObj(UniValue::VOBJ);
-            statusObj.push_back(Pair("alias", mne.getAlias()));
+            statusObj.push_back(Pair("name", mne.getAlias()));
             statusObj.push_back(Pair("result", fResult ? "successful" : "failed"));
 
             if (fResult) {
@@ -391,7 +391,7 @@ UniValue masternode(const JSONRPCRequest& request)
             std::string strStatus = fFound ? mn.GetStatus() : "MISSING";
 
             UniValue mnObj(UniValue::VOBJ);
-            mnObj.push_back(Pair("alias", mne.getAlias()));
+            mnObj.push_back(Pair("name", mne.getAlias()));
             mnObj.push_back(Pair("address", mne.getIp()));
             mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
             mnObj.push_back(Pair("txHash", mne.getTxHash()));
@@ -503,7 +503,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 "                                    additional matches in some modes are also available\n"
                 "\nAvailable modes:\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
-                "                   (since latest issued \"masternode start/start-many/start-alias\")\n"
+                "                   (since latest issued \"masternode start/start-many/initialize\")\n"
                 "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
                 "  daemon         - Print daemon version of a masternode (can be additionally filtered, exact match)\n"
                 "  full           - Print info in format 'status protocol payee lastseen activeseconds lastpaidtime lastpaidblock IP'\n"
@@ -684,7 +684,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
     if (request.fHelp  ||
         (
 #ifdef ENABLE_WALLET
-            strCommand != "create-alias" && strCommand != "create-all" &&
+            strCommand != "create-name" && strCommand != "create-all" &&
 #endif // ENABLE_WALLET
             strCommand != "decode" && strCommand != "relay"))
         throw std::runtime_error(
@@ -694,7 +694,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "\nAvailable commands:\n"
 #ifdef ENABLE_WALLET
-                "  create-alias  - Create single remote masternode broadcast message by assigned alias configured in masternode.conf\n"
+                "  create-name  - Create single remote masternode broadcast message by assigned name configured in masternode.conf\n"
                 "  create-all    - Create remote masternode broadcast messages for all masternodes configured in masternode.conf\n"
 #endif // ENABLE_WALLET
                 "  decode        - Decode masternode broadcast message\n"
@@ -702,7 +702,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                 );
 
 #ifdef ENABLE_WALLET
-    if (strCommand == "create-alias")
+    if (strCommand == "create-name")
     {
         if (!EnsureWalletIsAvailable(request.fHelp))
             return NullUniValue;
@@ -712,7 +712,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Wait for reindex and/or import to finish");
 
         if (request.params.size() < 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify an alias");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify a name");
 
         {
             LOCK(pwalletMain->cs_wallet);
@@ -725,7 +725,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
         UniValue statusObj(UniValue::VOBJ);
         std::vector<CMasternodeBroadcast> vecMnb;
 
-        statusObj.push_back(Pair("alias", strAlias));
+        statusObj.push_back(Pair("name", strAlias));
 
         for (const auto& mne : masternodeConfig.getEntries()) {
             if(mne.getAlias() == strAlias) {
@@ -750,7 +750,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 
         if(!fFound) {
             statusObj.push_back(Pair("result", "not found"));
-            statusObj.push_back(Pair("errorMessage", "Could not find alias in config. Verify with list-conf."));
+            statusObj.push_back(Pair("errorMessage", "Could not find name in config. Verify with list-conf."));
         }
 
         return statusObj;
@@ -787,7 +787,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             bool fResult = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb, true);
 
             UniValue statusObj(UniValue::VOBJ);
-            statusObj.push_back(Pair("alias", mne.getAlias()));
+            statusObj.push_back(Pair("name", mne.getAlias()));
             statusObj.push_back(Pair("result", fResult ? "successful" : "failed"));
 
             if(fResult) {

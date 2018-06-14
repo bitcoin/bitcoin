@@ -8,6 +8,7 @@
 #include "rpc/server.h"
 #include "dbwrapper.h"
 #include "feedback.h"
+#include "sync.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -35,6 +36,7 @@ enum EscrowStatus {
 	EscrowRefunded = 4,
 	EscrowRefundComplete = 5
 };
+static CCriticalSection cs_escrow;
 class CEscrow {
 public:
 	std::vector<unsigned char> vchEscrow;
@@ -170,21 +172,28 @@ public:
     CEscrowDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "escrow", nCacheSize, fMemory, fWipe) {}
 
     bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const COffer &offer, const CEscrow& escrow) {
-		bool writeState = Write(make_pair(std::string("escrowi"), escrow.vchEscrow), escrow);
-		WriteEscrowIndex(offer, escrow, vvchArgs);
+		bool writeState = false;
+		{
+			LOCK(cs_escrow);
+			writeState = Write(make_pair(std::string("escrowi"), escrow.vchEscrow), escrow);
+		}
+		if(writeState)
+			WriteEscrowIndex(offer, escrow, vvchArgs);
         return writeState;
     }
 	void WriteEscrowBid(const COffer& offer, const CEscrow& escrow, const std::string& status) {
 		WriteEscrowBidIndex(offer, escrow, status);
 	}
     bool EraseEscrow(const std::vector<unsigned char>& vchEscrow, bool cleanup = false) {
-		bool eraseState = Erase(make_pair(std::string("escrowi"), vchEscrow));
-        return eraseState;
+		LOCK(cs_escrow);
+		return Erase(make_pair(std::string("escrowi"), vchEscrow));
     }
     bool ReadEscrow(const std::vector<unsigned char>& vchEscrow, CEscrow& escrow) {
+		LOCK(cs_escrow);
         return Read(make_pair(std::string("escrowi"), vchEscrow), escrow);
     }
 	bool ReadEscrowLastTXID(const std::vector<unsigned char>& escrow, uint256& txid) {
+		LOCK(cs_escrow);
 		return Read(make_pair(std::string("escrowlt"), escrow), txid);
 	}
 	bool CleanupDatabase(int &servicesCleaned);
@@ -192,6 +201,7 @@ public:
 	void WriteEscrowFeedbackIndex(const COffer& offer, const CEscrow& escrow);
 	void WriteEscrowBidIndex(const COffer& offer, const CEscrow& escrow, const std::string& status);
 	void RefundEscrowBidIndex(const std::vector<unsigned char>& vchEscrow, const std::string& status);
+	bool ScanEscrows(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 };
 
 bool GetEscrow(const std::vector<unsigned char> &vchEscrow, CEscrow& txPos);

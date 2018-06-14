@@ -99,7 +99,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
 		boost::filesystem::remove(boost::filesystem::system_complete(dataDir + "/wallet.dat"));
 	}
     boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -unittest -datadir=") + dataDir;
+	string nodePath = fpath.string() + string(" -unittest -assetallocationindex -datadir=") + dataDir;
 	if(regTest)
 		nodePath += string(" -regtest -addressindex");
 	if(!extraArgs.empty())
@@ -1281,15 +1281,25 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	if(!usezdag)
+	if (usezdag) {
+		MilliSleep(100);
+	}
+	else {
 		GenerateBlocks(1, node);
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetallocationtransactions"));
+		BOOST_CHECK(r.isArray());
+		UniValue assetTxArray = r.get_array();
+		UniValue firstAssetTx = assetTxArray[0].get_obj();
+		BOOST_CHECK_EQUAL(find_value(firstAssetTx, "txid").get_str(), txid);
+		BOOST_CHECK_EQUAL(find_value(firstAssetTx, "confirmed").get_bool(), true);
+	}
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + name + " " + fromalias + " false"));
 	balance = find_value(r.get_obj(), "balance");
 	if(newfromamount > 0)
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges), newfromamount);
 	return txid;
 }
-void AssetSend(const string& node, const string& name, const string& inputs, const string& memo, const string& witness)
+string AssetSend(const string& node, const string& name, const string& inputs, const string& memo, const string& witness, bool completetx)
 {
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
@@ -1356,35 +1366,38 @@ void AssetSend(const string& node, const string& name, const string& inputs, con
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
-	
-	GenerateBlocks(1, node);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
+	if (completetx) {
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
-	balance = find_value(r.get_obj(), "balance");
-	if(newfromamount > 0)
-		BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
+		GenerateBlocks(1, node);
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
 
-	if (!otherNode1.empty())
-	{
-		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + name + " false"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
 		balance = find_value(r.get_obj(), "balance");
-		if(newfromamount > 0)
-			BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
+		if (newfromamount > 0)
+			BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges), newfromamount);
 
-	}
-	if (!otherNode2.empty())
-	{
-		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + name + " false"));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
-		balance = find_value(r.get_obj(), "balance");
-		if(newfromamount > 0)
-			BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges) , newfromamount);
+		if (!otherNode1.empty())
+		{
+			BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + name + " false"));
+			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
+			balance = find_value(r.get_obj(), "balance");
+			if (newfromamount > 0)
+				BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges), newfromamount);
 
+		}
+		if (!otherNode2.empty())
+		{
+			BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + name + " false"));
+			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
+			balance = find_value(r.get_obj(), "balance");
+			if (newfromamount > 0)
+				BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision, binputranges), newfromamount);
+
+		}
 	}
+	return hex_str;
 
 }
 const string CertNew(const string& node, const string& alias, const string& title, const string& pubdata, const string& witness)

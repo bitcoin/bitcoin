@@ -46,9 +46,9 @@
 
 extern bool fMasternodeMode;
 extern bool fUnitTest;
+extern bool fAssetAllocationIndex;
 extern bool fLiteMode;
 extern int nWalletBackups;
-
 static const bool DEFAULT_LOGTIMEMICROS  = false;
 static const bool DEFAULT_LOGIPS         = false;
 static const bool DEFAULT_LOGTIMESTAMPS  = true;
