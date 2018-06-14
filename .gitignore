@@ -9,6 +9,7 @@ src/raven-cli
 src/raven-tx
 src/test/test_raven
 src/test/test_raven_fuzzy
+src/test/test_raven_hash
 src/qt/test/test_raven-qt
 .vscode
 output.txt
