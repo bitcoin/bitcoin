@@ -1,22 +1,32 @@
-Bitcoin Core integration/staging tree
+Dobbscoin Core/SLACK integration/staging tree
 =====================================
+The Official CryptoCurrency of the Church of the SubGenius. http://www.subgenius.com
 
-[![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
+The ONLY crypto-currency accepted on the Pleasure Saucers. https://www.dobbscoin.info
 
-https://bitcoincore.org
+Maybe you've come into a large inheritance, or your income just suddenly popped.
+Maybe you gave birth to quintuplets or been recently divorced. Or maybe you just
+feel uneasy about your money; where it's going or how far it will take you in the
+future. Whatever your problem is, Dobbscoin can help you.
 
-What is Bitcoin?
+Will you join TheConspiracy’s mindless atheistic unknowing servitude to the Elder Bankers of the Universe and their MINIONS in some hideous World Government, or will you GET SLACK and FIGHT FOR FREEDOM as a zeal-crazed Priest-Warrior for ODIN?
+
+Give yourself to SLACK freely, joyously, without an atom of restraint --NOW -- and your worries are over.
+
+Get in on the ground floor of this lucrative alt., while difficulty is low.
+
+Eternal Salvation or Triple your Money Back!!
+
+What is Dobbscoin?
 ----------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+Dobbscoin is an excrimental new digital currency that enables the sending of
+instant Slack to anyone, anywhere in the omniverse. Dobbscoin uses peer-to-peer
+technology to operate with no central authority: managing transactions and
+issuing Slack is carried out collectively by the network.
 
-For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see https://bitcoin.org/en/download, or read the
-[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
+For more information, as well as an immediately useable binary version of
+the Dobbscoin Core software, see https://github.com/dobbscoin/dobbscoin-source/releases
 
 License
 -------
@@ -28,16 +38,16 @@ Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
+completely stable. [Tags](https://github.com/dobbscoin/dobbscoin-source/tags) are created
 regularly to indicate new official, stable release versions of Bitcoin Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
+The developer [forum](http://dobbscoin.info/smf)
 should be used to discuss complicated or controversial changes before working
 on a patch set.
 
-Developer IRC can be found on Freenode at #bitcoin-core-dev.
+Developer IRC can be found on Freenode at #dobbscoin-dev
 
 Testing
 -------
