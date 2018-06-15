@@ -90,6 +90,7 @@ bool GetWalletAddressesForKey(CWallet * const pwallet, const CKeyID &keyid, std:
 
 static bool ImportPrivateKey(CWallet * const pwallet, const UniValue& privkey, const std::string& label = "", const int64_t timestamp = 1)
 {
+    AssertLockHeld(pwallet->cs_wallet);
     CKey key = DecodeSecret(privkey.get_str());
     if (!key.IsValid()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
