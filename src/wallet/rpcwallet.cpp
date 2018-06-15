@@ -120,7 +120,7 @@ static void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     }
     entry.pushKV("bip125-replaceable", rbfStatus);
 
-    for (const std::pair<std::string, std::string>& item : wtx.mapValue)
+    for (const std::pair<const std::string, std::string>& item : wtx.mapValue)
         entry.pushKV(item.first, item.second);
 }
 
@@ -343,7 +343,7 @@ static UniValue setlabel(const JSONRPCRequest& request)
     // If so, delete the account record for it. Labels, unlike addresses, can be deleted,
     // and if we wouldn't do this, the record would stick around forever.
     bool found_address = false;
-    for (const std::pair<CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
+    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
         if (item.second.name == label) {
             found_address = true;
             break;
@@ -440,7 +440,7 @@ static UniValue getaddressesbyaccount(const JSONRPCRequest& request)
 
     // Find all addresses that have the given account
     UniValue ret(UniValue::VARR);
-    for (const std::pair<CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
+    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
         const CTxDestination& dest = item.first;
         const std::string& strName = item.second.name;
         if (strName == strAccount) {
@@ -753,7 +753,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 
     // Tally
     CAmount nAmount = 0;
-    for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
+    for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         const CWalletTx& wtx = pairWtx.second;
         if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
             continue;
@@ -821,7 +821,7 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
 
     // Tally
     CAmount nAmount = 0;
-    for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
+    for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         const CWalletTx& wtx = pairWtx.second;
         if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
             continue;
@@ -1527,7 +1527,7 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
 
     // Tally
     std::map<CTxDestination, tallyitem> mapTally;
-    for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
+    for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         const CWalletTx& wtx = pairWtx.second;
 
         if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
@@ -2106,13 +2106,13 @@ static UniValue listaccounts(const JSONRPCRequest& request)
             includeWatchonly = includeWatchonly | ISMINE_WATCH_ONLY;
 
     std::map<std::string, CAmount> mapAccountBalances;
-    for (const std::pair<CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook) {
+    for (const std::pair<const CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook) {
         if (IsMine(*pwallet, entry.first) & includeWatchonly) {  // This address belongs to me
             mapAccountBalances[entry.second.name] = 0;
         }
     }
 
-    for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
+    for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         const CWalletTx& wtx = pairWtx.second;
         CAmount nFee;
         std::string strSentAccount;
@@ -2141,7 +2141,7 @@ static UniValue listaccounts(const JSONRPCRequest& request)
         mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
 
     UniValue ret(UniValue::VOBJ);
-    for (const std::pair<std::string, CAmount>& accountBalance : mapAccountBalances) {
+    for (const std::pair<const std::string, CAmount>& accountBalance : mapAccountBalances) {
         ret.pushKV(accountBalance.first, ValueFromAmount(accountBalance.second));
     }
     return ret;
@@ -2250,7 +2250,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
 
     UniValue transactions(UniValue::VARR);
 
-    for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
+    for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         CWalletTx tx = pairWtx.second;
 
         if (depth == -1 || tx.GetDepthInMainChain() < depth) {
@@ -4187,7 +4187,7 @@ static UniValue getaddressesbylabel(const JSONRPCRequest& request)
 
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
-    for (const std::pair<CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
+    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
         if (item.second.name == label) {
             ret.pushKV(EncodeDestination(item.first), AddressBookDataToJSON(item.second, false));
         }
@@ -4240,7 +4240,7 @@ static UniValue listlabels(const JSONRPCRequest& request)
 
     // Add to a set to sort by label name, then insert into Univalue array
     std::set<std::string> label_set;
-    for (const std::pair<CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook) {
+    for (const std::pair<const CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook) {
         if (purpose.empty() || entry.second.purpose == purpose) {
             label_set.insert(entry.second.name);
         }
