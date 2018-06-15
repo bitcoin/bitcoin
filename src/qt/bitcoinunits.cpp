@@ -41,8 +41,8 @@ QString BitcoinUnits::longName(int unit)
     switch(unit)
     {
     case BTC: return QString("SLACK");
-    case mBTC: return QString("dobb");
-    case uBTC: return QString("dobbalina");
+    case mBTC: return QString("dobbs");
+    case uBTC: return QString("dobalina");
     default: return QString("???");
     }
 }
