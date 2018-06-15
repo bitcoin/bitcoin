@@ -3090,8 +3090,20 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Copy hiện tại signature tới system clipboard</translation>
     </message>
     <message>
+        <source>Sign the message to prove you own this Chaincoin address</source>
+        <translation>Ký tin nhắn để chứng minh bạn sở hữu Chaincoin address này</translation>
+    </message>
+    <message>
+        <source>The Chaincoin address the message was signed with</source>
+        <translation>Địa chỉ Chaincoin mà tin nhắn đã ký với</translation>
+    </message>
+    <message>
+        <source>Verify the message to ensure it was signed with the specified Chaincoin address</source>
+        <translation>Xác minh thông báo để đảm bảo rằng nó đã được ký với địa chỉ Chaincoin được chỉ định</translation>
+    </message>
+    <message>
         <source>Sign &amp;Message</source>
-        <translation>Sign &amp;Message</translation>
+        <translation>Ký &amp;tin nhắn</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
@@ -3099,11 +3111,11 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>Clear &amp;All</translation>
+        <translation>Làm sạch tất cả</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Verify Tin nhắn</translation>
+        <translation>&amp;Xắc Nhận Tin nhắn</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
@@ -3176,7 +3188,23 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-    </context>
+    <message>
+        <source>Version %1</source>
+        <translation>Phiên bản %1</translation>
+    </message>
+    <message>
+        <source>The Bitcoin Core developers</source>
+        <translation>Các nhà phát triển Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>The Dash Core developers</source>
+        <translation>Các nhà phát triển Dash Core</translation>
+    </message>
+    <message>
+        <source>The Chaincoin Core developers</source>
+        <translation>Các nhà phát triển Chaincoin Core</translation>
+    </message>
+</context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -3244,35 +3272,35 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation>Source</translation>
+        <translation>Nguồn</translation>
     </message>
     <message>
         <source>Generated</source>
-        <translation>Generated</translation>
+        <translation>Đã tạo</translation>
     </message>
     <message>
         <source>From</source>
-        <translation>From</translation>
+        <translation>Từ</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation>unknown</translation>
+        <translation>Không biết</translation>
     </message>
     <message>
         <source>To</source>
-        <translation>To</translation>
+        <translation>Tới</translation>
     </message>
     <message>
         <source>own address</source>
-        <translation>own address</translation>
+        <translation>địa chỉ riêng</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation>watch-only</translation>
+        <translation>chỉ xem</translation>
     </message>
     <message>
         <source>label</source>
-        <translation>label</translation>
+        <translation>Nhãn</translation>
     </message>
     <message>
         <source>Credit</source>
@@ -3284,7 +3312,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>not accepted</source>
-        <translation>not accepted</translation>
+        <translation>Không nhận</translation>
     </message>
     <message>
         <source>Debit</source>
@@ -3300,11 +3328,11 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation>Transaction fee</translation>
+        <translation>Phí giao dịch</translation>
     </message>
     <message>
         <source>Net amount</source>
-        <translation>Net amount</translation>
+        <translation>Số lượng tịnh</translation>
     </message>
     <message>
         <source>Message</source>
@@ -3312,35 +3340,35 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Comment</source>
-        <translation>Comment</translation>
+        <translation>Bình luận</translation>
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation>Transaction ID</translation>
+        <translation>ID giao dịch</translation>
     </message>
     <message>
         <source>Transaction total size</source>
-        <translation>Transaction total size</translation>
+        <translation>Tổng kích cỡ giao dịch</translation>
     </message>
     <message>
         <source>Merchant</source>
-        <translation>Merchant</translation>
+        <translation>Người bán</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</translation>
+        <translation>Tiền xu tạo ra phải trưởng thành %1 khối trước khi chúng có thể được chi tiêu. Khi bạn tạo ra khối này, nó đã được phát sóng vào mạng để được thêm vào chuỗi khối. Nếu nó không thành công trong chuỗi, trạng thái của nó sẽ thay đổi thành "không được chấp nhận" và sẽ không thể chi tiêu. Điều này đôi khi có thể xảy ra nếu một nút khác tạo ra một khối trong vòng vài giây của bạn.</translation>
     </message>
     <message>
         <source>Debug information</source>
-        <translation>Debug information</translation>
+        <translation>Thông tin gỡ lỗi</translation>
     </message>
     <message>
         <source>Transaction</source>
-        <translation>Transaction</translation>
+        <translation>Các Giao Dịch</translation>
     </message>
     <message>
         <source>Inputs</source>
-        <translation>Inputs</translation>
+        <translation>Đang nhập</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -3358,8 +3386,12 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
 <context>
     <name>TransactionDescDialog</name>
     <message>
+        <source>Transaction details</source>
+        <translation>Chi tiết giao dịch</translation>
+    </message>
+    <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>This pane shows a detailed description of the transaction</translation>
+        <translation>Ngăn này hiển thị mô tả chi tiết về giao dịch</translation>
     </message>
 </context>
 <context>
@@ -3370,7 +3402,11 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation>Type</translation>
+        <translation>Loại</translation>
+    </message>
+    <message>
+        <source>Address / Label</source>
+        <translation>Địa chỉ / Nhẵn</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
@@ -3378,27 +3414,27 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation>Open until %1</translation>
+        <translation>Mở cho đến %1</translation>
     </message>
     <message>
         <source>Offline</source>
-        <translation>Offline</translation>
+        <translation>Ngoại tuyến</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation>Unconfirmed</translation>
+        <translation>Chưa được xác nhận</translation>
     </message>
     <message>
         <source>Abandoned</source>
-        <translation>Abandoned</translation>
+        <translation>Bị bỏ rơi</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>Confirming (%1 of %2 recommended confirmations)</translation>
+        <translation>Xác nhận (%1 trong số %2 xác nhận được đề xuất)</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>Confirmed (%1 confirmations)</translation>
+        <translation>Đã xác nhận (%1 xác nhận)</translation>
     </message>
     <message>
         <source>Conflicted</source>
@@ -3406,43 +3442,67 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Immature (%1 confirmations, will be available after %2)</translation>
+        <translation>Chưa trưởng thành (%1 xác nhận, sẽ khả dụng sau %2)</translation>
     </message>
     <message>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>This block was not received by any other nodes and will probably not be accepted!</translation>
+        <translation>Khối này không được nhận bởi bất kỳ nút nào khác và có thể sẽ không được chấp nhận!</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation>Generated but not accepted</translation>
+        <translation>Đã tạo nhưng không được chấp nhận</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation>Received with</translation>
+        <translation>Đã nhận với</translation>
     </message>
     <message>
         <source>Received from</source>
-        <translation>Received from</translation>
+        <translation>Nhận được tư</translation>
+    </message>
+    <message>
+        <source>Received via PrivateSend</source>
+        <translation>Nhận từ PrivateSend</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Sent to</translation>
+        <translation>Gửi đến</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
-        <translation>Payment to yourself</translation>
+        <translation>Thanh toán cho chính bạn</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Mined</translation>
+        <translation>Đã khai thác</translation>
+    </message>
+    <message>
+        <source>PrivateSend Denominate</source>
+        <translation>PrivateSend Denominate</translation>
+    </message>
+    <message>
+        <source>PrivateSend Collateral Payment</source>
+        <translation>PrivateSend Collateral Payment</translation>
+    </message>
+    <message>
+        <source>PrivateSend Make Collateral Inputs</source>
+        <translation>PrivateSend Make Collateral Inputs</translation>
+    </message>
+    <message>
+        <source>PrivateSend Create Denominations</source>
+        <translation>PrivateSend Create Denominations</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation>PrivateSend</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation>watch-only</translation>
+        <translation>chỉ xem</translation>
     </message>
     <message>
         <source>(n/a)</source>
-        <translation>(n/a)</translation>
+        <translation>không tồn tại</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -3450,27 +3510,27 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Transaction status. Hover over this field to show number of confirmations.</translation>
+        <translation>Trạng thái giao dịch. Di chuột qua trường này để hiển thị số xác nhận.</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
-        <translation>Date and time that the transaction was received.</translation>
+        <translation>Ngày và giờ giao dịch được nhận.</translation>
     </message>
     <message>
         <source>Type of transaction.</source>
-        <translation>Type of transaction.</translation>
+        <translation>Loại giao dịch.</translation>
     </message>
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation>Whether or not a watch-only address is involved in this transaction.</translation>
+        <translation>Địa chỉ chỉ xem có liên quan đến giao dịch này hay không.</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
-        <translation>User-defined intent/purpose of the transaction.</translation>
+        <translation>Mục đích / mục đích do người dùng xác định của giao dịch.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation>Amount removed from or added to balance.</translation>
+        <translation>Số tiền bị xóa hoặc được thêm vào số dư.</translation>
     </message>
 </context>
 <context>
@@ -3504,40 +3564,68 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Range...</translation>
     </message>
     <message>
+        <source>Most Common</source>
+        <translation>Chung nhất</translation>
+    </message>
+    <message>
         <source>Received with</source>
-        <translation>Received with</translation>
+        <translation>Đã nhận với</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Sent to</translation>
+        <translation>Gửi đến</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation>PrivateSend</translation>
+    </message>
+    <message>
+        <source>PrivateSend Make Collateral Inputs</source>
+        <translation>PrivateSend Make Collateral Inputs</translation>
+    </message>
+    <message>
+        <source>PrivateSend Create Denominations</source>
+        <translation>PrivateSend Create Denominations</translation>
+    </message>
+    <message>
+        <source>PrivateSend Denominate</source>
+        <translation>PrivateSend Denominate</translation>
+    </message>
+    <message>
+        <source>PrivateSend Collateral Payment</source>
+        <translation>PrivateSend Collateral Payment</translation>
     </message>
     <message>
         <source>To yourself</source>
-        <translation>To yourself</translation>
+        <translation>Tới bạn</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Mined</translation>
+        <translation>Đã khai thác</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation>Other</translation>
+        <translation>Khác</translation>
+    </message>
+    <message>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>Nhập địa chỉ, id giao dịch hoặc nhãn để tìm kiếm</translation>
     </message>
     <message>
         <source>Min amount</source>
-        <translation>Min amount</translation>
+        <translation>Số lượng ít nhất</translation>
     </message>
     <message>
         <source>Abandon transaction</source>
-        <translation>Abandon transaction</translation>
+        <translation>Hủy giao dịch</translation>
     </message>
     <message>
         <source>Increase transaction fee</source>
-        <translation>Increase transaction fee</translation>
+        <translation>Tăng phí giao dịch</translation>
     </message>
     <message>
         <source>Copy address</source>
-        <translation>Copy address</translation>
+        <translation>Sao chép địa chỉ</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -3553,27 +3641,27 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Copy raw transaction</source>
-        <translation>Copy raw transaction</translation>
+        <translation>Sao chép giao dịch thô</translation>
     </message>
     <message>
         <source>Copy full transaction details</source>
-        <translation>Copy full transaction details</translation>
+        <translation>Sao chép chi tiết giao dịch đầy đủ</translation>
     </message>
     <message>
         <source>Edit label</source>
-        <translation>Edit label</translation>
+        <translation>Sửa Nhẵn</translation>
     </message>
     <message>
         <source>Show transaction details</source>
-        <translation>Show transaction details</translation>
+        <translation>Hiển thị chi tiết giao dịch</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
-        <translation>Export Transaction History</translation>
+        <translation>Xuất lịch sử giao dịch</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Comma separated file (*.csv)</translation>
+        <translation>Tệp được phân tách bằng dấu phẩy (* .csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -3581,7 +3669,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Watch-only</source>
-        <translation>Watch-only</translation>
+        <translation>Chỉ-xem:</translation>
     </message>
     <message>
         <source>Date</source>
@@ -3589,7 +3677,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation>Type</translation>
+        <translation>Loại</translation>
     </message>
     <message>
         <source>Label</source>
@@ -3609,37 +3697,37 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>There was an error trying to save the transaction history to %1.</translation>
+        <translation>Đã xảy ra lỗi khi cố gắng lưu lịch sử giao dịch vào %1.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation>Exporting Successful</translation>
+        <translation>Xuất thành công</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation>The transaction history was successfully saved to %1.</translation>
+        <translation>Lịch sử giao dịch đã được lưu thành công vào %1.</translation>
     </message>
     <message>
         <source>Range:</source>
-        <translation>Range:</translation>
+        <translation>Phạm vi:</translation>
     </message>
     <message>
         <source>to</source>
-        <translation>to</translation>
+        <translation>Tới</translation>
     </message>
 </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation>Unit to show amounts in. Click to select another unit.</translation>
+        <translation>Đơn vị hiển thị số tiền. Nhấp để chọn một đơn vị khác.</translation>
     </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
-        <translation>No wallet has been loaded.</translation>
+        <translation>Không có ví nào đã được tải.</translation>
     </message>
 </context>
 <context>
@@ -3650,39 +3738,39 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Fee bump error</source>
-        <translation>Fee bơm error</translation>
+        <translation>Lỗi bump phí</translation>
     </message>
     <message>
         <source>Increasing transaction fee failed</source>
-        <translation>Increasing transaction fee failed</translation>
+        <translation>Tăng phí giao dịch không thành công</translation>
     </message>
     <message>
         <source>Do you want to increase the fee?</source>
-        <translation>Do you want to increase the fee?</translation>
+        <translation>Bạn có muốn tăng phí không?</translation>
     </message>
     <message>
         <source>Current fee:</source>
-        <translation>Current fee:</translation>
+        <translation>Phí hiện tại:</translation>
     </message>
     <message>
         <source>Increase:</source>
-        <translation>Increase:</translation>
+        <translation>Tăng:</translation>
     </message>
     <message>
         <source>New fee:</source>
-        <translation>New fee:</translation>
+        <translation>Phí mới:</translation>
     </message>
     <message>
         <source>Confirm fee bump</source>
-        <translation>Confirm fee bump</translation>
+        <translation>Xác nhận mức phí bump</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
-        <translation>Can't sign transaction.</translation>
+        <translation>Không thể ký giao dịch.</translation>
     </message>
     <message>
         <source>Could not commit transaction</source>
-        <translation>Could not commit transaction</translation>
+        <translation>Không thể giao dịch</translation>
     </message>
 </context>
 <context>
@@ -3696,8 +3784,12 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Xuất dữ liệu trong thẻ hiện tại ra file</translation>
     </message>
     <message>
+        <source>Selected amount:</source>
+        <translation>Số tiền đã chọn:</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
-        <translation>Backup Wallet</translation>
+        <translation>Sao lưu Wallet</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
@@ -3705,22 +3797,314 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation>Backup Failed</translation>
+        <translation>Sao lưu không thành công</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>There was an error trying to save the wallet data to %1.</translation>
+        <translation>Đã xảy ra lỗi khi cố gắng lưu dữ liệu ví vào %1.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
-        <translation>Backup Successful</translation>
+        <translation>Sao lưu thành công</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation>The wallet data was successfully saved to %1.</translation>
+        <translation>Dữ liệu ví đã được lưu thành công thành %1.</translation>
     </message>
 </context>
 <context>
     <name>chaincoin-core</name>
+    <message>
+        <source>None</source>
+        <translation>không có gì</translation>
+    </message>
+    <message>
+        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
+        <translation>(1 = giữ dữ liệu meta tx, ví dụ: chủ sở hữu tài khoản và thông tin yêu cầu thanh toán, 2 = thả dữ liệu meta tx)</translation>
+    </message>
+    <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>-maxtxfee được đặt rất cao! Các khoản phí lớn này có thể được thanh toán trên một giao dịch duy nhất.</translation>
+    </message>
+    <message>
+        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
+        <translation>Mức phí (theo %s/kB) sẽ được sử dụng khi ước tính phí không đủ dữ liệu (mặc định: %s)</translation>
+    </message>
+    <message>
+        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
+        <translation>Chấp nhận các giao dịch chuyển tiếp nhận được từ các đối tác trong danh sách trắng ngay cả khi không chuyển tiếp giao dịch (mặc định: %d)</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Thêm một nút để kết nối và cố gắng giữ kết nối mở (xem lệnh `addnode` RPC help để biết thêm thông tin)</translation>
+    </message>
+    <message>
+        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+        <translation>Cho phép kết nối JSON-RPC từ nguồn được chỉ định. Hợp lệ cho &lt;ip&gt; là một IP duy nhất (ví dụ: 1.2.3.4), mạng / mặt nạ mạng (ví dụ: 1.2.3.4/255.255.255.0) hoặc mạng / CIDR (ví dụ: 1.2.3.4/24). Tùy chọn này có thể được chỉ định nhiều lần</translation>
+    </message>
+    <message>
+        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
+        <translation>Liên kết với địa chỉ đã cho và luôn lắng nghe nó. Sử dụng [host]: ký hiệu cổng cho IPv6</translation>
+    </message>
+    <message>
+        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
+        <translation>Liên kết với các địa chỉ và danh sách trắng mà bạn bè kết nối với nó. Sử dụng [host]: ký hiệu cổng cho IPv6</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>Liên kết đến địa chỉ đã cho để nghe các kết nối JSON-RPC. Sử dụng [host]: ký hiệu cổng cho IPv6. Tùy chọn này có thể được chỉ định nhiều lần (mặc định: liên kết với tất cả các giao diện)</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>Không thể lấy khóa trên thư mục dữ liệu %s. %s có thể đã chạy.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>Không thể cung cấp các kết nối cụ thể và yêu cầu addrman tìm các kết nối gửi đi giống nhau.</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Chỉ kết nối với (các) nút đã chỉ định; -connect = 0 vô hiệu hóa các kết nối tự động (các quy tắc cho peer này giống với -addnode)</translation>
+    </message>
+    <message>
+        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
+        <translation>Tạo tệp mới có quyền mặc định của hệ thống, thay vì umask 077 (chỉ hiệu quả với chức năng ví bị vô hiệu hóa)</translation>
+    </message>
+    <message>
+        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
+        <translation>Xóa tất cả các giao dịch ví và chỉ khôi phục các phần của blockchain thông qua -rescan khi khởi động</translation>
+    </message>
+    <message>
+        <source>Disable all Chaincoin specific functionality (Masternodes, PrivateSend, Governance) (0-1, default: %u)</source>
+        <translation>Tắt tất cả chức năng cụ thể của Chaincoin (Masternodes, PrivateSend, Governance) (0-1, mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
+        <translation>Khám phá các địa chỉ IP riêng (mặc định: 1 khi nghe và không tồn tại hoặc -proxy)</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Được phân phối theo giấy phép phần mềm MIT, hãy xem tệp COPYING hoặc &lt;http://www.opensource.org/licenses/mit-license.php&gt; đi kèm.</translation>
+    </message>
+    <message>
+        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
+        <translation>Không giữ giao dịch trong mempool lâu hơn &lt;n&gt;giờ (mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
+        <translation>Bật nhiều phiên trộn riêng tư cho mỗi khối, thử nghiệm (0-1, mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
+        <translation>Cho phép sử dụng PrivateSend tự động cho các khoản tiền được lưu trong ví này (0-1, mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
+        <translation>Các byte tương đương trên mỗi sigop trong các giao dịch cho relay và khai thác (mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
+        <translation>Lỗi khi tải %s: Bạn không thể bật HD trên ví tiền HD không tồn tại</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
+        <translation>Lỗi khi tải ví %s. tham số -wallet chỉ được chỉ định tên tệp (không phải đường dẫn).</translation>
+    </message>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Lỗi khi đọc %s! Tất cả các phím đều đọc chính xác, nhưng dữ liệu giao dịch hoặc mục nhập sổ địa chỉ có thể bị thiếu hoặc không chính xác.</translation>
+    </message>
+    <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>Lỗi: Không nghe được các kết nối đến (nghe lỗi trả về %s)</translation>
+    </message>
+    <message>
+        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
+        <translation>Loại trừ thông tin gỡ lỗi cho danh mục. Có thể được sử dụng kết hợp với -debug = 1 để xuất nhật ký gỡ lỗi cho tất cả các danh mục ngoại trừ một hoặc nhiều danh mục được chỉ định.</translation>
+    </message>
+    <message>
+        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
+        <translation>Thực hiện lệnh khi một cảnh báo có liên quan được nhận hoặc chúng ta thấy một ngã ba thực sự dài (%s trong cmd được thay thế bằng tin nhắn)</translation>
+    </message>
+    <message>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>Thực hiện lệnh khi thay đổi giao dịch ví (%s trong cmd được thay thế bằng TxID)</translation>
+    </message>
+    <message>
+        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
+        <translation>Thực hiện lệnh khi thay đổi khối tốt nhất (%s trong cmd được thay thế bằng khối băm)</translation>
+    </message>
+    <message>
+        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
+        <translation>Các giao dịch bổ sung để giữ trong bộ nhớ để tái tạo khối nhỏ gọn (mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
+        <translation>Không thể tạo bản sao lưu, tệp đã tồn tại! Điều này có thể xảy ra nếu bạn khởi động lại ví trong vòng chưa đầy 60 giây. Bạn có thể tiếp tục nếu bạn đồng ý với điều này.</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
+        <translation>Phí (trong %s/kB) nhỏ hơn số tiền này được coi là phí không cho chuyển tiếp, khai thác và tạo giao dịch (mặc định: %s)</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Các khoản phí (bằng%s/kB) nhỏ hơn số tiền này được coi là phí không cho việc tạo giao dịch (mặc định: %s)</translation>
+    </message>
+    <message>
+        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
+        <translation>Buộc chuyển tiếp giao dịch từ các đối tác trong danh sách cho phép ngay cả khi chúng vi phạm chính sách chuyển tiếp cục bộ (mặc định: %d)</translation>
+    </message>
+    <message>
+        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
+        <translation>Tìm thấy kết quả đầu ra chưa được xác nhận, sẽ đợi cho đến khi chúng xác nhận tiếp tục.</translation>
+    </message>
+    <message>
+        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
+        <translation>Cách triệt để xác minh khối kiểm tra là (0-4, mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>Nếu &lt;category&gt; không được cung cấp hoặc nếu &lt;category&gt;= 1, hãy xuất tất cả thông tin gỡ lỗi.</translation>
+    </message>
+    <message>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Nếu paytxfee không được thiết lập, hãy bao gồm đủ phí để các giao dịch bắt đầu xác nhận trung bình trong n khối (mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
+        <translation>Nếu khối này nằm trong chuỗi giả định rằng nó và tổ tiên của nó là hợp lệ và có khả năng bỏ qua xác minh kịch bản của họ (0 để xác minh tất cả, mặc định: %s, testnet: %s)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Số tiền không hợp lệ cho -maxtxfee =: '%s' (phải ít nhất là phí minrelay của %s để ngăn các giao dịch bị kẹt)</translation>
+    </message>
+    <message>
+        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
+        <translation>Duy trì chỉ mục giao dịch đầy đủ, được sử dụng bởi cuộc gọi rpc getrawtransaction (mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
+        <translation>Điều chỉnh bù thời gian ngang hàng trung bình tối đa cho phép. Phối cảnh địa phương của thời gian có thể bị ảnh hưởng bởi các đồng nghiệp về phía trước hoặc phía sau bởi số tiền này. (mặc định: %u giây)</translation>
+    </message>
+    <message>
+        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
+        <translation>Kích thước dữ liệu tối đa trong các giao dịch của nhà cung cấp dữ liệu mà chúng tôi chuyển tiếp và khai thác (mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>Tổng phí tối đa (bằng %s) để sử dụng trong một giao dịch ví hoặc giao dịch thô; cài đặt quá thấp có thể hủy bỏ các giao dịch lớn (mặc định: %s)</translation>
+    </message>
+    <message>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
+        <translation>Số giây để giữ cho các đồng nghiệp đang hoạt động sai khi kết nối lại (mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
+        <translation>Thông tin gỡ lỗi đầu ra (mặc định: %u, cung cấp &lt;category&gt; là tùy chọn)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Vui lòng kiểm tra xem ngày và giờ của máy tính có chính xác không! Nếu đồng hồ của bạn sai, %s sẽ không hoạt động bình thường.</translation>
+    </message>
+    <message>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation>Vui lòng đóng góp nếu bạn thấy %s hữu ích. Truy cập %s để biết thêm thông tin về phần mềm.</translation>
+    </message>
+    <message>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
+        <translation>PrivateSend sử dụng số tiền chính xác để gửi tiền, bạn có thể chỉ cần ẩn danh thêm một số tiền.</translation>
+    </message>
+    <message>
+        <source>Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
+        <translation>Cung cấp thanh khoản cho PrivateSend bằng cách thường xuyên trộn tiền trên cơ sở liên tục (0-100, mặc định: %u, 1 = rất thường xuyên, phí cao, 100 = rất không thường xuyên, phí thấp)</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>Prune được cấu hình dưới mức tối thiểu là %d MiB. Vui lòng sử dụng số cao hơn.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Prune: đồng bộ hóa ví cuối cùng vượt ra ngoài dữ liệu cắt xén. Bạn cần phải -reindex (tải xuống toàn bộ blockchain một lần nữa trong trường hợp nút cắt tỉa)</translation>
+    </message>
+    <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
+        <translation>Truy vấn cho các địa chỉ ngang hàng thông qua tra cứu DNS, nếu thấp trên địa chỉ (mặc định: 1 trừ khi kết nối được sử dụng)</translation>
+    </message>
+    <message>
+        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
+        <translation>Ngẫu nhiên thông tin đăng nhập cho mọi kết nối proxy. Điều này cho phép cô lập dòng Tor (mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>Giảm yêu cầu lưu trữ bằng cách cắt tỉa (xóa) các khối cũ. Chế độ này không tương thích với -txindex và -rescan. Cảnh báo: Hoàn nguyên cài đặt này yêu cầu tải xuống lại toàn bộ blockchain. (mặc định: 0 = vô hiệu hóa các khối cắt tỉa,&gt; %u = kích thước đích trong MiB để sử dụng cho các tệp khối)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Rescans là không thể trong chế độ tỉa. Bạn sẽ cần phải sử dụng -reindex mà sẽ tải xuống toàn bộ blockchain một lần nữa.</translation>
+    </message>
+    <message>
+        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
+        <translation>Đặt mức phí thấp nhất (trong %s/kB) cho các giao dịch được bao gồm trong việc tạo khối. (mặc định: %s)</translation>
+    </message>
+    <message>
+        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
+        <translation>Đặt trọng số khối BIP141 tối đa cho điều này * 4. Không được chấp nhận, sử dụng blockmaxweight</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
+        <translation>Đặt số lượng chuỗi xác minh tập lệnh (%u thành %d, 0 = tự động, &lt;0 = để lại nhiều lõi miễn phí, mặc định: %d)</translation>
+    </message>
+    <message>
+        <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
+        <translation>Đặt serialization của giao dịch thô hoặc khối hex trả về trong chế độ không tiết, không phân đoạn (0) hoặc segwit (1) (mặc định: %d)</translation>
+    </message>
+    <message>
+        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
+        <translation>Chỉ định thư mục để giữ ví (mặc định: &lt;datadir&gt;/ ví nếu nó tồn tại, nếu không &lt;datadir&gt;)</translation>
+    </message>
+    <message>
+        <source>Specify location of debug log file: this can be an absolute path or a path relative to the data directory (default: %s)</source>
+        <translation>Chỉ định vị trí của tệp nhật ký gỡ lỗi: đây có thể là đường dẫn tuyệt đối hoặc đường dẫn tương đối với thư mục dữ liệu (mặc định: %s)</translation>
+    </message>
+    <message>
+        <source>Starting in lite mode, all Chaincoin-specific functionality is disabled.</source>
+        <translation>Bắt đầu từ chế độ lite, tất cả chức năng cụ thể của Chaincoin đều bị vô hiệu hóa.</translation>
+    </message>
+    <message>
+        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
+        <translation>Hỗ trợ lọc các khối và giao dịch bằng các bộ lọc nở hoa (mặc định: %u)</translation>
+    </message>
+    <message>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation>Cơ sở dữ liệu khối chứa một khối xuất hiện từ tương lai. Điều này có thể là do ngày và giờ của máy tính của bạn được đặt không chính xác. Chỉ xây dựng lại cơ sở dữ liệu khối nếu bạn chắc chắn rằng ngày và giờ của máy tính của bạn là chính xác</translation>
+    </message>
+    <message>
+        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
+        <translation>Tỷ lệ phí (trong %s/kB) cho biết khả năng của bạn để loại bỏ thay đổi bằng cách thêm nó vào phí (mặc định: %s). Lưu ý: Một đầu ra bị loại bỏ nếu nó là bụi ở mức này, nhưng chúng tôi sẽ luôn loại bỏ phí chuyển tiếp bụi và phí hủy bỏ ở trên bị giới hạn bởi ước tính phí cho mục tiêu dài nhất</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>Số tiền giao dịch quá nhỏ để gửi sau khi khoản phí đã được khấu trừ</translation>
+    </message>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation>Đây là bản xây dựng thử nghiệm phát hành trước khi sử dụng có nguy cơ của riêng bạn - không sử dụng cho các ứng dụng khai thác hoặc buôn bán</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation>Đây là phí giao dịch bạn có thể hủy nếu thay đổi nhỏ hơn bụi ở cấp độ này</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>Đây là phí giao dịch bạn có thể trả khi ước tính phí không có sẵn.</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation>Tổng chiều dài của chuỗi phiên bản mạng (%i) vượt quá độ dài tối đa (%i). Giảm số lượng hoặc kích thước của các uacomments.</translation>
+    </message>
+    <message>
+        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
+        <translation>Cố gắng giữ lưu lượng gửi đi theo mục tiêu đã cho (trong MiB mỗi 24h), 0 = không có giới hạn (mặc định: %d)</translation>
+    </message>
     </context>
 </TS>
