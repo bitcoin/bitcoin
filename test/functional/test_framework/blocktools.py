@@ -97,14 +97,16 @@ def serialize_script_num(value):
         r[-1] |= 0x80
     return r
 
-def create_coinbase(height, pubkey=None):
+def create_coinbase(height, pubkey=None, txin=None):
     """Create a coinbase transaction, assuming no miner fees.
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
     otherwise an anyone-can-spend output."""
+    txin = txin or CTxIn(
+        COutPoint(0, 0xffffffff),
+        ser_string(serialize_script_num(height)), 0xffffffff)
     coinbase = CTransaction()
-    coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff),
-                        ser_string(serialize_script_num(height)), 0xffffffff))
+    coinbase.vin.append(txin)
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = 50 * COIN
     halvings = int(height / 150)  # regtest
@@ -127,6 +129,14 @@ def create_transaction(prevtx, n, sig, value, script_pub_key=CScript()):
     tx.vout.append(CTxOut(value, script_pub_key))
     tx.calc_sha256()
     return tx
+
+def create_coinbase_with_bad_txin(*args, **kwargs):
+    """Return a coinbase CTransaction with an invalid txin."""
+    kwargs.setdefault('txin', CTxIn(
+        COutPoint(0, 0),  # Normally second arg should be 0xffffffff
+        b'0',  # Normally should be block height
+        0xffffffff))
+    return create_coinbase(*args, **kwargs)
 
 def get_legacy_sigopcount_block(block, accurate=True):
     count = 0
