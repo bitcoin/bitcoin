@@ -780,7 +780,7 @@ void CBudgetManager::NewBlock()
     LogPrintf("CBudgetManager::NewBlock - PASSED\n");
 }
 
-void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
+void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     // lite mode is not supported
     if(fLiteMode) return;
@@ -894,7 +894,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         std::string strError = "";
         int nConf = 0;
-        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.GetFeeTxHash(), finalizedBudgetBroadcast.GetHash(), strError, finalizedBudgetBroadcast.nTime, nConf)){
+        if(finalizedBudgetBroadcast.GetFeeTxHash() != uint256() && !IsBudgetCollateralValid(finalizedBudgetBroadcast.GetFeeTxHash(), finalizedBudgetBroadcast.GetHash(), strError, finalizedBudgetBroadcast.nTime, nConf)){
             LogPrintf("Finalized Budget FeeTX is not valid - %s - %s\n", finalizedBudgetBroadcast.GetFeeTxHash().ToString(), strError);
 
             if(nConf >= 1) vecImmatureFinalizedBudgets.push_back(finalizedBudgetBroadcast);
@@ -902,6 +902,21 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
+
+        if (finalizedBudgetBroadcast.GetFeeTxHash() == uint256())
+        {
+            const CMasternode* producer = mnodeman.Find(finalizedBudgetBroadcast.MasternodeSubmittedId());
+            if (producer == NULL)
+            {
+                LogPrintf("fbs - unknown masternode - vin: %s\n", finalizedBudgetBroadcast.MasternodeSubmittedId().ToString());
+                mnodeman.AskForMN(pfrom, finalizedBudgetBroadcast.MasternodeSubmittedId());
+            }
+
+            if (finalizedBudgetBroadcast.VerifySignature(producer->pubkey2))
+            {
+                Misbehaving(pfrom->GetId(), 50);
+            }
+        }
 
         if(!finalizedBudgetBroadcast.IsValid(strError)) {
             LogPrintf("fbs - invalid finalized budget - %s\n", strError);
@@ -911,8 +926,11 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         LogPrintf("fbs - new finalized budget - %s\n", finalizedBudgetBroadcast.GetHash().ToString());
 
         CFinalizedBudget finalizedBudget(finalizedBudgetBroadcast);
-        if(AddFinalizedBudget(finalizedBudget)) {finalizedBudgetBroadcast.Relay();}
-        masternodeSync.AddedBudgetItem(finalizedBudgetBroadcast.GetHash());
+        if(AddFinalizedBudget(finalizedBudget))
+        {
+            finalizedBudgetBroadcast.Relay();
+            masternodeSync.AddedBudgetItem(finalizedBudgetBroadcast.GetHash());
+        }
 
         //we might have active votes for this budget that are now valid
         CheckOrphanVotes();
@@ -1579,6 +1597,8 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
     mapVotes = other.mapVotes;
     nFeeTXHash = other.nFeeTXHash;
     nTime = other.nTime;
+    signature = other.signature;
+    masternodeSubmittedId = other.masternodeSubmittedId;
     fValid = true;
     fAutoChecked = false;
     voteSubmittedTime = boost::none;

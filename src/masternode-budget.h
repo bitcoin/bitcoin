@@ -93,7 +93,7 @@ public:
     void MarkSynced();
     void Sync(CNode *node, uint256 nProp, bool fPartial = false) const;
 
-    void ProcessMessage(CNode *pfrom, std::string &strCommand, CDataStream &vRecv);
+    void ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStream &vRecv);
 
     void NewBlock();
 
@@ -294,6 +294,7 @@ public:
         READWRITE(vecBudgetPayments);
         READWRITE(fAutoChecked);
         READWRITE(signature);
+        READWRITE(masternodeSubmittedId);
 
         READWRITE(mapVotes);
     }
@@ -345,6 +346,7 @@ public:
         if (nFeeTXHash == uint256())
         {
             READWRITE(signature);
+            READWRITE(masternodeSubmittedId);
         }
     }
 };
