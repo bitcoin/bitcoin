@@ -1,9 +1,6 @@
 Chaincoin Core staging tree 0.16.00
 ===============================
 
-THIS IS A BETA VERSION - DO NOT USE FOR MINING OR MERCHANT APPLICATIONS!!!
-===============================
-
 
 https://www.chaincoin.org
 
@@ -76,4 +73,4 @@ Translations are periodically pulled from Transifex and merged into the git repo
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
 
-Translators should also follow the [forum](https://www.chaincoin.org/forum/topic/chaincoin-worldwide-collaboration.88/).
+Translators should also follow the translation channel in our [Discord](https://discord.gg/NabdcJ7).
