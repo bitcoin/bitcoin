@@ -525,19 +525,246 @@
         <source>The configuration file could not be opened.</source>
         <translation>לא ניתן היה לפתוח את קובץ ההגדרות.</translation>
     </message>
-    </context>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>מתחבר אל עמיתים ...</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>מעדכן</translation>
+    </message>
+    <message>
+        <source>Chaincoin Core</source>
+        <translation>Chaincoin Core</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>תאריך:%1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>סכום:%1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>סוג:%1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>תווית:%1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>כתובת %1
+</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>שלח עסקה </translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>עסקה נכנסת</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <translation>יצירת מפתח HD הינה &lt;b&gt;מופעלת&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>יצירת מפתח HD הינה &lt;b&gt;מושבתת&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; וכעת אינו &lt;b&gt;נעול&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
+        <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt;  ולא &lt;b&gt;נעול&lt;/b&gt; כרגע לערבוב בלבד
+</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt;  ו&lt;b&gt;נעול&lt;/b&gt; כעת</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Chaincoin can no longer continue safely and will quit.</source>
+        <translation>רעה שגיאה חמורה. Chaincoin כבר לא יכול להמשיך בבטחה ויפסיק.</translation>
+    </message>
+</context>
 <context>
     <name>ClientModel</name>
-    </context>
+    <message>
+        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
+        <translation>סה"כ:%1 (תואם PS:%2 / מאופשר:%3)</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Coin Selection</source>
+        <translation>בחירת מטבעות</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>כַּמוּת:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>בתים:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>כמות:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>תַשְׁלוּם:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>אָבָק:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>לאחר תשלום:</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation>שינוי:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation>(un) לבחור הכל</translation>
+    </message>
+    <message>
+        <source>toggle lock state</source>
+        <translation>מצב נעל</translation>
+    </message>
+    <message>
+        <source>Tree mode</source>
+        <translation>מצב עץ</translation>
+    </message>
+    <message>
+        <source>List mode</source>
+        <translation>מצב רשימה</translation>
+    </message>
+    <message>
+        <source>(1 locked)</source>
+        <translation>(1 נעול)</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>סכום</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>התקבל עם התווית</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>התקבל עם כתובת</translation>
+    </message>
+    <message>
+        <source>PS Rounds</source>
+        <translation>PS מעגלי</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>תאריך</translation>
+    </message>
+    <message>
+        <source>Confirmations</source>
+        <translation>אישורים</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation>מְאוּשָׁר</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>העתק כתובת</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>העתק תווית</translation>
+    </message>
     <message>
         <source>Copy amount</source>
         <translation>העתק סכום</translation>
     </message>
     <message>
+        <source>Copy transaction ID</source>
+        <translation>העתק מזהה עסקה</translation>
+    </message>
+    <message>
+        <source>Lock unspent</source>
+        <translation>נעל לא שומש</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation>בטל נעילה לא שומש</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation>העתק כמות</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>העתק תשלום</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>העתק לאחר תשלום</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>העתקת בתים</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>העתק אבק</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>העתק שינויים</translation>
+    </message>
+    <message>
+        <source>Please switch to "List mode" to use this function.</source>
+        <translation>עברו למצב "מצב רשימה" כדי להשתמש בפונקציה זו.</translation>
+    </message>
+    <message>
+        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again.</source>
+        <translation>קלט לא אנונימי נבחר. &lt;b&gt;שליחה פרטית תהייה מושבתת.&lt;/b&gt;&lt;br&gt;&lt;br&gt; אם אתה עדיין רוצה להשתמש ב PrivateSend, אנא בטל את כל הזנות שאינם nonymized קודם ולאחר מכן לסמן PrivateSend שוב.</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 נעול)</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>כן</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>לא</translation>
+    </message>
+    <message>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>תווית זו הופכת לאדומה אם כל נמען מקבל כמות קטנה יותר מסף האבק הנוכחי.</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(אין תווית)</translation>
     </message>
     </context>
 <context>

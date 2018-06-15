@@ -2543,6 +2543,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Genereer Bech32-adres</translation>
     </message>
     <message>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
+        <translation>Een optioneel bericht om aan het betalingsverzoek te koppelen, dat wordt weergegeven wanneer het verzoek wordt geopend. Opmerking: het bericht zal niet worden verzonden met de betaling via het Chaincoin netwerk.</translation>
+    </message>
+    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Toon het geselecteerde verzoek (doet hetzelfde als dubbelklikken)</translation>
     </message>
@@ -4590,6 +4594,14 @@ bekijk het bijkomende document COPYING of &lt;http://www.opensource.org/licenses
         <translation>Informatie</translation>
     </message>
     <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Dit product bevat software welke is ontwikkeld door het OpenSSL Project voor gebruik in de OpenSSL Toolkit %s en cryptografische software geschreven door Eric Young en UPnP software geschreven door Thomas Bernard.</translation>
+    </message>
+    <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation>Initialisatie sanity check mislukt. %s wordt afgesloten.</translation>
+    </message>
+    <message>
         <source>Input is not valid.</source>
         <translation>Invoer is niet geldig.</translation>
     </message>
@@ -5136,6 +5148,10 @@ bekijk het bijkomende document COPYING of &lt;http://www.opensource.org/licenses
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Niet mogelijk om te binden %s op deze computer (bind verwees naar error %s)</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation>Kan niet binden aan %s op deze computer. %s is waarschijnlijk al actief.</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>

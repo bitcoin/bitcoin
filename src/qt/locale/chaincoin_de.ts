@@ -2134,10 +2134,34 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </context>
 <context>
     <name>QRDialog</name>
-    </context>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>Sichere Datei...</translation>
+    </message>
+    <message>
+        <source>Error creating QR Code.</source>
+        <translation>Fehler beim Erstellen des QR-Codes</translation>
+    </message>
+</context>
 <context>
     <name>QRGeneralImageWidget</name>
-    </context>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>Sichere Datei...</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Image</source>
+        <translation>Kopiere Datei...</translation>
+    </message>
+    <message>
+        <source>Save QR Code</source>
+        <translation>Sichere QR-Code</translation>
+    </message>
+    <message>
+        <source>PNG Image (*.png)</source>
+        <translation>PNG Image (*.png)</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -2216,8 +2240,16 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Aktuelle Anzahl der Transaktionen</translation>
     </message>
     <message>
+        <source>Tools window</source>
+        <translation>Werkzeugfenster</translation>
+    </message>
+    <message>
         <source>Memory usage</source>
         <translation>Speichernutzung</translation>
+    </message>
+    <message>
+        <source>Number of Masternodes</source>
+        <translation>Anzahl der Masternodes</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
@@ -2605,6 +2637,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>(keine Nachricht)</translation>
     </message>
     <message>
+        <source>(no amount)</source>
+        <translation>(kein Betrag)</translation>
+    </message>
+    <message>
         <source>Requested</source>
         <translation>Angefordert</translation>
     </message>
@@ -2718,6 +2754,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
         <translation>Mit Replace-By-Fee (BIP-125) kann die Transaktionsgebühr nach dem Senden erhöht werden. Ohne dies wird eine höhere Gebühr empfohlen, um das Risiko einer hohen Transaktionszeit zu reduzieren.</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>Bestätigungszeit:</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2945,6 +2985,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
 <context>
     <name>ShutdownWindow</name>
     <message>
+        <source>Chaincoin Core is shutting down...</source>
+        <translation>Chaincoin Core wird heruntergefahren...</translation>
+    </message>
+    <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Fahren Sie den Computer nicht herunter, bevor dieses Fenster verschwindet.</translation>
     </message>
@@ -3074,7 +3118,19 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <source>[testnet]</source>
         <translation>[Testnetz]</translation>
     </message>
-    </context>
+    <message>
+        <source>The Bitcoin Core developers</source>
+        <translation>Die Bitcoin Core Entwickler</translation>
+    </message>
+    <message>
+        <source>The Dash Core developers</source>
+        <translation>Die Dash Core Entwickler</translation>
+    </message>
+    <message>
+        <source>The Chaincoin Core developers</source>
+        <translation>Die Chaincoin Core Entwickler</translation>
+    </message>
+</context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -3256,6 +3312,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
 <context>
     <name>TransactionDescDialog</name>
     <message>
+        <source>Transaction details</source>
+        <translation>Transaktionsdetails</translation>
+    </message>
+    <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Dieser Bereich zeigt eine detaillierte Beschreibung der Transaktion an</translation>
     </message>
@@ -3269,6 +3329,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Type</source>
         <translation>Typ</translation>
+    </message>
+    <message>
+        <source>Address / Label</source>
+        <translation>Adresse</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
@@ -3321,6 +3385,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Received from</source>
         <translation>Empfangen von</translation>
+    </message>
+    <message>
+        <source>Received via PrivateSend</source>
+        <translation>Empfangen über PrivateSend</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3400,6 +3468,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Range...</source>
         <translation>Zeitraum...</translation>
+    </message>
+    <message>
+        <source>Most Common</source>
+        <translation>Standard</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -3598,6 +3670,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Daten der aktuellen Ansicht in eine Datei exportieren</translation>
     </message>
     <message>
+        <source>Selected amount:</source>
+        <translation>Ausgewählte Anzahl:</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Wallet sichern</translation>
     </message>
@@ -3725,6 +3801,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Erlaubte Gegenstellen werden nicht für DoS-Attacken gesperrt und ihre Transkationen werden immer weitergeleitet, auch wenn sie sich bereits im Speicherpool befinden, was z.B. für Gateways sinnvoll ist.</translation>
     </message>
     <message>
+        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Sie müssen einen Masternodeprivatekey festlegen in der Konfigurationsdatei. Wenn Sie hilfe benötigen schauen sie bitte in die Dokumentation.</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Sie müssen die Datenbank mit Hilfe von -reindex neu aufbauen, um zum ungekürzten Modus zurückzukehren. Dies erfordert, dass die gesamte Blockkette erneut heruntergeladen wird.</translation>
     </message>
@@ -3797,6 +3877,14 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Blockerzeugungsoptionen:</translation>
     </message>
     <message>
+        <source>Can't find random Masternode.</source>
+        <translation>Zufällige Masternode nicht gefunden</translation>
+    </message>
+    <message>
+        <source>Can't mix while sync in progress.</source>
+        <translation>Mixen nicht möglich während der Synchronisation der Wallet</translation>
+    </message>
+    <message>
         <source>Cannot downgrade wallet</source>
         <translation>Wallet kann nicht auf eine ältere Version herabgestuft werden</translation>
     </message>
@@ -3819,6 +3907,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Mit dem angegebenen Knoten verbinden, um Adressen von Gegenstellen abzufragen, danach trennen</translation>
+    </message>
+    <message>
+        <source>Connecting to masternode...</source>
+        <translation>Verbinde mit Masternode...</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -4019,6 +4111,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>Ungültiger Betrag für -paytxfee=&lt;amount&gt;: '%s' (muss mindestens %s sein)</translation>
+    </message>
+    <message>
+        <source>Invalid masternodeprivkey. Please see documenation.</source>
+        <translation>Ungültiger Masternodeprivatekey. Wenn sie Hilfe benötigen schauen sie in die Dokumentation</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
