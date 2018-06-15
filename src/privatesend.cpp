@@ -218,11 +218,6 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
     for (const auto& txout : txCollateral.vout) {
         nValueOut += txout.nValue;
-
-        if(txout.scriptPubKey.IsUnspendable()) {
-            LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- Invalid Script, txCollateral=%s\n", txCollateral.ToString());
-            return false;
-        }
     }
 
     for (const auto& txin : txCollateral.vin) {
