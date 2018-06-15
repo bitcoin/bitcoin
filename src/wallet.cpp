@@ -1010,7 +1010,8 @@ void CWalletTx::RelayWalletTransaction(std::string strCommand)
             uint256 hash = GetHash();
             LogPrintf("Relaying wtx %s\n", hash.ToString());
 
-            if(strCommand == "ix"){
+            if (strCommand == "ix" && IsSporkActive(SPORK_2_INSTANTX))
+            {
                 if (this->vout.size() > 0)
                 {
                     CTxDestination dest;
@@ -1019,7 +1020,9 @@ void CWalletTx::RelayWalletTransaction(std::string strCommand)
                 }
                 g_instantSend->CreateNewLock(((CTransaction)*this));
                 RelayTransactionLockReq((CTransaction)*this, true);
-            } else {
+            }
+            else
+            {
                 RelayTransaction((CTransaction)*this);
             }
         }
