@@ -26,6 +26,7 @@
 #include <utilstrencodings.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <governance-classes.h>
