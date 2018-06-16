@@ -44,6 +44,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validationinterface.h>
+#include <versionbitsinfo.h>
 #include <warnings.h>
 #include <walletinitinterface.h>
 #include <stdint.h>
