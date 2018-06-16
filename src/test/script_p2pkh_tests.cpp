@@ -9,7 +9,7 @@
 
 using namespace std;
 
-BOOST_FIXTURE_TEST_SUITE(script_P2PKH_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(script_p2pkh_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(IsPayToPublicKeyHash)
 {

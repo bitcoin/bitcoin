@@ -10,7 +10,7 @@
 export LC_ALL=C
 
 EXIT_CODE=0
-OUTPUT=$(git ls-files -- "*.cpp" "*.h" "*.py" "*.sh" | grep -vE '^[a-z0-9_./-]+$' | grep -vE 'src/(secp256k1|univalue)/')
+OUTPUT=$(git ls-files -- "*.cpp" "*.h" "*.py" "*.sh" | grep -vE '^[a-z0-9_./-]+$' | grep -vE 'src/(secp256k1|univalue|usbdevice/ledger)/')
 if [[ ${OUTPUT} != "" ]]; then
     echo "Use only lowercase alphanumerics (a-z0-9), underscores (_), hyphens (-) and dots (.)"
     echo "in source code filenames:"

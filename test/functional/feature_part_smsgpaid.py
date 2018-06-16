@@ -168,7 +168,7 @@ class SmsgPaidTest(ParticlTestFramework):
 
         filepath = tmpdir+'/sendfile.txt'
         msg = b"msg in file\0after null sep"
-        with open(filepath,'wb') as fp:
+        with open(filepath, 'wb', encoding=None) as fp:
             fp.write(msg)
 
         ro = nodes[1].smsgsend(address1, address0_1, filepath, True, 4, False, True)
