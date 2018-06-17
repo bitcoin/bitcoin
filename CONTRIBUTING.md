@@ -127,10 +127,10 @@ before it will be merged. The basic squashing workflow is shown below.
 
     git checkout your_branch_name
     git rebase -i HEAD~n
-    # n is normally the number of commits in the pull
-    # set commits from 'pick' to 'squash', save and quit
-    # on the next screen, edit/refine commit messages
-    # save and quit
+    # n is normally the number of commits in the pull request.
+    # Set commits (except the one in the first line) from 'pick' to 'squash', save and quit.
+    # On the next screen, edit/refine commit messages.
+    # Save and quit.
     git push -f # (force push to GitHub)
 
 If you have problems with squashing (or other workflows with `git`), you can
