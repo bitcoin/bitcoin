@@ -126,6 +126,76 @@ static CZMQNotificationInterface* pzmqNotificationInterface = nullptr;
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 
+#ifdef WIN32
+
+HWND winHwnd = nullptr;
+MSG winMsg;
+const char lpcszClassName[] = "messageClass";
+
+LRESULT APIENTRY MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_CLOSE:
+            StartShutdown();
+            return 1;
+        default:
+            break;
+    };
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+};
+
+int CreateMessageWindow()
+{
+    // Create a message-only window to intercept WM_CLOSE events from particld
+
+    WNDCLASSEX WindowClassEx;
+    ZeroMemory(&WindowClassEx, sizeof(WNDCLASSEX));
+    WindowClassEx.cbSize = sizeof(WNDCLASSEX);
+    WindowClassEx.lpfnWndProc = MainWndProc;
+    WindowClassEx.hInstance = nullptr;
+    WindowClassEx.lpszClassName = lpcszClassName;
+
+    if (!RegisterClassEx(&WindowClassEx))
+    {
+        fprintf(stderr, "RegisterClassEx failed: %d.\n", GetLastError());
+        return 1;
+    };
+
+    winHwnd = CreateWindowEx(0, lpcszClassName, NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, nullptr, NULL);
+    if (!winHwnd)
+    {
+        fprintf(stderr, "CreateWindowEx failed: %d.\n", GetLastError());
+        return 1;
+    };
+
+    ShowWindow(winHwnd, SW_SHOWDEFAULT);
+
+    return 0;
+};
+
+int CloseMessageWindow()
+{
+    if (!winHwnd)
+        return 0;
+
+    if (!DestroyWindow(winHwnd))
+    {
+        fprintf(stderr, "DestroyWindow failed: %d.\n", GetLastError());
+        return 1;
+    };
+
+    if (!UnregisterClass(lpcszClassName, nullptr))
+    {
+        fprintf(stderr, "UnregisterClass failed: %d.\n", GetLastError());
+        return 1;
+    };
+
+    return 0;
+};
+
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -161,6 +231,21 @@ bool ShutdownRequested()
 {
     return fRequestShutdown;
 }
+
+bool ShutdownRequestedMainThread()
+{
+#ifdef WIN32
+    // Only particld will create a hidden window to receive messages
+    while (winHwnd && PeekMessage(&winMsg, 0, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&winMsg);
+        DispatchMessage(&winMsg);
+    };
+#endif
+    return fRequestShutdown;
+}
+
+
 
 /**
  * This is a minimally invasive approach to shutdown on LevelDB read errors from the
@@ -310,6 +395,8 @@ void Shutdown()
     } catch (const fs::filesystem_error& e) {
         LogPrintf("%s: Unable to remove pidfile: %s\n", __func__, e.what());
     }
+#else
+    CloseMessageWindow();
 #endif
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
@@ -1567,7 +1654,7 @@ bool AppInitMain()
 
 
     bool fLoaded = false;
-    while (!fLoaded && !fRequestShutdown) {
+    while (!fLoaded && !ShutdownRequestedMainThread()) {
         bool fReset = fReindex;
         std::string strLoadError;
 
@@ -1603,7 +1690,7 @@ bool AppInitMain()
                         CleanupBlockRevFiles();
                 }
 
-                if (fRequestShutdown) break;
+                if (ShutdownRequestedMainThread()) break;
 
                 // LoadBlockIndex will load fHavePruned if we've ever removed a
                 // block file from disk.
@@ -1731,7 +1818,7 @@ bool AppInitMain()
             fLoaded = true;
         } while(false);
 
-        if (!fLoaded && !fRequestShutdown) {
+        if (!fLoaded && !ShutdownRequestedMainThread()) {
             // first suggest a reindex
             if (!fReset) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
@@ -1754,7 +1841,7 @@ bool AppInitMain()
     // As LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
-    if (fRequestShutdown)
+    if (ShutdownRequestedMainThread())
     {
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
@@ -1832,7 +1919,7 @@ bool AppInitMain()
         // We previously could hang here if StartShutdown() is called prior to
         // ThreadImport getting started, so instead we just wait on a timer to
         // check ShutdownRequested() regularly.
-        while (!fHaveGenesis && !ShutdownRequested()) {
+        while (!fHaveGenesis && !ShutdownRequestedMainThread()) {
             condvar_GenesisWait.wait_for(lock, std::chrono::milliseconds(500));
         }
         uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
@@ -1850,7 +1937,7 @@ bool AppInitMain()
     smsgModule.Start(nullptr, !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
 #endif
 
-    if (ShutdownRequested()) {
+    if (ShutdownRequestedMainThread()) {
         return false;
     }
 

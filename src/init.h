@@ -21,8 +21,14 @@ namespace boost
 class thread_group;
 } // namespace boost
 
+#ifdef WIN32
+int CreateMessageWindow();
+int CloseMessageWindow();
+#endif
+
 void StartShutdown();
 bool ShutdownRequested();
+bool ShutdownRequestedMainThread();
 /** Interrupt threads */
 void Interrupt();
 void Shutdown();

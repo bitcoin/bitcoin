@@ -45,7 +45,7 @@
 
 static void WaitForShutdown()
 {
-    while (!ShutdownRequested())
+    while (!ShutdownRequestedMainThread())
     {
         MilliSleep(200);
     }
@@ -182,6 +182,12 @@ static bool AppInit(int argc, char* argv[])
             // If locking the data directory failed, exit immediately
             return false;
         }
+
+#ifdef WIN32
+        if (CreateMessageWindow() != 0)
+            return false;
+#endif
+
         fRet = AppInitMain();
     }
     catch (const std::exception& e) {
