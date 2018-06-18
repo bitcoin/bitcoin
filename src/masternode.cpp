@@ -217,9 +217,9 @@ void CMasternode::Check(bool fForce)
             return;
         }
 
+        // part 1: expire based on dashd ping
         bool fSentinelPingActive = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive();
-        bool fSentinelPingExpired = fSentinelPingActive && (!lastPing.fSentinelIsCurrent || !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS));
-
+        bool fSentinelPingExpired = fSentinelPingActive && !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS);
         LogPrint("masternode", "CMasternode::Check -- outpoint=%s, GetAdjustedTime()=%d, fSentinelPingExpired=%d\n",
                 outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
 
@@ -230,15 +230,31 @@ void CMasternode::Check(bool fForce)
             }
             return;
         }
-
     }
 
-    // Allow MNs to become ENABLED immediately in regtest/devnet
-    // On mainnet/testnet, we require them to be in PRE_ENABLED state for some time before they get into ENABLED state
+    // We require MNs to be in PRE_ENABLED until they either start to expire or receive a ping and go into ENABLED state
+    // Works on mainnet/testnet only and not the case on regtest/devnet.
     if (Params().NetworkIDString() != CBaseChainParams::REGTEST && Params().NetworkIDString() != CBaseChainParams::DEVNET) {
         if (lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {
             nActiveState = MASTERNODE_PRE_ENABLED;
             if (nActiveStatePrev != nActiveState) {
+                LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
+            }
+            return;
+        }
+    }
+
+    if(!fWaitForPing || fOurMasternode) {
+        // part 2: expire based on sentinel info
+        bool fSentinelPingActive = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive();
+        bool fSentinelPingExpired = fSentinelPingActive && !lastPing.fSentinelIsCurrent;
+
+        LogPrint("masternode", "CMasternode::Check -- outpoint=%s, GetAdjustedTime()=%d, fSentinelPingExpired=%d\n",
+                outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
+
+        if(fSentinelPingExpired) {
+            nActiveState = MASTERNODE_SENTINEL_PING_EXPIRED;
+            if(nActiveStatePrev != nActiveState) {
                 LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
             }
             return;
