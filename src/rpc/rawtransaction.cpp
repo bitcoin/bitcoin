@@ -637,9 +637,7 @@ static UniValue decodescript(const JSONRPCRequest& request)
             } else {
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
                 // Newer segwit program versions should be considered when then become available.
-                uint256 scriptHash;
-                CSHA256().Write(script.data(), script.size()).Finalize(scriptHash.begin());
-                segwitScr = GetScriptForDestination(WitnessV0ScriptHash(scriptHash));
+                segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, true);
             sr.pushKV("p2sh-segwit", EncodeDestination(CScriptID(segwitScr)));

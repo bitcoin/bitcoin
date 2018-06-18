@@ -402,8 +402,7 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     // P2PK compressed
     {
         CBasicKeyStore keystore;
-        scriptPubKey.clear();
-        scriptPubKey << ToByteVector(pubkeys[0]) << OP_CHECKSIG;
+        scriptPubKey = GetScriptForRawPubKey(pubkeys[0]);
 
         // Keystore does not have key
         result = IsMine(keystore, scriptPubKey);
@@ -418,8 +417,7 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     // P2PK uncompressed
     {
         CBasicKeyStore keystore;
-        scriptPubKey.clear();
-        scriptPubKey << ToByteVector(uncompressedPubkey) << OP_CHECKSIG;
+        scriptPubKey = GetScriptForRawPubKey(uncompressedPubkey);
 
         // Keystore does not have key
         result = IsMine(keystore, scriptPubKey);
@@ -434,8 +432,7 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     // P2PKH compressed
     {
         CBasicKeyStore keystore;
-        scriptPubKey.clear();
-        scriptPubKey << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
+        scriptPubKey = GetScriptForDestination(pubkeys[0].GetID());
 
         // Keystore does not have key
         result = IsMine(keystore, scriptPubKey);
@@ -450,8 +447,7 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     // P2PKH uncompressed
     {
         CBasicKeyStore keystore;
-        scriptPubKey.clear();
-        scriptPubKey << OP_DUP << OP_HASH160 << ToByteVector(uncompressedPubkey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
+        scriptPubKey = GetScriptForDestination(uncompressedPubkey.GetID());
 
         // Keystore does not have key
         result = IsMine(keystore, scriptPubKey);
@@ -467,11 +463,8 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     {
         CBasicKeyStore keystore;
 
-        CScript redeemScript;
-        redeemScript << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
+        CScript redeemScript = GetScriptForDestination(pubkeys[0].GetID());
+        scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
 
         // Keystore does not have redeemScript or key
         result = IsMine(keystore, scriptPubKey);
@@ -492,12 +485,9 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     {
         CBasicKeyStore keystore;
 
-        CScript redeemscript, redeemscript_inner;
-        redeemscript_inner << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
-        redeemscript << OP_HASH160 << ToByteVector(CScriptID(redeemscript_inner)) << OP_EQUAL;
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_HASH160 << ToByteVector(CScriptID(redeemscript)) << OP_EQUAL;
+        CScript redeemscript_inner = GetScriptForDestination(pubkeys[0].GetID());
+        CScript redeemscript = GetScriptForDestination(CScriptID(redeemscript_inner));
+        scriptPubKey = GetScriptForDestination(CScriptID(redeemscript));
 
         keystore.AddCScript(redeemscript);
         keystore.AddCScript(redeemscript_inner);
@@ -511,14 +501,9 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     {
         CBasicKeyStore keystore;
 
-        CScript witnessscript, redeemscript;
-        redeemscript << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
-        witnessscript << OP_HASH160 << ToByteVector(CScriptID(redeemscript)) << OP_EQUAL;
-
-        uint256 scripthash;
-        CSHA256().Write(witnessscript.data(), witnessscript.size()).Finalize(scripthash.begin());
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(scripthash);
+        CScript redeemscript = GetScriptForDestination(pubkeys[0].GetID());
+        CScript witnessscript = GetScriptForDestination(CScriptID(redeemscript));
+        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessscript));
 
         keystore.AddCScript(witnessscript);
         keystore.AddCScript(redeemscript);
@@ -532,13 +517,8 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     {
         CBasicKeyStore keystore;
 
-        CScript witnessscript;
-        witnessscript << OP_0 << ToByteVector(pubkeys[0].GetID());
-
-        scriptPubKey.clear();
-        uint256 scripthash;
-        CSHA256().Write(witnessscript.data(), witnessscript.size()).Finalize(scripthash.begin());
-        scriptPubKey << OP_0 << ToByteVector(scripthash);
+        CScript witnessscript = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0].GetID()));
+        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessscript));
 
         keystore.AddCScript(witnessscript);
         keystore.AddCScript(scriptPubKey);
@@ -551,16 +531,9 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     {
         CBasicKeyStore keystore;
 
-        CScript witnessscript_inner;
-        witnessscript_inner << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
-        uint256 scripthash;
-        CSHA256().Write(witnessscript_inner.data(), witnessscript_inner.size()).Finalize(scripthash.begin());
-        CScript witnessscript;
-        witnessscript << OP_0 << ToByteVector(scripthash);
-
-        scriptPubKey.clear();
-        CSHA256().Write(witnessscript.data(), witnessscript.size()).Finalize(scripthash.begin());
-        scriptPubKey << OP_0 << ToByteVector(scripthash);
+        CScript witnessscript_inner = GetScriptForDestination(pubkeys[0].GetID());
+        CScript witnessscript = GetScriptForDestination(WitnessV0ScriptHash(witnessscript_inner));
+        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessscript));
 
         keystore.AddCScript(witnessscript_inner);
         keystore.AddCScript(witnessscript);
@@ -575,8 +548,7 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         CBasicKeyStore keystore;
         keystore.AddKey(keys[0]);
 
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(pubkeys[0].GetID());
+        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0].GetID()));
 
         // Keystore implicitly has key and P2SH redeemScript
         keystore.AddCScript(scriptPubKey);
@@ -589,8 +561,7 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         CBasicKeyStore keystore;
         keystore.AddKey(uncompressedKey);
 
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(uncompressedPubkey.GetID());
+        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uncompressedPubkey.GetID()));
 
         // Keystore has key, but no P2SH redeemScript
         result = IsMine(keystore, scriptPubKey);
@@ -606,11 +577,7 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     {
         CBasicKeyStore keystore;
 
-        scriptPubKey.clear();
-        scriptPubKey << OP_2 <<
-            ToByteVector(uncompressedPubkey) <<
-            ToByteVector(pubkeys[1]) <<
-            OP_2 << OP_CHECKMULTISIG;
+        scriptPubKey = GetScriptForMultisig(2, {uncompressedPubkey, pubkeys[1]});
 
         // Keystore does not have any keys
         result = IsMine(keystore, scriptPubKey);
@@ -641,14 +608,8 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         keystore.AddKey(uncompressedKey);
         keystore.AddKey(keys[1]);
 
-        CScript redeemScript;
-        redeemScript << OP_2 <<
-            ToByteVector(uncompressedPubkey) <<
-            ToByteVector(pubkeys[1]) <<
-            OP_2 << OP_CHECKMULTISIG;
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
+        CScript redeemScript = GetScriptForMultisig(2, {uncompressedPubkey, pubkeys[1]});
+        scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
 
         // Keystore has no redeemScript
         result = IsMine(keystore, scriptPubKey);
@@ -666,18 +627,8 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         keystore.AddKey(keys[0]);
         keystore.AddKey(keys[1]);
 
-        CScript witnessScript;
-        witnessScript << OP_2 <<
-            ToByteVector(pubkeys[0]) <<
-            ToByteVector(pubkeys[1]) <<
-            OP_2 << OP_CHECKMULTISIG;
-
-        uint256 scriptHash;
-        CSHA256().Write(&witnessScript[0], witnessScript.size())
-            .Finalize(scriptHash.begin());
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(scriptHash);
+        CScript witnessScript = GetScriptForMultisig(2, {pubkeys[0], pubkeys[1]});
+        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
 
         // Keystore has keys, but no witnessScript or P2SH redeemScript
         result = IsMine(keystore, scriptPubKey);
@@ -700,18 +651,8 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         keystore.AddKey(uncompressedKey);
         keystore.AddKey(keys[1]);
 
-        CScript witnessScript;
-        witnessScript << OP_2 <<
-            ToByteVector(uncompressedPubkey) <<
-            ToByteVector(pubkeys[1]) <<
-            OP_2 << OP_CHECKMULTISIG;
-
-        uint256 scriptHash;
-        CSHA256().Write(&witnessScript[0], witnessScript.size())
-            .Finalize(scriptHash.begin());
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(scriptHash);
+        CScript witnessScript = GetScriptForMultisig(2, {uncompressedPubkey, pubkeys[1]});
+        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
 
         // Keystore has keys, but no witnessScript or P2SH redeemScript
         result = IsMine(keystore, scriptPubKey);
@@ -732,21 +673,9 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     {
         CBasicKeyStore keystore;
 
-        CScript witnessScript;
-        witnessScript << OP_2 <<
-            ToByteVector(pubkeys[0]) <<
-            ToByteVector(pubkeys[1]) <<
-            OP_2 << OP_CHECKMULTISIG;
-
-        uint256 scriptHash;
-        CSHA256().Write(&witnessScript[0], witnessScript.size())
-            .Finalize(scriptHash.begin());
-
-        CScript redeemScript;
-        redeemScript << OP_0 << ToByteVector(scriptHash);
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
+        CScript witnessScript = GetScriptForMultisig(2, {pubkeys[0], pubkeys[1]});
+        CScript redeemScript = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
+        scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
 
         // Keystore has no witnessScript, P2SH redeemScript, or keys
         result = IsMine(keystore, scriptPubKey);
