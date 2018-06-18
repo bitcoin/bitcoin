@@ -678,7 +678,15 @@ UniValue decodescript(const JSONRPCRequest& request)
             "     \"address\"     (string) raven address\n"
             "     ,...\n"
             "  ],\n"
-            "  \"p2sh\",\"address\" (string) address of P2SH script wrapping this redeem script (not returned if the script is already a P2SH).\n"
+            "  \"p2sh\":\"address\",       (string) address of P2SH script wrapping this redeem script (not returned if the script is already a P2SH).\n"
+            "  \"(The following only appears if the script is an asset script)\n"
+            "  \"asset_name\":\"name\",      (string) Name of the asset.\n"
+            "  \"amount\":\"x.xx\",          (numeric) The amount of assets interacted with.\n"
+            "  \"units\": n,                (numeric) The units of the asset. (Only appears in the type (new_asset)\n"
+            "  \"reissuable\": true|false, (boolean) If this asset is reissuable. (Only appears in type (new_asset|reissue_asset))\n"
+            "  \"hasIPFS\": true|false,    (boolean) If this asset has an IPFS hash. (Only appears in type (new_asset if hasIPFS is true)\n"
+            "  \"ipfs_hash\": \"hash\",      (string) The ipfs hash for the new asset. (Only appears in type (new_asset)\n"
+            "  \"new_ipfs_hash\":\"hash\",    (string) If new ipfs hash (Only appears in type. (reissue_asset))\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("decodescript", "\"hexstring\"")
@@ -705,6 +713,55 @@ UniValue decodescript(const JSONRPCRequest& request)
         // don't return the address for a P2SH of the P2SH.
         r.push_back(Pair("p2sh", EncodeDestination(CScriptID(script))));
     }
+
+    /** RVN START */
+    if (type.isStr() && type.get_str() == ASSET_TRANSFER_STRING) {
+        CAssetTransfer transfer;
+        std::string address;
+
+        if (!TransferAssetFromScript(script, transfer, address))
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Failed to deserialize the transfer asset script");
+
+        r.push_back(Pair("asset_name", transfer.strName));
+        r.push_back(Pair("amount", ValueFromAmount(transfer.nAmount)));
+
+    } else if (type.isStr() && type.get_str() == ASSET_REISSUE_STRING) {
+        CReissueAsset reissue;
+        std::string address;
+
+        if (!ReissueAssetFromScript(script, reissue, address))
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Failed to deserialize the reissue asset script");
+
+        r.push_back(Pair("asset_name", reissue.strName));
+        r.push_back(Pair("amount", ValueFromAmount(reissue.nAmount)));
+
+        bool reissuable = reissue.nReissuable ? true : false;
+        r.push_back(Pair("reissuable", reissuable));
+
+        if (reissue.strIPFSHash != "")
+            r.push_back(Pair("new_ipfs_hash", reissue.strIPFSHash));
+
+    } else if (type.isStr() && type.get_str() == ASSET_NEW_STRING) {
+        CNewAsset asset;
+        std::string address;
+
+        if(!AssetFromScript(script, asset, address))
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Failed to deserialize the new asset script");
+
+        r.push_back(Pair("asset_name", asset.strName));
+        r.push_back(Pair("amount", ValueFromAmount(asset.nAmount)));
+        r.push_back(Pair("units", asset.units));
+
+        bool reissuable = asset.nReissuable ? true : false;
+        r.push_back(Pair("reissuable", reissuable));
+
+        bool hasIPFS = asset.nHasIPFS ? true : false;
+        r.push_back(Pair("hasIPFS", hasIPFS));
+
+        if (hasIPFS)
+            r.push_back(Pair("ipfs_hash", asset.strIPFSHash));
+    }
+    /** RVN END */
 
     return r;
 }

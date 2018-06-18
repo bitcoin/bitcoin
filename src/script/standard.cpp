@@ -5,6 +5,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <base58.h>
+#include <assets/assets.h>
 #include "script/standard.h"
 
 #include "pubkey.h"
@@ -34,9 +35,9 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_WITNESS_UNKNOWN: return "witness_unknown";
 
     /** RVN START */
-    case TX_NEW_ASSET: return "new_asset";
-    case TX_TRANSFER_ASSET: return "transfer_asset";
-    case TX_REISSUE_ASSET: return "reissue_asset";
+    case TX_NEW_ASSET: return ASSET_NEW_STRING;
+    case TX_TRANSFER_ASSET: return ASSET_TRANSFER_STRING;
+    case TX_REISSUE_ASSET: return ASSET_REISSUE_STRING;
     /** RVN END */
     }
     return nullptr;
@@ -259,7 +260,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = unk;
         return true;
     /** RVN START */
-    } else if (whichType == TX_NEW_ASSET || TX_REISSUE_ASSET || TX_TRANSFER_ASSET) {
+    } else if (whichType == TX_NEW_ASSET || whichType == TX_REISSUE_ASSET || whichType == TX_TRANSFER_ASSET) {
         addressRet = CKeyID(uint160(vSolutions[0]));
         return true;
     }

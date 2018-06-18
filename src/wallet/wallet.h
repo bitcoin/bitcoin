@@ -187,6 +187,17 @@ struct COutputEntry
     int vout;
 };
 
+/** RVN START */
+struct CAssetOutputEntry
+{
+    std::string type;
+    std::string assetName;
+    CTxDestination destination;
+    CAmount amount;
+    int vout;
+};
+/** RVN END */
+
 /** A transaction with a merkle branch linking it to the block chain. */
 class CMerkleTx
 {
@@ -458,6 +469,9 @@ public:
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
+
+    void GetAmounts(std::list<COutputEntry>& listReceived,
+                    std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter, std::list<CAssetOutputEntry>& assetsReceived, std::list<CAssetOutputEntry>& assetsSent) const;
 
     bool IsFromMe(const isminefilter& filter) const
     {
