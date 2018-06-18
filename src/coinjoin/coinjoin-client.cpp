@@ -449,7 +449,7 @@ bool CCoinJoinClientSession::SendDenominate(const std::vector<std::pair<CTxDSIn,
         return false;
     }
 
-    if (txMyCollateral == CMutableTransaction()) {
+    if (CTransaction(txMyCollateral).IsNull()) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinClient:SendDenominate -- CoinJoin collateral not set\n");
         return false;
     }
@@ -913,7 +913,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
 
         //check our collateral and create new if needed
         std::string strReason;
-        if (txMyCollateral == CMutableTransaction()) {
+        if (CTransaction(txMyCollateral).IsNull()) {
             if (!CreateCollateralTransaction(txMyCollateral, strReason)) {
                 LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::DoAutomaticDenominating -- create collateral error:%s\n", strReason);
                 return false;
