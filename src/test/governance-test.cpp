@@ -689,12 +689,6 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         stream.reserve(1000);
         stream << fb;
 
-//        CFinalizedBudgetBroadcast actual;
-//        stream >> actual;
-//
-//        BOOST_REQUIRE_EQUAL(actual.GetHash(), fb.GetHash());
-//        BOOST_REQUIRE_EQUAL(actual.MasternodeSubmittedId(), fb.MasternodeSubmittedId());
-
         CNode dummy(INVALID_SOCKET, CAddress(CService("127.0.0.1", 0), NODE_NETWORK));
 
         budget.ProcessMessage(&dummy, "fbs", stream);

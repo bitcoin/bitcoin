@@ -944,9 +944,10 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand,
             {
                 LogPrintf("fbs - unknown masternode - vin: %s\n", finalizedBudgetBroadcast.MasternodeSubmittedId().ToString());
                 mnodeman.AskForMN(pfrom, finalizedBudgetBroadcast.MasternodeSubmittedId());
+                return;
             }
 
-            if (finalizedBudgetBroadcast.VerifySignature(producer->pubkey2))
+            if (!finalizedBudgetBroadcast.VerifySignature(producer->pubkey2))
             {
                 Misbehaving(pfrom->GetId(), 50);
             }
