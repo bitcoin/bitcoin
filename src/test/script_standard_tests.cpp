@@ -488,6 +488,88 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
+    // (P2PKH inside) P2SH inside P2SH (invalid)
+    {
+        CBasicKeyStore keystore;
+
+        CScript redeemscript, redeemscript_inner;
+        redeemscript_inner << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
+        redeemscript << OP_HASH160 << ToByteVector(CScriptID(redeemscript_inner)) << OP_EQUAL;
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_HASH160 << ToByteVector(CScriptID(redeemscript)) << OP_EQUAL;
+
+        keystore.AddCScript(redeemscript);
+        keystore.AddCScript(redeemscript_inner);
+        keystore.AddCScript(scriptPubKey);
+        keystore.AddKey(keys[0]);
+        result = IsMine(keystore, scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+    }
+
+    // (P2PKH inside) P2SH inside P2WSH (invalid)
+    {
+        CBasicKeyStore keystore;
+
+        CScript witnessscript, redeemscript;
+        redeemscript << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
+        witnessscript << OP_HASH160 << ToByteVector(CScriptID(redeemscript)) << OP_EQUAL;
+
+        uint256 scripthash;
+        CSHA256().Write(witnessscript.data(), witnessscript.size()).Finalize(scripthash.begin());
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(scripthash);
+
+        keystore.AddCScript(witnessscript);
+        keystore.AddCScript(redeemscript);
+        keystore.AddCScript(scriptPubKey);
+        keystore.AddKey(keys[0]);
+        result = IsMine(keystore, scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+    }
+
+    // P2WPKH inside P2WSH (invalid)
+    {
+        CBasicKeyStore keystore;
+
+        CScript witnessscript;
+        witnessscript << OP_0 << ToByteVector(pubkeys[0].GetID());
+
+        scriptPubKey.clear();
+        uint256 scripthash;
+        CSHA256().Write(witnessscript.data(), witnessscript.size()).Finalize(scripthash.begin());
+        scriptPubKey << OP_0 << ToByteVector(scripthash);
+
+        keystore.AddCScript(witnessscript);
+        keystore.AddCScript(scriptPubKey);
+        keystore.AddKey(keys[0]);
+        result = IsMine(keystore, scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+    }
+
+    // (P2PKH inside) P2WSH inside P2WSH (invalid)
+    {
+        CBasicKeyStore keystore;
+
+        CScript witnessscript_inner;
+        witnessscript_inner << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
+        uint256 scripthash;
+        CSHA256().Write(witnessscript_inner.data(), witnessscript_inner.size()).Finalize(scripthash.begin());
+        CScript witnessscript;
+        witnessscript << OP_0 << ToByteVector(scripthash);
+
+        scriptPubKey.clear();
+        CSHA256().Write(witnessscript.data(), witnessscript.size()).Finalize(scripthash.begin());
+        scriptPubKey << OP_0 << ToByteVector(scripthash);
+
+        keystore.AddCScript(witnessscript_inner);
+        keystore.AddCScript(witnessscript);
+        keystore.AddCScript(scriptPubKey);
+        keystore.AddKey(keys[0]);
+        result = IsMine(keystore, scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+    }
+
     // P2WPKH compressed
     {
         CBasicKeyStore keystore;
