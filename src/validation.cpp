@@ -2709,6 +2709,12 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
             CBlockIndex* starting_tip = chainActive.Tip();
             bool blocks_connected = false;
             do {
+                if (nStopAtHeight != DEFAULT_STOPATHEIGHT
+                        && chainActive.Tip()
+                        && chainActive.Tip()->nHeight >= nStopAtHeight) {
+                    break;
+                }
+
                 // We absolutely may not unlock cs_main until we've made forward progress
                 // (with the exception of shutdown due to hardware issues, low disk space, etc).
                 ConnectTrace connectTrace(mempool); // Destructed before cs_main is unlocked
@@ -2765,21 +2771,6 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
         if (ShutdownRequested())
             break;
     } while (pindexNewTip != pindexMostWork);
-
-    // Rewind chain if the active chain's height is greater than nStopAtHeight.
-    if (nStopAtHeight != DEFAULT_STOPATHEIGHT && pindexNewTip->nHeight > nStopAtHeight) {
-        DisconnectedBlockTransactions disconnectpool;
-        while (chainActive.Tip()->nHeight > nStopAtHeight) {
-            LogPrintf("Rolling back to the exact nStopAtHeight: target=%d, current=%d\n",
-                nStopAtHeight,
-                chainActive.Tip()->nHeight);
-            if (!DisconnectTip(state, chainparams, &disconnectpool)) {
-                UpdateMempoolForReorg(disconnectpool, false);
-                return false;
-            }
-        }
-        UpdateMempoolForReorg(disconnectpool, true);
-    }
 
     CheckBlockIndex(chainparams.GetConsensus());
 
