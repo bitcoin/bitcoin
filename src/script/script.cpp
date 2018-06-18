@@ -236,6 +236,17 @@ bool CScript::IsOwnerAsset() const
             (*this)[30] == RVN_O);
 }
 
+bool CScript::IsReissueAsset() const
+{
+    // Extra-fast test for new-asset CScripts:
+    return (this->size() > 30 &&
+            (*this)[25] == OP_RVN_ASSET &&
+            (*this)[27] == RVN_R &&
+            (*this)[28] == RVN_V &&
+            (*this)[29] == RVN_N &&
+            (*this)[30] == RVN_R);
+}
+
 bool CScript::IsTransferAsset() const
 {
     // Extra-fast test for new-asset CScripts:

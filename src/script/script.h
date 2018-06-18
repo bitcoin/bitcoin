@@ -652,6 +652,7 @@ public:
     /** RVN START */
     bool IsNewAsset() const;
     bool IsOwnerAsset() const;
+    bool IsReissueAsset() const;
     bool IsTransferAsset() const;
     /** RVN END */
 

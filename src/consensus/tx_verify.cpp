@@ -258,6 +258,31 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
 
             if (!asset.IsValid(strError, *assetCache, fMemPoolCheck, fCheckDuplicateInputs))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
+
+        } else if (tx.IsReissueAsset()) {
+            CReissueAsset reissue;
+            std::string strAddress;
+            if (!ReissueAssetFromTransaction(tx, reissue, strAddress))
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset");
+
+            bool foundOwnerAsset = false;
+            for (auto out : tx.vout) {
+                CAssetTransfer transfer;
+                std::string transferAddress;
+                if (TransferAssetFromScript(out.scriptPubKey, transfer, transferAddress)) {
+                    if (reissue.strName + OWNER == transfer.strName) {
+                        foundOwnerAsset = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!foundOwnerAsset)
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset-bad-owner-asset");
+
+            std::string strError = "";
+            if (!reissue.IsValid(strError, *assetCache))
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
         }
     }
     /** RVN END */

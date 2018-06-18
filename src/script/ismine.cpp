@@ -171,6 +171,20 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
                 return ISMINE_SPENDABLE;
             break;
         }
+
+        case TX_REISSUE_ASSET: {
+            keyID = CKeyID(uint160(vSolutions[0]));
+            if (sigversion != SIGVERSION_BASE) {
+                CPubKey pubkey;
+                if (keystore.GetPubKey(keyID, pubkey) && !pubkey.IsCompressed()) {
+                    isInvalid = true;
+                    return ISMINE_NO;
+                }
+            }
+            if (keystore.HaveKey(keyID))
+                return ISMINE_SPENDABLE;
+            break;
+        }
             /** RVN END*/
     }
 

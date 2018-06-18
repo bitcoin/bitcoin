@@ -101,12 +101,18 @@ class CBlockUndo
 {
 public:
     std::vector<CTxUndo> vtxundo; // for all but the coinbase
+    /** RVN START */
+    std::vector<std::pair<std::string, std::string> > vIPFSHashes;
+    /** RVN END */
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(vtxundo);
+        /** RVN START */
+        READWRITE(vIPFSHashes);
+        /** RVN END */
     }
 };
 

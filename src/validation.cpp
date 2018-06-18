@@ -1216,7 +1216,7 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     }
 }
 
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight, CAssetsCache* assetCache)
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight, CAssetsCache* assetCache, std::pair<std::string, std::string>* undoIPFSHash)
 {
     // mark inputs spent
     if (!tx.IsCoinBase()) {
@@ -1228,7 +1228,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
         }
     }
     // add outputs
-    AddCoins(inputs, tx, nHeight, false, assetCache); /** RVN START */ /* Pass assetCache into function */ /** RVN END */
+    AddCoins(inputs, tx, nHeight, false, assetCache, undoIPFSHash); /** RVN START */ /* Pass assetCache into function */ /** RVN END */
 }
 
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
@@ -1345,6 +1345,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     // as to the correct behavior - we may want to continue
                     // peering with non-upgraded nodes even after soft-fork
                     // super-majority signaling has occurred.
+
                     return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
@@ -1498,7 +1499,6 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out, CAss
  *  When FAILED is returned, view is left in an indeterminate state. */
 static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, CAssetsCache* assetsCache = nullptr)
 {
-    LogPrintf("%s\n", __func__);
     bool fClean = true;
 
     CBlockUndo blockUndo;
@@ -1575,6 +1575,21 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                     error("%s : Failed to Remove Owner from transaction. TXID : ", __func__, tx.GetHash().GetHex());
                     return DISCONNECT_FAILED;
                 }
+            } else if (tx.IsReissueAsset()) {
+                CReissueAsset reissue;
+                std::string strAddress;
+
+                if (!ReissueAssetFromTransaction(tx, reissue, strAddress)) {
+                    error("%s : Failed to get reissue asset from transaction. TXID : ", __func__, tx.GetHash().GetHex());
+                    return DISCONNECT_FAILED;
+                }
+
+                if (assetsCache->ContainsAsset(reissue.strName)) {
+                    if (!assetsCache->RemoveReissueAsset(reissue, strAddress, COutPoint(tx.GetHash(), tx.vout.size() - 1), blockUndo.vIPFSHashes)) {
+                        error("%s : Failed to Undo Reissue Asset. Asset Name : %s", __func__, reissue.strName);
+                        return DISCONNECT_FAILED;
+                    }
+                }
             }
 
             for (auto index : vAssetTxIndex) {
@@ -1604,7 +1619,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
             }
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
                 const COutPoint &out = tx.vin[j].prevout;
-                int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out, assetsCache);
+                int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out, assetsCache); /** RVN START */ /* Pass assetsCache into ApplyTxInUndo function */ /** RVN END */
                 if (res == DISCONNECT_FAILED) return DISCONNECT_FAILED;
                 fClean = fClean && res != DISCONNECT_UNCLEAN;
             }
@@ -1859,8 +1874,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     int64_t nSigOpsCost = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
-    vPos.reserve(block.vtx.size());
+    vPos.reserve(block.vtx.size() * 2);
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
+    blockundo.vIPFSHashes.reserve(block.vtx.size() - 1);
     std::vector<PrecomputedTransactionData> txdata;
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
     for (unsigned int i = 0; i < block.vtx.size(); i++)
@@ -1926,7 +1942,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             if (tx.IsNewAsset()) {
                 CNewAsset asset;
                 std::string strAddress;
-                AssetFromTransaction(tx, asset, strAddress);
+                if (!AssetFromTransaction(tx, asset, strAddress))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-asset-serialization");
 
                 std::string strError = "";
                 if(!IsNewOwnerTxValid(tx, asset.strName, strAddress, strError))
@@ -1934,6 +1951,15 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
                 if (!asset.IsValid(strError, *assetsCache))
                     return state.DoS(100, error("%s: %s", __func__, strError), REJECT_INVALID, "bad-txns-issue-asset");
+            } else if (tx.IsReissueAsset()) {
+                CReissueAsset reissue;
+                std::string strAddress;
+                if (!ReissueAssetFromTransaction(tx, reissue, strAddress))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset-serialization");
+
+                std::string strError = "";
+                if (!reissue.IsValid(strError, *assetsCache))
+                    return state.DoS(100, false, REJECT_INVALID, strError);
             }
         }
         /** RVN END */
@@ -1942,7 +1968,20 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         if (i > 0) {
             blockundo.vtxundo.push_back(CTxUndo());
         }
-        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight, assetsCache);
+        /** RVN START */
+        // Create the basic empty string pair for the undoblock
+        std::pair<std::string, std::string> undoPair = std::make_pair("", "");
+        std::pair<std::string, std::string>* undoIPFSHash = &undoPair;
+        /** RVN END */
+
+        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight, assetsCache, undoIPFSHash);
+
+        /** RVN START */
+        if (!undoIPFSHash->first.empty()) {
+            blockundo.vIPFSHashes.emplace_back(*undoIPFSHash);
+        }
+        /** RVN END */
+
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
@@ -3397,7 +3436,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
     if (!ConnectBlock(block, state, &indexDummy, viewNew, chainparams, &assetCache, true)) /** RVN START */ /*Add asset to function */ /** RVN END*/
-        return false;
+        return error("%s: Consensus::ConnectBlock: %s", __func__, FormatStateMessage(state));
     assert(state.IsValid());
 
     return true;
