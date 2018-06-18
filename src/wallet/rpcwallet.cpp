@@ -1263,9 +1263,11 @@ static UniValue sendmany(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     // Check funds
-    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount);
-    if (totalAmount > nBalance)
+    if (IsDeprecatedRPCEnabled("accounts") && totalAmount > pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount)) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
+    } else if (!IsDeprecatedRPCEnabled("accounts") && totalAmount > pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, nullptr)) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Wallet has insufficient funds");
+    }
 
     // Shuffle recipient list
     std::shuffle(vecSend.begin(), vecSend.end(), FastRandomContext());
