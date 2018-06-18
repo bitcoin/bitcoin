@@ -604,6 +604,12 @@ bool LoadData()
         return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
     }
 
+    uiInterface.InitMessage(_("Loading instant send cache..."));
+    if (!Load(GetInstantSend(), "ixcache.dat", "InstantSend"))
+    {
+        return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
+    }
+
     uiInterface.InitMessage(_("Loading budget cache..."));
     if (!Load(budget, "budget.dat", "MasternodeBudget"))
     {
@@ -622,12 +628,6 @@ bool LoadData()
 
     uiInterface.InitMessage(_("Loading systemnode payment cache..."));
     if (!Load(systemnodePayments, "snpayments.dat", "SystemnodePayments"))
-    {
-        return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
-    }
-
-    uiInterface.InitMessage(_("Loading instant send cache..."));
-    if (!Load(GetInstantSend(), "ixcache.dat", "InstantSend"))
     {
         return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
     }
