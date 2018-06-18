@@ -241,6 +241,11 @@ uint256 CSporkMessage::GetSignatureHash() const
 
 bool CSporkMessage::Sign(const CKey& key)
 {
+    if (!key.IsValid()) {
+        LogPrintf("CSporkMessage::Sign -- signing key is not valid\n");
+        return false;
+    }
+
     CKeyID pubKeyId = key.GetPubKey().GetID();
     std::string strError = "";
 
@@ -274,6 +279,22 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
             LogPrintf("CSporkMessage::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
+<<<<<<< HEAD
+=======
+    } else {
+        std::string strMessage = boost::lexical_cast<std::string>(nSporkID) + boost::lexical_cast<std::string>(nValue) + boost::lexical_cast<std::string>(nTimeSigned);
+
+        if (!CMessageSigner::VerifyMessage(pubKeyId, vchSig, strMessage, strError)){
+            // Note: unlike for other messages we have to check for new format even with SPORK_6_NEW_SIGS
+            // inactive because SPORK_6_NEW_SIGS default is OFF and it is not the first spork to sync
+            // (and even if it would, spork order can't be guaranteed anyway).
+            uint256 hash = GetSignatureHash();
+            if (!CHashSigner::VerifyHash(hash, pubKeyId, vchSig, strError)) {
+                LogPrintf("CSporkMessage::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
+                return false;
+            }
+        }
+>>>>>>> 6410705... Fix 2 small issues in sporks module (#2133)
     }
 
     return true;
