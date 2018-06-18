@@ -246,6 +246,12 @@ void CBudgetManager::SubmitFinalBudget()
 
             CFinalizedBudgetBroadcast finalizedBudgetBroadcast(strBudgetName, nBlockStart, vecTxBudgetPayments, activeMasternode.vin, key2);
 
+            if(mapSeenFinalizedBudgets.count(finalizedBudgetBroadcast.GetHash())) {
+                LogPrintf("CBudgetManager::SubmitFinalBudget - Budget already exists - %s\n", finalizedBudgetBroadcast.GetHash().ToString());
+                nSubmittedHeight = nCurrentHeight;
+                return; //already exists
+            }
+
             if(!finalizedBudgetBroadcast.IsValid(strError)){
                 LogPrintf("CBudgetManager::SubmitFinalBudget - Invalid finalized budget - %s \n", strError);
                 return;
