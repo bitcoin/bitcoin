@@ -14,6 +14,7 @@
 #include <ui_interface.h>
 
 #include <memory>
+#include <set>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -144,6 +145,9 @@ struct evhttp* eventHTTP = nullptr;
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
 static WorkQueue<HTTPClosure>* workQueue = nullptr;
+//! Set of current HTTP connections
+static Mutex g_http_connections_cs;
+static std::set<evhttp_connection*> g_http_connections GUARDED_BY(g_http_connections_cs);
 //! Handlers for (sub)paths
 std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
@@ -209,9 +213,24 @@ static std::string RequestMethodString(HTTPRequest::RequestMethod m)
     }
 }
 
-/** HTTP request callback */
-static void http_request_cb(struct evhttp_request* req, void* arg)
+/** HTTP connection close callback */
+static void http_connection_close_cb(struct evhttp_connection* conn, void* /* arg */)
 {
+    LOCK(g_http_connections_cs);
+    g_http_connections.erase(conn);
+}
+
+/** HTTP request callback */
+static void http_request_cb(struct evhttp_request* req, void* /* arg */)
+{
+    {
+        LOCK(g_http_connections_cs);
+        evhttp_connection* conn = evhttp_request_get_connection(req);
+        if (g_http_connections.insert(conn).second) {
+            evhttp_connection_set_closecb(conn, http_connection_close_cb, nullptr);
+        }
+    }
+
     // Disable reading to work around a libevent bug, fixed in 2.2.0.
     if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
         evhttp_connection* conn = evhttp_request_get_connection(req);
@@ -284,7 +303,6 @@ static bool ThreadHTTP(struct event_base* base)
     RenameThread("bitcoin-http");
     LogPrint(BCLog::HTTP, "Entering http event loop\n");
     event_base_dispatch(base);
-    // Event loop will be interrupted by InterruptHTTPServer()
     LogPrint(BCLog::HTTP, "Exited http event loop\n");
     return event_base_got_break(base) == 0;
 }
@@ -457,21 +475,21 @@ void StopHTTPServer()
         delete workQueue;
         workQueue = nullptr;
     }
+    {
+        LogPrint(BCLog::HTTP, "Disabling reading on current connections\n");
+        LOCK(g_http_connections_cs);
+        for (evhttp_connection* conn : g_http_connections) {
+            bufferevent* bev = evhttp_connection_get_bufferevent(conn);
+            if (bev) bufferevent_disable(bev, EV_READ);
+        }
+        g_http_connections.clear();
+    }
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
-        // Exit the event loop as soon as there are no active events.
-        event_base_loopexit(eventBase, nullptr);
-        // Give event loop a few seconds to exit (to send back last RPC responses), then break it
-        // Before this was solved with event_base_loopexit, but that didn't work as expected in
-        // at least libevent 2.0.21 and always introduced a delay. In libevent
-        // master that appears to be solved, so in the future that solution
-        // could be used again (if desirable).
-        // (see discussion in https://github.com/bitcoin/bitcoin/pull/6990)
-        if (threadResult.valid() && threadResult.wait_for(std::chrono::milliseconds(2000)) == std::future_status::timeout) {
-            LogPrintf("HTTP event loop did not exit within allotted time, sending loopbreak\n");
-            event_base_loopbreak(eventBase);
-        }
+        event_base_loopbreak(eventBase);
         threadHTTP.join();
+        // Process remaining events.
+        event_base_dispatch(eventBase);
     }
     if (eventHTTP) {
         evhttp_free(eventHTTP);
@@ -586,11 +604,10 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
         // workaround above.
         if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
             evhttp_connection* conn = evhttp_request_get_connection(req_copy);
-            if (conn) {
+            LOCK(g_http_connections_cs);
+            if (conn && g_http_connections.count(conn)) {
                 bufferevent* bev = evhttp_connection_get_bufferevent(conn);
-                if (bev) {
-                    bufferevent_enable(bev, EV_READ | EV_WRITE);
-                }
+                if (bev) bufferevent_enable(bev, EV_READ | EV_WRITE);
             }
         }
     });
