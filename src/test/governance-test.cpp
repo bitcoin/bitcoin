@@ -77,6 +77,7 @@ namespace
         }
 
         block.phashBlock = &hash;
+        block.nTime = GetTime();
         block.BuildSkip();
     }
 
@@ -100,11 +101,13 @@ namespace
         return CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubKey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
     }
 
-    CMasternode CreateMasternode(CTxIn vin)
+    CMasternode CreateMasternode(CTxIn vin, const CKey* signKey = NULL)
     {
         CMasternode mn;
         mn.vin = vin;
         mn.activeState = CMasternode::MASTERNODE_ENABLED;
+        if (signKey != NULL)
+            mn.pubkey2 = signKey->GetPubKey();
         return mn;
     }
 
@@ -117,6 +120,7 @@ namespace
     const unsigned char vchKey0[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
     const unsigned char vchKey1[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0};
     const unsigned char vchKey2[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0};
+    const unsigned char vchKey3[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0};
 
     struct FinalizedBudgetFixture
     {
@@ -126,6 +130,7 @@ namespace
         const CKey keyPairA;
         const CKey keyPairB;
         const CKey keyPairC;
+        const CKey keyPairMn;
 
         const CBudgetProposal proposalA;
         const CBudgetProposal proposalB;
@@ -141,16 +146,19 @@ namespace
         std::vector<CBlockIndex> blocks;
         std::string error;
 
+        static boost::scoped_ptr<ECCVerifyHandle> globalVerifyHandle;
+
         FinalizedBudgetFixture()
             : budgetName("test")
             , blockStart(1296000)
             , keyPairA(CreateKeyPair(vchKey0))
             , keyPairB(CreateKeyPair(vchKey1))
             , keyPairC(CreateKeyPair(vchKey2))
+            , keyPairMn(CreateKeyPair(vchKey3))
             , proposalA(CreateProposal("A", keyPairA, 42))
             , proposalB(CreateProposal("B", keyPairB, 404))
             , proposalC(CreateProposal("C", keyPairC, 42))
-            , mn1(CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN))))
+            , mn1(CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN)), &keyPairMn))
             , mn2(CreateMasternode(CTxIn(COutPoint(ArithToUint256(2), 1 * COIN))))
             , mn3(CreateMasternode(CTxIn(COutPoint(ArithToUint256(3), 1 * COIN))))
             , mn4(CreateMasternode(CTxIn(COutPoint(ArithToUint256(4), 1 * COIN))))
@@ -158,6 +166,8 @@ namespace
             , hashes(1290500)
             , blocks(1290500)
         {
+            globalVerifyHandle.reset(new ECCVerifyHandle());
+
             SetMockTime(GetTime());
 
             fMasterNode = true;
@@ -201,6 +211,7 @@ namespace
         }
 
     };
+    boost::scoped_ptr<ECCVerifyHandle> FinalizedBudgetFixture::globalVerifyHandle;
 }
 
 
@@ -563,6 +574,127 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         std::vector<CTxBudgetPayment> actual = budget.GetBudgetPayments();
 
         BOOST_CHECK_EQUAL_COLLECTIONS(actual.begin(), actual.end(), expected.begin(), expected.end());
+    }
+
+    BOOST_AUTO_TEST_CASE(CreateFinalizedBudgetSignedByMasternode)
+    {
+        // Set Up
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+        txBudgetPayments.push_back(GetPayment(proposalB));
+
+        BOOST_REQUIRE(keyPairMn.GetPubKey() == mn1.pubkey2);
+        CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+
+        // Call & Check
+        BOOST_CHECK(budget.IsValid());
+        BOOST_CHECK_EQUAL(budget.MasternodeSubmittedId(), mn1.vin);
+    }
+
+    BOOST_AUTO_TEST_CASE(CreateFinalizedBudgetSignedWithWrongKey)
+    {
+        // Set Up
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+        txBudgetPayments.push_back(GetPayment(proposalB));
+
+        BOOST_REQUIRE(keyPairMn.GetPubKey() != mn2.pubkey2);
+        CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, mn2.vin, keyPairMn);
+
+        // Call & Check
+        BOOST_CHECK(!budget.IsValid());
+    }
+
+    BOOST_AUTO_TEST_CASE(FinalizedBudgetSignatureValid)
+    {
+        // Set Up
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+        txBudgetPayments.push_back(GetPayment(proposalB));
+
+        BOOST_REQUIRE(keyPairMn.GetPubKey() == mn1.pubkey2);
+        CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+
+        // Call & Check
+        BOOST_CHECK(budget.VerifySignature(mn1.pubkey2));
+    }
+
+    BOOST_AUTO_TEST_CASE(CopyFinalizedBudget)
+    {
+        // Set Up
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+        txBudgetPayments.push_back(GetPayment(proposalB));
+
+        CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+
+        CFinalizedBudget copied = budget;
+
+        BOOST_CHECK_EQUAL(budget.GetHash(), copied.GetHash());
+        BOOST_CHECK_EQUAL(budget.GetFeeTxHash(), copied.GetFeeTxHash());
+        BOOST_CHECK_EQUAL(budget.MasternodeSubmittedId(), copied.MasternodeSubmittedId());
+        BOOST_CHECK(copied.VerifySignature(mn1.pubkey2));
+    }
+
+    BOOST_AUTO_TEST_CASE(FinalizedBudgetCanBeAdded)
+    {
+        BOOST_REQUIRE(budget.GetFinalizedBudgets().empty());
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+        txBudgetPayments.push_back(GetPayment(proposalB));
+
+        BOOST_REQUIRE(keyPairMn.GetPubKey() == mn1.pubkey2);
+        CFinalizedBudgetBroadcast fb(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+
+        BOOST_REQUIRE(fb.IsValid());
+        BOOST_CHECK(budget.AddFinalizedBudget(fb));
+    }
+
+    BOOST_AUTO_TEST_CASE(FinalizedBudgetSerialized)
+    {
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+        txBudgetPayments.push_back(GetPayment(proposalB));
+
+        CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+
+        BOOST_REQUIRE(budget.IsValid());
+
+        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+        stream.reserve(1000);
+        stream << budget;
+
+        CFinalizedBudgetBroadcast restored;
+        stream >> restored;
+
+        BOOST_CHECK_EQUAL(restored.GetHash(), budget.GetHash());
+        BOOST_CHECK_EQUAL(restored.MasternodeSubmittedId(), budget.MasternodeSubmittedId());
+        BOOST_CHECK_EQUAL(restored.GetFeeTxHash(), budget.GetFeeTxHash());
+        BOOST_CHECK(restored.VerifySignature(mn1.pubkey2));
+    }
+
+    BOOST_AUTO_TEST_CASE(FinalizedBudgetReceivedOverNetwork)
+    {
+        BOOST_REQUIRE(budget.GetFinalizedBudgets().empty());
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+        txBudgetPayments.push_back(GetPayment(proposalB));
+
+        BOOST_REQUIRE(keyPairMn.GetPubKey() == mn1.pubkey2);
+        CFinalizedBudgetBroadcast fb(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+
+        BOOST_REQUIRE(fb.IsValid());
+
+        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+        stream.reserve(1000);
+        stream << fb;
+
+        CNode dummy(INVALID_SOCKET, CAddress(CService("127.0.0.1", 0), NODE_NETWORK));
+
+        budget.ProcessMessage(&dummy, "fbs", stream);
+
+        BOOST_REQUIRE(!budget.GetFinalizedBudgets().empty());
+        BOOST_CHECK_EQUAL(budget.GetFinalizedBudgets().front()->GetHash(), fb.GetHash());
     }
 
 BOOST_AUTO_TEST_SUITE_END()

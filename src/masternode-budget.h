@@ -93,7 +93,7 @@ public:
     void MarkSynced();
     void Sync(CNode *node, uint256 nProp, bool fPartial = false) const;
 
-    void ProcessMessage(CNode *pfrom, std::string &strCommand, CDataStream &vRecv);
+    void ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStream &vRecv);
 
     void NewBlock();
 
@@ -212,6 +212,8 @@ protected:
     int nBlockStart;
     map<uint256, CFinalizedBudgetVote> mapVotes;
     uint256 nFeeTXHash;
+    std::vector<unsigned char> signature;
+    CTxIn masternodeSubmittedId;
 
     static bool ComparePayments(const CTxBudgetPayment& a, const CTxBudgetPayment& b)
     {
@@ -231,13 +233,15 @@ public:
 
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
-    CFinalizedBudget(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
+    CFinalizedBudget(std::string strBudgetName, int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, uint256 nFeeTXHash);
+    CFinalizedBudget(std::string strBudgetName, int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const CKey& keyMasternode);
 
     void CleanAndRemove(bool fSignatureCheck);
     bool AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::string& strError);
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true) const;
     bool IsValid(bool fCheckCollateral=true) const;
+    bool VerifySignature(const CPubKey& pubKey) const;
 
     bool IsVoteSubmitted() const { return voteSubmittedTime.is_initialized(); }
     void ResetAutoChecked();
@@ -251,6 +255,8 @@ public:
     int GetVoteCount() const {return (int)mapVotes.size();}
     const std::vector<CTxBudgetPayment>& GetBudgetPayments() const;
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const;
+
+    const CTxIn& MasternodeSubmittedId() const { return masternodeSubmittedId; }
 
     //check to see if we should vote on this
     bool AutoCheck();
@@ -287,6 +293,8 @@ public:
         READWRITE(nBlockStart);
         READWRITE(vecBudgetPayments);
         READWRITE(fAutoChecked);
+        READWRITE(signature);
+        READWRITE(masternodeSubmittedId);
 
         READWRITE(mapVotes);
     }
@@ -295,12 +303,10 @@ public:
 // FinalizedBudget are cast then sent to peers with this object, which leaves the votes out
 class CFinalizedBudgetBroadcast : public CFinalizedBudget
 {
-private:
-    std::vector<unsigned char> vchSig;
-
 public:
     CFinalizedBudgetBroadcast();
-    CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
+    CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
+    CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, const CTxIn& masternodeId, const CKey& keyMasternode);
 
     void swap(CFinalizedBudgetBroadcast& first, CFinalizedBudgetBroadcast& second) // nothrow
     {
@@ -334,7 +340,14 @@ public:
         READWRITE(LIMITED_STRING(strBudgetName, 20));
         READWRITE(nBlockStart);
         READWRITE(vecBudgetPayments);
+
+
         READWRITE(nFeeTXHash);
+        if (nFeeTXHash == uint256())
+        {
+            READWRITE(signature);
+            READWRITE(masternodeSubmittedId);
+        }
     }
 };
 
