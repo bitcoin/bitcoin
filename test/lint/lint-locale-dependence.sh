@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export LC_ALL=C
 KNOWN_VIOLATIONS=(
     "src/base58.cpp:.*isspace"
     "src/bitcoin-tx.cpp.*stoul"

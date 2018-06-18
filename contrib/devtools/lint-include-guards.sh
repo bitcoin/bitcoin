@@ -6,6 +6,7 @@
 #
 # Check include guards.
 
+export LC_ALL=C
 HEADER_ID_PREFIX="BITCOIN_"
 HEADER_ID_SUFFIX="_H"
 

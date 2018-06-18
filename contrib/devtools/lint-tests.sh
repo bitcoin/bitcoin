@@ -6,6 +6,7 @@
 #
 # Check the test suite naming conventions
 
+export LC_ALL=C
 EXIT_CODE=0
 
 NAMING_INCONSISTENCIES=$(git grep -E '^BOOST_FIXTURE_TEST_SUITE\(' -- \
