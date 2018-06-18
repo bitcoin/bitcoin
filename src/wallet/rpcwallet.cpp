@@ -397,8 +397,8 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "                             transaction, just kept in your wallet.\n"
             "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
             "                             The recipient will receive less amount of Dash than you enter in the amount field.\n"
-            "6. \"use_is\"             (bool, optional) Send this transaction as InstantSend (default: false)\n"
-            "7. \"use_ps\"             (bool, optional) Use anonymized funds only (default: false)\n"
+            "6. \"use_is\"             (bool, optional, default=false) Send this transaction as InstantSend\n"
+            "7. \"use_ps\"             (bool, optional, default=false) Use anonymized funds only\n"
             "\nResult:\n"
             "\"txid\"                  (string) The transaction id.\n"
             "\nExamples:\n"
@@ -1006,8 +1006,8 @@ UniValue sendmany(const JSONRPCRequest& request)
             "      \"address\"          (string) Subtract fee from this address\n"
             "      ,...\n"
             "    ]\n"
-            "7. \"use_is\"                (bool, optional) Send this transaction as InstantSend (default: false)\n"
-            "8. \"use_ps\"                (bool, optional) Use anonymized funds only (default: false)\n"
+            "7. \"use_is\"                (bool, optional, default=false) Send this transaction as InstantSend\n"
+            "8. \"use_ps\"                (bool, optional, default=false) Use anonymized funds only\n"
             "\nResult:\n"
             "\"txid\"                   (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
@@ -1304,7 +1304,7 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
             "listreceivedbyaddress ( minconf addlockconf include_empty include_watchonly)\n"
-            "\nList balances by receiving address.\n"
+            "\nList incoming payments grouped by receiving address.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. addlockconf       (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
@@ -1349,7 +1349,7 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
             "listreceivedbyaccount ( minconf addlockconf include_empty include_watchonly)\n"
-            "\nDEPRECATED. List balances by account.\n"
+            "\nDEPRECATED. List incoming payments grouped by account.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. addlockconf       (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
@@ -2564,7 +2564,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             "    \"redeemScript\" : n        (string) The redeemScript if scriptPubKey is P2SH\n"
             "    \"spendable\" : xxx,        (bool) Whether we have the private keys to spend this output\n"
             "    \"solvable\" : xxx,         (bool) Whether we know how to spend this output, ignoring the lack of keys\n"
-            "    \"ps_rounds\" : n           (numeric) The number of PS round\n"
+            "    \"ps_rounds\" : n           (numeric) The number of PS rounds\n"
             "  }\n"
             "  ,...\n"
             "]\n"

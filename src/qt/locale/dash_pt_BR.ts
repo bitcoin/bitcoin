@@ -1826,7 +1826,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Estamos prestes a criar um novo backup automático para você, no entanto&lt;span style='color:red;'&gt;, você deve sempre garantir que você tenha backups salvos em algum lugar seguro&lt;/span&gt;!</translation>
     </message>
     <message>
-        <source>Note: You turn this message off in options.</source>
+        <source>Note: You can turn this message off in options.</source>
         <translation>Nota: Você desliga esta mensagem nas opções.</translation>
     </message>
     <message>

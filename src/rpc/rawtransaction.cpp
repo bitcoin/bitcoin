@@ -882,7 +882,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
             "1. \"hexstring\"    (string, required) The hex string of the raw transaction)\n"
             "2. allowhighfees  (boolean, optional, default=false) Allow high fees\n"
             "3. instantsend    (boolean, optional, default=false) Use InstantSend to send this transaction\n"
-            "3. bypasslimits   (boolean, optional, default=false) Bypass transactions policy limits\n"
+            "4. bypasslimits   (boolean, optional, default=false) Bypass transaction policy limits\n"
             "\nResult:\n"
             "\"hex\"             (string) The transaction hash in hex\n"
             "\nExamples:\n"
