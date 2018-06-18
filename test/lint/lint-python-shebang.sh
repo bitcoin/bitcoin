@@ -1,5 +1,7 @@
 #!/bin/bash
 # Shebang must use python3 (not python or python2)
+
+export LC_ALL=C
 EXIT_CODE=0
 for PYTHON_FILE in $(git ls-files -- "*.py"); do
     if [[ $(head -c 2 "${PYTHON_FILE}") == "#!" &&

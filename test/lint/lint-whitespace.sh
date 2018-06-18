@@ -8,6 +8,7 @@
 
 # We can't run this check unless we know the commit range for the PR.
 
+export LC_ALL=C
 while getopts "?" opt; do
   case $opt in
     ?)
