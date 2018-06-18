@@ -85,7 +85,8 @@ class WalletLabelsTest(BitcoinTestFramework):
         # we want to reset so that the "" label has what's expected.
         # otherwise we're off by exactly the fee amount as that's mined
         # and matures in the next 100 blocks
-        node.sendfrom("", common_address, fee)
+        if accounts_api:
+            node.sendfrom("", common_address, fee)
         amount_to_send = 1.0
 
         # Create labels and make sure subsequent label API calls
@@ -125,7 +126,7 @@ class WalletLabelsTest(BitcoinTestFramework):
             if accounts_api:
                 node.sendfrom(label.name, to_label.receive_address, amount_to_send)
             else:
-                node.sendfrom(label.name, to_label.addresses[0], amount_to_send)
+                node.sendtoaddress(to_label.addresses[0], amount_to_send)
         node.generate(1)
         for label in labels:
             if accounts_api:
@@ -166,7 +167,8 @@ class WalletLabelsTest(BitcoinTestFramework):
             label.add_address(multisig_address)
             label.purpose[multisig_address] = "send"
             label.verify(node)
-            node.sendfrom("", multisig_address, 50)
+            if accounts_api:
+                node.sendfrom("", multisig_address, 50)
         node.generate(101)
         if accounts_api:
             for label in labels:
