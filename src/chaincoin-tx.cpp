@@ -385,7 +385,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     CScript scriptPubKey = GetScriptForMultisig(required, pubkeys);
 
     if (bSegWit) {
-        for (CPubKey& pubkey : pubkeys) {
+        for (const CPubKey& pubkey : pubkeys) {
             if (!pubkey.IsCompressed()) {
                 throw std::runtime_error("Uncompressed pubkeys are not useable for SegWit outputs");
             }

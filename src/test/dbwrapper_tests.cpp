@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(dbwrapper_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(dbwrapper)
 {
     // Perform tests both obfuscated and non-obfuscated.
-    for (bool obfuscate : {false, true}) {
+    for (const bool obfuscate : {false, true}) {
         fs::path ph = SetDataDir(std::string("dbwrapper").append(obfuscate ? "_true" : "_false"));
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
         char key = 'k';
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
 BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 {
     // Perform tests both obfuscated and non-obfuscated.
-    for (bool obfuscate : {false, true}) {
+    for (const bool obfuscate : {false, true}) {
         fs::path ph = SetDataDir(std::string("dbwrapper_batch").append(obfuscate ? "_true" : "_false"));
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 {
     // Perform tests both obfuscated and non-obfuscated.
-    for (bool obfuscate : {false, true}) {
+    for (const bool obfuscate : {false, true}) {
         fs::path ph = SetDataDir(std::string("dbwrapper_iterator").append(obfuscate ? "_true" : "_false"));
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
         if (x & 1) BOOST_CHECK(dbw.Write(key, value));
     }
 
-    for (int seek_start : {0x00, 0x80}) {
+    for (const int seek_start : {0x00, 0x80}) {
         it->Seek((uint8_t)seek_start);
         for (unsigned int x=seek_start; x<255; ++x) {
             uint8_t key;
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
     }
 
     std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
-    for (int seek_start : {0, 5}) {
+    for (const int seek_start : {0, 5}) {
         snprintf(buf, sizeof(buf), "%d", seek_start);
         StringContentsSerializer seek_key(buf);
         it->Seek(seek_key);
