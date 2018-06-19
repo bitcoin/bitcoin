@@ -135,6 +135,7 @@ If you rely on the old output format, you can still specify an additional parame
 - `getgovernanceinfo` has new field `sentinelpingmaxseconds`;
 - `getwalletinfo` now shows PrivateSend balance in `privatesend_balance` field;
 - `sendrawtransaction` no longer bypasses transaction policy limits by default.
+- `dumphdinfo` should throw an error when wallet isn't HD now
 
 There is also a new RPC command `listaddressbalances`.
 
@@ -260,6 +261,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`1d620d1f9`](https://github.com/dashpay/dash/commit/1d620d1f9) Fix calls to AcceptToMemoryPool in PS submodules (#1823)
 
 ### Network:
+- [`6bf389afb`](https://github.com/dashpay/dash/commit/6bf389afb) Don't drop mnb-s for outdated MNs (#2131)
 - [`c60079b59`](https://github.com/dashpay/dash/commit/c60079b59) ThreadOpenMasternodeConnections should process only one mn at a time (#2080)
 - [`a648d6eff`](https://github.com/dashpay/dash/commit/a648d6eff) Drop delayed headers logic and fix duplicate initial headers sync by handling block inv correctly (#2032)
 - [`99085c5b6`](https://github.com/dashpay/dash/commit/99085c5b6) swap devnet magic bytes around (#2028)
@@ -305,6 +307,10 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`fa2549986`](https://github.com/dashpay/dash/commit/fa2549986) Swap iterations and fUseInstantSend parameters in ApproximateBestSubset (#1819)
 
 ### RPC:
+- [`700b7ceb7`](https://github.com/dashpay/dash/commit/700b7ceb7) RPC: dumphdinfo should throw an error when wallet isn't HD (#2134)
+- [`5669fc880`](https://github.com/dashpay/dash/commit/5669fc880) Fix typos and rpc help text (#2120)
+- [`806d7f049`](https://github.com/dashpay/dash/commit/806d7f049) Fix rpc tests broken by 2110 (#2118)
+- [`8d8fdb433`](https://github.com/dashpay/dash/commit/8d8fdb433) sendrawtransaction no longer bypasses transaction policy limits by default (#2110)
 - [`6ab1fd763`](https://github.com/dashpay/dash/commit/6ab1fd763) RPC: Add description for InstantSend-related fields of mempool entry (#2050)
 - [`138441eb8`](https://github.com/dashpay/dash/commit/138441eb8) Add `forkpoint` to `getchaintips` (#2039)
 - [`9b17f2b9c`](https://github.com/dashpay/dash/commit/9b17f2b9c) Convert `gobject count` output to json (by default) (#1994)
@@ -330,6 +336,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`e30009c31`](https://github.com/dashpay/dash/commit/e30009c31) Fix qt and fontconfig depends #1884
 
 ### Docs:
+- [`d076ad4ce`](https://github.com/dashpay/dash/commit/d076ad4ce) Update release notes and staging tree in README (#2116)
 - [`ca2eae6e6`](https://github.com/dashpay/dash/commit/ca2eae6e6) 12.3 release notes draft (#2045)
 - [`faeb4480a`](https://github.com/dashpay/dash/commit/faeb4480a) Update manpages with ./contrib/devtools/gen-manpages.sh (#2088)
 - [`4148b8200`](https://github.com/dashpay/dash/commit/4148b8200) Release notes cleanup (#2034)
@@ -341,9 +348,12 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`3dc62106b`](https://github.com/dashpay/dash/commit/3dc62106b) [Docs] Doxygen config update (#1796)
 
 ### Other fixes and improvements:
-- [`806d7f049`](https://github.com/dashpay/dash/commit/806d7f049) Fix rpc tests broken by 2110 (#2118)
+- [`641070521`](https://github.com/dashpay/dash/commit/641070521) Fix 2 small issues in sporks module (#2133)
+- [`97b9b4fed`](https://github.com/dashpay/dash/commit/97b9b4fed) Bump nMinimumChainWork, defaultAssumeValid and checkpoints (#2130)
+- [`1c9917e22`](https://github.com/dashpay/dash/commit/1c9917e22) Fix CVE-2018-12356 by hardening the regex (#2126)
+- [`b7c326115`](https://github.com/dashpay/dash/commit/b7c326115) Do not create mnb until sync is finished (#2122)
+- [`b98643c27`](https://github.com/dashpay/dash/commit/b98643c27) Split sentinel expiration in CMasternode::Check() in two parts (timeout and version) (#2121)
 - [`836e10471`](https://github.com/dashpay/dash/commit/836e10471) Bump proto to 70210 (#2109)
-- [`8d8fdb433`](https://github.com/dashpay/dash/commit/8d8fdb433) sendrawtransaction no longer bypasses transaction policy limits by default (#2110)
 - [`23ba94b37`](https://github.com/dashpay/dash/commit/23ba94b37) Bump remaining min protocols (#2097)
 - [`9299a84b1`](https://github.com/dashpay/dash/commit/9299a84b1) Bump few consts (#2096)
 - [`7b43720f0`](https://github.com/dashpay/dash/commit/7b43720f0) Fix copying of final binaries into dashcore-binaries (#2090)
@@ -426,11 +436,13 @@ Thanks to everyone who directly contributed to this release:
 
 - Alexander Block
 - Chris Adam
+- Codarren Velvindron
 - crowning-
 - gladcow
 - Kamil Woźniak
 - Nathan Marley
 - Oleg Girko
+- PaulieD
 - Semen Martynov
 - Spencer Lievens
 - thephez
