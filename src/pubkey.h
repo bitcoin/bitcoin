@@ -202,9 +202,7 @@ public:
     //! Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
 
-    void MakeQR() { vch[4] = 0x00; }
-
-    bool IsQR() const { return vch[4] <= 0x80; }
+    bool IsQR() const { return vch[4] < 0x80; }
 };
 
 struct CExtPubKey {
