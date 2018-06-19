@@ -5,7 +5,7 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.6.3
+!define VERSION 0.6.4
 !define COMPANY "Peercoin project"
 !define URL http://github.com/peercoin/peercoin/
 
@@ -51,7 +51,7 @@ CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.6.3.0
+VIProductVersion 0.6.4.0
 VIAddVersionKey ProductName Peercoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
