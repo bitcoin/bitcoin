@@ -283,8 +283,8 @@ static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
 {
     RenameThread("bitcoin-http");
     LogPrint(BCLog::HTTP, "Entering http event loop\n");
-    event_base_dispatch(base);
-    // Event loop will be interrupted by InterruptHTTPServer()
+    event_base_loop(base, EVLOOP_NO_EXIT_ON_EMPTY);
+    // Event loop will be interrupted by StopHTTPServer()
     LogPrint(BCLog::HTTP, "Exited http event loop\n");
     return event_base_got_break(base) == 0;
 }
