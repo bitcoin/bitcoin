@@ -7659,7 +7659,7 @@ int CHDWallet::SaveStealthAddress(CHDWalletDB *pwdb, CExtKeyAccount *sea, const 
     CStoredExtKey *sekScan, *sekSpend;
     if (!(sekScan = sea->GetChain(nScanChain)))
         return errorN(1, "Unknown scan chain.");
-    if (!(sekSpend = sea->GetChain(nScanChain)))
+    if (!(sekSpend = sea->GetChain(nSpendChain)))
         return errorN(1, "Unknown spend chain.");
 
     sea->mapStealthKeys[idKey] = akStealth;
@@ -7712,6 +7712,7 @@ int CHDWallet::SaveStealthAddress(CHDWalletDB *pwdb, CExtKeyAccount *sea, const 
     CStealthAddress sxAddr;
     if (0 != akStealth.SetSxAddr(sxAddr))
         return errorN(1, "SetSxAddr failed.");
+
     SetAddressBook(pwdb, sxAddr, akStealth.sLabel, "receive", vPath, false, fBech32);
 
     return 0;
@@ -8060,6 +8061,7 @@ bool CHDWallet::GetFullChainPath(const CExtKeyAccount *pa, size_t nChain, std::v
             return error("%s: AppendPath failed.", __func__);
     } else
     {
+        // This account has a path relative to the root, key0 is the account key
         const CStoredExtKey *sek = pa->GetChain(0);
         if (sek && 0 != AppendPath(sek, vPath))
             return error("%s: AppendPath failed.", __func__);

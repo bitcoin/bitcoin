@@ -708,7 +708,7 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
             CStoredExtKey *sekStealthScan = new CStoredExtKey();
             sekStealthScan->kp = evStealthScan;
             vSigPath.clear();
-            //sekStealthSpend->SetPath(vSigPath);
+            // sekStealthScan isn't on the account chain
             sekStealthScan->nFlags |= EAF_ACTIVE | EAF_IN_ACCOUNT;
             sekStealthScan->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_STEALTH_SCAN);
             sea->InsertChain(sekStealthScan);
@@ -928,7 +928,6 @@ static UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
 
         if (0 != akStealth.SetSxAddr(sxAddr))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "SetSxAddr failed.");
-
 
         CKeyID idAccount = sea->GetID();
         CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");

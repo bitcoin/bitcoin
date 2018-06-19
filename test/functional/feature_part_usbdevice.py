@@ -182,8 +182,6 @@ class USBDeviceTest(ParticlTestFramework):
         ro = nodes[1].devicesignrawtransaction(hexRaw)
         assert(ro['complete'] == True)
 
-
-
         # import privkey in node2
         rootkey = nodes[2].extkeyaltversion('xparFdrwJK7K2nfYzrkEqAKr5EcJNdY4c6ZNoLFFx1pMXQSQpo5MAufjogrS17RkqsLAijZJaBDHhG3G7SuJjtsTmRRTEKZDzGMnVCeX59cQCiR')
         ro = nodes[2].extkey('import', rootkey, 'master key', True)
@@ -214,6 +212,11 @@ class USBDeviceTest(ParticlTestFramework):
         extaddr2_0 = nodes[2].getnewextaddress()
         assert(extaddr1_0 == extaddr2_0)
 
+        # Ensure account matches after node restarts
+        account1 = nodes[1].extkey('account')
+        self.restart_node(1)
+        account1_r = nodes[1].extkey('account')
+        assert(json.dumps(account1) == json.dumps(account1_r))
 
 
 if __name__ == '__main__':
