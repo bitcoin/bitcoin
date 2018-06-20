@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Shebang must use python3 (not python or python2)
 
 export LC_ALL=C
