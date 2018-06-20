@@ -95,6 +95,7 @@ bool WalletFrame::removeWallet(const QString &name)
 
     WalletView *walletView = mapWalletViews.take(name);
     walletStack->removeWidget(walletView);
+    delete walletView;
     return true;
 }
 
