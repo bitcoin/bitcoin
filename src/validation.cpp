@@ -1141,8 +1141,9 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     if (consensusParams.fPowAllowMinDifficultyBlocks && nHeight >= 200) { nSubsidy = 100 * COIN; }
     if (!consensusParams.fPowAllowMinDifficultyBlocks && nHeight == 68425) { nSubsidy = 10 * COIN; }
     if (!consensusParams.fPowAllowMinDifficultyBlocks && nHeight >= 69791) { nSubsidy = 10 * COIN; }
-    if (!consensusParams.fPowAllowMinDifficultyBlocks && nHeight >= 210000) { nSubsidy = 5 * COIN; }
-    if (!consensusParams.fPowAllowMinDifficultyBlocks && nHeight >= 379155) { nSubsidy = 100 * COIN; }
+    // The X-Folding taken out for now.
+    //if (!consensusParams.fPowAllowMinDifficultyBlocks && nHeight >= 210000) { nSubsidy = 5 * COIN; }
+    //if (!consensusParams.fPowAllowMinDifficultyBlocks && nHeight >= 379155) { nSubsidy = 100 * COIN; }
     // Subsidy is cut in half every 1010100 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
