@@ -26,7 +26,7 @@ Building MicroBitcoin
 ================
 
 See doc/build-*.md for instructions on building the various
-elements of the MicroBitcoin Core reference implementation of Bitcoin.
+elements of the MicroBitcoin reference implementation of Bitcoin.
 
 License
 -------
