@@ -525,8 +525,8 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 
 fs::path GetDefaultDataDir()
 {
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\MicroBitcoin
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\MicroBitcoin
     // Mac: ~/.microbitcoin
     // Unix: ~/.microbitcoin
 #ifdef WIN32

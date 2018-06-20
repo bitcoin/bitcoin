@@ -145,11 +145,7 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
         sign = -1;
     }
 
-	if (to.nHeight >= params.hardforkHeight) {
-        r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip);
-    } else {
-        r = r * arith_uint256(params.nPowTargetSpacing * 5) / GetBlockProof(tip);
-    }
+	r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip);
     
     if (r.bits() > 63) {
         return sign * std::numeric_limits<int64_t>::max();

@@ -174,7 +174,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         coinbaseTx.vout[0].scriptPubKey = GetScriptForDestination(pmAddr.Get());
         coinbaseTx.vout[0].nValue = pmValue;
 
-        // coinbaseTx.vout.push_back(CTxOut(pmValue, GetScriptForDestination(pmAddr.Get())));
 
     } else {
         coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;

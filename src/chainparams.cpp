@@ -102,10 +102,6 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1479168000; // November 15th, 2016.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
-        
-        consensus.vDeployments[Consensus::HARDFORK_MICROBITCOIN].bit = 27;
-        consensus.vDeployments[Consensus::HARDFORK_MICROBITCOIN].nStartTime = 999999999999ULL;
-        consensus.vDeployments[Consensus::HARDFORK_MICROBITCOIN].nTimeout = 999999999999ULL; 
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000f91c579d57cad4bc5278cc");
@@ -115,7 +111,7 @@ public:
 
         consensus.hardforkHeight = 525001;
         consensus.premineAddress = "Mf8RVs3b4MM2s4pY9W5pyqTgbNPTVE8qT6";
-        consensus.premineValue = 1050000 * COIN * BTC_2_MBC_RATE; // 5%
+        consensus.premineValue = 1050000 * COIN * COIN_RATIO; // 5%
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -135,7 +131,7 @@ public:
         nDefaultPort = 6403;
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN * BTC_2_MBC_RATE);
+        genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN * COIN_RATIO);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
@@ -232,10 +228,6 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1462060800; // May 1st 2016
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1493596800; // May 1st 2017
 
-        consensus.vDeployments[Consensus::HARDFORK_MICROBITCOIN].bit = 27;
-        consensus.vDeployments[Consensus::HARDFORK_MICROBITCOIN].nStartTime = 999999999999ULL;
-        consensus.vDeployments[Consensus::HARDFORK_MICROBITCOIN].nTimeout = 999999999999ULL; 
-
         // The best chain should have at least this much work.
         // consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000002830dab7f76dbb7d63");
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -245,7 +237,7 @@ public:
 
         consensus.hardforkHeight = 1200000;
         consensus.premineAddress = "mh7CayYx3J8ofEU5zSZPqJJV65d8ijkJpm";
-        consensus.premineValue = 2000000 * COIN * BTC_2_MBC_RATE;
+        consensus.premineValue = 2000000 * COIN * COIN_RATIO;
 
         pchBitcoinMessageStart[0] = 0x0b;
         pchBitcoinMessageStart[1] = 0x11;
@@ -260,7 +252,7 @@ public:
         nDefaultPort = 18333;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 50 * COIN * BTC_2_MBC_RATE);
+        genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 50 * COIN * COIN_RATIO);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
@@ -332,10 +324,6 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
 
-        consensus.vDeployments[Consensus::HARDFORK_MICROBITCOIN].bit = 27;
-        consensus.vDeployments[Consensus::HARDFORK_MICROBITCOIN].nStartTime = 0;
-        consensus.vDeployments[Consensus::HARDFORK_MICROBITCOIN].nTimeout = 999999999999ULL; 
-
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
 
@@ -344,7 +332,7 @@ public:
 
         consensus.hardforkHeight = 1000;
         consensus.premineAddress = "";
-        consensus.premineValue = 2000000 * COIN * BTC_2_MBC_RATE;
+        consensus.premineValue = 2000000 * COIN * COIN_RATIO;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;
@@ -359,7 +347,7 @@ public:
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN * BTC_2_MBC_RATE);
+        genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN * COIN_RATIO);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));

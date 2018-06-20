@@ -1106,7 +1106,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN * BTC_2_MBC_RATE;
+    CAmount nSubsidy = 50 * COIN * COIN_RATIO;
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
@@ -1728,10 +1728,6 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         if (state == THRESHOLD_LOCKED_IN || state == THRESHOLD_STARTED) {
             nVersion |= VersionBitsMask(params, (Consensus::DeploymentPos)i);
         }
-    }
-
-    if (pindexPrev && pindexPrev->nHeight + 1 >= params.hardforkHeight) {
-        nVersion |= VERSIONBITS_MICROBITCOIN;
     }
 
     return nVersion;
