@@ -12,6 +12,9 @@
 #include "crypto/common.h"
 #include "versionbits.h"
 
+/*
+ * All magic is happening here :D
+ */
 uint256 CBlockHeader::GetHash() const
 {
     if (IsMicroBitcoin())
@@ -19,7 +22,6 @@ uint256 CBlockHeader::GetHash() const
         XCoin::CGroestlHashWriter ss(SER_GETHASH, PROTOCOL_VERSION); //GRS
         ss << *this;
         return ss.GetHash();
-        // return SerializeHash(*this);
     } else {
         return SerializeHash(*this);
     }
@@ -27,8 +29,7 @@ uint256 CBlockHeader::GetHash() const
 
 bool CBlockHeader::IsMicroBitcoin() const
 {
-    // Time is the end of CSV deployment
-    return nTime > 1493596800 && nVersion & VERSIONBITS_MICROBITCOIN;
+    return nTime > 1527625482; // 525000
 }
 
 std::string CBlock::ToString() const

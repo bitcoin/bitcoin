@@ -89,33 +89,36 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     int nHeight = pindexLast->nHeight + 1;
 
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+    const auto isHardfork = nHeight >= params.hardforkHeight;
 
     // Premine block
-    if (pindexLast->nHeight == params.hardforkHeight)
+    if (isHardfork)
     {
-        return UintToArith256(params.powLimitPremine).GetCompact();
-    }
+        if (nHeight == params.hardforkHeight)
+        {
+            return UintToArith256(params.powLimitPremine).GetCompact();
+        }
 
-    // Pow limit start for warm-up period.
-    if (nHeight < params.hardforkHeight + params.nWarmUpWindow)
-    {
-        return UintToArith256(params.powLimitStart).GetCompact();
-    }
+        // Pow limit start for warm-up period.
+        if (nHeight < params.hardforkHeight + params.nWarmUpWindow)
+        {
+            return UintToArith256(params.powLimitStart).GetCompact();
+        }
 
-    if (nHeight >= params.hardforkHeight && nHeight < params.hardforkHeight + DGWPastBlocksMax)
-    {
-        return nProofOfWorkLimit;
+        if (nHeight >= params.hardforkHeight && nHeight < params.hardforkHeight + DGWPastBlocksMax)
+        {
+            return nProofOfWorkLimit;
+        }
     }
 
     if (params.fPowNoRetargeting) return pindexLast->nBits;
 
-    const auto isHardfork = nHeight >= params.hardforkHeight;
     const auto difficultyAdjustmentInterval = isHardfork
         ? params.DifficultyAdjustmentInterval()
         : params.BitcoinDifficultyAdjustmentInterval();
 
     // Only change once per difficulty adjustment interval
-    if ((nHeight) % difficultyAdjustmentInterval != 0)
+    if (nHeight % difficultyAdjustmentInterval != 0)
     {
         if (params.fPowAllowMinDifficultyBlocks)
         {
@@ -176,12 +179,14 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit)) {
         return false;
+    }
 
     // Check proof of work matches claimed amount
-    if (UintToArith256(hash) > bnTarget)
+    if (UintToArith256(hash) > bnTarget) {
         return false;
+    }
 
     return true;
 }

@@ -81,7 +81,7 @@ public:
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.powLimitPremine = uint256S("0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.powLimitStart = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nWarmUpWindow = 1024;
+        consensus.nWarmUpWindow = 4096;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.nBtcPowTargetSpacing = 10 * 60;
@@ -108,7 +108,7 @@ public:
         consensus.vDeployments[Consensus::HARDFORK_MICROBITCOIN].nTimeout = 999999999999ULL; 
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000f91c579d57cad4bc5278cc");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000100010001");
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000000000000005214481d2d96f898e3d5416e43359c145944a909d242e0"); //477890
@@ -135,7 +135,7 @@ public:
         nDefaultPort = 6403;
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1524897652, 2962302098, 0x1d00ffff, 1, 50 * COIN * BTC_2_MBC_RATE);
+        genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN * BTC_2_MBC_RATE);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
@@ -170,6 +170,13 @@ public:
                 {250000, uint256S("0x000000000000003887df1f29024b06fc2200b55f8af8f35453d7be294df2d214")},
                 {279000, uint256S("0x0000000000000001ae8c72a0b0c301f67e3afca10e819efa9041e458e9bd7e40")},
                 {295000, uint256S("0x00000000000000004d9b4ef50f0f9d686fd69db2e03af35a100370c64632a983")},
+                {350000, uint256S("0x0000000000000000053cf64f0400bb38e0c4b3872c38795ddde27acb40a112bb")},
+                {370000, uint256S("0x000000000000000002cad3026f68357229dd6eaa6bcef6fe5166e1e53b039b8c")},
+                {390000, uint256S("0x00000000000000000520000e60b56818523479ada2614806ba17ce0bbe6eaded")},
+                {430000, uint256S("0x000000000000000001868b2bb3a285f3cc6b33ea234eb70facf4dcdf22186b87")},
+                {450000, uint256S("0x0000000000000000014083723ed311a461c648068af8cef8a19dcd620c07a20b")},
+                {490000, uint256S("0x000000000000000000de069137b17b8d5a3dfbd5b145b2dcfb203f15d0c4de90")},
+                {524377, uint256S("0x000000000000000000309f4a5c55a3ddbf6bf49ac310cbbd04d0b7b200d7673a")},
             }
         };
 

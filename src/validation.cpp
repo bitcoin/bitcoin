@@ -2080,7 +2080,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     if (premineValue) blockReward += premineValue;
     if (block.vtx[0]->GetValueOut() > blockReward)
     {
-        std::cout << "\n\n\n\n" << blockReward << "\n\n\n\n";
+        // std::cout << "\n\n\n\n" << blockReward << "\n\n\n\n";
         return state.DoS(100, error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)", block.vtx[0]-> GetValueOut(), blockReward), REJECT_INVALID, "bad-cb-amount");
     }
 

@@ -178,6 +178,5 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
 
 bool CBlockIndex::IsMicroBitcoin() const
 {
-    // Time is the end of CSV deployment
-    return nTime > 1493596800 && nVersion & VERSIONBITS_MICROBITCOIN;
+    return nTime > 1527625482; // 525000
 }
