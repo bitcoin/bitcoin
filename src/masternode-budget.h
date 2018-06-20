@@ -205,12 +205,13 @@ private:
     mutable CCriticalSection cs;
     bool fAutoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
     boost::optional<int> voteSubmittedTime;
+    std::map<uint256, CFinalizedBudgetVote> mapObsoleteVotes;
 
 protected:
     std::vector<CTxBudgetPayment> vecBudgetPayments;
     std::string strBudgetName;
     int nBlockStart;
-    map<uint256, CFinalizedBudgetVote> mapVotes;
+    std::map<uint256, CFinalizedBudgetVote> mapVotes;
     uint256 nFeeTXHash;
     std::vector<unsigned char> signature;
     CTxIn masternodeSubmittedId;
@@ -237,7 +238,7 @@ public:
     CFinalizedBudget(std::string strBudgetName, int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const CKey& keyMasternode);
 
     void CleanAndRemove(bool fSignatureCheck);
-    bool AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::string& strError);
+    bool AddOrUpdateVote(bool isOldVote, const CFinalizedBudgetVote& vote, std::string& strError);
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true) const;
     bool IsValid(bool fCheckCollateral=true) const;
@@ -249,6 +250,8 @@ public:
     std::string GetName() const { return strBudgetName; }
     uint256 GetFeeTxHash() const { return nFeeTXHash; }
     const std::map<uint256, CFinalizedBudgetVote>& GetVotes() const { return mapVotes; }
+    const std::map<uint256, CFinalizedBudgetVote>& GetObsoleteVotes() const { return mapObsoleteVotes; }
+    void DiscontinueOlderVotes(const CFinalizedBudgetVote& newerVote);
     std::string GetProposals() const;
     int GetBlockStart() const {return nBlockStart;}
     int GetBlockEnd() const {return nBlockStart;} // Paid in single block

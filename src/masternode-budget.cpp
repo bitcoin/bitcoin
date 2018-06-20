@@ -1251,7 +1251,25 @@ bool CBudgetManager::UpdateFinalizedBudget(const CFinalizedBudgetVote& vote, CNo
         return false;
     }
 
-    return mapFinalizedBudgets[vote.nBudgetHash].AddOrUpdateVote(vote, strError);
+    bool isOldVote = false;
+
+    for (std::map<uint256, CFinalizedBudget>::iterator i = mapFinalizedBudgets.begin(); i != mapFinalizedBudgets.end(); ++i)
+    {
+        const std::map<uint256, CFinalizedBudgetVote>& votes = i->second.GetVotes();
+        const std::map<uint256, CFinalizedBudgetVote>::const_iterator found = votes.find(vote.vin.prevout.GetHash());
+        if (found != votes.end() && found->second.nTime > vote.nTime)
+            isOldVote = true;
+    }
+
+    if (!mapFinalizedBudgets[vote.nBudgetHash].AddOrUpdateVote(isOldVote, vote, strError))
+        return false;
+
+    for (std::map<uint256, CFinalizedBudget>::iterator i = mapFinalizedBudgets.begin(); i != mapFinalizedBudgets.end(); ++i)
+    {
+        i->second.DiscontinueOlderVotes(vote);
+    }
+
+    return true;
 }
 
 CBudgetProposal::CBudgetProposal()
@@ -1646,7 +1664,20 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
     voteSubmittedTime = boost::none;
 }
 
-bool CFinalizedBudget::AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::string& strError)
+void CFinalizedBudget::DiscontinueOlderVotes(const CFinalizedBudgetVote& newerVote)
+{
+    std::map<uint256, CFinalizedBudgetVote>::const_iterator found = mapVotes.find(newerVote.vin.prevout.GetHash());
+    if (found == mapVotes.end())
+        return;
+
+    if (found->second.nTime < newerVote.nTime)
+    {
+        mapObsoleteVotes.insert(std::make_pair(newerVote.vin.prevout.GetHash(), found->second));
+        mapVotes.erase(found);
+    }
+}
+
+bool CFinalizedBudget::AddOrUpdateVote(bool isOldVote, const CFinalizedBudgetVote& vote, std::string& strError)
 {
     LOCK(cs);
 
@@ -1677,7 +1708,11 @@ bool CFinalizedBudget::AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::st
         return false;
     }
 
-    mapVotes.insert(found, std::make_pair(masternodeHash, vote));
+    if (isOldVote)
+        mapObsoleteVotes.insert(found, std::make_pair(masternodeHash, vote));
+    else
+        mapVotes.insert(found, std::make_pair(masternodeHash, vote));
+
     return true;
 }
 

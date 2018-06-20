@@ -738,6 +738,18 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             obj.push_back(Pair(i->second.vin.prevout.ToStringShort(), bObj));
         }
 
+        const std::map<uint256, CFinalizedBudgetVote>& oldVotes = pfinalBudget->GetObsoleteVotes();
+        for (std::map<uint256, CFinalizedBudgetVote>::const_iterator i = oldVotes.begin(); i != oldVotes.end(); ++i)
+        {
+            Object bObj;
+            bObj.push_back(Pair("nHash", i->first.ToString().c_str()));
+            bObj.push_back(Pair("nTime", static_cast<int64_t>(i->second.nTime)));
+            bObj.push_back(Pair("fValid", i->second.fValid));
+            bObj.push_back(Pair("obsolete", true));
+
+            obj.push_back(Pair(i->second.vin.prevout.ToStringShort(), bObj));
+        }
+
         return obj;
     }
 

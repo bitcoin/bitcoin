@@ -1221,6 +1221,106 @@ namespace
 
 BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
 
+    BOOST_AUTO_TEST_CASE(OnlyTheLastMasternodeVoteCounts)
+    {
+        // Set Up
+
+        // Create finalized budget #1
+        std::vector<CTxBudgetPayment> txBudgetPayments1;
+        txBudgetPayments1.push_back(CreatePayment(keyPairB, 404));
+        txBudgetPayments1.push_back(CreatePayment(keyPairC, 111));
+        CFinalizedBudget fb1("test", blockHeight, txBudgetPayments1, finalBudgetCollateral);
+
+        // Create finalized budget #2
+        std::vector<CTxBudgetPayment> txBudgetPayments2;
+        txBudgetPayments2.push_back(CreatePayment(keyPairA, 42));
+        CFinalizedBudget fb2("test", blockHeight, txBudgetPayments2, finalBudgetCollateral);
+
+        // Add finalized budgets to budget manager
+        budget.AddFinalizedBudget(fb1, false); // false = don't check collateral
+        budget.AddFinalizedBudget(fb2, false); // false = don't check collateral
+
+        // Vote for finalized bugets
+        CFinalizedBudgetVote vote1(mn1.vin, fb1.GetHash());
+        CFinalizedBudgetVote vote2(mn2.vin, fb1.GetHash());
+        CFinalizedBudgetVote vote3(mn3.vin, fb1.GetHash());
+
+        SetMockTime(GetTime() + 60 * 60 + 1);
+
+        CFinalizedBudgetVote vote4(mn1.vin, fb2.GetHash());
+        CFinalizedBudgetVote vote5(mn2.vin, fb2.GetHash());
+
+        budget.UpdateFinalizedBudget(vote1, NULL, error);
+        budget.UpdateFinalizedBudget(vote2, NULL, error);
+        budget.UpdateFinalizedBudget(vote3, NULL, error);
+        budget.UpdateFinalizedBudget(vote4, NULL, error);
+        budget.UpdateFinalizedBudget(vote5, NULL, error);
+
+        // Set expectations
+        std::vector<CTxOut> expected;
+        expected.push_back(CTxOut(9 * COIN, CScript()));
+        expected.push_back(CTxOut(42, PayToPublicKey(keyPairA.GetPubKey()))); // Payment from budget #2
+
+        // Call & Check
+
+        CMutableTransaction actual;
+        actual.vout.push_back(CTxOut());
+
+        budget.FillBlockPayee(actual, fees);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
+    }
+
+    BOOST_AUTO_TEST_CASE(OnlyTheLastMasternodeVoteCounts_VotesOutOfOrder)
+    {
+        // Set Up
+
+        // Create finalized budget #1
+        std::vector<CTxBudgetPayment> txBudgetPayments1;
+        txBudgetPayments1.push_back(CreatePayment(keyPairB, 404));
+        txBudgetPayments1.push_back(CreatePayment(keyPairC, 111));
+        CFinalizedBudget fb1("test", blockHeight, txBudgetPayments1, finalBudgetCollateral);
+
+        // Create finalized budget #2
+        std::vector<CTxBudgetPayment> txBudgetPayments2;
+        txBudgetPayments2.push_back(CreatePayment(keyPairA, 42));
+        CFinalizedBudget fb2("test", blockHeight, txBudgetPayments2, finalBudgetCollateral);
+
+        // Add finalized budgets to budget manager
+        budget.AddFinalizedBudget(fb1, false); // false = don't check collateral
+        budget.AddFinalizedBudget(fb2, false); // false = don't check collateral
+
+        // Vote for finalized bugets
+        CFinalizedBudgetVote vote1(mn1.vin, fb1.GetHash());
+        CFinalizedBudgetVote vote2(mn2.vin, fb1.GetHash());
+        CFinalizedBudgetVote vote3(mn3.vin, fb1.GetHash());
+
+        SetMockTime(GetTime() + 60 * 60 + 1);
+
+        CFinalizedBudgetVote vote4(mn1.vin, fb2.GetHash());
+        CFinalizedBudgetVote vote5(mn2.vin, fb2.GetHash());
+
+        budget.UpdateFinalizedBudget(vote3, NULL, error);
+        budget.UpdateFinalizedBudget(vote4, NULL, error);
+        budget.UpdateFinalizedBudget(vote5, NULL, error);
+        budget.UpdateFinalizedBudget(vote1, NULL, error);
+        budget.UpdateFinalizedBudget(vote2, NULL, error);
+
+        // Set expectations
+        std::vector<CTxOut> expected;
+        expected.push_back(CTxOut(9 * COIN, CScript()));
+        expected.push_back(CTxOut(42, PayToPublicKey(keyPairA.GetPubKey()))); // Payment from budget #2
+
+        // Call & Check
+
+        CMutableTransaction actual;
+        actual.vout.push_back(CTxOut());
+
+        budget.FillBlockPayee(actual, fees);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
+    }
+
     BOOST_AUTO_TEST_CASE(FinalizedBudgetIsSuccessfullyAdded)
     {
         // Set Up
