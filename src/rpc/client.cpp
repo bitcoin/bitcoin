@@ -181,6 +181,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_sendactivation", 3 },
     { "omni_sendalert", 1 },
     { "omni_sendalert", 2 },
+    { "omni_createfunded_send", 2 },
+    { "omni_createfunded_sweep", 2 },
 
     /* Omni Core - raw transaction calls */
     { "omni_decodetransaction", 1 },

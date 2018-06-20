@@ -34,6 +34,99 @@
 using std::runtime_error;
 using namespace mastercore;
 
+
+UniValue omni_createfunded_send(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 5)
+        throw runtime_error(
+            "omni_createfunded_send \"fromaddress\" \"toaddress\" propertyid \"amount\" \"feeaddress\"\n"
+
+            "\nCreates a funded simple send raw transaction.\n"
+
+            "\nAll coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. toaddress            (string, required) the address of the receiver\n"
+            "3. propertyid           (number, required) the identifier of the tokens to send\n"
+            "4. amount               (string, required) the amount to send\n"
+            "5. feeaddress           (string, required) the address that is used to pay for fees, if needed\n"
+
+            "\nResult:\n"
+            "\"hex\"                 (string) the hex-encoded raw transaction\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_createfunded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"100.0\" \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+            + HelpExampleRpc("omni_createfunded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"100.0\", \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = ParseAddress(params[0]);
+    std::string toAddress = ParseAddress(params[1]);
+    uint32_t propertyId = ParsePropertyId(params[2]);
+    int64_t amount = ParseAmount(params[3], isPropertyDivisible(propertyId));
+    std::string feeAddress = ParseAddress(params[4]);
+
+    // perform checks
+    RequireExistingProperty(propertyId);
+    RequireBalance(fromAddress, propertyId, amount);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_SimpleSend(propertyId, amount);
+
+    // create the raw transaction
+    std::string rawHex;
+    int result = CreateFundedTransaction(fromAddress, toAddress, feeAddress, payload, rawHex);
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    }
+
+    return rawHex;
+}
+
+UniValue omni_createfunded_sweep(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 4)
+        throw runtime_error(
+            "omni_createfunded_sweep \"fromaddress\" \"toaddress\" ecosystem \"feeaddress\"\n"
+
+            "\nCreates a raw transaction that transfers all available tokens in the given ecosystem to the recipient.\n"
+
+            "\nAll coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. toaddress            (string, required) the address of the receiver\n"
+            "3. ecosystem            (number, required) the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)\n"
+            "4. feeaddress           (string, required) the address that is used to pay for fees, if needed\n"
+
+            "\nResult:\n"
+            "\"hex\"                 (string) the hex-encoded raw transaction\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_createfunded_sweep", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1\"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+            + HelpExampleRpc("omni_createfunded_sweep", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = ParseAddress(params[0]);
+    std::string toAddress = ParseAddress(params[1]);
+    uint8_t ecosystem = ParseEcosystem(params[2]);
+    std::string feeAddress = ParseAddress(params[3]);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_SendAll(ecosystem);
+
+    // create the raw transaction
+    std::string rawHex;
+    int result = CreateFundedTransaction(fromAddress, toAddress, feeAddress, payload, rawHex);
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    }
+
+    return rawHex;
+}
+
 UniValue omni_sendrawtx(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 5)
@@ -1467,6 +1560,8 @@ static const CRPCCommand commands[] =
     { "hidden",                            "omni_senddeactivation",        &omni_senddeactivation,        true  },
     { "hidden",                            "omni_sendactivation",          &omni_sendactivation,          false },
     { "hidden",                            "omni_sendalert",               &omni_sendalert,               true  },
+    { "omni layer (transaction creation)", "omni_createfunded_send",       &omni_createfunded_send,       false },
+    { "omni layer (transaction creation)", "omni_createfunded_sweep",      &omni_createfunded_sweep,      false },
 
     /* depreciated: */
     { "hidden",                            "sendrawtx_MP",                 &omni_sendrawtx,               false },
