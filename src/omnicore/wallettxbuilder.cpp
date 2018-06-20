@@ -11,8 +11,10 @@
 #include "base58.h"
 #include "coincontrol.h"
 #include "core_io.h"
+#include "main.h"
 #include "script/script.h"
 #include "script/standard.h"
+#include "sync.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -24,19 +26,27 @@
 #include <vector>
 
 using mastercore::AddressToPubKey;
+using mastercore::SelectAllCoins;
 using mastercore::SelectCoins;
 using mastercore::UseEncodingClassC;
 
-// This function requests the wallet create an Omni transaction using the supplied parameters and payload
-int WalletTxBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
-        int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit)
+/** Creates and sends a transaction. */
+int WalletTxBuilder(
+        const std::string& senderAddress,
+        const std::string& receiverAddress,
+        const std::string& redemptionAddress,
+        int64_t referenceAmount,
+        const std::vector<unsigned char>& payload,
+        uint256& retTxid,
+        std::string& retRawTx,
+        bool commit)
 {
 #ifdef ENABLE_WALLET
     if (pwalletMain == NULL) return MP_ERR_WALLET_ACCESS;
 
     // Determine the class to send the transaction via - default is Class C
     int omniTxClass = OMNI_CLASS_C;
-    if (!UseEncodingClassC(data.size())) omniTxClass = OMNI_CLASS_B;
+    if (!UseEncodingClassC(payload.size())) omniTxClass = OMNI_CLASS_B;
 
     // Prepare the transaction - first setup some vars
     CCoinControl coinControl;
@@ -62,10 +72,10 @@ int WalletTxBuilder(const std::string& senderAddress, const std::string& receive
             if (!AddressToPubKey(sAddress, redeemingPubKey)) {
                 return MP_REDEMP_BAD_VALIDATION;
             }
-            if (!OmniCore_Encode_ClassB(senderAddress,redeemingPubKey,data,vecSend)) { return MP_ENCODING_ERROR; }
+            if (!OmniCore_Encode_ClassB(senderAddress,redeemingPubKey,payload,vecSend)) { return MP_ENCODING_ERROR; }
         break; }
         case OMNI_CLASS_C:
-            if(!OmniCore_Encode_ClassC(data,vecSend)) { return MP_ENCODING_ERROR; }
+            if(!OmniCore_Encode_ClassC(payload,vecSend)) { return MP_ENCODING_ERROR; }
         break;
     }
 
@@ -94,15 +104,173 @@ int WalletTxBuilder(const std::string& senderAddress, const std::string& receive
 
     // If this request is only to create, but not commit the transaction then display it and exit
     if (!commit) {
-        rawHex = EncodeHexTx(wtxNew);
+        retRawTx = EncodeHexTx(wtxNew);
         return 0;
     } else {
         // Commit the transaction to the wallet and broadcast)
         PrintToLog("%s: %s; nFeeRet = %d\n", __func__, wtxNew.ToString(), nFeeRet);
         if (!pwalletMain->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
-        txid = wtxNew.GetHash();
+        retTxid = wtxNew.GetHash();
         return 0;
     }
+#else
+    return MP_ERR_WALLET_ACCESS;
+#endif
+
+}
+
+/** Locks all available coins that are not in the set of destinations. */
+static void LockUnrelatedCoins(
+        CWallet* pwallet,
+        const std::set<CTxDestination>& destinations,
+        std::vector<COutPoint>& retLockedCoins)
+{
+    if (pwallet == NULL) {
+        return;
+    }
+
+    // NOTE: require: LOCK2(cs_main, pwallet->cs_wallet);
+
+    // lock any other output
+    std::vector<COutput> vCoins;
+    pwallet->AvailableCoins(vCoins, false, nullptr, true);
+
+    for (COutput& output : vCoins) {
+        CTxDestination address;
+        const CScript& scriptPubKey = output.tx->vout[output.i].scriptPubKey;
+        bool fValidAddress = ExtractDestination(scriptPubKey, address);
+
+        // don't lock specified coins, but any other
+        if (fValidAddress && destinations.count(address)) {
+            continue;
+        }
+
+        COutPoint outpointLocked(output.tx->GetHash(), output.i);
+        pwallet->LockCoin(outpointLocked);
+        retLockedCoins.push_back(outpointLocked);
+    }
+}
+
+/** Unlocks all coins, which were previously locked. */
+static void UnlockCoins(
+        CWallet* pwallet,
+        const std::vector<COutPoint>& vToUnlock)
+{
+    if (pwallet == NULL) {
+        return;
+    }
+
+    // NOTE: require: LOCK2(cs_main, pwallet->cs_wallet);
+
+    for (const COutPoint& output : vToUnlock) {
+        pwallet->UnlockCoin(output);
+    }
+}
+
+/**
+ * Creates and funds a raw transaction by selecting all coins from the sender
+ * and enough coins from a fee source. Change is sent to the fee source!
+ */
+int CreateFundedTransaction(
+        const std::string& senderAddress,
+        const std::string& receiverAddress,
+        const std::string& feeAddress,
+        const std::vector<unsigned char>& payload,
+        std::string& retRawTx)
+{
+#ifdef ENABLE_WALLET
+    if (pwalletMain == NULL) {
+        return MP_ERR_WALLET_ACCESS;
+    }
+
+    if (!UseEncodingClassC(payload.size())) {
+        return MP_ENCODING_ERROR;
+    }
+    
+    // add payload output
+    std::vector<std::pair<CScript, int64_t> > vecSend;
+    if (!OmniCore_Encode_ClassC(payload, vecSend)) {
+        return MP_ENCODING_ERROR;
+    }
+
+    // add reference output, if there is one
+    if (!receiverAddress.empty()) {
+        CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
+        vecSend.push_back(std::make_pair(scriptPubKey, GetDustThreshold(scriptPubKey)));
+    }
+
+    // convert into recipients objects
+    std::vector<CRecipient> vecRecipients;
+    for (size_t i = 0; i < vecSend.size(); ++i) {
+        const std::pair<CScript, int64_t>& vec = vecSend[i];
+        CRecipient recipient = {vec.first, vec.second, false};
+        vecRecipients.push_back(recipient);
+    }
+
+    bool fSuccess = false;
+    CWalletTx wtxNew;
+    CReserveKey reserveKey(pwalletMain);
+    int64_t nFeeRequired = 0;
+    std::string strFailReason;
+    int nChangePosRet = 0; // add change first
+
+    // set change
+    CCoinControl coinControl;
+    coinControl.destChange = CBitcoinAddress(feeAddress).Get();
+    coinControl.fAllowOtherInputs = true;
+
+    if (!SelectAllCoins(senderAddress, coinControl)) {
+        PrintToLog("%s: ERROR: sender %s has no coins\n", __func__, senderAddress);
+        return false;
+    }
+    
+    // prepare sources for fees
+    std::set<CTxDestination> feeSources;
+    feeSources.insert(CBitcoinAddress(feeAddress).Get());
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    std::vector<COutPoint> vLockedCoins;
+    LockUnrelatedCoins(pwalletMain, feeSources, vLockedCoins);
+
+    fSuccess = pwalletMain->CreateTransaction(vecRecipients, wtxNew, reserveKey, nFeeRequired, nChangePosRet, strFailReason, &coinControl, false);
+
+    // to restore the original order of inputs, create a new transaction and add
+    // inputs and outputs step by step
+    CMutableTransaction tx;
+
+    std::vector<COutPoint> vSelectedInputs;
+    coinControl.ListSelected(vSelectedInputs);
+
+    // add previously selected coins
+    BOOST_FOREACH(const COutPoint& txIn, vSelectedInputs) {
+        tx.vin.push_back(CTxIn(txIn));
+    }
+
+    // add other selected coins
+    BOOST_FOREACH(const CTxIn& txin, wtxNew.vin) {
+        if (!coinControl.IsSelected(txin.prevout)) {
+            tx.vin.push_back(txin);
+        }
+    }
+
+    // add outpus
+    BOOST_FOREACH(const CTxOut& txOut, wtxNew.vout) {
+        tx.vout.push_back(txOut);
+    }
+
+    if (fSuccess) {
+       retRawTx = EncodeHexTx(tx);
+    }
+
+    UnlockCoins(pwalletMain, vLockedCoins);
+
+    if (!fSuccess) {
+        PrintToLog("%s: ERROR: wallet transaction creation failed: %s\n", __func__, strFailReason);
+        return MP_ERR_CREATE_TX;
+    }
+
+    return 0;
 #else
     return MP_ERR_WALLET_ACCESS;
 #endif

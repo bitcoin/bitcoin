@@ -28,6 +28,9 @@ int IsMyAddress(const std::string& address);
 
 /** Selects spendable outputs to create a transaction. */
 int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, int64_t additional = 0);
+
+/** Selects all spendable outputs to create a transaction. */
+int64_t SelectAllCoins(const std::string& fromAddress, CCoinControl& coinControl);
 }
 
 #endif // OMNICORE_WALLETUTILS_H
