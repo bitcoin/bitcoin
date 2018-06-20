@@ -37,13 +37,15 @@ using namespace mastercore;
 
 UniValue omni_createfunded_send(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 5)
+    if (fHelp || params.size() < 5 || params.size() > 6)
         throw runtime_error(
-            "omni_createfunded_send \"fromaddress\" \"toaddress\" propertyid \"amount\" \"feeaddress\"\n"
+            "omni_createfunded_send \"fromaddress\" \"toaddress\" propertyid \"amount\" \"feeaddress\" ( lockunspent )\n"
 
             "\nCreates a funded simple send raw transaction.\n"
 
             "\nAll coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
+
+            "\nAs per default, the unspent outputs of this transaction are locked, to avoid that they are used for the construction of another transaction!\n"
 
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
@@ -51,6 +53,7 @@ UniValue omni_createfunded_send(const UniValue& params, bool fHelp)
             "3. propertyid           (number, required) the identifier of the tokens to send\n"
             "4. amount               (string, required) the amount to send\n"
             "5. feeaddress           (string, required) the address that is used to pay for fees, if needed\n"
+            "6. lockunspent          (boolean, optional) lock selected unspent outputs (default: true)\n"
 
             "\nResult:\n"
             "\"hex\"                 (string) the hex-encoded raw transaction\n"
@@ -66,6 +69,10 @@ UniValue omni_createfunded_send(const UniValue& params, bool fHelp)
     uint32_t propertyId = ParsePropertyId(params[2]);
     int64_t amount = ParseAmount(params[3], isPropertyDivisible(propertyId));
     std::string feeAddress = ParseAddress(params[4]);
+    bool lockUnspents = true;
+    if (params.size() > 5) {
+        lockUnspents = params[5].get_bool();
+    }
 
     // perform checks
     RequireExistingProperty(propertyId);
@@ -76,7 +83,7 @@ UniValue omni_createfunded_send(const UniValue& params, bool fHelp)
 
     // create the raw transaction
     std::string rawHex;
-    int result = CreateFundedTransaction(fromAddress, toAddress, feeAddress, payload, rawHex);
+    int result = CreateFundedTransaction(fromAddress, toAddress, feeAddress, payload, rawHex, lockUnspents);
     if (result != 0) {
         throw JSONRPCError(result, error_str(result));
     }
@@ -86,19 +93,22 @@ UniValue omni_createfunded_send(const UniValue& params, bool fHelp)
 
 UniValue omni_createfunded_sweep(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 4)
+    if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
-            "omni_createfunded_sweep \"fromaddress\" \"toaddress\" ecosystem \"feeaddress\"\n"
+            "omni_createfunded_sweep \"fromaddress\" \"toaddress\" ecosystem \"feeaddress\" ( lockunspent )\n"
 
             "\nCreates a raw transaction that transfers all available tokens in the given ecosystem to the recipient.\n"
 
             "\nAll coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
+
+            "\nAs per default, the unspent outputs of this transaction are locked, to avoid that they are used for the construction of another transaction!\n"
 
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
             "2. toaddress            (string, required) the address of the receiver\n"
             "3. ecosystem            (number, required) the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)\n"
             "4. feeaddress           (string, required) the address that is used to pay for fees, if needed\n"
+            "5. lockunspent          (boolean, optional) lock selected unspent outputs (default: true)\n"
 
             "\nResult:\n"
             "\"hex\"                 (string) the hex-encoded raw transaction\n"
@@ -113,13 +123,17 @@ UniValue omni_createfunded_sweep(const UniValue& params, bool fHelp)
     std::string toAddress = ParseAddress(params[1]);
     uint8_t ecosystem = ParseEcosystem(params[2]);
     std::string feeAddress = ParseAddress(params[3]);
+    bool lockUnspents = true;
+    if (params.size() > 4) {
+        lockUnspents = params[4].get_bool();
+    }
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_SendAll(ecosystem);
 
     // create the raw transaction
     std::string rawHex;
-    int result = CreateFundedTransaction(fromAddress, toAddress, feeAddress, payload, rawHex);
+    int result = CreateFundedTransaction(fromAddress, toAddress, feeAddress, payload, rawHex, lockUnspents);
     if (result != 0) {
         throw JSONRPCError(result, error_str(result));
     }

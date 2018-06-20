@@ -176,7 +176,8 @@ int CreateFundedTransaction(
         const std::string& receiverAddress,
         const std::string& feeAddress,
         const std::vector<unsigned char>& payload,
-        std::string& retRawTx)
+        std::string& retRawTx,
+        bool fLockUnspents)
 {
 #ifdef ENABLE_WALLET
     if (pwalletMain == NULL) {
@@ -221,7 +222,7 @@ int CreateFundedTransaction(
 
     if (!SelectAllCoins(senderAddress, coinControl)) {
         PrintToLog("%s: ERROR: sender %s has no coins\n", __func__, senderAddress);
-        return false;
+        return MP_INPUTS_INVALID;
     }
     
     // prepare sources for fees
@@ -254,16 +255,22 @@ int CreateFundedTransaction(
         }
     }
 
-    // add outpus
+    // add outputs
     BOOST_FOREACH(const CTxOut& txOut, wtxNew.vout) {
         tx.vout.push_back(txOut);
     }
 
-    if (fSuccess) {
-       retRawTx = EncodeHexTx(tx);
+    // restore original locking state
+    UnlockCoins(pwalletMain, vLockedCoins);
+
+    // lock selected outputs for this transaction
+    if (fSuccess && fLockUnspents) {
+        BOOST_FOREACH(const CTxIn& txIn, tx.vin) {
+            pwalletMain->LockCoin(txIn.prevout);
+        }
     }
 
-    UnlockCoins(pwalletMain, vLockedCoins);
+    retRawTx = EncodeHexTx(tx);
 
     if (!fSuccess) {
         PrintToLog("%s: ERROR: wallet transaction creation failed: %s\n", __func__, strFailReason);

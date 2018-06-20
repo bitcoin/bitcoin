@@ -247,6 +247,9 @@ int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, i
             if (pwalletMain->IsSpent(txid, n)) {
                 continue;
             }
+            if (pwalletMain->IsLockedCoin(txid, n)) {
+                continue;
+            }
             if (txOut.nValue < GetEconomicThreshold(txOut)) {
                 if (msc_debug_tokens)
                     PrintToLog("%s: output value below economic threshold: %s:%d, value: %d\n",
@@ -315,6 +318,9 @@ int64_t SelectAllCoins(const std::string& fromAddress, CCoinControl& coinControl
                 continue;
             }
             if (pwalletMain->IsSpent(txid, n)) {
+                continue;
+            }
+            if (pwalletMain->IsLockedCoin(txid, n)) {
                 continue;
             }
 

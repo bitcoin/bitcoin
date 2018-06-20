@@ -29,7 +29,8 @@ int CreateFundedTransaction(
         const std::string& receiverAddress,
         const std::string& feeAddress,
         const std::vector<unsigned char>& payload,
-        std::string& retRawTx);
+        std::string& retRawTx,
+        bool fLockOutputs = false);
 
 
 #endif // OMNICORE_WALLETTXBUILDER_H
