@@ -334,7 +334,8 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     // Check dust with default relay fee:
     CAmount nDustThreshold = 182 * dustRelayFee.GetFeePerK()/1000 * 3;
-    BOOST_CHECK_EQUAL(nDustThreshold, 546);
+	// SYSCOIN
+    BOOST_CHECK_EQUAL(nDustThreshold, 5460);
     // dust:
     t.vout[0].nValue = nDustThreshold - 1;
     BOOST_CHECK(!IsStandardTx(t, reason));
@@ -346,10 +347,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     // nDustThreshold = 182 * 1234 / 1000 * 3
     minRelayTxFee = CFeeRate(1234);
     // dust:
-    t.vout[0].nValue = 546 - 1;
+	// SYSCOIN
+    t.vout[0].nValue = 5460 - 1;
     BOOST_CHECK(!IsStandardTx(t, reason));
     // not dust:
-    t.vout[0].nValue = 546;
+	// SYSCOIN
+    t.vout[0].nValue = 5460;
     BOOST_CHECK(IsStandardTx(t, reason));
     minRelayTxFee = CFeeRate(DUST_RELAY_TX_FEE);
 
