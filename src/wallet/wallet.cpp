@@ -5323,6 +5323,8 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         }
     }
 
+    uiInterface.LoadWallet(walletInstance);
+
     // Register with the validation interface. It's ok to do this after rescan since we're still holding cs_main.
     RegisterValidationInterface(temp_wallet.release());
 
