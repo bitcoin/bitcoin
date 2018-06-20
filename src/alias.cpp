@@ -2773,19 +2773,20 @@ bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOpt
 	vector<unsigned char> vchAlias;
 	int nStartBlock = 0;
 	if (!oOptions.isNull()) {
-		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
-		const UniValue &txid = find_value(optionsObj, "txid");
+		const UniValue &txid = find_value(oOptions, "txid");
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
 
-		const UniValue &aliasObj = find_value(optionsObj, "alias");
-		if (aliasObj.isStr())
+		const UniValue &aliasObj = find_value(oOptions, "alias");
+		if (aliasObj.isStr()) {
 			vchAlias = vchFromValue(aliasObj);
+		}
 
-		const UniValue &startblock = find_value(optionsObj, "startblock");
-		if (startblock.isNum())
+		const UniValue &startblock = find_value(oOptions, "startblock");
+		if (startblock.isNum()) {
 			nStartBlock = startblock.get_int();
+		}
 	}
 
 	LOCK(cs_alias);
@@ -2841,26 +2842,40 @@ UniValue scanaliases(const JSONRPCRequest& request) {
 	if (request.fHelp || 3 < params.size())
 		throw runtime_error("scanaliases [count] [from] [options]\n"
 			"scan through all aliases.\n"
-			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[count]          (numeric, optional, unbounded=0, default=10) The number of results to return, 0 returns all results.\n"
 			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
-			"[options]        (array, optional) A json object with options to filter results\n"
+			"[options]        (object, optional) A json object with options to filter results\n"
 			"    {\n"
-			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
+			"      \"txid\":txid					(string) Transaction ID to filter results for\n"
 			"      \"alias\":alias				(string) Alias name to filter.\n"
-			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"      \"startblock\":block   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
 			"    }\n"
-			+ HelpExampleCli("scanaliases", "0 10")
-			+ HelpExampleCli("scanaliases", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"alias\":\"''\",\"startblock\":0}}")
+			+ HelpExampleCli("scanaliases", "0")
+			+ HelpExampleCli("scanaliases", "10 10")
+			+ HelpExampleCli("scanaliases", "10 0 '{\"alias\":\"find-this-alias\"}'")
+			+ HelpExampleCli("scanaliases", "10 0 '{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"startblock\":0}'")
 		);
 	UniValue options;
 	int count = 10;
 	int from = 0;
-	if (params.size() > 0)
+	if (params.size() > 0) {
 		count = params[0].get_int();
-	if (params.size() > 1)
+		if (count == 0) {
+			count = INT_MAX;
+		} else
+		if (count < 0) {
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5522 - " + _("'count' must be 0 or greater"));
+		}
+	}
+	if (params.size() > 1) {
 		from = params[1].get_int();
-	if (params.size() > 2)
+		if (from < 0) {
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5522 - " + _("'from' must be 0 or greater"));
+		}
+	}
+	if (params.size() > 2) {
 		options = params[2];
+	}
 
 	UniValue oRes(UniValue::VARR);
 	if (!paliasdb->ScanAliases(count, from, options, oRes))
