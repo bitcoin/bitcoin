@@ -119,6 +119,7 @@ int WalletTxBuilder(
 
 }
 
+#ifdef ENABLE_WALLET
 /** Locks all available coins that are not in the set of destinations. */
 static void LockUnrelatedCoins(
         CWallet* pwallet,
@@ -166,6 +167,7 @@ static void UnlockCoins(
         pwallet->UnlockCoin(output);
     }
 }
+#endif
 
 /**
  * Creates and funds a raw transaction by selecting all coins from the sender
