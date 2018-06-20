@@ -132,7 +132,7 @@ static std::string LabelFromValue(const UniValue& value)
     return label;
 }
 
-UniValue mcreatesurrogateforkey(const JSONRPCRequest& request)
+UniValue mhashpubkeys(const JSONRPCRequest& request)
 {
 	CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
 
@@ -141,48 +141,29 @@ UniValue mcreatesurrogateforkey(const JSONRPCRequest& request)
 
 	if (request.fHelp || request.params.size() != 2)
 		throw std::runtime_error(
-			"mgetkeypairhash \"oldkeyid\" \n"
-			"\nReturns the hash of the concatenation of: hash(oldpublic key) and hash(new public key)."
+			"mhashpubkeys \"pkid1\" \"pkid2\"\n"
+			"\nReturns the hash of the concatenation of the two public keys."
 			"This hashed data will be used for a commit reveal scheme which will "
 			"ensure the transition to quantum resistance signature schemes.\n"
 			"\nArguments:\n"
-			"1. oldKeyId    (string, required) The id of the old public key.\n"
-			"2. newKeyId    (string, required) The id of the old public key.\n"
+			"1. pk1    (string, required) The id of the old public key.\n"
+			"2. pk2    (string, required) The id of the new public key.\n"
 			"\nResult:\n"
-			"public key: hexstring of key id\n"
-			"new qr key: hexstring of key id\n"
-			"pair hash: hexstring of commit data\n");
+			"pair hash: hexstring of H(pk1, pk2)\n");
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR}, false);
 
-	const std::string oldKeyIdStr = request.params[0].get_str();
-	CKeyID oldKeyId;
-	oldKeyId.SetHex(oldKeyIdStr);
-	CPubKey oldPubKey;
-	if (!pwallet->GetPubKey(oldKeyId, oldPubKey))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin key");
-
-	const std::string newKeyIdStr = request.params[1].get_str();
-	CKeyID newKeyId;
-	newKeyId.SetHex(newKeyIdStr);
-	CPubKey qrPubKey;
-	if (!pwallet->GetPubKey(newKeyId, qrPubKey))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin key");
+    CPubKey pk1 = HexToPubKey(request.params[0].get_str());
+    CPubKey pk2 = HexToPubKey(request.params[1].get_str());
 
 	CPubKeySurrogate sur;
-	sur.pubKey = oldPubKey;
-	sur.qrPubKey = qrPubKey;
+	sur.pubKey = pk1;
+	sur.qrPubKey = pk2;
+	pwallet->mapPubKeySurrogate[pk1] = sur;
 
-	pwallet->mapPubKeySurrogate[oldPubKey] = sur;
+	uint256 h = Hash(pk1.begin(), pk1.end(), pk2.begin(), pk2.end());
 
-	uint256 h = Hash(oldPubKey.begin(), oldPubKey.end(), qrPubKey.begin(), qrPubKey.end());
-
-	UniValue res = UniValue(UniValue::VOBJ);
-	res.pushKV("public key", UniValue(oldKeyId.GetHex()));
-	res.pushKV("new qr key", UniValue(qrPubKey.GetID().GetHex()));
-	res.pushKV("pair hash", UniValue(h.GetHex()));
-
-	return res;
+	return UniValue(h.GetHex());
 }
 
 UniValue mgetrawrevealtx(const JSONRPCRequest& request)
@@ -194,7 +175,8 @@ UniValue mgetrawrevealtx(const JSONRPCRequest& request)
 	}
 
 	if (request.fHelp || request.params.size() != 4)
-		throw std::runtime_error("mgetrawrevealtx \"oldkeyid\" \"newaddress\" \"commitdata\" \n"
+		throw std::runtime_error(
+			"mgetrawrevealtx \"oldkeyid\" \"newaddress\" \"commitdata\" \n"
 			"\nReturns a raw transaction which consumes all UTXOS associated to oldkeyid, "
 			"sends all the funds to the new address and also appends special commit data so that"
 			" this can be verified using a new consensus protocol for quantum resistance.\n"
@@ -266,7 +248,46 @@ UniValue mgetrawrevealtx(const JSONRPCRequest& request)
 	return EncodeHexTx(rawTx);
 }
 
-UniValue mkeys(const JSONRPCRequest& request)
+UniValue maddexistence(const JSONRPCRequest& request)
+{
+	CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+
+	if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+		return NullUniValue;
+	}
+
+	if (request.fHelp || request.params.size() != 4)
+		throw std::runtime_error(
+			"maddexistence \"pk\" \"commitTx\" \"proof\" \n"
+			"\nReturns a raw transaction which consumes all UTXOS associated to oldkeyid, "
+			"sends all the funds to the new address and also appends special commit data so that"
+			" this can be verified using a new consensus protocol for quantum resistance.\n"
+			"\nArguments:\n"
+			"1. oldkeyid    (hexstring, required) \n"
+			"2. newaddress    (string, required) A new (QR) address.\n"
+			"3. commitTx      (string, required) Not yet known.\n"
+			"4. proof         (string, required) "
+			"\nResult:\n"
+			"hexstring");
+	RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR, UniValue::VSTR}, false);
+
+	const CPubKey pk = HexToPubKey(request.params[0].get_str());
+
+	CPubKeySurrogate sur = pwallet->mapPubKeySurrogate[pk];
+	CMutableTransaction mtx;
+	if (!DecodeHexTx(mtx, request.params[1].get_str(), true, true)) {
+		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+	}
+	sur.commitTx = MakeTransactionRef(std::move(mtx));
+	sur.proof = request.params[2].get_str();
+
+	pwallet->mapPubKeySurrogate[pk] = sur;
+
+	return UniValue();
+}
+
+
+UniValue mlistkeys(const JSONRPCRequest& request)
 {
 	CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
 
@@ -275,12 +296,11 @@ UniValue mkeys(const JSONRPCRequest& request)
 
 	if (request.fHelp || request.params.size() != 0)
 		throw std::runtime_error(
-			"msks\n"
-			"\nReturns an object where the keys are addresses and the"
-			" values are hashes of public keys.\n"
+			"mlistkeys\n"
+			"\nReturns an object where the keys are addresses and the values are public keys.\n"
 			"\nArguments: none\n"
 			"\nResult:\n"
-			"map from addresses to ids of public keys");
+			"map from addresses to hex of public keys");
 
 	// Make sure the results are valid at least up to the most recent block
 	// the user could have gotten from another RPC command prior to now
@@ -291,7 +311,34 @@ UniValue mkeys(const JSONRPCRequest& request)
 	for (const std::pair<CTxDestination, CAddressBookData> p : pwallet->mapAddressBook) {
 		CPubKey vchPubKey;
 		pwallet->GetPubKey(GetKeyForDestination(*pwallet, p.first), vchPubKey);
-		res.pushKV(EncodeDestination(p.first), (vchPubKey.IsQR() ? "qr-" : "non-qr-") + vchPubKey.GetID().GetHex());
+		res.pushKV(EncodeDestination(p.first), (vchPubKey.IsQR() ? "" : "non-") + "qr: " + HexStr(vchPubKey.begin(), vchPubKey.end()));
+	}
+	return res;
+}
+
+UniValue mlistsurrogates(const JSONRPCRequest& request)
+{
+	CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+
+	if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+		return NullUniValue;
+
+	if (request.fHelp || request.params.size() != 0)
+		throw std::runtime_error(
+			"mlistsurrogates\n"
+			"\nReturns an object where the keys are addresses and the values are public key surrogates.\n"
+			"\nArguments: none\n"
+			"\nResult:\n"
+			"map from addresses to hex of public keys");
+
+	// Make sure the results are valid at least up to the most recent block
+	// the user could have gotten from another RPC command prior to now
+	pwallet->BlockUntilSyncedToCurrentChain();
+
+	LOCK2(cs_main, pwallet->cs_wallet);
+	UniValue res(UniValue::VARR);
+	for (const std::pair<CPubKey, CPubKeySurrogate> p : pwallet->mapPubKeySurrogate) {
+		res.push_back(UniValue(p.second.ToString()));
 	}
 	return res;
 }
@@ -4380,10 +4427,11 @@ extern UniValue rescanblockchain(const JSONRPCRequest& request);
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
-	    { "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,            {"hexstring","options","iswitness"} },
-	    { "mine",    "mkeys",               &mkeys,            {} },
-	    { "mine",    "mgetrawrevealtx",               &mgetrawrevealtx,            {} },
-	    { "mine",    "mcreatesurrogateforkey",               &mcreatesurrogateforkey,            {} },
+	{ "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,            {"hexstring","options","iswitness"} },
+	{ "mine",               "mlistkeys",                        &mlistkeys,                     {} },
+	{ "mine",               "mlistsurrogates",                  &mlistsurrogates,               {} },
+	{ "mine",               "mgetrawrevealtx",                  &mgetrawrevealtx,               {} },
+	{ "mine",               "mhashpubkeys",                     &mhashpubkeys,                  {} },
     { "hidden",             "resendwallettransactions",         &resendwallettransactions,      {} },
     { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
     { "wallet",             "abortrescan",                      &abortrescan,                   {} },
