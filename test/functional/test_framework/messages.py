@@ -841,6 +841,52 @@ class BlockTransactions():
     def __repr__(self):
         return "BlockTransactions(hash=%064x transactions=%s)" % (self.blockhash, repr(self.transactions))
 
+class CPartialMerkleTree():
+    def __init__(self):
+        self.nTransactions = 0
+        self.vHash = []
+        self.vBits = []
+        self.fBad = False
+
+    def deserialize(self, f):
+        self.nTransactions = struct.unpack("<i", f.read(4))[0]
+        self.vHash = deser_uint256_vector(f)
+        vBytes = deser_string(f)
+        self.vBits = []
+        for i in range(len(vBytes) * 8):
+            self.vBits.append(vBytes[i//8] & (1 << (i % 8)) != 0)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<i", self.nTransactions)
+        r += ser_uint256_vector(self.vHash)
+        vBytesArray = bytearray([0x00] * ((len(self.vBits) + 7)//8))
+        for i in range(len(self.vBits)):
+            vBytesArray[i // 8] |= self.vBits[i] << (i % 8)
+        r += ser_string(bytes(vBytesArray))
+        return r
+
+    def __repr__(self):
+        return "CPartialMerkleTree(nTransactions=%d, vHash=%s, vBits=%s)" % (self.nTransactions, repr(self.vHash), repr(self.vBits))
+
+class CMerkleBlock():
+    def __init__(self):
+        self.header = CBlockHeader()
+        self.txn = CPartialMerkleTree()
+
+    def deserialize(self, f):
+        self.header.deserialize(f)
+        self.txn.deserialize(f)
+
+    def serialize(self):
+        r = b""
+        r += self.header.serialize()
+        r += self.txn.serialize()
+        return r
+
+    def __repr__(self):
+        return "CMerkleBlock(header=%s, txn=%s)" % (repr(self.header), repr(self.txn))
+
 
 # Objects that correspond to messages on the wire
 class msg_version():
