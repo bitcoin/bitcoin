@@ -1638,14 +1638,6 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	strEncryptionPublicKey = params[6].get_str();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[7]);
-	if (!fUnitTest) {
-		
-		if (strEncryptionPrivateKey.empty() || strEncryptionPublicKey.empty())
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("Encryption keys cannot be empty"));
-		CPubKey vchPubKey(ParseHex(strEncryptionPublicKey));
-		if(!vchPubKey.IsFullyValid())
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("Public encryption key is invalid"));
-	}
 	CMutableTransaction tx;
 	tx.nVersion = SYSCOIN_TX_VERSION;
 	tx.vin.clear();
