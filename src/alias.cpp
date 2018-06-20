@@ -1546,7 +1546,8 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 		if(!addressLast.IsValid())
 			throw runtime_error("Change address is not valid");
 		CTxOut changeOut(nChange, GetScriptForDestination(addressLast.Get()));
-		tx.vout.push_back(changeOut);
+		if (!changeOut.IsDust(dustRelayFee))
+			tx.vout.push_back(changeOut);
 	}
 	// else create new change address in this wallet
 	else {
@@ -1554,7 +1555,8 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 		CPubKey vchPubKey;
 		reservekey.GetReservedKey(vchPubKey, true);
 		CTxOut changeOut(nChange, GetScriptForDestination(vchPubKey.GetID()));
-		tx.vout.push_back(changeOut);
+		if (!changeOut.IsDust(dustRelayFee))
+			tx.vout.push_back(changeOut);
 	}
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION) {
