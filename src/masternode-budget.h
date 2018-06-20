@@ -107,8 +107,8 @@ public:
     std::vector<CBudgetProposal *> GetAllProposals();
     std::vector<CFinalizedBudget *> GetFinalizedBudgets();
 
-    bool AddFinalizedBudget(CFinalizedBudget &finalizedBudget, bool checkCollateral = true);
-    bool UpdateFinalizedBudget(CFinalizedBudgetVote &vote, CNode *pfrom, std::string &strError);
+    bool AddFinalizedBudget(const CFinalizedBudget &finalizedBudget, bool checkCollateral = true);
+    bool UpdateFinalizedBudget(const CFinalizedBudgetVote &vote, CNode *pfrom, std::string &strError);
     void SubmitFinalBudget();
 
     bool AddProposal(const CBudgetProposal &budgetProposal, bool checkCollateral = true);
@@ -301,33 +301,18 @@ public:
 };
 
 // FinalizedBudget are cast then sent to peers with this object, which leaves the votes out
-class CFinalizedBudgetBroadcast : public CFinalizedBudget
+class CFinalizedBudgetBroadcast : private CFinalizedBudget
 {
 public:
     CFinalizedBudgetBroadcast();
     CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
     CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, const CTxIn& masternodeId, const CKey& keyMasternode);
 
-    void swap(CFinalizedBudgetBroadcast& first, CFinalizedBudgetBroadcast& second) // nothrow
-    {
-        // enable ADL (not necessary in our case, but good practice)
-        using std::swap;
+    CFinalizedBudget Budget() const;
 
-        // by swapping the members of two classes,
-        // the two classes are effectively swapped
-        swap(first.strBudgetName, second.strBudgetName);
-        swap(first.nBlockStart, second.nBlockStart);
-        first.mapVotes.swap(second.mapVotes);
-        first.vecBudgetPayments.swap(second.vecBudgetPayments);
-        swap(first.nFeeTXHash, second.nFeeTXHash);
-        swap(first.nTime, second.nTime);
-    }
+    void swap(CFinalizedBudgetBroadcast& first, CFinalizedBudgetBroadcast& second); // nothrow
 
-    CFinalizedBudgetBroadcast& operator=(CFinalizedBudgetBroadcast from)
-    {
-        swap(*this, from);
-        return *this;
-    }
+    CFinalizedBudgetBroadcast& operator=(CFinalizedBudgetBroadcast from);
 
     void Relay();
 
@@ -518,7 +503,7 @@ public:
         swap(first.nAmount, second.nAmount);
         swap(first.address, second.address);
         swap(first.nTime, second.nTime);
-        swap(first.nFeeTXHash, second.nFeeTXHash);        
+        swap(first.nFeeTXHash, second.nFeeTXHash);
         first.mapVotes.swap(second.mapVotes);
     }
 
