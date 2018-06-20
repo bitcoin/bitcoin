@@ -90,7 +90,6 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	// ensure last registration wins
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jag2"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), newaddress);
-	AliasUpdate("node1", "jag2");
 }
 BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 {
