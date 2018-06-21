@@ -706,7 +706,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("IsValid",  finalizedBudget->IsValid(strError)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
 
-            resultObj.push_back(Pair(finalizedBudget->GetName(), bObj));
+            resultObj.push_back(Pair(finalizedBudget->GetHash().ToString(), bObj));
         }
 
         return resultObj;

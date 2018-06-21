@@ -237,7 +237,7 @@ public:
     bool IsVoteSubmitted() const { return voteSubmittedTime.is_initialized(); }
     void ResetAutoChecked();
 
-    std::string GetName() const { return strBudgetName; }
+
     uint256 GetFeeTxHash() const { return nFeeTXHash; }
     const std::map<uint256, CFinalizedBudgetVote>& GetVotes() const { return mapVotes; }
     const std::map<uint256, CFinalizedBudgetVote>& GetObsoleteVotes() const { return mapObsoleteVotes; }
