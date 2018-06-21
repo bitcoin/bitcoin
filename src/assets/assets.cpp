@@ -174,7 +174,7 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
         strError  = "Invalid parameter: has_ipfs must be 0 or 1.";
 
     if (nHasIPFS && strIPFSHash.size() != 40)
-        strError  = "Invalid parameter: ipfs_hash must be 40 bytes.";
+        strError  = "Invalid parameter: ipfs_hash must be 40 bytes (currently " + std::to_string(strIPFSHash.size()) + ").";
 
     return strError == "";
 }

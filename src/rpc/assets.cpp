@@ -36,8 +36,6 @@
 #include "wallet/walletdb.h"
 
 
-//issue(to_address, asset_name, qty, units=1, reissuable=false)
-//Issue an asset with unique name. Unit as 1 for whole units, or 0.00000001 for satoshi-like units. Qty should be whole number. Reissuable is true/false for whether additional units can be issued by the original issuer.
 UniValue issue(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -56,8 +54,8 @@ UniValue issue(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"asset_name\"            (string, required) a unique name\n"
             "2. \"qty\"                   (integer, required) the number of units to be issued\n"
-            "3. \"address\"               (string), required), address asset will be sent to, if it is empty, address will be generated for you\n"
-            "4. \"units\"                 (integer, optional, default=1), the atomic unit size (1, 0.1, ... ,0.00000001)\n"
+            "3. \"to_address\"            (string), required), address asset will be sent to, if it is empty, address will be generated for you\n"
+            "4. \"units\"                 (integer, optional, default=0, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
             "5. \"reissuable\"            (boolean, optional, default=false), whether future reissuance is allowed\n"
             "6. \"has_ipfs\"              (boolean, optional, default=false), whether ifps hash is going to be added to the asset\n"
             "7. \"ipfs_hash\"             (string, optional but required if has_ipfs = 1), an ipfs hash\n"
@@ -179,8 +177,6 @@ UniValue issue(const JSONRPCRequest& request)
     return result;
 }
 
-//getaddressbalances(address, minconf=1)
-//Returns a list of all the asset balances for address in this node’s wallet, with at least minconf confirmations.
 UniValue getaddressbalances(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1)
@@ -239,20 +235,20 @@ UniValue getassetdata(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-                "getallassets assets_name\n"
+                "getassetdata asset_name\n"
                 "\nReturns assets metadata if that asset exists\n"
 
                 "\nArguments:\n"
-                "1. \"assets_name\"               (string, required) the name of the asset\n"
+                "1. \"asset_name\"               (string, required) the name of the asset\n"
 
                 "\nResult:\n"
                 "[ "
-                "{ name : (string)\n"
-                "  amount : (number)\n"
-                "  units : (number)\n"
-                "  reissuable : (number)\n"
-                "  has_ipfs : (number)\n"
-                "  ipfs_hash : (hash)}\n, only if has_ipfs = 1"
+                "{ name: (string)\n"
+                "  amount: (number)\n"
+                "  units: (number)\n"
+                "  reissuable: (number)\n"
+                "  has_ipfs: (number)\n"
+                "  ipfs_hash: (hash)}\n, only if has_ipfs = 1"
                 "{...}, {...}\n"
                 "]\n"
 
@@ -272,13 +268,13 @@ UniValue getassetdata(const JSONRPCRequest& request)
             return NullUniValue;
 
         UniValue value(UniValue::VOBJ);
-        value.push_back(Pair("name: ", asset.strName));
-        value.push_back(Pair("amount: ", ValueFromAmount(asset.nAmount)));
-        value.push_back(Pair("units: ", asset.units));
-        value.push_back(Pair("reissuable: ", asset.nReissuable));
-        value.push_back(Pair("has_ipfs: ", asset.nHasIPFS));
+        value.push_back(Pair("name", asset.strName));
+        value.push_back(Pair("amount", asset.nAmount));
+        value.push_back(Pair("units", asset.units));
+        value.push_back(Pair("reissuable", asset.nReissuable));
+        value.push_back(Pair("has_ipfs", asset.nHasIPFS));
         if (asset.nHasIPFS)
-            value.push_back(Pair("ipfs_hash: ", asset.strIPFSHash));
+            value.push_back(Pair("ipfs_hash", asset.strIPFSHash));
 
         result.push_back(value);
 
@@ -297,17 +293,21 @@ UniValue getmyassets(const JSONRPCRequest& request)
 
                 "\nResult:\n"
                 "[ "
-                "{ name : (string)\n"
-                "  amount : (number)\n"
-                "  units : (number)\n"
-                "  reissuable : (number)\n"
-                "  has_ipfs : (number)\n"
-                "  ipfs_hash : (hash)}\n, only if has_ipfs = 1"
-                "{...}, {...}\n"
+                "  {\n"
+                "    (asset_name):\n"
+                "    [\n"
+                "      {\n"
+                "        \"txid\": txid,\n"
+                "        \"index\": index\n"
+                "      }\n"
+                "      {...}, {...}\n"
+                "    ]\n"
+                "  }\n"
+                "  {...}, {...}\n"
                 "]\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("getmyassets", "")
+                + HelpExampleRpc("getmyassets", "")
                 + HelpExampleCli("getmyassets", "")
         );
 
@@ -333,7 +333,7 @@ UniValue getmyassets(const JSONRPCRequest& request)
     return result;
 }
 
-// TODO Used to test database, remove before release
+// TODO: Used to test database, remove before release(?)
 UniValue getassetaddresses(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -380,7 +380,6 @@ UniValue getassetaddresses(const JSONRPCRequest& request)
     return addresses;
 }
 
-// TODO Used to test database, remove before release
 UniValue transfer(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -485,7 +484,6 @@ UniValue transfer(const JSONRPCRequest& request)
     return result;
 }
 
-// TODO Used to test database, remove before release
 UniValue reissue(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -633,38 +631,6 @@ UniValue reissue(const JSONRPCRequest& request)
     return result;
 }
 
-//issuefrom(from_address, to_address, qty, units, units=1, reissuable=false)
-//Issue an asset with unique name from a specific address -- allows control of which address/private_key is used to issue the asset. Unit as 1 for whole units, or 0.00000001 for satoshi-like units. Qty should be whole number. Reissuable is true/false for whether additional units can be issued by the original issuer.
-
-//issuemore(to_address, asset_name, qty)
-//Issue more of a specific asset. This is only allowed by the original issuer of the asset and if the reissuable flag was set to true at the time of original issuance.
-
-//makeuniqueasset(address, asset_name, unique_id)
-//Creates a unique asset from a pool of assets with a specific name. Example: If the asset name is SOFTLICENSE, then this could make unique assets like SOFTLICENSE:38293 and SOFTLICENSE:48382 This would be called once per unique asset needed.
-
-//listassets(assets=*, verbose=false, count=MAX, start=0)
-//This lists assets that have already been created. It does not distinguish unique assets.
-
-//listuniqueassets(asset)
-//This lists the assets that have been made unique, and the address that owns the asset.
-
-//sendasset(to_address, asset, amount)
-//This sends assets from one asset holder to another.
-
-//sendassetfrom(from_address, to_address, asset, amount)
-//This sends asset from one asset holder to another, but allows spIsecifying which address to send from, so that if a wallet that has multiple addresses holding a given asset, the send can disambiguate the address from which to send.
-
-//getassettransaction(asset, txid)
-//This returns details for a specific asset transaction.
-
-//listassettransactions(asset, verbose=false, count=100, start=0)
-//This returns a list of transactions for a given asset.
-
-//reward(from_address, asset, amount, except=[])
-//Sends RVN to holders of the the specified asset. The Raven is split pro-rata to holders of the asset. Any remainder that cannot be evenly divided to the satoshi (1/100,000,000 RVN) level will be added to the mining fee. ​except​ is a list of addresses to exclude from the distribution - used so that you could exclude treasury shares that do not participate in the reward.
-
-//send_asset(from_address, from_asset, to_asset, amount, except=[])
-//Sends an asset to holders of the the specified to_asset. This can be used to send a voting token to holders of an asset. Combined with a messaging protocol explaining the vote, it could act as a distributed voting system.
 
 static const CRPCCommand commands[] =
 { //  category    name                      actor (function)         argNames
@@ -674,8 +640,8 @@ static const CRPCCommand commands[] =
     { "assets",   "getassetdata",           &getassetdata,           {"asset_name"}},
     { "assets",   "getmyassets",            &getmyassets,            {}},
     { "assets",   "getassetaddresses",      &getassetaddresses,      {"asset_name"}},
-    { "assets",   "transfer",               &transfer,               {"asset_name, address, amount"}},
-    { "assets",   "reissue",                &reissue,                {"asset_name, address, amount, reissuable, new_ipfs"}}
+    { "assets",   "transfer",               &transfer,               {"asset_name", "address", "amount"}},
+    { "assets",   "reissue",                &reissue,                {"asset_name", "address", "amount", "reissuable", "new_ipfs"}}
 };
 
 void RegisterAssetRPCCommands(CRPCTable &t)

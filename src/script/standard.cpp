@@ -259,7 +259,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = unk;
         return true;
     /** RVN START */
-    } else if (whichType == TX_NEW_ASSET || TX_REISSUE_ASSET || TX_TRANSFER_ASSET) {
+    } else if (whichType == TX_NEW_ASSET || whichType == TX_REISSUE_ASSET || whichType == TX_TRANSFER_ASSET) {
         addressRet = CKeyID(uint160(vSolutions[0]));
         return true;
     }
