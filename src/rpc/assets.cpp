@@ -273,7 +273,7 @@ UniValue getassetdata(const JSONRPCRequest& request)
 
         UniValue value(UniValue::VOBJ);
         value.push_back(Pair("name: ", asset.strName));
-        value.push_back(Pair("amount: ", asset.nAmount));
+        value.push_back(Pair("amount: ", ValueFromAmount(asset.nAmount)));
         value.push_back(Pair("units: ", asset.units));
         value.push_back(Pair("reissuable: ", asset.nReissuable));
         value.push_back(Pair("has_ipfs: ", asset.nHasIPFS));
@@ -372,11 +372,9 @@ UniValue getassetaddresses(const JSONRPCRequest& request)
     auto setAddresses = passets->mapAssetsAddresses.at(asset_name);
     for (auto it : setAddresses) {
         auto pair = std::make_pair(asset_name, it);
-        if (passets->mapAssetsAddressAmount.count(pair)) {
+
+        if (GetBestAssetAddressAmount(*passets, asset_name, it))
             addresses.push_back(Pair(it, ValueFromAmount(passets->mapAssetsAddressAmount.at(pair))));
-        } else {
-            addresses.push_back(Pair(it, 0));
-        }
     }
 
     return addresses;
