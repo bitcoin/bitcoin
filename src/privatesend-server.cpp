@@ -46,6 +46,8 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         LogPrint(BCLog::PRIVSEND, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), dsa.txCollateral.GetHash().ToString());
 
+        if(dsa.nInputCount < 0 || dsa.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) return;
+
         masternode_info_t mnInfo;
         if(!mnodeman.GetMasternodeInfo(activeMasternode.outpoint, mnInfo)) {
             PushStatus(pfrom, STATUS_REJECTED, ERR_MN_LIST, connman);
@@ -99,6 +101,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         LogPrint(BCLog::PRIVSEND, "DSQUEUE -- %s new\n", dsq.ToString());
 
         if(dsq.IsExpired()) return;
+        if(dsq.nInputCount < 0 || dsq.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) return;
 
         masternode_info_t mnInfo;
         if(!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, mnInfo)) return;
@@ -163,6 +166,18 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         if(entry.vecTxOut.size() > PRIVATESEND_ENTRY_MAX_SIZE) {
             LogPrintf("DSVIN -- ERROR: too many outputs! %d/%d\n", entry.vecTxOut.size(), PRIVATESEND_ENTRY_MAX_SIZE);
             PushStatus(pfrom, STATUS_REJECTED, ERR_MAXIMUM, connman);
+            return;
+        }
+
+        if(nSessionInputCount != 0 && entry.vecTxDSIn.size() != nSessionInputCount) {
+            LogPrintf("DSVIN -- ERROR: incorrect number of inputs! %d/%d\n", entry.vecTxDSIn.size(), nSessionInputCount);
+            PushStatus(pfrom, STATUS_REJECTED, ERR_INVALID_INPUT_COUNT, connman);
+            return;
+        }
+
+        if(nSessionInputCount != 0 && entry.vecTxOut.size() != nSessionInputCount) {
+            LogPrintf("DSVIN -- ERROR: incorrect number of outputs! %d/%d\n", entry.vecTxOut.size(), nSessionInputCount);
+            PushStatus(pfrom, STATUS_REJECTED, ERR_INVALID_INPUT_COUNT, connman);
             return;
         }
 
@@ -431,12 +446,20 @@ void CPrivateSendServer::ChargeFees(CConnman* connman)
         LogPrintf("CPrivateSendServer::ChargeFees -- found uncooperative node (didn't %s transaction), charging fees: %s\n",
                 (nState == POOL_STATE_SIGNING) ? "sign" : "send", vecOffendersCollaterals[0]->ToString());
 
-        if (connman) {
-            CInv inv(MSG_DSTX, vecOffendersCollaterals[0]->GetHash());
-            connman->ForEachNode([&inv](CNode* pnode)
-            {
-                pnode->PushInventory(inv);
-            });
+        LOCK(cs_main);
+
+        CValidationState state;
+        if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], nullptr, nullptr, false, maxTxFee)) {
+            // should never really happen
+            LogPrintf("CPrivateSendServer::ChargeFees -- ERROR: AcceptToMemoryPool failed!\n");
+        } else {
+            if (connman) {
+                CInv inv(MSG_TX, vecOffendersCollaterals[0]->GetHash());
+                connman->ForEachNode([&inv](CNode* pnode)
+                {
+                    pnode->PushInventory(inv);
+                });
+            }
         }
     }
 }
@@ -457,15 +480,24 @@ void CPrivateSendServer::ChargeRandomFees(CConnman* connman)
 {
     if(!fMasternodeMode) return;
 
+    LOCK(cs_main);
+
     for (const auto& txCollateral : vecSessionCollaterals) {
         if(GetRandInt(100) > 10) return;
         LogPrintf("CPrivateSendServer::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral->GetHash().ToString());
-        if (connman) {
-            CInv inv(MSG_DSTX, txCollateral->GetHash());
-            connman->ForEachNode([&inv](CNode* pnode)
-            {
-                pnode->PushInventory(inv);
-            });
+
+        CValidationState state;
+        if(!AcceptToMemoryPool(mempool, state, txCollateral, nullptr, nullptr, false, maxTxFee)) {
+            // should never really happen
+            LogPrintf("CPrivateSendServer::ChargeRandomFees -- ERROR: AcceptToMemoryPool failed!\n");
+        } else {
+            if (connman) {
+                CInv inv(MSG_TX, txCollateral->GetHash());
+                connman->ForEachNode([&inv](CNode* pnode)
+                {
+                    pnode->PushInventory(inv);
+                });
+            }
         }
     }
 }
@@ -502,7 +534,7 @@ void CPrivateSendServer::CheckForCompleteQueue(CConnman* connman)
     if(nState == POOL_STATE_QUEUE && IsSessionReady()) {
         SetState(POOL_STATE_ACCEPTING_ENTRIES);
 
-        CDarksendQueue dsq(nSessionDenom, activeMasternode.outpoint, GetAdjustedTime(), true);
+        CDarksendQueue dsq(nSessionDenom, nSessionInputCount, activeMasternode.outpoint, GetAdjustedTime(), true);
         LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::CheckForCompleteQueue -- queue is ready, signing and relaying (%s)\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
@@ -681,6 +713,12 @@ bool CPrivateSendServer::IsAcceptableDSA(const CDarksendAccept& dsa, PoolMessage
         return false;
     }
 
+    if(dsa.nInputCount < 0 || dsa.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) {
+        LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::%s -- requested count is not valid!\n", __func__);
+        nMessageIDRet = ERR_INVALID_INPUT_COUNT;
+        return false;
+    }
+
     return true;
 }
 
@@ -703,13 +741,14 @@ bool CPrivateSendServer::CreateNewSession(const CDarksendAccept& dsa, PoolMessag
     nMessageIDRet = MSG_NOERR;
     nSessionID = GetRandInt(999999)+1;
     nSessionDenom = dsa.nDenom;
+    nSessionInputCount = dsa.nInputCount;
 
     SetState(POOL_STATE_QUEUE);
     nTimeLastSuccessfulStep = GetTime();
 
     if(!fUnitTest) {
         //broadcast that I'm accepting entries, only if it's the first entry through
-        CDarksendQueue dsq(dsa.nDenom, activeMasternode.outpoint, GetAdjustedTime(), false);
+        CDarksendQueue dsq(dsa.nDenom, dsa.nInputCount, activeMasternode.outpoint, GetAdjustedTime(), false);
         LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
@@ -745,14 +784,21 @@ bool CPrivateSendServer::AddUserToExistingSession(const CDarksendAccept& dsa, Po
         return false;
     }
 
+    if(dsa.nInputCount != nSessionInputCount) {
+        LogPrintf("CPrivateSendServer::AddUserToExistingSession -- incompatible count %d != nSessionInputCount %d\n",
+                    dsa.nInputCount, nSessionInputCount);
+        nMessageIDRet = ERR_INVALID_INPUT_COUNT;
+        return false;
+    }
+
     // count new user as accepted to an existing session
 
     nMessageIDRet = MSG_NOERR;
     nTimeLastSuccessfulStep = GetTime();
     vecSessionCollaterals.push_back(MakeTransactionRef(dsa.txCollateral));
 
-    LogPrintf("CPrivateSendServer::AddUserToExistingSession -- new user accepted, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",
-            nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
+    LogPrintf("CPrivateSendServer::AddUserToExistingSession -- new user accepted, nSessionID: %d  nSessionDenom: %d (%s)  nSessionInputCount: %d  vecSessionCollaterals.size(): %d\n",
+            nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), nSessionInputCount, vecSessionCollaterals.size());
 
     return true;
 }

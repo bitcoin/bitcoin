@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="gl" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -132,10 +130,6 @@
         <translation>Reindexando bloques no disco...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Enviar moedas a unha dirección Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Facer copia de seguridade do moedeiro noutra localización</translation>
     </message>
@@ -144,20 +138,12 @@
         <translation>Cambiar o contrasinal empregado para a encriptación do moedeiro</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>Ventana de &amp;Depuración</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Abrir consola de depuración e diagnóstico</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verificar mensaxe...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -184,14 +170,6 @@
         <translation>Encriptar as claves privadas que pertencen ao teu moedeiro</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Asina mensaxes coas túas direccións Bitcoin para probar que te pertencen</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verificar mensaxes para asegurar que foron asinados con direccións Bitcoin dadas.</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Arquivo</translation>
     </message>
@@ -208,20 +186,12 @@
         <translation>Barra de ferramentas</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Solicitar pagos (xenera códigos QR e bitcoin: URIs)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Amosar a listaxe de direccións e etiquetas para enviar empregadas</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Amosar a listaxe de etiquetas e direccións para recibir empregadas</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Abrir un bitcoin: URI ou solicitude de pago</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -277,6 +247,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Quantity:</source>
@@ -326,6 +299,9 @@
         <source>Confirmed</source>
         <translation>Confirmado</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -407,13 +383,12 @@
         <translation>Empregar un directorio de datos personalizado</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -470,10 +445,6 @@
     <message>
         <source>W&amp;allet</source>
         <translation>Moedeiro</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abrir automáticamente o porto do cliente Bitcoin no router. Esto so funciona se o teu router soporta UPnP e está habilitado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -555,10 +526,6 @@
         <translation>Formulario</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>A información amosada por estar desactualizada. O teu moedeiro sincronízase automáticamente coa rede Bitcoin despois de que se estableza unha conexión, pero este proceso non está todavía rematado.</translation>
-    </message>
-    <message>
         <source>Your current spendable balance</source>
         <translation>O teu balance actualmente dispoñible</translation>
     </message>
@@ -632,6 +599,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -647,10 +620,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Información</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Ventana de Depuración</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -921,10 +890,6 @@
         <translation>Copiar a sinatura actual ao portapapeis do sistema</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Asina a mensaxe para probar que posees esta dirección Bitcoin</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>Asinar &amp;Mensaxe</translation>
     </message>
@@ -941,10 +906,6 @@
         <translation>&amp;Verificar Mensaxe</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección Bitcoin especificada</translation>
-    </message>
-    <message>
         <source>Verify &amp;Message</source>
         <translation>Verificar &amp;Mensaxe</translation>
     </message>
@@ -959,7 +920,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -976,7 +937,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Este panel amosa unha descripción detallada da transacción</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     </context>
@@ -996,186 +957,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Opcións:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Especificar directorio de datos</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Conectar a nodo para recuperar direccións de pares, e desconectar</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Especificar a túa propia dirección pública</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Aceptar liña de comandos e comandos JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Executar no fondo como un demo e aceptar comandos</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Core de Bitcoin</translation>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Enlazar a unha dirección dada e escoitar sempre nela. Emprega a notación [host]:post para IPv6</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Executar comando cando unha transacción do moedeiro cambia (%s no comando é substituído por TxID)</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;categoría&gt; pode ser:</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Aceptar conexións de fóra (por defecto: 1 se non -proxy ou -connect)</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Opcións de creación de bloque:</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>Detectada base de datos de bloques corrupta.</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>Queres reconstruír a base de datos de bloques agora?</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>Erro inicializando a base de datos de bloques</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>Erro inicializando entorno de base de datos de moedeiro %s!</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>Erro cargando base de datos do bloque</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>Erro abrindo base de datos de bloques</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Erro: Espacio en disco escaso!</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Fallou escoitar en calquera porto. Emprega -listen=0 se queres esto.</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Bloque genesis incorrecto o no existente. Datadir erróneo para a rede?</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>Non hai suficientes descritores de arquivo dispoñibles.</translation>
-    </message>
-    <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>Especificar arquivo do moedeiro (dentro do directorio de datos)</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Verificando bloques...</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Executar comando cando se recibe unha alerta relevante ou vemos un fork realmente longo (%s no cmd é substituído pola mensaxe)</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Información</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Enviar traza/información de depuración á consola en lugar de ao arquivo debug.log</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Recortar o arquivo debug.log ao arrancar o cliente (por defecto: 1 cando no-debug)</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>Fallou a sinatura da transacción</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>A cantidade da transacción é demasiado pequena</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>A transacción é demasiado grande</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Nome de usuario para conexións JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Precaución</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Precisas reconstruír a base de datos empregando -reindex para cambiar -txindex</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Contrasinal para conexións JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Executar comando cando o mellor bloque cambie (%s no comando é sustituído polo hash do bloque)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Permitir lookup de DNS para -addnote, -seednote e -connect</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Rede descoñecida especificada en -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Fondos insuficientes</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Cargando índice de bloques...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Cargando moedeiro...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Non se pode desactualizar o moedeiro</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Rescaneando...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Carga completa</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Erro</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

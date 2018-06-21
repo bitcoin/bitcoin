@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="ru_RU" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Адреса получения</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Это ваши биткойн адреса для отправки платежа. Всегда проверяйте сумму и адрес получателя перед отправкой платежа.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Это ваши биткойн адреса для получения платежей. Настоятельно рекомендуем использовать новые адреса для получения каждой транзакции.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -166,20 +156,12 @@
         <translation>Подтвердите шифрование бумажника</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Внимание: если вы зашифруете ваш кошелек и потеряете ваш пароль, то вы &lt;b&gt;ПОТЕРЯЕТЕ ВСЕ ВАШИ БИТКОЙНЫ&lt;/b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Вы уверены, что вы хотите зашифровать ваш кошелек?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>Бумажник зашифрован</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 закроется сейчас для завершения процесса шифрования. Запомните что шифрование вашего кошелька не сможет полностью защитить ваши биткойны от кражи при помощи вредоносного ПО, заразившего ваш компьютер.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -244,10 +226,6 @@
         <translation>Выйти</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;О программе %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>Показать информацию о %1</translation>
     </message>
@@ -284,10 +262,6 @@
         <translation>&amp;Адреса для получения...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Открыть &amp;URI...</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>Нажмите для отключения взаимодействия с сетью.</translation>
     </message>
@@ -308,24 +282,12 @@
         <translation>Реиндексация блоков на диске...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Послать средства на биткойн адрес</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Изменить пароль, используемый для шифрования кошелька</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Окно отладки</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Проверить сообщение...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -389,6 +351,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Bytes:</source>
@@ -444,6 +409,9 @@
     </message>
     </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -483,13 +451,12 @@
         <translation>Добро пожаловать в %1.</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -542,10 +509,6 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Пробросить порт через &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Подключится к сети Bitcoin через SOCKS5 прокси.</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -632,10 +595,6 @@
 <context>
     <name>QObject</name>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Введите биткоин-адрес (напр. %1)</translation>
-    </message>
-    <message>
         <source>%1 and %2</source>
         <translation>%1 и %2</translation>
     </message>
@@ -662,7 +621,13 @@
         <source>Error: %1</source>
         <translation>Ошибка: %1</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -679,10 +644,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>Информация</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Окно отладки</translation>
     </message>
     <message>
         <source>Received</source>
@@ -868,10 +829,6 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Label</source>
-        <translation>Метка</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(нет метки)</translation>
     </message>
@@ -924,30 +881,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>bitcoin-core</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Информация</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Предупреждение</translation>
-    </message>
-    <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Ошибка</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

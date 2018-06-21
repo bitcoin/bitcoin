@@ -588,8 +588,8 @@ std::string LicenseInfo()
            _("This is experimental software.") + "\n" +
            _("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.") + "\n" +
            "\n" +
-           _("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.") +
-           "\n";
+            strprintf(_("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard."), "<https://www.openssl.org>") +
+            "\n";
 }
 
 static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex)
@@ -869,8 +869,6 @@ void InitParameterInteraction()
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendrounds=%d\n", __func__, nLiqProvTmp, itostr(std::numeric_limits<int>::max()));
         gArgs.ForceSetArg("-privatesendamount", itostr(MAX_PRIVATESEND_AMOUNT));
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendamount=%d\n", __func__, nLiqProvTmp, MAX_PRIVATESEND_AMOUNT);
-        gArgs.ForceSetArg("-privatesendmultisession", "0");
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendmultisession=0\n", __func__, nLiqProvTmp);
     }
 #endif // ENABLE_WALLET
     if (gArgs.IsArgSet("-blockmaxsize")) {
@@ -1258,7 +1256,7 @@ bool AppInitSanityChecks()
 
     // Sanity check
     if (!InitSanityCheck())
-        return InitError(_("Initialization sanity check failed. Chaincoin Core is shutting down."));
+        return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down."), _(PACKAGE_NAME)));
 
     // Probe the data directory lock to give an early error message, if possible
     // We cannot hold the data directory lock here, as the forking for daemon() hasn't yet happened,
@@ -1349,7 +1347,6 @@ bool AppInitMain()
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
 
-    int64_t nStart;
 
     // ********************************************************* Step 5: initialize AutoBackup and verify wallet database integrity
 #ifdef ENABLE_WALLET
@@ -1502,6 +1499,8 @@ bool AppInitMain()
     LogPrintf("* Using %.1fMiB for in-memory UTXO set (plus up to %.1fMiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
     bool fLoaded = false;
+    int64_t nStart = GetTimeMillis();
+
     while (!fLoaded && !fRequestShutdown) {
         bool fReset = fReindex;
         std::string strLoadError;
@@ -1808,21 +1807,25 @@ bool AppInitMain()
         }
     }
 
-    privateSendClient.nLiquidityProvider = std::min(std::max((int)gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), 0), 100);
+    privateSendClient.nLiquidityProvider = std::min(std::max((int)gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), MIN_PRIVATESEND_LIQUIDITY), MAX_PRIVATESEND_LIQUIDITY);
+    int nMaxRounds = MAX_PRIVATESEND_ROUNDS;
     if(privateSendClient.nLiquidityProvider) {
         // special case for liquidity providers only, normal clients should use default value
-        privateSendClient.SetMinBlocksToWait(privateSendClient.nLiquidityProvider * 15);
+        privateSendClient.SetMinBlocksToWait(privateSendClient.nLiquidityProvider);
+        nMaxRounds = std::numeric_limits<int>::max();
     }
 
     privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", false);
     privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
-    privateSendClient.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), 2), privateSendClient.nLiquidityProvider ? 99999 : 16);
-    privateSendClient.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), 2), 999999);
+    privateSendClient.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), nMaxRounds);
+    privateSendClient.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
+
+    LogPrintf("PrivateSend liquidityprovider: %d\n", privateSendClient.nLiquidityProvider);
+    LogPrintf("PrivateSend rounds: %d\n", privateSendClient.nPrivateSendRounds);
+    LogPrintf("PrivateSend amount: %d\n", privateSendClient.nPrivateSendAmount);
 #endif // ENABLE_WALLET
 
     LogPrintf("fLiteMode %d\n", fLiteMode);
-    LogPrintf("PrivateSend rounds %d\n", privateSendClient.nPrivateSendRounds);
-    LogPrintf("PrivateSend amount %d\n", privateSendClient.nPrivateSendAmount);
 
     CPrivateSend::InitStandardDenominations();
 

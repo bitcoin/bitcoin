@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="lv_LV" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -196,16 +194,8 @@
         <translation>Saņemšanas &amp;adreses...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Atvērt &amp;URI...</translation>
-    </message>
-    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Bloku reindeksēšana no diska...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Nosūtīt bitkoinus uz Bitcoin adresi</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -216,20 +206,12 @@
         <translation>Mainīt maciņa šifrēšanas paroli</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Atkļūdošanas logs</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Atvērt atkļūdošanas un diagnostikas konsoli</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Pārbaudīt ziņojumu...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -256,14 +238,6 @@
         <translation>Šifrēt privātās atslēgas kuras pieder tavam maciņam</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Parakstīt ziņojumus ar savām Bitcoin adresēm lai pierādītu ka tās pieder tev</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Pārbaudīt ziņojumus lai pārliecinātos, ka tie tika parakstīti ar norādītajām Bitcoin adresēm</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Fails</translation>
     </message>
@@ -278,14 +252,6 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>Ciļņu rīkjosla</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Pieprasīt maksājumus (izveido QR kodu un bitcoin: URIs)</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Atvērt bitcoin URI vai maksājuma pieprasījumu</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -335,6 +301,9 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;slēgts&lt;/b&gt;</translation>
     </message>
+    </context>
+<context>
+    <name>ClientModel</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -394,6 +363,9 @@
         <source>(no label)</source>
         <translation>(bez nosaukuma)</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -467,13 +439,12 @@
         <translation>Izmantot pielāgotu datu mapi:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Kļūda</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -568,10 +539,6 @@
         <translation>&amp;Tērēt neapstiprinātu atlikumu</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Uz rūtera automātiski atvērt Bitcoin klienta portu. Tas strādā tikai tad, ja rūteris atbalsta UPnP un tas ir ieslēgts.</translation>
-    </message>
-    <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Kartēt portu, izmantojot &amp;UPnP</translation>
     </message>
@@ -659,10 +626,6 @@
         <translation>Forma</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Attēlotā informācija var būt novecojusi. Jūsu maciņš pēc savienojuma izveides automātiski sinhronizējas ar Bitcoin tīklu, taču šis process vēl nav beidzies.</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>Pieejams:</translation>
     </message>
@@ -744,6 +707,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -759,10 +728,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Informācija</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Atkļūdošanas logs</translation>
     </message>
     <message>
         <source>General</source>
@@ -1101,10 +1066,6 @@
         <translation>Kopēt parakstu uz sistēmas starpliktuvi</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Parakstīt ziņojumu lai pierādītu, ka esi šīs Bitcoin adreses īpašnieks.</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>Parakstīt &amp;Ziņojumu</translation>
     </message>
@@ -1135,7 +1096,7 @@
         <source>[testnet]</source>
         <translation>[testnets]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -1152,13 +1113,9 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Šis panelis parāda transakcijas detaļas</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Nosaukums</translation>
-    </message>
     <message>
         <source>(no label)</source>
         <translation>(bez nosaukuma)</translation>
@@ -1192,146 +1149,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Iespējas:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Norādiet datu direktoriju</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Pievienoties mezglam, lai iegūtu citu mezglu adreses, un atvienoties</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Norādiet savu publisko adresi</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Pieņemt komandrindas un JSON-RPC komandas</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Darbināt fonā kā servisu un pieņemt komandas</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; var būt:</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Bloka izveidošanas iestatījumi:</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Savienojuma iestatījumi:</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>Atkļūdošanas/Testēšanas iestatījumi:</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>Kļūda ielādējot bloku datubāzi</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Kļūda: Zema diska vieta!</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>Importē...</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Pārbauda blokus...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Maciņa iespējas:</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informācija</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>RPC servera iestatījumi:</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Debug/trace informāciju izvadīt konsolē, nevis debug.log failā</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>Transakcijas parakstīšana neizdevās</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>Transakcijas summa ir pārāk maza</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Transakcija ir pārāk liela</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>JSON-RPC savienojumu lietotājvārds</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Brīdinājums</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>JSON-RPC savienojumu parole</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Izpildīt komandu, kad labāk atbilstošais bloks izmainās (%s cmd aizvieto ar bloka hešu)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Atļaut DNS uzmeklēšanu priekš -addnode, -seednode un -connect</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>-onlynet komandā norādīts nepazīstams tīkls: '%s'</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Nepietiek bitkoinu</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Ielādē bloku indeksu...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Ielādē maciņu...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Nevar maciņa formātu padarīt vecāku</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Skanēju no jauna...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Ielāde pabeigta</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Kļūda</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

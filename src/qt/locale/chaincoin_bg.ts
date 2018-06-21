@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="bg" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Получаване на адреси</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Това са адресите на получателите на плащания. Винаги проверявайте размера на сумата и адреса на получателя, преди да изпратите монети.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Това са Вашите Биткойн адреси,благодарение на които ще получавате плащания.Препоръчително е да използвате нови адреси за получаване на всяка транзакция.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -170,10 +160,6 @@
         <translation>Потвърдете на шифрирането на портфейла</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>ВНИМАНИЕ: Ако шифрирате вашият портфейл и изгубите паролата си, &lt;b&gt;ЩЕ ИЗГУБИТЕ ВСИЧКИТЕ СИ БИТКОИНИ&lt;/b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Наистина ли желаете да шифрирате портфейла си?</translation>
     </message>
@@ -268,10 +254,6 @@
         <translation>Изход от приложението</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>Относно %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>Покажи информация относно %1</translation>
     </message>
@@ -312,10 +294,6 @@
         <translation>&amp;Получаване на адресите...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Отвори &amp;URI...</translation>
-    </message>
-    <message>
         <source>Click to disable network activity.</source>
         <translation>Натиснете за деактивиране на мрежата</translation>
     </message>
@@ -332,10 +310,6 @@
         <translation>Повторно индексиране на блоковете на диска...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Изпращане към Биткоин адрес</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Запазване на портфейла на друго място</translation>
     </message>
@@ -344,20 +318,12 @@
         <translation>Променя паролата за портфейла</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Прозорец за отстраняване на грешки</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Отворете конзолата за диагностика и отстраняване на грешки</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Проверка на съобщение...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Биткоин</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -384,14 +350,6 @@
         <translation>Шифроване на личните ключове,които принадлежат на портфейла Ви.</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Пишете съобщения със своя Биткойн адрес за да докажете,че е ваш.</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Потвърждаване на съобщения  за да се знае,че са написани с дадените Биткойн адреси.</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
     </message>
@@ -408,20 +366,12 @@
         <translation>Раздели</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Изискване на плащания(генерира QR кодове и биткойн: URIs)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Показване на списъка с използвани адреси и имена</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Покажи списък с използваните адреси и имена.</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Отворете биткойн: URI  или заявка за плащане</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -462,10 +412,6 @@
     <message>
         <source>Up to date</source>
         <translation>Синхронизиран</translation>
-    </message>
-    <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Покажи %1 помощно съобщение за да получиш лист с възможни Биткойн команди</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -525,11 +471,10 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Портфейлът е &lt;b&gt;криптиран&lt;/b&gt; и &lt;b&gt;заключен&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Възникна фатална грешка. Биткойн не може да продължи безопасно и ще се изключи.</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ClientModel</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -674,6 +619,9 @@
     </message>
 </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -710,10 +658,6 @@
     <message>
         <source>Edit sending address</source>
         <translation>Редактиране на адрес за изпращане</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>"%1" не е валиден Биткоин адрес.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -762,10 +706,6 @@
         <translation>(%1-битов)</translation>
     </message>
     <message>
-        <source>About %1</source>
-        <translation>Относно %1</translation>
-    </message>
-    <message>
         <source>Command-line options</source>
         <translation>Списък с команди</translation>
     </message>
@@ -805,7 +745,7 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>Нулиране на всички настройки променени в GUI</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -829,21 +769,12 @@
         <translation>Използване на директория ръчно</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Биткоин</translation>
-    </message>
-    <message>
-        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation>Най малко %1 GB данни ще бъдат запаметени в тази директория, и ще нарастват през времето.</translation>
-    </message>
-    <message>
-        <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation>Около %1 GB данни ще бъдат запаметени в тази директория.</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Грешка</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -934,16 +865,8 @@
         <translation>&amp;Похарчете непотвърденото ресто</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Автоматично отваряне на входящия Bitcoin порт. Работи само с рутери поддържащи UPnP.</translation>
-    </message>
-    <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Отваряне на входящия порт чрез &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Свързване с Биткойн мрежата чрез SOCKS5  прокси.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1041,10 +964,6 @@
         <translation>Формуляр</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Биткоин, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
-    </message>
-    <message>
         <source>Watch-only:</source>
         <translation>В наблюдателен режим:</translation>
     </message>
@@ -1094,10 +1013,6 @@
     <message>
         <source>Payment request error</source>
         <translation>Възникна грешка по време назаявката за плащане</translation>
-    </message>
-    <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Биткойн не можe да се стартира: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1178,10 +1093,6 @@
         <translation>Сума</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Въведете Биткойн адрес (например: %1)</translation>
-    </message>
-    <message>
         <source>%1 d</source>
         <translation>%1 ден</translation>
     </message>
@@ -1242,6 +1153,12 @@
     </message>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
@@ -1273,10 +1190,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>Данни</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Прозорец с грешки</translation>
     </message>
     <message>
         <source>General</source>
@@ -1611,14 +1524,6 @@
         <translation>Скрий</translation>
     </message>
     <message>
-        <source>Recommended:</source>
-        <translation>Препоръчителна:</translation>
-    </message>
-    <message>
-        <source>Custom:</source>
-        <translation>По избор:</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Изпращане към повече от един получател</translation>
     </message>
@@ -1713,10 +1618,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Заявката за плащане е изтекла.</translation>
-    </message>
-    <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Внимание: Невалиден Биткойн адрес</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -1835,10 +1736,6 @@
         <translation>Копиране на текущия подпис</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Подпишете съобщение като доказателство, че притежавате определен адрес</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>Подпиши &amp;съобщение</translation>
     </message>
@@ -1849,10 +1746,6 @@
     <message>
         <source>&amp;Verify Message</source>
         <translation>&amp;Провери</translation>
-    </message>
-    <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Проверете съобщение, за да сте сигурни че е подписано с определен Биткоин адрес</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -1917,7 +1810,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -2062,7 +1955,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Описание на транзакцията</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2072,10 +1965,6 @@
     <message>
         <source>Type</source>
         <translation>Тип</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Име</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2350,166 +2239,6 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Опции:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Определете директория за данните</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Свържете се към сървър за да можете да извлечете адресите на пиърите след което се разкачете.</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Въведете Ваш публичен адрес</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Биткойн ядро</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; може да бъде:</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Приемайте връзки отвън.(по подразбиране:1 в противен случай -proxy или -connect)</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Настройки на връзката:</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>Желаете ли да пресъздадете базата данни с блокове сега?</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>Грешка в пускането на базата данни с блокове</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Грешка: мястото на диска е малко!</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Провалено "слушане" на всеки порт. Използвайте -listen=0 ако искате това.</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>Внасяне...</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Проверка на блоковете...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Настройки на портфейла:</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>Свързване чрез SOCKS5  прокси</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Информация</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Изпрати локализиращата или дебъг информацията към конзолата, вместо файлът debug.log</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation>Това е експериментален софтуер.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>Сумата на транзакцията е твърде малка</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Транзакцията е твърде голяма</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Потребителско име за JSON-RPC връзките</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Предупреждение</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Парола за  JSON-RPC връзките</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>Назовете конфигурационен файл(по подразбиране %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>Задайте време на изключване при проблеми със свързването в милисекунди(минимум:1, по подразбиране %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>Задайте pid  файл(по подразбиране: %s)</translation>
-    </message>
-    <message>
-        <source>Starting network threads...</source>
-        <translation>Стартиране на мрежовите нишки...</translation>
-    </message>
-    <message>
-        <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation>Портфейлът няма да плаша по-малко от миналата такса за препредаване.</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>Това е минималната такса за транзакция, която плащате за всяка транзакция.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Това е таксата за транзакцията която ще платите ако изпратите транзакция.</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation>Сумите на транзакциите не могат да бъдат отрицателни</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation>Транзакцията трябва да има поне един получател.</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Недостатъчно средства</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Зареждане на блок индекса...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Зареждане на портфейла...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Портфейлът не може да се понижи.</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Преразглеждане на последовтелността от блокове...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Зареждането е завършено</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Грешка</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

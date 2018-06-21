@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="km_KH" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -92,16 +90,18 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>ផ្ញើកាក់ទៅកាន់ អាសយដ្ឋាន Bitcoin មួយ</translation>
-    </message>
-    <message>
         <source>Wallet</source>
         <translation>កាបូប</translation>
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -114,6 +114,9 @@
     </context>
 <context>
     <name>Intro</name>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -138,6 +141,12 @@
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -212,6 +221,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>chaincoin-core</name>
     </context>
 </TS>

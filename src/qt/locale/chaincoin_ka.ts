@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="ka" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>მიმღები მისამართი</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>ეს არის თქვენი ბიტკოინ-მისამართები, რომელთაგანაც შეგიძლიათ გადახდა. აუცილებლად შეამოწმეთ თანხა და მიმღები მისამართი გაგზავნამდე.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>ეს არის თქვენი ბიტკოინ-მისამართები, რომლებზეც შეგიძლიათ მიიღოთ თანხები. რეკომენდებულია ყოველი ტრანსაქციისათვის ახალი მიმღები მისამართის გამოყენება.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -170,10 +160,6 @@
         <translation>საფულის დაშიფრვის დადასტურება</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>გაფრთხილება: თუ თქვენ დაშიფრავთ თქვენს საფულეს და ამის შემდეგ დაკარგავთ გასაშიფრ ფრაზას, &lt;b&gt;თქვენ დაკარგავთ ყველა ბიტკოინს!&lt;/b&gt;</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>დარწმუნებული ხარ რომ საფულის დაშიფვრა გსურს?</translation>
     </message>
@@ -236,10 +222,6 @@
         <translation>გასვლა</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>%1-ის &amp;შესახებ</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>%1-ის შესახებ ინფორმაციის ჩვენება</translation>
     </message>
@@ -280,16 +262,8 @@
         <translation>მიღების მისამა&amp;რთი</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>&amp;URI-ის გახსნა...</translation>
-    </message>
-    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>დისკზე ბლოკების რეინდექსაცია...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>მონეტების გაგზავნა Bitcoin-მისამართზე</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -300,20 +274,12 @@
         <translation>საფულის დაშიფრვის ფრაზა-პაროლის შეცვლა</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>და&amp;ხვეწის ფანჯარა</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>დახვეწისა და გიაგნოსტიკის კონსოლის გაშვება</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;ვერიფიკაცია</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -340,14 +306,6 @@
         <translation>თქვენი საფულის პირადი გასაღებების დაშიფრვა</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>მესიჯებზე ხელმოწერა თქვენი Bitcoin-მისამართებით იმის დასტურად, რომ ის თქვენია</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>შეამოწმეთ, რომ მესიჯები ხელმოწერილია მითითებული Bitcoin-მისამართით</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;ფაილი</translation>
     </message>
@@ -364,20 +322,12 @@
         <translation>ბარათების პანელი</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>გადახდის მოთხოვნა (შეიქმნება QR-კოდები და bitcoin: ბმულები)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>გამოყენებული გაგზავნის მისამართებისა და ნიშნულების სიის ჩვენება</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>გამოყენებული მიღების მისამართებისა და ნიშნულების სიის ჩვენება</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>bitcoin: URI-ის ან გადახდის მოთხოვნის გახსნა</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -471,6 +421,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Quantity:</source>
@@ -562,6 +515,9 @@
     </message>
 </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -618,10 +574,6 @@
         <translation>(%1-ბიტი)</translation>
     </message>
     <message>
-        <source>About %1</source>
-        <translation>%1-ის შესახებ</translation>
-    </message>
-    <message>
         <source>Command-line options</source>
         <translation>კომანდების ზოლის ოპციები</translation>
     </message>
@@ -657,13 +609,12 @@
         <translation>მითითებული კატალოგის გამოყენება:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>შეცდომა</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -760,14 +711,6 @@
     <message>
         <source>Expert</source>
         <translation>ექსპერტი</translation>
-    </message>
-    <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>დაუდასტურებელი ხურდის გამოყენების აკრძალვის შემდეგ მათი გამოყენება შეუძლებელი იქნება, სანამ ტრანსაქციას არ ექნება ერთი დასტური მაინც. ეს აისახება თქვენი ნაშთის დათვლაზეც.</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>როუტერში Bitcoin-კლიენტის პორტის ავტომატური გახსნა. მუშაობს, თუ თქვენს როუტერს ჩართული აქვს UPnP.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -877,10 +820,6 @@
         <translation>ფორმა</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>ნაჩვენები ინფორმაცია შეიძლება მოძველებული იყოს. თქვენი საფულე ავტომატურად სინქრონიზდება Bitcoin-ის ქსელთან კავშირის დამყარების შემდეგ, ეს პროცესი ჯერ არ არის დასრულებული.</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>ხელმისაწვდომია:</translation>
     </message>
@@ -966,6 +905,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -981,10 +926,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;ინფორმაცია</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>დახვეწის ფანჯარა</translation>
     </message>
     <message>
         <source>General</source>
@@ -1310,10 +1251,6 @@
         <translation>შეიყვანეთ ამ მისამართის ნიშნული გამოყენებული მისამართების სიაში დასამატებლად</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>მესიჯი, რომელიც თან ერთვის მონეტებს:  URI, რომელიც შეინახება ტრანსაქციასთან ერთად თქვენთვის. შენიშვნა: მესიჯი არ გაყვება გადახდას ბითქოინის ქსელში.</translation>
-    </message>
-    <message>
         <source>Pay To:</source>
         <translation>ადრესატი:</translation>
     </message>
@@ -1371,10 +1308,6 @@
         <translation>მიმდინარე ხელმოწერის კოპირება კლიპბორდში</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>მოაწერეთ ხელი იმის დასადასტურებლად, რომ ეს მისამართი თქვენია</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>&amp;მესიჯის ხელმოწერა</translation>
     </message>
@@ -1391,10 +1324,6 @@
         <translation>მესიჯის &amp;ვერიფიკაცია</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>შეამოწმეთ, რომ მესიჯი ხელმოწერილია მითითებული Bitcoin-მისამართით</translation>
-    </message>
-    <message>
         <source>Verify &amp;Message</source>
         <translation>&amp;მესიჯის ვერიფიკაცია</translation>
     </message>
@@ -1409,7 +1338,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -1426,13 +1355,9 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>ტრანსაქციის დაწვრილებითი აღწერილობა</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>ნიშნული</translation>
-    </message>
     <message>
         <source>(no label)</source>
         <translation>(ნიშნული არ არის)</translation>
@@ -1482,198 +1407,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>ოპციები:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>მიუთითეთ მონაცემთა კატალოგი</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>მიერთება კვანძთან, პირების მისამართების მიღება და გათიშვა</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>მიუთითეთ თქვენი საჯარო მისამართი</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>საკომანდო სტრიქონისა და JSON-RPC-კომამდების ნებართვა</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>რეზიდენტულად გაშვება და კომანდების მიღება</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>მოცემულ მისამართზე მიჯაჭვა მუდმივად მასზე მიყურადებით. გამოიყენეთ [host]:port ფორმა IPv6-სათვის</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>კომანდის შესრულება საფულის ტრანსაქციის ცვლილებისას (%s კომანდაში ჩანაცვლდება TxID-ით)</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; შეიძლება იყოს:</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>გარედან შეერთებების დაშვება (ნაგულისხმევი: 1 თუ არ გამოიყენება -proxy ან -connect)</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>ბლოკის შექმნის ოპციები:</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>შენიშნულია ბლოკთა ბაზის დაზიანება</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>არ ჩაიტვირთოს საფულე და აიკრძალოს საფულისადმი RPC-მიმართვები</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>გავუშვათ ბლოკთა ბაზის ხელახლა აგება ეხლა?</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>ვერ ინიციალიზდება ბლოკების ბაზა</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>ვერ ინიციალიზდება საფულის ბაზის გარემო %s!</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>არ იტვირთება ბლოკების ბაზა</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>ბლოკთა ბაზის შექმნა ვერ მოხერხდა</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>შეცდომა: დისზე არ არის ადგილი!</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>ვერ ხერხდება პორტების მიყურადება. თუ გსურთ, გამოიყენეთ -listen=0.</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>საწყისი ბლოკი არ არსებობს ან არასწორია. ქსელის მონაცემთა კატალოგი datadir ხომ არის არასწორი?</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>არ არის საკმარისი ფაილ-დესკრიპტორები.</translation>
-    </message>
-    <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>მიუთითეთ საფულის ფაილი (კატალოგში)</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>ბლოკების ვერიფიკაცია...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>სფულის ოპციები:</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>ბრძანების შესრულება შესაბამისი უწყების მიღებისას ან როცა შეინიშნება საგრძნობი გახლეჩა (cmd-ში %s შეიცვლება მესიჯით)</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>ინფორმაცია</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>ტრასირების/დახვეწის ინფოს გაგზავნა კონსოლზე debug.log ფაილის ნაცვლად</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>debug.log ფაილის შეკუმშვა გაშვებისას (ნაგულისხმევია: 1 როცა არ აყენია -debug)</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>ტრანსაქციების ხელმოწერა ვერ მოხერხდა</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>ტრანსაქციების რაოდენობა ძალიან ცოტაა</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>ტრანსაქცია ძალიან დიდია</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>მომხმარებლის სახელი JSON-RPC-შეერთებისათვის</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>გაფრთხილება</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>საჭიროა ბაზის ხელახალი აგება, გამოიყენეთ -reindex რათა შეცვალოთ -txindex</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>ტრანსაქციების ჩახსნა საფულიდან...</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>პაროლი JSON-RPC-შეერთებისათვის</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>კომანდის შესრულება უკეთესი ბლოკის გამოჩენისას (%s კომანდაში ჩანაცვლდება ბლოკის ჰეშით)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>DNS-ძებნის დაშვება -addnode, -seednode და -connect-სათვის</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>-onlynet-ში მითითებულია უცნობი ქსელი: '%s'</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>არ არის საკმარისი თანხა</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>ბლოკების ინდექსის ჩატვირთვა...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>საფულის ჩატვირთვა...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>საფულის ძველ ვერსიაზე გადაყვანა შეუძლებელია</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>სკანირება...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>ჩატვირთვა დასრულებულია</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>შეცდომა</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

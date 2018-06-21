@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="eo" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -62,14 +60,6 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Ricevaj adresoj</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Jen viaj Bitmon-adresoj por sendi pagojn. Zorge kontrolu la sumon kaj la alsendan adreson antaŭ ol sendi.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Jen viaj bitmonaj adresoj por ricevi pagojn. Estas konsilinde uzi apartan ricevan adreson por ĉiu transakcio.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -166,20 +156,12 @@
         <translation>Tajpu la malnovan pasvorton kaj la novan pasvorton por la monujo.</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Atentu! Se vi ĉifras vian monujon kaj perdas la pasfrazon, vi &lt;b&gt;PERDOS LA TUTON DE VIA BITMONO&lt;b&gt;!</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Ĉu vi certas, ke vi volas ĉifri la monujon?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>La monujo estas ĉifrita</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 nun fermiĝos por fini la ĉifradon. Memoru, ke eĉ ĉifrado ne protektas kontraŭ ĉiu atako, ekz. se viruso infektus vian komputilon.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -264,16 +246,8 @@
         <translation>&amp;Ricevaj adresoj...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Malfermi &amp;URI-on...</translation>
-    </message>
-    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Reindeksado de blokoj sur disko...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Sendi monon al Bitmon-adreso</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -284,20 +258,12 @@
         <translation>Ŝanĝi la pasfrazon por ĉifri la monujon</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>Sen&amp;cimiga fenestro</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Malfermi konzolon de sencimigo kaj diagnozo</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Kontroli mesaĝon...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitmono</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -324,14 +290,6 @@
         <translation>Ĉifri la privatajn ŝlosilojn de via monujo</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Subskribi mesaĝojn per via Bitmon-adresoj por pravigi, ke vi estas la posedanto</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Kontroli mesaĝojn por kontroli ĉu ili estas subskribitaj per specifaj Bitmon-adresoj</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Dosiero</translation>
     </message>
@@ -348,20 +306,12 @@
         <translation>Langeto-breto</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Peti pagon (kreas QR-kodojn kaj URI-ojn kun prefikso bitcoin:)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Vidigi la liston de uzitaj sendaj adresoj kaj etikedoj</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Vidigi la liston de uzitaj ricevaj adresoj kaj etikedoj</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Malfermi bitcoin:-URI-on aŭ pagpeton</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -447,6 +397,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Quantity:</source>
@@ -516,6 +469,9 @@
         <source>(no label)</source>
         <translation>(neniu etikedo)</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -601,10 +557,6 @@
         <translation>Uzi alian dosierujon por datumoj:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitmono</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Eraro</translation>
     </message>
@@ -612,6 +564,9 @@
         <source>%n GB of free space available</source>
         <translation><numerusform>%n gigabajto de libera loko disponeble</numerusform><numerusform>%n gigabajtoj de libera loko disponebla.</numerusform></translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -680,10 +635,6 @@
     <message>
         <source>Expert</source>
         <translation>Fakulo</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Aŭtomate malfermi la kursilan pordon por Bitmono. Tio funkcias nur se via kursilo havas la UPnP-funkcion, kaj se tiu ĉi estas ŝaltita.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -779,10 +730,6 @@
     <message>
         <source>Form</source>
         <translation>Formularo</translation>
-    </message>
-    <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Eblas, ke la informoj videblaj ĉi tie estas eksdataj. Via monujo aŭtomate sinkoniĝas kun la bitmona reto kiam ili konektiĝas, sed tiu procezo ankoraŭ ne finfariĝis.</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -890,6 +837,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
@@ -909,10 +862,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Informoj</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Sencimiga fenestro</translation>
     </message>
     <message>
         <source>General</source>
@@ -1279,10 +1228,6 @@
         <translation>Kreo de transakcio fiaskis!</translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Averto: Nevalida Bitmon-adreso</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(neniu etikedo)</translation>
     </message>
@@ -1395,10 +1340,6 @@
         <translation>Kopii la aktualan subskribon al la tondejo</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Subskribi la mesaĝon por pravigi, ke vi estas la posedanto de tiu Bitmon-adreso</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>Subskribi &amp;Mesaĝon</translation>
     </message>
@@ -1413,10 +1354,6 @@
     <message>
         <source>&amp;Verify Message</source>
         <translation>&amp;Kontroli Mesaĝon</translation>
-    </message>
-    <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Kontroli la mesaĝon por pravigi, ke ĝi ja estas subskribita per la specifa Bitmon-adreso</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -1485,7 +1422,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -1622,7 +1559,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Tiu ĉi panelo montras detalan priskribon de la transakcio</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -1632,10 +1569,6 @@
     <message>
         <source>Type</source>
         <translation>Tipo</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etikedo</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -1866,206 +1799,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Agordoj:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Specifi dosieron por datumoj</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Konekti al nodo por ricevi adresojn de samtavolanoj, kaj malkonekti</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Specifi vian propran publikan adreson</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Akcepti komandojn JSON-RPC kaj el komandlinio</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Ruli fone kiel demono kaj akcepti komandojn</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Kerno de Bitmono</translation>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Bindi al donita adreso kaj ĉiam aŭskulti per ĝi. Uzu la formaton [gastigo]:pordo por IPv6</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Plenumi komandon kiam monuja transakcio ŝanĝiĝas (%s en cmd anstataŭiĝas per TxID)</translation>
-    </message>
-    <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Tiu ĉi estas antaŭeldona testa versio - uzu laŭ via propra risko - ne uzu por minado aŭ por aplikaĵoj por vendistoj</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Averto: La reto ne tute konsentas! Kelkaj minantoj ŝajne spertas problemojn aktuale.</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; povas esti:</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Akcepti konektojn el ekstere (defaŭlte: 1 se ne estas -proxy nek -connect)</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Blok-kreaj agordaĵoj:</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>Difektita blokdatumbazo trovita</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>Ĉu vi volas rekonstrui la blokdatumbazon nun?</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>Eraro dum pravalorizado de blokdatumbazo</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>Eraro dum pravalorizado de monuj-datumbaza ĉirkaŭaĵo %s!</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>Eraro dum ŝargado de blokdatumbazo</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>Eraro dum malfermado de blokdatumbazo</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Eraro: restas malmulte da diskospaco!</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Ne sukcesis aŭskulti ajnan pordon. Uzu -listen=0 se tion vi volas.</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Geneza bloko aŭ netrovita aŭ neĝusta. Ĉu eble la datadir de la reto malĝustas?</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>Nesufiĉa nombro de dosierpriskribiloj disponeblas.</translation>
-    </message>
-    <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>Specifi monujan dosieron (ene de dosierujo por datumoj)</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Kontrolado de blokoj...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Monujaj opcioj:</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Plenumi komandon kiam rilata alerto riceviĝas, aŭ kiam ni vidas tre longan forkon (%s en cms anstataŭiĝas per mesaĝo)</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informoj</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Sendi spurajn/sencimigajn informojn al la konzolo anstataŭ al dosiero debug.log</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Malpligrandigi la sencimigan protokol-dosieron kiam kliento lanĉiĝas (defaŭlte: 1 kiam mankas -debug)</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>Subskriba transakcio fiaskis</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation>ĝi estas eksperimenta programo</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>Transakcia sumo tro malgranda</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Transakcio estas tro granda</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Salutnomo por konektoj JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Averto</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Vi devas rekontrui la datumbazon kun -reindex por ŝanĝi -txindex</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Pasvorto por konektoj JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Plenumi komandon kiam plej bona bloko ŝanĝiĝas (%s en cmd anstataŭiĝas per bloka haketaĵo)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Permesi DNS-elserĉojn por -addnote, -seednote kaj -connect</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Nekonata reto specifita en -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Nesufiĉa mono</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Ŝarĝante blok-indekson...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Ŝargado de monujo...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Ne eblas malpromocii monujon</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Reskanado...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Ŝargado finiĝis</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Eraro</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

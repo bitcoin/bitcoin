@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="lt" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -116,10 +114,6 @@
         <translation>Išjungti programą</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;Apie %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>Rodyti informaciją apie %1</translation>
     </message>
@@ -156,16 +150,8 @@
         <translation>&amp;Gaunami adresai...</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Atidaryti &amp;URI...</translation>
-    </message>
-    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Blokai iš naujo indeksuojami...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Siųsti monetas Bitcoin adresui</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -176,20 +162,12 @@
         <translation>Pakeisti slaptafrazę naudojamą piniginės užšifravimui</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Derinimo langas</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Atverti derinimo ir diagnostikos konsolę</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Tikrinti žinutę...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -279,6 +257,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
@@ -338,6 +319,9 @@
     </message>
     </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -385,13 +369,12 @@
         <translation>Sveiki</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Klaida</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -436,10 +419,6 @@
     <message>
         <source>W&amp;allet</source>
         <translation>Piniginė</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatiškai atidaryti Bitcoin kliento prievadą maršrutizatoriuje. Tai veikia tik tada, kai jūsų maršrutizatorius palaiko UPnP ir ji įjungta.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -622,6 +601,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -637,10 +622,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Informacija</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Derinimo langas</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -879,10 +860,6 @@
         <translation>Įveskite pranešimą, kurį norite pasirašyti čia</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Registruotis žinute įrodymuii, kad turite šį adresą</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>Registruoti praneši&amp;mą</translation>
     </message>
@@ -895,10 +872,6 @@
         <translation>&amp;Patikrinti žinutę</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Patikrinkite žinutę, jog įsitikintumėte, kad ją pasirašė nurodytas Bitcoin adresas</translation>
-    </message>
-    <message>
         <source>Verify &amp;Message</source>
         <translation>&amp;Patikrinti žinutę</translation>
     </message>
@@ -909,7 +882,7 @@
         <source>[testnet]</source>
         <translation>[testavimotinklas]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -926,7 +899,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Šis langas sandorio detalų aprašymą</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     </context>
@@ -950,86 +923,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Parinktys:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Nustatyti duomenų aplanką</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Nurodykite savo nuosavą viešą adresą</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Priimti komandinę eilutę ir JSON-RPC komandas</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Dirbti fone kaip šešėlyje ir priimti komandas</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin branduolys</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>Klaida atveriant blokų duombazę</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Tikrinami blokai...</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informacija</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Siųsti atsekimo/derinimo info į konsolę vietoj debug.log failo</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Vartotojo vardas JSON-RPC jungimuisi</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Įspėjimas</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Slaptažodis JSON-RPC sujungimams</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Leisti DNS paiešką sujungimui ir mazgo pridėjimui</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Nepakanka lėšų</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Įkeliamas blokų indeksas...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Užkraunama piniginė...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Peržiūra</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Įkėlimas baigtas</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Klaida</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

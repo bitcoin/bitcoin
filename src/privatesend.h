@@ -17,15 +17,15 @@ class CPrivateSend;
 class CConnman;
 
 // timeouts
-static const int PRIVATESEND_AUTO_TIMEOUT_MIN       = 5;
-static const int PRIVATESEND_AUTO_TIMEOUT_MAX       = 15;
-static const int PRIVATESEND_QUEUE_TIMEOUT          = 30;
-static const int PRIVATESEND_SIGNING_TIMEOUT        = 15;
+static const int PRIVATESEND_AUTO_TIMEOUT_MIN       = 10;
+static const int PRIVATESEND_AUTO_TIMEOUT_MAX       = 30;
+static const int PRIVATESEND_QUEUE_TIMEOUT          = 120;
+static const int PRIVATESEND_SIGNING_TIMEOUT        = 30;
 
 //! minimum peer version accepted by mixing pool
 static const int MIN_PRIVATESEND_PEER_PROTO_VERSION = 70015;
 
-static const CAmount PRIVATESEND_ENTRY_MAX_SIZE     = 9;
+static const size_t PRIVATESEND_ENTRY_MAX_SIZE      = 9;
 
 // pool responses
 enum PoolMessage {
@@ -51,6 +51,7 @@ enum PoolMessage {
     MSG_NOERR,
     MSG_SUCCESS,
     MSG_ENTRIES_ADDED,
+    ERR_INVALID_INPUT_COUNT,
     MSG_POOL_MIN = ERR_ALREADY_HAVE,
     MSG_POOL_MAX = MSG_ENTRIES_ADDED
 };
@@ -58,6 +59,7 @@ enum PoolMessage {
 // pool states
 enum PoolState {
     POOL_STATE_IDLE,
+    POOL_STATE_CONNECTING,
     POOL_STATE_QUEUE,
     POOL_STATE_ACCEPTING_ENTRIES,
     POOL_STATE_SIGNING,
@@ -99,15 +101,18 @@ class CDarksendAccept
 {
 public:
     int nDenom;
+    int nInputCount;
     CMutableTransaction txCollateral;
 
     CDarksendAccept() :
         nDenom(0),
+        nInputCount(0),
         txCollateral(CMutableTransaction())
         {};
 
-    CDarksendAccept(int nDenom, const CMutableTransaction& txCollateral) :
+    CDarksendAccept(int nDenom, int nInputCount, const CMutableTransaction& txCollateral) :
         nDenom(nDenom),
+        nInputCount(nInputCount),
         txCollateral(txCollateral)
         {};
 
@@ -116,6 +121,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nDenom);
+        READWRITE(nInputCount);
         READWRITE(txCollateral);
     }
 
@@ -169,6 +175,7 @@ class CDarksendQueue
 {
 public:
     int nDenom;
+    int nInputCount;
     COutPoint masternodeOutpoint;
     int64_t nTime;
     bool fReady; //ready for submit
@@ -178,6 +185,7 @@ public:
 
     CDarksendQueue() :
         nDenom(0),
+        nInputCount(0),
         masternodeOutpoint(COutPoint()),
         nTime(0),
         fReady(false),
@@ -185,8 +193,9 @@ public:
         fTried(false)
         {}
 
-    CDarksendQueue(int nDenom, COutPoint outpoint, int64_t nTime, bool fReady) :
+    CDarksendQueue(int nDenom, int nInputCount, COutPoint outpoint, int64_t nTime, bool fReady) :
         nDenom(nDenom),
+        nInputCount(nInputCount),
         masternodeOutpoint(outpoint),
         nTime(nTime),
         fReady(fReady),
@@ -200,6 +209,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nDenom);
         READWRITE(masternodeOutpoint);
+        READWRITE(nInputCount);
         READWRITE(nTime);
         READWRITE(fReady);
         if (!(s.GetType() & SER_GETHASH)) {
@@ -226,13 +236,13 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("nDenom=%d, nTime=%lld, fReady=%s, fTried=%s, masternode=%s",
-                        nDenom, nTime, fReady ? "true" : "false", fTried ? "true" : "false", masternodeOutpoint.ToStringShort());
+        return strprintf("nDenom=%d, nInputCount=%d, nTime=%lld, fReady=%s, fTried=%s, masternode=%s",
+                        nDenom, nInputCount, nTime, fReady ? "true" : "false", fTried ? "true" : "false", masternodeOutpoint.ToStringShort());
     }
 
     friend bool operator==(const CDarksendQueue& a, const CDarksendQueue& b)
     {
-        return a.nDenom == b.nDenom && a.masternodeOutpoint == b.masternodeOutpoint && a.nTime == b.nTime && a.fReady == b.fReady;
+        return a.nDenom == b.nDenom && a.nInputCount == b.nInputCount && a.masternodeOutpoint == b.masternodeOutpoint && a.nTime == b.nTime && a.fReady == b.fReady;
     }
 };
 
@@ -324,6 +334,7 @@ protected:
 
 public:
     int nSessionDenom; //Users must submit an denom matching this
+    int nSessionInputCount; //Users must submit a count matching this
 
     CPrivateSendBase() { SetNull(); }
 

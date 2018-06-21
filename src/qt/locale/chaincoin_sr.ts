@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="sr" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -140,10 +138,6 @@
         <translation>Промени &amp;лозинку...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Пошаљите новац на bitcoin адресу</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Мењање лозинке којом се шифрује новчаник</translation>
     </message>
@@ -201,6 +195,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
@@ -218,6 +215,9 @@
         <source>Confirmed</source>
         <translation>Potvrdjen</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -254,6 +254,9 @@
         <source>Error</source>
         <translation>Greška</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -314,6 +317,12 @@
 </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -431,7 +440,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     </context>
@@ -444,7 +453,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ovaj odeljak pokazuje detaljan opis transakcije</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     </context>
@@ -472,54 +481,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Opcije</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Gde je konkretni data direktorijum </translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Prihvati komandnu liniju i JSON-RPC komande</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Radi u pozadini kao daemon servis i prihvati komande</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Korisničko ime za JSON-RPC konekcije</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Lozinka za JSON-RPC konekcije</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Nedovoljno sredstava</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Učitavam blok indeksa...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Новчаник се учитава...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Ponovo skeniram...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Završeno učitavanje</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Greška</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

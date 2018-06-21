@@ -56,7 +56,8 @@ UniValue privatesend(const JSONRPCRequest& request)
     if(request.params[0].get_str() == "start") {
         {
             LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            EnsureWalletIsUnlocked(pwallet);
+            if (pwallet->IsLocked(true))
+                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
         }
 
         privateSendClient.fEnablePrivateSend = true;
@@ -778,9 +779,6 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
             EnsureWalletIsUnlocked(pwallet);
         }
-
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
 
         int nSuccessful = 0;
         int nFailed = 0;

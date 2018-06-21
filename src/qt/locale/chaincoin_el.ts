@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="el" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -45,11 +43,17 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Date</source>
         <translation>Ημερομηνία</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -84,6 +88,9 @@
     </message>
     </context>
 <context>
+    <name>MasternodeList</name>
+    </context>
+<context>
     <name>ModalOverlay</name>
     </context>
 <context>
@@ -116,6 +123,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -143,10 +156,6 @@
     <message>
         <source>Insufficient funds!</source>
         <translation>Κεφάλαια μη επαρκή</translation>
-    </message>
-    <message>
-        <source>Recommended:</source>
-        <translation>Συνίσταται:</translation>
     </message>
     </context>
 <context>
@@ -196,26 +205,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Κεφάλαια μη επαρκή</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Φόρτωση πορτοφολιού...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Επανάληψη σάρωσης</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Η φόρτωση ολοκληρώθηκε</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Σφάλμα</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

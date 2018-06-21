@@ -26,7 +26,7 @@ import xml.etree.ElementTree as ET
 # Name of transifex tool
 TX = 'tx'
 # Name of source language file
-SOURCE_LANG = 'bitcoin_en.ts'
+SOURCE_LANG = 'chaincoin_en.ts'
 # Directory with locale files
 LOCALE_DIR = 'src/qt/locale'
 # Minimum number of messages for translation to be considered at all
@@ -51,7 +51,10 @@ def find_format_specifiers(s):
         percent = s.find('%', pos)
         if percent < 0:
             break
-        specifiers.append(s[percent+1])
+        try:
+            specifiers.append(s[percent+1])
+        except:
+            print('Failed to get specifier')
         pos = percent+2
     return specifiers
 

@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="es_CL" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -100,10 +98,6 @@
         <translation>Salir del programa</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>S&amp;obre %1</translation>
-    </message>
-    <message>
         <source>About &amp;Qt</source>
         <translation>Acerca de</translation>
     </message>
@@ -136,16 +130,8 @@
         <translation>Recibiendo direcciones</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Abrir y url...</translation>
-    </message>
-    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Cargando el index de bloques...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Enviar monedas a una dirección bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -156,20 +142,12 @@
         <translation>Cambiar la contraseña utilizada para la codificación de la billetera</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>Ventana &amp;Debug</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Abre consola de depuración y diagnóstico</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>Verificar mensaje....</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -188,10 +166,6 @@
         <translation>&amp;Mostrar/Ocultar</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Firmar un mensaje para provar que usted es dueño de esta dirección</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Archivo</translation>
     </message>
@@ -206,10 +180,6 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>Barra de pestañas</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Pide pagos (genera codigos QR and bitcoin: URls)</translation>
     </message>
     <message>
         <source>Error</source>
@@ -249,6 +219,9 @@
     </message>
     </context>
 <context>
+    <name>ClientModel</name>
+    </context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
@@ -275,6 +248,9 @@
         <source>Confirmed</source>
         <translation>Confirmado</translation>
     </message>
+    </context>
+<context>
+    <name>DarksendConfig</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -320,13 +296,12 @@
         <translation>bienvenido</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Error</translation>
     </message>
+    </context>
+<context>
+    <name>MasternodeList</name>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -367,10 +342,6 @@
     <message>
         <source>Expert</source>
         <translation>experto</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abre automáticamente el puerto del cliente Bitcoin en el router. Esto funciona solo cuando tu router es compatible con UPnP y está habilitado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -478,6 +449,12 @@
     <name>QObject::QObject</name>
     </context>
 <context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -493,10 +470,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Información</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Ventana Debug</translation>
     </message>
     <message>
         <source>General</source>
@@ -693,10 +666,6 @@
         <translation>Firma</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Firmar un mensjage para probar que usted es dueño de esta dirección</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation>Firmar Mensaje</translation>
     </message>
@@ -719,7 +688,7 @@
         <source>[testnet]</source>
         <translation>[red-de-pruebas]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -736,7 +705,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Esta ventana muestra información detallada sobre la transacción</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>TransactionTableModel</name>
     </context>
@@ -756,93 +725,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Opciones:
-</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Especifica directorio para los datos
-</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Aceptar comandos consola y JSON-RPC
-</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Correr como demonio y acepta comandos
-</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>bitcoin core</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>Error cargando blkindex.dat</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Atención: Poco espacio en el disco duro</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Información</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Enviar informacion de seguimiento a la consola en vez del archivo debug.log</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Usuario para las conexiones JSON-RPC
-</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Atención</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Contraseña para las conexiones JSON-RPC
-</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Permite búsqueda DNS para addnode y connect
-</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Fondos insuficientes</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Cargando el index de bloques...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Cargando cartera...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>No es posible desactualizar la billetera</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Rescaneando...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Carga completa</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Error</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

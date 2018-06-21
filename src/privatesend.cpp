@@ -142,6 +142,7 @@ void CPrivateSendBase::SetNull()
     nState = POOL_STATE_IDLE;
     nSessionID = 0;
     nSessionDenom = 0;
+    nSessionInputCount = 0;
     vecEntries.clear();
     finalMutableTransaction.vin.clear();
     finalMutableTransaction.vout.clear();
@@ -167,6 +168,7 @@ std::string CPrivateSendBase::GetStateString() const
 {
     switch(nState) {
         case POOL_STATE_IDLE:                   return "IDLE";
+        case POOL_STATE_CONNECTING:             return "CONNECTING";
         case POOL_STATE_QUEUE:                  return "QUEUE";
         case POOL_STATE_ACCEPTING_ENTRIES:      return "ACCEPTING_ENTRIES";
         case POOL_STATE_SIGNING:                return "SIGNING";
@@ -216,11 +218,6 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
     for (const auto& txout : txCollateral.vout) {
         nValueOut += txout.nValue;
-
-        if(txout.scriptPubKey.IsUnspendable()) {
-            LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- Invalid Script, txCollateral=%s\n", txCollateral.ToString());
-            return false;
-        }
     }
 
     for (const auto& txin : txCollateral.vin) {
@@ -400,6 +397,7 @@ std::string CPrivateSend::GetMessageByID(PoolMessage nMessageID)
         case MSG_NOERR:                 return _("No errors detected.");
         case MSG_SUCCESS:               return _("Transaction created successfully.");
         case MSG_ENTRIES_ADDED:         return _("Your entries added successfully.");
+        case ERR_INVALID_INPUT_COUNT:   return _("Invalid input count.");
         default:                        return _("Unknown response.");
     }
 }

@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
 <TS language="th_TH" version="2.1">
 <context>
     <name>AddressBookPage</name>
@@ -128,10 +126,6 @@
         <translation>ออกจากโปรแกรม</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;เกี่ยวกับ %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>แสดงข้อมูล เกี่ยวกับ %1</translation>
     </message>
@@ -172,16 +166,8 @@
         <translation>&amp;ที่เก็บเงิน ที่จะรับ bitcoin</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>เปิด &amp;URI</translation>
-    </message>
-    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>กำลังทำดัชนี ที่เก็บบล็อก ใหม่ ในดิสก์...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>ส่ง coins ไปยัง ที่เก็บ Bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -192,20 +178,12 @@
         <translation>เปลี่ยนรหัสผ่านที่ใช้สำหรับการเข้ารหัสกระเป๋าเงิน</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;หน้าต่าง Debug</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>เปิด แผลงควบคุม debugging และ diagnostic</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;ยืนยันข้อความ...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -232,14 +210,6 @@
         <translation>เข้ารหัส private keys/ รหัสส่วนตัว สำหรับกระเป๋าเงินของท่าน</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>เซ็นชื่อด้วยข้อความ ที่เก็บ Bitcoin เพื่อแสดงว่าท่านเป็นเจ้าของ bitcoin นี้จริง</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>ตรวจสอบ ข้อความ เพื่อให้แน่ใจว่า การเซ็นต์ชื่อ ด้วยที่เก็บ Bitcoin แล้ว</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;ไฟล์</translation>
     </message>
@@ -256,10 +226,6 @@
         <translation>แถบเครื่องมือ</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>เรียกเก็บ การชำระเงิน (สร้าง QR codes และ bitcoin: URIs)</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>แสดงรายการ ที่เก็บเงินที่จะส่ง bitcoin ออก และป้ายชื่อ ที่ใช้ไปแล้ว</translation>
     </message>
@@ -268,16 +234,8 @@
         <translation>แสดงรายการ ที่เก็บเงินที่จะรับ bitcoin เข้า และป้ายชื่อ ที่ใช้ไปแล้ว</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>เปิด bitcoin: URI หรือ การเรียกเก็บเงิน (การเรียกให้ชำระเงิน)</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;ตัวเลือก Command-line</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n ช่องการเชื่อมต่อที่ใช้งานได้ เพื่อเชื่อมกับเครือข่าย Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -318,10 +276,6 @@
     <message>
         <source>Up to date</source>
         <translation>ทันสมัย</translation>
-    </message>
-    <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>แสดง %1 ข้อความช่วยเหลือ เพื่อแสดงรายการ ตัวเลือกที่เป็นไปได้สำหรับ Bitcoin command-line</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -377,6 +331,9 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>กระเป๋าเงินถูก &lt;b&gt;เข้ารหัส&lt;/b&gt; และในปัจจุบัน &lt;b&gt;ล็อค &lt;/b&gt;</translation>
     </message>
+    </context>
+<context>
+    <name>ClientModel</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -450,6 +407,9 @@
     </message>
     </context>
 <context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -506,10 +466,6 @@
         <translation>(%1-บิท)</translation>
     </message>
     <message>
-        <source>About %1</source>
-        <translation>เกี่ยวกับ %1</translation>
-    </message>
-    <message>
         <source>Command-line options</source>
         <translation>ตัวเลือก Command-line</translation>
     </message>
@@ -549,7 +505,7 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>รีเซตการเปลี่ยนการตั้งค่าทั้งหมดใน GUI</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -573,10 +529,6 @@
         <translation>ใช้ไดเร็กทอรี่ข้อมูลที่ตั้งค่าเอง:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>ข้อผิดพลาด: ไดเร็กทอรี่ข้อมูลที่ต้องการ "%1" ไม่สามารถสร้างได้</translation>
     </message>
@@ -593,6 +545,9 @@
         <translation><numerusform>(ต้องการพื้นที่ %n GB)</numerusform></translation>
     </message>
 </context>
+<context>
+    <name>MasternodeList</name>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -630,14 +585,6 @@
         <translation>&amp;หลัก</translation>
     </message>
     <message>
-        <source>Automatically start %1 after logging in to the system.</source>
-        <translation>เริ่มต้นอัตโนมัติ %1 หลังจาก ล็อกอิน เข้าสู่ระบบแล้ว</translation>
-    </message>
-    <message>
-        <source>&amp;Start %1 on system login</source>
-        <translation>&amp;เริ่ม %1 ในการล็อกอินระบบ</translation>
-    </message>
-    <message>
         <source>Size of &amp;database cache</source>
         <translation>ขนาดของ &amp;database cache</translation>
     </message>
@@ -656,10 +603,6 @@
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>มินิไมซ์แอพ แทนการออกจากแอพพลิเคชั่น เมื่อวินโดว์ได้รับการปิด เมื่อเลือกตัวเลือกนี้ แอพพลิเคชั่น จะถูกปิด ก็ต่อเมื่อ มีการเลือกเมนู Exit/ออกจากระบบ เท่านั้น</translation>
-    </message>
-    <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>URL แบบอื่น (ยกตัวอย่าง เอ็กพลอเลอร์บล็อก) ที่อยู่ใน เมนูรายการ ลำดับ %s ใน URL จะถูกเปลี่ยนด้วย รายการแฮช URL ที่เป็นแบบหลายๆอัน จะถูกแยก โดย เครื่องหมายเส้นบาร์ตั้ง |</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -694,24 +637,12 @@
         <translation>เปิดใช้ coin &amp; รูปแบบการควบคุม</translation>
     </message>
     <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>หากท่านไม่เปิดใช้ การใช้เงินทอนที่ยังไม่ยืนยัน เงินทอนจากการทำรายการจะไม่สามารถใช้ได้ จนกว่ารายการที่ทำการ จะได้รับการยืนยันหนึ่งครั้ง และจะกระทบการคำนวณยอดคงเหลือของท่านด้วย</translation>
-    </message>
-    <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;ใช้เงินทอนที่ยังไม่ยืนยัน</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>เปิด Bitcoin ไคล์เอ็นท์พอร์ต/client port บน router โดยอัตโนมัติ วิธีนี้ใช้ได้เมื่อ router สนับสนุน UPnP และสถานะเปิดใช้งาน</translation>
-    </message>
-    <message>
         <source>Map port using &amp;UPnP</source>
         <translation>จองพอร์ต โดยใช้ &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>เชื่อมต่อกับ Bitcoin เน็ตเวิร์ก ผ่านพร็อกซี่แบบ SOCKS5</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -744,10 +675,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>เชื่อมต่อกับ เครือข่าย Bitcoin ผ่านทาง พร้อกซี่ SOCKS5 แยกต่างหาก สำหรับ Tor เซอร์วิส</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -788,6 +715,12 @@
     </context>
 <context>
     <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -865,7 +798,7 @@
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TrafficGraphWidget</name>
     </context>
@@ -894,22 +827,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>ตัวเลือก:</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>ข้อมูล</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>คำเตือน</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>ข้อผิดพลาด</translation>
-    </message>
-</context>
+    <name>chaincoin-core</name>
+    </context>
 </TS>

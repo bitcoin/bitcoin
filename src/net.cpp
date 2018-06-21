@@ -1969,22 +1969,30 @@ void CConnman::ThreadOpenMasternodeConnections()
         if (interruptNet)
             return;
 
+        // NOTE: Process only one pending masternode at a time
+
         LOCK(cs_vPendingMasternodes);
-        std::vector<CService>::iterator it = vPendingMasternodes.begin();
-        while (it != vPendingMasternodes.end()) {
-            if (!IsMasternodeOrDisconnectRequested(*it)) {
-                OpenNetworkConnection(CAddress(*it, NODE_NETWORK), false, nullptr, nullptr, false, false, false, true);
-                // should be in the list now if connection was opened
-                ForNode(*it, [&](CNode* pnode) {
-                    if (pnode->fDisconnect) {
-                        return false;
-                    }
-                    grant.MoveTo(pnode->grantMasternodeOutbound);
-                    return true;
-                });
-            }
-            it = vPendingMasternodes.erase(it);
+        if (vPendingMasternodes.empty()) {
+            // nothing to do, keep waiting
+            continue;
         }
+
+        const CService addr = vPendingMasternodes.front();
+        vPendingMasternodes.erase(vPendingMasternodes.begin());
+        if (IsMasternodeOrDisconnectRequested(addr)) {
+            // nothing to do, try the next one
+            continue;
+        }
+
+        OpenNetworkConnection(CAddress(addr, NODE_NETWORK), false, nullptr, nullptr, false, false, false, true);
+        // should be in the list now if connection was opened
+        ForNode(addr, [&](CNode* pnode) {
+            if (pnode->fDisconnect) {
+                return false;
+            }
+            grant.MoveTo(pnode->grantMasternodeOutbound);
+            return true;
+        });
     }
 }
 
@@ -2136,7 +2144,7 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to %s on this computer. Chaincoin Core is probably already running."), addrBind.ToString());
+            strError = strprintf(_("Unable to bind to %s on this computer. %s is probably already running."), addrBind.ToString(), _(PACKAGE_NAME));
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToString(), NetworkErrorString(nErr));
         LogPrintf("%s\n", strError);
