@@ -124,7 +124,6 @@ namespace
 
     struct FinalizedBudgetFixture
     {
-        const std::string budgetName;
         const int blockStart;
 
         const CKey keyPairA;
@@ -149,8 +148,7 @@ namespace
         static boost::scoped_ptr<ECCVerifyHandle> globalVerifyHandle;
 
         FinalizedBudgetFixture()
-            : budgetName("test")
-            , blockStart(1296000)
+            : blockStart(1296000)
             , keyPairA(CreateKeyPair(vchKey0))
             , keyPairB(CreateKeyPair(vchKey1))
             , keyPairC(CreateKeyPair(vchKey2))
@@ -225,7 +223,6 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         payments1.push_back(GetPayment(proposalB));
         payments1.push_back(GetPayment(proposalC));
         CFinalizedBudget budget1(
-            budgetName, 
             blockStart, 
             payments1,
             ArithToUint256(1)
@@ -236,36 +233,6 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         payments2.push_back(GetPayment(proposalB));
         payments2.push_back(GetPayment(proposalC));
         CFinalizedBudget budget2(
-            budgetName,
-            blockStart,
-            payments2,
-            ArithToUint256(2)
-        );
-
-        // Call & Check
-        BOOST_CHECK_EQUAL(budget1.GetHash(), budget2.GetHash());
-    }
-
-    BOOST_AUTO_TEST_CASE(CompareHash_DifferentName)
-    {
-        // Set Up
-        std::vector<CTxBudgetPayment> payments1;
-        payments1.push_back(GetPayment(proposalA));
-        payments1.push_back(GetPayment(proposalB));
-        payments1.push_back(GetPayment(proposalC));
-        CFinalizedBudget budget1(
-            budgetName,
-            blockStart,
-            payments1,
-            ArithToUint256(1)
-        );
-
-        std::vector<CTxBudgetPayment> payments2;
-        payments2.push_back(GetPayment(proposalA));
-        payments2.push_back(GetPayment(proposalB));
-        payments2.push_back(GetPayment(proposalC));
-        CFinalizedBudget budget2(
-            "he-who-must-not-be-named",
             blockStart,
             payments2,
             ArithToUint256(2)
@@ -282,7 +249,6 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         payments1.push_back(GetPayment(proposalA));
         payments1.push_back(GetPayment(proposalC));
         CFinalizedBudget budget1(
-            budgetName,
             blockStart,
             payments1,
             ArithToUint256(1)
@@ -292,7 +258,6 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         payments2.push_back(GetPayment(proposalA));
         payments2.push_back(GetPayment(proposalB));
         CFinalizedBudget budget2(
-            budgetName,
             blockStart,
             payments2,
             ArithToUint256(2)
@@ -310,7 +275,6 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         payments1.push_back(GetPayment(proposalB));
         payments1.push_back(GetPayment(proposalC));
         CFinalizedBudget budget1(
-            budgetName,
             blockStart,
             payments1,
             ArithToUint256(1)
@@ -321,7 +285,6 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         payments2.push_back(GetPayment(proposalC));
         payments2.push_back(GetPayment(proposalA));
         CFinalizedBudget budget2(
-            budgetName,
             blockStart,
             payments2,
             ArithToUint256(2)
@@ -356,7 +319,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         std::vector<CTxBudgetPayment> txBudgetPayments;
         txBudgetPayments.push_back(GetPayment(proposalA));
 
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        CFinalizedBudget budget(blockStart, txBudgetPayments, ArithToUint256(42));
 
         BOOST_REQUIRE(budget.fValid);
         BOOST_REQUIRE(budget.IsValid(false));
@@ -412,7 +375,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalB));
         txBudgetPayments.push_back(GetPayment(proposalC));
 
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        CFinalizedBudget budget(blockStart, txBudgetPayments, ArithToUint256(42));
 
         BOOST_REQUIRE(budget.fValid);
         BOOST_REQUIRE(budget.IsValid(false));
@@ -468,7 +431,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalB));
         txBudgetPayments.push_back(GetPayment(proposalA));
 
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        CFinalizedBudget budget(blockStart, txBudgetPayments, ArithToUint256(42));
 
         BOOST_REQUIRE(budget.fValid);
         BOOST_REQUIRE(budget.IsValid(false));
@@ -488,7 +451,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalA));
         txBudgetPayments.push_back(GetPayment(proposalB));
 
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        CFinalizedBudget budget(blockStart, txBudgetPayments, ArithToUint256(42));
 
         CMutableTransaction expected;
         expected.vout.push_back(CTxOut(proposalB.GetAmount(), proposalB.GetPayee()));
@@ -505,7 +468,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalA));
         txBudgetPayments.push_back(GetPayment(proposalB));
 
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        CFinalizedBudget budget(blockStart, txBudgetPayments, ArithToUint256(42));
 
         CMutableTransaction wrong1;
         wrong1.vout.push_back(CTxOut(proposalB.GetAmount(), proposalB.GetPayee()));
@@ -524,7 +487,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         std::vector<CTxBudgetPayment> txBudgetPayments;
         txBudgetPayments.push_back(GetPayment(proposalA));
 
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        CFinalizedBudget budget(blockStart, txBudgetPayments, ArithToUint256(42));
 
         CMutableTransaction wrong1;
         wrong1.vout.push_back(CTxOut(proposalA.GetAmount(), proposalC.GetPayee()));
@@ -544,7 +507,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalA));
         txBudgetPayments.push_back(GetPayment(proposalB));
 
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        CFinalizedBudget budget(blockStart, txBudgetPayments, ArithToUint256(42));
 
         CMutableTransaction wrong1;
         wrong1.vout.push_back(CTxOut(proposalA.GetAmount(), proposalA.GetPayee()));
@@ -564,7 +527,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalA));
         txBudgetPayments.push_back(GetPayment(proposalB));
 
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, ArithToUint256(42));
+        CFinalizedBudget budget(blockStart, txBudgetPayments, ArithToUint256(42));
 
         std::vector<CTxBudgetPayment> expected;
         expected.push_back(GetPayment(proposalB));
@@ -584,7 +547,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalB));
 
         BOOST_REQUIRE(keyPairMn.GetPubKey() == mn1.pubkey2);
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        CFinalizedBudget budget(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
 
         // Call & Check
         BOOST_CHECK(budget.IsValid());
@@ -599,7 +562,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalB));
 
         BOOST_REQUIRE(keyPairMn.GetPubKey() != mn2.pubkey2);
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, mn2.vin, keyPairMn);
+        CFinalizedBudget budget(blockStart, txBudgetPayments, mn2.vin, keyPairMn);
 
         // Call & Check
         BOOST_CHECK(!budget.IsValid());
@@ -613,7 +576,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalB));
 
         BOOST_REQUIRE(keyPairMn.GetPubKey() == mn1.pubkey2);
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        CFinalizedBudget budget(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
 
         // Call & Check
         BOOST_CHECK(budget.VerifySignature(mn1.pubkey2));
@@ -626,7 +589,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalA));
         txBudgetPayments.push_back(GetPayment(proposalB));
 
-        CFinalizedBudget budget(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        CFinalizedBudget budget(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
 
         CFinalizedBudget copied = budget;
 
@@ -644,7 +607,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalB));
 
         BOOST_REQUIRE(keyPairMn.GetPubKey() == mn1.pubkey2);
-        CFinalizedBudget fb(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        CFinalizedBudget fb(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
 
         BOOST_REQUIRE(fb.IsValid());
         BOOST_CHECK(budget.AddFinalizedBudget(fb));
@@ -656,7 +619,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalA));
         txBudgetPayments.push_back(GetPayment(proposalB));
 
-        CFinalizedBudgetBroadcast budget(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        CFinalizedBudgetBroadcast budget(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
 
         BOOST_REQUIRE(budget.Budget().IsValid());
 
@@ -681,7 +644,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         txBudgetPayments.push_back(GetPayment(proposalB));
 
         BOOST_REQUIRE(keyPairMn.GetPubKey() == mn1.pubkey2);
-        CFinalizedBudgetBroadcast fb(budgetName, blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        CFinalizedBudgetBroadcast fb(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
 
         BOOST_REQUIRE(fb.Budget().IsValid());
 
@@ -1229,12 +1192,12 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         std::vector<CTxBudgetPayment> txBudgetPayments1;
         txBudgetPayments1.push_back(CreatePayment(keyPairB, 404));
         txBudgetPayments1.push_back(CreatePayment(keyPairC, 111));
-        CFinalizedBudget fb1("test", blockHeight, txBudgetPayments1, finalBudgetCollateral);
+        CFinalizedBudget fb1(blockHeight, txBudgetPayments1, finalBudgetCollateral);
 
         // Create finalized budget #2
         std::vector<CTxBudgetPayment> txBudgetPayments2;
         txBudgetPayments2.push_back(CreatePayment(keyPairA, 42));
-        CFinalizedBudget fb2("test", blockHeight, txBudgetPayments2, finalBudgetCollateral);
+        CFinalizedBudget fb2(blockHeight, txBudgetPayments2, finalBudgetCollateral);
 
         // Add finalized budgets to budget manager
         budget.AddFinalizedBudget(fb1, false); // false = don't check collateral
@@ -1279,12 +1242,12 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         std::vector<CTxBudgetPayment> txBudgetPayments1;
         txBudgetPayments1.push_back(CreatePayment(keyPairB, 404));
         txBudgetPayments1.push_back(CreatePayment(keyPairC, 111));
-        CFinalizedBudget fb1("test", blockHeight, txBudgetPayments1, finalBudgetCollateral);
+        CFinalizedBudget fb1(blockHeight, txBudgetPayments1, finalBudgetCollateral);
 
         // Create finalized budget #2
         std::vector<CTxBudgetPayment> txBudgetPayments2;
         txBudgetPayments2.push_back(CreatePayment(keyPairA, 42));
-        CFinalizedBudget fb2("test", blockHeight, txBudgetPayments2, finalBudgetCollateral);
+        CFinalizedBudget fb2(blockHeight, txBudgetPayments2, finalBudgetCollateral);
 
         // Add finalized budgets to budget manager
         budget.AddFinalizedBudget(fb1, false); // false = don't check collateral
@@ -1329,7 +1292,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
         txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
 
-        CFinalizedBudget fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+        CFinalizedBudget fb(blockHeight, txBudgetPayments, finalBudgetCollateral);
 
         BOOST_REQUIRE(budget.GetFinalizedBudgets().empty());
         
@@ -1349,7 +1312,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
         txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
 
-        CFinalizedBudget fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+        CFinalizedBudget fb(blockHeight, txBudgetPayments, finalBudgetCollateral);
 
         // Call & Check
 
@@ -1366,7 +1329,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         txBudgetPayments.push_back(CreatePayment(keyPairA, 42));
         txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
         txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
-        CFinalizedBudget fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+        CFinalizedBudget fb(blockHeight, txBudgetPayments, finalBudgetCollateral);
 
         // Add finalized budget to budget manager
         budget.AddFinalizedBudget(fb, false); // false = don't check collateral
@@ -1404,7 +1367,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         txBudgetPayments.push_back(CreatePayment(keyPairA, 42));
         txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
         txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
-        CFinalizedBudget fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+        CFinalizedBudget fb(blockHeight, txBudgetPayments, finalBudgetCollateral);
 
         // Add finalized budget to budget manager
         budget.AddFinalizedBudget(fb, false); // false = don't check collateral
@@ -1441,7 +1404,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         txBudgetPayments.push_back(CreatePayment(keyPairA, 42));
         txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
         txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
-        CFinalizedBudget fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+        CFinalizedBudget fb(blockHeight, txBudgetPayments, finalBudgetCollateral);
 
         // Add finalized budget to budget manager
         budget.AddFinalizedBudget(fb, false); // false = don't check collateral
@@ -1471,12 +1434,12 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         std::vector<CTxBudgetPayment> txBudgetPayments1;
         txBudgetPayments1.push_back(CreatePayment(keyPairB, 404));
         txBudgetPayments1.push_back(CreatePayment(keyPairC, 111));
-        CFinalizedBudget fb1("test", blockHeight, txBudgetPayments1, finalBudgetCollateral);
+        CFinalizedBudget fb1(blockHeight, txBudgetPayments1, finalBudgetCollateral);
 
         // Create finalized budget #2
         std::vector<CTxBudgetPayment> txBudgetPayments2;
         txBudgetPayments2.push_back(CreatePayment(keyPairA, 42));
-        CFinalizedBudget fb2("test", blockHeight, txBudgetPayments2, finalBudgetCollateral);
+        CFinalizedBudget fb2(blockHeight, txBudgetPayments2, finalBudgetCollateral);
 
         // Add finalized budgets to budget manager
         budget.AddFinalizedBudget(fb1, false); // false = don't check collateral
@@ -1520,7 +1483,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         txBudgetPayments.push_back(CreatePayment(keyPairA, 42));
         txBudgetPayments.push_back(CreatePayment(keyPairB, 404));
         txBudgetPayments.push_back(CreatePayment(keyPairC, 111));
-        CFinalizedBudget fb("test", blockHeight, txBudgetPayments, finalBudgetCollateral);
+        CFinalizedBudget fb(blockHeight, txBudgetPayments, finalBudgetCollateral);
 
         // Add finalized budget to budget manager
         budget.AddFinalizedBudget(fb, false); // false = don't check collateral

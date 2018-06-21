@@ -216,6 +216,10 @@ protected:
     std::vector<unsigned char> signature;
     CTxIn masternodeSubmittedId;
 
+public:
+    bool fValid;
+    int64_t nTime;
+
     static bool ComparePayments(const CTxBudgetPayment& a, const CTxBudgetPayment& b)
     {
         if (a.nAmount != b.nAmount)
@@ -228,14 +232,11 @@ protected:
             return false;
     }
 
-public:
-    bool fValid;
-    int64_t nTime;
-
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
-    CFinalizedBudget(std::string strBudgetName, int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, uint256 nFeeTXHash);
-    CFinalizedBudget(std::string strBudgetName, int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const CKey& keyMasternode);
+    CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, uint256 nFeeTXHash);
+    CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const CKey& keyMasternode);
+    CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const std::vector<unsigned char>& signature);
 
     void CleanAndRemove(bool fSignatureCheck);
     bool AddOrUpdateVote(bool isOldVote, const CFinalizedBudgetVote& vote, std::string& strError);
@@ -304,12 +305,12 @@ public:
 };
 
 // FinalizedBudget are cast then sent to peers with this object, which leaves the votes out
-class CFinalizedBudgetBroadcast : private CFinalizedBudget
+class CFinalizedBudgetBroadcast
 {
 public:
     CFinalizedBudgetBroadcast();
-    CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
-    CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, const CTxIn& masternodeId, const CKey& keyMasternode);
+    CFinalizedBudgetBroadcast(int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
+    CFinalizedBudgetBroadcast(int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, const CTxIn& masternodeId, const CKey& keyMasternode);
 
     CFinalizedBudget Budget() const;
 
@@ -319,13 +320,26 @@ public:
 
     void Relay();
 
+    uint256 GetHash() const
+    {
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << nBlockStart;
+        ss << vecBudgetPayments;
+
+        uint256 h1 = ss.GetHash();
+        return h1;
+    }
+
     ADD_SERIALIZE_METHODS;
 
     //for propagating messages
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         //for syncing with other clients
-        READWRITE(LIMITED_STRING(strBudgetName, 20));
+        std::string dummy = ""; // for backwards compatibility
+        READWRITE(LIMITED_STRING(dummy, 20));
+
         READWRITE(nBlockStart);
         READWRITE(vecBudgetPayments);
 
@@ -337,6 +351,13 @@ public:
             READWRITE(masternodeSubmittedId);
         }
     }
+
+private:
+    std::vector<CTxBudgetPayment> vecBudgetPayments;
+    int nBlockStart;
+    uint256 nFeeTXHash;
+    std::vector<unsigned char> signature;
+    CTxIn masternodeSubmittedId;
 };
 
 //
