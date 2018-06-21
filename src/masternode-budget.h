@@ -218,7 +218,6 @@ protected:
 
 public:
     bool fValid;
-    int64_t nTime;
 
     static bool ComparePayments(const CTxBudgetPayment& a, const CTxBudgetPayment& b);
 
@@ -275,9 +274,10 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
+        int64_t dummy;
         READWRITE(LIMITED_STRING(strBudgetName, 20));
         READWRITE(nFeeTXHash);
-        READWRITE(nTime);
+        READWRITE(dummy);
         READWRITE(nBlockStart);
         READWRITE(vecBudgetPayments);
         READWRITE(fAutoChecked);

@@ -1608,7 +1608,6 @@ CFinalizedBudget::CFinalizedBudget()
     vecBudgetPayments.clear();
     mapVotes.clear();
     nFeeTXHash = uint256();
-    nTime = 0;
     fValid = true;
     fAutoChecked = false;
     voteSubmittedTime = boost::none;
@@ -1620,7 +1619,6 @@ CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetP
     , nBlockStart(nBlockStart)
     , nFeeTXHash(nFeeTXHash)
     , fValid(true)
-    , nTime(0)
 {
     boost::sort(this->vecBudgetPayments, ComparePayments);
 }
@@ -1631,7 +1629,6 @@ CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetP
     , nBlockStart(nBlockStart)
     , masternodeSubmittedId(masternodeId)
     , fValid(true)
-    , nTime(0)
 {
     boost::sort(this->vecBudgetPayments, ComparePayments);
 
@@ -1646,7 +1643,6 @@ CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetP
     , masternodeSubmittedId(masternodeId)
     , signature(signature)
     , fValid(true)
-    , nTime(0)
 {
     boost::sort(this->vecBudgetPayments, ComparePayments);
 }
@@ -1659,7 +1655,6 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
     vecBudgetPayments = other.vecBudgetPayments;
     mapVotes = other.mapVotes;
     nFeeTXHash = other.nFeeTXHash;
-    nTime = other.nTime;
     signature = other.signature;
     masternodeSubmittedId = other.masternodeSubmittedId;
     fValid = true;
@@ -1922,8 +1917,6 @@ bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral) con
 
     std::string strError2 = "";
     if(fCheckCollateral && !nFeeTXHash.IsNull()){
-        if (nTime == 0)
-            LogPrintf("CFinalizedBudget::IsValid - ERROR: nTime == 0 is unexpected\n");
         int nConf = 0;
         int64_t nTime;
         if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError2, nTime, nConf)){
