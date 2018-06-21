@@ -202,19 +202,16 @@ class CFinalizedBudget
 {
 private:
     // critical section to protect the inner data structures
-    mutable CCriticalSection cs;
-    bool fAutoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
-    boost::optional<int> voteSubmittedTime;
-    std::map<uint256, CFinalizedBudgetVote> mapObsoleteVotes;
-
-protected:
-    std::vector<CTxBudgetPayment> vecBudgetPayments;
-    std::string strBudgetName;
-    int nBlockStart;
-    std::map<uint256, CFinalizedBudgetVote> mapVotes;
-    uint256 nFeeTXHash;
-    std::vector<unsigned char> signature;
-    CTxIn masternodeSubmittedId;
+    mutable CCriticalSection m_cs;
+    bool m_autoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
+    boost::optional<int> m_voteSubmittedTime;
+    std::vector<CTxBudgetPayment> m_payments;
+    int m_blockStart;
+    std::map<uint256, CFinalizedBudgetVote> m_votes;
+    std::map<uint256, CFinalizedBudgetVote> m_obsoleteVotes;
+    uint256 m_feeTransactionHash;
+    std::vector<unsigned char> m_signature;
+    CTxIn m_masternodeSubmittedId;
 
 public:
     bool fValid;
@@ -234,26 +231,26 @@ public:
     bool IsValid(bool fCheckCollateral=true) const;
     bool VerifySignature(const CPubKey& pubKey) const;
 
-    bool IsVoteSubmitted() const { return voteSubmittedTime.is_initialized(); }
+    bool IsVoteSubmitted() const { return m_voteSubmittedTime.is_initialized(); }
     void ResetAutoChecked();
     bool IsSubmittedManually() const;
 
-    uint256 GetFeeTxHash() const { return nFeeTXHash; }
-    const std::map<uint256, CFinalizedBudgetVote>& GetVotes() const { return mapVotes; }
-    const std::map<uint256, CFinalizedBudgetVote>& GetObsoleteVotes() const { return mapObsoleteVotes; }
+    uint256 GetFeeTxHash() const { return m_feeTransactionHash; }
+    const std::map<uint256, CFinalizedBudgetVote>& GetVotes() const { return m_votes; }
+    const std::map<uint256, CFinalizedBudgetVote>& GetObsoleteVotes() const { return m_obsoleteVotes; }
     void DiscontinueOlderVotes(const CFinalizedBudgetVote& newerVote);
     std::string GetProposals() const;
-    int GetBlockStart() const {return nBlockStart;}
-    int GetBlockEnd() const {return nBlockStart;} // Paid in single block
-    int GetVoteCount() const {return (int)mapVotes.size();}
+    int GetBlockStart() const {return m_blockStart;}
+    int GetBlockEnd() const {return m_blockStart;} // Paid in single block
+    int GetVoteCount() const {return (int)m_votes.size();}
     const std::vector<CTxBudgetPayment>& GetBudgetPayments() const;
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const;
 
-    const CTxIn& MasternodeSubmittedId() const { return masternodeSubmittedId; }
+    const CTxIn& MasternodeSubmittedId() const { return m_masternodeSubmittedId; }
 
     //check to see if we should vote on this
     bool AutoCheck();
-    bool IsAutoChecked() const { return fAutoChecked; }
+    bool IsAutoChecked() const { return m_autoChecked; }
     //total crown paid out by this budget
     CAmount GetTotalPayout() const;
     //vote on this finalized budget as a masternode
@@ -274,17 +271,18 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
-        int64_t dummy;
-        READWRITE(LIMITED_STRING(strBudgetName, 20));
-        READWRITE(nFeeTXHash);
-        READWRITE(dummy);
-        READWRITE(nBlockStart);
-        READWRITE(vecBudgetPayments);
-        READWRITE(fAutoChecked);
-        READWRITE(signature);
-        READWRITE(masternodeSubmittedId);
+        int64_t dummy1;
+        std::string dummy2;
+        READWRITE(LIMITED_STRING(dummy2, 20));
+        READWRITE(m_feeTransactionHash);
+        READWRITE(dummy1);
+        READWRITE(m_blockStart);
+        READWRITE(m_payments);
+        READWRITE(m_autoChecked);
+        READWRITE(m_signature);
+        READWRITE(m_masternodeSubmittedId);
 
-        READWRITE(mapVotes);
+        READWRITE(m_votes);
     }
 };
 
@@ -318,23 +316,23 @@ public:
         std::string dummy = ""; // for backwards compatibility
         READWRITE(LIMITED_STRING(dummy, 20));
 
-        READWRITE(nBlockStart);
-        READWRITE(vecBudgetPayments);
+        READWRITE(m_blockStart);
+        READWRITE(m_payments);
 
-        READWRITE(nFeeTXHash);
+        READWRITE(m_feeTransactionHash);
         if (!IsSubmittedManually())
         {
-            READWRITE(signature);
-            READWRITE(masternodeSubmittedId);
+            READWRITE(m_signature);
+            READWRITE(m_masternodeSubmittedId);
         }
     }
 
 private:
-    std::vector<CTxBudgetPayment> vecBudgetPayments;
-    int nBlockStart;
-    uint256 nFeeTXHash;
-    std::vector<unsigned char> signature;
-    CTxIn masternodeSubmittedId;
+    std::vector<CTxBudgetPayment> m_payments;
+    int m_blockStart;
+    uint256 m_feeTransactionHash;
+    std::vector<unsigned char> m_signature;
+    CTxIn m_masternodeSubmittedId;
 };
 
 //

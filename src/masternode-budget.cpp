@@ -214,7 +214,6 @@ void CBudgetManager::SubmitFinalBudget()
         return; // allow submitting final budget only when 2 days left before payments
 
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
-    std::string strBudgetName = "main";
     std::vector<CTxBudgetPayment> vecTxBudgetPayments;
 
     for(unsigned int i = 0; i < vBudgetProposals.size(); i++){
@@ -1603,86 +1602,84 @@ bool CBudgetVote::SignatureValid(bool fSignatureCheck) const
 
 CFinalizedBudget::CFinalizedBudget()
 {
-    strBudgetName = "";
-    nBlockStart = 0;
-    vecBudgetPayments.clear();
-    mapVotes.clear();
-    nFeeTXHash = uint256();
+    m_blockStart = 0;
+    m_payments.clear();
+    m_votes.clear();
+    m_feeTransactionHash = uint256();
     fValid = true;
-    fAutoChecked = false;
-    voteSubmittedTime = boost::none;
+    m_autoChecked = false;
+    m_voteSubmittedTime = boost::none;
 }
 
 CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, uint256 nFeeTXHash)
-    : fAutoChecked(false)
-    , vecBudgetPayments(vecBudgetPayments)
-    , nBlockStart(nBlockStart)
-    , nFeeTXHash(nFeeTXHash)
+    : m_autoChecked(false)
+    , m_payments(vecBudgetPayments)
+    , m_blockStart(nBlockStart)
+    , m_feeTransactionHash(nFeeTXHash)
     , fValid(true)
 {
-    boost::sort(this->vecBudgetPayments, ComparePayments);
+    boost::sort(this->m_payments, ComparePayments);
 }
 
 CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const CKey& keyMasternode)
-    : fAutoChecked(false)
-    , vecBudgetPayments(vecBudgetPayments)
-    , nBlockStart(nBlockStart)
-    , masternodeSubmittedId(masternodeId)
+    : m_autoChecked(false)
+    , m_payments(vecBudgetPayments)
+    , m_blockStart(nBlockStart)
+    , m_masternodeSubmittedId(masternodeId)
     , fValid(true)
 {
-    boost::sort(this->vecBudgetPayments, ComparePayments);
+    boost::sort(this->m_payments, ComparePayments);
 
-    if (!keyMasternode.SignCompact(GetHash(), signature))
+    if (!keyMasternode.SignCompact(GetHash(), m_signature))
         throw std::runtime_error("Cannot sign finalized budget: ");
 }
 
 CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const std::vector<unsigned char>& signature)
-    : fAutoChecked(false)
-    , vecBudgetPayments(vecBudgetPayments)
-    , nBlockStart(nBlockStart)
-    , masternodeSubmittedId(masternodeId)
-    , signature(signature)
+    : m_autoChecked(false)
+    , m_payments(vecBudgetPayments)
+    , m_blockStart(nBlockStart)
+    , m_masternodeSubmittedId(masternodeId)
+    , m_signature(signature)
     , fValid(true)
 {
-    boost::sort(this->vecBudgetPayments, ComparePayments);
+    boost::sort(this->m_payments, ComparePayments);
 }
 
 CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
-    : strBudgetName(other.strBudgetName)
-    , nBlockStart(other.nBlockStart)
-    , vecBudgetPayments(other.vecBudgetPayments)
-    , mapVotes(other.mapVotes)
-    , nFeeTXHash(other.nFeeTXHash)
-    , signature(other.signature)
-    , masternodeSubmittedId(other.masternodeSubmittedId)
+    : m_blockStart(other.m_blockStart)
+    , m_payments(other.m_payments)
+    , m_votes(other.m_votes)
+    , m_feeTransactionHash(other.m_feeTransactionHash)
+    , m_signature(other.m_signature)
+    , m_masternodeSubmittedId(other.m_masternodeSubmittedId)
     , fValid(true)
-    , fAutoChecked(false)
-    , voteSubmittedTime(boost::none)
+    , m_autoChecked(false)
+    , m_voteSubmittedTime(boost::none)
 {
-    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
+    assert(boost::is_sorted(m_payments, ComparePayments));
 }
 
 void CFinalizedBudget::DiscontinueOlderVotes(const CFinalizedBudgetVote& newerVote)
 {
-    std::map<uint256, CFinalizedBudgetVote>::const_iterator found = mapVotes.find(newerVote.vin.prevout.GetHash());
-    if (found == mapVotes.end())
+    std::map<uint256, CFinalizedBudgetVote>::const_iterator found = m_votes.find(newerVote.vin.prevout.GetHash());
+    if (found == m_votes.end())
         return;
 
     if (found->second.nTime < newerVote.nTime)
     {
-        mapObsoleteVotes.insert(std::make_pair(newerVote.vin.prevout.GetHash(), found->second));
-        mapVotes.erase(found);
+        m_obsoleteVotes.insert(std::make_pair(newerVote.vin.prevout.GetHash(), found->second));
+        m_votes.erase(found);
     }
 }
 
 bool CFinalizedBudget::AddOrUpdateVote(bool isOldVote, const CFinalizedBudgetVote& vote, std::string& strError)
 {
-    LOCK(cs);
+    LOCK(m_cs);
 
     uint256 masternodeHash = vote.vin.prevout.GetHash();
-    map<uint256, CFinalizedBudgetVote>::iterator found = mapVotes.find(masternodeHash);
+    map<uint256, CFinalizedBudgetVote>::iterator found = m_votes.find(masternodeHash);
 
-    if(found != mapVotes.end()){
+    if(found != m_votes.end()){
         const CFinalizedBudgetVote& previousVote = found->second;
         if (previousVote.GetHash() == vote.GetHash()) {
             LogPrint("mnbudget", "CFinalizedBudget::AddOrUpdateVote - Already have the vote\n");
@@ -1707,9 +1704,9 @@ bool CFinalizedBudget::AddOrUpdateVote(bool isOldVote, const CFinalizedBudgetVot
     }
 
     if (isOldVote)
-        mapObsoleteVotes.insert(found, std::make_pair(masternodeHash, vote));
+        m_obsoleteVotes.insert(found, std::make_pair(masternodeHash, vote));
     else
-        mapVotes.insert(found, std::make_pair(masternodeHash, vote));
+        m_votes.insert(found, std::make_pair(masternodeHash, vote));
 
     return true;
 }
@@ -1734,23 +1731,23 @@ public:
 //evaluate if we should vote for this. Masternode only
 bool CFinalizedBudget::AutoCheck()
 {
-    LOCK(cs);
-    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
+    LOCK(m_cs);
+    assert(boost::is_sorted(m_payments, ComparePayments));
 
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev)
         return false;
 
-    LogPrintf("CFinalizedBudget::AutoCheck - %lli - %d\n", pindexPrev->nHeight, fAutoChecked);
+    LogPrintf("CFinalizedBudget::AutoCheck - %lli - %d\n", pindexPrev->nHeight, m_autoChecked);
 
-    if(!fMasterNode || fAutoChecked)
+    if(!fMasterNode || m_autoChecked)
         return false;
 
     // Auto-check votes with an interval that does not allow to submit votes to soon
-    if (voteSubmittedTime && GetTime() - voteSubmittedTime.get() < FINAL_BUDGET_VOTE_UPDATE_MIN)
+    if (m_voteSubmittedTime && GetTime() - m_voteSubmittedTime.get() < FINAL_BUDGET_VOTE_UPDATE_MIN)
         return false;
 
-    fAutoChecked = true; //we only need to check this once
+    m_autoChecked = true; //we only need to check this once
 
 
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
@@ -1758,10 +1755,10 @@ bool CFinalizedBudget::AutoCheck()
     
     boost::sort(vBudgetProposals, SortByAmount());
 
-    for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
-        LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vecBudgetPayments[i].nProposalHash.ToString());
-        LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vecBudgetPayments[i].payee.ToString());
-        LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vecBudgetPayments[i].nAmount);
+    for(unsigned int i = 0; i < m_payments.size(); i++){
+        LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, m_payments[i].nProposalHash.ToString());
+        LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, m_payments[i].payee.ToString());
+        LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, m_payments[i].nAmount);
     }
 
     for(unsigned int i = 0; i < vBudgetProposals.size(); i++){
@@ -1775,31 +1772,30 @@ bool CFinalizedBudget::AutoCheck()
         return false;
     }
 
-    if(vBudgetProposals.size() != vecBudgetPayments.size()) {
+    if(vBudgetProposals.size() != m_payments.size()) {
         LogPrintf("CFinalizedBudget::AutoCheck - Budget length doesn't match\n");
         return false;
     }
 
 
-    for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
+    for(unsigned int i = 0; i < m_payments.size(); i++){
         if(i > vBudgetProposals.size() - 1) {
             LogPrintf("CFinalizedBudget::AutoCheck - Vector size mismatch, aborting\n");
             return false;
         }
 
-        if(vecBudgetPayments[i].nProposalHash != vBudgetProposals[i]->GetHash()){
-            LogPrintf("CFinalizedBudget::AutoCheck - item #%d doesn't match %s %s\n", i, vecBudgetPayments[i].nProposalHash.ToString(), vBudgetProposals[i]->GetHash().ToString());
+        if(m_payments[i].nProposalHash != vBudgetProposals[i]->GetHash()){
+            LogPrintf("CFinalizedBudget::AutoCheck - item #%d doesn't match %s %s\n", i, m_payments[i].nProposalHash.ToString(), vBudgetProposals[i]->GetHash().ToString());
             return false;
         }
 
-        // if(vecBudgetPayments[i].payee != vBudgetProposals[i]->GetPayee()){ -- triggered with false positive
-        if(vecBudgetPayments[i].payee.ToString() != vBudgetProposals[i]->GetPayee().ToString()){
-            LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, vecBudgetPayments[i].payee.ToString(), vBudgetProposals[i]->GetPayee().ToString());
+        if(m_payments[i].payee.ToString() != vBudgetProposals[i]->GetPayee().ToString()){
+            LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, m_payments[i].payee.ToString(), vBudgetProposals[i]->GetPayee().ToString());
             return false;
         }
 
-        if(vecBudgetPayments[i].nAmount != vBudgetProposals[i]->GetAmount()){
-            LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %lli %lli\n", i, vecBudgetPayments[i].nAmount, vBudgetProposals[i]->GetAmount());
+        if(m_payments[i].nAmount != vBudgetProposals[i]->GetAmount()){
+            LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %lli %lli\n", i, m_payments[i].nAmount, vBudgetProposals[i]->GetAmount());
             return false;
         }
     }
@@ -1811,9 +1807,9 @@ bool CFinalizedBudget::AutoCheck()
 // If masternode voted for a proposal, but is now invalid -- remove the vote
 void CFinalizedBudget::CleanAndRemove(bool fSignatureCheck)
 {
-    std::map<uint256, CFinalizedBudgetVote>::iterator it = mapVotes.begin();
+    std::map<uint256, CFinalizedBudgetVote>::iterator it = m_votes.begin();
 
-    while(it != mapVotes.end()) {
+    while(it != m_votes.end()) {
         (*it).second.fValid = (*it).second.SignatureValid(fSignatureCheck);
         ++it;
     }
@@ -1824,8 +1820,8 @@ CAmount CFinalizedBudget::GetTotalPayout() const
 {
     CAmount ret = 0;
 
-    for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
-        ret += vecBudgetPayments[i].nAmount;
+    for(unsigned int i = 0; i < m_payments.size(); i++){
+        ret += m_payments[i].nAmount;
     }
 
     return ret;
@@ -1833,12 +1829,12 @@ CAmount CFinalizedBudget::GetTotalPayout() const
 
 std::string CFinalizedBudget::GetProposals() const
 {
-    LOCK(cs);
-    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
+    LOCK(m_cs);
+    assert(boost::is_sorted(m_payments, ComparePayments));
 
     std::string ret = "";
 
-    BOOST_FOREACH(const CTxBudgetPayment& budgetPayment, vecBudgetPayments)
+    BOOST_FOREACH(const CTxBudgetPayment& budgetPayment, m_payments)
     {
         CBudgetProposal* pbudgetProposal = budget.FindProposal(budgetPayment.nProposalHash);
 
@@ -1897,39 +1893,39 @@ std::string CFinalizedBudget::GetStatus() const
 uint256 CFinalizedBudget::GetHash() const
 {
     CHashWriter stream(SER_GETHASH, PROTOCOL_VERSION);
-    stream << nBlockStart;
-    stream << vecBudgetPayments;
+    stream << m_blockStart;
+    stream << m_payments;
 
     return stream.GetHash();
 }
 
 bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral) const
 {
-    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
+    assert(boost::is_sorted(m_payments, ComparePayments));
     //must be the correct block for payment to happen (once a month)
-    if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0) {strError = "Invalid BlockStart"; return false;}
-    if(GetBlockEnd() - nBlockStart > 100) {strError = "Invalid BlockEnd"; return false;}
-    if((int)vecBudgetPayments.size() > 100) {strError = "Invalid budget payments count (too many)"; return false;}
-    if(nBlockStart == 0) {strError = "Invalid BlockStart == 0"; return false;}
+    if(m_blockStart % GetBudgetPaymentCycleBlocks() != 0) {strError = "Invalid BlockStart"; return false;}
+    if(GetBlockEnd() - m_blockStart > 100) {strError = "Invalid BlockEnd"; return false;}
+    if((int)m_payments.size() > 100) {strError = "Invalid budget payments count (too many)"; return false;}
+    if(m_blockStart == 0) {strError = "Invalid BlockStart == 0"; return false;}
 
     //can only pay out 10% of the possible coins (min value of coins)
-    if(GetTotalPayout() > budget.GetTotalBudget(nBlockStart)) {strError = "Invalid Payout (more than max)"; return false;}
+    if(GetTotalPayout() > budget.GetTotalBudget(m_blockStart)) {strError = "Invalid Payout (more than max)"; return false;}
 
     std::string strError2 = "";
-    if(fCheckCollateral && !nFeeTXHash.IsNull()){
+    if(fCheckCollateral && !m_feeTransactionHash.IsNull()){
         int nConf = 0;
         int64_t nTime;
-        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError2, nTime, nConf)){
+        if(!IsBudgetCollateralValid(m_feeTransactionHash, GetHash(), strError2, nTime, nConf)){
             {strError = "Invalid Collateral : " + strError2; return false;}
         }
     }
 
-    if (nFeeTXHash.IsNull())
+    if (m_feeTransactionHash.IsNull())
     {
-        const CMasternode* producer = mnodeman.Find(masternodeSubmittedId);
+        const CMasternode* producer = mnodeman.Find(m_masternodeSubmittedId);
         if (producer == NULL)
         {
-            strError = "Cannot find masternode : " + masternodeSubmittedId.ToString();
+            strError = "Cannot find masternode : " + m_masternodeSubmittedId.ToString();
             return false;
         }
 
@@ -1945,7 +1941,7 @@ bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral) con
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return true;
 
-    if(nBlockStart < pindexPrev->nHeight-100) {strError = "Older than current blockHeight"; return false;}
+    if(m_blockStart < pindexPrev->nHeight-100) {strError = "Older than current blockHeight"; return false;}
 
     return true;
 }
@@ -1958,13 +1954,13 @@ bool CFinalizedBudget::IsValid(bool fCheckCollateral) const
 
 bool CFinalizedBudget::IsSubmittedManually() const
 {
-    return nFeeTXHash != uint256();
+    return m_feeTransactionHash != uint256();
 }
 
 bool CFinalizedBudget::VerifySignature(const CPubKey& pubKey) const
 {
     CPubKey result;
-    if (!result.RecoverCompact(GetHash(), signature))
+    if (!result.RecoverCompact(GetHash(), m_signature))
         return false;
 
     return result.GetID() == pubKey.GetID();
@@ -1975,19 +1971,19 @@ void CFinalizedBudget::ResetAutoChecked()
     if (!IsValid())
         return;
 
-    fAutoChecked = false;
+    m_autoChecked = false;
 }
 
 bool CFinalizedBudget::IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const
 {
-    assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
+    assert(boost::is_sorted(m_payments, ComparePayments));
 
     if(nBlockHeight != GetBlockStart()) {
         LogPrintf("CFinalizedBudget::IsTransactionValid - Invalid block - height: %d start: %d\n", nBlockHeight, GetBlockStart());
         return false;
     }
 
-    BOOST_FOREACH(const CTxBudgetPayment& payment, vecBudgetPayments)
+    BOOST_FOREACH(const CTxBudgetPayment& payment, m_payments)
     {
         bool found = false;
         BOOST_FOREACH(const CTxOut& out, txNew.vout)
@@ -2007,7 +2003,7 @@ bool CFinalizedBudget::IsTransactionValid(const CTransaction& txNew, int nBlockH
 
 const std::vector<CTxBudgetPayment>& CFinalizedBudget::GetBudgetPayments() const
 {
-    return vecBudgetPayments;
+    return m_payments;
 }
 
 void CFinalizedBudget::SubmitVote()
@@ -2033,7 +2029,7 @@ void CFinalizedBudget::SubmitVote()
 
         budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
-        voteSubmittedTime = GetTime();
+        m_voteSubmittedTime = GetTime();
     } else {
         LogPrintf("CFinalizedBudget::SubmitVote : Error submitting vote - %s\n", strError);
     }
@@ -2044,7 +2040,7 @@ void CFinalizedBudget::MarkSynced()
     if (!fValid)
         return;
 
-    for(std::map<uint256,CFinalizedBudgetVote>::iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
+    for(std::map<uint256,CFinalizedBudgetVote>::iterator vote = m_votes.begin(); vote != m_votes.end(); ++vote)
     {
         if(vote->second.fValid)
             vote->second.fSynced = true;
@@ -2061,7 +2057,7 @@ int CFinalizedBudget::Sync(CNode* pfrom, bool fPartial) const
     ++invCount;
 
     //send votes
-    for(std::map<uint256,CFinalizedBudgetVote>::const_iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
+    for(std::map<uint256,CFinalizedBudgetVote>::const_iterator vote = m_votes.begin(); vote != m_votes.end(); ++vote)
     {
         if(!vote->second.fValid)
             continue;
@@ -2081,7 +2077,7 @@ void CFinalizedBudget::ResetSync()
     if (!fValid)
         return;
 
-    for(std::map<uint256,CFinalizedBudgetVote>::iterator vote = mapVotes.begin(); vote != mapVotes.end(); ++vote)
+    for(std::map<uint256,CFinalizedBudgetVote>::iterator vote = m_votes.begin(); vote != m_votes.end(); ++vote)
     {
         vote->second.fSynced = false;
     }
@@ -2092,37 +2088,37 @@ CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast()
 }
 
 CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, uint256 nFeeTXHash)
-    : nBlockStart(nBlockStart)
-    , vecBudgetPayments(vecBudgetPayments)
-    , nFeeTXHash(nFeeTXHash)
+    : m_blockStart(nBlockStart)
+    , m_payments(vecBudgetPayments)
+    , m_feeTransactionHash(nFeeTXHash)
 {
-    boost::sort(this->vecBudgetPayments, CFinalizedBudget::ComparePayments);
+    boost::sort(this->m_payments, CFinalizedBudget::ComparePayments);
 }
 
 CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const CKey& keyMasternode)
-    : nBlockStart(nBlockStart)
-    , vecBudgetPayments(vecBudgetPayments)
-    , masternodeSubmittedId(masternodeId)
+    : m_blockStart(nBlockStart)
+    , m_payments(vecBudgetPayments)
+    , m_masternodeSubmittedId(masternodeId)
 {
-    boost::sort(this->vecBudgetPayments, CFinalizedBudget::ComparePayments);
+    boost::sort(this->m_payments, CFinalizedBudget::ComparePayments);
 
-    if (!keyMasternode.SignCompact(GetHash(), signature))
+    if (!keyMasternode.SignCompact(GetHash(), m_signature))
         throw std::runtime_error("Cannot sign finalized budget: ");
 }
 
 CFinalizedBudget CFinalizedBudgetBroadcast::Budget() const
 {
     if (IsSubmittedManually())
-        return CFinalizedBudget(nBlockStart, vecBudgetPayments, nFeeTXHash);
+        return CFinalizedBudget(m_blockStart, m_payments, m_feeTransactionHash);
     else
-        return CFinalizedBudget(nBlockStart, vecBudgetPayments, masternodeSubmittedId, signature);
+        return CFinalizedBudget(m_blockStart, m_payments, m_masternodeSubmittedId, m_signature);
 }
 
 uint256 CFinalizedBudgetBroadcast::GetHash() const
 {
     CHashWriter stream(SER_GETHASH, PROTOCOL_VERSION);
-    stream << nBlockStart;
-    stream << vecBudgetPayments;
+    stream << m_blockStart;
+    stream << m_payments;
 
     return stream.GetHash();
 }
@@ -2139,32 +2135,32 @@ bool CFinalizedBudgetBroadcast::IsValid(bool fCheckCollateral) const
 
 bool CFinalizedBudgetBroadcast::IsSubmittedManually() const
 {
-    return nFeeTXHash != uint256();
+    return m_feeTransactionHash != uint256();
 }
 
 uint256 CFinalizedBudgetBroadcast::GetFeeTxHash() const
 {
-    return nFeeTXHash;
+    return m_feeTransactionHash;
 }
 
 int CFinalizedBudgetBroadcast::GetBlockStart() const
 {
-    return nBlockStart;
+    return m_blockStart;
 }
 
 const CTxIn& CFinalizedBudgetBroadcast::MasternodeSubmittedId() const
 {
-    return masternodeSubmittedId;
+    return m_masternodeSubmittedId;
 }
 
 const std::vector<CTxBudgetPayment>& CFinalizedBudgetBroadcast::GetBudgetPayments() const
 {
-    return vecBudgetPayments;
+    return m_payments;
 }
 
 void CFinalizedBudgetBroadcast::Relay()
 {
-    assert(boost::is_sorted(vecBudgetPayments, CFinalizedBudget::ComparePayments));
+    assert(boost::is_sorted(m_payments, CFinalizedBudget::ComparePayments));
     CInv inv(MSG_BUDGET_FINALIZED, GetHash());
     RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
 }
