@@ -296,15 +296,21 @@ public:
     CFinalizedBudgetBroadcast(int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
     CFinalizedBudgetBroadcast(int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, const CTxIn& masternodeId, const CKey& keyMasternode);
 
-    CFinalizedBudget Budget() const;
-
     void swap(CFinalizedBudgetBroadcast& first, CFinalizedBudgetBroadcast& second); // nothrow
 
     CFinalizedBudgetBroadcast& operator=(CFinalizedBudgetBroadcast from);
 
     void Relay();
 
+    CFinalizedBudget Budget() const;
+    uint256 GetFeeTxHash() const;
+    int GetBlockStart() const;
+    const std::vector<CTxBudgetPayment>& GetBudgetPayments() const;
+    const CTxIn& MasternodeSubmittedId() const;
     uint256 GetHash() const;
+
+    bool IsValid(std::string& strError, bool fCheckCollateral = true) const;
+    bool IsValid(bool fCheckCollateral = true) const;
 
     ADD_SERIALIZE_METHODS;
 
@@ -578,9 +584,6 @@ public:
         READWRITE(nTime);
         READWRITE(vchSig);
     }
-
-
-
 };
 
 #endif
