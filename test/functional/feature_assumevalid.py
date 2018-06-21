@@ -68,12 +68,12 @@ class AssumeValidTest(BitcoinTestFramework):
     def send_blocks_until_disconnected(self, p2p_conn):
         """Keep sending blocks to the node until we're disconnected."""
         for i in range(len(self.blocks)):
-            if p2p_conn.state != "connected":
+            if not p2p_conn.is_connected:
                 break
             try:
                 p2p_conn.send_message(msg_block(self.blocks[i]))
             except IOError as e:
-                assert str(e) == 'Not connected, no pushbuf'
+                assert not p2p_conn.is_connected
                 break
 
     def assert_blockchain_height(self, node, height):

@@ -118,11 +118,11 @@ class P2PLeakTest(BitcoinTestFramework):
         time.sleep(5)
 
         #This node should have been banned
-        assert no_version_bannode.state != "connected"
+        assert not no_version_bannode.is_connected
 
         # These nodes should have been disconnected
-        assert unsupported_service_bit5_node.state != "connected"
-        assert unsupported_service_bit7_node.state != "connected"
+        assert not unsupported_service_bit5_node.is_connected
+        assert not unsupported_service_bit7_node.is_connected
 
         self.nodes[0].disconnect_p2ps()
 
