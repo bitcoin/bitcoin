@@ -209,7 +209,7 @@ bool CPubKey::IsFullyValid() const {
     if (!IsValid())
         return false;
     if (IsQR())
-        return true;
+    	return true;
     secp256k1_pubkey pubkey;
     return secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size());
 }

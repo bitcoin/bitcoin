@@ -820,7 +820,7 @@ public:
     std::map<uint256, int> mapRequestCount;
 
     std::map<CTxDestination, CAddressBookData> mapAddressBook;
-    std::map<CPubKey, CPubKeySurrogate> mapPubKeySurrogate;
+//    std::map<CPubKey, CPubKeySurrogate> mapPubKeySurrogate;
 
     std::set<COutPoint> setLockedCoins;
 

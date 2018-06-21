@@ -878,14 +878,45 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
         SignatureData sigdata;
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
+        	if (IsQRWitnessEnabled(chainActive.Tip(), Params().GetConsensus())){
+				CTxDestination addr;
+				CPubKey vchPubKey;
+				if (! ExtractDestination(prevPubKey, addr)) {
+					TxInErrorToJSON(txin, vErrors, "Could not extract address when adding surrogates.");
+				} else if (!keystore->GetPubKey(GetKeyForDestination(*keystore, addr), vchPubKey)) {
+					TxInErrorToJSON(txin, vErrors, "Could not extract pubkey when adding surrogates.");
+				} else if (!vchPubKey.IsQR() ) {
+					if (keystore->mapPubKeySurrogate.count(vchPubKey) == 1) {
+						CPubKeySurrogate sur = keystore->mapPubKeySurrogate[vchPubKey];
+						CKey key;
+						if (keystore->GetKey(sur.qrPubKey.GetID(), key)) {
+							std::vector<unsigned char> vchSig;
+							uint256 hash = SignatureHash(prevPubKey, txConst, i, nHashType, amount, SigVersion::BASE);
+							if (key.Sign(hash, vchSig)) {
+								sur.qrSig = vchSig;
+								mtx.vin[i].qrWit.push_back(sur);
+								std::cout<<"Created QR sig: "<<HexStr(mtx.vin[i].qrWit[0].qrSig.begin(), mtx.vin[i].qrWit[0].qrSig.end())<<std::endl;
+								std::cout<<"Used QR pubkey: "<<HexStr(sur.qrPubKey.begin(), sur.qrPubKey.end())<<std::endl;
+							} else {
+								TxInErrorToJSON(txin, vErrors, "Could not sign.");
+							}
+						} else {
+							TxInErrorToJSON(txin, vErrors, "Could not find surrogate private key.");
+						}
+					} else {
+						TxInErrorToJSON(txin, vErrors, "Could not find surrogate in map.");
+					}
+				}
+        	}
+
             ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, nHashType), prevPubKey, sigdata);
         }
-        sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, amount, IsQRWitnessEnabled(chainActive.Tip(), Params().GetConsensus())), sigdata, DataFromTransaction(mtx, i));
+        sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, amount, false), sigdata, DataFromTransaction(mtx, i));
 
         UpdateTransaction(mtx, i, sigdata);
 
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, IsQRWitnessEnabled(chainActive.Tip(), Params().GetConsensus())), &serror)) {
+        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, false), &serror)) {
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
                 TxInErrorToJSON(txin, vErrors, "Unable to sign input, invalid stack size (possibly missing key)");

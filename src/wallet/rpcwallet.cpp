@@ -181,7 +181,7 @@ UniValue mgetrawrevealtx(const JSONRPCRequest& request)
 			"sends all the funds to the new address and also appends special commit data so that"
 			" this can be verified using a new consensus protocol for quantum resistance.\n"
 			"\nArguments:\n"
-			"1. oldkeyid    (hexstring, required) \n"
+			"1. oldpubkey    (hexstring, required) \n"
 			"2. newaddress    (string, required) A new (QR) address.\n"
 			"3. commitTx      (string, required) Not yet known.\n"
 			"4. proof         (string, required) "
@@ -189,8 +189,7 @@ UniValue mgetrawrevealtx(const JSONRPCRequest& request)
 			"hexstring");
 
 	const std::string oldKeyIdStr = request.params[0].get_str();
-	CKeyID oldKeyId;
-	oldKeyId.SetHex(oldKeyIdStr);
+	CKeyID oldKeyId = HexToPubKey(request.params[0].get_str()).GetID();
 
 	CTxDestination dest = DecodeDestination(request.params[1].get_str());
 	if (!IsValidDestination(dest)) {
@@ -256,7 +255,7 @@ UniValue maddexistence(const JSONRPCRequest& request)
 		return NullUniValue;
 	}
 
-	if (request.fHelp || request.params.size() != 4)
+	if (request.fHelp)
 		throw std::runtime_error(
 			"maddexistence \"pk\" \"commitTx\" \"proof\" \n"
 			"\nReturns a raw transaction which consumes all UTXOS associated to oldkeyid, "
@@ -311,7 +310,7 @@ UniValue mlistkeys(const JSONRPCRequest& request)
 	for (const std::pair<CTxDestination, CAddressBookData> p : pwallet->mapAddressBook) {
 		CPubKey vchPubKey;
 		pwallet->GetPubKey(GetKeyForDestination(*pwallet, p.first), vchPubKey);
-		res.pushKV(EncodeDestination(p.first), (vchPubKey.IsQR() ? "" : "non-") + "qr: " + HexStr(vchPubKey.begin(), vchPubKey.end()));
+		res.pushKV(EncodeDestination(p.first), (vchPubKey.IsQR() ? "qr: " : "non-qr: ") + HexStr(vchPubKey.begin(), vchPubKey.end()));
 	}
 	return res;
 }
@@ -4429,6 +4428,7 @@ static const CRPCCommand commands[] =
     //  --------------------- ------------------------          -----------------------         ----------
 	{ "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,            {"hexstring","options","iswitness"} },
 	{ "mine",               "mlistkeys",                        &mlistkeys,                     {} },
+	{ "mine",               "maddexistence",                        &maddexistence,                     {} },
 	{ "mine",               "mlistsurrogates",                  &mlistsurrogates,               {} },
 	{ "mine",               "mgetrawrevealtx",                  &mgetrawrevealtx,               {} },
 	{ "mine",               "mhashpubkeys",                     &mhashpubkeys,                  {} },

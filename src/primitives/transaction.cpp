@@ -45,11 +45,12 @@ std::string CTxIn::ToString() const
 
 std::string CPubKeySurrogate::ToString() const
 {
-    return strprintf("CPubKeySurrogate(old-key: %s, new-key: %s, commitTx-hash: %s, proof: %s)",
-    		pubKey.GetID().GetHex(),
-			qrPubKey.GetID().GetHex(),
-			commitTx->GetHash().GetHex(),
-			proof.substr(0, 24));
+    return strprintf("CPubKeySurrogate(old-key: %s, new-key: %s, commitTx-hash: %s, proof: %s, qrSig: %s)",
+    		HexStr(pubKey.begin(), pubKey.end()),
+			HexStr(qrPubKey.begin(), qrPubKey.end()),
+			((!commitTx) ? "none" : commitTx->GetHash().GetHex()),
+			proof.substr(0, 24),
+		    HexStr(qrSig.begin(), qrSig.end()));
 }
 
 CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)

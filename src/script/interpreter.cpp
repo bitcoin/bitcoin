@@ -12,6 +12,7 @@
 #include <script/script.h>
 #include <uint256.h>
 #include <iostream>
+#include <utilstrencodings.h>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -1290,21 +1291,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 
 bool TransactionSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
-	std::cout<<"Verifying signature with "<< (pubkey.IsQR() ? "" : "non-") <<"quantum resistant public key: "<<pubkey.GetID().GetHex()<<"!"<<(enforceQR ? "(need-qr)" : "(normal)")<<std::endl;
-    if (!pubkey.Verify(sighash, vchSig)) {
-    	return false;
-    }
-	if (enforceQR && !pubkey.IsQR()) {
-		std::cout<<"Need surrogate!"<<std::endl;
-		for (const auto& surrogate : txTo->vin[nIn].qrWit) {
-			if (pubkey == surrogate.pubKey) {
-				std::cout<<"Found surrogate!"<<std::endl;
-				return surrogate.qrPubKey.Verify(sighash, surrogate.qrSig);
-			}
-		}
-		return false;
-	}
-    return true;
+    return pubkey.Verify(sighash, vchSig);
 }
 
 bool TransactionSignatureChecker::CheckSig(const std::vector<unsigned char>& vchSigIn, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const
@@ -1320,10 +1307,33 @@ bool TransactionSignatureChecker::CheckSig(const std::vector<unsigned char>& vch
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
+    uint256 sighash;
+    sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
+
+    std::cout<<"Verifying signature with "<< (pubkey.IsQR() ? "" : "non-")
+            		<<"quantum resistant public key: "
+        			<< HexStr(pubkey.begin(), pubkey.end())
+        			<<"!"<<(enforceQR ? "(need-qr)" : "(normal)")
+        			<<std::endl;
 
     if (!VerifySignature(vchSig, pubkey, sighash))
         return false;
+
+	if (enforceQR && !pubkey.IsQR()) {
+		std::cout<<"Need surrogate!"<<std::endl;
+		for (const auto& surrogate : txTo->vin[nIn].qrWit) {
+			if (pubkey == surrogate.pubKey) {
+				std::cout<<"Found surrogate!"<<std::endl;
+				sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, SigVersion::BASE);
+
+				std::cout<<"Check surrogate qr verification with sig: "<<HexStr(surrogate.qrSig.begin(), surrogate.qrSig.end())<<std::endl;
+				std::cout<<"For pubkey: "<<HexStr(surrogate.qrPubKey.begin(), surrogate.qrPubKey.end())<<std::endl;
+
+				return VerifySignature(surrogate.qrSig, surrogate.qrPubKey, sighash);
+			}
+		}
+		return false;
+	}
 
     return true;
 }
