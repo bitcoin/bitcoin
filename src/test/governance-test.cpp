@@ -621,7 +621,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
 
         CFinalizedBudgetBroadcast budget(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
 
-        BOOST_REQUIRE(budget.Budget().IsValid());
+        BOOST_REQUIRE(budget.IsValid());
 
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream.reserve(1000);
@@ -630,9 +630,9 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         CFinalizedBudgetBroadcast restored;
         stream >> restored;
 
-        BOOST_CHECK_EQUAL(restored.Budget().GetHash(), budget.Budget().GetHash());
-        BOOST_CHECK_EQUAL(restored.Budget().MasternodeSubmittedId(), budget.Budget().MasternodeSubmittedId());
-        BOOST_CHECK_EQUAL(restored.Budget().GetFeeTxHash(), budget.Budget().GetFeeTxHash());
+        BOOST_CHECK_EQUAL(restored.GetHash(), budget.GetHash());
+        BOOST_CHECK_EQUAL(restored.MasternodeSubmittedId(), budget.MasternodeSubmittedId());
+        BOOST_CHECK_EQUAL(restored.GetFeeTxHash(), budget.GetFeeTxHash());
         BOOST_CHECK(restored.Budget().VerifySignature(mn1.pubkey2));
     }
 
@@ -646,7 +646,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         BOOST_REQUIRE(keyPairMn.GetPubKey() == mn1.pubkey2);
         CFinalizedBudgetBroadcast fb(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
 
-        BOOST_REQUIRE(fb.Budget().IsValid());
+        BOOST_REQUIRE(fb.IsValid());
 
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream.reserve(1000);
@@ -657,7 +657,7 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
         budget.ProcessMessage(&dummy, "fbs", stream);
 
         BOOST_REQUIRE(!budget.GetFinalizedBudgets().empty());
-        BOOST_CHECK_EQUAL(budget.GetFinalizedBudgets().front()->GetHash(), fb.Budget().GetHash());
+        BOOST_CHECK_EQUAL(budget.GetFinalizedBudgets().front()->GetHash(), fb.GetHash());
     }
 
 BOOST_AUTO_TEST_SUITE_END()
