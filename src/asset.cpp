@@ -1347,7 +1347,7 @@ UniValue listassets(const JSONRPCRequest& request) {
 	if (request.fHelp || 3 < params.size())
 		throw runtime_error("listassets [count] [from] [{options}]\n"
 			"scan through all assets.\n"
-			"[count]          (numeric, optional, unbounedd=0, default=10) The number of results to return, 0 to return all.\n"
+			"[count]          (numeric, optional, unbounded=0, default=10) The number of results to return, 0 to return all.\n"
 			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
 			"[options]        (object, optional) A json object with options to filter results\n"
 			"    {\n"

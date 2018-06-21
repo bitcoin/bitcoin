@@ -2843,7 +2843,7 @@ UniValue listaliases(const JSONRPCRequest& request) {
 	if (request.fHelp || 3 < params.size())
 		throw runtime_error("listaliases [count] [from] [{options}]]\n"
 			"scan through all aliases.\n"
-			"[count]          (numeric, optional, unbounded=0, default=10) The number of results to return, 0 returns all results.\n"
+			"[count]          (numeric, optional, unbounded=0, default=10) The number of results to return, 0 returns all.\n"
 			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
 			"[options]        (object, optional) A json object with options to filter results\n"
 			"    {\n"
