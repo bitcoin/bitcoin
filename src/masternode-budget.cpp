@@ -1887,6 +1887,15 @@ std::string CFinalizedBudget::GetStatus() const
     return retBadHashes + retBadPayeeOrAmount;
 }
 
+uint256 CFinalizedBudget::GetHash() const
+{
+    CHashWriter stream(SER_GETHASH, PROTOCOL_VERSION);
+    stream << nBlockStart;
+    stream << vecBudgetPayments;
+
+    return stream.GetHash();
+}
+
 bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral) const
 {
     assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
@@ -2097,6 +2106,15 @@ CFinalizedBudget CFinalizedBudgetBroadcast::Budget() const
         return CFinalizedBudget(nBlockStart, vecBudgetPayments, nFeeTXHash);
     else
         return CFinalizedBudget(nBlockStart, vecBudgetPayments, masternodeSubmittedId, signature);
+}
+
+uint256 CFinalizedBudgetBroadcast::GetHash() const
+{
+    CHashWriter stream(SER_GETHASH, PROTOCOL_VERSION);
+    stream << nBlockStart;
+    stream << vecBudgetPayments;
+
+    return stream.GetHash();
 }
 
 void CFinalizedBudgetBroadcast::swap(CFinalizedBudgetBroadcast& first, CFinalizedBudgetBroadcast& second) // nothrow

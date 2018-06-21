@@ -277,20 +277,14 @@ public:
     //checks the hashes to make sure we know about them
     std::string GetStatus() const;
 
-    uint256 GetHash() const{
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << nBlockStart;
-        ss << vecBudgetPayments;
-
-        uint256 h1 = ss.GetHash();
-        return h1;
-    }
+    uint256 GetHash() const;
 
     ADD_SERIALIZE_METHODS;
 
     //for saving to the serialized db
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(LIMITED_STRING(strBudgetName, 20));
         READWRITE(nFeeTXHash);
         READWRITE(nTime);
@@ -320,23 +314,13 @@ public:
 
     void Relay();
 
-    uint256 GetHash() const
-    {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << nBlockStart;
-        ss << vecBudgetPayments;
-
-        uint256 h1 = ss.GetHash();
-        return h1;
-    }
+    uint256 GetHash() const;
 
     ADD_SERIALIZE_METHODS;
 
-    //for propagating messages
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
-        //for syncing with other clients
         std::string dummy = ""; // for backwards compatibility
         READWRITE(LIMITED_STRING(dummy, 20));
 
