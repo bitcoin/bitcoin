@@ -896,7 +896,9 @@ bool CSMSG::Start(std::shared_ptr<CWallet> pwalletIn, bool fDontStart, bool fSca
     if (pwallet)
         return error("%s: pwallet is already set.", __func__);
     pwallet = pwalletIn;
+#ifdef ENABLE_WALLET
     m_handler_unload = interfaces::MakeHandler(pwallet->NotifyUnload.connect(boost::bind(&NotifyUnload, this)));
+#endif
 
     fSecMsgEnabled = true;
     g_connman->SetLocalServices(ServiceFlags(g_connman->GetLocalServices() | NODE_SMSG));
@@ -985,7 +987,9 @@ bool CSMSG::Shutdown()
         secp256k1_context_destroy(secp256k1_context_smsg);
     secp256k1_context_smsg = nullptr;
 
+#ifdef ENABLE_WALLET
     m_handler_unload->disconnect();
+#endif
     pwallet.reset();
     return true;
 };

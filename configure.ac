@@ -1041,6 +1041,12 @@ case $host in
     ;;
 esac
 
+if test "x$enable_usbdevice" = "xyes"; then
+  if test "x$enable_wallet" != "xyes"; then
+    AC_MSG_ERROR("enable_usbdevice must be used with enable_wallet.")
+  fi
+fi
+
 if test x$use_pkgconfig = xyes; then
   : dnl
   m4_ifdef(

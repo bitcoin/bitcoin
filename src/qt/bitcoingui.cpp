@@ -123,7 +123,6 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     modalOverlay(0),
     prevBlocks(0),
     spinnerFrame(0),
-    m_wallet_selector_label(nullptr),
     platformStyle(_platformStyle)
 {
     QSettings settings;
