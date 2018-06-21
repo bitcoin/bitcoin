@@ -296,10 +296,6 @@ public:
     CFinalizedBudgetBroadcast(int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
     CFinalizedBudgetBroadcast(int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, const CTxIn& masternodeId, const CKey& keyMasternode);
 
-    void swap(CFinalizedBudgetBroadcast& first, CFinalizedBudgetBroadcast& second); // nothrow
-
-    CFinalizedBudgetBroadcast& operator=(CFinalizedBudgetBroadcast from);
-
     void Relay();
 
     CFinalizedBudget Budget() const;

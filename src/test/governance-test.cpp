@@ -591,12 +591,50 @@ BOOST_FIXTURE_TEST_SUITE(FinalizedBudget, FinalizedBudgetFixture)
 
         CFinalizedBudget budget(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
 
+        // Call & Check
         CFinalizedBudget copied = budget;
 
         BOOST_CHECK_EQUAL(budget.GetHash(), copied.GetHash());
         BOOST_CHECK_EQUAL(budget.GetFeeTxHash(), copied.GetFeeTxHash());
         BOOST_CHECK_EQUAL(budget.MasternodeSubmittedId(), copied.MasternodeSubmittedId());
         BOOST_CHECK(copied.VerifySignature(mn1.pubkey2));
+    }
+
+    BOOST_AUTO_TEST_CASE(CopyFinalizedBudgetBroadcast)
+    {
+        // Set Up
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+        txBudgetPayments.push_back(GetPayment(proposalB));
+
+        CFinalizedBudgetBroadcast budget(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+
+        // Call & Check
+        CFinalizedBudgetBroadcast copied = budget;
+
+        BOOST_CHECK_EQUAL(budget.GetHash(), copied.GetHash());
+        BOOST_CHECK_EQUAL(budget.GetFeeTxHash(), copied.GetFeeTxHash());
+        BOOST_CHECK_EQUAL(budget.MasternodeSubmittedId(), copied.MasternodeSubmittedId());
+        BOOST_CHECK(copied.Budget().VerifySignature(mn1.pubkey2));
+    }
+
+    BOOST_AUTO_TEST_CASE(CopyAssignFinalizedBudgetBroadcast)
+    {
+        // Set Up
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+        txBudgetPayments.push_back(GetPayment(proposalB));
+
+        CFinalizedBudgetBroadcast budget(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        CFinalizedBudgetBroadcast copied;
+
+        // Call & Check
+        copied = budget;
+
+        BOOST_CHECK_EQUAL(budget.GetHash(), copied.GetHash());
+        BOOST_CHECK_EQUAL(budget.GetFeeTxHash(), copied.GetFeeTxHash());
+        BOOST_CHECK_EQUAL(budget.MasternodeSubmittedId(), copied.MasternodeSubmittedId());
+        BOOST_CHECK(copied.Budget().VerifySignature(mn1.pubkey2));
     }
 
     BOOST_AUTO_TEST_CASE(FinalizedBudgetCanBeAdded)

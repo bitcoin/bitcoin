@@ -1648,18 +1648,18 @@ CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetP
 }
 
 CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
+    : strBudgetName(other.strBudgetName)
+    , nBlockStart(other.nBlockStart)
+    , vecBudgetPayments(other.vecBudgetPayments)
+    , mapVotes(other.mapVotes)
+    , nFeeTXHash(other.nFeeTXHash)
+    , signature(other.signature)
+    , masternodeSubmittedId(other.masternodeSubmittedId)
+    , fValid(true)
+    , fAutoChecked(false)
+    , voteSubmittedTime(boost::none)
 {
     assert(boost::is_sorted(vecBudgetPayments, ComparePayments));
-    strBudgetName = other.strBudgetName;
-    nBlockStart = other.nBlockStart;
-    vecBudgetPayments = other.vecBudgetPayments;
-    mapVotes = other.mapVotes;
-    nFeeTXHash = other.nFeeTXHash;
-    signature = other.signature;
-    masternodeSubmittedId = other.masternodeSubmittedId;
-    fValid = true;
-    fAutoChecked = false;
-    voteSubmittedTime = boost::none;
 }
 
 void CFinalizedBudget::DiscontinueOlderVotes(const CFinalizedBudgetVote& newerVote)
@@ -2132,18 +2132,6 @@ bool CFinalizedBudgetBroadcast::IsValid(bool fCheckCollateral) const
     return Budget().IsValid(fCheckCollateral);
 }
 
-void CFinalizedBudgetBroadcast::swap(CFinalizedBudgetBroadcast& first, CFinalizedBudgetBroadcast& second) // nothrow
-{
-    // enable ADL (not necessary in our case, but good practice)
-    using std::swap;
-
-    // by swapping the members of two classes,
-    // the two classes are effectively swapped
-    swap(first.nBlockStart, second.nBlockStart);
-    first.vecBudgetPayments.swap(second.vecBudgetPayments);
-    swap(first.nFeeTXHash, second.nFeeTXHash);
-}
-
 uint256 CFinalizedBudgetBroadcast::GetFeeTxHash() const
 {
     return nFeeTXHash;
@@ -2162,12 +2150,6 @@ const CTxIn& CFinalizedBudgetBroadcast::MasternodeSubmittedId() const
 const std::vector<CTxBudgetPayment>& CFinalizedBudgetBroadcast::GetBudgetPayments() const
 {
     return vecBudgetPayments;
-}
-
-CFinalizedBudgetBroadcast& CFinalizedBudgetBroadcast::operator=(CFinalizedBudgetBroadcast from)
-{
-    swap(*this, from);
-    return *this;
 }
 
 void CFinalizedBudgetBroadcast::Relay()
