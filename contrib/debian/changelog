@@ -1,3 +1,9 @@
+peercoin (0.6.4-1) stable; urgency=low
+
+  * New upstream release, minor fixes in the manpages.
+
+ --  <peerchemist@protonmail.ch>  Wed, 20 Jun 2018 10:35:20 +0000
+
 peercoin (0.6.3-1) stable; urgency=low
 
   * New upstream release, improved desktop integration.
