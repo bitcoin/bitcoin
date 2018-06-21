@@ -148,15 +148,15 @@ ProposalList::ProposalList(const PlatformStyle *platformStyle, QWidget *parent) 
     actionBar->setContentsMargins(0,20,0,20);
 
     QPushButton *voteYesButton = new QPushButton(tr("Vote Yes"), this);
-    voteYesButton->setToolTip(tr("Yote Yes on the selected proposal"));
+    voteYesButton->setToolTip(tr("Vote Yes on the selected proposal"));
     actionBar->addWidget(voteYesButton);
 
     QPushButton *voteAbstainButton = new QPushButton(tr("Vote Abstain"), this);
-    voteAbstainButton->setToolTip(tr("Yote Abstain on the selected proposal"));
+    voteAbstainButton->setToolTip(tr("Vote Abstain on the selected proposal"));
     actionBar->addWidget(voteAbstainButton);
 
     QPushButton *voteNoButton = new QPushButton(tr("Vote No"), this);
-    voteNoButton->setToolTip(tr("Yote No on the selected proposal"));
+    voteNoButton->setToolTip(tr("Vote No on the selected proposal"));
     actionBar->addWidget(voteNoButton);
 
     secondsLabel = new QLabel();
