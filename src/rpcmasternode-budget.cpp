@@ -694,17 +694,18 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         BOOST_FOREACH(CFinalizedBudget* finalizedBudget, winningFbs)
         {
             Object bObj;
-            bObj.push_back(Pair("FeeTX",  finalizedBudget->GetFeeTxHash().ToString()));
+            bObj.push_back(Pair("IsSubmittedManually",  finalizedBudget->IsSubmittedManually()));
             bObj.push_back(Pair("Hash",  finalizedBudget->GetHash().ToString()));
             bObj.push_back(Pair("BlockStart",  (int64_t)finalizedBudget->GetBlockStart()));
             bObj.push_back(Pair("BlockEnd",    (int64_t)finalizedBudget->GetBlockStart())); // Budgets are paid in a single block !
             bObj.push_back(Pair("Proposals",  finalizedBudget->GetProposals()));
             bObj.push_back(Pair("VoteCount",  (int64_t)finalizedBudget->GetVoteCount()));
             bObj.push_back(Pair("Status",  finalizedBudget->GetStatus()));
-
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  finalizedBudget->IsValid(strError)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
+            if (finalizedBudget->IsSubmittedManually())
+                bObj.push_back(Pair("FeeTX",  finalizedBudget->GetFeeTxHash().ToString()));
 
             resultObj.push_back(Pair(finalizedBudget->GetHash().ToString(), bObj));
         }

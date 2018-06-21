@@ -936,7 +936,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand,
         std::string strError = "";
         int nConf = 0;
         int64_t nTime = 0;
-        if(finalizedBudgetBroadcast.GetFeeTxHash() != uint256() && !IsBudgetCollateralValid(finalizedBudgetBroadcast.GetFeeTxHash(), finalizedBudgetBroadcast.GetHash(), strError, nTime, nConf)){
+        if(finalizedBudgetBroadcast.IsSubmittedManually() && !IsBudgetCollateralValid(finalizedBudgetBroadcast.GetFeeTxHash(), finalizedBudgetBroadcast.GetHash(), strError, nTime, nConf)){
             LogPrintf("Finalized Budget FeeTX is not valid - %s - %s\n", finalizedBudgetBroadcast.GetFeeTxHash().ToString(), strError);
 
             if(nConf >= 1) vecImmatureFinalizedBudgets.push_back(finalizedBudgetBroadcast);
@@ -945,7 +945,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
 
-        if (finalizedBudgetBroadcast.GetFeeTxHash() == uint256())
+        if (!finalizedBudgetBroadcast.IsSubmittedManually())
         {
             const CMasternode* producer = mnodeman.Find(finalizedBudgetBroadcast.MasternodeSubmittedId());
             if (producer == NULL)
@@ -1956,6 +1956,11 @@ bool CFinalizedBudget::IsValid(bool fCheckCollateral) const
     return IsValid(dummy, fCheckCollateral);
 }
 
+bool CFinalizedBudget::IsSubmittedManually() const
+{
+    return nFeeTXHash != uint256();
+}
+
 bool CFinalizedBudget::VerifySignature(const CPubKey& pubKey) const
 {
     CPubKey result;
@@ -2107,7 +2112,7 @@ CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(int nBlockStart, const std:
 
 CFinalizedBudget CFinalizedBudgetBroadcast::Budget() const
 {
-    if (nFeeTXHash != uint256())
+    if (IsSubmittedManually())
         return CFinalizedBudget(nBlockStart, vecBudgetPayments, nFeeTXHash);
     else
         return CFinalizedBudget(nBlockStart, vecBudgetPayments, masternodeSubmittedId, signature);
@@ -2130,6 +2135,11 @@ bool CFinalizedBudgetBroadcast::IsValid(std::string& strError, bool fCheckCollat
 bool CFinalizedBudgetBroadcast::IsValid(bool fCheckCollateral) const
 {
     return Budget().IsValid(fCheckCollateral);
+}
+
+bool CFinalizedBudgetBroadcast::IsSubmittedManually() const
+{
+    return nFeeTXHash != uint256();
 }
 
 uint256 CFinalizedBudgetBroadcast::GetFeeTxHash() const

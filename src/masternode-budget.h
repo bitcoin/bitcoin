@@ -236,7 +236,7 @@ public:
 
     bool IsVoteSubmitted() const { return voteSubmittedTime.is_initialized(); }
     void ResetAutoChecked();
-
+    bool IsSubmittedManually() const;
 
     uint256 GetFeeTxHash() const { return nFeeTXHash; }
     const std::map<uint256, CFinalizedBudgetVote>& GetVotes() const { return mapVotes; }
@@ -308,6 +308,8 @@ public:
     bool IsValid(std::string& strError, bool fCheckCollateral = true) const;
     bool IsValid(bool fCheckCollateral = true) const;
 
+    bool IsSubmittedManually() const;
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -319,9 +321,8 @@ public:
         READWRITE(nBlockStart);
         READWRITE(vecBudgetPayments);
 
-
         READWRITE(nFeeTXHash);
-        if (nFeeTXHash == uint256())
+        if (!IsSubmittedManually())
         {
             READWRITE(signature);
             READWRITE(masternodeSubmittedId);
