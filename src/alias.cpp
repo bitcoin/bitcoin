@@ -2035,6 +2035,13 @@ string GenerateSyscoinGuid()
 }
 UniValue prunesyscoinservices(const JSONRPCRequest& request)
 {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() > 0)
+		throw runtime_error(
+			"prunesyscoinservices\n"
+			"\nPrune expired Syscoin service data from the internal database.\n"
+			+ HelpExampleCli("prunesyscoinservices", "")
+		);
 	int servicesCleaned = 0;
 	CleanupSyscoinServiceDatabases(servicesCleaned);
 	UniValue res(UniValue::VOBJ);
