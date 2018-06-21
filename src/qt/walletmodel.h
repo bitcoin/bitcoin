@@ -224,6 +224,7 @@ public:
 
 private:
     std::unique_ptr<interfaces::Wallet> m_wallet;
+    std::unique_ptr<interfaces::Handler> m_handler_unload;
     std::unique_ptr<interfaces::Handler> m_handler_status_changed;
     std::unique_ptr<interfaces::Handler> m_handler_address_book_changed;
     std::unique_ptr<interfaces::Handler> m_handler_transaction_changed;
@@ -279,6 +280,9 @@ Q_SIGNALS:
 
     // Watch-only address added
     void notifyWatchonlyChanged(bool fHaveWatchonly);
+
+    // Signal that wallet is about to be removed
+    void unload();
 
     // Signal that reserved balance in wallet changed
     void notifyReservedBalanceChanged(CAmount nValue);

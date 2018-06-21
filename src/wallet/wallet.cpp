@@ -35,6 +35,10 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+
+#include <wallet/hdwallet.h>
+
+
 static CCriticalSection cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
 
@@ -77,6 +81,15 @@ std::shared_ptr<CWallet> GetWallet(const std::string& name)
         if (wallet->GetName() == name) return wallet;
     }
     return nullptr;
+}
+
+// Custom deleter for shared_ptr<CWallet>.
+static void ReleaseWallet(CWallet* wallet)
+{
+    LogPrintf("Releasing wallet %s\n", wallet->GetName());
+    wallet->BlockUntilSyncedToCurrentChain();
+    wallet->Flush();
+    delete wallet;
 }
 
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
@@ -1330,7 +1343,7 @@ void CWallet::BlockUntilSyncedToCurrentChain() {
         LOCK(cs_main);
         const CBlockIndex* initialChainTip = chainActive.Tip();
 
-        if (m_last_block_processed->GetAncestor(initialChainTip->nHeight) == initialChainTip) {
+        if (m_last_block_processed && m_last_block_processed->GetAncestor(initialChainTip->nHeight) == initialChainTip) {
             return;
         }
     }
@@ -4259,8 +4272,10 @@ bool CWallet::Verify(std::string wallet_file, bool salvage_wallet, std::string& 
     return WalletBatch::VerifyDatabaseFile(wallet_path, warning_string, error_string);
 }
 
-std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name, const fs::path& path, CWallet *walletInstanceIn)
+std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name_, const fs::path& path)
 {
+    std::string name = name_;
+    if (fParticlMode && name == "") name = "wallet.dat";
     const std::string& walletFile = name;
 
     // needed to restore wallet transaction meta data after -zapwallettxes
@@ -4281,17 +4296,14 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name, 
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
 
-    std::shared_ptr<CWallet> walletInstance;
-    if (!walletInstanceIn)
-    {
-        // Make a temporary wallet unique pointer so memory doesn't get leaked if
-        // wallet creation fails.
-        walletInstance = std::make_shared<CWallet>(name, WalletDatabase::Create(path));
-    } else
-    {
-        walletInstance.reset(walletInstanceIn);
-    }
-
+    std::shared_ptr<CWallet> walletInstance(fParticlMode
+        ? std::shared_ptr<CWallet>(new CHDWallet(name, WalletDatabase::Create(path)), ReleaseWallet)
+        : std::shared_ptr<CWallet>(new CWallet(name, WalletDatabase::Create(path)), ReleaseWallet));
+    /*
+    (
+        ? (new CHDWallet(name, WalletDatabase::Create(path)), ReleaseWallet)
+        : ());
+    */
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DBErrors::LOAD_OK)
     {
@@ -4320,8 +4332,6 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name, 
         }
     }
 
-    uiInterface.LoadWallet(walletInstance);
-
     int prev_version = walletInstance->nWalletVersion;
     if (gArgs.GetBoolArg("-upgradewallet", fFirstRun))
     {
@@ -4343,7 +4353,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name, 
     }
 
     // Upgrade to HD if explicit upgrade
-    if (gArgs.GetBoolArg("-upgradewallet", false) && !walletInstanceIn) {
+    if (gArgs.GetBoolArg("-upgradewallet", false) && !fParticlMode) {
         LOCK(walletInstance->cs_wallet);
 
         // Do not upgrade versions to any version between HD_SPLIT and FEATURE_PRE_SPLIT_KEYPOOL unless already supporting HD_SPLIT
@@ -4385,7 +4395,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name, 
         }
     }
 
-    if (fFirstRun && !walletInstanceIn)
+    if (fFirstRun && !fParticlMode)
     {
         // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
         if (!gArgs.GetBoolArg("-usehd", true)) {
@@ -4571,6 +4581,8 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name, 
             }
         }
     }
+
+    uiInterface.LoadWallet(walletInstance);
 
     // Register with the validation interface. It's ok to do this after rescan since we're still holding cs_main.
     RegisterValidationInterface(walletInstance.get());

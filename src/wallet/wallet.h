@@ -1176,6 +1176,9 @@ public:
     //! Flush wallet (bitdb flush)
     void Flush(bool shutdown=false);
 
+    /** Wallet is about to be unloaded */
+    boost::signals2::signal<void ()> NotifyUnload;
+
     /**
      * Address book entry changed.
      * @note called with lock cs_wallet held.
@@ -1216,7 +1219,7 @@ public:
     static bool Verify(std::string wallet_file, bool salvage_wallet, std::string& error_string, std::string& warning_string);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static std::shared_ptr<CWallet> CreateWalletFromFile(const std::string& name, const fs::path& path, CWallet *walletInstanceIn=nullptr);
+    static std::shared_ptr<CWallet> CreateWalletFromFile(const std::string& name, const fs::path& path);
 
     /**
      * Wallet post-init setup

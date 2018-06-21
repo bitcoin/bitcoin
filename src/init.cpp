@@ -1930,7 +1930,7 @@ bool AppInitMain()
     if (fParticlMode) // SMSG breaks functional tests with services flag, see version msg
     {
         auto vpwallets = GetWallets();
-        smsgModule.Start(vpwallets.size() > 0 ? vpwallets[0].get() : nullptr, !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
+        smsgModule.Start(vpwallets.size() > 0 ? vpwallets[0] : nullptr, !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
     };
 #else
     if (fParticlMode)

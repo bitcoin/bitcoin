@@ -252,24 +252,13 @@ bool WalletInit::Open() const
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        CHDWallet *partWallet = nullptr;
-        std::unique_ptr<CHDWallet> temp_wallet;
-        if (fParticlMode)
-        {
-            std::string walletName = walletFile == "" ? "wallet.dat" : walletFile;
-            temp_wallet = MakeUnique<CHDWallet>(walletName, WalletDatabase::Create(fs::absolute(walletFile, GetWalletDir())));
-            partWallet = temp_wallet.get();
-        };
-        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()), partWallet);
+        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()));
         if (!pwallet) {
             return false;
         }
-
-        if (partWallet && !partWallet->Initialise())
+        if (fParticlMode && !((CHDWallet*)pwallet.get())->Initialise())
             return false;
-
         AddWallet(pwallet);
-        temp_wallet.release();
     }
 
     return true;

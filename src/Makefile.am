@@ -492,6 +492,7 @@ libparticl_smsg_a_SOURCES = \
   lz4/lz4.c \
   xxhash/xxhash.h \
   xxhash/xxhash.c \
+  interfaces/handler.cpp \
   smsg/crypter.cpp \
   smsg/keystore.h \
   smsg/keystore.cpp \

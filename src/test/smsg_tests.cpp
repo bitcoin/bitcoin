@@ -38,24 +38,23 @@ BOOST_AUTO_TEST_CASE(smsg_test)
     smsg::fSecMsgEnabled = true;
     int rv = 0;
     const int nKeys = 12;
-    CWallet keystore("dummy", WalletDatabase::CreateDummy());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>("dummy", WalletDatabase::CreateDummy());
     std::vector<CKey> keyOwn(nKeys);
     for (int i = 0; i < nKeys; i++)
     {
         InsecureNewKey(keyOwn[i], true);
-        LOCK(keystore.cs_wallet);
-        keystore.AddKey(keyOwn[i]);
+        LOCK(wallet->cs_wallet);
+        wallet->AddKey(keyOwn[i]);
     };
 
     std::vector<CKey> keyRemote(nKeys);
     for (int i = 0; i < nKeys; i++)
     {
         InsecureNewKey(keyRemote[i], true);
-        LOCK(keystore.cs_wallet);
-        keystore.AddKey(keyRemote[i]); // need pubkey
+        LOCK(wallet->cs_wallet);
+        wallet->AddKey(keyRemote[i]); // need pubkey
     };
-
-    BOOST_CHECK(true == smsgModule.Start(&keystore, false, false));
+    BOOST_CHECK(true == smsgModule.Start(wallet, false, false));
 
     CKeyID idNull;
     BOOST_CHECK(idNull.IsNull());

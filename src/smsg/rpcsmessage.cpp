@@ -43,7 +43,7 @@ static UniValue smsgenable(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
 
-    CWallet *pwallet = nullptr;
+    std::shared_ptr<CWallet> pwallet;
     std::string walletName = "none";
 #ifdef ENABLE_WALLET
     auto vpwallets = GetWallets();
@@ -56,7 +56,7 @@ static UniValue smsgenable(const JSONRPCRequest &request)
         {
             if (pw->GetName() != sFindWallet)
                 continue;
-            pwallet = pw.get();
+            pwallet = pw;
             break;
         };
         if (!pwallet)
@@ -64,7 +64,7 @@ static UniValue smsgenable(const JSONRPCRequest &request)
     } else
     {
         if (vpwallets.size() > 0)
-            pwallet = vpwallets[0].get();
+            pwallet = vpwallets[0];
     };
     if (pwallet)
         walletName = pwallet->GetName();

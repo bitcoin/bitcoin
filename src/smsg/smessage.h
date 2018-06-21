@@ -12,6 +12,7 @@
 #include <ui_interface.h>
 #include <lz4/lz4.h>
 #include <smsg/keystore.h>
+#include <interfaces/handler.h>
 
 
 class CWallet;
@@ -381,10 +382,10 @@ public:
     int ReadIni();
     int WriteIni();
 
-    bool Start(CWallet *pwalletIn, bool fDontStart, bool fScanChain);
+    bool Start(std::shared_ptr<CWallet> pwalletIn, bool fDontStart, bool fScanChain);
     bool Shutdown();
 
-    bool Enable(CWallet *pwallet);
+    bool Enable(std::shared_ptr<CWallet> pwallet);
     bool Disable();
 
     int ReceiveData(CNode *pfrom, const std::string &strCommand, CDataStream &vRecv);
@@ -457,7 +458,8 @@ public:
     std::set<SecMsgPurged> setPurged;
     std::set<int64_t> setPurgedTimestamps;
     SecMsgOptions options;
-    CWallet *pwallet = nullptr;
+    std::shared_ptr<CWallet> pwallet;
+    std::unique_ptr<interfaces::Handler> m_handler_unload;
 
     int64_t nLastProcessedPurged = 0;
 };
