@@ -2164,6 +2164,7 @@ UniValue aliasinfo(const JSONRPCRequest& request) {
 		throw runtime_error("aliasinfo <aliasname>\n"
 				"Show values of an alias.\n");
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
+	ToLowerCase(vchAlias);
 	CAliasIndex txPos;
 	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5517 - " + _("Failed to read from alias DB"));
@@ -2872,4 +2873,16 @@ UniValue scanaliases(const JSONRPCRequest& request) {
 	if (!paliasdb->ScanAliases(count, from, options, oRes))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5522 - " + _("Scan failed"));
 	return oRes;
+}
+
+void ToLowerCase(std::vector<unsigned char>& vchValue) {
+    std::string strValue;
+    std::vector<unsigned char>::const_iterator vi = vchValue.begin();
+    while (vi != vchValue.end()) 
+    {
+        strValue += std::tolower(*vi);
+        vi++;
+    }
+    std::vector<unsigned char> vchNewValue(strValue.begin(), strValue.end());
+    std::swap(vchValue, vchNewValue);
 }
