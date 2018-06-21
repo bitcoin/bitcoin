@@ -220,17 +220,7 @@ public:
     bool fValid;
     int64_t nTime;
 
-    static bool ComparePayments(const CTxBudgetPayment& a, const CTxBudgetPayment& b)
-    {
-        if (a.nAmount != b.nAmount)
-            return a.nAmount > b.nAmount;
-        else if (a.nProposalHash != b.nProposalHash)
-            return a.nProposalHash < b.nProposalHash;
-        else if (a.payee != b.payee)
-            return a.payee < b.payee;
-        else
-            return false;
-    }
+    static bool ComparePayments(const CTxBudgetPayment& a, const CTxBudgetPayment& b);
 
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
