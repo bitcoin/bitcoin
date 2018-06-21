@@ -2821,8 +2821,9 @@ bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOpt
 					pcursor->Next();
 					continue;
 				}
-				index++;
-				if (from > 0 && index <= from) {
+				index += 1;
+				if (index <= from) {
+					pcursor->Next();
 					continue;
 				}
 				oRes.push_back(oAlias);
@@ -2837,10 +2838,10 @@ bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOpt
 	}
 	return true;
 }
-UniValue scanaliases(const JSONRPCRequest& request) {
+UniValue listaliases(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 < params.size())
-		throw runtime_error("scanaliases [count] [from] [options]\n"
+		throw runtime_error("listaliases [count] [from] [{options}]]\n"
 			"scan through all aliases.\n"
 			"[count]          (numeric, optional, unbounded=0, default=10) The number of results to return, 0 returns all results.\n"
 			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
@@ -2850,10 +2851,10 @@ UniValue scanaliases(const JSONRPCRequest& request) {
 			"      \"alias\":alias				(string) Alias name to filter.\n"
 			"      \"startblock\":block   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
 			"    }\n"
-			+ HelpExampleCli("scanaliases", "0")
-			+ HelpExampleCli("scanaliases", "10 10")
-			+ HelpExampleCli("scanaliases", "10 0 '{\"alias\":\"find-this-alias\"}'")
-			+ HelpExampleCli("scanaliases", "10 0 '{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"startblock\":0}'")
+			+ HelpExampleCli("listaliases", "0")
+			+ HelpExampleCli("listaliases", "10 10")
+			+ HelpExampleCli("listaliases", "0 0 '{\"alias\":\"find-this-alias\"}'")
+			+ HelpExampleCli("listaliases", "0 0 '{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"startblock\":0}'")
 		);
 	UniValue options;
 	int count = 10;
