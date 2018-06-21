@@ -26,6 +26,7 @@
         <file alias="eye_plus">res/icons/drkblue/eye_plus.png</file>
         <file alias="options">res/icons/drkblue/configure.png</file>
         <file alias="receiving_addresses">res/icons/drkblue/receive.png</file>
+        <file alias="proposal">res/icons/drkblue/proposal.png</file>
         <file alias="editpaste">res/icons/drkblue/editpaste.png</file>
         <file alias="editcopy">res/icons/drkblue/editcopy.png</file>
         <file alias="add">res/icons/drkblue/add.png</file>
@@ -82,6 +83,7 @@
         <file alias="eye_plus">res/icons/crownium/eye_plus.png</file>
         <file alias="options">res/icons/crownium/configure.png</file>
         <file alias="receiving_addresses">res/icons/crownium/receive.png</file>
+        <file alias="proposal">res/icons/crownium/proposal.png</file>
         <file alias="editpaste">res/icons/crownium/editpaste.png</file>
         <file alias="editcopy">res/icons/crownium/editcopy.png</file>
         <file alias="add">res/icons/crownium/add.png</file>
@@ -138,6 +140,7 @@
         <file alias="eye_plus">res/icons/light/eye_plus.png</file>
         <file alias="options">res/icons/light/configure.png</file>
         <file alias="receiving_addresses">res/icons/light/receive.png</file>
+        <file alias="proposal">res/icons/light/proposal.png</file>
         <file alias="editpaste">res/icons/light/editpaste.png</file>
         <file alias="editcopy">res/icons/light/editcopy.png</file>
         <file alias="add">res/icons/light/add.png</file>
@@ -194,6 +197,7 @@
         <file alias="eye_plus">res/icons/trad/eye_plus.png</file>
         <file alias="options">res/icons/trad/configure.png</file>
         <file alias="receiving_addresses">res/icons/trad/receive.png</file>
+        <file alias="proposal">res/icons/trad/proposal.png</file>
         <file alias="editpaste">res/icons/trad/editpaste.png</file>
         <file alias="editcopy">res/icons/trad/editcopy.png</file>
         <file alias="add">res/icons/trad/add.png</file>
@@ -377,6 +381,7 @@
         <file>res/icons/green/questionmark.png</file>
         <file alias="quit">res/icons/green/quit.png</file>
         <file alias="receiving_addresses">res/icons/green/receive.png</file>
+        <file alias="proposal">res/icons/green/proposal.png</file>
         <file alias="remove">res/icons/green/remove.png</file>
         <file alias="send">res/icons/green/send.png</file>
         <file alias="sign">res/icons/green/sign.png</file>
