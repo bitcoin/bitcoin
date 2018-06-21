@@ -2398,30 +2398,34 @@ bool CEscrowDB::ScanEscrows(const int count, const int from, const UniValue& oOp
 	vector<unsigned char> vchEscrow, vchBuyerAlias, vchSellerAlias, vchArbiterAlias;
 	int nStartBlock = 0;
 	if (!oOptions.isNull()) {
-		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
-		const UniValue &txid = find_value(optionsObj, "txid");
+		const UniValue &txid = find_value(oOptions, "txid");
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		const UniValue &escrowObj = find_value(optionsObj, "escrow");
-		if (escrowObj.isStr())
+		const UniValue &escrowObj = find_value(oOptions, "escrow");
+		if (escrowObj.isStr()) {
 			vchEscrow = vchFromValue(escrowObj);
+		}
 
-		const UniValue &aliasBuyerObj = find_value(optionsObj, "buyeralias");
-		if (aliasBuyerObj.isStr())
+		const UniValue &aliasBuyerObj = find_value(oOptions, "buyeralias");
+		if (aliasBuyerObj.isStr()) {
 			vchBuyerAlias = vchFromValue(aliasBuyerObj);
+		}
 
-		const UniValue &aliasSellerObj = find_value(optionsObj, "selleralias");
-		if (aliasSellerObj.isStr())
+		const UniValue &aliasSellerObj = find_value(oOptions, "selleralias");
+		if (aliasSellerObj.isStr()) {
 			vchSellerAlias = vchFromValue(aliasSellerObj);
+		}
 
-		const UniValue &aliasArbiterObj = find_value(optionsObj, "arbiteralias");
-		if (aliasArbiterObj.isStr())
+		const UniValue &aliasArbiterObj = find_value(oOptions, "arbiteralias");
+		if (aliasArbiterObj.isStr()) {
 			vchArbiterAlias = vchFromValue(aliasArbiterObj);
+		}
 
-		const UniValue &startblock = find_value(optionsObj, "startblock");
-		if (startblock.isNum())
+		const UniValue &startblock = find_value(oOptions, "startblock");
+		if (startblock.isNum()) {
 			nStartBlock = startblock.get_int();
+		}
 	}
 
 	LOCK(cs_escrow);
@@ -2471,8 +2475,9 @@ bool CEscrowDB::ScanEscrows(const int count, const int from, const UniValue& oOp
 					pcursor->Next();
 					continue;
 				}
-				index++;
-				if (from > 0 && index <= from) {
+				index += 1;
+				if (index <= from) {
+					pcursor->Next();
 					continue;
 				}
 				oRes.push_back(oEscrow);
@@ -2487,34 +2492,49 @@ bool CEscrowDB::ScanEscrows(const int count, const int from, const UniValue& oOp
 	}
 	return true;
 }
-UniValue scanescrows(const JSONRPCRequest& request) {
+UniValue listescrows(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 < params.size())
-		throw runtime_error("scanescrows [count] [from] [options]\n"
+		throw runtime_error("listescrows [count] [from] [{options}]\n"
 			"scan through all escrows.\n"
-			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[count]          (numeric, optional, unbounded=0, default=10) The number of results to return, 0 to return all.\n"
 			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
-			"[options]        (array, optional) A json object with options to filter results\n"
+			"[options]        (object, optional) A json object with options to filter results\n"
 			"    {\n"
-			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
-			"	   \"escrow\":guid				(string) Escrow GUID to filter.\n"
-			"      \"buyeralias\":alias			(string) Buyer Alias name to filter.\n"
-			"      \"selleralias\":alias		(string) Seller Alias name to filter.\n"
-			"      \"arbiteralias\":alias		(string) Arbiter Alias name to filter.\n"
-			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"      \"txid\":txid					(string) Transaction ID to filter results for\n"
+			"	     \"escrow\":guid				(string) Escrow GUID to filter.\n"
+			"      \"buyeralias\":alias		(string) Buyer Alias name to filter.\n"
+			"      \"selleralias\":alias	(string) Seller Alias name to filter.\n"
+			"      \"arbiteralias\":alias	(string) Arbiter Alias name to filter.\n"
+			"      \"startblock\":block 	(number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
 			"    }\n"
-			+ HelpExampleCli("scancerts", "0 10")
-			+ HelpExampleCli("scancerts", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"escrow\":\"32bff1fa844c124\",\"buyeralias\":\"''\",\"selleralias\":\"tomjerry\",\"arbiteralias\":\"''\",\"startblock\":0}}")
+			+ HelpExampleCli("listcerts", "0")
+			+ HelpExampleCli("listcerts", "10 10")
+			+ HelpExampleCli("listcerts", "0 0 '{\"escrow\":\"32bff1fa844c124\"}'")
+			+ HelpExampleCli("listcerts", "0 0 '{\"buyeralias\":\"buyer-alias\",\"selleralias\":\"seller-alias\",\"arbiteralias\":\"arbiter-alias\"}'")
+			+ HelpExampleCli("listcerts", "0 0 '{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"startblock\":0}'")
 		);
 	UniValue options;
 	int count = 10;
 	int from = 0;
-	if (params.size() > 0)
+	if (params.size() > 0) {
 		count = params[0].get_int();
-	if (params.size() > 1)
+		if (count == 0) {
+			count = INT_MAX;
+		} else
+		if (count < 0) {
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4539 - " + _("'count' must be 0 or greater"));
+		}
+	}
+	if (params.size() > 1) {
 		from = params[1].get_int();
-	if (params.size() > 2)
+		if (from < 0) {
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4539 - " + _("'from' must be 0 or greater"));
+		}
+	}
+	if (params.size() > 2) {
 		options = params[2];
+	}
 
 	UniValue oRes(UniValue::VARR);
 	if (!pescrowdb->ScanEscrows(count, from, options, oRes))
