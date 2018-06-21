@@ -249,6 +249,10 @@ public:
 
     virtual CoinJoin::Client& coinJoin() = 0;
 
+    //! Register handler for unload message.
+    using UnloadFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleUnload(UnloadFn fn) = 0;
+
     //! Register handler for show progress messages.
     using ShowProgressFn = std::function<void(const std::string& title, int progress)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
