@@ -1166,8 +1166,8 @@ bool CPrivateSendClient::PrepareDenominate(int nMinRounds, int nMaxRounds, std::
                 ++it2;
             }
         }
-        if(nValueLeft == 0) break;
         nStep++;
+        if(nValueLeft == 0) break;
     }
 
     {
@@ -1178,7 +1178,7 @@ bool CPrivateSendClient::PrepareDenominate(int nMinRounds, int nMaxRounds, std::
         }
     }
 
-    if (CPrivateSend::GetDenominations(vecTxOutRet) != nSessionDenom || (nSessionInputCount != 0 && nStep != nStepsMax)) {
+    if (CPrivateSend::GetDenominations(vecTxOutRet) != nSessionDenom || (nSessionInputCount != 0 && vecTxOutRet.size() != nSessionInputCount)) {
         {
             // unlock used coins on failure
             LOCK(pwalletMain->cs_wallet);
