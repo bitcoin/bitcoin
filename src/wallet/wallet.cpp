@@ -3064,6 +3064,7 @@ bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWall
                 const CAmount nChange = nValueIn - nValueToSelect;
 
                 /** RVN START */
+                // Add the change for the assets
                 std::map<std::string, CAmount> mapAssetChange;
                 for (auto asset : mapAssetValue) {
                     if (mapAssetsIn.count(asset.first))
