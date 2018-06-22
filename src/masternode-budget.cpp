@@ -1663,7 +1663,7 @@ BudgetDraft::BudgetDraft(const BudgetDraft& other)
 
 void BudgetDraft::DiscontinueOlderVotes(const BudgetDraftVote& newerVote)
 {
-    std::map<uint256, BudgetDraftVote>::const_iterator found = m_votes.find(newerVote.vin.prevout.GetHash());
+    std::map<uint256, BudgetDraftVote>::iterator found = m_votes.find(newerVote.vin.prevout.GetHash());
     if (found == m_votes.end())
         return;
 
