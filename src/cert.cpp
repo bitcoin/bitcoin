@@ -520,7 +520,7 @@ UniValue certnew(const JSONRPCRequest& request) {
 
 	// check for alias existence in DB
 	CAliasIndex theAlias;
-
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 3500 - " + _("failed to read alias from alias DB"));
 
@@ -693,6 +693,7 @@ UniValue certtransfer(const JSONRPCRequest& request) {
 
 	// check for alias existence in DB
 	CAliasIndex toAlias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, toAlias))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 3503 - " + _("Failed to read transfer alias from DB"));
 

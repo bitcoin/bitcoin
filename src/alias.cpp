@@ -1587,6 +1587,7 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"							
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
+	ToLowerCase(vchAlias);
 	string strName = stringFromVch(vchAlias);
 	/*Above pattern makes sure domain name matches the following criteria :
 
@@ -1823,6 +1824,7 @@ UniValue aliasupdate(const JSONRPCRequest& request) {
 
 
 	CAliasIndex theAlias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5511 - " + _("Could not find an alias with this name"));
 
@@ -2099,6 +2101,7 @@ UniValue aliasbalance(const JSONRPCRequest& request)
 		fUseInstantSend = params[1].get_bool();
 	CAmount nAmount = 0;
 	CAliasIndex theAlias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, theAlias))
 	{
 		UniValue res(UniValue::VOBJ);
@@ -2338,6 +2341,7 @@ UniValue aliaspay(const JSONRPCRequest& request) {
 
 
     string strFrom = params[0].get_str();
+	boost::algorithm::to_lower(strFrom);
 	CAliasIndex theAlias;
 	if (!GetAlias(vchFromString(strFrom), theAlias))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5519 - " + _("Invalid fromalias"));
@@ -2445,6 +2449,7 @@ UniValue aliasupdatewhitelist(const JSONRPCRequest& request) {
 
 
 	CAliasIndex theAlias;
+	ToLowerCase(vchOwnerAlias);
 	if (!GetAlias(vchOwnerAlias, theAlias))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR ERRCODE: 5520 - " + _("Could not find an alias with this guid"));
 
@@ -2509,6 +2514,7 @@ UniValue aliasclearwhitelist(const JSONRPCRequest& request) {
 
 
 	CAliasIndex theAlias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR ERRCODE: 5522 - " + _("Could not find an alias with this name"));
 
@@ -2582,7 +2588,7 @@ UniValue aliaswhitelist(const JSONRPCRequest& request) {
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 
 	CAliasIndex theAlias;
-
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("could not find alias with this guid");
 
