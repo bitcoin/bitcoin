@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	UniValue r;
 	string baddata = gooddata + "a";
 	string guid = AssetNew("node1", "chf", "jagassetbig1", gooddata);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "scanassets"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassets"));
 	UniValue rArray = r.get_array();
 	BOOST_CHECK(rArray.size() > 0);
 	BOOST_CHECK_EQUAL(find_value(rArray[0].get_obj(), "_id").get_str(), guid);
