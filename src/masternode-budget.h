@@ -200,24 +200,10 @@ public:
 
 class CFinalizedBudget
 {
-private:
-    // critical section to protect the inner data structures
-    mutable CCriticalSection m_cs;
-    bool m_autoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
-    boost::optional<int> m_voteSubmittedTime;
-    std::vector<CTxBudgetPayment> m_payments;
-    int m_blockStart;
-    std::map<uint256, CFinalizedBudgetVote> m_votes;
-    std::map<uint256, CFinalizedBudgetVote> m_obsoleteVotes;
-    uint256 m_feeTransactionHash;
-    std::vector<unsigned char> m_signature;
-    CTxIn m_masternodeSubmittedId;
-
 public:
-    bool fValid;
-
     static bool ComparePayments(const CTxBudgetPayment& a, const CTxBudgetPayment& b);
 
+public:
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
     CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, uint256 nFeeTXHash);
@@ -271,19 +257,32 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
-        int64_t dummy1;
-        std::string dummy2;
-        READWRITE(LIMITED_STRING(dummy2, 20));
-        READWRITE(m_feeTransactionHash);
-        READWRITE(dummy1);
         READWRITE(m_blockStart);
         READWRITE(m_payments);
-        READWRITE(m_autoChecked);
+
+        READWRITE(m_feeTransactionHash);
         READWRITE(m_signature);
         READWRITE(m_masternodeSubmittedId);
-
+        
+        READWRITE(m_autoChecked);
         READWRITE(m_votes);
     }
+
+public:
+    bool fValid;
+
+private:
+    // critical section to protect the inner data structures
+    mutable CCriticalSection m_cs;
+    bool m_autoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
+    std::vector<CTxBudgetPayment> m_payments;
+    int m_blockStart;
+    std::map<uint256, CFinalizedBudgetVote> m_votes;
+    std::map<uint256, CFinalizedBudgetVote> m_obsoleteVotes;
+    uint256 m_feeTransactionHash;
+    std::vector<unsigned char> m_signature;
+    CTxIn m_masternodeSubmittedId;
+    boost::optional<int> m_voteSubmittedTime;
 };
 
 // FinalizedBudget are cast then sent to peers with this object, which leaves the votes out

@@ -1622,11 +1622,11 @@ CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetP
 }
 
 CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const CKey& keyMasternode)
-    : m_autoChecked(false)
+    : fValid(true)
+    , m_autoChecked(false)
     , m_payments(vecBudgetPayments)
     , m_blockStart(nBlockStart)
     , m_masternodeSubmittedId(masternodeId)
-    , fValid(true)
 {
     boost::sort(this->m_payments, ComparePayments);
 
@@ -1635,25 +1635,25 @@ CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetP
 }
 
 CFinalizedBudget::CFinalizedBudget(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, const CTxIn& masternodeId, const std::vector<unsigned char>& signature)
-    : m_autoChecked(false)
+    : fValid(true)
+    , m_autoChecked(false)
     , m_payments(vecBudgetPayments)
     , m_blockStart(nBlockStart)
     , m_masternodeSubmittedId(masternodeId)
     , m_signature(signature)
-    , fValid(true)
 {
     boost::sort(this->m_payments, ComparePayments);
 }
 
 CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
-    : m_blockStart(other.m_blockStart)
+    : fValid(true)
+    , m_autoChecked(false)
     , m_payments(other.m_payments)
+    , m_blockStart(other.m_blockStart)
     , m_votes(other.m_votes)
     , m_feeTransactionHash(other.m_feeTransactionHash)
     , m_signature(other.m_signature)
     , m_masternodeSubmittedId(other.m_masternodeSubmittedId)
-    , fValid(true)
-    , m_autoChecked(false)
     , m_voteSubmittedTime(boost::none)
 {
     assert(boost::is_sorted(m_payments, ComparePayments));
