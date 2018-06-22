@@ -254,13 +254,14 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 
 static UniValue setmocktime(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "setmocktime timestamp\n"
+            "setmocktime timestamp (is_offset)\n"
             "\nSet the local time to given timestamp (-regtest only)\n"
             "\nArguments:\n"
             "1. timestamp  (integer, required) Unix seconds-since-epoch timestamp\n"
             "   Pass 0 to go back to using the system time."
+            "2. is_offset  (bool, optional, default=false) Clock keeps moving if true.\n"
         );
 
     if (!Params().MineBlocksOnDemand())
@@ -273,8 +274,14 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     // ensure all call sites of GetTime() are accessing this safely.
     LOCK(cs_main);
 
+    bool isOffset = request.params.size() > 1 ? GetBool(request.params[0]) : false;
+
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    SetMockTime(request.params[0].get_int64());
+
+    if (isOffset)
+        SetMockTimeOffset(request.params[0].get_int64());
+    else
+        SetMockTime(request.params[0].get_int64());
 
     return NullUniValue;
 }
@@ -1103,7 +1110,7 @@ static const CRPCCommand commands[] =
     #endif
 
     /* Not shown in help */
-    { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
+    { "hidden",             "setmocktime",            &setmocktime,            {"timestamp","is_offset"}},
     { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "getinfo",                &getinfo_deprecated,     {}},

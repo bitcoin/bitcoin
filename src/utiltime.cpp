@@ -16,11 +16,12 @@
 #include <tinyformat.h>
 
 static std::atomic<int64_t> nMockTime(0); //!< For unit testing
+static std::atomic<bool> mockTimeOffset(false); // Treat nMockTime as an offset
 
 int64_t GetTime()
 {
     int64_t mocktime = nMockTime.load(std::memory_order_relaxed);
-    if (mocktime) return mocktime;
+    if (mocktime) return mockTimeOffset ? time(nullptr) - mocktime : mocktime;
 
     time_t now = time(nullptr);
     assert(now > 0);
@@ -29,7 +30,14 @@ int64_t GetTime()
 
 void SetMockTime(int64_t nMockTimeIn)
 {
+    mockTimeOffset = false;
     nMockTime.store(nMockTimeIn, std::memory_order_relaxed);
+}
+
+void SetMockTimeOffset(int64_t nMockTimeIn)
+{
+    mockTimeOffset = true;
+    nMockTime.store(time(nullptr) - nMockTimeIn, std::memory_order_relaxed);
 }
 
 int64_t GetMockTime()

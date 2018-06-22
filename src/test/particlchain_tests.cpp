@@ -12,6 +12,7 @@
 #include <consensus/tx_verify.h>
 #include <key/extkey.h>
 #include <pos/kernel.h>
+#include <chainparams.h>
 
 #include <script/sign.h>
 #include <policy/policy.h>
@@ -381,6 +382,19 @@ BOOST_AUTO_TEST_CASE(mixed_input_types)
         else
             BOOST_CHECK(state.GetRejectReason() == "mixed-input-types");
     };
+}
+
+BOOST_AUTO_TEST_CASE(coin_year_reward)
+{
+    BOOST_CHECK(Params().GetCoinYearReward(1529700000) == 5 * CENT);
+    BOOST_CHECK(Params().GetCoinYearReward(1531832399) == 5 * CENT);
+    BOOST_CHECK(Params().GetCoinYearReward(1531832400) == 4 * CENT);    // 2018-07-17 13:00:00
+    BOOST_CHECK(Params().GetCoinYearReward(1563368399) == 4 * CENT);
+    BOOST_CHECK(Params().GetCoinYearReward(1563368400) == 3 * CENT);    // 2019-07-17 13:00:00
+    BOOST_CHECK(Params().GetCoinYearReward(1594904399) == 3 * CENT);
+    BOOST_CHECK(Params().GetCoinYearReward(1594904400) == 2 * CENT);    // 2020-07-16 13:00:00
+    BOOST_CHECK(Params().GetCoinYearReward(1626440400) == 2 * CENT);
+    BOOST_CHECK(Params().GetCoinYearReward(1657976400) == 2 * CENT);
 }
 
 
