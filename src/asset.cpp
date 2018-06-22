@@ -686,7 +686,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	vchWitness = vchFromValue(params[10]);
 	// check for alias existence in DB
 	CAliasIndex theAlias;
-	ToLowerCase(vchAlias)
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2500 - " + _("failed to read alias from alias DB"));
 
