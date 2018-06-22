@@ -875,7 +875,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string addressStr1 = addressStr;
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
-	UniValue r;
+	UniValue r, r1;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 
 	string oldvalue = find_value(r.get_obj(), "publicvalue").get_str();
@@ -888,8 +888,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
 	string newAddressStr = addressStr == "''" ? oldAddressStr : addressStr;
 	// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + boost::lexical_cast<string>(nAcceptTransferFlags) + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness));
-	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r1 = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + boost::lexical_cast<string>(nAcceptTransferFlags) + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness));
+	UniValue varray = r1.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
 	try
