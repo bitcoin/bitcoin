@@ -686,7 +686,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	vchWitness = vchFromValue(params[10]);
 	// check for alias existence in DB
 	CAliasIndex theAlias;
-
+	ToLowerCase(vchAlias)
 	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2500 - " + _("failed to read alias from alias DB"));
 
@@ -861,6 +861,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	vchWitness = vchFromValue(params[2]);
 	// check for alias existence in DB
 	CAliasIndex toAlias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, toAlias))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2503 - " + _("Failed to read alias from DB"));
 
@@ -943,6 +944,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 
 	// check for alias existence in DB
 	CAliasIndex fromAlias;
+	ToLowerCase(vchAliasFrom);
 	if (!GetAlias(vchAliasFrom, fromAlias))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2506 - " + _("Failed to read sender alias from DB"));
 
@@ -968,6 +970,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	
 		UniValue receiverObj = receiver.get_obj();
 		vector<unsigned char> vchAliasTo = vchFromValue(find_value(receiverObj, "aliasto"));
+		ToLowerCase(vchAliasTo);
 		if (!GetAlias(vchAliasTo, toAlias))
 			throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2508 - " + _("Failed to read recipient alias from DB"));
 

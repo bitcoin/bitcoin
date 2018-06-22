@@ -1037,14 +1037,10 @@ UniValue escrowbid(const JSONRPCRequest& request) {
 	vector<unsigned char> vchEscrow = vchFromValue(params[1]);
 	CAmount nBid = AmountFromValue(params[2].get_real());
 	float fBid = params[3].get_real();
-	// check for alias existence in DB
-	CAliasIndex bidalias;
-	if (!GetAlias(vchAlias, bidalias))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4500 - " + _("Failed to read alias from DB"));
-
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[4]);
 	CAliasIndex bidderalias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, bidderalias))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4501 - " + _("Could not find alias with this name"));
 	CScript scriptPubKeyAliasOrig, scriptPubKeyAlias;
@@ -1242,6 +1238,7 @@ UniValue escrownew(const JSONRPCRequest& request) {
 	vchWitness = vchFromValue(params[15]);
 
 	CAliasIndex buyeralias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, buyeralias))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4507 - " + _("Could not find buyer alias with this name"));
 	

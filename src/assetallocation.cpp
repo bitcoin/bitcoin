@@ -763,6 +763,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 
 		UniValue receiverObj = receiver.get_obj();
 		vector<unsigned char> vchAliasTo = vchFromValue(find_value(receiverObj, "aliasto"));
+		ToLowerCase(vchAliasTo);
 		if (!GetAlias(vchAliasTo, toAlias))
 			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Failed to read recipient alias from DB"));
 
@@ -797,6 +798,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	}
 	// check for alias existence in DB
 	CAliasIndex fromAlias;
+	ToLowerCase(vchAliasFrom);
 	if (!GetAlias(vchAliasFrom, fromAlias))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1502 - " + _("Failed to read sender alias from DB"));
 
@@ -880,6 +882,7 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 
 	// check for alias existence in DB
 	CAliasIndex fromAlias;
+	ToLowerCase(vchAliasFrom);
 	if (!GetAlias(vchAliasFrom, fromAlias))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1505 - " + _("Failed to read alias from DB"));
 

@@ -729,6 +729,7 @@ UniValue offernew(const JSONRPCRequest& request) {
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 
 	CAliasIndex alias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, alias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1500 - " + _("Could not find an alias with this name"));
 
@@ -886,6 +887,7 @@ UniValue offerlink(const JSONRPCRequest& request) {
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 
 	CAliasIndex alias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, alias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1510 - " + _("Could not find an alias with this name"));
  
@@ -1042,7 +1044,7 @@ UniValue offerupdate(const JSONRPCRequest& request) {
 
 	if (!GetAlias(theOffer.vchAlias, offerAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1535 - " + _("Could not find an alias with this name"));
-
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, alias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1536 - " + _("Could not find an alias with this name"));
 
