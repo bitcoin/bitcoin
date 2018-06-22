@@ -596,6 +596,7 @@ public:
     double dPingTime;
     double dPingWait;
     double dMinPing;
+    CAmount minFeeFilter;
     // Our address, as reported by the peer
     std::string addrLocal;
     // Address of this peer
