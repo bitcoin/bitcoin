@@ -348,4 +348,5 @@ bool DoesAliasExist(const std::string &strAddress);
 bool IsOutpointMature(const COutPoint& outpoint, bool fUseInstantSend = false);
 UniValue syscointxfund_helper(const std::vector<unsigned char> &vchAlias, const std::vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, std::vector<CRecipient> &vecSend);
 bool FlushSyscoinDBs();
+void ToLowerCase(std::vector<unsigned char>& vchValue);
 #endif // ALIAS_H

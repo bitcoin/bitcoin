@@ -729,6 +729,7 @@ UniValue offernew(const JSONRPCRequest& request) {
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 
 	CAliasIndex alias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, alias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1500 - " + _("Could not find an alias with this name"));
 
@@ -886,6 +887,7 @@ UniValue offerlink(const JSONRPCRequest& request) {
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 
 	CAliasIndex alias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, alias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1510 - " + _("Could not find an alias with this name"));
  
@@ -1042,7 +1044,7 @@ UniValue offerupdate(const JSONRPCRequest& request) {
 
 	if (!GetAlias(theOffer.vchAlias, offerAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1535 - " + _("Could not find an alias with this name"));
-
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, alias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1536 - " + _("Could not find an alias with this name"));
 
@@ -1464,20 +1466,19 @@ bool COfferDB::ScanOffers(const int count, const int from, const UniValue& oOpti
 	vector<unsigned char> vchOffer, vchAlias;
 	int nStartBlock = 0;
 	if (!oOptions.isNull()) {
-		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
-		const UniValue &txid = find_value(optionsObj, "txid");
+		const UniValue &txid = find_value(oOptions, "txid");
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		const UniValue &offerObj = find_value(optionsObj, "offer");
+		const UniValue &offerObj = find_value(oOptions, "offer");
 		if (offerObj.isStr())
 			vchOffer = vchFromValue(offerObj);
 
-		const UniValue &aliasObj = find_value(optionsObj, "alias");
+		const UniValue &aliasObj = find_value(oOptions, "alias");
 		if (aliasObj.isStr())
 			vchAlias = vchFromValue(aliasObj);
 
-		const UniValue &startblock = find_value(optionsObj, "startblock");
+		const UniValue &startblock = find_value(oOptions, "startblock");
 		if (startblock.isNum())
 			nStartBlock = startblock.get_int();
 	}
@@ -1519,13 +1520,15 @@ bool COfferDB::ScanOffers(const int count, const int from, const UniValue& oOpti
 					pcursor->Next();
 					continue;
 				}
-				index++;
-				if (from > 0 && index <= from) {
+				index += 1;
+				if (index <= from) {
+					pcursor->Next();
 					continue;
 				}
 				oRes.push_back(oOffer);
-				if (index >= count + from)
+				if (index >= count + from) {
 					break;
+				}
 			}
 			pcursor->Next();
 		}
@@ -1535,32 +1538,47 @@ bool COfferDB::ScanOffers(const int count, const int from, const UniValue& oOpti
 	}
 	return true;
 }
-UniValue scanoffers(const JSONRPCRequest& request) {
+UniValue listoffers(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 < params.size())
-		throw runtime_error("scanoffers [count] [from] [options]\n"
+		throw runtime_error("listoffers [count] [from] [{options}]\n"
 			"scan through all offers.\n"
-			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[count]          (numeric, optional, unbounded=0, default=10) The number of results to return, 0 to return all.\n"
 			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
-			"[options]        (array, optional) A json object with options to filter results\n"
+			"[options]        (object, optional) A json object with options to filter results\n"
 			"    {\n"
-			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
-			"	   \"offer\":guid				(string) Offer GUID to filter.\n"
-			"      \"alias\":alias				(string) Alias name to filter.\n"
-			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"      \"txid\":txid				(string) Transaction ID to filter.\n"
+			"	     \"offer\":guid				(string) Offer GUID to filter.\n"
+			"      \"alias\":alias			(string) Alias name to filter.\n"
+			"      \"startblock\":block	(number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
 			"    }\n"
-			+ HelpExampleCli("scanoffers", "0 10")
-			+ HelpExampleCli("scanoffers", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"offer\":\"32bff1fa844c124\",\"alias\":\"''\",\"startblock\":0}}")
+			+ HelpExampleCli("listoffers", "0")
+			+ HelpExampleCli("listoffers", "10 10")
+			+ HelpExampleCli("listoffers", "0 0 '{\"offer\":\"32bff1fa844c124\",\"startblock\":0}'")
+			+ HelpExampleCli("listoffers", "0 0 '{\"alias\":\"offer-owner-alias\"}'")
+			+ HelpExampleCli("listoffers", "0 0 '{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\"}'")
 		);
 	UniValue options;
 	int count = 10;
 	int from = 0;
-	if (params.size() > 0)
+	if (params.size() > 0) {
 		count = params[0].get_int();
-	if (params.size() > 1)
+		if (count == 0) {
+			count = INT_MAX;
+		} else
+		if (count < 0) {
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 5538 - " + _("'count' must be 0 or greater"));
+		}
+	}
+	if (params.size() > 1) {
 		from = params[1].get_int();
-	if (params.size() > 2)
+		if (from < 0) {
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 5538 - " + _("'from' must be 0 or greater"));
+		}
+	}
+	if (params.size() > 2) {
 		options = params[2];
+	}
 
 	UniValue oRes(UniValue::VARR);
 	if (!pofferdb->ScanOffers(count, from, options, oRes))
