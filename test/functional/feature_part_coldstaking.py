@@ -7,8 +7,10 @@ from test_framework.test_particl import ParticlTestFramework
 from test_framework.util import *
 from test_framework.address import *
 
+
 def keyhash_to_p2pkh_part(b):
     return keyhash_to_p2pkh(b, False, False)
+
 
 class ColdStakingTest(ParticlTestFramework):
     def set_test_params(self):
@@ -133,20 +135,13 @@ class ColdStakingTest(ParticlTestFramework):
         last_balance = ro['watchonly_unconfirmed_balance']
         assert(last_balance > 0)
 
-
-
-
-
         ekChange = nodes[0].getnewextaddress()
         assert(ekChange == 'pparszMzzW1247AwkR61QFUH6L8zSJDnRvsS8a2FLwfSsgbeusiLNdBkLRXjFb3E5AXVoR6PJTj9nSEF1feCsCyBdGw165XqVcaWs5HiDmcZrLAX')
-
 
         changeaddress = {'coldstakingaddress':coldstakingaddr, 'address_standard':ekChange}
         ro = nodes[0].walletsettings('changeaddress', changeaddress)
         assert(ro['changeaddress']['coldstakingaddress'] == coldstakingaddr)
         assert(ro['changeaddress']['address_standard'] == ekChange)
-
-
 
         txid2 = nodes[0].sendtoaddress(addr2_1, 100)
 
@@ -166,14 +161,11 @@ class ColdStakingTest(ParticlTestFramework):
         assert(hashCoinstake == '1ac277619e43a7e0558c612f86b918104742f65c')
         assert(hashSpend == '55e9e9b1aebf76f2a2ce9d7af6267be996bc235e3a65fa0f87a345267f9b3895')
 
-
         ro = nodes[0].deriverangekeys(1, 1, coldstakingaddr)
         assert(ro[0] == keyhash_to_p2pkh_part(hex_str_to_bytes(hashCoinstake)))
 
         ro = nodes[0].deriverangekeys(0, 0, ekChange, 'false', 'false', 'false', 'true')
         assert(ro[0] == keyhash_to_p2pkh_part(hex_str_to_bytes(hashSpend)))
-
-
 
         ro = nodes[0].extkey('list', 'true')
         fFound = False
@@ -193,7 +185,6 @@ class ColdStakingTest(ParticlTestFramework):
                 assert(chain['path'] == 'm/0h/2')
         assert(fFound)
 
-
         assert(self.wait_for_mempool(nodes[1], txid2))
 
         ro = nodes[1].extkey('key', 'xBDBWFLeYrbBhPRSKHzVwN61rwUGwCXvUB', 'true')
@@ -205,10 +196,7 @@ class ColdStakingTest(ParticlTestFramework):
         ro = nodes[1].getwalletinfo()
         assert(ro['watchonly_unconfirmed_balance'] > last_balance)
 
-
-
         txid3 = nodes[0].sendtoaddress(addr2_1, 100)
-
         tx = nodes[0].getrawtransaction(txid3, True)
 
         hashCoinstake = ''
@@ -250,7 +238,6 @@ class ColdStakingTest(ParticlTestFramework):
 
         ro = nodes[1].extkey('key', 'xBDBWFLeYrbBhPRSKHzVwN61rwUGwCXvUB', 'true')
         assert(ro['num_derives'] == '3')
-
 
         # Test stake to coldstakingchangeaddress
         ro = nodes[0].walletsettings('stakelimit', {'height':2})

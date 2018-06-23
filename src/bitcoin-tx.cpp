@@ -364,7 +364,7 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
         if (destination.type() == typeid(CStealthAddress))
         {
             CStealthAddress sx = boost::get<CStealthAddress>(destination);
-            std::shared_ptr<CTxOutData> outData = MAKE_OUTPUT<CTxOutData>();
+            OUTPUT_PTR<CTxOutData> outData = MAKE_OUTPUT<CTxOutData>();
             std::string sNarration;
             std::string sError;
             if (0 != PrepareStealthOutput(sx, sNarration, scriptPubKey, outData->vData, sError))

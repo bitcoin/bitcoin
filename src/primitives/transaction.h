@@ -298,13 +298,9 @@ public:
     std::string ToString() const;
 };
 
-
-typedef std::shared_ptr<CTxOutBase> CTxOutBaseRef;
 #define OUTPUT_PTR std::shared_ptr
-#define MAKE_OUTPUT std::make_shared
-
 typedef OUTPUT_PTR<CTxOutBase> CTxOutBaseRef;
-
+#define MAKE_OUTPUT std::make_shared
 
 class CTxOutStandard : public CTxOutBase
 {

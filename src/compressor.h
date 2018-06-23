@@ -141,7 +141,7 @@ public:
             {
                 case OUTPUT_STANDARD:
                     {
-                    std::shared_ptr<CTxOutStandard> p = std::dynamic_pointer_cast<CTxOutStandard>(txout);
+                    CTxOutStandard *p = (CTxOutStandard*)txout.get();
 
                     uint64_t nVal = CompressAmount(p->nValue);
                     READWRITE(VARINT(nVal));
@@ -152,7 +152,7 @@ public:
                     break;
                 case OUTPUT_CT:
                     {
-                    std::shared_ptr<CTxOutCT> p = std::dynamic_pointer_cast<CTxOutCT>(txout);
+                    CTxOutCT *p = (CTxOutCT*)txout.get();
 
                     // TODO: need all fields?
                     CScriptCompressor cscript(REF(p->scriptPubKey));
@@ -176,8 +176,8 @@ public:
                     return;
                 case OUTPUT_STANDARD:
                     {
-                    std::shared_ptr<CTxOutStandard> p;
-                    txout = p = MAKE_OUTPUT<CTxOutStandard>();
+                    txout = MAKE_OUTPUT<CTxOutStandard>();
+                    CTxOutStandard *p = (CTxOutStandard*)txout.get();
 
                     uint64_t nVal = 0;
                     READWRITE(VARINT(nVal));
@@ -189,8 +189,8 @@ public:
                     break;
                 case OUTPUT_CT:
                     {
-                    std::shared_ptr<CTxOutCT> p;
-                    txout = p = MAKE_OUTPUT<CTxOutCT>();
+                    txout = MAKE_OUTPUT<CTxOutCT>();
+                    CTxOutCT *p = (CTxOutCT*)txout.get();
 
                     // TODO: need all fields?
                     CScriptCompressor cscript(REF(p->scriptPubKey));

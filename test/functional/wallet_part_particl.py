@@ -610,10 +610,8 @@ class WalletParticlTest(ParticlTestFramework):
 
         ro = nodes[1].walletpassphrasechange('changedPass', 'changedPass2')
 
-
         ro = nodes[2].listaddressgroupings()
         assert(len(ro) == 5)
-
 
         # Test lockunspent
         unspent = nodes[2].listunspent()
@@ -629,6 +627,7 @@ class WalletParticlTest(ParticlTestFramework):
         txnid = nodes[1].sendtoaddress(address1, 0.01, "", "", False, "", True)
         ro = nodes[1].bumpfee(txnid)
         assert(len(ro['errors']) == 0)
+
 
 if __name__ == '__main__':
     WalletParticlTest().main()

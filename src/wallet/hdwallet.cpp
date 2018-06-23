@@ -1934,7 +1934,7 @@ isminetype CHDWallet::IsMine(const CTxOutBase *txout) const
 
 bool CHDWallet::IsMine(const CTransaction &tx) const
 {
-    for (const auto txout : tx.vpout)
+    for (const auto &txout : tx.vpout)
         if (IsMine(txout.get()))
             return true;
     return false;
@@ -2105,7 +2105,7 @@ CAmount CHDWallet::GetCredit(const CTransaction &tx, const isminefilter &filter)
 {
     CAmount nCredit = 0;
 
-    for (const auto txout : tx.vpout)
+    for (const auto &txout : tx.vpout)
     {
         nCredit += GetCredit(txout.get(), filter);
         if (!MoneyRange(nCredit))
@@ -2118,7 +2118,7 @@ void CHDWallet::GetCredit(const CTransaction &tx, CAmount &nSpendable, CAmount &
 {
     nSpendable = 0;
     nWatchOnly = 0;
-    for (const auto txout : tx.vpout)
+    for (const auto &txout : tx.vpout)
     {
         if (!txout->IsType(OUTPUT_STANDARD))
             continue;
@@ -11970,7 +11970,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
             nCredit += kernelOut->nValue;
             vwtxPrev.push_back(pcoin.first);
 
-            std::shared_ptr<CTxOutData> out0 = MAKE_OUTPUT<CTxOutData>();
+            OUTPUT_PTR<CTxOutData> out0 = MAKE_OUTPUT<CTxOutData>();
             out0->vData.resize(4);
             memcpy(&out0->vData[0], &nBlockHeight, 4);
 
@@ -11985,7 +11985,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
 
             txNew.vpout.push_back(out0);
 
-            std::shared_ptr<CTxOutStandard> out1 = MAKE_OUTPUT<CTxOutStandard>();
+            OUTPUT_PTR<CTxOutStandard> out1 = MAKE_OUTPUT<CTxOutStandard>();
             out1->nValue = 0;
             out1->scriptPubKey = scriptPubKeyKernel;
             txNew.vpout.push_back(out1);
@@ -12080,7 +12080,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         if (nBlockHeight % pDevFundSettings->nDevOutputPeriod == 0)
         {
             // Place dev fund output
-            std::shared_ptr<CTxOutStandard> outDevSplit = MAKE_OUTPUT<CTxOutStandard>();
+            OUTPUT_PTR<CTxOutStandard> outDevSplit = MAKE_OUTPUT<CTxOutStandard>();
             outDevSplit->nValue = nDevCfwd;
 
             CTxDestination dfDest = CBitcoinAddress(pDevFundSettings->sDevFundAddresses).Get();
@@ -12113,7 +12113,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     // Set output amount, split outputs if > nStakeSplitThreshold
     if (nCredit >= nStakeSplitThreshold)
     {
-        std::shared_ptr<CTxOutStandard> outSplit = MAKE_OUTPUT<CTxOutStandard>();
+        OUTPUT_PTR<CTxOutStandard> outSplit = MAKE_OUTPUT<CTxOutStandard>();
         outSplit->nValue = 0;
         outSplit->scriptPubKey = scriptPubKeyKernel;
 
@@ -12132,7 +12132,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         std::vector<uint8_t> vData;
         if (!GetScriptForAddress(scriptReward, rewardAddress, true, &vData))
             return error("%s: Could not get script for reward address.", __func__);
-        std::shared_ptr<CTxOutStandard> outReward = MAKE_OUTPUT<CTxOutStandard>();
+        OUTPUT_PTR<CTxOutStandard> outReward = MAKE_OUTPUT<CTxOutStandard>();
         outReward->nValue = nRewardOut;
         outReward->scriptPubKey = scriptReward;
         txNew.vpout.push_back(outReward);

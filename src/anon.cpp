@@ -98,7 +98,7 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
             vpOutCommits.push_back(plainCommitment.data);
 
             secp256k1_pedersen_commitment *pc;
-            for (auto &txout : tx.vpout)
+            for (const auto &txout : tx.vpout)
             {
                 if ((pc = txout->GetPCommitment()))
                     vpOutCommits.push_back(pc->data);
@@ -179,7 +179,7 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
         vpOutCommits.push_back(plainCommitment.data);
 
         secp256k1_pedersen_commitment *pc;
-        for (auto &txout : tx.vpout)
+        for (const auto &txout : tx.vpout)
         {
             if ((pc = txout->GetPCommitment()))
                 vpOutCommits.push_back(pc->data);

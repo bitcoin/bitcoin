@@ -4299,11 +4299,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name_,
     std::shared_ptr<CWallet> walletInstance(fParticlMode
         ? std::shared_ptr<CWallet>(new CHDWallet(name, WalletDatabase::Create(path)), ReleaseWallet)
         : std::shared_ptr<CWallet>(new CWallet(name, WalletDatabase::Create(path)), ReleaseWallet));
-    /*
-    (
-        ? (new CHDWallet(name, WalletDatabase::Create(path)), ReleaseWallet)
-        : ());
-    */
+
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DBErrors::LOAD_OK)
     {

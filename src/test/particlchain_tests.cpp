@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
     txn.nLockTime = 0;
 
     int nBlockHeight = 1;
-    std::shared_ptr<CTxOutData> outData = MAKE_OUTPUT<CTxOutData>();
+    OUTPUT_PTR<CTxOutData> outData = MAKE_OUTPUT<CTxOutData>();
     outData->vData.resize(4);
     memcpy(&outData->vData[0], &nBlockHeight, 4);
     txn.vpout.push_back(outData);

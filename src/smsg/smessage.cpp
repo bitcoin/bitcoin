@@ -3853,7 +3853,7 @@ int CSMSG::FundMsg(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmo
     assert(coinControl.m_extrafee <= std::numeric_limits<uint32_t>::max());
     uint32_t msgFee = coinControl.m_extrafee;
 
-    std::shared_ptr<CTxOutData> out0 = MAKE_OUTPUT<CTxOutData>();
+    OUTPUT_PTR<CTxOutData> out0 = MAKE_OUTPUT<CTxOutData>();
     out0->vData.resize(25); // 4 byte fee, max 42.94967295
     out0->vData[0] = DO_FUND_MSG;
     memcpy(&out0->vData[1], msgId.begin(), 20);

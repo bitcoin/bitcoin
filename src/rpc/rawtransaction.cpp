@@ -601,9 +601,9 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
 
             if (fParticlMode)
             {
-                std::shared_ptr<CTxOutData> out = MAKE_OUTPUT<CTxOutData>();
+                OUTPUT_PTR<CTxOutData> out = MAKE_OUTPUT<CTxOutData>();
                 out->vData = data;
-                rawTx.vpout.push_back(out);
+                rawTx.vpout.push_back(std::move(out));
             } else
             {
                 CTxOut out(0, CScript() << OP_RETURN << data);
@@ -624,24 +624,24 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
 
             if (fParticlMode)
             {
-                std::shared_ptr<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
+                OUTPUT_PTR<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
                 out->nValue = nAmount;
                 if (destination.type() == typeid(CStealthAddress))
                 {
                     CStealthAddress sx = boost::get<CStealthAddress>(destination);
-                    std::shared_ptr<CTxOutData> outData = MAKE_OUTPUT<CTxOutData>();
+                    OUTPUT_PTR<CTxOutData> outData = MAKE_OUTPUT<CTxOutData>();
                     std::string sNarration;
                     std::string sError;
                     if (0 != PrepareStealthOutput(sx, sNarration, scriptPubKey, outData->vData, sError))
                         throw JSONRPCError(RPC_INTERNAL_ERROR, std::string("PrepareStealthOutput failed: ") + sError);
 
                     out->scriptPubKey = scriptPubKey;
-                    rawTx.vpout.push_back(out);
-                    rawTx.vpout.push_back(outData);
+                    rawTx.vpout.push_back(std::move(out));
+                    rawTx.vpout.push_back(std::move(outData));
                 } else
                 {
                     out->scriptPubKey = scriptPubKey;
-                    rawTx.vpout.push_back(out);
+                    rawTx.vpout.push_back(std::move(out));
                 };
             } else
             {
@@ -855,7 +855,6 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
             "\nExamples:\n"
             + HelpExampleCli("combinerawtransaction", "[\"myhex1\", \"myhex2\", \"myhex3\"]")
         );
-
 
     UniValue txs = request.params[0].get_array();
     std::vector<CMutableTransaction> txVariants(txs.size());

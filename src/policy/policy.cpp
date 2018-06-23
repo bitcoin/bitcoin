@@ -189,7 +189,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         }
     }
 
-    for (const auto txout : tx.vpout) {
+    for (const auto &txout : tx.vpout) {
         const CTxOutBase *p = txout.get();
 
         if (!p->IsType(OUTPUT_STANDARD) && !p->IsType(OUTPUT_CT))
